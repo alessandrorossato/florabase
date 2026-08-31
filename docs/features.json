@@ -1,0 +1,784 @@
+{
+  "priority_scheme": {
+    "P0": "Blocks safe foundational or release work",
+    "P1": "Next core product increment",
+    "P2": "Valuable after the core path",
+    "P3": "Optional or later improvement"
+  },
+  "allowed_statuses": ["planned", "in_progress", "implemented", "verified"],
+  "features": [
+    {
+      "id": "FOUNDATION-001",
+      "category": "infrastructure",
+      "description": "Production-oriented vertical application scaffold",
+      "acceptance_criteria": [
+        "Compose builds and all three services become healthy",
+        "Backend readiness verifies PostgreSQL and frontend reaches the API through its proxy",
+        "Migrations, persistence across container recreation, tests, static checks, and backup validation pass"
+      ],
+      "dependencies": [],
+      "priority": "P0",
+      "status": "verified"
+    },
+    {
+      "id": "OPS-001",
+      "category": "operations",
+      "description": "Exercise restore against an isolated disposable database",
+      "acceptance_criteria": [
+        "A custom-format dump restores into an isolated database",
+        "Migration revision and infrastructure metadata match the source",
+        "The drill and cleanup procedure are documented without touching valuable data"
+      ],
+      "dependencies": ["FOUNDATION-001"],
+      "priority": "P0",
+      "status": "verified"
+    },
+    {
+      "id": "SECURITY-001",
+      "category": "security",
+      "description": "Decide the initial authentication and session architecture",
+      "acceptance_criteria": [
+        "Single-operator and multi-user exposure assumptions are documented",
+        "Reverse-proxy identity and application-session options are compared",
+        "The backend-owned session, cookie, CSRF, password, bootstrap, invalidation, lifetime, and abuse-control decisions are explicit",
+        "Proxy, HTTPS, CORS, API failure, configuration, database, and deferred boundaries are testable",
+        "An accepted ADR records the chosen boundary and required protections without fake authentication"
+      ],
+      "dependencies": ["FOUNDATION-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "SECURITY-002",
+      "category": "security",
+      "description": "Implement local owner authentication and server-side sessions",
+      "acceptance_criteria": [
+        "Alembic-managed user, session, and bounded login-throttle persistence follows ADR 0005",
+        "The guarded first-owner CLI, Argon2id login, session rotation/revocation, logout, and expiry behavior are integration-tested",
+        "Secure cookie, same-origin, CSRF, generic failure, authorization-default, rate-limit, and secret-redaction behavior are tested",
+        "Production fails closed for insecure origin, cookie, CORS, or required authentication configuration"
+      ],
+      "dependencies": ["SECURITY-001", "TESTING-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "DOMAIN-001",
+      "category": "domain",
+      "description": "Define the first BotanicalIdentity aggregate contract",
+      "acceptance_criteria": [
+        "Real user workflows and minimum fields are documented",
+        "BotanicalIdentity, scientific taxon name, cultivar qualifier, shared scope, and duplicate reconciliation boundaries are explicit",
+        "The change remains small enough for one migration and API increment"
+      ],
+      "dependencies": ["SECURITY-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "DATABASE-001",
+      "category": "database",
+      "description": "Add the minimal BotanicalIdentity schema through Alembic",
+      "acceptance_criteria": [
+        "Migration uses UUIDv7 identifiers, UTC timestamps, and justified constraints",
+        "Upgrade and downgrade are tested against PostgreSQL",
+        "No unrelated botanical tables are introduced"
+      ],
+      "dependencies": ["DOMAIN-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "BACKEND-001",
+      "category": "backend",
+      "description": "Expose the first validated BotanicalIdentity REST slice",
+      "acceptance_criteria": [
+        "Versioned create and read behavior follows the documented contract",
+        "Validation, conflicts, not-found behavior, and database constraints are tested",
+        "OpenAPI and generated frontend types are current"
+      ],
+      "dependencies": ["DATABASE-001", "SECURITY-002"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "FRONTEND-002",
+      "category": "frontend",
+      "description": "Build the browser owner login, session, and logout flow",
+      "acceptance_criteria": [
+        "Accessible login uses the generated backend API contract and presents generic credential or throttle failures with explicit loading and failure states",
+        "An authenticated browser session is restored after reload, including a safe way to obtain a usable session-bound CSRF token without re-entering the password",
+        "Logout is supported without storing authentication tokens in localStorage or sessionStorage or weakening the HttpOnly session-cookie boundary"
+      ],
+      "dependencies": ["SECURITY-002"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "FRONTEND-001",
+      "category": "frontend",
+      "description": "Build the first accessible BotanicalIdentity interaction",
+      "acceptance_criteria": [
+        "The UI uses generated API declarations",
+        "Loading, empty, success, validation, and server-error states are explicit",
+        "Keyboard and accessible-name behavior has component coverage"
+      ],
+      "dependencies": ["BACKEND-001", "FRONTEND-002"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "IDENTITY-001",
+      "category": "frontend",
+      "description": "Add the basic BotanicalIdentity directory and navigation workflow",
+      "acceptance_criteria": [
+        "Authenticated users can retrieve a deterministic directory of existing BotanicalIdentity records without knowing their UUIDs",
+        "The accessible frontend supports browsing/selecting an existing BotanicalIdentity and reuses its existing detail/profile interaction",
+        "Creation, duplicate handling, loading, empty, selection, authentication, and failure behavior remain explicit without introducing advanced collection search"
+      ],
+      "dependencies": ["BACKEND-001", "FRONTEND-001", "PROFILE-002"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "ATTACHMENT-001",
+      "category": "domain",
+      "description": "Decide persistent attachment metadata and storage boundaries",
+      "acceptance_criteria": [
+        "Relationship, filename, type, size, validation, deletion, and backup semantics are documented",
+        "Volume ownership and reverse-proxy upload limits are defined",
+        "No object storage is introduced without a concrete requirement"
+      ],
+      "dependencies": ["FOUNDATION-001"],
+      "priority": "P2",
+      "status": "verified"
+    },
+    {
+      "id": "TESTING-001",
+      "category": "testing",
+      "description": "Add a PostgreSQL-backed API integration test fixture",
+      "acceptance_criteria": [
+        "Tests use an isolated disposable database",
+        "Migrations initialize the schema and cleanup cannot target non-test data",
+        "The integration command is documented and works in Compose"
+      ],
+      "dependencies": ["FOUNDATION-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "PROFILE-001",
+      "category": "profile",
+      "description": "Define the first manually maintained BotanicalProfile contract",
+      "acceptance_criteria": [
+        "The contract keeps general botanical knowledge separate from BotanicalIdentity and collection observations",
+        "A small incomplete-friendly first profile is defined without one field per possible botanical fact",
+        "Operator-authored content and later source-scoped enrichment boundaries are explicit"
+      ],
+      "dependencies": ["DOMAIN-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "PROFILE-002",
+      "category": "profile",
+      "description": "Add the first protected manual BotanicalProfile interaction",
+      "acceptance_criteria": [
+        "An Alembic-managed profile references exactly one BotanicalIdentity and permits incomplete content",
+        "Authenticated create, read, and update behavior is validated and integration-tested",
+        "The accessible UI distinguishes reference knowledge from collection observations"
+      ],
+      "dependencies": ["PROFILE-001", "BACKEND-001", "FRONTEND-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "SUPPLIER-001",
+      "category": "supplier",
+      "description": "Add a reusable Supplier and acquisition-source directory",
+      "acceptance_criteria": [
+        "Supplier supports seller, nursery, supermarket, person, exchange, and other source workflows without requiring geographic origin",
+        "Protected persistence and API behavior preserve optional contact or descriptive data",
+        "The accessible UI supports selecting and maintaining suppliers independently of lots"
+      ],
+      "dependencies": ["BACKEND-001", "FRONTEND-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "LOCATION-001",
+      "category": "location",
+      "description": "Add a simple hierarchical collection Location directory",
+      "acceptance_criteria": [
+        "Locations support an optional parent and prevent hierarchy cycles",
+        "Protected persistence and API behavior cover roots, children, rename, and safe retirement",
+        "The accessible UI can choose a location for stored material or cultivated plants"
+      ],
+      "dependencies": ["BACKEND-001", "FRONTEND-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "GEOGRAPHY-001",
+      "category": "geography",
+      "description": "Add hierarchical GeographicPlace reference data",
+      "acceptance_criteria": [
+        "GeographicPlace is distinct from collection Location and supports canonical World, continent, applicable subregion, and country or territory nodes from documented maintained standards and codes",
+        "Relationships select the most appropriate known node and infer ancestors without manufacturing precision or redundantly persisting every ancestor",
+        "Canonical base nodes remain stable reference data, while operator-defined local places can extend them without introducing coordinates, GIS, maps, or external runtime geography integrations"
+      ],
+      "dependencies": ["BACKEND-001", "FRONTEND-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "GEOGRAPHY-002",
+      "category": "geography",
+      "description": "Relate BotanicalIdentity native range to GeographicPlace",
+      "acceptance_criteria": [
+        "Structured native range uses the shared GeographicPlace hierarchy and remains independent from SeedLot material provenance",
+        "A BotanicalIdentity or profile may reference one or more broad or precise known places without replacing disjunct areas with their common ancestor",
+        "Existing operator-authored BotanicalProfile origin_distribution text remains valid and is not silently overwritten"
+      ],
+      "dependencies": ["GEOGRAPHY-001", "PROFILE-002"],
+      "priority": "P2",
+      "status": "verified"
+    },
+    {
+      "id": "SEED-001",
+      "category": "seed",
+      "description": "Define the SeedLot and seed provenance contract",
+      "acceptance_criteria": [
+        "One physical packet or bag is one SeedLot referencing BotanicalIdentity even when descriptive details match another lot",
+        "Acquisition and harvest dates preserve known precision, and optional quantity supports exact or approximate count or weight",
+        "Source category, optional Supplier, optional geographic origin, storage, notes, lifecycle, and later parent-Plant lineage boundaries are explicit"
+      ],
+      "dependencies": ["DOMAIN-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "SEED-002",
+      "category": "seed",
+      "description": "Persist the first SeedLot inventory slice",
+      "acceptance_criteria": [
+        "One focused Alembic increment follows the approved SeedLot contract and references BotanicalIdentity, Supplier, GeographicPlace material provenance, and Location where present",
+        "PostgreSQL constraints preserve optionality, declared date precision, quantity kind, and non-destructive lifecycle states",
+        "Upgrade, downgrade, and database invariants are integration-tested without introducing Sowing or Plant tables"
+      ],
+      "dependencies": [
+        "SEED-001",
+        "DATABASE-001",
+        "SUPPLIER-001",
+        "LOCATION-001",
+        "GEOGRAPHY-001"
+      ],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "SEED-003",
+      "category": "seed",
+      "description": "Expose the protected SeedLot API workflow",
+      "acceptance_criteria": [
+        "Authenticated create, read, list, update, and lifecycle behavior follows the SeedLot contract",
+        "Validation covers partial dates, optional exact or approximate quantity, source, supplier, origin, and location independently",
+        "Failures, authorization, and historical retention are integration-tested and generated API artifacts are current"
+      ],
+      "dependencies": ["SEED-002", "SECURITY-002"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "SEED-004",
+      "category": "seed",
+      "description": "Build the first accessible SeedLot inventory UI",
+      "acceptance_criteria": [
+        "Fast entry requires only integrity-critical information and does not imply unknown date or quantity precision",
+        "List and detail views distinguish inactive lots while retaining their history",
+        "Loading, empty, success, validation, and failure states have component coverage"
+      ],
+      "dependencies": ["SEED-003", "FRONTEND-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "SOWING-001",
+      "category": "sowing",
+      "description": "Define the Sowing and basic germination contract",
+      "acceptance_criteria": [
+        "A Sowing represents material intentionally taken from exactly one SeedLot",
+        "Fast entry has a small minimum while substrate, method, treatment, temperature, and environment remain optional",
+        "Simple sown and germinated totals coexist with later optional dated germination observations"
+      ],
+      "dependencies": ["SEED-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "SOWING-002",
+      "category": "sowing",
+      "description": "Add the protected Sowing and basic germination backend slice",
+      "acceptance_criteria": [
+        "Alembic-managed Sowings reference SeedLots and retain failed or completed outcomes",
+        "Authenticated API behavior supports quick entry, optional cultivation details, and simple germination totals",
+        "Quantity integrity, failures, and historical retention are integration-tested"
+      ],
+      "dependencies": ["SOWING-001", "SEED-003", "LINEAGE-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "SOWING-003",
+      "category": "sowing",
+      "description": "Build the accessible Sowing and basic germination UI",
+      "acceptance_criteria": [
+        "The primary flow records a Sowing and simple germination result with minimal input",
+        "Advanced optional details are available without blocking simple use",
+        "Active, failed, and completed Sowings remain discoverable with tested loading and failure states"
+      ],
+      "dependencies": ["SOWING-002", "SEED-004"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "PLANT-001",
+      "category": "plant",
+      "description": "Define individual Plant and PlantGroup contracts",
+      "acceptance_criteria": [
+        "Individually tracked specimens and grouped batches are distinct concepts with shared workflow lineage",
+        "Origin, optional location, quantity for groups, and historical lifecycle outcomes are explicit",
+        "Individual extraction preserves group provenance but its transaction details remain deferred"
+      ],
+      "dependencies": ["SOWING-001", "LOCATION-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "PLANT-002",
+      "category": "plant",
+      "description": "Add the protected Plant and PlantGroup backend slice",
+      "acceptance_criteria": [
+        "Alembic-managed Plants and PlantGroups preserve their BotanicalIdentity and originating Sowing where known",
+        "Authenticated API behavior supports individual and group lifecycle and location changes without destructive deletion",
+        "Group quantity, provenance, authorization, and inactive-state invariants are integration-tested"
+      ],
+      "dependencies": ["PLANT-001", "SOWING-002", "LINEAGE-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "PLANT-003",
+      "category": "plant",
+      "description": "Build the accessible Plant and PlantGroup collection UI",
+      "acceptance_criteria": [
+        "The UI supports choosing individual or group tracking from a successful Sowing",
+        "Current location and active or historical state are visible without hiding provenance",
+        "Loading, empty, validation, success, and failure states have component coverage"
+      ],
+      "dependencies": ["PLANT-002", "SOWING-003"],
+      "priority": "P1",
+      "status": "planned"
+    },
+    {
+      "id": "LINEAGE-001",
+      "category": "lineage",
+      "description": "Define explicit collection-workflow lineage relationships",
+      "acceptance_criteria": [
+        "The contract covers SeedLot to Sowing to Plant or PlantGroup and parent Plant to collection-produced SeedLot",
+        "Known provenance is retained while unknown links remain optional",
+        "No generic graph, genealogy engine, or speculative relationship type is introduced"
+      ],
+      "dependencies": ["SEED-001", "SOWING-001", "PLANT-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "LINEAGE-002",
+      "category": "lineage",
+      "description": "Complete collection-producer lineage and supported traversal",
+      "acceptance_criteria": [
+        "A SeedLot produced in the collection can reference its one known Plant or PlantGroup producer",
+        "The API can traverse the explicit upstream and downstream workflow relationships",
+        "Lineage survives inactive lifecycle states and is covered by integration tests"
+      ],
+      "dependencies": ["SEED-003", "PLANT-002", "LINEAGE-001"],
+      "priority": "P1",
+      "status": "planned"
+    },
+    {
+      "id": "EVENT-001",
+      "category": "event",
+      "description": "Define the lightweight Plant history and observation contract",
+      "acceptance_criteria": [
+        "The first vocabulary covers movement, repotting, flowering, fruiting, pruning, treatment, harvest, death or loss, and free observations without separate tables per type",
+        "Events retain when and what happened with partial information allowed",
+        "Collection observations remain separate from BotanicalProfile reference knowledge"
+      ],
+      "dependencies": ["PLANT-001", "PROFILE-001"],
+      "priority": "P1",
+      "status": "planned"
+    },
+    {
+      "id": "EVENT-002",
+      "category": "event",
+      "description": "Add a lightweight protected Plant history timeline",
+      "acceptance_criteria": [
+        "Plants and PlantGroups can retain typed events and free observations in chronological history",
+        "Location and lifecycle events preserve prior history rather than overwriting it",
+        "Authenticated API and accessible timeline behavior cover validation, failure, and inactive records"
+      ],
+      "dependencies": ["EVENT-001", "PLANT-003"],
+      "priority": "P1",
+      "status": "planned"
+    },
+    {
+      "id": "ATTACHMENT-002",
+      "category": "attachment",
+      "description": "Implement guarded local attachment storage",
+      "acceptance_criteria": [
+        "Alembic metadata and configured durable storage follow the accepted ATTACHMENT-001 boundaries",
+        "Upload and retrieval validate size, filename, media type, authorization, and trusted storage roots",
+        "Backup, restore, deletion, and failure behavior are integration-tested and documented"
+      ],
+      "dependencies": ["ATTACHMENT-001", "SECURITY-002", "TESTING-001"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "ATTACHMENT-003",
+      "category": "attachment",
+      "description": "Relate photos to collection records and history",
+      "acceptance_criteria": [
+        "Locally managed photos and external image references use distinct semantics and explicit supported relationships to SeedLot, Sowing, Plant, PlantGroup, or justified collection events",
+        "The UI distinguishes uploaded content from source URLs and exposes captions, attribution, broken-link or loading failures, and privacy-safe external-media behavior without implying unsupported generic attachment targets",
+        "Inactive collection records retain their photo history, records remain usable without images, and a future optional primary or cover designation supports compact inventory views without prescribing persistence mechanics early"
+      ],
+      "dependencies": ["ATTACHMENT-002", "EVENT-002", "SEED-004"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "GERMINATION-001",
+      "category": "sowing",
+      "description": "Add dated germination observations and derived statistics",
+      "acceptance_criteria": [
+        "Optional dated observations can coexist with simple germination totals",
+        "Percentage, first germination, timing, cumulative germination, and T50 are derived only when sufficient data exists",
+        "Missing observations never prevent basic Sowing use"
+      ],
+      "dependencies": ["SOWING-003"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "PWA-001",
+      "category": "frontend",
+      "description": "Make the authenticated Florabase web app installable as a safe mobile PWA",
+      "acceptance_criteria": [
+        "A valid manifest, supported application icons, standalone display behavior, HTTPS requirements, and installability are implemented and tested on the supported mobile-browser targets",
+        "Service-worker and cache behavior has an explicit safe policy that does not accidentally persist authenticated API responses, session material, or stale mutation results, and application updates have clear user-visible behavior",
+        "Initial PWA scope provides installability and reliable application-shell behavior without claiming offline mutation/synchronization, push notifications, or native-device integrations that have not been separately designed"
+      ],
+      "dependencies": ["FRONTEND-002", "SOWING-003"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "ORDER-001",
+      "category": "order",
+      "description": "Add purchase Orders distinct from Suppliers and material lots",
+      "acceptance_criteria": [
+        "An Order groups an acquisition transaction without merging separate physical lots",
+        "Optional price, date, supplier, and order-reference data preserve known precision",
+        "SeedLots can link to an Order without requiring all lots to be purchased"
+      ],
+      "dependencies": ["SUPPLIER-001", "SEED-003"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "EVENT-003",
+      "category": "event",
+      "description": "Deepen PlantEvent workflows from observed usage",
+      "acceptance_criteria": [
+        "Structured event details are added only for event types with demonstrated filtering or workflow needs",
+        "Existing lightweight events and free observations remain valid",
+        "History remains chronological, attributable, and non-destructive"
+      ],
+      "dependencies": ["EVENT-002"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "PLANT-004",
+      "category": "plant",
+      "description": "Extract an individual Plant from a PlantGroup",
+      "acceptance_criteria": [
+        "Extraction atomically reduces the active group quantity and creates one individual Plant",
+        "The individual preserves its direct originating PlantGroup relationship and derivable upstream Sowing and SeedLot provenance while BotanicalIdentity remains independently correctable",
+        "Invalid quantities, concurrent extraction, and historical-group behavior are integration-tested"
+      ],
+      "dependencies": ["PLANT-003", "LINEAGE-002"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "TUBER-001",
+      "category": "tuber",
+      "description": "Add a TuberLot workflow parallel to SeedLot",
+      "acceptance_criteria": [
+        "One physical tuber lot retains BotanicalIdentity, source, quantity, location, lifecycle, and provenance",
+        "Establishment into Plants or PlantGroups preserves lineage without using Sowing",
+        "No generic propagation-material base table is introduced without demonstrated need"
+      ],
+      "dependencies": [
+        "PLANT-003",
+        "SUPPLIER-001",
+        "LOCATION-001",
+        "LINEAGE-001"
+      ],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "CUTTING-001",
+      "category": "cutting",
+      "description": "Add a CuttingLot workflow parallel to SeedLot",
+      "acceptance_criteria": [
+        "One physical cutting lot retains BotanicalIdentity, source, quantity, location, lifecycle, and provenance",
+        "Rooting or establishment into Plants or PlantGroups preserves known parent-Plant lineage without using Sowing",
+        "The implementation follows concrete cutting workflows rather than speculative inheritance"
+      ],
+      "dependencies": [
+        "PLANT-003",
+        "SUPPLIER-001",
+        "LOCATION-001",
+        "LINEAGE-002"
+      ],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "LABEL-001",
+      "category": "label",
+      "description": "Add printable labels and QR-based record lookup",
+      "acceptance_criteria": [
+        "Labels identify supported collection records with stable, non-secret references",
+        "QR lookup requires normal authorization and does not encode session credentials",
+        "Printable output is tested for the selected physical label workflow"
+      ],
+      "dependencies": ["SEED-004", "PLANT-003"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "SEARCH-001",
+      "category": "search",
+      "description": "Add advanced collection search and filtering",
+      "acceptance_criteria": [
+        "Filters reflect implemented structured fields and lifecycle states rather than speculative metadata",
+        "Botanical reference knowledge and collection observations remain distinguishable in results",
+        "Empty, partial, authorized, and large-result behavior is tested"
+      ],
+      "dependencies": ["PROFILE-002", "SEED-004", "PLANT-003", "EVENT-002"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "DASHBOARD-001",
+      "category": "dashboard",
+      "description": "Add collection dashboards and summary statistics",
+      "acceptance_criteria": [
+        "Summaries derive from retained SeedLot, Sowing, Plant, PlantGroup, and event history",
+        "Incomplete data is reported without manufacturing denominators or precision",
+        "Definitions for every displayed statistic are documented and tested"
+      ],
+      "dependencies": ["GERMINATION-001", "EVENT-002", "PLANT-003"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "UX-001",
+      "category": "frontend",
+      "description": "Refine the product around collection and activity workflows",
+      "acceptance_criteria": [
+        "Primary navigation emphasizes Dashboard, SeedLots, Sowings and germination, Plants and PlantGroups, acquisitions or Orders, and collection activity or history once those workflows exist",
+        "BotanicalIdentity, Supplier, Location, and GeographicPlace directories remain available as secondary administration and maintenance surfaces",
+        "Concrete collection workflows can select existing reference data and, where justified, create it contextually without duplicating validation or forcing navigation away"
+      ],
+      "dependencies": ["SEED-004", "SOWING-003", "PLANT-003"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "UX-002",
+      "category": "frontend",
+      "description": "Add layered contextual help to collection forms",
+      "acceptance_criteria": [
+        "Ambiguous domain fields provide concise inline explanations without requiring external documentation for ordinary form completion",
+        "Additional examples use keyboard-, focus-, and screen-reader-accessible information controls rather than hover-only tooltips",
+        "Deeper help is reserved for genuinely complex concepts and self-explanatory fields avoid excessive help chrome"
+      ],
+      "dependencies": ["SEED-004", "SOWING-003", "PLANT-003"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "IMPORT-001",
+      "category": "transfer",
+      "description": "Add guided tabular import and simple operator-facing export",
+      "acceptance_criteria": [
+        "A documented initial CSV format provides downloadable examples or templates and explains columns, optionality, date precision, identifiers, and representative records",
+        "Import validates before mutation and provides a preview or dry run with valid rows, invalid rows, unresolved or ambiguous references, records requiring creation, and clear row-level errors without silent guessing",
+        "Supported core collection records have a simple human-oriented CSV export, with structured JSON added only where useful and explicitly distinguished from backup, restore, and full-fidelity collection transfer"
+      ],
+      "dependencies": ["SEED-004", "PLANT-003"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "LINEAGE-003",
+      "category": "lineage",
+      "description": "Add visual lineage navigation",
+      "acceptance_criteria": [
+        "The view renders only explicit recorded workflow relationships",
+        "Unknown parents and inactive ancestors are represented honestly",
+        "Large or branching lineages remain navigable and authorized"
+      ],
+      "dependencies": ["LINEAGE-002", "PLANT-004"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "ENRICHMENT-001",
+      "category": "enrichment",
+      "description": "Add reviewable BotanicalProfile enrichment proposals",
+      "acceptance_criteria": [
+        "Licensing, terms, API availability, attribution, and data quality are reviewed before selecting a source",
+        "Proposals retain source, external identifier where appropriate, retrieval time, and field-level provenance",
+        "Operator-authored profile content is never silently overwritten"
+      ],
+      "dependencies": ["PROFILE-002"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "ENRICHMENT-002",
+      "category": "enrichment",
+      "description": "Automate refresh of approved source-scoped enrichment",
+      "acceptance_criteria": [
+        "Refresh is limited to reviewed sources and records retrieval outcomes and failures",
+        "Changed external data becomes a reviewable proposal or remains source-scoped",
+        "Scheduling, retries, attribution, and removal behavior are observable and documented"
+      ],
+      "dependencies": ["ENRICHMENT-001"],
+      "priority": "P3",
+      "status": "planned"
+    },
+    {
+      "id": "TAXONOMY-001",
+      "category": "taxonomy",
+      "description": "Add assisted BotanicalIdentity reconciliation",
+      "acceptance_criteria": [
+        "Reconciliation proposes rather than automatically applies identity changes",
+        "An explicit survivor preserves and repoints all collection references transactionally",
+        "Source evidence, conflicts, authorization, and rollback-safe failures are retained"
+      ],
+      "dependencies": ["ENRICHMENT-001", "LINEAGE-002"],
+      "priority": "P3",
+      "status": "planned"
+    },
+    {
+      "id": "TAXONOMY-002",
+      "category": "taxonomy",
+      "description": "Retain BotanicalIdentity synonyms and name history",
+      "acceptance_criteria": [
+        "Former and synonymous names are source-scoped or operator-authored and do not replace the stable identity UUID",
+        "Current-name selection and history are explicit and attributable",
+        "Search can find historical names without treating every synonym as a new BotanicalIdentity"
+      ],
+      "dependencies": ["TAXONOMY-001"],
+      "priority": "P3",
+      "status": "planned"
+    },
+    {
+      "id": "WEATHER-001",
+      "category": "integration",
+      "description": "Relate reviewed weather data to cultivation history",
+      "acceptance_criteria": [
+        "A concrete location and comparison workflow selects the weather source and granularity",
+        "Imported conditions retain source, place, time, and retrieval provenance",
+        "Weather data remains distinct from operator observations and BotanicalProfile guidance"
+      ],
+      "dependencies": ["EVENT-002", "LOCATION-001"],
+      "priority": "P3",
+      "status": "planned"
+    },
+    {
+      "id": "REMINDER-001",
+      "category": "reminder",
+      "description": "Add reminders and calendar workflows",
+      "acceptance_criteria": [
+        "Reminders arise from explicit operator intent or a reviewed domain rule",
+        "Completion and dismissal retain useful history without manufacturing PlantEvents",
+        "Time zones, missed runs, notification failure, and authorization are tested"
+      ],
+      "dependencies": ["EVENT-003"],
+      "priority": "P3",
+      "status": "planned"
+    },
+    {
+      "id": "ANALYSIS-001",
+      "category": "analysis",
+      "description": "Add comparative cultivation analysis",
+      "acceptance_criteria": [
+        "Comparisons use explicit collection observations and explain inclusion criteria",
+        "Reference-profile guidance is not treated as observed collection evidence",
+        "Incomplete samples, uncertainty, and insufficient data are reported honestly"
+      ],
+      "dependencies": ["DASHBOARD-001", "EVENT-003"],
+      "priority": "P3",
+      "status": "planned"
+    },
+    {
+      "id": "TRANSFER-001",
+      "category": "transfer",
+      "description": "Add advanced collection import and export",
+      "acceptance_criteria": [
+        "A documented format preserves stable references, precision, provenance, lifecycle, and lineage",
+        "Import validates before mutation and reports partial or conflicting records",
+        "Export and restore responsibilities are distinct and attachment handling is explicit"
+      ],
+      "dependencies": ["LINEAGE-002", "ATTACHMENT-003"],
+      "priority": "P3",
+      "status": "planned"
+    },
+    {
+      "id": "INTEGRATION-001",
+      "category": "integration",
+      "description": "Add automation and external integrations for proven workflows",
+      "acceptance_criteria": [
+        "Each integration has a concrete workflow, least-privilege authorization, and explicit failure behavior",
+        "External mutations are attributable, idempotent where needed, and observable",
+        "No generic integration framework is introduced before repeated needs exist"
+      ],
+      "dependencies": ["TRANSFER-001", "REMINDER-001"],
+      "priority": "P3",
+      "status": "planned"
+    },
+    {
+      "id": "SECURITY-003",
+      "category": "security",
+      "description": "Define multi-user ownership and collaboration when required",
+      "acceptance_criteria": [
+        "A concrete multi-user workflow defines ownership, sharing, roles, and isolation",
+        "Existing shared BotanicalIdentity scope and collection-record ownership are reconciled explicitly",
+        "Enrollment, recovery, audit, and migration risks are decided before implementation"
+      ],
+      "dependencies": ["SECURITY-002", "TRANSFER-001"],
+      "priority": "P3",
+      "status": "planned"
+    }
+  ]
+}

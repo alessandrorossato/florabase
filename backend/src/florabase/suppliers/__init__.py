@@ -1,0 +1,1 @@
+"""Supplier directory capability."""

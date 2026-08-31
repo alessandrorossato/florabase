@@ -1,0 +1,1 @@
+"""Botanical identity persistence capability."""
