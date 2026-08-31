@@ -1,0 +1,2017 @@
+{
+  "dataset": "Unicode Common Locale Data Repository (CLDR)",
+  "source": "unicode_cldr",
+  "version": "48.2.1",
+  "license": "Unicode-3.0",
+  "records": [
+    {
+      "id": "019f3f06-3800-7149-bc3f-19b47997fade",
+      "name": "World",
+      "parent_source_code": null,
+      "source_code": "001",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-76f9-9d58-0eb08f3a390c",
+      "name": "Africa",
+      "parent_source_code": "001",
+      "source_code": "002",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7fdd-a7a9-3d1562a38c53",
+      "name": "South America",
+      "parent_source_code": "419",
+      "source_code": "005",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-768e-bb30-84054b57e954",
+      "name": "Oceania",
+      "parent_source_code": "001",
+      "source_code": "009",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7d83-a70f-c8e5da418243",
+      "name": "Western Africa",
+      "parent_source_code": "002",
+      "source_code": "011",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7bf2-90ec-b70ab1fdb4fa",
+      "name": "Central America",
+      "parent_source_code": "419",
+      "source_code": "013",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7dd6-9d1d-b2734247449a",
+      "name": "Eastern Africa",
+      "parent_source_code": "002",
+      "source_code": "014",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7698-b281-4ac16902af59",
+      "name": "Northern Africa",
+      "parent_source_code": "002",
+      "source_code": "015",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7f70-84d7-dc4a2dbf9a20",
+      "name": "Middle Africa",
+      "parent_source_code": "002",
+      "source_code": "017",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7e26-b444-a36964b20464",
+      "name": "Southern Africa",
+      "parent_source_code": "002",
+      "source_code": "018",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-753d-98c2-0c6bac60ddb8",
+      "name": "Americas",
+      "parent_source_code": "001",
+      "source_code": "019",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7f1b-97b0-3ad7a5bb09f4",
+      "name": "Northern America",
+      "parent_source_code": "019",
+      "source_code": "021",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7597-ab68-b7c422f543af",
+      "name": "Caribbean",
+      "parent_source_code": "419",
+      "source_code": "029",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7cad-a210-b77a221b8e9b",
+      "name": "Eastern Asia",
+      "parent_source_code": "142",
+      "source_code": "030",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7bb7-be85-d141c8ba11ac",
+      "name": "Southern Asia",
+      "parent_source_code": "142",
+      "source_code": "034",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-71d5-bfb2-66bcbcadeb16",
+      "name": "Southeast Asia",
+      "parent_source_code": "142",
+      "source_code": "035",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7e94-b262-6d8f4c041647",
+      "name": "Southern Europe",
+      "parent_source_code": "150",
+      "source_code": "039",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7dac-8998-5fd06a5d34eb",
+      "name": "Australasia",
+      "parent_source_code": "009",
+      "source_code": "053",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7a4a-812d-76428fcb1a77",
+      "name": "Melanesia",
+      "parent_source_code": "009",
+      "source_code": "054",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-74de-84de-06a5c9cec389",
+      "name": "Micronesian Region",
+      "parent_source_code": "009",
+      "source_code": "057",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7c10-a990-0f1a9841d136",
+      "name": "Polynesia",
+      "parent_source_code": "009",
+      "source_code": "061",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-701d-a4e2-3b846f5e7662",
+      "name": "Asia",
+      "parent_source_code": "001",
+      "source_code": "142",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-74d6-8af2-2579902bb23c",
+      "name": "Central Asia",
+      "parent_source_code": "142",
+      "source_code": "143",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7a5b-8688-e4706cf128c2",
+      "name": "Western Asia",
+      "parent_source_code": "142",
+      "source_code": "145",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-70f7-8a10-6e2f215ca415",
+      "name": "Europe",
+      "parent_source_code": "001",
+      "source_code": "150",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-75f0-a8a9-0f8d3d3c9503",
+      "name": "Eastern Europe",
+      "parent_source_code": "150",
+      "source_code": "151",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7da5-8d84-fc087f089105",
+      "name": "Northern Europe",
+      "parent_source_code": "150",
+      "source_code": "154",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-77a3-a959-1fdef6a37eff",
+      "name": "Western Europe",
+      "parent_source_code": "150",
+      "source_code": "155",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-70f3-af86-cc3ff0983d55",
+      "name": "Latin America and the Caribbean",
+      "parent_source_code": "019",
+      "source_code": "419",
+      "source_code_type": "un_m49"
+    },
+    {
+      "id": "019f3f06-3800-7b20-ab63-eeb2da8d4aa9",
+      "name": "Ascension Island",
+      "parent_source_code": "QO",
+      "source_code": "AC",
+      "source_code_type": "cldr_territory"
+    },
+    {
+      "id": "019f3f06-3800-7198-ae65-0ef277f5d6d3",
+      "name": "Andorra",
+      "parent_source_code": "039",
+      "source_code": "AD",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7824-815e-a20c66fdbd84",
+      "name": "United Arab Emirates",
+      "parent_source_code": "145",
+      "source_code": "AE",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7a18-bac4-0adf0eac096e",
+      "name": "Afghanistan",
+      "parent_source_code": "034",
+      "source_code": "AF",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-734a-99d7-0c86145f30fb",
+      "name": "Antigua & Barbuda",
+      "parent_source_code": "029",
+      "source_code": "AG",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-77a3-a4fe-3f34baffb656",
+      "name": "Anguilla",
+      "parent_source_code": "029",
+      "source_code": "AI",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7f23-b185-a13ab25958ed",
+      "name": "Albania",
+      "parent_source_code": "039",
+      "source_code": "AL",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7b69-8fcc-b6ab572931de",
+      "name": "Armenia",
+      "parent_source_code": "145",
+      "source_code": "AM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-774d-9c50-de6bb1e74609",
+      "name": "Angola",
+      "parent_source_code": "017",
+      "source_code": "AO",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7002-a69b-3f7d644877b0",
+      "name": "Antarctica",
+      "parent_source_code": "QO",
+      "source_code": "AQ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7499-ae01-8d727c88a63c",
+      "name": "Argentina",
+      "parent_source_code": "005",
+      "source_code": "AR",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7630-88c8-dac8de35c439",
+      "name": "American Samoa",
+      "parent_source_code": "061",
+      "source_code": "AS",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7ca7-a9d2-9dc26dd6391b",
+      "name": "Austria",
+      "parent_source_code": "155",
+      "source_code": "AT",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7882-9828-712ceac5581f",
+      "name": "Australia",
+      "parent_source_code": "053",
+      "source_code": "AU",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7475-b175-c524b90e701b",
+      "name": "Aruba",
+      "parent_source_code": "029",
+      "source_code": "AW",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7554-81ba-9d4efa8d1f26",
+      "name": "Åland Islands",
+      "parent_source_code": "154",
+      "source_code": "AX",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-73f5-96a2-84587aab4c0b",
+      "name": "Azerbaijan",
+      "parent_source_code": "145",
+      "source_code": "AZ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7178-a6f9-713b904f5b32",
+      "name": "Bosnia & Herzegovina",
+      "parent_source_code": "039",
+      "source_code": "BA",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-71f4-9949-1e2c3c45b63a",
+      "name": "Barbados",
+      "parent_source_code": "029",
+      "source_code": "BB",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7a0b-b6ca-df14087ed4e2",
+      "name": "Bangladesh",
+      "parent_source_code": "034",
+      "source_code": "BD",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7a66-9bbd-5936ebaf2aee",
+      "name": "Belgium",
+      "parent_source_code": "155",
+      "source_code": "BE",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7cb3-9f1c-a01871fcbd3d",
+      "name": "Burkina Faso",
+      "parent_source_code": "011",
+      "source_code": "BF",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7389-86ec-3c047ff60de0",
+      "name": "Bulgaria",
+      "parent_source_code": "151",
+      "source_code": "BG",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-71a0-a3e4-89e40ee91f78",
+      "name": "Bahrain",
+      "parent_source_code": "145",
+      "source_code": "BH",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-759b-a274-a0d4e52ad297",
+      "name": "Burundi",
+      "parent_source_code": "014",
+      "source_code": "BI",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-795a-843e-63b8f6a88fc2",
+      "name": "Benin",
+      "parent_source_code": "011",
+      "source_code": "BJ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7def-b69a-fb4b7668849f",
+      "name": "St. Barthélemy",
+      "parent_source_code": "029",
+      "source_code": "BL",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7695-8029-ff183c5cf8f6",
+      "name": "Bermuda",
+      "parent_source_code": "021",
+      "source_code": "BM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7ce0-8eba-6899eb84c43d",
+      "name": "Brunei",
+      "parent_source_code": "035",
+      "source_code": "BN",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7017-890e-c099620d2bdb",
+      "name": "Bolivia",
+      "parent_source_code": "005",
+      "source_code": "BO",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-77ba-85e6-d70642c173b5",
+      "name": "Caribbean Netherlands",
+      "parent_source_code": "029",
+      "source_code": "BQ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7b32-a097-ed9760b28022",
+      "name": "Brazil",
+      "parent_source_code": "005",
+      "source_code": "BR",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-756b-9bc0-2873ae1b3a74",
+      "name": "Bahamas",
+      "parent_source_code": "029",
+      "source_code": "BS",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-732c-9119-95f45a0fae8e",
+      "name": "Bhutan",
+      "parent_source_code": "034",
+      "source_code": "BT",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7927-9fbc-ba3942f7325c",
+      "name": "Bouvet Island",
+      "parent_source_code": "005",
+      "source_code": "BV",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7f51-8b94-702e60627dd4",
+      "name": "Botswana",
+      "parent_source_code": "018",
+      "source_code": "BW",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7361-ba4b-3a31d9b85c06",
+      "name": "Belarus",
+      "parent_source_code": "151",
+      "source_code": "BY",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7b5f-a0e8-80b56a27c145",
+      "name": "Belize",
+      "parent_source_code": "013",
+      "source_code": "BZ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7f19-a0ec-c06e0ebe2fc6",
+      "name": "Canada",
+      "parent_source_code": "021",
+      "source_code": "CA",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-78dd-a804-f17bfcca282b",
+      "name": "Cocos (Keeling) Islands",
+      "parent_source_code": "053",
+      "source_code": "CC",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7176-b351-247d65548456",
+      "name": "Congo - Kinshasa",
+      "parent_source_code": "017",
+      "source_code": "CD",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7868-b9ad-7b5f123a50b6",
+      "name": "Central African Republic",
+      "parent_source_code": "017",
+      "source_code": "CF",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7294-8796-72d4d5b71fdf",
+      "name": "Congo - Brazzaville",
+      "parent_source_code": "017",
+      "source_code": "CG",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7c46-8235-97378790a2b9",
+      "name": "Switzerland",
+      "parent_source_code": "155",
+      "source_code": "CH",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7038-9fb1-c43cf98c853f",
+      "name": "Côte d’Ivoire",
+      "parent_source_code": "011",
+      "source_code": "CI",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-78f6-bff3-6210113e4ae2",
+      "name": "Cook Islands",
+      "parent_source_code": "061",
+      "source_code": "CK",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-767a-bb96-1e0d336b9bea",
+      "name": "Chile",
+      "parent_source_code": "005",
+      "source_code": "CL",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7ca7-b327-9ba347ddad20",
+      "name": "Cameroon",
+      "parent_source_code": "017",
+      "source_code": "CM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7d7b-9a89-2054afdc6abb",
+      "name": "China",
+      "parent_source_code": "030",
+      "source_code": "CN",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-744a-849d-63651409f484",
+      "name": "Colombia",
+      "parent_source_code": "005",
+      "source_code": "CO",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7e2a-81ac-438e7f903f15",
+      "name": "Clipperton Island",
+      "parent_source_code": "QO",
+      "source_code": "CP",
+      "source_code_type": "cldr_territory"
+    },
+    {
+      "id": "019f3f06-3800-76df-a359-4115833e84f3",
+      "name": "Sark",
+      "parent_source_code": "154",
+      "source_code": "CQ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7b2e-acfb-04801ea419be",
+      "name": "Costa Rica",
+      "parent_source_code": "013",
+      "source_code": "CR",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7555-95eb-03df49a824b0",
+      "name": "Cuba",
+      "parent_source_code": "029",
+      "source_code": "CU",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7989-83c7-d5bcfcae2c48",
+      "name": "Cape Verde",
+      "parent_source_code": "011",
+      "source_code": "CV",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-70b3-97f2-ae5d84e5c784",
+      "name": "Curaçao",
+      "parent_source_code": "029",
+      "source_code": "CW",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7b98-a2db-315a2392fa77",
+      "name": "Christmas Island",
+      "parent_source_code": "053",
+      "source_code": "CX",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-75cf-941a-dbf3ba8cceef",
+      "name": "Cyprus",
+      "parent_source_code": "145",
+      "source_code": "CY",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-78e4-a184-d0101c4a612c",
+      "name": "Czechia",
+      "parent_source_code": "151",
+      "source_code": "CZ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-79ff-9b57-1eb8e5054eee",
+      "name": "Germany",
+      "parent_source_code": "155",
+      "source_code": "DE",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7a66-86ee-d8ccaddbbb5d",
+      "name": "Diego Garcia",
+      "parent_source_code": "QO",
+      "source_code": "DG",
+      "source_code_type": "cldr_territory"
+    },
+    {
+      "id": "019f3f06-3800-74a3-a794-305e910064a2",
+      "name": "Djibouti",
+      "parent_source_code": "014",
+      "source_code": "DJ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7b27-b9ad-825e4697f1a2",
+      "name": "Denmark",
+      "parent_source_code": "154",
+      "source_code": "DK",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7a55-a8cb-cfef457710c4",
+      "name": "Dominica",
+      "parent_source_code": "029",
+      "source_code": "DM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-77de-989d-0831e2f9760d",
+      "name": "Dominican Republic",
+      "parent_source_code": "029",
+      "source_code": "DO",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-79f1-8312-f400692826fe",
+      "name": "Algeria",
+      "parent_source_code": "015",
+      "source_code": "DZ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7845-9727-6781e0e0f1cb",
+      "name": "Ceuta & Melilla",
+      "parent_source_code": "015",
+      "source_code": "EA",
+      "source_code_type": "cldr_territory"
+    },
+    {
+      "id": "019f3f06-3800-77c1-97c3-cb6eae6e06e3",
+      "name": "Ecuador",
+      "parent_source_code": "005",
+      "source_code": "EC",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-72fb-843d-583ebb172ee7",
+      "name": "Estonia",
+      "parent_source_code": "154",
+      "source_code": "EE",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7a88-a0c6-a64fd20037ba",
+      "name": "Egypt",
+      "parent_source_code": "015",
+      "source_code": "EG",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7e65-b610-92be881fa191",
+      "name": "Western Sahara",
+      "parent_source_code": "015",
+      "source_code": "EH",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7352-8d40-543a1504a2e1",
+      "name": "Eritrea",
+      "parent_source_code": "014",
+      "source_code": "ER",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-73ba-8e44-7cfa3ca52bbd",
+      "name": "Spain",
+      "parent_source_code": "039",
+      "source_code": "ES",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7eeb-99c6-feeff03d378f",
+      "name": "Ethiopia",
+      "parent_source_code": "014",
+      "source_code": "ET",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7641-a0d6-a2651895bc9a",
+      "name": "Finland",
+      "parent_source_code": "154",
+      "source_code": "FI",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7943-afb0-830319aa880a",
+      "name": "Fiji",
+      "parent_source_code": "054",
+      "source_code": "FJ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7109-94c2-f8074489f176",
+      "name": "Falkland Islands",
+      "parent_source_code": "005",
+      "source_code": "FK",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7a0c-af97-760c22549df6",
+      "name": "Micronesia",
+      "parent_source_code": "057",
+      "source_code": "FM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7ba6-bba5-0fee38637e0b",
+      "name": "Faroe Islands",
+      "parent_source_code": "154",
+      "source_code": "FO",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7657-9d36-6bbe0d9e6a50",
+      "name": "France",
+      "parent_source_code": "155",
+      "source_code": "FR",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-78a4-a8e1-0b82ec0a4fc4",
+      "name": "Gabon",
+      "parent_source_code": "017",
+      "source_code": "GA",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-78be-9846-bac8a897a2bc",
+      "name": "United Kingdom",
+      "parent_source_code": "154",
+      "source_code": "GB",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-73a4-8b27-e8ae30a9ed83",
+      "name": "Grenada",
+      "parent_source_code": "029",
+      "source_code": "GD",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7f11-8e90-1c26b8623819",
+      "name": "Georgia",
+      "parent_source_code": "145",
+      "source_code": "GE",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7935-ab0d-b83e301d3b96",
+      "name": "French Guiana",
+      "parent_source_code": "005",
+      "source_code": "GF",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7f57-9605-d251665fd731",
+      "name": "Guernsey",
+      "parent_source_code": "154",
+      "source_code": "GG",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-75f0-b44f-bd832807f5ae",
+      "name": "Ghana",
+      "parent_source_code": "011",
+      "source_code": "GH",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-741b-a94d-75877a431eb7",
+      "name": "Gibraltar",
+      "parent_source_code": "039",
+      "source_code": "GI",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-76c9-b426-a638dcede359",
+      "name": "Greenland",
+      "parent_source_code": "021",
+      "source_code": "GL",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7da2-bee6-690881f17b4e",
+      "name": "Gambia",
+      "parent_source_code": "011",
+      "source_code": "GM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7082-be66-72a672f5a90f",
+      "name": "Guinea",
+      "parent_source_code": "011",
+      "source_code": "GN",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7e01-92c8-5b9c5b29a490",
+      "name": "Guadeloupe",
+      "parent_source_code": "029",
+      "source_code": "GP",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-745d-84b1-8fe979f8d51d",
+      "name": "Equatorial Guinea",
+      "parent_source_code": "017",
+      "source_code": "GQ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7162-90fe-493df1ed0e49",
+      "name": "Greece",
+      "parent_source_code": "039",
+      "source_code": "GR",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7dd3-abb1-999c7453df63",
+      "name": "South Georgia & South Sandwich Islands",
+      "parent_source_code": "005",
+      "source_code": "GS",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-78c9-a058-aee14e98b859",
+      "name": "Guatemala",
+      "parent_source_code": "013",
+      "source_code": "GT",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7286-b40a-0887e2501511",
+      "name": "Guam",
+      "parent_source_code": "057",
+      "source_code": "GU",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7825-b563-c5e64fa1c2df",
+      "name": "Guinea-Bissau",
+      "parent_source_code": "011",
+      "source_code": "GW",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-785b-9089-e7fc4eb17688",
+      "name": "Guyana",
+      "parent_source_code": "005",
+      "source_code": "GY",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7b7c-bfbf-310eea2216ba",
+      "name": "Hong Kong SAR China",
+      "parent_source_code": "030",
+      "source_code": "HK",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7c46-829e-112ddde0fcd5",
+      "name": "Heard & McDonald Islands",
+      "parent_source_code": "053",
+      "source_code": "HM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7fd6-b87d-b0894c07b8ed",
+      "name": "Honduras",
+      "parent_source_code": "013",
+      "source_code": "HN",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7e6f-b5db-f434cc67ad76",
+      "name": "Croatia",
+      "parent_source_code": "039",
+      "source_code": "HR",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7d90-bf46-237704c95c98",
+      "name": "Haiti",
+      "parent_source_code": "029",
+      "source_code": "HT",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7773-ab4e-3a6b8ce6ac20",
+      "name": "Hungary",
+      "parent_source_code": "151",
+      "source_code": "HU",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7264-8e52-6861011e3ef9",
+      "name": "Canary Islands",
+      "parent_source_code": "015",
+      "source_code": "IC",
+      "source_code_type": "cldr_territory"
+    },
+    {
+      "id": "019f3f06-3800-7341-a565-8449798eee49",
+      "name": "Indonesia",
+      "parent_source_code": "035",
+      "source_code": "ID",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-735b-af3c-2c6ede46ed34",
+      "name": "Ireland",
+      "parent_source_code": "154",
+      "source_code": "IE",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7718-8b78-7b56c662a7da",
+      "name": "Israel",
+      "parent_source_code": "145",
+      "source_code": "IL",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7600-8476-5224146054c8",
+      "name": "Isle of Man",
+      "parent_source_code": "154",
+      "source_code": "IM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-770b-b0be-8b234a66ed37",
+      "name": "India",
+      "parent_source_code": "034",
+      "source_code": "IN",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-768f-a3ed-61064e18acd5",
+      "name": "British Indian Ocean Territory",
+      "parent_source_code": "014",
+      "source_code": "IO",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-79b2-b7d0-eb7410a01d4e",
+      "name": "Iraq",
+      "parent_source_code": "145",
+      "source_code": "IQ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7cde-a2fe-7235fdf13fbe",
+      "name": "Iran",
+      "parent_source_code": "034",
+      "source_code": "IR",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7aee-aeab-9a49867d6cc4",
+      "name": "Iceland",
+      "parent_source_code": "154",
+      "source_code": "IS",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-722d-a856-c551fa2d9ece",
+      "name": "Italy",
+      "parent_source_code": "039",
+      "source_code": "IT",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7cb6-9457-d1a3583091ec",
+      "name": "Jersey",
+      "parent_source_code": "154",
+      "source_code": "JE",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7d18-945f-6873a0e66e0a",
+      "name": "Jamaica",
+      "parent_source_code": "029",
+      "source_code": "JM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-77be-9667-e5ba0fe392eb",
+      "name": "Jordan",
+      "parent_source_code": "145",
+      "source_code": "JO",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7359-93be-d711fb82dc61",
+      "name": "Japan",
+      "parent_source_code": "030",
+      "source_code": "JP",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-72e5-a661-63d3e8843642",
+      "name": "Kenya",
+      "parent_source_code": "014",
+      "source_code": "KE",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-74c3-b6c0-8b07e7377e5a",
+      "name": "Kyrgyzstan",
+      "parent_source_code": "143",
+      "source_code": "KG",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-735d-9bb1-7897c006aea9",
+      "name": "Cambodia",
+      "parent_source_code": "035",
+      "source_code": "KH",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7304-bd30-3e0f0305b7b0",
+      "name": "Kiribati",
+      "parent_source_code": "057",
+      "source_code": "KI",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7fc7-add0-22e3ce983ce6",
+      "name": "Comoros",
+      "parent_source_code": "014",
+      "source_code": "KM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7916-b8a4-06e2d14c6500",
+      "name": "St. Kitts & Nevis",
+      "parent_source_code": "029",
+      "source_code": "KN",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7082-a855-b3d4ed7b0d68",
+      "name": "North Korea",
+      "parent_source_code": "030",
+      "source_code": "KP",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7ee1-8933-4279a21b5cbe",
+      "name": "South Korea",
+      "parent_source_code": "030",
+      "source_code": "KR",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-79f6-8c3c-3a47b0f0a3b6",
+      "name": "Kuwait",
+      "parent_source_code": "145",
+      "source_code": "KW",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7f0a-93b9-7e3610220d3d",
+      "name": "Cayman Islands",
+      "parent_source_code": "029",
+      "source_code": "KY",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7712-9a8c-4f5e57b30ab2",
+      "name": "Kazakhstan",
+      "parent_source_code": "143",
+      "source_code": "KZ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7318-b133-9e45839b8029",
+      "name": "Laos",
+      "parent_source_code": "035",
+      "source_code": "LA",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7244-beb8-f48eca004e84",
+      "name": "Lebanon",
+      "parent_source_code": "145",
+      "source_code": "LB",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7cb5-a8b6-3310a1a898e8",
+      "name": "St. Lucia",
+      "parent_source_code": "029",
+      "source_code": "LC",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7448-9bfc-e3726d3f665d",
+      "name": "Liechtenstein",
+      "parent_source_code": "155",
+      "source_code": "LI",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-71e1-bdd3-bba5f1354b0e",
+      "name": "Sri Lanka",
+      "parent_source_code": "034",
+      "source_code": "LK",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-70f2-9ae6-ac8bb399d092",
+      "name": "Liberia",
+      "parent_source_code": "011",
+      "source_code": "LR",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7a0d-947c-5d213adef82e",
+      "name": "Lesotho",
+      "parent_source_code": "018",
+      "source_code": "LS",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-720e-a043-947bf8717c35",
+      "name": "Lithuania",
+      "parent_source_code": "154",
+      "source_code": "LT",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7ee9-b9df-ec22ee886ec9",
+      "name": "Luxembourg",
+      "parent_source_code": "155",
+      "source_code": "LU",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7716-a374-96270e149d62",
+      "name": "Latvia",
+      "parent_source_code": "154",
+      "source_code": "LV",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7b31-ad25-0de603575751",
+      "name": "Libya",
+      "parent_source_code": "015",
+      "source_code": "LY",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7864-a701-6280dade96cd",
+      "name": "Morocco",
+      "parent_source_code": "015",
+      "source_code": "MA",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7ffc-94f3-3530ee2f70a4",
+      "name": "Monaco",
+      "parent_source_code": "155",
+      "source_code": "MC",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-768f-942c-3ccb296a7496",
+      "name": "Moldova",
+      "parent_source_code": "151",
+      "source_code": "MD",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7e7f-9612-13ae84e39c10",
+      "name": "Montenegro",
+      "parent_source_code": "039",
+      "source_code": "ME",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-713c-a84c-f97828a902fe",
+      "name": "St. Martin",
+      "parent_source_code": "029",
+      "source_code": "MF",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-73de-a0a5-12bf717def81",
+      "name": "Madagascar",
+      "parent_source_code": "014",
+      "source_code": "MG",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7dd8-97bf-ced207e5a602",
+      "name": "Marshall Islands",
+      "parent_source_code": "057",
+      "source_code": "MH",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7780-ae39-890f631f3c40",
+      "name": "North Macedonia",
+      "parent_source_code": "039",
+      "source_code": "MK",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7d19-95bd-b4a07c64ba6d",
+      "name": "Mali",
+      "parent_source_code": "011",
+      "source_code": "ML",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7c5e-9578-1ba23986762c",
+      "name": "Myanmar (Burma)",
+      "parent_source_code": "035",
+      "source_code": "MM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-73c8-9f39-951e92159e97",
+      "name": "Mongolia",
+      "parent_source_code": "030",
+      "source_code": "MN",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-78e6-b849-e6a865510f2f",
+      "name": "Macao SAR China",
+      "parent_source_code": "030",
+      "source_code": "MO",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-768c-902e-e6dd8473ad07",
+      "name": "Northern Mariana Islands",
+      "parent_source_code": "057",
+      "source_code": "MP",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7a81-a9b5-b02836ab9484",
+      "name": "Martinique",
+      "parent_source_code": "029",
+      "source_code": "MQ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-74f1-93d6-d1c90189c836",
+      "name": "Mauritania",
+      "parent_source_code": "011",
+      "source_code": "MR",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7ad8-b5a8-fabd5508632a",
+      "name": "Montserrat",
+      "parent_source_code": "029",
+      "source_code": "MS",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-759e-9965-95d61ac7f097",
+      "name": "Malta",
+      "parent_source_code": "039",
+      "source_code": "MT",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7008-85d4-4cf8fbc284f0",
+      "name": "Mauritius",
+      "parent_source_code": "014",
+      "source_code": "MU",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7c21-81ac-3302dafacbfe",
+      "name": "Maldives",
+      "parent_source_code": "034",
+      "source_code": "MV",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7870-a8e7-46a713e5a7a0",
+      "name": "Malawi",
+      "parent_source_code": "014",
+      "source_code": "MW",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7dd1-970a-cb950babb5d2",
+      "name": "Mexico",
+      "parent_source_code": "013",
+      "source_code": "MX",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-721e-9f85-7b0a6cfc8ebc",
+      "name": "Malaysia",
+      "parent_source_code": "035",
+      "source_code": "MY",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7c8e-af9a-0a511652e104",
+      "name": "Mozambique",
+      "parent_source_code": "014",
+      "source_code": "MZ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-78fd-9491-3c2594e05fce",
+      "name": "Namibia",
+      "parent_source_code": "018",
+      "source_code": "NA",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7d1d-a282-f67056ad0f4d",
+      "name": "New Caledonia",
+      "parent_source_code": "054",
+      "source_code": "NC",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7ec0-a4f6-0264ea477018",
+      "name": "Niger",
+      "parent_source_code": "011",
+      "source_code": "NE",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-726f-ac67-450fd7c3ffde",
+      "name": "Norfolk Island",
+      "parent_source_code": "053",
+      "source_code": "NF",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-74d5-812c-799d767427b9",
+      "name": "Nigeria",
+      "parent_source_code": "011",
+      "source_code": "NG",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7270-8720-0d96c9369eb9",
+      "name": "Nicaragua",
+      "parent_source_code": "013",
+      "source_code": "NI",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7ef3-aa2b-a394f7f60aa2",
+      "name": "Netherlands",
+      "parent_source_code": "155",
+      "source_code": "NL",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-75a5-b8c3-0c534b70c618",
+      "name": "Norway",
+      "parent_source_code": "154",
+      "source_code": "NO",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-771b-87c0-f1235b8db112",
+      "name": "Nepal",
+      "parent_source_code": "034",
+      "source_code": "NP",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7661-9099-db829863d4cf",
+      "name": "Nauru",
+      "parent_source_code": "057",
+      "source_code": "NR",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7e5b-94fe-6060614b08cd",
+      "name": "Niue",
+      "parent_source_code": "061",
+      "source_code": "NU",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-73d5-84c4-ca221ebcba56",
+      "name": "New Zealand",
+      "parent_source_code": "053",
+      "source_code": "NZ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-736b-b85c-7162bf0418ba",
+      "name": "Oman",
+      "parent_source_code": "145",
+      "source_code": "OM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-706e-9e15-649eb16ea12b",
+      "name": "Panama",
+      "parent_source_code": "013",
+      "source_code": "PA",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7771-9fa9-0db355617701",
+      "name": "Peru",
+      "parent_source_code": "005",
+      "source_code": "PE",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7e63-9fb4-4c4374276d5e",
+      "name": "French Polynesia",
+      "parent_source_code": "061",
+      "source_code": "PF",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-700c-bfd9-07bcd2009c48",
+      "name": "Papua New Guinea",
+      "parent_source_code": "054",
+      "source_code": "PG",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7b28-b037-cb02bfa45671",
+      "name": "Philippines",
+      "parent_source_code": "035",
+      "source_code": "PH",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-745c-97fc-8aaac1801da9",
+      "name": "Pakistan",
+      "parent_source_code": "034",
+      "source_code": "PK",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-79d1-8bd3-df0b840ad43f",
+      "name": "Poland",
+      "parent_source_code": "151",
+      "source_code": "PL",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-74fd-8d72-ced58448a722",
+      "name": "St. Pierre & Miquelon",
+      "parent_source_code": "021",
+      "source_code": "PM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-72e1-aa52-f0c9e0f8f826",
+      "name": "Pitcairn Islands",
+      "parent_source_code": "061",
+      "source_code": "PN",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-772d-a4db-84f33e4aea82",
+      "name": "Puerto Rico",
+      "parent_source_code": "029",
+      "source_code": "PR",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7746-8748-ef0fb7e3425d",
+      "name": "Palestinian Territories",
+      "parent_source_code": "145",
+      "source_code": "PS",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-75c5-83dd-034b47b77418",
+      "name": "Portugal",
+      "parent_source_code": "039",
+      "source_code": "PT",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7f72-99d4-d943c1a6245d",
+      "name": "Palau",
+      "parent_source_code": "057",
+      "source_code": "PW",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-75e7-97b9-739fc2cc8b7e",
+      "name": "Paraguay",
+      "parent_source_code": "005",
+      "source_code": "PY",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7169-898b-29d106fbd390",
+      "name": "Qatar",
+      "parent_source_code": "145",
+      "source_code": "QA",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7192-8c9b-9d8fc8a43ce1",
+      "name": "Outlying Oceania",
+      "parent_source_code": "009",
+      "source_code": "QO",
+      "source_code_type": "cldr_territory"
+    },
+    {
+      "id": "019f3f06-3800-7190-b056-db549a8711ad",
+      "name": "Réunion",
+      "parent_source_code": "014",
+      "source_code": "RE",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7ece-8e03-f91cb82b0217",
+      "name": "Romania",
+      "parent_source_code": "151",
+      "source_code": "RO",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7feb-a64d-79d0fc317960",
+      "name": "Serbia",
+      "parent_source_code": "039",
+      "source_code": "RS",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7b7f-ad26-cd39c40a235d",
+      "name": "Russia",
+      "parent_source_code": "151",
+      "source_code": "RU",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-73ef-b9d7-515935d415ac",
+      "name": "Rwanda",
+      "parent_source_code": "014",
+      "source_code": "RW",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7195-9cbd-3405f18d29e2",
+      "name": "Saudi Arabia",
+      "parent_source_code": "145",
+      "source_code": "SA",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7fec-a777-0cd611a4081f",
+      "name": "Solomon Islands",
+      "parent_source_code": "054",
+      "source_code": "SB",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-77dc-bbe5-64f2507161cf",
+      "name": "Seychelles",
+      "parent_source_code": "014",
+      "source_code": "SC",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-73fa-bfda-e00b8ae446ee",
+      "name": "Sudan",
+      "parent_source_code": "015",
+      "source_code": "SD",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-799a-9817-e2644073c479",
+      "name": "Sweden",
+      "parent_source_code": "154",
+      "source_code": "SE",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-74e0-90ba-39e1b888df9d",
+      "name": "Singapore",
+      "parent_source_code": "035",
+      "source_code": "SG",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-71f3-b999-ea95e19de1f5",
+      "name": "St. Helena",
+      "parent_source_code": "011",
+      "source_code": "SH",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7dae-9960-3a51a123d1d2",
+      "name": "Slovenia",
+      "parent_source_code": "039",
+      "source_code": "SI",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7cdf-87bf-b234061b531a",
+      "name": "Svalbard & Jan Mayen",
+      "parent_source_code": "154",
+      "source_code": "SJ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-79bf-84fe-11082563b562",
+      "name": "Slovakia",
+      "parent_source_code": "151",
+      "source_code": "SK",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-72bd-9347-d8b0d5440981",
+      "name": "Sierra Leone",
+      "parent_source_code": "011",
+      "source_code": "SL",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-78d8-b96d-1c69fa936234",
+      "name": "San Marino",
+      "parent_source_code": "039",
+      "source_code": "SM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7d4e-ad02-de26c7588518",
+      "name": "Senegal",
+      "parent_source_code": "011",
+      "source_code": "SN",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7c6d-a7f1-5e9f8359ef92",
+      "name": "Somalia",
+      "parent_source_code": "014",
+      "source_code": "SO",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7897-822a-9b3ac968fa63",
+      "name": "Suriname",
+      "parent_source_code": "005",
+      "source_code": "SR",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-73ec-a511-67b821d014da",
+      "name": "South Sudan",
+      "parent_source_code": "014",
+      "source_code": "SS",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7457-a61e-ca9263727eee",
+      "name": "São Tomé & Príncipe",
+      "parent_source_code": "017",
+      "source_code": "ST",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7bcc-9955-fe991cd946fb",
+      "name": "El Salvador",
+      "parent_source_code": "013",
+      "source_code": "SV",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7581-8e57-461b2e543043",
+      "name": "Sint Maarten",
+      "parent_source_code": "029",
+      "source_code": "SX",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-73ff-b1ad-ed7485ee9b6e",
+      "name": "Syria",
+      "parent_source_code": "145",
+      "source_code": "SY",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7016-a3d8-2f011e78719c",
+      "name": "Eswatini",
+      "parent_source_code": "018",
+      "source_code": "SZ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7232-89e0-6f27d13d250a",
+      "name": "Tristan da Cunha",
+      "parent_source_code": "QO",
+      "source_code": "TA",
+      "source_code_type": "cldr_territory"
+    },
+    {
+      "id": "019f3f06-3800-783b-a2a7-87b0e078eb48",
+      "name": "Turks & Caicos Islands",
+      "parent_source_code": "029",
+      "source_code": "TC",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7eac-bf78-1f85af458140",
+      "name": "Chad",
+      "parent_source_code": "017",
+      "source_code": "TD",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-79ae-ab6c-0b520b54307c",
+      "name": "French Southern Territories",
+      "parent_source_code": "014",
+      "source_code": "TF",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7a4a-8b6d-302526c20f98",
+      "name": "Togo",
+      "parent_source_code": "011",
+      "source_code": "TG",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7e69-9448-015e33fba60b",
+      "name": "Thailand",
+      "parent_source_code": "035",
+      "source_code": "TH",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7510-aef6-63f26ccd9829",
+      "name": "Tajikistan",
+      "parent_source_code": "143",
+      "source_code": "TJ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7138-a8b3-65fe6786f1a4",
+      "name": "Tokelau",
+      "parent_source_code": "061",
+      "source_code": "TK",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7911-a651-26e5c15997ee",
+      "name": "Timor-Leste",
+      "parent_source_code": "035",
+      "source_code": "TL",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7ce9-a715-80b7966a2b44",
+      "name": "Turkmenistan",
+      "parent_source_code": "143",
+      "source_code": "TM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7726-8417-bb9b54f930df",
+      "name": "Tunisia",
+      "parent_source_code": "015",
+      "source_code": "TN",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7b91-8b93-9d8f51504143",
+      "name": "Tonga",
+      "parent_source_code": "061",
+      "source_code": "TO",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-71b8-b9e8-22f191cf47a5",
+      "name": "Türkiye",
+      "parent_source_code": "145",
+      "source_code": "TR",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7805-a921-7a4ffd964715",
+      "name": "Trinidad & Tobago",
+      "parent_source_code": "029",
+      "source_code": "TT",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7f4b-8027-061ecb13ce17",
+      "name": "Tuvalu",
+      "parent_source_code": "061",
+      "source_code": "TV",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-739c-a819-ded52c37c869",
+      "name": "Taiwan",
+      "parent_source_code": "030",
+      "source_code": "TW",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7361-8efd-da33cc36a130",
+      "name": "Tanzania",
+      "parent_source_code": "014",
+      "source_code": "TZ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7b93-aa90-b184e25267bc",
+      "name": "Ukraine",
+      "parent_source_code": "151",
+      "source_code": "UA",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-736b-87f9-ff9e252eaf07",
+      "name": "Uganda",
+      "parent_source_code": "014",
+      "source_code": "UG",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7b62-970d-99b65d0ce15f",
+      "name": "U.S. Outlying Islands",
+      "parent_source_code": "057",
+      "source_code": "UM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-73b0-ad82-ded80a871252",
+      "name": "United States",
+      "parent_source_code": "021",
+      "source_code": "US",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7567-949b-2c1632057662",
+      "name": "Uruguay",
+      "parent_source_code": "005",
+      "source_code": "UY",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7757-8c2c-44d5860e0893",
+      "name": "Uzbekistan",
+      "parent_source_code": "143",
+      "source_code": "UZ",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7f37-893a-cce8bca63cfb",
+      "name": "Vatican City",
+      "parent_source_code": "039",
+      "source_code": "VA",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-701b-bba3-5ecb5bf5c783",
+      "name": "St. Vincent & Grenadines",
+      "parent_source_code": "029",
+      "source_code": "VC",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-72a8-8064-eeb2015de30c",
+      "name": "Venezuela",
+      "parent_source_code": "005",
+      "source_code": "VE",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7ad0-9d74-9834a90e755e",
+      "name": "British Virgin Islands",
+      "parent_source_code": "029",
+      "source_code": "VG",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7452-80e5-4c35f909f804",
+      "name": "U.S. Virgin Islands",
+      "parent_source_code": "029",
+      "source_code": "VI",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7270-8cfe-d1583f515a62",
+      "name": "Vietnam",
+      "parent_source_code": "035",
+      "source_code": "VN",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7a37-a1b7-8e6bb921b551",
+      "name": "Vanuatu",
+      "parent_source_code": "054",
+      "source_code": "VU",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-73d5-8012-55c60cd81300",
+      "name": "Wallis & Futuna",
+      "parent_source_code": "061",
+      "source_code": "WF",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7ae5-8117-6d7adfb46421",
+      "name": "Samoa",
+      "parent_source_code": "061",
+      "source_code": "WS",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7e00-862c-9b2df88951f9",
+      "name": "Kosovo",
+      "parent_source_code": "039",
+      "source_code": "XK",
+      "source_code_type": "cldr_territory"
+    },
+    {
+      "id": "019f3f06-3800-79a9-937e-e06cf967b4db",
+      "name": "Yemen",
+      "parent_source_code": "145",
+      "source_code": "YE",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-79f1-ad0c-bbd766205328",
+      "name": "Mayotte",
+      "parent_source_code": "014",
+      "source_code": "YT",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-706f-af12-0a9784e4e1da",
+      "name": "South Africa",
+      "parent_source_code": "018",
+      "source_code": "ZA",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-720c-ac91-15f3793a549c",
+      "name": "Zambia",
+      "parent_source_code": "014",
+      "source_code": "ZM",
+      "source_code_type": "iso_3166_1_alpha_2"
+    },
+    {
+      "id": "019f3f06-3800-7b8a-bcf0-522395540199",
+      "name": "Zimbabwe",
+      "parent_source_code": "014",
+      "source_code": "ZW",
+      "source_code_type": "iso_3166_1_alpha_2"
+    }
+  ]
+}
