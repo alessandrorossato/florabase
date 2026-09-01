@@ -14,6 +14,7 @@ from pydantic import (
     model_validator,
 )
 
+from florabase.plants.model import PlantGroupLifecycle, PlantLifecycle
 from florabase.seed_lots.model import (
     PartialDatePrecision,
     SeedLotLifecycle,
@@ -122,6 +123,8 @@ class SeedLotWrite(BaseModel):
     label: str | None = Field(default=None, max_length=255)
     source_kind: SeedLotSourceKind = SeedLotSourceKind.UNKNOWN
     source_detail: str | None = Field(default=None, max_length=255)
+    producer_plant_id: UUID | None = None
+    producer_plant_group_id: UUID | None = None
     supplier_id: UUID | None = None
     material_provenance_place_id: UUID | None = None
     acquisition_date: PartialDate | None = None
@@ -156,6 +159,12 @@ class SeedLotWrite(BaseModel):
             and self.lifecycle != SeedLotLifecycle.EXHAUSTED
         ):
             raise ValueError("Zero quantity is only valid for an exhausted SeedLot")
+        if self.producer_plant_id is not None and self.producer_plant_group_id is not None:
+            raise ValueError("A SeedLot may have at most one Plant or PlantGroup producer")
+        if self.source_kind != SeedLotSourceKind.COLLECTION_PRODUCED and (
+            self.producer_plant_id is not None or self.producer_plant_group_id is not None
+        ):
+            raise ValueError("A producer is only valid for a collection-produced SeedLot")
         return self
 
 
@@ -187,6 +196,20 @@ class LocationSummary(BaseModel):
     display_path: str
 
 
+class ProducerPlantSummary(BaseModel):
+    id: UUID
+    label: str | None
+    lifecycle: PlantLifecycle
+    botanical_identity: BotanicalIdentitySummary
+
+
+class ProducerPlantGroupSummary(BaseModel):
+    id: UUID
+    label: str | None
+    lifecycle: PlantGroupLifecycle
+    botanical_identity: BotanicalIdentitySummary
+
+
 class SeedLotResponse(BaseModel):
     id: UUID
     botanical_identity_id: UUID
@@ -194,6 +217,10 @@ class SeedLotResponse(BaseModel):
     label: str | None
     source_kind: SeedLotSourceKind
     source_detail: str | None
+    producer_plant_id: UUID | None
+    producer_plant: ProducerPlantSummary | None
+    producer_plant_group_id: UUID | None
+    producer_plant_group: ProducerPlantGroupSummary | None
     supplier_id: UUID | None
     supplier: SupplierSummary | None
     material_provenance_place_id: UUID | None

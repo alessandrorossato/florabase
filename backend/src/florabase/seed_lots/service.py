@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from decimal import Decimal
-from uuid import UUID
+from uuid import UUID, uuid7
 
 from sqlalchemy import case, func, select
 from sqlalchemy.orm import Session, aliased
@@ -12,15 +12,19 @@ from florabase.botanical_identities.schemas import BotanicalIdentityResponse
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.service import display_path as geographic_display_path
 from florabase.geographic_places.service import list_geographic_places
+from florabase.lineage.service import validate_producer_assignment
 from florabase.locations.model import Location
 from florabase.locations.service import display_path as location_display_path
 from florabase.locations.service import list_locations
+from florabase.plants.model import Plant, PlantGroup
 from florabase.seed_lots.model import SeedLot
 from florabase.seed_lots.schemas import (
     BotanicalIdentitySummary,
     GeographicPlaceSummary,
     LocationSummary,
     PartialDate,
+    ProducerPlantGroupSummary,
+    ProducerPlantSummary,
     SeedLotCreate,
     SeedLotResponse,
     SeedLotUpdate,
@@ -43,11 +47,22 @@ class SeedLotProjection:
     supplier: Supplier | None
     material_provenance: GeographicPlace | None
     location: Location | None
+    producer_plant: Plant | None = None
+    producer_plant_identity: BotanicalIdentity | None = None
+    producer_plant_group: PlantGroup | None = None
+    producer_plant_group_identity: BotanicalIdentity | None = None
 
 
 def _require_references(
     database: Session, payload: SeedLotCreate | SeedLotUpdate
-) -> tuple[BotanicalIdentity, Supplier | None, GeographicPlace | None, Location | None]:
+) -> tuple[
+    BotanicalIdentity,
+    Supplier | None,
+    GeographicPlace | None,
+    Location | None,
+    Plant | None,
+    PlantGroup | None,
+]:
     botanical_identity = database.get(BotanicalIdentity, payload.botanical_identity_id)
     if botanical_identity is None:
         raise SeedLotReferenceNotFoundError(
@@ -68,7 +83,21 @@ def _require_references(
     location = database.get(Location, payload.location_id) if payload.location_id else None
     if payload.location_id is not None and location is None:
         raise SeedLotReferenceNotFoundError("location_not_found", "Location not found")
-    return botanical_identity, supplier, place, location
+    producer_plant = (
+        database.get(Plant, payload.producer_plant_id) if payload.producer_plant_id else None
+    )
+    if payload.producer_plant_id is not None and producer_plant is None:
+        raise SeedLotReferenceNotFoundError("producer_plant_not_found", "Producer Plant not found")
+    producer_group = (
+        database.get(PlantGroup, payload.producer_plant_group_id)
+        if payload.producer_plant_group_id
+        else None
+    )
+    if payload.producer_plant_group_id is not None and producer_group is None:
+        raise SeedLotReferenceNotFoundError(
+            "producer_plant_group_not_found", "Producer PlantGroup not found"
+        )
+    return botanical_identity, supplier, place, location, producer_plant, producer_group
 
 
 def _partial_date_values(prefix: str, value: PartialDate | None) -> dict[str, object]:
@@ -95,6 +124,8 @@ def _write_values(payload: SeedLotCreate | SeedLotUpdate) -> dict[str, object]:
         "label": payload.label,
         "source_kind": payload.source_kind.value,
         "source_detail": payload.source_detail,
+        "producer_plant_id": payload.producer_plant_id,
+        "producer_plant_group_id": payload.producer_plant_group_id,
         "supplier_id": payload.supplier_id,
         "material_provenance_place_id": payload.material_provenance_place_id,
         "location_id": payload.location_id,
@@ -112,7 +143,10 @@ def _write_values(payload: SeedLotCreate | SeedLotUpdate) -> dict[str, object]:
 
 def create_seed_lot(database: Session, payload: SeedLotCreate) -> SeedLot:
     _require_references(database, payload)
-    seed_lot = SeedLot(**_write_values(payload))
+    seed_lot = SeedLot(id=uuid7(), **_write_values(payload))
+    validate_producer_assignment(
+        database, seed_lot.id, payload.producer_plant_id, payload.producer_plant_group_id
+    )
     database.add(seed_lot)
     database.flush()
     return seed_lot
@@ -120,6 +154,9 @@ def create_seed_lot(database: Session, payload: SeedLotCreate) -> SeedLot:
 
 def update_seed_lot(database: Session, seed_lot: SeedLot, payload: SeedLotUpdate) -> SeedLot:
     _require_references(database, payload)
+    validate_producer_assignment(
+        database, seed_lot.id, payload.producer_plant_id, payload.producer_plant_group_id
+    )
     for field, value in _write_values(payload).items():
         setattr(seed_lot, field, value)
     seed_lot.updated_at = datetime.now(UTC)
@@ -128,17 +165,51 @@ def update_seed_lot(database: Session, seed_lot: SeedLot, payload: SeedLotUpdate
 
 
 def _projection_statement() -> Select[
-    tuple[SeedLot, BotanicalIdentity, Supplier, GeographicPlace, Location]
+    tuple[
+        SeedLot,
+        BotanicalIdentity,
+        Supplier,
+        GeographicPlace,
+        Location,
+        Plant,
+        BotanicalIdentity,
+        PlantGroup,
+        BotanicalIdentity,
+    ]
 ]:
     supplier = aliased(Supplier)
     place = aliased(GeographicPlace)
     location = aliased(Location)
+    producer_plant = aliased(Plant)
+    producer_plant_identity = aliased(BotanicalIdentity)
+    producer_group = aliased(PlantGroup)
+    producer_group_identity = aliased(BotanicalIdentity)
     return (
-        select(SeedLot, BotanicalIdentity, supplier, place, location)
+        select(
+            SeedLot,
+            BotanicalIdentity,
+            supplier,
+            place,
+            location,
+            producer_plant,
+            producer_plant_identity,
+            producer_group,
+            producer_group_identity,
+        )
         .join(BotanicalIdentity, BotanicalIdentity.id == SeedLot.botanical_identity_id)
         .outerjoin(supplier, supplier.id == SeedLot.supplier_id)
         .outerjoin(place, place.id == SeedLot.material_provenance_place_id)
         .outerjoin(location, location.id == SeedLot.location_id)
+        .outerjoin(producer_plant, producer_plant.id == SeedLot.producer_plant_id)
+        .outerjoin(
+            producer_plant_identity,
+            producer_plant_identity.id == producer_plant.botanical_identity_id,
+        )
+        .outerjoin(producer_group, producer_group.id == SeedLot.producer_plant_group_id)
+        .outerjoin(
+            producer_group_identity,
+            producer_group_identity.id == producer_group.botanical_identity_id,
+        )
     )
 
 
@@ -204,6 +275,38 @@ def responses(database: Session, projections: list[SeedLotProjection]) -> list[S
                 label=seed_lot.label,
                 source_kind=seed_lot.source_kind,
                 source_detail=seed_lot.source_detail,
+                producer_plant_id=seed_lot.producer_plant_id,
+                producer_plant=(
+                    ProducerPlantSummary(
+                        id=item.producer_plant.id,
+                        label=item.producer_plant.label,
+                        lifecycle=item.producer_plant.lifecycle,
+                        botanical_identity=BotanicalIdentitySummary(
+                            id=item.producer_plant_identity.id,
+                            display_label=BotanicalIdentityResponse.from_model(
+                                item.producer_plant_identity
+                            ).display_label,
+                        ),
+                    )
+                    if item.producer_plant and item.producer_plant_identity
+                    else None
+                ),
+                producer_plant_group_id=seed_lot.producer_plant_group_id,
+                producer_plant_group=(
+                    ProducerPlantGroupSummary(
+                        id=item.producer_plant_group.id,
+                        label=item.producer_plant_group.label,
+                        lifecycle=item.producer_plant_group.lifecycle,
+                        botanical_identity=BotanicalIdentitySummary(
+                            id=item.producer_plant_group_identity.id,
+                            display_label=BotanicalIdentityResponse.from_model(
+                                item.producer_plant_group_identity
+                            ).display_label,
+                        ),
+                    )
+                    if item.producer_plant_group and item.producer_plant_group_identity
+                    else None
+                ),
                 supplier_id=seed_lot.supplier_id,
                 supplier=(
                     SupplierSummary(id=item.supplier.id, name=item.supplier.name)

@@ -11,6 +11,8 @@ from florabase.auth.dependencies import (
     require_owner,
 )
 from florabase.db.session import get_database_session
+from florabase.lineage.schemas import LineageResponse
+from florabase.lineage.service import LineageCycleError, lineage
 from florabase.seed_lots.schemas import SeedLotCreate, SeedLotResponse, SeedLotUpdate
 from florabase.seed_lots.service import (
     SeedLotProjection,
@@ -35,6 +37,13 @@ def _not_found() -> HTTPException:
 def _reference_not_found(error: SeedLotReferenceNotFoundError) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
+        detail={"code": error.code, "message": error.message},
+    )
+
+
+def _lineage_conflict(error: LineageCycleError) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
         detail={"code": error.code, "message": error.message},
     )
 
@@ -75,6 +84,8 @@ def create(
         seed_lot = create_seed_lot(database, payload)
     except SeedLotReferenceNotFoundError as error:
         raise _reference_not_found(error) from error
+    except LineageCycleError as error:
+        raise _lineage_conflict(error) from error
     response.headers["Location"] = f"/api/v1/seed-lots/{seed_lot.id}"
     return _response(database, seed_lot.id)
 
@@ -86,6 +97,23 @@ def read(
     database: Annotated[Session, Depends(get_database_session)],
 ) -> SeedLotResponse:
     return _response(database, seed_lot_id)
+
+
+@router.get(
+    "/{seed_lot_id}/lineage",
+    response_model=LineageResponse,
+    operation_id="getSeedLotLineage",
+)
+def read_lineage(
+    seed_lot_id: UUID,
+    _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> LineageResponse:
+    _require_seed_lot(database, seed_lot_id)
+    try:
+        return lineage(database, ("seed_lot", seed_lot_id))
+    except LineageCycleError as error:
+        raise _lineage_conflict(error) from error
 
 
 @router.put("/{seed_lot_id}", response_model=SeedLotResponse, operation_id="updateSeedLot")
@@ -101,4 +129,6 @@ def update(
         update_seed_lot(database, projection.seed_lot, payload)
     except SeedLotReferenceNotFoundError as error:
         raise _reference_not_found(error) from error
+    except LineageCycleError as error:
+        raise _lineage_conflict(error) from error
     return _response(database, seed_lot_id)

@@ -899,11 +899,12 @@ it does not duplicate Sowing B or SeedLot A. A Plant directly from Sowing B does
 SeedLot A because Sowing owns that relationship. Later traversal may derive ancestors without
 denormalizing them.
 
-Future traversal may follow the same direct links upstream from Plant through an originating group
-or Sowing to SeedLot and, when present, its collection producer. It may follow them downstream from
-a producer through produced SeedLots and Sowings to resulting Plants or PlantGroups. `LINEAGE-001`
-defines those semantics only; `LINEAGE-002` owns concrete authorized traversal APIs and completion
-behavior, while `LINEAGE-003` owns visual navigation.
+Authorized traversal derives ancestors across the supported concrete workflow links. From Plant or
+PlantGroup it follows an originating Sowing to SeedLot and then, when known, the SeedLot's producer;
+from SeedLot it starts with that producer. It continues generation by generation until the next
+direct relationship is unknown. The lineage API returns typed compact records in deterministic
+immediate-first order, retains inactive records, and uses a visited set as a defensive backstop
+against corrupt cyclic data. `LINEAGE-003` owns visual navigation over this API.
 
 Unknown lineage is legitimate for Plants, PlantGroups, and collection-produced SeedLots. Known
 parts of a chain remain recorded even when other parts are absent. Florabase never infers or
@@ -939,6 +940,12 @@ The small relational ownership boundary is:
 - the extracted Plant's PlantGroup relationship and transaction belong to `PLANT-004`; and
 - `LINEAGE-002` completes the single Plant-or-PlantGroup producer relationship for
   collection-produced SeedLots and supported upstream/downstream traversal.
+
+Alembic revision `20260901_0012` implements the `LINEAGE-002` persistence boundary with mutually
+exclusive restrictive Plant and PlantGroup producer foreign keys on SeedLot. The full SeedLot create
+and PUT contracts validate producer existence, collection-produced source compatibility, and cycles
+before writes. Authenticated lineage routes on SeedLot, Plant, and PlantGroup return the subject and
+its supported typed ancestors without changing SeedLot or Sowing accounting.
 
 These relationships must use explicit aggregate-owned foreign keys and integrity constraints where
 implemented. A polymorphic `lineage_edges(source_type, source_id, destination_type, destination_id,

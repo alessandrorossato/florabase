@@ -318,6 +318,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/plant-groups/{plant_group_id}/lineage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Plant Group Lineage */
+        get: operations["getPlantGroupLineage"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plants": {
         parameters: {
             query?: never;
@@ -347,6 +364,23 @@ export interface paths {
         get: operations["getPlant"];
         /** Update One Plant */
         put: operations["updatePlant"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plants/{plant_id}/lineage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Plant Lineage */
+        get: operations["getPlantLineage"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -400,6 +434,23 @@ export interface paths {
         get: operations["getSeedLot"];
         /** Update */
         put: operations["updateSeedLot"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/seed-lots/{seed_lot_id}/lineage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Lineage */
+        get: operations["getSeedLotLineage"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -682,6 +733,13 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** LineageResponse */
+        LineageResponse: {
+            /** Ancestors */
+            ancestors: (components["schemas"]["SeedLotLineageNode"] | components["schemas"]["SowingLineageNode"] | components["schemas"]["PlantLineageNode"] | components["schemas"]["PlantGroupLineageNode"])[];
+            /** Subject */
+            subject: components["schemas"]["SeedLotLineageNode"] | components["schemas"]["SowingLineageNode"] | components["schemas"]["PlantLineageNode"] | components["schemas"]["PlantGroupLineageNode"];
+        };
         /** LocationCreate */
         LocationCreate: {
             /** Name */
@@ -845,6 +903,23 @@ export interface components {
          * @enum {string}
          */
         PlantGroupLifecycle: "active" | "completed" | "dead" | "lost" | "discarded";
+        /** PlantGroupLineageNode */
+        PlantGroupLineageNode: {
+            botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "plant_group";
+            /** Label */
+            label: string | null;
+            lifecycle: components["schemas"]["PlantGroupLifecycle"];
+        };
         /** PlantGroupQuantity */
         PlantGroupQuantity: {
             /** Is Approximate */
@@ -930,6 +1005,23 @@ export interface components {
          * @enum {string}
          */
         PlantLifecycle: "active" | "dead" | "lost" | "discarded";
+        /** PlantLineageNode */
+        PlantLineageNode: {
+            botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "plant";
+            /** Label */
+            label: string | null;
+            lifecycle: components["schemas"]["PlantLifecycle"];
+        };
         /** PlantResponse */
         PlantResponse: {
             botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
@@ -1001,6 +1093,30 @@ export interface components {
             /** Supplier Id */
             supplier_id?: string | null;
         };
+        /** ProducerPlantGroupSummary */
+        ProducerPlantGroupSummary: {
+            botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string | null;
+            lifecycle: components["schemas"]["PlantGroupLifecycle"];
+        };
+        /** ProducerPlantSummary */
+        ProducerPlantSummary: {
+            botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string | null;
+            lifecycle: components["schemas"]["PlantLifecycle"];
+        };
         /** SeedLotCreate */
         SeedLotCreate: {
             acquisition_date?: components["schemas"]["PartialDate"] | null;
@@ -1021,6 +1137,10 @@ export interface components {
             material_provenance_place_id?: string | null;
             /** Notes */
             notes?: string | null;
+            /** Producer Plant Group Id */
+            producer_plant_group_id?: string | null;
+            /** Producer Plant Id */
+            producer_plant_id?: string | null;
             quantity?: components["schemas"]["SeedQuantity-Input"] | null;
             /** Source Detail */
             source_detail?: string | null;
@@ -1034,6 +1154,23 @@ export interface components {
          * @enum {string}
          */
         SeedLotLifecycle: "active" | "exhausted" | "discarded" | "lost";
+        /** SeedLotLineageNode */
+        SeedLotLineageNode: {
+            botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "seed_lot";
+            /** Label */
+            label: string | null;
+            lifecycle: components["schemas"]["SeedLotLifecycle"];
+        };
         /** SeedLotResponse */
         SeedLotResponse: {
             acquisition_date: components["schemas"]["PartialDate"] | null;
@@ -1066,6 +1203,12 @@ export interface components {
             material_provenance_place_id: string | null;
             /** Notes */
             notes: string | null;
+            producer_plant: components["schemas"]["ProducerPlantSummary"] | null;
+            producer_plant_group: components["schemas"]["ProducerPlantGroupSummary"] | null;
+            /** Producer Plant Group Id */
+            producer_plant_group_id: string | null;
+            /** Producer Plant Id */
+            producer_plant_id: string | null;
             quantity: components["schemas"]["SeedQuantity-Output"] | null;
             /** Source Detail */
             source_detail: string | null;
@@ -1104,6 +1247,10 @@ export interface components {
             material_provenance_place_id?: string | null;
             /** Notes */
             notes?: string | null;
+            /** Producer Plant Group Id */
+            producer_plant_group_id?: string | null;
+            /** Producer Plant Id */
+            producer_plant_id?: string | null;
             quantity?: components["schemas"]["SeedQuantity-Input"] | null;
             /** Source Detail */
             source_detail?: string | null;
@@ -1191,6 +1338,22 @@ export interface components {
          * @enum {string}
          */
         SowingLifecycle: "active" | "completed" | "failed" | "abandoned";
+        /** SowingLineageNode */
+        SowingLineageNode: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "sowing";
+            /** Label */
+            label: string | null;
+            lifecycle: components["schemas"]["SowingLifecycle"];
+        };
         /** SowingLocationSummary */
         SowingLocationSummary: {
             /** Display Path */
@@ -2286,6 +2449,37 @@ export interface operations {
             };
         };
     };
+    getPlantGroupLineage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plant_group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LineageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     listPlants: {
         parameters: {
             query?: never;
@@ -2396,6 +2590,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlantResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getPlantLineage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LineageResponse"];
                 };
             };
             /** @description Validation Error */
@@ -2539,6 +2764,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SeedLotResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getSeedLotLineage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                seed_lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LineageResponse"];
                 };
             };
             /** @description Validation Error */
