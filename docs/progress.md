@@ -1,5 +1,43 @@
 # Progress
 
+## 2026-09-01 — PLANT-003
+
+- Added one authenticated Plants navigation section containing both individual Plants and
+  PlantGroups in a shared searchable, lifecycle-filtered, type-filtered master/detail collection.
+  Compact rows lead with BotanicalIdentity and optional label, distinguish Plant versus Group in
+  text, and show current Location, direct or Sowing origin, lifecycle, and persisted group quantity
+  without deriving cross-resource accounting. Desktop retains both panes; phone widths use
+  list-to-detail navigation with accessible Back and row-focus restoration.
+- Added a generated-contract Plant frontend API adapter and one progressively disclosed `+ New`
+  workflow that first chooses Plant or Plant group. BotanicalIdentity and Sowing use searchable
+  understandable selectors; minimal creation requires only BotanicalIdentity. The complete shared
+  form preserves independent downstream identity, mutually exclusive known-Sowing/direct origin,
+  optional Supplier and material provenance, partial collection-entry date, current Location,
+  correctable lifecycle, multiline notes, and unknown/exact/approximate whole group quantity with
+  friendly zero-state validation. One full PUT editor performs coherent origin, location,
+  lifecycle, and group quantity corrections; failed saves retain the form.
+- Added 9 focused component/integration tests covering loading, empty, missing-reference, list and
+  detail failure, unified Plant/Group rows, all search fields, lifecycle/type filters and their
+  composition, mobile Back/focus, disclosure/type choice, minimal and full creates, Sowing/direct
+  transitions, stale provenance clearing, identity independence, partial date and references,
+  group quantity/zero rules, complete Plant and PlantGroup edits, failed PUT retention,
+  authorization, and session expiry. The complete frontend suite passes all 80 tests.
+- Responsive browser verification against the real frontend and a disposable read-only mock API
+  passed at 1280×900, 390×844, and the supported 320×720 minimum: desktop master/detail remained
+  side by side, phone detail was full width, long botanical and path text wrapped, creation controls
+  stacked, partial-date inputs adapted, and document width never exceeded the viewport. No existing
+  Florabase account, cookie, or collection data was changed.
+- Exact successful verification: Prettier; ESLint; strict TypeScript; Ruff format/lint; strict mypy
+  over 106 source files; 138 backend unit tests at 93.37% coverage; all 80 frontend tests; all 184
+  disposable PostgreSQL 18.6 integration tests; OpenAPI/generated TypeScript drift; production
+  backend and frontend image builds; responsive browser checks; and a complete `make check`. No
+  backend, migration, OpenAPI, generated declaration, dependency, extraction, collection-producer,
+  event, attachment/photo, PWA, offline, or synchronization behavior changed.
+- The three existing `PLANT-003` acceptance criteria remain unchanged and are fully exercised, so
+  `PLANT-003` is `verified`. `LINEAGE-002` and `EVENT-001` remain the dependency-unblocked P1
+  features; `EVENT-002` now has `PLANT-003` satisfied but still depends on `EVENT-001`. No next
+  feature was started.
+
 ## 2026-08-31 — PLANT-002
 
 - Resumed and completed the interrupted Plant/PlantGroup backend slice without replacing its
