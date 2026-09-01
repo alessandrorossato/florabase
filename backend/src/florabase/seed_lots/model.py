@@ -95,6 +95,15 @@ class SeedLot(Base):
             "(source_kind <> 'other' AND source_detail IS NULL)",
             name="ck_seed_lots_source_detail",
         ),
+        CheckConstraint(
+            "NOT (producer_plant_id IS NOT NULL AND producer_plant_group_id IS NOT NULL)",
+            name="ck_seed_lots_producer_exclusive",
+        ),
+        CheckConstraint(
+            "source_kind = 'collection_produced' OR "
+            "(producer_plant_id IS NULL AND producer_plant_group_id IS NULL)",
+            name="ck_seed_lots_producer_source_kind",
+        ),
         _partial_date_constraint("acquisition_date"),
         _partial_date_constraint("harvest_date"),
         _partial_date_constraint("expected_viability_until"),
@@ -130,6 +139,12 @@ class SeedLot(Base):
     label: Mapped[str | None] = mapped_column(String(255), nullable=True)
     source_kind: Mapped[str] = mapped_column(String(32), default=SeedLotSourceKind.UNKNOWN.value)
     source_detail: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    producer_plant_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("plants.id", ondelete="RESTRICT"), nullable=True, index=True
+    )
+    producer_plant_group_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("plant_groups.id", ondelete="RESTRICT"), nullable=True, index=True
+    )
     supplier_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("suppliers.id", ondelete="RESTRICT"), nullable=True, index=True
     )

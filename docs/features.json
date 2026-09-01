@@ -404,7 +404,7 @@
       ],
       "dependencies": ["SEED-003", "PLANT-002", "LINEAGE-001"],
       "priority": "P1",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "EVENT-001",

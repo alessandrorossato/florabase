@@ -490,6 +490,71 @@
         "title": "HealthResponse",
         "type": "object"
       },
+      "LineageResponse": {
+        "properties": {
+          "ancestors": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "plant": "#/components/schemas/PlantLineageNode",
+                  "plant_group": "#/components/schemas/PlantGroupLineageNode",
+                  "seed_lot": "#/components/schemas/SeedLotLineageNode",
+                  "sowing": "#/components/schemas/SowingLineageNode"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/SeedLotLineageNode"
+                },
+                {
+                  "$ref": "#/components/schemas/SowingLineageNode"
+                },
+                {
+                  "$ref": "#/components/schemas/PlantLineageNode"
+                },
+                {
+                  "$ref": "#/components/schemas/PlantGroupLineageNode"
+                }
+              ]
+            },
+            "title": "Ancestors",
+            "type": "array"
+          },
+          "subject": {
+            "discriminator": {
+              "mapping": {
+                "plant": "#/components/schemas/PlantLineageNode",
+                "plant_group": "#/components/schemas/PlantGroupLineageNode",
+                "seed_lot": "#/components/schemas/SeedLotLineageNode",
+                "sowing": "#/components/schemas/SowingLineageNode"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SeedLotLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/SowingLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/PlantLineageNode"
+              },
+              {
+                "$ref": "#/components/schemas/PlantGroupLineageNode"
+              }
+            ],
+            "title": "Subject"
+          }
+        },
+        "required": [
+          "subject",
+          "ancestors"
+        ],
+        "title": "LineageResponse",
+        "type": "object"
+      },
       "LocationCreate": {
         "additionalProperties": false,
         "properties": {
@@ -1043,6 +1108,46 @@
         "title": "PlantGroupLifecycle",
         "type": "string"
       },
+      "PlantGroupLineageNode": {
+        "properties": {
+          "botanical_identity": {
+            "$ref": "#/components/schemas/BotanicalIdentitySummary"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "plant_group",
+            "default": "plant_group",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/PlantGroupLifecycle"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "lifecycle",
+          "botanical_identity"
+        ],
+        "title": "PlantGroupLineageNode",
+        "type": "object"
+      },
       "PlantGroupQuantity": {
         "additionalProperties": false,
         "properties": {
@@ -1411,6 +1516,46 @@
         "title": "PlantLifecycle",
         "type": "string"
       },
+      "PlantLineageNode": {
+        "properties": {
+          "botanical_identity": {
+            "$ref": "#/components/schemas/BotanicalIdentitySummary"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "plant",
+            "default": "plant",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/PlantLifecycle"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "lifecycle",
+          "botanical_identity"
+        ],
+        "title": "PlantLineageNode",
+        "type": "object"
+      },
       "PlantResponse": {
         "properties": {
           "botanical_identity": {
@@ -1728,6 +1873,74 @@
         "title": "PlantUpdate",
         "type": "object"
       },
+      "ProducerPlantGroupSummary": {
+        "properties": {
+          "botanical_identity": {
+            "$ref": "#/components/schemas/BotanicalIdentitySummary"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/PlantGroupLifecycle"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "lifecycle",
+          "botanical_identity"
+        ],
+        "title": "ProducerPlantGroupSummary",
+        "type": "object"
+      },
+      "ProducerPlantSummary": {
+        "properties": {
+          "botanical_identity": {
+            "$ref": "#/components/schemas/BotanicalIdentitySummary"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/PlantLifecycle"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "lifecycle",
+          "botanical_identity"
+        ],
+        "title": "ProducerPlantSummary",
+        "type": "object"
+      },
       "SeedLotCreate": {
         "additionalProperties": false,
         "properties": {
@@ -1818,6 +2031,30 @@
             ],
             "title": "Notes"
           },
+          "producer_plant_group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Producer Plant Group Id"
+          },
+          "producer_plant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Producer Plant Id"
+          },
           "quantity": {
             "anyOf": [
               {
@@ -1872,6 +2109,46 @@
         ],
         "title": "SeedLotLifecycle",
         "type": "string"
+      },
+      "SeedLotLineageNode": {
+        "properties": {
+          "botanical_identity": {
+            "$ref": "#/components/schemas/BotanicalIdentitySummary"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "seed_lot",
+            "default": "seed_lot",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/SeedLotLifecycle"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "lifecycle",
+          "botanical_identity"
+        ],
+        "title": "SeedLotLineageNode",
+        "type": "object"
       },
       "SeedLotResponse": {
         "properties": {
@@ -1992,6 +2269,50 @@
             ],
             "title": "Notes"
           },
+          "producer_plant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProducerPlantSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "producer_plant_group": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProducerPlantGroupSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "producer_plant_group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Producer Plant Group Id"
+          },
+          "producer_plant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Producer Plant Id"
+          },
           "quantity": {
             "anyOf": [
               {
@@ -2051,6 +2372,10 @@
           "label",
           "source_kind",
           "source_detail",
+          "producer_plant_id",
+          "producer_plant",
+          "producer_plant_group_id",
+          "producer_plant_group",
           "supplier_id",
           "supplier",
           "material_provenance_place_id",
@@ -2171,6 +2496,30 @@
               }
             ],
             "title": "Notes"
+          },
+          "producer_plant_group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Producer Plant Group Id"
+          },
+          "producer_plant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Producer Plant Id"
           },
           "quantity": {
             "anyOf": [
@@ -2518,6 +2867,42 @@
         ],
         "title": "SowingLifecycle",
         "type": "string"
+      },
+      "SowingLineageNode": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "const": "sowing",
+            "default": "sowing",
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/SowingLifecycle"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "lifecycle"
+        ],
+        "title": "SowingLineageNode",
+        "type": "object"
       },
       "SowingLocationSummary": {
         "properties": {
@@ -4567,6 +4952,49 @@
         ]
       }
     },
+    "/api/v1/plant-groups/{plant_group_id}/lineage": {
+      "get": {
+        "operationId": "getPlantGroupLineage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plant_group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plant Group Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LineageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Plant Group Lineage",
+        "tags": [
+          "plant-groups"
+        ]
+      }
+    },
     "/api/v1/plants": {
       "get": {
         "operationId": "listPlants",
@@ -4754,6 +5182,49 @@
           }
         },
         "summary": "Update One Plant",
+        "tags": [
+          "plants"
+        ]
+      }
+    },
+    "/api/v1/plants/{plant_id}/lineage": {
+      "get": {
+        "operationId": "getPlantLineage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plant Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LineageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Plant Lineage",
         "tags": [
           "plants"
         ]
@@ -4967,6 +5438,49 @@
           }
         },
         "summary": "Update",
+        "tags": [
+          "seed-lots"
+        ]
+      }
+    },
+    "/api/v1/seed-lots/{seed_lot_id}/lineage": {
+      "get": {
+        "operationId": "getSeedLotLineage",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seed_lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Seed Lot Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LineageResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Lineage",
         "tags": [
           "seed-lots"
         ]

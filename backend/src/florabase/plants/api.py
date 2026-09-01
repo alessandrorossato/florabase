@@ -11,6 +11,8 @@ from florabase.auth.dependencies import (
     require_owner,
 )
 from florabase.db.session import get_database_session
+from florabase.lineage.schemas import LineageResponse
+from florabase.lineage.service import LineageCycleError, LineageKey, lineage
 from florabase.plants.schemas import (
     PlantCreate,
     PlantGroupCreate,
@@ -72,6 +74,16 @@ def _plant_group_response(database: Session, plant_group_id: UUID) -> PlantGroup
     return plant_group_responses(database, [_require_plant_group(database, plant_group_id)])[0]
 
 
+def _lineage_response(database: Session, subject: LineageKey) -> LineageResponse:
+    try:
+        return lineage(database, subject)
+    except LineageCycleError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"code": error.code, "message": error.message},
+        ) from error
+
+
 @plants_router.get("", response_model=list[PlantResponse], operation_id="listPlants")
 def list_all_plants(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
@@ -108,6 +120,18 @@ def read_plant(
     database: Annotated[Session, Depends(get_database_session)],
 ) -> PlantResponse:
     return _plant_response(database, plant_id)
+
+
+@plants_router.get(
+    "/{plant_id}/lineage", response_model=LineageResponse, operation_id="getPlantLineage"
+)
+def read_plant_lineage(
+    plant_id: UUID,
+    _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> LineageResponse:
+    _require_plant(database, plant_id)
+    return _lineage_response(database, ("plant", plant_id))
 
 
 @plants_router.put("/{plant_id}", response_model=PlantResponse, operation_id="updatePlant")
@@ -166,6 +190,20 @@ def read_plant_group(
     database: Annotated[Session, Depends(get_database_session)],
 ) -> PlantGroupResponse:
     return _plant_group_response(database, plant_group_id)
+
+
+@plant_groups_router.get(
+    "/{plant_group_id}/lineage",
+    response_model=LineageResponse,
+    operation_id="getPlantGroupLineage",
+)
+def read_plant_group_lineage(
+    plant_group_id: UUID,
+    _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> LineageResponse:
+    _require_plant_group(database, plant_group_id)
+    return _lineage_response(database, ("plant_group", plant_group_id))
 
 
 @plant_groups_router.put(

@@ -1,5 +1,32 @@
 # Progress
 
+## 2026-09-01 — LINEAGE-002
+
+- Added Alembic revision `20260901_0012`, completing collection-produced SeedLot provenance with
+  optional, mutually exclusive, restrictive Plant and PlantGroup producer foreign keys. PostgreSQL
+  constraints and Pydantic validation require a producer only with `collection_produced`, reject
+  missing or dual references, and retain inactive producers without cascading lineage changes.
+- Extended SeedLot create, full PUT, list, and detail behavior with compact producer summaries and
+  pre-write existence and cycle validation. Producer edits do not alter SeedLot quantity or Sowing
+  accounting, and downstream BotanicalIdentity remains independently correctable.
+- Added authenticated typed lineage routes for SeedLots, Plants, and PlantGroups. A focused recursive
+  PostgreSQL CTE traverses only the supported direct workflow relationships in deterministic
+  immediate-first order, batches summary projection, preserves valid multi-generation and inactive
+  history, and detects both proposed and defensively encountered cycles without a generic edge table
+  or graph framework.
+- Added migration and API integration coverage for unknown, Plant, and PlantGroup producers; source
+  and reference validation; summary projection; full replacement; direct and multi-generation cycle
+  rejection; roots; Sowing chains; valid multi-generation traversal; inactive history;
+  authorization; not-found behavior; schema downgrade; and unchanged accounting.
+- Exact successful verification: Ruff format/lint; strict mypy over 111 source files; 139 backend
+  unit tests at 90.71% coverage; all 192 disposable PostgreSQL 18.6 integration tests; Prettier;
+  ESLint; strict TypeScript; all 80 frontend tests; OpenAPI/generated TypeScript drift; production
+  backend and frontend image builds; and a complete `make check`.
+- All three existing `LINEAGE-002` acceptance criteria remain unchanged and are fully exercised, so
+  `LINEAGE-002` is `verified`. `EVENT-001` remains the dependency-unblocked P1 item, and `PLANT-004`
+  is now dependency-unblocked at P2. No extraction, visual lineage navigation, events, attachments,
+  frontend lineage UI, or next feature was started.
+
 ## 2026-09-01 — PLANT-003
 
 - Added one authenticated Plants navigation section containing both individual Plants and

@@ -71,3 +71,37 @@ def test_source_detail_and_zero_lifecycle_are_cross_validated() -> None:
             botanical_identity_id=identity_id,
             quantity={"kind": "seed_count", "value": 0, "is_approximate": False},
         )
+
+
+def test_collection_producer_is_optional_exclusive_and_source_kind_bound() -> None:
+    identity_id = "018f0000-0000-7000-8000-000000000001"
+    plant_id = "018f0000-0000-7000-8000-000000000002"
+    group_id = "018f0000-0000-7000-8000-000000000003"
+    unknown = SeedLotCreate(botanical_identity_id=identity_id, source_kind="collection_produced")
+    assert unknown.producer_plant_id is None
+    assert unknown.producer_plant_group_id is None
+    assert (
+        SeedLotCreate(
+            botanical_identity_id=identity_id,
+            source_kind="collection_produced",
+            producer_plant_id=plant_id,
+        ).producer_plant_id
+        is not None
+    )
+    assert (
+        SeedLotCreate(
+            botanical_identity_id=identity_id,
+            source_kind="collection_produced",
+            producer_plant_group_id=group_id,
+        ).producer_plant_group_id
+        is not None
+    )
+    with pytest.raises(ValidationError):
+        SeedLotCreate(
+            botanical_identity_id=identity_id,
+            source_kind="collection_produced",
+            producer_plant_id=plant_id,
+            producer_plant_group_id=group_id,
+        )
+    with pytest.raises(ValidationError):
+        SeedLotCreate(botanical_identity_id=identity_id, producer_plant_id=plant_id)

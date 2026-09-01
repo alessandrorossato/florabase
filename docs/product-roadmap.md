@@ -259,10 +259,11 @@ The recommended implementation sequence is:
     events.
 11. Take Phase 2 and Phase 3 items one at a time in dependency order.
 
-The SeedLot, Sowing, Plant/PlantGroup, and explicit lineage product contracts are verified.
-`SOWING-002` is now dependency-unblocked and is the next implementation task. It owns only the
-required `Sowing → SeedLot` relationship and basic Sowing backend slice; it must not create Plant
-tables, collection-producer lineage, traversal, extraction, or generic graph infrastructure.
+The SeedLot, Sowing, Plant/PlantGroup, and explicit lineage contracts and their first concrete
+backend/UI increments through `LINEAGE-002` are verified. Collection-produced SeedLots can reference
+one known Plant or PlantGroup, and authenticated typed traversal follows the supported workflow
+relationships without generic graph infrastructure. `EVENT-001` remains the dependency-unblocked P1
+contract task; `PLANT-004` is now dependency-unblocked at P2. No next feature is selected here.
 
 ## Deliberately deferred
 
