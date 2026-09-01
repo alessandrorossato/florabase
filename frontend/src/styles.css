@@ -438,6 +438,110 @@ button:disabled {
   gap: clamp(1.5rem, 3vw, 2.5rem);
   margin-top: 2rem;
 }
+
+.plant-master-detail {
+  display: grid;
+  grid-template-columns: minmax(17rem, 0.8fr) minmax(24rem, 1.4fr);
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  align-items: start;
+  margin-top: 2rem;
+}
+
+.plant-master,
+.plant-detail-pane {
+  min-width: 0;
+}
+
+.plant-row {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.record-type-badge {
+  display: inline-flex;
+  width: fit-content;
+  border: 1px solid #a9b9af;
+  border-radius: 999px;
+  padding: 0.12rem 0.5rem;
+  color: #587064;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.plant-kind-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.plant-kind-actions button {
+  display: grid;
+  gap: 0.5rem;
+  min-height: 7rem;
+  text-align: left;
+}
+
+.plant-kind-actions span {
+  font-weight: 400;
+}
+
+.plant-advanced-fields > .field--full,
+.plant-advanced-fields > .origin-mode-field {
+  grid-column: 1 / -1;
+}
+
+.origin-mode-field {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.plant-back {
+  display: none;
+  margin-bottom: 1rem;
+}
+
+.plant-detail-pane.seed-creation-panel {
+  grid-column: 1 / -1;
+  order: -1;
+}
+
+.plant-detail h3,
+.plant-detail dd,
+.plant-row span {
+  overflow-wrap: anywhere;
+}
+
+.plant-detail h4 {
+  margin: 1.4rem 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.plant-detail section + section {
+  margin-top: 1.25rem;
+  padding-top: 0.25rem;
+  border-top: 1px solid #dce6de;
+}
+
+.plant-detail dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.plant-detail dt {
+  color: #587064;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.plant-detail dd {
+  margin: 0.2rem 0 0;
+}
+
+.plant-form textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
 .sowing-master,
 .sowing-detail-pane {
   min-width: 0;
@@ -784,6 +888,10 @@ button:disabled {
   .sowing-master-detail {
     grid-template-columns: 1fr;
   }
+
+  .plant-master-detail {
+    grid-template-columns: minmax(15rem, 0.72fr) minmax(21rem, 1.28fr);
+  }
 }
 
 @media (max-width: 48rem) {
@@ -811,6 +919,26 @@ button:disabled {
   .sowing-master-detail.is-detail-view .sowing-back {
     display: inline-flex;
   }
+
+  .plant-master-detail {
+    display: block;
+  }
+
+  .plant-master-detail.is-detail-view .plant-master {
+    display: none;
+  }
+
+  .plant-master-detail:not(.is-detail-view) .plant-detail-pane {
+    display: none;
+  }
+
+  .plant-master-detail.is-detail-view .plant-back {
+    display: inline-flex;
+  }
+
+  .plant-kind-actions {
+    grid-template-columns: 1fr;
+  }
   .sowing-quantity-controls,
   .temperature-controls {
     grid-template-columns: 1fr;
@@ -823,6 +951,13 @@ button:disabled {
   .seed-form-heading {
     align-items: stretch;
     flex-direction: column;
+  }
+}
+
+@media (max-width: 26rem) {
+  .partial-date-parts,
+  .plant-detail dl {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -7,6 +7,7 @@ import { LoginForm } from "./auth/LoginForm";
 import { BotanicalIdentityScreen } from "./botanical-identities/BotanicalIdentityScreen";
 import { GeographyScreen } from "./geographic-places/GeographyScreen";
 import { LocationScreen } from "./locations/LocationScreen";
+import { PlantScreen } from "./plants/PlantScreen";
 import { SeedLotScreen } from "./seed-lots/SeedLotScreen";
 import { SowingScreen } from "./sowings/SowingScreen";
 import { SupplierScreen } from "./suppliers/SupplierScreen";
@@ -22,7 +23,13 @@ function ApplicationShell() {
   const state = auth.state;
   const [health, setHealth] = useState<HealthState>({ status: "loading" });
   const [section, setSection] = useState<
-    "seeds" | "sowings" | "identities" | "suppliers" | "locations" | "geography"
+    | "seeds"
+    | "sowings"
+    | "plants"
+    | "identities"
+    | "suppliers"
+    | "locations"
+    | "geography"
   >("identities");
 
   useEffect(() => {
@@ -70,6 +77,16 @@ function ApplicationShell() {
       <p className="eyebrow">Self-hosted botanical records</p>
       <h1 id="page-title">Florabase</h1>
       <nav aria-label="Primary navigation" className="primary-navigation">
+        <button
+          type="button"
+          className="navigation-link"
+          aria-current={section === "plants" ? "page" : undefined}
+          onClick={() => {
+            setSection("plants");
+          }}
+        >
+          Plants
+        </button>
         <button
           type="button"
           className="navigation-link"
@@ -135,6 +152,8 @@ function ApplicationShell() {
         <SeedLotScreen />
       ) : section === "sowings" ? (
         <SowingScreen />
+      ) : section === "plants" ? (
+        <PlantScreen />
       ) : section === "identities" ? (
         <BotanicalIdentityScreen />
       ) : section === "suppliers" ? (
