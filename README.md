@@ -1,121 +1,103 @@
 # Florabase
 
-Florabase is a self-hosted botanical collection manager. This repository currently contains only its production-oriented foundation: PostgreSQL, a typed FastAPI REST API, a React frontend, explicit migrations, quality tooling, and operational documentation. Botanical features are intentionally not implemented yet.
+Florabase is a self-hosted web application for managing a personal botanical collection. It keeps
+botanical reference information separate from the material and plants in a collection, while
+preserving explicit provenance through real collection workflows.
 
-## Prerequisites
+Florabase is under active pre-release development. The current application is usable for one local
+owner, but no stable public release or supported-version policy has been published yet.
 
-- Docker Engine 29 or newer with Docker Compose v2 (`docker compose`)
-- GNU Make 4 or newer
-- `curl` for `make health`
-- Linux amd64 or arm64
+## What works today
 
-Host Python and Node are optional because normal commands run in containers.
+- Botanical identities and incomplete-friendly, operator-authored botanical profiles
+- Supplier, collection Location, and geographic provenance directories
+- Seed lots with source, partial dates, quantity, storage, lifecycle, and optional producer lineage
+- Sowings with partial dates, quantities, cultivation details, and simple germination totals
+- Individually tracked Plants and quantity-aware PlantGroups
+- Atomic extraction of a Plant from a PlantGroup
+- Explicit lineage through `SeedLot → Sowing → Plant / PlantGroup`, group extraction, and
+  collection-produced seed lots
+- Local owner authentication with server-side sessions and CSRF protection
 
-## Initial setup
+Plant events, attachments and photos, advanced search, dashboards, import/export, and PWA
+installability are planned, not implemented. See the [product roadmap](docs/product-roadmap.md) and
+the detailed [feature backlog](docs/features.json).
+
+## Screenshots
+
+No current screenshots are committed. Before the first public release, capture the authenticated
+desktop Plants view, the mobile Seed lots or Sowings workflow, and a lineage-aware PlantGroup
+extraction result using non-sensitive demonstration data.
+
+## Architecture
+
+Florabase is a modular monolith:
+
+- React and strict TypeScript in the browser
+- FastAPI and typed Python for the versioned `/api/v1` API
+- PostgreSQL as the relational source of truth
+- Alembic as the only schema migration path
+- Docker Compose for development and self-hosting
+- backend-owned OpenAPI with committed generated TypeScript declarations
+
+The production-oriented Compose stack publishes only the frontend proxy. PostgreSQL and the backend
+remain on an internal network.
+
+## Requirements
+
+The primary workflow requires Docker Engine with Docker Compose v2, GNU Make, and `curl`. The
+repository currently uses multi-architecture upstream images; host Python and Node are optional.
+
+A public deployment requires an operator-managed HTTPS reverse proxy. Florabase production mode
+requires the exact public HTTPS origin and secure same-origin session cookies.
+
+## Quick start for development
 
 ```bash
 make setup
-```
-
-Review `.env`. Its checked-in example values are only for localhost development. Set a unique URL-safe database password and keep `POSTGRES_PASSWORD` and the password inside `FLORABASE_DATABASE_URL` identical. Never deploy the example credentials.
-
-For production, also set `FLORABASE_CANONICAL_ORIGIN` to the exact public HTTPS origin and keep
-`FLORABASE_CORS_ORIGINS=[]` for the same-origin browser/API architecture.
-
-## Start, inspect, and stop
-
-Production-oriented local stack:
-
-```bash
-make up
-make migrate
-make health
-make logs
-make down
-```
-
-The UI is available at <http://127.0.0.1:8080>. PostgreSQL and the backend are not published by the base stack.
-
-After the first migration of a new installation, create the one local owner interactively:
-
-```bash
-docker compose run --rm backend python -m florabase.auth.bootstrap owner
-```
-
-The password is prompted securely and never accepted as a command argument. See
-[security.md](docs/security.md) for the stdin automation option and authentication policy.
-
-Hot-reloading development stack:
-
-```bash
 make dev
 ```
 
-This publishes Vite at <http://localhost:5173>, FastAPI at <http://localhost:8000>, and PostgreSQL
-at `127.0.0.1:5432`. Use the `localhost` Vite URL because it is the explicit development canonical
-origin. Development behavior comes from `compose.dev.yaml`; production never enables reload,
-debug mode, or the loopback cookie policy.
+`make setup` copies `.env.example` to the ignored `.env` file and never overwrites an existing one.
+Review the file and replace its example credentials. The development override uses
+`http://localhost:5173`; open that exact URL.
 
-## Development commands
-
-```bash
-make build
-make test
-make test-integration
-make lint
-make format
-make format-check
-make typecheck
-make check
-```
-
-`make check` is the main non-destructive suite. It checks formatting, lint, Python/TypeScript typing, backend/frontend tests, and generated API drift. See [development.md](docs/development.md).
-
-## Database migrations
-
-Apply reviewed migrations explicitly; application startup never migrates automatically:
+In another terminal, apply migrations and create the first owner:
 
 ```bash
 make migrate
-make migration MESSAGE="describe schema change"
+docker compose run --rm backend python -m florabase.auth.bootstrap owner
 ```
 
-Inspect every generated migration and add downgrade behavior where practical before applying it.
+The bootstrap command prompts for the password without accepting it as a command argument. For a
+public or durable installation, follow the [deployment guide](docs/deployment.md) instead of treating
+the development stack as production.
 
-## API contract generation
+## Development
 
-```bash
-make api-generate
-make api-check
-```
-
-`backend/openapi.json` is generated from FastAPI. `frontend/src/api/schema.d.ts` is generated from it. Both are committed so frontend builds do not require a running backend.
+`make check` runs formatting checks, lint, strict Python and TypeScript typing, backend and frontend
+tests, and generated API drift checks. PostgreSQL integration tests run separately with
+`make test-integration`. See [development.md](docs/development.md) for focused workflows, migrations,
+code generation, and Git practices.
 
 ## Backup and restore
 
-```bash
-make backup
-make restore FILE=backups/florabase-YYYYMMDDTHHMMSSZ.dump CONFIRM_REPLACE=yes CONFIRM_DATABASE=florabase
-```
+`make backup` creates a custom-format PostgreSQL dump. `make restore` deliberately replaces the
+configured database and requires explicit confirmation. Read [backup-restore.md](docs/backup-restore.md)
+before restoring. No attachment storage exists yet, so current backups cover application-managed
+data in PostgreSQL only; deployment configuration and secrets need a separate protected backup.
 
-Restore replaces the target database. Read [backup-restore.md](docs/backup-restore.md) before using it. Database dumps do not include future uploaded attachments, `.env`, or reverse-proxy secrets.
+## Project information
 
-## Production deployment
-
-The base Compose stack is production-oriented but assumes an operator-managed HTTPS reverse
-proxy. At minimum, replace example secrets, set the exact HTTPS canonical origin, leave CORS
-disabled, set `APP_BIND_ADDRESS` deliberately, run a backup, build reviewed images, apply
-migrations explicitly, bootstrap the first owner on new installations, start the stack, and run
-`make health`. See [deployment.md](docs/deployment.md) and [security.md](docs/security.md).
-
-## Documentation
-
+- [Deployment and upgrades](docs/deployment.md)
+- [Development guide](docs/development.md)
+- [Domain model](docs/domain-model.md)
 - [Architecture](docs/architecture.md)
-- [Preliminary domain model](docs/domain-model.md)
+- [Security architecture](docs/security.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
 - [Product roadmap](docs/product-roadmap.md)
-- [Development](docs/development.md)
-- [Deployment](docs/deployment.md)
-- [Backup and restore](docs/backup-restore.md)
-- [Security](docs/security.md)
-- [Backlog](docs/features.json)
-- [Progress](docs/progress.md)
+- [Engineering progress](docs/progress.md)
+
+No license has been selected. Until the repository owner adds one, the source is publicly visible
+but no open-source license is granted.
