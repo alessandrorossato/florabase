@@ -23,6 +23,11 @@ implementation detail.
   and an actual GitHub workflow run remain one-time operator verification because GitHub CLI
   authentication was unavailable during implementation. CI-001 therefore remains `implemented`,
   not `verified`, until the workflow runs successfully on GitHub and those settings are confirmed.
+- The first pull-request run exposed a GitHub checkout ownership difference: Vitest's default
+  bundled config loader tried to write a timestamped module under `/app/node_modules/.vite-temp`
+  while loading `vite.config.ts`. The frontend test script now uses Vitest's supported runner config
+  loader, which evaluates the existing config without writing beside the read-only checkout and
+  preserves non-root container execution.
 
 ## 2026-09-02 — DOCS-001 repository audit
 
