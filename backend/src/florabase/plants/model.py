@@ -46,7 +46,25 @@ class PlantGroupLifecycle(StrEnum):
     DISCARDED = "discarded"
 
 
-def _common_constraints(table: str, lifecycles: str) -> tuple[CheckConstraint, ...]:
+def _common_constraints(
+    table: str, lifecycles: str, *, plant_group_origin: bool = False
+) -> tuple[CheckConstraint, ...]:
+    origin_constraint = (
+        "((originating_plant_group_id IS NOT NULL AND originating_sowing_id IS NULL "
+        "AND direct_origin_kind IS NULL AND direct_origin_detail IS NULL "
+        "AND supplier_id IS NULL AND material_provenance_place_id IS NULL) OR "
+        "(originating_plant_group_id IS NULL AND ((originating_sowing_id IS NOT NULL "
+        "AND direct_origin_kind IS NULL AND direct_origin_detail IS NULL AND supplier_id IS NULL "
+        "AND material_provenance_place_id IS NULL) OR (originating_sowing_id IS NULL "
+        "AND direct_origin_kind IN ('purchased', 'gift_exchange', 'collection_produced', "
+        "'other', 'unknown'))))) IS TRUE"
+        if plant_group_origin
+        else "((originating_sowing_id IS NOT NULL AND direct_origin_kind IS NULL "
+        "AND direct_origin_detail IS NULL AND supplier_id IS NULL "
+        "AND material_provenance_place_id IS NULL) OR "
+        "(originating_sowing_id IS NULL AND direct_origin_kind IN "
+        "('purchased', 'gift_exchange', 'collection_produced', 'other', 'unknown'))) IS TRUE"
+    )
     return (
         CheckConstraint(
             "label IS NULL OR (char_length(label) BETWEEN 1 AND 255 "
@@ -54,14 +72,7 @@ def _common_constraints(table: str, lifecycles: str) -> tuple[CheckConstraint, .
             "AND label !~ '[[:cntrl:]]')",
             name=f"ck_{table}_label",
         ),
-        CheckConstraint(
-            "((originating_sowing_id IS NOT NULL AND direct_origin_kind IS NULL "
-            "AND direct_origin_detail IS NULL AND supplier_id IS NULL "
-            "AND material_provenance_place_id IS NULL) OR "
-            "(originating_sowing_id IS NULL AND direct_origin_kind IN "
-            "('purchased', 'gift_exchange', 'collection_produced', 'other', 'unknown'))) IS TRUE",
-            name=f"ck_{table}_origin",
-        ),
+        CheckConstraint(origin_constraint, name=f"ck_{table}_origin"),
         CheckConstraint(
             "(direct_origin_kind = 'other' AND (direct_origin_detail IS NULL OR "
             "(char_length(direct_origin_detail) BETWEEN 1 AND 255 "
@@ -98,7 +109,9 @@ def _common_constraints(table: str, lifecycles: str) -> tuple[CheckConstraint, .
 
 class Plant(Base):
     __tablename__ = "plants"
-    __table_args__ = _common_constraints("plants", "'active', 'dead', 'lost', 'discarded'")
+    __table_args__ = _common_constraints(
+        "plants", "'active', 'dead', 'lost', 'discarded'", plant_group_origin=True
+    )
 
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid7)
     botanical_identity_id: Mapped[UUID] = mapped_column(
@@ -107,9 +120,10 @@ class Plant(Base):
     originating_sowing_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("sowings.id", ondelete="RESTRICT"), nullable=True, index=True
     )
-    direct_origin_kind: Mapped[str | None] = mapped_column(
-        String(32), nullable=True, default=DirectOriginKind.UNKNOWN.value
+    originating_plant_group_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("plant_groups.id", ondelete="RESTRICT"), nullable=True, index=True
     )
+    direct_origin_kind: Mapped[str | None] = mapped_column(String(32), nullable=True)
     direct_origin_detail: Mapped[str | None] = mapped_column(String(255), nullable=True)
     supplier_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("suppliers.id", ondelete="RESTRICT"), nullable=True, index=True
@@ -153,9 +167,7 @@ class PlantGroup(Base):
     originating_sowing_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("sowings.id", ondelete="RESTRICT"), nullable=True, index=True
     )
-    direct_origin_kind: Mapped[str | None] = mapped_column(
-        String(32), nullable=True, default=DirectOriginKind.UNKNOWN.value
-    )
+    direct_origin_kind: Mapped[str | None] = mapped_column(String(32), nullable=True)
     direct_origin_detail: Mapped[str | None] = mapped_column(String(255), nullable=True)
     supplier_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("suppliers.id", ondelete="RESTRICT"), nullable=True, index=True

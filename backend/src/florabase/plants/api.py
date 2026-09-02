@@ -15,6 +15,8 @@ from florabase.lineage.schemas import LineageResponse
 from florabase.lineage.service import LineageCycleError, LineageKey, lineage
 from florabase.plants.schemas import (
     PlantCreate,
+    PlantExtractionCreate,
+    PlantExtractionResponse,
     PlantGroupCreate,
     PlantGroupResponse,
     PlantGroupUpdate,
@@ -22,11 +24,13 @@ from florabase.plants.schemas import (
     PlantUpdate,
 )
 from florabase.plants.service import (
+    PlantDomainConflictError,
     PlantGroupProjection,
     PlantProjection,
     PlantReferenceNotFoundError,
     create_plant,
     create_plant_group,
+    extract_plant,
     get_plant,
     get_plant_group,
     list_plant_groups,
@@ -50,6 +54,13 @@ def _not_found(code: str, message: str) -> HTTPException:
 
 def _reference_not_found(error: PlantReferenceNotFoundError) -> HTTPException:
     return _not_found(error.code, error.message)
+
+
+def _domain_conflict(error: PlantDomainConflictError) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail={"code": error.code, "message": error.message},
+    )
 
 
 def _require_plant(database: Session, plant_id: UUID) -> PlantProjection:
@@ -147,6 +158,8 @@ def update_one_plant(
         update_plant(database, projection.plant, payload)
     except PlantReferenceNotFoundError as error:
         raise _reference_not_found(error) from error
+    except PlantDomainConflictError as error:
+        raise _domain_conflict(error) from error
     return _plant_response(database, plant_id)
 
 
@@ -179,6 +192,33 @@ def create_one_plant_group(
         raise _reference_not_found(error) from error
     response.headers["Location"] = f"/api/v1/plant-groups/{plant_group.id}"
     return _plant_group_response(database, plant_group.id)
+
+
+@plant_groups_router.post(
+    "/{plant_group_id}/extract-plant",
+    response_model=PlantExtractionResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="extractPlantFromGroup",
+)
+def extract_one_plant(
+    plant_group_id: UUID,
+    payload: PlantExtractionCreate,
+    response: Response,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> PlantExtractionResponse:
+    require_owner(actor)
+    try:
+        plant, plant_group = extract_plant(database, plant_group_id, payload)
+    except PlantReferenceNotFoundError as error:
+        raise _reference_not_found(error) from error
+    except PlantDomainConflictError as error:
+        raise _domain_conflict(error) from error
+    response.headers["Location"] = f"/api/v1/plants/{plant.id}"
+    return PlantExtractionResponse(
+        plant=_plant_response(database, plant.id),
+        plant_group=_plant_group_response(database, plant_group.id),
+    )
 
 
 @plant_groups_router.get(

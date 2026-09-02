@@ -1,10 +1,12 @@
 from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from decimal import Decimal
+from threading import Barrier
 from uuid import UUID, uuid7
 
 import pytest
-from sqlalchemy import Connection, select
+from sqlalchemy import Connection, Engine, delete, func, select
 from sqlalchemy.orm import Session
 
 from florabase.auth.dependencies import AuthenticatedActor, require_csrf
@@ -17,6 +19,8 @@ from florabase.geographic_places.model import GeographicPlace
 from florabase.locations.model import Location
 from florabase.main import app
 from florabase.plants.model import Plant, PlantGroup
+from florabase.plants.schemas import PlantExtractionCreate
+from florabase.plants.service import PlantDomainConflictError, extract_plant
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import Sowing
 from florabase.suppliers.model import Supplier
@@ -467,3 +471,380 @@ def test_group_mutation_requires_owner_authorization(
         app.dependency_overrides.pop(require_csrf, None)
     assert status_code == 403
     assert body["detail"] == "Request forbidden"
+
+
+@pytest.mark.parametrize(
+    ("quantity", "expected_quantity", "expected_lifecycle"),
+    [
+        (None, None, "active"),
+        ({"value": 7, "is_approximate": True}, {"value": 7, "is_approximate": True}, "active"),
+        ({"value": 3, "is_approximate": False}, {"value": 2, "is_approximate": False}, "active"),
+        (
+            {"value": 1, "is_approximate": False},
+            {"value": 0, "is_approximate": False},
+            "completed",
+        ),
+    ],
+)
+def test_extract_plant_quantity_inheritance_overrides_and_response(
+    authenticated_browser: tuple[str, str],
+    plant_references: dict[str, str],
+    database_connection: Connection,
+    quantity: dict[str, object] | None,
+    expected_quantity: dict[str, object] | None,
+    expected_lifecycle: str,
+) -> None:
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        sowing = database.get(Sowing, UUID(plant_references["active_sowing"]))
+        seed_lot = database.get(SeedLot, UUID(plant_references["lot"]))
+        identities = database.scalars(
+            select(BotanicalIdentity).where(
+                BotanicalIdentity.id.in_(
+                    [
+                        UUID(plant_references["upstream_identity"]),
+                        UUID(plant_references["plant_identity"]),
+                    ]
+                )
+            )
+        ).all()
+        location = database.get(Location, UUID(plant_references["location"]))
+        assert sowing is not None
+        assert seed_lot is not None
+        assert location is not None
+        upstream_before = (
+            sowing.quantity_value,
+            sowing.germinated_count,
+            seed_lot.quantity_value,
+            seed_lot.producer_plant_id,
+            seed_lot.producer_plant_group_id,
+            tuple(
+                (identity.id, identity.scientific_name, identity.updated_at)
+                for identity in identities
+            ),
+            (location.id, location.name, location.parent_id, location.updated_at),
+        )
+    _, _, group = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/plant-groups",
+        {
+            "botanical_identity_id": plant_references["upstream_identity"],
+            "originating_sowing_id": plant_references["active_sowing"],
+            "location_id": plant_references["location"],
+            "label": "Source seedlings",
+            "quantity": quantity,
+        },
+    )
+    status_code, headers, result = mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/plant-groups/{group['id']}/extract-plant",
+        {
+            "botanical_identity_id": plant_references["plant_identity"],
+            "location_id": None,
+            "label": "Selected seedling",
+            "collection_entry_date": {"precision": "month", "year": 2026, "month": 9},
+            "notes": "Strong individual.",
+        },
+    )
+    assert status_code == 201
+    assert headers["location"].endswith(result["plant"]["id"])
+    plant = result["plant"]
+    assert plant["botanical_identity_id"] == plant_references["plant_identity"]
+    assert plant["location_id"] is None
+    assert plant["label"] == "Selected seedling"
+    assert plant["collection_entry_date"] == {
+        "precision": "month",
+        "year": 2026,
+        "month": 9,
+        "day": None,
+    }
+    assert plant["notes"] == "Strong individual."
+    assert plant["lifecycle"] == "active"
+    assert plant["originating_sowing_id"] is None
+    assert plant["direct_origin_kind"] is None
+    assert plant["supplier_id"] is None
+    assert plant["material_provenance_place_id"] is None
+    assert plant["originating_plant_group_id"] == group["id"]
+    assert plant["originating_plant_group"]["label"] == "Source seedlings"
+    assert result["plant_group"]["quantity"] == expected_quantity
+    assert result["plant_group"]["lifecycle"] == expected_lifecycle
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        sowing = database.get(Sowing, UUID(plant_references["active_sowing"]))
+        seed_lot = database.get(SeedLot, UUID(plant_references["lot"]))
+        identities = database.scalars(
+            select(BotanicalIdentity).where(
+                BotanicalIdentity.id.in_(
+                    [
+                        UUID(plant_references["upstream_identity"]),
+                        UUID(plant_references["plant_identity"]),
+                    ]
+                )
+            )
+        ).all()
+        location = database.get(Location, UUID(plant_references["location"]))
+        assert sowing is not None
+        assert seed_lot is not None
+        assert location is not None
+        assert (
+            sowing.quantity_value,
+            sowing.germinated_count,
+            seed_lot.quantity_value,
+            seed_lot.producer_plant_id,
+            seed_lot.producer_plant_group_id,
+            tuple(
+                (identity.id, identity.scientific_name, identity.updated_at)
+                for identity in identities
+            ),
+            (location.id, location.name, location.parent_id, location.updated_at),
+        ) == upstream_before
+
+
+def test_extract_plant_defaults_and_explicit_location_modes(
+    authenticated_browser: tuple[str, str], plant_references: dict[str, str]
+) -> None:
+    _, _, group = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/plant-groups",
+        {
+            "botanical_identity_id": plant_references["plant_identity"],
+            "location_id": plant_references["location"],
+        },
+    )
+    path = f"/api/v1/plant-groups/{group['id']}/extract-plant"
+    inherited = mutate(authenticated_browser, "POST", path, {})[2]["plant"]
+    assert inherited["botanical_identity_id"] == plant_references["plant_identity"]
+    assert inherited["location_id"] == plant_references["location"]
+    cleared = mutate(authenticated_browser, "POST", path, {"location_id": None})[2]["plant"]
+    assert cleared["location_id"] is None
+
+    _, _, no_location_group = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/plant-groups",
+        {"botanical_identity_id": plant_references["plant_identity"]},
+    )
+    overridden = mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/plant-groups/{no_location_group['id']}/extract-plant",
+        {"location_id": plant_references["location"]},
+    )[2]["plant"]
+    assert overridden["location_id"] == plant_references["location"]
+
+
+@pytest.mark.parametrize(
+    "collection_entry_date",
+    [
+        {"precision": "year", "year": 2026},
+        {"precision": "month", "year": 2026, "month": 9},
+        {"precision": "day", "year": 2026, "month": 9, "day": 1},
+    ],
+)
+def test_extract_plant_partial_dates(
+    authenticated_browser: tuple[str, str],
+    plant_references: dict[str, str],
+    collection_entry_date: dict[str, object],
+) -> None:
+    _, _, group = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/plant-groups",
+        {"botanical_identity_id": plant_references["plant_identity"]},
+    )
+    extracted = mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/plant-groups/{group['id']}/extract-plant",
+        {"collection_entry_date": collection_entry_date},
+    )[2]["plant"]
+    assert extracted["collection_entry_date"] == {
+        **collection_entry_date,
+        "month": collection_entry_date.get("month"),
+        "day": collection_entry_date.get("day"),
+    }
+
+
+@pytest.mark.parametrize("lifecycle", ["completed", "dead", "lost", "discarded"])
+def test_extract_plant_rejects_historical_groups_without_mutation(
+    authenticated_browser: tuple[str, str],
+    plant_references: dict[str, str],
+    lifecycle: str,
+) -> None:
+    quantity = {"value": 2, "is_approximate": False}
+    _, _, group = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/plant-groups",
+        {
+            "botanical_identity_id": plant_references["plant_identity"],
+            "lifecycle": lifecycle,
+            "quantity": quantity,
+        },
+    )
+    status_code, _, body = mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/plant-groups/{group['id']}/extract-plant",
+        {},
+    )
+    assert status_code == 409
+    assert body["detail"]["code"] == "plant_group_not_active"
+
+
+def test_extract_plant_security_missing_references_and_atomic_rollback(
+    authenticated_browser: tuple[str, str],
+    plant_references: dict[str, str],
+    database_connection: Connection,
+) -> None:
+    _, _, group = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/plant-groups",
+        {
+            "botanical_identity_id": plant_references["plant_identity"],
+            "quantity": {"value": 2, "is_approximate": False},
+        },
+    )
+    path = f"/api/v1/plant-groups/{group['id']}/extract-plant"
+    for payload, code in (
+        ({"botanical_identity_id": str(uuid7())}, "botanical_identity_not_found"),
+        ({"location_id": str(uuid7())}, "location_not_found"),
+    ):
+        status_code, _, body = mutate(authenticated_browser, "POST", path, payload)
+        assert status_code == 404
+        assert body["detail"]["code"] == code
+    cookie, csrf = authenticated_browser
+    assert request("POST", path, body={})[0] == 401
+    assert request("POST", path, body={}, headers={"cookie": cookie, "origin": ORIGIN})[0] == 403
+    assert (
+        request(
+            "POST",
+            path,
+            body={},
+            headers={"cookie": cookie, "origin": "https://evil.example", "x-csrf-token": csrf},
+        )[0]
+        == 403
+    )
+    assert (
+        mutate(authenticated_browser, "POST", f"/api/v1/plant-groups/{uuid7()}/extract-plant", {})[
+            0
+        ]
+        == 404
+    )
+    current = request("GET", f"/api/v1/plant-groups/{group['id']}", headers={"cookie": cookie})[2]
+    assert current["quantity"] == {"value": 2, "is_approximate": False}
+    assert current["lifecycle"] == "active"
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        assert (
+            database.scalar(
+                select(func.count())
+                .select_from(Plant)
+                .where(Plant.originating_plant_group_id == UUID(group["id"]))
+            )
+            == 0
+        )
+
+
+def test_extracted_plant_put_preserves_read_only_origin(
+    authenticated_browser: tuple[str, str], plant_references: dict[str, str]
+) -> None:
+    _, _, group = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/plant-groups",
+        {"botanical_identity_id": plant_references["upstream_identity"]},
+    )
+    _, _, extraction = mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/plant-groups/{group['id']}/extract-plant",
+        {},
+    )
+    plant_id = extraction["plant"]["id"]
+    status_code, _, updated = mutate(
+        authenticated_browser,
+        "PUT",
+        f"/api/v1/plants/{plant_id}",
+        {
+            "botanical_identity_id": plant_references["plant_identity"],
+            "location_id": plant_references["location"],
+            "label": "Corrected",
+            "collection_entry_date": {"precision": "year", "year": 2025},
+            "notes": "Corrected notes",
+            "lifecycle": "dead",
+        },
+    )
+    assert status_code == 200
+    assert updated["originating_plant_group_id"] == group["id"]
+    assert updated["label"] == "Corrected"
+    assert updated["lifecycle"] == "dead"
+    for forbidden in (
+        {"originating_sowing_id": plant_references["active_sowing"]},
+        {"direct_origin_kind": "unknown"},
+    ):
+        status_code, _, body = mutate(
+            authenticated_browser,
+            "PUT",
+            f"/api/v1/plants/{plant_id}",
+            {"botanical_identity_id": plant_references["plant_identity"], **forbidden},
+        )
+        assert status_code == 409
+        assert body["detail"]["code"] == "extracted_plant_origin_immutable"
+
+
+@pytest.mark.parametrize(("starting", "successes"), [(1, 1), (2, 2)])
+def test_concurrent_exact_extraction_serializes_without_overdraw(
+    database_engine: Engine, starting: int, successes: int
+) -> None:
+    identity_id = uuid7()
+    group_id = uuid7()
+    with Session(database_engine) as database:
+        database.add(BotanicalIdentity(id=identity_id, scientific_name=f"Concurrent {identity_id}"))
+        database.add(
+            PlantGroup(
+                id=group_id,
+                botanical_identity_id=identity_id,
+                direct_origin_kind="unknown",
+                quantity_value=starting,
+                quantity_is_approximate=False,
+            )
+        )
+        database.commit()
+    barrier = Barrier(2)
+
+    def perform() -> bool:
+        with Session(database_engine) as database:
+            barrier.wait()
+            try:
+                extract_plant(database, group_id, PlantExtractionCreate())
+                database.commit()
+                return True
+            except PlantDomainConflictError:
+                database.rollback()
+                return False
+
+    try:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            results = [future.result() for future in [executor.submit(perform) for _ in range(2)]]
+        assert sum(results) == successes
+        with Session(database_engine) as database:
+            group = database.get(PlantGroup, group_id)
+            assert group is not None
+            assert group.quantity_value == 0
+            assert group.lifecycle == "completed"
+            assert (
+                database.scalar(
+                    select(func.count())
+                    .select_from(Plant)
+                    .where(Plant.originating_plant_group_id == group_id)
+                )
+                == successes
+            )
+    finally:
+        with Session(database_engine) as database:
+            database.execute(delete(Plant).where(Plant.originating_plant_group_id == group_id))
+            database.execute(delete(PlantGroup).where(PlantGroup.id == group_id))
+            database.execute(delete(BotanicalIdentity).where(BotanicalIdentity.id == identity_id))
+            database.commit()

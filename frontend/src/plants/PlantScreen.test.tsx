@@ -106,6 +106,8 @@ function plant(overrides: Record<string, unknown> = {}) {
     label: "Avocado #1",
     originating_sowing_id: null,
     originating_sowing: null,
+    originating_plant_group_id: null,
+    originating_plant_group: null,
     direct_origin_kind: "purchased",
     direct_origin_detail: null,
     supplier_id: supplierId,
@@ -396,7 +398,12 @@ test("one New disclosure chooses type and supports BotanicalIdentity-only Plant 
   await user.click(
     screen.getByRole("button", { name: /Plant.*One individually/s }),
   );
-  await chooseReference(user, "Botanical identity", "Persea americana");
+  const identity = screen.getByRole("combobox", {
+    name: "Botanical identity",
+  });
+  await user.clear(identity);
+  await user.type(identity, "Persea");
+  await user.click(screen.getByRole("button", { name: "Persea americana" }));
   await user.click(screen.getByRole("button", { name: "Record Plant" }));
   expect(
     await screen.findByText("Plant was added to the collection."),
@@ -817,4 +824,270 @@ test("detail loading, detail failure, authorization, and session expiry are expl
     await screen.findByText("Your session expired. Sign in again to continue."),
   ).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
+});
+
+test("active group extraction is focused, updates exact quantity, opens the Plant, and keeps origin read-only", async () => {
+  const activeGroup = group({
+    lifecycle: "active",
+    quantity: { value: 1, is_approximate: false },
+    location_id: locationId,
+    location: { id: locationId, display_path: location.display_path },
+  });
+  let plants: unknown[] = [];
+  let groups: unknown[] = [activeGroup];
+  let extractionPayload: Record<string, unknown> | undefined;
+  mockApi(
+    plantHandler(plants, groups, (path, init) => {
+      if (
+        path === `/api/v1/plant-groups/${groupId}/extract-plant` &&
+        init?.method === "POST"
+      ) {
+        extractionPayload = body(init);
+        const completedGroup = group({
+          lifecycle: "completed",
+          quantity: { value: 0, is_approximate: false },
+        });
+        const extracted = plant({
+          id: "extracted-plant",
+          botanical_identity_id: identityId,
+          botanical_identity: {
+            id: identityId,
+            display_label: "Persea americana",
+          },
+          label: extractionPayload.label,
+          location_id: extractionPayload.location_id,
+          location: null,
+          originating_plant_group_id: groupId,
+          originating_plant_group: {
+            id: groupId,
+            label: "Seedlings 2026",
+            lifecycle: "completed",
+            botanical_identity: {
+              id: otherIdentityId,
+              display_label: "Cyphomandra betacea",
+            },
+            quantity: { value: 0, is_approximate: false },
+          },
+          direct_origin_kind: null,
+          supplier_id: null,
+          supplier: null,
+          material_provenance_place_id: null,
+          material_provenance: null,
+        });
+        plants = [extracted];
+        groups = [completedGroup];
+        return json({ plant: extracted, plant_group: completedGroup }, 201);
+      }
+      return undefined;
+    }),
+  );
+  const user = await openPlants();
+  await user.click(
+    await screen.findByRole("button", { name: /Seedlings 2026/ }),
+  );
+  await user.click(
+    await screen.findByRole("button", { name: "Extract plant" }),
+  );
+  expect(screen.getByRole("heading", { name: "Extract plant" })).toHaveFocus();
+  expect(screen.getByText(/last exact member/)).toBeInTheDocument();
+  expect(screen.queryByLabelText("Lifecycle")).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("Direct origin")).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("Originating Sowing")).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("combobox", { name: "Botanical identity" }),
+  ).toHaveValue("Cyphomandra betacea");
+  expect(screen.getByLabelText("Current location (optional)")).toHaveValue(
+    locationId,
+  );
+  const extractionIdentity = screen.getByRole("combobox", {
+    name: "Botanical identity",
+  });
+  await user.clear(extractionIdentity);
+  await user.type(extractionIdentity, "Persea");
+  await user.click(screen.getByRole("button", { name: "Persea americana" }));
+  await user.selectOptions(
+    screen.getByLabelText("Current location (optional)"),
+    "",
+  );
+  await user.type(screen.getByLabelText("Label (optional)"), "Chosen one");
+  await user.selectOptions(screen.getByLabelText("Precision"), "day");
+  await user.clear(screen.getByLabelText("Year"));
+  await user.type(screen.getByLabelText("Year"), "2026");
+  await user.clear(screen.getByLabelText("Month"));
+  await user.type(screen.getByLabelText("Month"), "9");
+  await user.clear(screen.getByLabelText("Day"));
+  await user.type(screen.getByLabelText("Day"), "1");
+  await user.type(
+    screen.getByLabelText("Notes (optional)"),
+    "Chosen for vigor.",
+  );
+  await user.click(screen.getByRole("button", { name: "Extract plant" }));
+  expect(extractionPayload).toMatchObject({
+    botanical_identity_id: identityId,
+    location_id: null,
+    label: "Chosen one",
+    collection_entry_date: {
+      precision: "day",
+      year: 2026,
+      month: 9,
+      day: 1,
+    },
+    notes: "Chosen for vigor.",
+  });
+  expect(
+    await screen.findByText("Plant was extracted from the group."),
+  ).toBeInTheDocument();
+  expect(screen.getByText("Extracted from group")).toBeInTheDocument();
+  expect(screen.getByText("Seedlings 2026")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Edit Plant" }));
+  expect(screen.getByText(/Origin is read-only/)).toBeInTheDocument();
+  expect(screen.queryByLabelText("Direct origin")).not.toBeInTheDocument();
+});
+
+test("group extraction availability and quantity explanations cover inactive, exact, approximate, and unknown states", async () => {
+  const scenarios = [
+    {
+      record: group({ lifecycle: "completed" }),
+      explanation: "Plants can only be extracted from an active group.",
+      actionable: false,
+    },
+    {
+      record: group({
+        lifecycle: "active",
+        quantity: { value: 5, is_approximate: false },
+      }),
+      explanation: "Group count: 5 → 4",
+      actionable: true,
+    },
+    {
+      record: group({
+        lifecycle: "active",
+        quantity: { value: 5, is_approximate: true },
+      }),
+      explanation: "Approximate group quantity will remain unchanged.",
+      actionable: true,
+    },
+    {
+      record: group({ lifecycle: "active", quantity: null }),
+      explanation: "Group quantity is unknown and will remain unknown.",
+      actionable: true,
+    },
+  ];
+
+  for (const scenario of scenarios) {
+    mockApi(plantHandler([], [scenario.record]));
+    const user = await openPlants();
+    if (!scenario.actionable) {
+      await user.click(
+        within(screen.getByRole("group", { name: "Lifecycle" })).getByRole(
+          "button",
+          { name: "History" },
+        ),
+      );
+    }
+    await user.click(
+      await screen.findByRole("button", { name: /Seedlings 2026/ }),
+    );
+    if (scenario.actionable) {
+      const action = await screen.findByRole("button", {
+        name: "Extract plant",
+      });
+      await user.click(action);
+    } else {
+      expect(
+        screen.queryByRole("button", { name: "Extract plant" }),
+      ).not.toBeInTheDocument();
+    }
+    expect(await screen.findByText(scenario.explanation)).toBeInTheDocument();
+    cleanup();
+    vi.restoreAllMocks();
+  }
+});
+
+test("extraction conflict preserves the form, refreshes the group, and does not add a Plant", async () => {
+  let currentGroup = group({
+    lifecycle: "active",
+    quantity: { value: 1, is_approximate: false },
+  });
+  let postCount = 0;
+  mockApi(
+    plantHandler([], [currentGroup], (path, init) => {
+      if (
+        path === `/api/v1/plant-groups/${groupId}/extract-plant` &&
+        init?.method === "POST"
+      ) {
+        postCount += 1;
+        currentGroup = group({
+          lifecycle: "completed",
+          quantity: { value: 0, is_approximate: false },
+        });
+        return json({ detail: { code: "plant_group_not_active" } }, 409);
+      }
+      if (
+        path === `/api/v1/plant-groups/${groupId}` &&
+        (!init?.method || init.method === "GET")
+      )
+        return json(currentGroup);
+      return undefined;
+    }),
+  );
+  const user = await openPlants();
+  await user.click(
+    await screen.findByRole("button", { name: /Seedlings 2026/ }),
+  );
+  await user.click(
+    await screen.findByRole("button", { name: "Extract plant" }),
+  );
+  const label = screen.getByLabelText("Label (optional)");
+  await user.type(label, "Keep this value");
+  await user.click(screen.getByRole("button", { name: "Extract plant" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "current state has been refreshed",
+  );
+  expect(label).toHaveValue("Keep this value");
+  expect(screen.getByText(/no longer active/)).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Extract plant" })).toBeDisabled();
+  expect(postCount).toBe(1);
+  expect(
+    screen.queryByText("Plant was extracted from the group."),
+  ).not.toBeInTheDocument();
+});
+
+test("source PlantGroup context is searchable for extracted Plants", async () => {
+  const extracted = plant({
+    originating_plant_group_id: groupId,
+    originating_plant_group: {
+      id: groupId,
+      label: "Tamarillo extraction source",
+      lifecycle: "active",
+      botanical_identity: {
+        id: otherIdentityId,
+        display_label: "Cyphomandra betacea",
+      },
+      quantity: null,
+    },
+    direct_origin_kind: null,
+    supplier_id: null,
+    supplier: null,
+    material_provenance_place_id: null,
+    material_provenance: null,
+  });
+  mockApi(plantHandler([extracted], []));
+  const user = await openPlants();
+  await user.type(
+    await screen.findByRole("searchbox", { name: "Search Plants" }),
+    "Tamarillo extraction source",
+  );
+  const result = screen.getByRole("button", { name: /Avocado #1/ });
+  expect(result).toHaveTextContent(
+    "Extracted from group · Tamarillo extraction source",
+  );
+  await user.clear(screen.getByRole("searchbox", { name: "Search Plants" }));
+  await user.type(
+    screen.getByRole("searchbox", { name: "Search Plants" }),
+    "Cyphomandra betacea",
+  );
+  expect(
+    screen.getByRole("button", { name: /Avocado #1/ }),
+  ).toBeInTheDocument();
 });

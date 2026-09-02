@@ -1,5 +1,42 @@
 # Progress
 
+## 2026-09-02 — PLANT-004
+
+- Added Alembic revision `20260901_0013` and a nullable, indexed, restrictive
+  `plants.originating_plant_group_id` relationship. PostgreSQL now enforces exactly one of the
+  existing Sowing origin, direct origin, or PlantGroup origin modes; the focused
+  `0012 → 0013 → 0012 → 0013` migration cycle preserves existing records and converts extracted
+  Plants back to valid direct-unknown roots on downgrade.
+- Added the owner-authorized and session-CSRF-protected
+  `POST /api/v1/plant-groups/{id}/extract-plant` operation. It locks the active PlantGroup, creates
+  exactly one active Plant with an immutable immediate PlantGroup origin, supports independent
+  BotanicalIdentity and current-Location choices plus optional label/date/notes, decrements exact
+  quantities atomically, completes an exact final member, and leaves approximate or unknown
+  quantities unchanged. The response returns authoritative Plant and PlantGroup projections.
+- Extended Plant projection, full PUT protection, and lineage traversal for the new immediate parent.
+  Extracted Plants retain normal correctable identity, location, label, date, notes, and lifecycle,
+  while ordinary PUT cannot detach or reassign their extraction origin. Upstream Sowing, SeedLot,
+  producer, BotanicalIdentity, and Location records remain unchanged.
+- Extended the unified Plants UI with an active-only `Extract plant` action, a focused form limited to
+  the permitted fields, concise exact/approximate/unknown consequences, authoritative success
+  reconciliation, preserved input and group refresh on conflicts, selected extracted-Plant detail,
+  read-only origin editing, and source-group search context. The form moves keyboard focus on open,
+  announces failures/status, restores action focus on cancel, and disables stale resubmission after
+  a refreshed group becomes inactive.
+- Exact successful verification: Ruff formatting/lint; strict mypy; 141 backend unit tests at 90.17%
+  coverage; all 209 disposable PostgreSQL 18.6 integration tests, including exact-1/exact-2 races,
+  rollback, upstream immutability, migration cycle, and lineage/cycle behavior; Prettier; ESLint;
+  strict TypeScript; all 84 frontend tests; regenerated OpenAPI and TypeScript declarations plus API
+  drift; production backend/frontend image builds; and a complete `make check`.
+- Responsive browser verification against an isolated local stack passed at 390×844: long botanical
+  and group names and the quantity explanation wrapped, controls stayed within the viewport, the form
+  stacked without horizontal overflow, and focus landed on the extraction heading. The saved local
+  production `.env` canonical origin is invalid, so the production health check correctly refused to
+  start; it was not edited, and browser QA used a disposable isolated development stack instead.
+- All three existing `PLANT-004` acceptance criteria remain unchanged and are fully exercised, so
+  `PLANT-004` is `verified`. No batch extraction, reverse merge/undo, propagation workflow, generic
+  event/ledger/parent-child framework, attachment/photo, or PWA behavior was added.
+
 ## 2026-09-01 — LINEAGE-002
 
 - Added Alembic revision `20260901_0012`, completing collection-produced SeedLot provenance with

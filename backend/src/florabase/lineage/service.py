@@ -56,6 +56,11 @@ _WALK = text(
             WHERE walk.kind = 'plant' AND plant.id = walk.id
               AND plant.originating_sowing_id IS NOT NULL
             UNION ALL
+            SELECT 'plant_group'::text, plant.originating_plant_group_id
+            FROM plants AS plant
+            WHERE walk.kind = 'plant' AND plant.id = walk.id
+              AND plant.originating_plant_group_id IS NOT NULL
+            UNION ALL
             SELECT 'sowing'::text, plant_group.originating_sowing_id
             FROM plant_groups AS plant_group
             WHERE walk.kind = 'plant_group' AND plant_group.id = walk.id
