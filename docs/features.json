@@ -443,7 +443,7 @@
       ],
       "dependencies": ["PLANT-001", "PROFILE-001"],
       "priority": "P1",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "EVENT-002",

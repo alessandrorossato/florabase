@@ -125,6 +125,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/events/{event_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Event */
+        get: operations["getEvent"];
+        /** Update One Event */
+        put: operations["updateEvent"];
+        post?: never;
+        /** Delete One Event */
+        delete: operations["deleteEvent"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/geographic-places": {
         parameters: {
             query?: never;
@@ -318,6 +337,24 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/plant-groups/{plant_group_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Plant Group Events */
+        get: operations["listPlantGroupEvents"];
+        put?: never;
+        /** Create Plant Group Event */
+        post: operations["createPlantGroupEvent"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plant-groups/{plant_group_id}/extract-plant": {
         parameters: {
             query?: never;
@@ -382,6 +419,24 @@ export interface paths {
         /** Update One Plant */
         put: operations["updatePlant"];
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plants/{plant_id}/events": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Plant Events */
+        get: operations["listPlantEvents"];
+        put?: never;
+        /** Create Plant Event */
+        post: operations["createPlantEvent"];
         delete?: never;
         options?: never;
         head?: never;
@@ -671,6 +726,56 @@ export interface components {
          * @enum {string}
          */
         DirectOriginKind: "purchased" | "gift_exchange" | "collection_produced" | "other" | "unknown";
+        /** EventCreate */
+        EventCreate: {
+            /** Destination Location Id */
+            destination_location_id?: string | null;
+            kind: components["schemas"]["EventKind"];
+            /** Notes */
+            notes?: string | null;
+            occurred_on?: components["schemas"]["PartialDate"] | null;
+        };
+        /**
+         * EventKind
+         * @enum {string}
+         */
+        EventKind: "observation" | "movement" | "repotting" | "flowering" | "fruiting" | "pruning" | "treatment" | "harvest" | "death" | "loss" | "discarded" | "other";
+        /** EventResponse */
+        EventResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            destination_location: components["schemas"]["LocationSummary"] | null;
+            /** Destination Location Id */
+            destination_location_id: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["EventKind"];
+            /** Notes */
+            notes: string | null;
+            occurred_on: components["schemas"]["PartialDate"] | null;
+            /** Target */
+            target: components["schemas"]["PlantEventTarget"] | components["schemas"]["PlantGroupEventTarget"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** EventUpdate */
+        EventUpdate: {
+            /** Destination Location Id */
+            destination_location_id?: string | null;
+            kind: components["schemas"]["EventKind"];
+            /** Notes */
+            notes?: string | null;
+            occurred_on?: components["schemas"]["PartialDate"] | null;
+        };
         /** GeographicPlaceCreate */
         GeographicPlaceCreate: {
             /** Name */
@@ -901,6 +1006,22 @@ export interface components {
             /** Supplier Id */
             supplier_id?: string | null;
         };
+        /** PlantEventTarget */
+        PlantEventTarget: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string | null;
+            lifecycle: components["schemas"]["PlantLifecycle"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "plant";
+        };
         /** PlantExtractionCreate */
         PlantExtractionCreate: {
             /** Botanical Identity Id */
@@ -944,6 +1065,22 @@ export interface components {
             quantity?: components["schemas"]["PlantGroupQuantity"] | null;
             /** Supplier Id */
             supplier_id?: string | null;
+        };
+        /** PlantGroupEventTarget */
+        PlantGroupEventTarget: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string | null;
+            lifecycle: components["schemas"]["PlantGroupLifecycle"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "plant_group";
         };
         /**
          * PlantGroupLifecycle
@@ -1978,6 +2115,105 @@ export interface operations {
             };
         };
     };
+    getEvent: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateEvent: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteEvent: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                event_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     listGeographicPlaces: {
         parameters: {
             query?: never;
@@ -2499,6 +2735,74 @@ export interface operations {
             };
         };
     };
+    listPlantGroupEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plant_group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createPlantGroupEvent: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                plant_group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     extractPlantFromGroup: {
         parameters: {
             query?: never;
@@ -2677,6 +2981,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlantResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listPlantEvents: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createPlantEvent: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                plant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EventCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["EventResponse"];
                 };
             };
             /** @description Validation Error */

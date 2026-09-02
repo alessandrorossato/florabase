@@ -284,6 +284,214 @@
         "title": "DirectOriginKind",
         "type": "string"
       },
+      "EventCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "destination_location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination Location Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EventKind"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "occurred_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "EventCreate",
+        "type": "object"
+      },
+      "EventKind": {
+        "enum": [
+          "observation",
+          "movement",
+          "repotting",
+          "flowering",
+          "fruiting",
+          "pruning",
+          "treatment",
+          "harvest",
+          "death",
+          "loss",
+          "discarded",
+          "other"
+        ],
+        "title": "EventKind",
+        "type": "string"
+      },
+      "EventResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "destination_location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/LocationSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "destination_location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination Location Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EventKind"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "occurred_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "target": {
+            "discriminator": {
+              "mapping": {
+                "plant": "#/components/schemas/PlantEventTarget",
+                "plant_group": "#/components/schemas/PlantGroupEventTarget"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PlantEventTarget"
+              },
+              {
+                "$ref": "#/components/schemas/PlantGroupEventTarget"
+              }
+            ],
+            "title": "Target"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "target",
+          "kind",
+          "occurred_on",
+          "notes",
+          "destination_location_id",
+          "destination_location",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "EventResponse",
+        "type": "object"
+      },
+      "EventUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "destination_location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Destination Location Id"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/EventKind"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "occurred_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "EventUpdate",
+        "type": "object"
+      },
       "GeographicPlaceCreate": {
         "additionalProperties": false,
         "properties": {
@@ -1009,6 +1217,42 @@
         "title": "PlantCreate",
         "type": "object"
       },
+      "PlantEventTarget": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/PlantLifecycle"
+          },
+          "type": {
+            "const": "plant",
+            "default": "plant",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "lifecycle"
+        ],
+        "title": "PlantEventTarget",
+        "type": "object"
+      },
       "PlantExtractionCreate": {
         "additionalProperties": false,
         "properties": {
@@ -1221,6 +1465,42 @@
           "botanical_identity_id"
         ],
         "title": "PlantGroupCreate",
+        "type": "object"
+      },
+      "PlantGroupEventTarget": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/PlantGroupLifecycle"
+          },
+          "type": {
+            "const": "plant_group",
+            "default": "plant_group",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "lifecycle"
+        ],
+        "title": "PlantGroupEventTarget",
         "type": "object"
       },
       "PlantGroupLifecycle": {
@@ -4269,6 +4549,166 @@
         ]
       }
     },
+    "/api/v1/events/{event_id}": {
+      "delete": {
+        "operationId": "deleteEvent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete One Event",
+        "tags": [
+          "events"
+        ]
+      },
+      "get": {
+        "operationId": "getEvent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Event",
+        "tags": [
+          "events"
+        ]
+      },
+      "put": {
+        "operationId": "updateEvent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "event_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Event Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update One Event",
+        "tags": [
+          "events"
+        ]
+      }
+    },
     "/api/v1/geographic-places": {
       "get": {
         "operationId": "listGeographicPlaces",
@@ -5102,6 +5542,120 @@
         ]
       }
     },
+    "/api/v1/plant-groups/{plant_group_id}/events": {
+      "get": {
+        "operationId": "listPlantGroupEvents",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plant_group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plant Group Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EventResponse"
+                  },
+                  "title": "Response Listplantgroupevents",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Plant Group Events",
+        "tags": [
+          "events"
+        ]
+      },
+      "post": {
+        "operationId": "createPlantGroupEvent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plant_group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plant Group Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Plant Group Event",
+        "tags": [
+          "events"
+        ]
+      }
+    },
     "/api/v1/plant-groups/{plant_group_id}/extract-plant": {
       "post": {
         "operationId": "extractPlantFromGroup",
@@ -5403,6 +5957,120 @@
         "summary": "Update One Plant",
         "tags": [
           "plants"
+        ]
+      }
+    },
+    "/api/v1/plants/{plant_id}/events": {
+      "get": {
+        "operationId": "listPlantEvents",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plant Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EventResponse"
+                  },
+                  "title": "Response Listplantevents",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Plant Events",
+        "tags": [
+          "events"
+        ]
+      },
+      "post": {
+        "operationId": "createPlantEvent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EventCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Plant Event",
+        "tags": [
+          "events"
         ]
       }
     },
