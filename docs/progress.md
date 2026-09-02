@@ -4,6 +4,35 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-02 — EVENT-002
+
+- Added one protected Event journal to both Plant and PlantGroup detail pages. The complete
+  EVENT-001 vocabulary has human-readable labels; API order and unknown, year, month, or complete
+  occurrence-date precision remain faithful. Desktop uses a vertical chronological timeline, while
+  narrow screens use compact wrapping cards with touch-sized actions and no horizontal scrolling.
+- Added predictable All, Observations, Cultivation, and Status filters plus useful loading, error,
+  retry, empty, and mutation states. The accessible create flow conditionally requires a movement
+  destination and explains movement or lifecycle side effects. Every Event can be edited or deleted;
+  both flows explain that historical correction/deletion neither replays nor rolls back current
+  Location or lifecycle. Successful creation refetches both Event history and the authoritative
+  Plant/PlantGroup state; update and deletion refresh history only.
+- Component coverage now exercises Plant and PlantGroup journals, every kind and partial-date
+  precision, deterministic ordering, all filters, desktop/mobile structure, empty/loading/error
+  states, creation and validation, state-changing refresh, edit/delete semantics, mutation failure,
+  warnings, and accessible labels/actions. Verification passed Prettier, ESLint, strict TypeScript,
+  Ruff, strict mypy over 122 source files, 169 backend unit tests at 90.72% coverage, 89 frontend
+  tests, generated API drift, workflow-helper tests, all 222 disposable PostgreSQL integration tests,
+  and production backend/frontend image builds through `make ci`; `git diff --check` also passed.
+- Browser QA against an isolated tmpfs PostgreSQL stack confirmed the desktop timeline and the
+  responsive 390×844 card layout, including faithful dates, wrapping long notes, visible destination,
+  44-pixel action targets, zero horizontal overflow, side-effect warnings, non-rollback dialogs, and
+  authoritative Location refresh after movement. No migration or generated API change was needed,
+  and no operator database or volume was modified.
+- A collection-wide Event timeline remains deferred. `UX-001` now explicitly retains the future
+  cross-application review of primary/mobile and detail navigation, tabs/sections, action placement,
+  cross-domain hierarchy, visual/interaction coherence, and possible global Event activity. That UX
+  work remains planned. `EVENT-002` is verified.
+
 ## 2026-09-02 — EVENT-001
 
 - Added first-class UUIDv7 Events for exactly one Plant or PlantGroup, with the controlled initial
@@ -166,12 +195,13 @@ implementation detail.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
-  protected Plant/PlantGroup Event backend journal.
-- Next dependency-unblocked P1 product contract: `EVENT-002`.
+  protected Plant/PlantGroup Event backend journal and detail-page timeline UI.
+- No planned P1 product increment remains in `features.json`; licensing/version policy and release
+  readiness remain explicit operator/product decisions in the roadmap.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.
   Other unblocked P2 product items are listed by the machine-readable dependency graph rather than
   prioritized here.
-- Deliberately absent: the Event timeline UI, structured Event payloads beyond movement, Event
-  attachments/photos, advanced search, dashboards, import/export, PWA behavior,
+- Deliberately absent: a collection-wide Event timeline, structured Event payloads beyond movement,
+  Event attachments/photos, advanced search, dashboards, import/export, PWA behavior,
   offline/synchronization behavior, generic graphs, and multi-user collaboration.

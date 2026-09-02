@@ -134,8 +134,14 @@ Florabase is not event-sourced. The Plant or PlantGroup row is authoritative cur
 initial Event creation applies a side effect. Correcting an Event's kind, partial date, notes, or
 movement destination changes history only; editing or deleting an Event never replays, reverses, or
 recomputes current Location or lifecycle. Ordinary Plant/PlantGroup edits do not create Events.
-Structured per-kind payloads beyond movement destination, Event attachments, and the Event timeline
-UI are deferred.
+
+Plant and PlantGroup detail pages expose the same protected Event journal. Desktop presents the
+API-ordered history as a vertical timeline, while narrow screens use compact wrapping cards. The UI
+supports All, Observations (observation, flowering, fruiting), Cultivation (movement, repotting,
+pruning, treatment, harvest), and Status (death, loss, discarded) filters; `other` remains in All.
+Creation explains current-state effects, and correction/deletion explains the non-event-sourced
+boundary. Structured per-kind payloads beyond movement destination, Event attachments, and a
+possible collection-wide Event timeline are deferred.
 
 ## Explicit lineage
 
