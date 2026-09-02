@@ -14,9 +14,10 @@ do not pre-build later capabilities.
 6. Run the narrowest meaningful baseline checks; use `make check` before risky or broad changes when
    the full stack is available.
 
-Use a focused branch (normally `feat/<feature-id>` or `docs/<topic>`). Implement the smallest coherent
-change, run focused checks while developing, then complete the relevant full verification before
-marking a feature `verified`.
+Choose the roadmap increment before creating a branch. Use `make feature-start
+BRANCH=feat/<feature-id>` (or a focused `fix/`, `docs/`, or `ci/` name) to create it from clean,
+fast-forwarded `main`. Implement the smallest coherent change, run focused checks while developing,
+then complete the relevant full verification before marking a feature `verified`.
 
 ## Repository boundaries
 
@@ -57,8 +58,12 @@ acceptance criterion, not merely satisfied dependencies.
 After meaningful work, update affected documentation and append or consolidate a concise
 `docs/progress.md` milestone with the exact checks and unresolved issues. Review `git diff` and
 `git diff --check` before staging. Stage only intentional files, inspect the staged diff, commit the
-feature branch, and push it normally. Open a pull request into `main`; never force-push, rewrite
-shared history, or merge the pull request unless the user explicitly requests it.
+feature branch, and push it normally. Open a pull request into `main` and, when authenticated and
+supported by repository rules, enable squash auto-merge. Never bypass pending or failed required
+checks, force-push, rewrite shared history, manually force a merge, or commit feature work directly
+to `main`. If GitHub CLI authentication is unavailable, leave the pushed branch intact and report
+the normal pull-request URL. After GitHub merges the PR, use `make feature-finish` for conservative
+local cleanup.
 
 Before finishing, run relevant formatting, lint, typing, tests, integration, API drift, migration,
 build, and health checks proportional to the change. Report environmental limits exactly and never

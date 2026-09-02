@@ -31,6 +31,7 @@ make test-integration
 make api-check
 make build
 make check
+make ci
 ```
 
 `make format` modifies Python and frontend-supported text; the other check commands are intended to
@@ -42,6 +43,12 @@ removes its tmpfs-backed database even on failure.
 
 Run production image builds when Dockerfiles, dependencies, build configuration, or release-facing
 code changes. Run migration and integration checks for schema or persistence changes.
+
+GitHub runs three stable checks for pull requests into `main`: `quality` runs `make check`,
+`integration` exercises the same disposable PostgreSQL suite as `make test-integration`, and `build`
+builds the production backend and frontend images. `make ci` runs all three gates locally in
+sequence; it is deliberately comprehensive, while focused commands remain the normal development
+loop.
 
 ## Optional host tools
 
@@ -88,12 +95,36 @@ the schema, and never rewrite a migration that may have been deployed.
 The current Alembic head is discovered from the migration chain rather than duplicated here; use
 `docker compose run --rm backend alembic heads` when needed.
 
+To upgrade the existing development database explicitly, use `make dev-upgrade`. It uses
+`compose.yaml` plus `compose.dev.yaml`, displays the current revision, applies `alembic upgrade head`,
+and displays the resulting revision without deleting volumes. Back up meaningful production data
+before production upgrades; this development helper is not a production deployment command.
+
 ## Git and backlog workflow
 
-Read `AGENTS.md`, `docs/progress.md`, and `docs/features.json`. Branch from current verified `main`,
-keep one backlog increment per branch, preserve unrelated work, and document explicit exclusions.
-Before review, run the full relevant checks, inspect `git diff` and `git diff --check`, update the
-backlog/progress honestly, stage only intentional files, and push the branch normally. Open a pull
-request into `main`; do not force-push or merge it unless explicitly authorized.
+Read `AGENTS.md`, `docs/progress.md`, and `docs/features.json`, decide the backlog increment, then use:
+
+```bash
+make feature-start BRANCH=feat/example
+```
+
+The helper requires a clean tree and an `origin`, fetches and prunes, fast-forwards local `main`, and
+refuses unsafe or existing branches. It does not infer the next feature. Keep one increment per
+branch and document explicit exclusions. Before review, run focused tests and `make check` (plus the
+relevant integration/build gates), inspect `git diff` and `git diff --check`, update progress
+honestly, and stage only intentional files.
+
+Push normally and open a pull request into `main`. Required GitHub checks are `quality`,
+`integration`, and `build`; the normal merge method is squash auto-merge, never bypassing a pending
+or failed check. GitHub should remove the merged remote head branch. From the clean local feature
+branch, finish with:
+
+```bash
+make feature-finish
+```
+
+This helper requires authenticated GitHub CLI evidence that the exact branch head was merged into
+`main`, verifies that merge on `origin/main`, fast-forwards local `main`, and only then removes the
+unchanged local branch. It stops without deletion when merge state cannot be established.
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for the concise contributor checklist.

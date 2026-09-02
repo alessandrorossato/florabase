@@ -33,7 +33,11 @@ The clearest remaining P1 product sequence is:
 1. define the lightweight Plant event and observation contract (`EVENT-001`);
 2. implement the protected Plant/PlantGroup history timeline (`EVENT-002`);
 3. decide the operator-approved licensing and release/version policy;
-4. add pull-request CI (`CI-001`) and complete release readiness as a separate release increment.
+4. complete release readiness as a separate release increment.
+
+`CI-001` now supplies the repository-side pull-request verification and repeatable feature-branch
+workflow; enabling the corresponding GitHub repository rules is an operator configuration step when
+authenticated administration access is available.
 
 Events should cover practical movement, repotting, flowering, fruiting, pruning, treatment, harvest,
 death/loss, and free observations without separate speculative tables. Collection evidence must stay

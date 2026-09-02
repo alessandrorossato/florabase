@@ -4,6 +4,26 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-02 — CI-001 repository automation implemented
+
+- Added stable `quality`, `integration`, and `build` pull-request checks using the repository's
+  existing verification, disposable PostgreSQL, and production Compose build paths. The workflow
+  has read-only permissions, per-PR stale-run cancellation, explicit timeouts, and unconditional
+  integration cleanup.
+- Added isolated-tested `feature-start` and `feature-finish` helpers, explicit development database
+  upgrade wiring, and `make ci`; centralized the squash auto-merge workflow in contributor guidance.
+- Local verification passed Bash syntax checks; isolated workflow-helper tests; pinned Prettier over
+  changed Markdown, JSON, and YAML; 209 PostgreSQL integration tests; production backend/frontend
+  image builds; `git diff --check`; and a final `make check` (Ruff, ESLint, strict mypy over 112
+  source files, strict TypeScript, 141 backend unit tests at 90.17% coverage, 84 frontend tests, and
+  generated API drift). One earlier `make check` attempt hit a host load average of 9.49 and 14
+  unchanged frontend tests exceeded their five-second timeout; the focused retry and final complete
+  run passed without weakening the tests.
+- Repository auto-merge, squash preference, automatic head-branch deletion, required `main` checks,
+  and an actual GitHub workflow run remain one-time operator verification because GitHub CLI
+  authentication was unavailable during implementation. CI-001 therefore remains `implemented`,
+  not `verified`, until the workflow runs successfully on GitHub and those settings are confirmed.
+
 ## 2026-09-02 — DOCS-001 repository audit
 
 - Reconciled public and engineering documentation with the implemented application through
@@ -112,7 +132,8 @@ implementation detail.
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage.
 - Next dependency-unblocked P1 product contract: `EVENT-001`.
-- Planned dependency-unblocked repository work: `CI-001`. Other unblocked P2 product items are
-  listed by the machine-readable dependency graph rather than prioritized here.
+- `CI-001` repository automation is implemented pending GitHub-run and repository-setting evidence.
+  Other unblocked P2 product items are listed by the machine-readable dependency graph rather than
+  prioritized here.
 - Deliberately absent: Plant events, attachments/photos, advanced search, dashboards, import/export,
   PWA behavior, offline/synchronization behavior, generic graphs, and multi-user collaboration.
