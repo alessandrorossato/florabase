@@ -1,0 +1,62 @@
+name: Pull request verification
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  POSTGRES_DB: florabase_ci
+  POSTGRES_USER: florabase_ci
+  POSTGRES_PASSWORD: disposable-ci-password
+  FLORABASE_DATABASE_URL: postgresql+psycopg://florabase_ci:disposable-ci-password@db:5432/florabase_ci
+
+jobs:
+  quality:
+    name: quality
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Test repository workflow helpers
+        run: make test-workflow-helpers
+      - name: Run formatting, lint, typing, unit, frontend, and API drift checks
+        run: make check
+
+  integration:
+    name: integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Run disposable PostgreSQL integration tests
+        run: make test-integration
+      - name: Remove disposable integration services
+        if: always()
+        run: docker compose --project-name florabase-integration --file compose.integration.yaml down --volumes --remove-orphans
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Build production backend and frontend images
+        run: make build
