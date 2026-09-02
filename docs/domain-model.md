@@ -115,6 +115,28 @@ creates one Plant with the group as immutable immediate origin. Exact quantities
 exact member completes the group. Approximate and unknown quantities remain unchanged because
 subtracting one would imply false precision.
 
+### Event
+
+An Event is an explicitly recorded historical occurrence for exactly one Plant or PlantGroup. It
+has a UUIDv7 identity, a controlled kind, an optional year/month/day-precision occurrence date,
+optional notes, and exact UTC creation/update timestamps. The initial vocabulary is observation,
+movement, repotting, flowering, fruiting, pruning, treatment, harvest, death, loss, discarded, and
+other. Collection observations remain separate from BotanicalProfile reference knowledge.
+
+Movement additionally requires one destination Location. Creating a movement Event atomically
+updates the target's current Location. Creating death, loss, or discarded Events atomically updates
+the target's lifecycle to dead, lost, or discarded, subject to the existing PlantGroup quantity and
+lifecycle invariant. Target rows are locked for these state-changing transactions. Events remain
+usable for inactive targets, and restrictive foreign keys preserve history when targets or movement
+destinations are referenced.
+
+Florabase is not event-sourced. The Plant or PlantGroup row is authoritative current state, and only
+initial Event creation applies a side effect. Correcting an Event's kind, partial date, notes, or
+movement destination changes history only; editing or deleting an Event never replays, reverses, or
+recomputes current Location or lifecycle. Ordinary Plant/PlantGroup edits do not create Events.
+Structured per-kind payloads beyond movement destination, Event attachments, and the Event timeline
+UI are deferred.
+
 ## Explicit lineage
 
 Florabase persists only direct relationships created by supported workflows:
@@ -159,8 +181,8 @@ product workflows preserve historical rows rather than hard-deleting them.
 
 ## Deferred capabilities
 
-Plant events and observations, attachment/photo storage, richer germination observations, Orders,
-other propagation material, advanced search, dashboards, contextual help, import/export, PWA
-installability, enrichment, taxonomy reconciliation, reminders, weather, and multi-user ownership
-remain planned. `docs/features.json` is the detailed source for their dependencies and acceptance
-criteria.
+The Event timeline UI, Event attachments, richer structured Event payloads, attachment/photo
+storage, richer germination observations, Orders, other propagation material, advanced search,
+dashboards, contextual help, import/export, PWA installability, enrichment, taxonomy reconciliation,
+reminders, weather, and multi-user ownership remain planned. `docs/features.json` is the detailed
+source for their dependencies and acceptance criteria.

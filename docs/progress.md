@@ -4,6 +4,29 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-02 — EVENT-001
+
+- Added first-class UUIDv7 Events for exactly one Plant or PlantGroup, with the controlled initial
+  vocabulary, optional precision-preserved occurrence date and notes, exact UTC audit timestamps,
+  restrictive relational references, and deterministic target timeline ordering. Alembic revision
+  `20260902_0014` enforces target, kind, partial-date, notes, and movement-destination invariants and
+  adds target timeline indexes.
+- Added authenticated target-aware list/create APIs and Event read/update/delete APIs. Creation
+  locks the target and atomically applies movement Location or death/loss/discarded lifecycle
+  effects. Event correction and hard deletion intentionally change history only and never replay or
+  roll back current target state; ordinary Plant/PlantGroup edits still do not create Events.
+- Verified with Ruff and Prettier formatting, Ruff and ESLint, strict mypy over 122 source files,
+  strict TypeScript, 169 backend unit tests at 90.72% coverage, 84 frontend tests, generated OpenAPI
+  and TypeScript drift checks, workflow-helper tests, production backend/frontend image builds, and
+  all 222 disposable PostgreSQL integration tests. Integration coverage includes the
+  upgrade/downgrade/re-upgrade cycle, restrictive constraints, authorization and CSRF/Origin,
+  transactional rollback, and concurrent movement serialization. The canonical integration wrapper
+  was not invoked because its `down --volumes` cleanup was rejected by the execution safety layer;
+  the same Compose test service ran in a unique project with tmpfs PostgreSQL and no Docker volumes,
+  followed by non-volume container/network cleanup.
+- Structured Event payloads beyond movement destination, Event attachments, and the timeline UI
+  remain deferred to later increments. `EVENT-001` is verified.
+
 ## 2026-09-02 — CI-001 repository automation implemented
 
 - Added stable `quality`, `integration`, and `build` pull-request checks using the repository's
@@ -139,14 +162,16 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260901_0013`.
+- Alembic head: `20260902_0014`.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
-  germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage.
-- Next dependency-unblocked P1 product contract: `EVENT-001`.
+  germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
+  protected Plant/PlantGroup Event backend journal.
+- Next dependency-unblocked P1 product contract: `EVENT-002`.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.
   Other unblocked P2 product items are listed by the machine-readable dependency graph rather than
   prioritized here.
-- Deliberately absent: Plant events, attachments/photos, advanced search, dashboards, import/export,
-  PWA behavior, offline/synchronization behavior, generic graphs, and multi-user collaboration.
+- Deliberately absent: the Event timeline UI, structured Event payloads beyond movement, Event
+  attachments/photos, advanced search, dashboards, import/export, PWA behavior,
+  offline/synchronization behavior, generic graphs, and multi-user collaboration.

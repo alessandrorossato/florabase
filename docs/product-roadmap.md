@@ -22,7 +22,9 @@ contracts.
 The verified product supports BotanicalIdentity and BotanicalProfile, Supplier, Location,
 GeographicPlace, SeedLot, Sowing with simple germination totals, Plant, and PlantGroup. Explicit
 lineage covers SeedLot through Sowing to Plant/PlantGroup, one-at-a-time PlantGroup extraction, and a
-Plant or PlantGroup producing a collection-produced SeedLot. Inactive records retain history.
+Plant or PlantGroup producing a collection-produced SeedLot. The verified EVENT-001 backend adds
+typed, partial-date Plant/PlantGroup history with creation-time movement and lifecycle effects.
+Inactive records retain history.
 
 This is substantial pre-release functionality, not a declaration of a stable first release.
 
@@ -30,18 +32,20 @@ This is substantial pre-release functionality, not a declaration of a stable fir
 
 The clearest remaining P1 product sequence is:
 
-1. define the lightweight Plant event and observation contract (`EVENT-001`);
-2. implement the protected Plant/PlantGroup history timeline (`EVENT-002`);
-3. decide the operator-approved licensing and release/version policy;
-4. complete release readiness as a separate release increment.
+1. implement the protected Plant/PlantGroup history timeline UI (`EVENT-002`);
+2. decide the operator-approved licensing and release/version policy;
+3. complete release readiness as a separate release increment.
 
 `CI-001` now supplies the repository-side pull-request verification and repeatable feature-branch
 workflow. The active `Protect main` ruleset requires its `quality`, `integration`, and `build` checks,
 and repository merge settings permit squash auto-merge while disabling merge commits and rebases.
 
-Events should cover practical movement, repotting, flowering, fruiting, pruning, treatment, harvest,
-death/loss, and free observations without separate speculative tables. Collection evidence must stay
-separate from BotanicalProfile knowledge.
+EVENT-001 covers practical movement, repotting, flowering, fruiting, pruning, treatment, harvest,
+death/loss/discarded, and free observations without separate speculative tables. Event creation can
+atomically change current Location or lifecycle, but later Event edits/deletion never replay or roll
+back current state: Florabase is not event-sourced. Collection evidence stays separate from
+BotanicalProfile knowledge. Structured payloads beyond movement, attachments, and the timeline UI
+remain deferred.
 
 Attachment storage and photos are valuable but currently P2. Whether they are mandatory for the
 first public release is an explicit operator/product decision; this roadmap does not silently make
@@ -66,7 +70,7 @@ terms, availability, attribution, and quality review before selection.
 
 ## Deliberate boundaries
 
-Florabase does not currently provide events, attachments, dashboards, advanced collection search,
-offline writes, import/export, a generic propagation-material hierarchy, a generic graph engine, or
-multi-user ownership. Future work should extend concrete workflows without weakening unknown-data,
-history, authorization, or provenance semantics.
+Florabase does not currently provide an Event timeline UI, Event attachments, dashboards, advanced
+collection search, offline writes, import/export, a generic propagation-material hierarchy, a
+generic graph engine, or multi-user ownership. Future work should extend concrete workflows without
+weakening unknown-data, history, authorization, or provenance semantics.

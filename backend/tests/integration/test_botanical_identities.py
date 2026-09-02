@@ -102,6 +102,7 @@ def test_schema_uses_native_types_named_constraints_and_only_one_botanical_table
         "auth_sessions",
         "botanical_identities",
         "botanical_profiles",
+        "events",
         "geographic_places",
         "locations",
         "login_throttles",
