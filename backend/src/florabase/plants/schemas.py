@@ -82,8 +82,6 @@ class PlantCommonWrite(BaseModel):
             ):
                 raise ValueError("Sowing origin and direct-origin data are mutually exclusive")
         else:
-            if self.direct_origin_kind is None:
-                self.direct_origin_kind = DirectOriginKind.UNKNOWN
             if (
                 self.direct_origin_kind != DirectOriginKind.OTHER
                 and self.direct_origin_detail is not None
@@ -97,11 +95,39 @@ class PlantWrite(PlantCommonWrite):
 
 
 class PlantCreate(PlantWrite):
-    pass
+    @model_validator(mode="after")
+    def default_direct_origin(self) -> Self:
+        if self.originating_sowing_id is None and self.direct_origin_kind is None:
+            self.direct_origin_kind = DirectOriginKind.UNKNOWN
+        return self
 
 
 class PlantUpdate(PlantWrite):
     pass
+
+
+class PlantExtractionCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    botanical_identity_id: UUID | None = None
+    location_id: UUID | None = None
+    label: str | None = Field(default=None, max_length=255)
+    collection_entry_date: PartialDate | None = None
+    notes: str | None = Field(default=None, max_length=20_000)
+
+    @field_validator("label", mode="before")
+    @classmethod
+    def normalize_label(cls, value: object) -> object:
+        if value is not None and not isinstance(value, str):
+            return value
+        return _single_line(value)
+
+    @field_validator("notes", mode="before")
+    @classmethod
+    def normalize_extraction_notes(cls, value: object) -> object:
+        if value is not None and not isinstance(value, str):
+            return value
+        return _notes(value)
 
 
 class PlantGroupQuantity(BaseModel):
@@ -120,6 +146,12 @@ class PlantGroupQuantity(BaseModel):
 class PlantGroupWrite(PlantCommonWrite):
     quantity: PlantGroupQuantity | None = None
     lifecycle: PlantGroupLifecycle = PlantGroupLifecycle.ACTIVE
+
+    @model_validator(mode="after")
+    def default_direct_origin(self) -> Self:
+        if self.originating_sowing_id is None and self.direct_origin_kind is None:
+            self.direct_origin_kind = DirectOriginKind.UNKNOWN
+        return self
 
     @model_validator(mode="after")
     def validate_quantity_lifecycle(self) -> Self:
@@ -195,13 +227,28 @@ class PlantCommonResponse(BaseModel):
     updated_at: datetime
 
 
+class OriginatingPlantGroupSummary(BaseModel):
+    id: UUID
+    label: str | None
+    lifecycle: PlantGroupLifecycle
+    botanical_identity: BotanicalIdentitySummary
+    quantity: PlantGroupQuantity | None
+
+
 class PlantResponse(PlantCommonResponse):
     lifecycle: PlantLifecycle
+    originating_plant_group_id: UUID | None
+    originating_plant_group: OriginatingPlantGroupSummary | None
 
 
 class PlantGroupResponse(PlantCommonResponse):
     quantity: PlantGroupQuantity | None
     lifecycle: PlantGroupLifecycle
+
+
+class PlantExtractionResponse(BaseModel):
+    plant: PlantResponse
+    plant_group: PlantGroupResponse
 
 
 assert {item.value for item in PartialDatePrecision} == {"year", "month", "day"}

@@ -20,6 +20,9 @@ def test_plant_and_group_are_distinct_focused_mappings() -> None:
         "id",
         "botanical_identity_id",
         "originating_sowing_id",
+    ]
+    plant_origin = ["originating_plant_group_id"]
+    common_tail = [
         "direct_origin_kind",
         "direct_origin_detail",
         "supplier_id",
@@ -31,9 +34,10 @@ def test_plant_and_group_are_distinct_focused_mappings() -> None:
         "collection_entry_date_day",
     ]
     tail = ["location_id", "lifecycle", "notes", "created_at", "updated_at"]
-    assert list(Plant.__table__.columns.keys()) == common + tail
+    assert list(Plant.__table__.columns.keys()) == common + plant_origin + common_tail + tail
     assert list(PlantGroup.__table__.columns.keys()) == [
         *common,
+        *common_tail,
         "quantity_value",
         "quantity_is_approximate",
         *tail,
@@ -48,7 +52,6 @@ def test_plant_and_group_are_distinct_focused_mappings() -> None:
         assert not any(
             name in model.__table__.columns
             for name in (
-                "originating_plant_group_id",
                 "lineage_edge_id",
                 "event_id",
                 "attachment_id",
@@ -61,8 +64,9 @@ def test_plant_defaults_uuidv7_and_exact_vocabularies() -> None:
     for model in (Plant, PlantGroup):
         assert model.__table__.c.id.default.arg({}).version == 7
         assert model.__table__.c.created_at.default.arg({}).tzinfo is UTC
-        assert model.__table__.c.direct_origin_kind.default.arg == "unknown"
         assert model.__table__.c.lifecycle.default.arg == "active"
+    assert Plant.__table__.c.direct_origin_kind.default is None
+    assert PlantGroup.__table__.c.direct_origin_kind.default is None
     assert utc_now().tzinfo is UTC
     assert {item.value for item in DirectOriginKind} == {
         "purchased",

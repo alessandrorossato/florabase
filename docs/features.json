@@ -521,7 +521,7 @@
       ],
       "dependencies": ["PLANT-003", "LINEAGE-002"],
       "priority": "P2",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "TUBER-001",

@@ -108,6 +108,14 @@ def lineage_records(database_connection: Connection) -> dict[str, str]:
         group_a.originating_sowing_id = root_sowing.id
         group_a.direct_origin_kind = None
         database.flush()
+        extracted_plant = Plant(
+            botanical_identity_id=descendant_identity.id,
+            originating_plant_group_id=group_a.id,
+            direct_origin_kind=None,
+            label="Extracted A",
+        )
+        database.add(extracted_plant)
+        database.flush()
         lot_b = SeedLot(
             botanical_identity_id=descendant_identity.id,
             label="Generation B seed",
@@ -140,6 +148,7 @@ def lineage_records(database_connection: Connection) -> dict[str, str]:
             "group_a": str(group_a.id),
             "direct_plant": str(direct_plant.id),
             "direct_group": str(direct_group.id),
+            "extracted_plant": str(extracted_plant.id),
             "lot_b": str(lot_b.id),
             "sowing_b": str(sowing_b.id),
             "plant_b": str(plant_b.id),
@@ -373,6 +382,17 @@ def test_direct_and_multigeneration_cycles_are_rejected_but_valid_chain_is_trave
     )
     assert long_cycle[0] == 409
 
+    extracted_cycle = mutate(
+        authenticated_browser,
+        "PUT",
+        f"/api/v1/seed-lots/{lineage_records['root_lot']}",
+        _producer_payload(
+            lineage_records["root_identity"],
+            producer_plant_id=lineage_records["extracted_plant"],
+        ),
+    )
+    assert extracted_cycle[0] == 409
+
     valid_status, _, valid = mutate(
         authenticated_browser,
         "POST",
@@ -448,6 +468,18 @@ def test_traversal_roots_sowing_group_partial_identity_and_security(
         assert body["subject"]["kind"] == subject_kind
         assert [node["kind"] for node in body["ancestors"]] == ["sowing", "seed_lot"]
         assert body["ancestors"][1]["botanical_identity"]["id"] == lineage_records["root_identity"]
+
+    extracted = request(
+        "GET",
+        f"/api/v1/plants/{lineage_records['extracted_plant']}/lineage",
+        headers={"cookie": cookie},
+    )[2]
+    assert [node["kind"] for node in extracted["ancestors"]] == [
+        "plant_group",
+        "sowing",
+        "seed_lot",
+    ]
+    assert extracted["ancestors"][0]["id"] == lineage_records["group_a"]
 
     produced = request(
         "GET",

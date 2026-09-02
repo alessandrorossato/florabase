@@ -739,6 +739,51 @@
         "title": "LogoutResponse",
         "type": "object"
       },
+      "OriginatingPlantGroupSummary": {
+        "properties": {
+          "botanical_identity": {
+            "$ref": "#/components/schemas/BotanicalIdentitySummary"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/PlantGroupLifecycle"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlantGroupQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "lifecycle",
+          "botanical_identity",
+          "quantity"
+        ],
+        "title": "OriginatingPlantGroupSummary",
+        "type": "object"
+      },
       "OriginatingSowingSummary": {
         "properties": {
           "botanical_identity_display_label": {
@@ -962,6 +1007,87 @@
           "botanical_identity_id"
         ],
         "title": "PlantCreate",
+        "type": "object"
+      },
+      "PlantExtractionCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "botanical_identity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Botanical Identity Id"
+          },
+          "collection_entry_date": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "title": "PlantExtractionCreate",
+        "type": "object"
+      },
+      "PlantExtractionResponse": {
+        "properties": {
+          "plant": {
+            "$ref": "#/components/schemas/PlantResponse"
+          },
+          "plant_group": {
+            "$ref": "#/components/schemas/PlantGroupResponse"
+          }
+        },
+        "required": [
+          "plant",
+          "plant_group"
+        ],
+        "title": "PlantExtractionResponse",
         "type": "object"
       },
       "PlantGroupCreate": {
@@ -1676,6 +1802,28 @@
             ],
             "title": "Notes"
           },
+          "originating_plant_group": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OriginatingPlantGroupSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "originating_plant_group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Originating Plant Group Id"
+          },
           "originating_sowing": {
             "anyOf": [
               {
@@ -1745,7 +1893,9 @@
           "notes",
           "created_at",
           "updated_at",
-          "lifecycle"
+          "lifecycle",
+          "originating_plant_group_id",
+          "originating_plant_group"
         ],
         "title": "PlantResponse",
         "type": "object"
@@ -4947,6 +5097,75 @@
           }
         },
         "summary": "Update One Plant Group",
+        "tags": [
+          "plant-groups"
+        ]
+      }
+    },
+    "/api/v1/plant-groups/{plant_group_id}/extract-plant": {
+      "post": {
+        "operationId": "extractPlantFromGroup",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plant_group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plant Group Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlantExtractionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantExtractionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Extract One Plant",
         "tags": [
           "plant-groups"
         ]

@@ -6,6 +6,10 @@ export type PartialDate = components["schemas"]["PartialDate"];
 export type PlantCreate = components["schemas"]["PlantCreate"];
 export type PlantUpdate = components["schemas"]["PlantUpdate"];
 export type PlantResponse = components["schemas"]["PlantResponse"];
+export type PlantExtractionCreate =
+  components["schemas"]["PlantExtractionCreate"];
+export type PlantExtractionResponse =
+  components["schemas"]["PlantExtractionResponse"];
 export type PlantLifecycle = components["schemas"]["PlantLifecycle"];
 export type PlantGroupCreate = components["schemas"]["PlantGroupCreate"];
 export type PlantGroupUpdate = components["schemas"]["PlantGroupUpdate"];
@@ -74,6 +78,17 @@ export function updatePlantGroup(
   return requestJson(
     `/api/v1/plant-groups/${encodeURIComponent(id)}`,
     mutation("PUT", payload, csrfToken),
+  );
+}
+
+export function extractPlantFromGroup(
+  id: string,
+  payload: PlantExtractionCreate,
+  csrfToken: string,
+): Promise<PlantExtractionResponse> {
+  return requestJson(
+    `/api/v1/plant-groups/${encodeURIComponent(id)}/extract-plant`,
+    mutation("POST", payload, csrfToken),
   );
 }
 

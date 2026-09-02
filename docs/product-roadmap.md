@@ -122,11 +122,11 @@ Plants worth individual attention are recorded as `Plant`; batches are recorded 
 Either can be entered with BotanicalIdentity alone when its history is unknown, can retain one known
 originating Sowing, or can use the small direct-origin vocabulary when no workflow parent is known.
 An extracted Plant instead records its one originating PlantGroup and does not duplicate that
-group's Sowing or SeedLot ancestors. Direct Supplier, material provenance, and current Location
-remain independent optional facts. Extracting an
-individual from a PlantGroup will preserve the originating group and upstream provenance while
-reducing the grouped quantity. The detailed extraction transaction is Phase 2 so the first
-PlantGroup capability can stay small.
+group's Sowing or SeedLot ancestors. The dedicated one-at-a-time extraction operation is atomic and
+active-group-only: exact quantities decrease, an exact final member completes the group, and
+approximate or unknown quantities remain unchanged. BotanicalIdentity and current Location begin
+from the group but may be deliberately overridden (or Location cleared), while the extraction
+origin remains read-only through ordinary Plant editing.
 
 ### Other propagation material
 

@@ -12,8 +12,15 @@ from florabase.geographic_places.model import GeographicPlace
 from florabase.locations.model import Location
 from florabase.plants import api, service
 from florabase.plants.model import Plant, PlantGroup
-from florabase.plants.schemas import PlantCreate, PlantGroupCreate, PlantGroupUpdate, PlantUpdate
+from florabase.plants.schemas import (
+    PlantCreate,
+    PlantExtractionCreate,
+    PlantGroupCreate,
+    PlantGroupUpdate,
+    PlantUpdate,
+)
 from florabase.plants.service import (
+    PlantDomainConflictError,
     PlantGroupProjection,
     PlantProjection,
     PlantReferenceNotFoundError,
@@ -150,7 +157,7 @@ def test_services_create_update_project_and_preserve_independent_lineage(
     assert created_group.lifecycle == "dead"
     assert created_group.quantity_value == 0
 
-    plant_row = (plant, identity, sowing, lot, upstream, None, None, location)
+    plant_row = (plant, identity, sowing, lot, upstream, None, None, location, None, None)
     group_row = (group, identity, None, None, None, supplier, place, location)
     database.execute.return_value.one_or_none.side_effect = [plant_row, group_row]
     assert service.get_plant(database, plant.id) == PlantProjection(*plant_row)
@@ -204,11 +211,78 @@ def test_service_friendly_missing_reference(missing_type: type[object], code: st
     assert error.value.code == code
 
 
+def test_extraction_service_locks_inherits_decrements_and_preserves_put_origin() -> None:
+    plant, group, identity, _, _, _, _, _, location = models()
+    group.botanical_identity_id = identity.id
+    group.location_id = location.id
+    group.quantity_value = 1
+    group.quantity_is_approximate = False
+    group.lifecycle = "active"
+    database = database_with_references((identity, location))
+    database.scalar.return_value = group
+    extracted, updated_group = service.extract_plant(
+        database, group.id, PlantExtractionCreate(label="Chosen")
+    )
+    assert extracted.originating_plant_group_id == group.id
+    assert extracted.botanical_identity_id == identity.id
+    assert extracted.location_id == location.id
+    assert extracted.direct_origin_kind is None
+    assert updated_group.quantity_value == 0
+    assert updated_group.lifecycle == "completed"
+    database.add.assert_called_once_with(extracted)
+    database.flush.assert_called()
+
+    extracted.id = plant.id
+    allowed = PlantUpdate(
+        botanical_identity_id=identity.id,
+        label="Corrected",
+        location_id=location.id,
+        lifecycle="dead",
+    )
+    service.update_plant(database, extracted, allowed)
+    assert extracted.originating_plant_group_id == group.id
+    assert extracted.label == "Corrected"
+    with pytest.raises(PlantDomainConflictError):
+        service.update_plant(
+            database,
+            extracted,
+            PlantUpdate(botanical_identity_id=identity.id, direct_origin_kind="unknown"),
+        )
+
+
+def test_extraction_service_rejects_missing_historical_and_exhausted_groups() -> None:
+    database = MagicMock()
+    database.scalar.return_value = None
+    with pytest.raises(PlantReferenceNotFoundError):
+        service.extract_plant(database, uuid7(), PlantExtractionCreate())
+
+    group = PlantGroup(
+        id=uuid7(),
+        botanical_identity_id=uuid7(),
+        direct_origin_kind="unknown",
+        lifecycle="dead",
+    )
+    database.scalar.return_value = group
+    with pytest.raises(PlantDomainConflictError) as historical:
+        service.extract_plant(database, group.id, PlantExtractionCreate())
+    assert historical.value.code == "plant_group_not_active"
+
+    group.lifecycle = "active"
+    group.quantity_value = 0
+    group.quantity_is_approximate = False
+    database.get.return_value = object()
+    with pytest.raises(PlantDomainConflictError) as exhausted:
+        service.extract_plant(database, group.id, PlantExtractionCreate())
+    assert exhausted.value.code == "plant_group_quantity_exhausted"
+
+
 def test_api_routes_success_not_found_reference_and_owner_errors(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     plant, group, identity, sowing, lot, upstream, supplier, place, location = models()
-    plant_projection = PlantProjection(plant, identity, sowing, lot, upstream, None, None, location)
+    plant_projection = PlantProjection(
+        plant, identity, sowing, lot, upstream, None, None, location, None, None
+    )
     group_projection = PlantGroupProjection(
         group, identity, None, None, None, supplier, place, location
     )

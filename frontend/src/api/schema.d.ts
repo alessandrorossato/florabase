@@ -318,6 +318,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/plant-groups/{plant_group_id}/extract-plant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Extract One Plant */
+        post: operations["extractPlantFromGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plant-groups/{plant_group_id}/lineage": {
         parameters: {
             query?: never;
@@ -807,6 +824,19 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** OriginatingPlantGroupSummary */
+        OriginatingPlantGroupSummary: {
+            botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string | null;
+            lifecycle: components["schemas"]["PlantGroupLifecycle"];
+            quantity: components["schemas"]["PlantGroupQuantity"] | null;
+        };
         /** OriginatingSowingSummary */
         OriginatingSowingSummary: {
             /** Botanical Identity Display Label */
@@ -870,6 +900,23 @@ export interface components {
             originating_sowing_id?: string | null;
             /** Supplier Id */
             supplier_id?: string | null;
+        };
+        /** PlantExtractionCreate */
+        PlantExtractionCreate: {
+            /** Botanical Identity Id */
+            botanical_identity_id?: string | null;
+            collection_entry_date?: components["schemas"]["PartialDate"] | null;
+            /** Label */
+            label?: string | null;
+            /** Location Id */
+            location_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** PlantExtractionResponse */
+        PlantExtractionResponse: {
+            plant: components["schemas"]["PlantResponse"];
+            plant_group: components["schemas"]["PlantGroupResponse"];
         };
         /** PlantGroupCreate */
         PlantGroupCreate: {
@@ -1055,6 +1102,9 @@ export interface components {
             material_provenance_place_id: string | null;
             /** Notes */
             notes: string | null;
+            originating_plant_group: components["schemas"]["OriginatingPlantGroupSummary"] | null;
+            /** Originating Plant Group Id */
+            originating_plant_group_id: string | null;
             originating_sowing: components["schemas"]["OriginatingSowingSummary"] | null;
             /** Originating Sowing Id */
             originating_sowing_id: string | null;
@@ -2436,6 +2486,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PlantGroupResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    extractPlantFromGroup: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                plant_group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlantExtractionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantExtractionResponse"];
                 };
             };
             /** @description Validation Error */

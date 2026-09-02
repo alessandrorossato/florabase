@@ -841,8 +841,11 @@ optional link, never by inference or a synthetic placeholder.
 
 A Sowing may produce Plants, PlantGroups, both, or neither. Plant and PlantGroup origin links are
 optional so imported, historical, or directly acquired records remain valid without fake Sowings.
-The atomic extraction operation, grouped-quantity reduction, concurrency behavior, and any related
-event belong to `PLANT-004`, not this contract.
+`PLANT-004` implements that relationship through the dedicated atomic
+`POST /api/v1/plant-groups/{plant_group_id}/extract-plant` operation. It creates exactly one active
+Plant and records only the immediate PlantGroup parent. Ordinary Plant PUT preserves this edge and
+cannot assign, clear, or replace it; a future explicit correction workflow would own historical
+lineage corrections.
 
 ### Immediate-origin exclusivity and direct origin
 
@@ -906,6 +909,14 @@ direct relationship is unknown. The lineage API returns typed compact records in
 immediate-first order, retains inactive records, and uses a visited set as a defensive backstop
 against corrupt cyclic data. `LINEAGE-003` owns visual navigation over this API.
 
+For extraction, the service locks and revalidates the source PlantGroup row. Only an active group is
+eligible. An exact count is decremented by one in the same transaction as Plant creation; extracting
+the final exact member stores zero and automatically completes the group. Approximate counts and
+unknown quantity remain unchanged because neither is a precise accounting balance. The extracted
+Plant inherits BotanicalIdentity and current Location unless the request overrides the identity,
+overrides the Location, or explicitly clears Location. It never inherits the group's label, notes,
+direct provenance, lifecycle, or duplicated Sowing link.
+
 Unknown lineage is legitimate for Plants, PlantGroups, and collection-produced SeedLots. Known
 parts of a chain remain recorded even when other parts are absent. Florabase never infers or
 reparents lineage from BotanicalIdentity, dates, labels, Location, Supplier, quantities, or similar
@@ -946,6 +957,12 @@ exclusive restrictive Plant and PlantGroup producer foreign keys on SeedLot. The
 and PUT contracts validate producer existence, collection-produced source compatibility, and cycles
 before writes. Authenticated lineage routes on SeedLot, Plant, and PlantGroup return the subject and
 its supported typed ancestors without changing SeedLot or Sowing accounting.
+
+Alembic revision `20260901_0013` implements the extracted Plant's nullable restrictive
+`originating_plant_group_id` foreign key and index. PostgreSQL independently enforces the three
+mutually exclusive Plant origin modes: direct root, originating Sowing, or originating PlantGroup.
+The focused traversal and producer-cycle check follow `Plant → PlantGroup` before the group's older
+ancestors, including when detecting a collection-produced SeedLot cycle through an extracted Plant.
 
 These relationships must use explicit aggregate-owned foreign keys and integrity constraints where
 implemented. A polymorphic `lineage_edges(source_type, source_id, destination_type, destination_id,

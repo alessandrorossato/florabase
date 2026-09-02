@@ -20,9 +20,11 @@ from florabase.plants.schemas import (
     BotanicalIdentitySummary,
     GeographicPlaceSummary,
     LocationSummary,
+    OriginatingPlantGroupSummary,
     OriginatingSowingSummary,
     PlantCommonWrite,
     PlantCreate,
+    PlantExtractionCreate,
     PlantGroupCreate,
     PlantGroupQuantity,
     PlantGroupResponse,
@@ -44,6 +46,12 @@ class PlantReferenceNotFoundError(Exception):
 
 
 @dataclass(frozen=True)
+class PlantDomainConflictError(Exception):
+    code: str
+    message: str
+
+
+@dataclass(frozen=True)
 class PlantProjection:
     plant: Plant
     botanical_identity: BotanicalIdentity
@@ -53,6 +61,8 @@ class PlantProjection:
     supplier: Supplier | None
     material_provenance: GeographicPlace | None
     location: Location | None
+    originating_plant_group: PlantGroup | None
+    originating_plant_group_identity: BotanicalIdentity | None
 
 
 @dataclass(frozen=True)
@@ -103,9 +113,11 @@ def _common_write_values(payload: PlantCommonWrite) -> dict[str, object]:
     values: dict[str, object] = {
         "botanical_identity_id": payload.botanical_identity_id,
         "originating_sowing_id": payload.originating_sowing_id,
-        "direct_origin_kind": payload.direct_origin_kind.value
-        if payload.direct_origin_kind
-        else None,
+        "direct_origin_kind": (
+            payload.direct_origin_kind.value
+            if payload.direct_origin_kind
+            else ("unknown" if payload.originating_sowing_id is None else None)
+        ),
         "direct_origin_detail": payload.direct_origin_detail,
         "supplier_id": payload.supplier_id,
         "material_provenance_place_id": payload.material_provenance_place_id,
@@ -127,13 +139,87 @@ def create_plant(database: Session, payload: PlantCreate) -> Plant:
 
 def update_plant(database: Session, plant: Plant, payload: PlantUpdate) -> Plant:
     _require_references(database, payload)
-    values = _common_write_values(payload)
+    if plant.originating_plant_group_id is not None:
+        forbidden = {
+            "originating_sowing_id",
+            "direct_origin_kind",
+            "direct_origin_detail",
+            "supplier_id",
+            "material_provenance_place_id",
+        }
+        if payload.model_fields_set & forbidden:
+            raise PlantDomainConflictError(
+                "extracted_plant_origin_immutable",
+                "An extracted Plant's PlantGroup origin cannot be changed through ordinary editing",
+            )
+        values = {
+            "botanical_identity_id": payload.botanical_identity_id,
+            "label": payload.label,
+            "location_id": payload.location_id,
+            "notes": payload.notes,
+            **_partial_date_values(payload.collection_entry_date),
+        }
+    else:
+        values = _common_write_values(payload)
     values["lifecycle"] = payload.lifecycle.value
     for field, value in values.items():
         setattr(plant, field, value)
     plant.updated_at = datetime.now(UTC)
     database.flush()
     return plant
+
+
+def extract_plant(
+    database: Session, plant_group_id: UUID, payload: PlantExtractionCreate
+) -> tuple[Plant, PlantGroup]:
+    plant_group = database.scalar(
+        select(PlantGroup).where(PlantGroup.id == plant_group_id).with_for_update()
+    )
+    if plant_group is None:
+        raise PlantReferenceNotFoundError("plant_group_not_found", "PlantGroup not found")
+    if plant_group.lifecycle != "active":
+        raise PlantDomainConflictError(
+            "plant_group_not_active", "Only an active PlantGroup can have a Plant extracted"
+        )
+    identity_id = payload.botanical_identity_id or plant_group.botanical_identity_id
+    location_id = (
+        payload.location_id
+        if "location_id" in payload.model_fields_set
+        else plant_group.location_id
+    )
+    if database.get(BotanicalIdentity, identity_id) is None:
+        raise PlantReferenceNotFoundError(
+            "botanical_identity_not_found", "Botanical identity not found"
+        )
+    if location_id is not None and database.get(Location, location_id) is None:
+        raise PlantReferenceNotFoundError("location_not_found", "Location not found")
+    plant = Plant(
+        botanical_identity_id=identity_id,
+        originating_plant_group_id=plant_group.id,
+        originating_sowing_id=None,
+        direct_origin_kind=None,
+        direct_origin_detail=None,
+        supplier_id=None,
+        material_provenance_place_id=None,
+        label=payload.label,
+        location_id=location_id,
+        notes=payload.notes,
+        lifecycle="active",
+        **_partial_date_values(payload.collection_entry_date),
+    )
+    database.add(plant)
+    if plant_group.quantity_value is not None and plant_group.quantity_is_approximate is False:
+        if plant_group.quantity_value < 1:
+            raise PlantDomainConflictError(
+                "plant_group_quantity_exhausted",
+                "The PlantGroup has no exact members available to extract",
+            )
+        plant_group.quantity_value -= 1
+        if plant_group.quantity_value == 0:
+            plant_group.lifecycle = "completed"
+        plant_group.updated_at = datetime.now(UTC)
+    database.flush()
+    return plant, plant_group
 
 
 def create_plant_group(database: Session, payload: PlantGroupCreate) -> PlantGroup:
@@ -181,6 +267,8 @@ def _plant_projection_statement() -> Select[
         Supplier,
         GeographicPlace,
         Location,
+        PlantGroup,
+        BotanicalIdentity,
     ]
 ]:
     sowing = aliased(Sowing)
@@ -189,6 +277,8 @@ def _plant_projection_statement() -> Select[
     supplier = aliased(Supplier)
     place = aliased(GeographicPlace)
     location = aliased(Location)
+    originating_group = aliased(PlantGroup)
+    originating_group_identity = aliased(BotanicalIdentity)
     return (
         select(
             Plant,
@@ -199,6 +289,8 @@ def _plant_projection_statement() -> Select[
             supplier,
             place,
             location,
+            originating_group,
+            originating_group_identity,
         )
         .join(BotanicalIdentity, BotanicalIdentity.id == Plant.botanical_identity_id)
         .outerjoin(sowing, sowing.id == Plant.originating_sowing_id)
@@ -207,6 +299,11 @@ def _plant_projection_statement() -> Select[
         .outerjoin(supplier, supplier.id == Plant.supplier_id)
         .outerjoin(place, place.id == Plant.material_provenance_place_id)
         .outerjoin(location, location.id == Plant.location_id)
+        .outerjoin(originating_group, originating_group.id == Plant.originating_plant_group_id)
+        .outerjoin(
+            originating_group_identity,
+            originating_group_identity.id == originating_group.botanical_identity_id,
+        )
     )
 
 
@@ -395,6 +492,31 @@ def plant_responses(database: Session, projections: list[PlantProjection]) -> li
                 locations,
             ),
             lifecycle=item.plant.lifecycle,
+            originating_plant_group_id=item.plant.originating_plant_group_id,
+            originating_plant_group=(
+                OriginatingPlantGroupSummary(
+                    id=item.originating_plant_group.id,
+                    label=item.originating_plant_group.label,
+                    lifecycle=item.originating_plant_group.lifecycle,
+                    botanical_identity=BotanicalIdentitySummary(
+                        id=item.originating_plant_group_identity.id,
+                        display_label=BotanicalIdentityResponse.from_model(
+                            item.originating_plant_group_identity
+                        ).display_label,
+                    ),
+                    quantity=(
+                        PlantGroupQuantity(
+                            value=item.originating_plant_group.quantity_value,
+                            is_approximate=item.originating_plant_group.quantity_is_approximate,
+                        )
+                        if item.originating_plant_group.quantity_value is not None
+                        and item.originating_plant_group.quantity_is_approximate is not None
+                        else None
+                    ),
+                )
+                if item.originating_plant_group and item.originating_plant_group_identity
+                else None
+            ),
         )
         for item in projections
     ]
