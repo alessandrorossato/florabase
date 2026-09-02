@@ -19,10 +19,14 @@ implementation detail.
   generated API drift). One earlier `make check` attempt hit a host load average of 9.49 and 14
   unchanged frontend tests exceeded their five-second timeout; the focused retry and final complete
   run passed without weakening the tests.
-- Repository auto-merge, squash preference, automatic head-branch deletion, required `main` checks,
-  and an actual GitHub workflow run remain one-time operator verification because GitHub CLI
-  authentication was unavailable during implementation. CI-001 therefore remains `implemented`,
-  not `verified`, until the workflow runs successfully on GitHub and those settings are confirmed.
+- GitHub-side verification is complete: implementation was squash-merged as `a746e4f`, Actions run
+  `33605345339` passed `quality`, `integration`, and `build`, and the repository permits squash
+  auto-merge while disabling merge commits and rebases. The active `Protect main` ruleset targets
+  only `refs/heads/main`, requires pull requests plus strict `quality`, `integration`, and `build`
+  checks, and protects against deletion and non-fast-forward updates. The first `make feature-finish`
+  execution verified the merged PR, fast-forwarded local `main`, removed local `ci/ci-001`, and left
+  the repository clean; automatic remote head-branch deletion was also confirmed after merge.
+  `CI-001` is now `verified`.
 - The first pull-request run exposed a GitHub checkout ownership difference: Vitest's default
   bundled config loader tried to write a timestamped module under `/app/node_modules/.vite-temp`
   while loading `vite.config.ts`. The frontend test script now uses Vitest's supported runner config
@@ -140,7 +144,8 @@ implementation detail.
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage.
 - Next dependency-unblocked P1 product contract: `EVENT-001`.
-- `CI-001` repository automation is implemented pending GitHub-run and repository-setting evidence.
+- `CI-001` repository automation is verified through the merged pull-request workflow and protected
+  `main` checks.
   Other unblocked P2 product items are listed by the machine-readable dependency graph rather than
   prioritized here.
 - Deliberately absent: Plant events, attachments/photos, advanced search, dashboards, import/export,
