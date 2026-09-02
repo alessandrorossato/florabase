@@ -1,6 +1,8 @@
 # Security baseline
 
-- Secrets live outside version control. `.env` is ignored; `.env.example` contains localhost-only values.
+- Secrets live outside version control. `.env` is ignored; `.env.example` contains replaceable
+  examples and a valid representative production HTTPS origin, while the development Compose
+  override supplies the loopback origin.
 - Settings are centrally validated. Production requires an HTTPS canonical origin and secure
   cookies, rejects CORS and wildcard origins for the same-origin browser architecture, and
   defaults to debug off.
@@ -11,9 +13,9 @@
 - Backups contain sensitive collection and account data. Encrypt and restrict them, and test
   restoration.
 
-Local owner authentication is implemented under `/api/v1/auth`. Health and readiness remain
-public; application and administrative operations use the authenticated-actor dependency and an
-explicit authorization dependency. No botanical operation is exposed by this change.
+Local owner authentication is implemented under `/api/v1/auth`. Health and readiness remain public;
+application and administrative operations use the authenticated-actor dependency and an explicit
+authorization dependency.
 
 [ADR 0005](decisions/0005-authentication-and-sessions.md) defines the accepted boundary: FastAPI owns local accounts and opaque PostgreSQL-backed sessions; the browser receives a secure, HTTP-only, same-site cookie; state-changing requests require a session-bound CSRF token; and reverse-proxy headers never assert identity. The first release permits one owner but uses real user and session records so later multi-user authorization remains possible. JWTs, proxy authentication, OAuth/OIDC, Redis, and external identity providers are deliberately outside the initial design.
 

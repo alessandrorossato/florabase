@@ -72,11 +72,15 @@ Compare the isolated and source query output. The Alembic revision and infrastru
 
 ## Complete recovery set
 
-A database dump alone is incomplete once attachments exist. Coordinate and protect:
+No attachment or upload storage exists today, so all application-managed collection and account data
+is in PostgreSQL. A database dump still does not include deployment configuration, reverse-proxy
+configuration, TLS material, or secrets. Coordinate and protect:
 
 - the PostgreSQL custom-format dump;
-- a consistent copy of the future uploads volume/bind mount;
 - deployment configuration and secrets stored in an appropriate secrets backup;
 - the exact application image/source version and migration revision.
+
+If attachment storage is implemented later, its documented durable volume and a database-consistent
+copy will also be required; current backup behavior must not be assumed to cover future files.
 
 Encryption, retention, off-site copies, restore drills, and access control are operator responsibilities.

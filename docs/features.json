@@ -34,6 +34,32 @@
       "status": "verified"
     },
     {
+      "id": "DOCS-001",
+      "category": "documentation",
+      "description": "Audit repository consistency and public-repository readiness",
+      "acceptance_criteria": [
+        "Public and engineering documentation accurately distinguish implemented behavior from planned capabilities through PLANT-004",
+        "Installation, development, upgrade, backup, contribution, security, and repository metadata guidance is consistent with executable configuration",
+        "Feature dependencies, internal links, documentation formatting, and the unchanged application verification suite pass, with unresolved release decisions reported"
+      ],
+      "dependencies": ["PLANT-004"],
+      "priority": "P0",
+      "status": "verified"
+    },
+    {
+      "id": "CI-001",
+      "category": "testing",
+      "description": "Run Florabase verification automatically on pull requests",
+      "acceptance_criteria": [
+        "Pull requests run frontend and backend formatting, lint, strict typing, and unit or component tests",
+        "PostgreSQL integration tests and generated API drift checks run in an isolated repeatable environment",
+        "Production image builds run where practical and failures are visible without weakening local verification"
+      ],
+      "dependencies": ["DOCS-001", "TESTING-001"],
+      "priority": "P0",
+      "status": "planned"
+    },
+    {
       "id": "SECURITY-001",
       "category": "security",
       "description": "Decide the initial authentication and session architecture",
@@ -242,7 +268,7 @@
       ],
       "dependencies": ["GEOGRAPHY-001", "PROFILE-002"],
       "priority": "P2",
-      "status": "verified"
+      "status": "planned"
     },
     {
       "id": "SEED-001",

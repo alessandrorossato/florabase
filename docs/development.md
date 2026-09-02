@@ -1,57 +1,99 @@
 # Development
 
-## Reproducible container workflow
+## Container workflow
 
-Run `make setup` once, inspect `.env`, then use `make dev` for hot reload. The development override mounts source into development image targets and binds every published dependency to loopback. It replaces the production frontend port and healthcheck with Vite on port 5173. The base stack remains the source of service topology and production defaults.
-
-Development explicitly sets `http://localhost:5173` as the canonical origin and uses the
-loopback-only `florabase-session-dev` cookie without `Secure`. Open Vite through that exact URL for
-login-origin checks. Production cannot select this cookie mode.
-
-After migrations, create the local owner using the bootstrap command in `docs/security.md`, then
-open `http://localhost:5173`. The browser restores an existing HttpOnly-cookie session after a
-reload and obtains a fresh in-memory CSRF token automatically; it does not ask for the password
-again while the backend session remains valid. Sign out revokes the backend session and returns to
-the owner login form.
-
-Normal checks use containers:
+Docker Compose is the canonical toolchain. Install Docker Engine with Compose v2, GNU Make, Git, and
+`curl`, then run:
 
 ```bash
+make setup
+make dev
+```
+
+The development override mounts source, enables backend and frontend hot reload, and publishes only
+loopback ports: Vite at `http://localhost:5173`, FastAPI at `http://localhost:8000`, and PostgreSQL at
+`127.0.0.1:5432`. Use the exact `localhost` Vite URL so Origin and development-cookie checks match.
+Run `make migrate`, bootstrap a local owner as documented in [deployment.md](deployment.md), and do
+not use valuable data for development tests.
+
+## Checks
+
+Use the narrowest relevant command while working:
+
+```bash
+make format
 make format-check
 make lint
 make typecheck
-make test
+make test-backend
+make test-frontend
 make test-integration
 make api-check
+make build
 make check
 ```
 
-`make format` is the only command above that intentionally modifies source. Do not run destructive database tests against a valuable database.
+`make format` modifies Python and frontend-supported text; the other check commands are intended to
+be non-destructive. `make test` combines backend unit and frontend tests. `make check` combines
+format checks, lint, strict typing, unit/component tests, and generated API drift. Run
+`make test-integration` separately for PostgreSQL-backed behavior; it creates the isolated
+`florabase-integration` Compose project, verifies disposable-database markers, migrates to head, and
+removes its tmpfs-backed database even on failure.
 
-`make test` keeps the normal backend unit tests and frontend tests fast by excluding the
-`integration` marker. `make test-integration` creates the separate `florabase-integration`
-Compose project, waits for PostgreSQL 18, checks two explicit disposable-test configuration
-markers, applies the real Alembic chain, runs integration tests, and removes its containers and
-tmpfs-backed database even when tests fail. Tests share one PostgreSQL instance for the run and
-use a rolled-back transaction per test. The integration database has no published port and does
-not reuse the normal `florabase` Compose project or its `postgres_data` volume.
+Run production image builds when Dockerfiles, dependencies, build configuration, or release-facing
+code changes. Run migration and integration checks for schema or persistence changes.
 
-## Optional host workflow
+## Optional host tools
 
-Host tools are not required. If used, install Python 3.12–3.14 and Node 24, then:
+Containers are preferred. For focused host work, the declared ranges are Python 3.12–3.14 and Node
+24 with pnpm 11:
 
 ```bash
 python3 -m venv backend/.venv
 backend/.venv/bin/pip install -r backend/requirements-dev.lock
-cd frontend && corepack enable && pnpm install --frozen-lockfile
+cd frontend
+corepack enable
+pnpm install --frozen-lockfile
 ```
 
-Run backend commands from `backend/` and frontend commands from `frontend/`. Lockfiles contain exact direct and transitive versions. Review release notes and run the full suite when updating them. `make dependency-update` refreshes locks after direct pins in `pyproject.toml` or `package.json` have been deliberately reviewed.
+Run backend tools from `backend/` and frontend tools from `frontend/`. Exact dependencies are in the
+committed lockfiles. Change direct pins deliberately, review release notes, refresh locks with
+`make dependency-update`, and run the full relevant suite.
 
-## Database changes
+## API contracts
 
-Start PostgreSQL, create a revision with `make migration MESSAGE="..."`, inspect it, and apply with `make migrate`. Autogeneration is assistance, not proof of correctness. Never edit an already-deployed migration to disguise a new change.
+FastAPI is authoritative. `backend/openapi.json` is generated from the application, and
+`frontend/src/api/schema.d.ts` is generated from that artifact. After an API contract change:
 
-## Generated API contract
+```bash
+make api-generate
+make api-check
+```
 
-FastAPI generates `backend/openapi.json`; `openapi-typescript` generates `frontend/src/api/schema.d.ts`. Generated files are committed. `make api-check` regenerates temporary comparisons and restores the working files before returning.
+Commit both generated files. Do not hand-edit generated TypeScript declarations or accept drift.
+
+## Database migrations
+
+Alembic is the only schema-management path. Start PostgreSQL, then create and apply a revision:
+
+```bash
+make migration MESSAGE="describe schema change"
+make migrate
+```
+
+Inspect generated SQL, constraints, data safety, and downgrade behavior. Add PostgreSQL migration and
+invariant coverage proportional to risk. Never use application startup or `create_all()` to mutate
+the schema, and never rewrite a migration that may have been deployed.
+
+The current Alembic head is discovered from the migration chain rather than duplicated here; use
+`docker compose run --rm backend alembic heads` when needed.
+
+## Git and backlog workflow
+
+Read `AGENTS.md`, `docs/progress.md`, and `docs/features.json`. Branch from current verified `main`,
+keep one backlog increment per branch, preserve unrelated work, and document explicit exclusions.
+Before review, run the full relevant checks, inspect `git diff` and `git diff --check`, update the
+backlog/progress honestly, stage only intentional files, and push the branch normally. Open a pull
+request into `main`; do not force-push or merge it unless explicitly authorized.
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for the concise contributor checklist.

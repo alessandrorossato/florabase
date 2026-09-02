@@ -1,111 +1,80 @@
 # Architecture
 
-## Context and boundaries
+## System boundary
 
-Florabase is a self-hosted personal botanical collection manager. This repository starts as a modular monolith: a browser application calls a versioned REST API; the API is the only component that reads or writes PostgreSQL. There are no botanical features in the initial scaffold.
+Florabase is a self-hosted modular monolith. A React browser application calls a versioned FastAPI
+REST API, and the API is the only application component that reads or writes PostgreSQL.
 
 ```text
-Browser -> frontend reverse proxy -> /api/v1 -> FastAPI -> PostgreSQL
-                              \---- static React application
+Browser → frontend nginx → /api/v1 → FastAPI → PostgreSQL
+                    └────→ static React application
 ```
 
-The host reverse proxy and the Docker host are outside the application boundary. Backups, TLS certificates, DNS, and host hardening remain operator responsibilities.
+The host, HTTPS reverse proxy, DNS, TLS material, database backups, and host hardening remain operator
+responsibilities.
 
 ## Responsibilities
 
-- **Backend:** validation, API contracts, future business rules, authorization, database transactions, and structured container logs.
-- **Frontend:** accessible user interaction, explicit loading/error states, and calls through the documented API boundary. It never connects to PostgreSQL.
-- **PostgreSQL:** relational source of truth, constraints, UTC timestamps, migration state, and future domain data.
-- **Frontend proxy:** serves immutable production assets and forwards `/api/` to the backend. It is not the internet-facing TLS boundary.
+- The backend owns validation, authentication and authorization, business rules, transactions,
+  OpenAPI, and structured logs.
+- The frontend owns accessible interactions and explicit loading, empty, success, and failure states.
+  It uses relative API URLs and never connects to PostgreSQL.
+- PostgreSQL is the source of truth for accounts, sessions, reference data, collection data,
+  constraints, timestamps, and migration state.
+- The production frontend nginx serves built assets and proxies `/api/`; it is not the public TLS
+  boundary.
 
-## Data and persistent storage
+## Runtime and configuration
 
-PostgreSQL uses the `postgres_data` named volume. No uploads volume or writable application data directory exists yet; attachment storage will be added only with a concrete capability and migration/backup plan. Application code must treat future configured upload roots as trusted roots and validate filenames, media types, sizes, and content.
+`compose.yaml` is production-oriented: PostgreSQL and FastAPI are internal, the frontend alone
+publishes a port, services have health checks, and application containers run non-root where
+practical. `compose.dev.yaml` adds bind-mounted source, hot reload, and loopback-only development
+ports. `compose.integration.yaml` owns an isolated tmpfs PostgreSQL test project.
 
-The database and uploads require coordinated, separately protected backups. Container layers hold no durable state. Operators must ensure Docker-managed volumes have suitable ownership and that backup processes can read them without broadening runtime permissions.
+Backend settings are centralized in `florabase.core.config`. Production requires an exact HTTPS
+canonical origin, secure cookies, and empty CORS configuration for the same-origin application.
+Development explicitly uses `http://localhost:5173` and a loopback-only cookie mode. See
+[deployment.md](deployment.md).
 
-## API boundary
+## Persistence and migrations
 
-The backend owns OpenAPI and exposes APIs under `/api/v1`. The committed `backend/openapi.json` is generated from the application, and `frontend/src/api/schema.d.ts` is generated from that artifact. `make api-generate` regenerates both; `make api-check` detects drift.
+The `postgres_data` named volume is the only durable application data store today. No uploads or
+attachment volume exists. Container layers hold no durable state.
 
-- Browser and production Compose: relative `/api/v1` requests pass through the frontend proxy.
-- Local Vite development: relative `/api/v1` requests are proxied to `BACKEND_PROXY_URL` (default `http://backend:8000` inside Compose).
-- A future external reverse proxy should route to the frontend container; it need not expose the backend directly.
+Alembic is the only schema-change path, and migrations run explicitly rather than at application
+startup. Application-generated UUIDv7 identifiers and UTC timestamps follow
+[ADR 0004](decisions/0004-identifier-strategy.md).
 
-## Configuration
+## API and generated types
 
-Backend configuration is centralized in `florabase.core.config` and read from environment variables with the `FLORABASE_` prefix. The frontend uses a relative API path, avoiding environment-specific browser hostnames. Compose interpolates database credentials and published ports from `.env`; safe development examples live in `.env.example`.
+All application routes are under `/api/v1`. The backend generates committed `backend/openapi.json`;
+`openapi-typescript` generates committed `frontend/src/api/schema.d.ts`. `make api-generate` refreshes
+both and `make api-check` detects drift.
 
-Production sets `FLORABASE_ENVIRONMENT=production`, JSON logs, no debug mode, and an explicit CORS origin list. Production startup rejects wildcard CORS. Secrets must be supplied by the operator, never baked into images or committed.
+## Implemented domain modules
 
-## Development and production
+The application currently persists and exposes BotanicalIdentity, BotanicalProfile, Supplier,
+Location, GeographicPlace, SeedLot, Sowing, Plant, and PlantGroup. Direct foreign keys express the
+supported workflow lineage: SeedLot to Sowing to Plant/PlantGroup, PlantGroup extraction to Plant,
+and Plant/PlantGroup production of a collection-produced SeedLot. The implementation does not use a
+generic graph, polymorphic collection item, event framework, or attachment subsystem.
 
-`compose.yaml` is the production-oriented baseline: versioned multi-architecture upstream images, non-root application processes, internal database/backend networking, health checks, and an nginx frontend. `compose.dev.yaml` adds source mounts, hot reload, and localhost-only database, backend, and Vite ports. The development override replaces the production frontend port and healthcheck; it does not change the database or API architecture.
+See [domain-model.md](domain-model.md) for semantics and current limitations.
 
-Migrations never run as an application startup side effect. `make migrate` is explicit. Production deploys should back up, deploy images, run migrations as a deliberate release step, and then replace application containers.
+## Authentication and observability
 
-## Migrations and identifiers
+FastAPI owns local accounts and opaque PostgreSQL-backed sessions. Production uses a Secure,
+HttpOnly, SameSite=Strict cookie; state changes additionally require exact-Origin and session-bound
+CSRF validation. Reverse-proxy headers never assert identity. See
+[ADR 0005](decisions/0005-authentication-and-sessions.md) and [security.md](security.md).
 
-Alembic is the only schema-change mechanism. Migrations must be deterministic, reviewable, and reversible where practical. Future public identifiers use application-generated UUIDv7 values; see ADR 0004. Timestamps are timezone-aware at boundaries and stored as PostgreSQL `timestamptz` in UTC.
+Application logs go to stdout. Production defaults to JSON. `/api/v1/health` is liveness;
+`/api/v1/ready` executes a database readiness check. `make health` reaches both through the frontend
+proxy.
 
-## Domain data scope
+## Deliberately deferred
 
-`BotanicalIdentity` is the canonical aggregate for the stable collection-local botanical identity
-Florabase assigns to seeds, plants, and future collection material. It is installation-wide shared
-classification/reference data, not data owned by one user, so its table does not include a
-`user_id`. Shared reference scope does not determine the ownership of future `SeedLot`, `Plant`,
-`Sowing`, `Observation`, or other collection records; each capability must define its own scope.
-
-Future collection entities reference `botanical_identity_id` rather than copying scientific or
-cultivar identity as authoritative data. The SQL table is `botanical_identities`, and the protected
-REST resource is `/api/v1/botanical-identities`. The first API slice supports owner-authorized,
-Origin- and CSRF-protected creation, authenticated read-by-UUID, and an authenticated deterministic
-directory read. The directory returns the complete lightweight collection ordered
-case-insensitively by scientific name and cultivar, with an unqualified identity first and UUID as
-the stable tie-breaker. This matches the expected first-release scale of one self-hosted operator;
-server-side pagination can be added if observed collection size later requires it. BotanicalIdentity
-mutations remain protected operations under ADR 0005.
-
-`BotanicalProfile` is the optional, installation-wide general-reference extension of one
-BotanicalIdentity. Its `botanical_identity_id` is both primary key and cascading foreign key, so
-PostgreSQL directly enforces at most one profile per identity without a second profile identifier.
-The table stores only the five verified nullable plain-text sections and rejects empty, untrimmed,
-control-containing, or overlong persisted values; a table check requires at least one section.
-
-The protected nested resource is
-`/api/v1/botanical-identities/{botanical_identity_id}/profile`. Authenticated `GET` returns the
-current profile or a stable profile-not-found response. Owner-authorized, exact-Origin,
-CSRF-protected `PUT` is an idempotent full replacement: it returns `201` when creating and `200`
-when replacing. Clearing the final populated section removes the profile and returns `204`; an
-all-empty first replacement returns `422`. A PostgreSQL upsert makes concurrent first replacements
-converge on the identity-keyed row. This two-operation interface represents the one-to-one current
-resource directly and avoids unrelated generic CRUD or a separate destructive-delete workflow.
-
-## Logging and observability
-
-Backend application logs go to stdout. Production defaults to JSON records with UTC timestamps, levels, logger names, and messages; development may use readable text. Uvicorn access/error logs remain visible. Secrets and request bodies are not logged by the scaffold. `/api/v1/health` is liveness only; `/api/v1/ready` performs `SELECT 1` against PostgreSQL.
-
-## Authentication and security
-
-Authentication uses the backend-owned local accounts and opaque PostgreSQL-backed cookie sessions
-defined by ADR 0005. Protected features resolve an authenticated actor from the HttpOnly session
-cookie, and state changes additionally require exact-Origin and session-bound CSRF validation.
-Reverse-proxy identity is not trusted.
-
-The internet-facing reverse proxy must terminate HTTPS, restrict request sizes, set appropriate HSTS
-and security headers, and protect administrative routes. The backend does not trust forwarded
-headers or proxy-asserted identity; security-sensitive public URL behavior uses explicit
-configuration. Upload validation remains deferred; domain operations must continue to avoid
-disclosing stack traces and require explicit authorization.
-
-## Backup and restore
-
-`make backup` creates a timestamped PostgreSQL custom-format dump without overwriting an existing file. `make restore FILE=...` requires an explicit dump, destructive-action confirmation, and the exact target database name because it replaces database contents. See `docs/backup-restore.md`.
-
-## Unresolved questions
-
-- Whether a later concrete requirement justifies multi-user enrollment, external identity federation, or non-browser API credentials.
-- Retention, size limits, thumbnailing, and backup consistency for attachments.
-- Taxonomy enrichment, name-history persistence, and BotanicalIdentity reconciliation implementation
-  deferred by the focused contract in `docs/domain-model.md`.
-- Whether production should eventually use immutable registry images instead of local Compose builds.
+Attachments and uploads, Plant events and observation history, advanced search, dashboards,
+import/export, PWA installability, multi-user collaboration, taxonomy reconciliation, and external
+integrations remain backlog items. Their storage and service infrastructure will be designed only
+when a concrete feature requires it.
