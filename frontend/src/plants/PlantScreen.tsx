@@ -14,6 +14,7 @@ import {
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
+import { EventJournal } from "../events/EventJournal";
 import {
   listGeographicPlaces,
   type GeographicPlaceResponse,
@@ -256,11 +257,15 @@ function sowingChoice(sowing: SowingResponse): string {
 function Detail({
   record,
   sowings,
+  locations,
   headingRef,
+  onEventTargetRefresh,
 }: {
   record: PlantRecord;
   sowings: SowingResponse[];
+  locations: LocationResponse[];
   headingRef: RefObject<HTMLHeadingElement | null>;
+  onEventTargetRefresh: () => Promise<void>;
 }) {
   const value = record.value;
   const sowing = value.originating_sowing_id
@@ -384,6 +389,14 @@ function Detail({
           <p className="preserve-lines">{value.notes}</p>
         </section>
       )}
+      <EventJournal
+        key={`${record.kind}:${value.id}`}
+        targetKind={record.kind}
+        targetId={value.id}
+        targetLabel={value.label ?? value.botanical_identity.display_label}
+        locations={locations}
+        onTargetRefresh={onEventTargetRefresh}
+      />
     </article>
   );
 }
@@ -653,6 +666,26 @@ export function PlantScreen() {
 
   function updateForm<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
+  }
+
+  async function refreshEventTarget(kind: RecordKind, id: string) {
+    const [target, plants, groups] = await Promise.all([
+      kind === "plant" ? getPlant(id) : getPlantGroup(id),
+      listPlants(),
+      listPlantGroups(),
+    ]);
+    const authoritative = {
+      kind,
+      value: target,
+    } as PlantRecord;
+    setDetail({ status: "ready", record: authoritative });
+    setCollection({
+      status: "ready",
+      records: [
+        ...plants.map((value): PlantRecord => ({ kind: "plant", value })),
+        ...groups.map((value): PlantRecord => ({ kind: "group", value })),
+      ],
+    });
   }
 
   function validate(): string[] {
@@ -1543,7 +1576,11 @@ export function PlantScreen() {
               <Detail
                 record={selected}
                 sowings={references.sowings}
+                locations={references.locations}
                 headingRef={detailHeading}
+                onEventTargetRefresh={() =>
+                  refreshEventTarget(selected.kind, selected.value.id)
+                }
               />
               <div className="actions">
                 {selected.kind === "group" &&

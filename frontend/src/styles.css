@@ -542,6 +542,156 @@ button:disabled {
   min-height: 6rem;
   resize: vertical;
 }
+
+.event-journal {
+  min-width: 0;
+}
+
+.event-heading,
+.event-card-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.plant-detail .event-heading h4 {
+  margin: 0.15rem 0 0;
+}
+
+.event-heading .eyebrow,
+.event-card h5,
+.event-card p,
+.event-empty h5,
+.event-empty p {
+  margin: 0;
+}
+
+.event-filters {
+  margin-top: 1rem;
+}
+
+.event-timeline {
+  position: relative;
+  display: grid;
+  gap: 1rem;
+  margin: 1.25rem 0 0;
+  padding: 0 0 0 1.5rem;
+  list-style: none;
+}
+
+.event-timeline::before {
+  position: absolute;
+  top: 0.5rem;
+  bottom: 0.5rem;
+  left: 0.37rem;
+  width: 2px;
+  background: #b9cbbf;
+  content: "";
+}
+
+.event-item {
+  position: relative;
+  min-width: 0;
+}
+
+.event-marker {
+  position: absolute;
+  top: 1.1rem;
+  left: -1.48rem;
+  width: 0.75rem;
+  height: 0.75rem;
+  background: #fff;
+  border: 2px solid #1d6542;
+  border-radius: 50%;
+}
+
+.event-item--death .event-marker,
+.event-item--loss .event-marker,
+.event-item--discarded .event-marker {
+  border-radius: 0.15rem;
+}
+
+.event-card {
+  min-width: 0;
+  padding: 1rem;
+  background: #fff;
+  border: 1px solid #cfdbd2;
+  border-radius: 0.75rem;
+}
+
+.event-card h5,
+.event-empty h5 {
+  font-size: 1rem;
+}
+
+.event-card time {
+  display: inline-block;
+  margin-top: 0.2rem;
+  color: #587064;
+  font-size: 0.85rem;
+}
+
+.event-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: end;
+  gap: 0.4rem;
+}
+
+.event-actions button {
+  min-height: 2.5rem;
+  padding: 0.5rem 0.7rem;
+}
+
+.event-card .event-destination,
+.event-card .event-notes {
+  margin-top: 0.75rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.event-destination {
+  color: #365649;
+}
+
+.event-empty {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px dashed #9eb2a5;
+  border-radius: 0.75rem;
+}
+
+.event-empty p {
+  color: #587064;
+  line-height: 1.55;
+}
+
+.event-empty button {
+  justify-self: start;
+}
+
+.event-dialog {
+  width: min(100%, 38rem);
+}
+
+.event-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.event-form textarea {
+  min-height: 7rem;
+  resize: vertical;
+}
+
+.event-effect {
+  margin: 0;
+  line-height: 1.5;
+}
 .sowing-master,
 .sowing-detail-pane {
   min-width: 0;
@@ -938,6 +1088,29 @@ button:disabled {
 
   .plant-kind-actions {
     grid-template-columns: 1fr;
+  }
+
+  .event-timeline {
+    gap: 0.75rem;
+    padding-left: 0;
+  }
+
+  .event-timeline::before,
+  .event-marker {
+    display: none;
+  }
+
+  .event-card-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .event-actions {
+    justify-content: start;
+  }
+
+  .event-actions button {
+    min-height: 2.75rem;
   }
   .sowing-quantity-controls,
   .temperature-controls {

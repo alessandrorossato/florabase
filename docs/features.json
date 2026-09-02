@@ -456,7 +456,7 @@
       ],
       "dependencies": ["EVENT-001", "PLANT-003"],
       "priority": "P1",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "ATTACHMENT-002",
@@ -627,11 +627,12 @@
     {
       "id": "UX-001",
       "category": "frontend",
-      "description": "Refine the product around collection and activity workflows",
+      "description": "Review cross-application navigation and detail information architecture",
       "acceptance_criteria": [
-        "Primary navigation emphasizes Dashboard, SeedLots, Sowings and germination, Plants and PlantGroups, acquisitions or Orders, and collection activity or history once those workflows exist",
-        "BotanicalIdentity, Supplier, Location, and GeographicPlace directories remain available as secondary administration and maintenance surfaces",
-        "Concrete collection workflows can select existing reference data and, where justified, create it contextually without duplicating validation or forcing navigation away"
+        "Primary and mobile navigation establish a coherent hierarchy for collection workflows, activity, and secondary BotanicalIdentity, Supplier, Location, and GeographicPlace administration",
+        "Detail pages use a consistent information architecture for navigation, tabs or sections, action placement, and cross-domain context without duplicating validation or forcing unnecessary navigation away",
+        "A consistent visual and interaction language applies across Florabase while preserving accessible responsive behavior",
+        "The review decides whether collection-wide Event activity belongs in a global timeline, dashboard feed, cross-Plant and PlantGroup filters, or navigation entry without presupposing the final model"
       ],
       "dependencies": ["SEED-004", "SOWING-003", "PLANT-003"],
       "priority": "P2",

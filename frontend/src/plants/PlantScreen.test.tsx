@@ -13,6 +13,7 @@ const placeId = "01900000-0000-7000-8000-000000000501";
 const sowingId = "01900000-0000-7000-8000-000000000601";
 const plantId = "01900000-0000-7000-8000-000000000701";
 const groupId = "01900000-0000-7000-8000-000000000702";
+const eventId = "01900000-0000-7000-8000-000000000801";
 
 const identities = [
   {
@@ -161,6 +162,41 @@ function group(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function journalEvent(kind: string, overrides: Record<string, unknown> = {}) {
+  return {
+    id: `${eventId.slice(0, -2)}${String(Object.keys(eventKinds).indexOf(kind) + 1).padStart(2, "0")}`,
+    target: {
+      type: "plant",
+      id: plantId,
+      label: "Avocado #1",
+      lifecycle: "active",
+    },
+    kind,
+    occurred_on: null,
+    notes: null,
+    destination_location_id: null,
+    destination_location: null,
+    created_at: "2026-09-02T10:00:00Z",
+    updated_at: "2026-09-02T10:00:00Z",
+    ...overrides,
+  };
+}
+
+const eventKinds: Record<string, string> = {
+  observation: "Observation",
+  movement: "Movement",
+  repotting: "Repotting",
+  flowering: "Flowering",
+  fruiting: "Fruiting",
+  pruning: "Pruning",
+  treatment: "Treatment",
+  harvest: "Harvest",
+  death: "Death",
+  loss: "Loss",
+  discarded: "Discarded",
+  other: "Other",
+};
+
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -219,6 +255,7 @@ function plantHandler(
     const reading = !init?.method || init.method === "GET";
     if (path === "/api/v1/plants" && reading) return json(plants);
     if (path === "/api/v1/plant-groups" && reading) return json(groups);
+    if (path.endsWith("/events") && reading) return json([]);
     if (path.startsWith("/api/v1/plants/") && reading) {
       const match = plants.find(
         (item) =>
@@ -1090,4 +1127,368 @@ test("source PlantGroup context is searchable for extracted Plants", async () =>
   expect(
     screen.getByRole("button", { name: /Avocado #1/ }),
   ).toBeInTheDocument();
+});
+
+test("Plant Event history preserves API order, every label and partial-date precision while filters stay predictable", async () => {
+  const events = Object.keys(eventKinds).map((kind, index) =>
+    journalEvent(kind, {
+      occurred_on:
+        index === 0
+          ? { precision: "year", year: 2024 }
+          : index === 1
+            ? { precision: "month", year: 2025, month: 3 }
+            : index === 2
+              ? { precision: "day", year: 2026, month: 9, day: 2 }
+              : null,
+      notes:
+        kind === "observation"
+          ? "A long observation that must remain readable."
+          : null,
+      destination_location:
+        kind === "movement"
+          ? { id: locationId, display_path: location.display_path }
+          : null,
+      destination_location_id: kind === "movement" ? locationId : null,
+    }),
+  );
+  mockApi(
+    plantHandler([plant()], [], (path) =>
+      path === `/api/v1/plants/${plantId}/events` ? json(events) : undefined,
+    ),
+  );
+  const user = await openPlants();
+  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  const timeline = await screen.findByRole("list", { name: "Event history" });
+  const items = within(timeline).getAllByRole("listitem");
+  expect(items).toHaveLength(12);
+  expect(
+    items.map((item) => within(item).getByRole("heading").textContent),
+  ).toEqual(Object.values(eventKinds));
+  expect(items[0]).toHaveTextContent("2024");
+  expect(items[1]).toHaveTextContent("2025-03");
+  expect(items[2]).toHaveTextContent("2026-09-02");
+  expect(items[3]).toHaveTextContent("Date unknown");
+  expect(items[1]).toHaveTextContent("Destination: Greenhouse → Bench 4");
+  expect(items[0].querySelector(".event-card")).toBeInTheDocument();
+  expect(timeline).toHaveClass("event-timeline");
+
+  const filters = screen.getByRole("group", { name: "Filter Events" });
+  await user.click(
+    within(filters).getByRole("button", { name: "Observations" }),
+  );
+  expect(within(timeline).getAllByRole("listitem")).toHaveLength(3);
+  expect(within(timeline).queryByText("Other")).not.toBeInTheDocument();
+  await user.click(
+    within(filters).getByRole("button", { name: "Cultivation" }),
+  );
+  expect(within(timeline).getAllByRole("listitem")).toHaveLength(5);
+  await user.click(within(filters).getByRole("button", { name: "Status" }));
+  expect(within(timeline).getAllByRole("listitem")).toHaveLength(3);
+  await user.click(within(filters).getByRole("button", { name: "All" }));
+  expect(within(timeline).getAllByRole("listitem")).toHaveLength(12);
+});
+
+test("PlantGroup detail has the same responsive Event journal and a useful empty state", async () => {
+  let groupEvents: unknown[] = [];
+  mockApi(
+    plantHandler([], [group()], (path) =>
+      path === `/api/v1/plant-groups/${groupId}/events`
+        ? json(groupEvents)
+        : undefined,
+    ),
+  );
+  const user = await openPlants();
+  await user.click(
+    within(screen.getByRole("group", { name: "Lifecycle" })).getByRole(
+      "button",
+      { name: "History" },
+    ),
+  );
+  await user.click(
+    await screen.findByRole("button", { name: /Seedlings 2026/ }),
+  );
+  expect(
+    await screen.findByRole("heading", { name: "No Events recorded yet" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText(/observations, cultivation work/),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "Add the first event" }),
+  ).toBeInTheDocument();
+
+  cleanup();
+  vi.restoreAllMocks();
+  groupEvents = [
+    journalEvent("flowering", {
+      target: {
+        type: "plant_group",
+        id: groupId,
+        label: "Seedlings 2026",
+        lifecycle: "completed",
+      },
+      notes: "First group bloom.",
+    }),
+  ];
+  mockApi(
+    plantHandler([], [group()], (path) =>
+      path === `/api/v1/plant-groups/${groupId}/events`
+        ? json(groupEvents)
+        : undefined,
+    ),
+  );
+  const parityUser = await openPlants();
+  await parityUser.click(
+    within(screen.getByRole("group", { name: "Lifecycle" })).getByRole(
+      "button",
+      { name: "History" },
+    ),
+  );
+  await parityUser.click(
+    await screen.findByRole("button", { name: /Seedlings 2026/ }),
+  );
+  expect(
+    await screen.findByRole("heading", { name: "Flowering" }),
+  ).toBeInTheDocument();
+  expect(screen.getByText("First group bloom.")).toBeInTheDocument();
+});
+
+test("Event creation validates movement, explains side effects and authoritatively refreshes Plant state", async () => {
+  const events: Record<string, unknown>[] = [];
+  const plants = [plant({ location_id: null, location: null })];
+  let targetReads = 0;
+  mockApi(
+    plantHandler(plants, [], (path, init) => {
+      if (path === `/api/v1/plants/${plantId}/events`) {
+        if (init?.method === "POST") {
+          const payload = body(init);
+          const created = journalEvent(String(payload.kind), {
+            ...payload,
+            id: `${eventId}-${String(events.length)}`,
+            destination_location:
+              payload.kind === "movement"
+                ? { id: locationId, display_path: location.display_path }
+                : null,
+          });
+          events.push(created);
+          if (payload.kind === "movement")
+            plants[0] = plant({
+              location_id: locationId,
+              location: { id: locationId, display_path: location.display_path },
+            });
+          if (["death", "loss", "discarded"].includes(String(payload.kind)))
+            plants[0] = plant({
+              ...plants[0],
+              lifecycle: payload.kind === "death" ? "dead" : payload.kind,
+            });
+          return json(created, 201);
+        }
+        return json(events);
+      }
+      if (
+        path === `/api/v1/plants/${plantId}` &&
+        (!init?.method || init.method === "GET")
+      ) {
+        targetReads += 1;
+        return json(plants[0]);
+      }
+      return undefined;
+    }),
+  );
+  const user = await openPlants();
+  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(await screen.findByRole("button", { name: "Add event" }));
+  await user.type(screen.getByLabelText("Notes (optional)"), "New leaf.");
+  await user.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: "Add event",
+    }),
+  );
+  expect(await screen.findByText("Event was added.")).toBeInTheDocument();
+  expect(screen.getByText("New leaf.")).toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "Add event" }));
+  await user.selectOptions(screen.getByLabelText("Event kind"), "movement");
+  expect(
+    screen.getByText(/also changes the current Location/),
+  ).toBeInTheDocument();
+  await user.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: "Add event",
+    }),
+  );
+  expect(screen.getByRole("alert")).toHaveTextContent(
+    "Choose the destination Location",
+  );
+  await user.selectOptions(
+    screen.getByLabelText("Destination Location"),
+    locationId,
+  );
+  await user.selectOptions(screen.getByLabelText("Precision"), "month");
+  await user.clear(screen.getByLabelText("Year"));
+  await user.type(screen.getByLabelText("Year"), "2026");
+  await user.clear(screen.getByLabelText("Month"));
+  await user.type(screen.getByLabelText("Month"), "8");
+  await user.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: "Add event",
+    }),
+  );
+  expect(await screen.findByText("2026-08")).toBeInTheDocument();
+  expect(screen.getAllByText(location.display_path).length).toBeGreaterThan(0);
+
+  await user.click(screen.getByRole("button", { name: "Add event" }));
+  for (const kind of ["death", "loss", "discarded"]) {
+    await user.selectOptions(screen.getByLabelText("Event kind"), kind);
+    expect(
+      screen.getByText(/also changes the current lifecycle/),
+    ).toHaveTextContent(kind);
+  }
+  await user.selectOptions(screen.getByLabelText("Event kind"), "death");
+  await user.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: "Add event",
+    }),
+  );
+  expect(await screen.findByText("Dead")).toBeInTheDocument();
+  expect(targetReads).toBeGreaterThanOrEqual(4);
+});
+
+test("historical edit and delete warn and never synthesize target rollback", async () => {
+  let events = [
+    journalEvent("movement", {
+      destination_location_id: locationId,
+      destination_location: {
+        id: locationId,
+        display_path: location.display_path,
+      },
+      notes: "Moved for winter.",
+    }),
+  ];
+  let targetReads = 0;
+  mockApi(
+    plantHandler([plant()], [], (path, init) => {
+      if (path === `/api/v1/plants/${plantId}/events`) return json(events);
+      if (
+        path === `/api/v1/events/${events[0]?.id}` &&
+        init?.method === "PUT"
+      ) {
+        const payload = body(init);
+        events = [
+          journalEvent(String(payload.kind), { ...events[0], ...payload }),
+        ];
+        return json(events[0]);
+      }
+      if (path.startsWith("/api/v1/events/") && init?.method === "DELETE") {
+        events = [];
+        return new Response(null, { status: 204 });
+      }
+      if (
+        path === `/api/v1/plants/${plantId}` &&
+        (!init?.method || init.method === "GET")
+      ) {
+        targetReads += 1;
+        return json(plant());
+      }
+      return undefined;
+    }),
+  );
+  const user = await openPlants();
+  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await screen.findByText("Moved for winter.");
+  const readsAfterOpen = targetReads;
+  await user.click(screen.getByRole("button", { name: "Edit" }));
+  expect(screen.getByText(/Editing changes history only/)).toHaveTextContent(
+    "does not move the record again",
+  );
+  await user.selectOptions(screen.getByLabelText("Event kind"), "death");
+  await user.click(screen.getByRole("button", { name: "Save changes" }));
+  expect(
+    await screen.findByText("Event changes were saved."),
+  ).toBeInTheDocument();
+  expect(
+    await screen.findByRole("heading", { name: "Death" }),
+  ).toBeInTheDocument();
+  expect(targetReads).toBe(readsAfterOpen);
+
+  await user.click(screen.getByRole("button", { name: "Delete" }));
+  expect(screen.getByRole("dialog")).toHaveTextContent(
+    "does not undo changes previously made",
+  );
+  await user.click(screen.getByRole("button", { name: "Delete event" }));
+  expect(
+    await screen.findByRole("heading", { name: "No Events recorded yet" }),
+  ).toBeInTheDocument();
+  expect(targetReads).toBe(readsAfterOpen);
+});
+
+test("Event loading, fetch failure and mutation failure remain explicit", async () => {
+  let resolveEvents: ((response: Response) => void) | undefined;
+  const pendingEvents = new Promise<Response>((resolve) => {
+    resolveEvents = resolve;
+  });
+  mockApi(
+    plantHandler([plant()], [], (path) =>
+      path === `/api/v1/plants/${plantId}/events` ? pendingEvents : undefined,
+    ),
+  );
+  const user = await openPlants();
+  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  expect(await screen.findByRole("status", { name: "" })).toHaveTextContent(
+    "Loading Events",
+  );
+  resolveEvents?.(json([]));
+  expect(
+    await screen.findByRole("heading", { name: "No Events recorded yet" }),
+  ).toBeInTheDocument();
+
+  cleanup();
+  vi.restoreAllMocks();
+  mockApi(
+    plantHandler([plant()], [], (path) =>
+      path === `/api/v1/plants/${plantId}/events`
+        ? json({ detail: "failed" }, 500)
+        : undefined,
+    ),
+  );
+  const failingUser = await openPlants();
+  await failingUser.click(
+    await screen.findByRole("button", { name: /Avocado #1/ }),
+  );
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "could not load this Event history",
+  );
+  expect(
+    screen.getByRole("button", { name: "Retry Events" }),
+  ).toBeInTheDocument();
+
+  cleanup();
+  vi.restoreAllMocks();
+  mockApi(
+    plantHandler([plant()], [], (path, init) => {
+      if (
+        path === `/api/v1/plants/${plantId}/events` &&
+        init?.method === "POST"
+      )
+        return json({ detail: "failed" }, 500);
+      if (path === `/api/v1/plants/${plantId}/events`) return json([]);
+      return undefined;
+    }),
+  );
+  const mutationUser = await openPlants();
+  await mutationUser.click(
+    await screen.findByRole("button", { name: /Avocado #1/ }),
+  );
+  await mutationUser.click(
+    await screen.findByRole("button", { name: "Add the first event" }),
+  );
+  await mutationUser.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: "Add event",
+    }),
+  );
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "could not save or refresh this Event",
+  );
+  expect(screen.getByRole("dialog")).toBeInTheDocument();
 });
