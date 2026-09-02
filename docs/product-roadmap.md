@@ -36,8 +36,8 @@ The clearest remaining P1 product sequence is:
 4. complete release readiness as a separate release increment.
 
 `CI-001` now supplies the repository-side pull-request verification and repeatable feature-branch
-workflow; enabling the corresponding GitHub repository rules is an operator configuration step when
-authenticated administration access is available.
+workflow. The active `Protect main` ruleset requires its `quality`, `integration`, and `build` checks,
+and repository merge settings permit squash auto-merge while disabling merge commits and rebases.
 
 Events should cover practical movement, repotting, flowering, fruiting, pruning, treatment, harvest,
 death/loss, and free observations without separate speculative tables. Collection evidence must stay
