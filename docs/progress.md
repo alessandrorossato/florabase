@@ -27,7 +27,10 @@ implementation detail.
   bundled config loader tried to write a timestamped module under `/app/node_modules/.vite-temp`
   while loading `vite.config.ts`. The frontend test script now uses Vitest's supported runner config
   loader, which evaluates the existing config without writing beside the read-only checkout and
-  preserves non-root container execution.
+  preserves non-root container execution. Once the frontend suite could complete, the same run
+  revealed that API drift verification also regenerated tracked artifacts before comparing and
+  restoring them. Both generators now use read-only check modes during verification; the explicit
+  artifact-writing path remains `make api-generate`.
 
 ## 2026-09-02 — DOCS-001 repository audit
 
