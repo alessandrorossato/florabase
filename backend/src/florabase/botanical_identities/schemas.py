@@ -81,6 +81,10 @@ class BotanicalIdentityCreate(BaseModel):
         return _normalize_optional(value)
 
 
+class BotanicalIdentityUpdate(BotanicalIdentityCreate):
+    pass
+
+
 class BotanicalIdentityResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

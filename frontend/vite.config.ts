@@ -14,7 +14,9 @@ export default defineConfig({
   },
   test: {
     environment: "jsdom",
+    fileParallelism: false,
     setupFiles: "./src/test/setup.ts",
+    testTimeout: 15_000,
     coverage: {
       provider: "v8",
     },

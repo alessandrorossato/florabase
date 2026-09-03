@@ -380,15 +380,23 @@ def _ordering(
     )
 
 
-def list_plants(database: Session) -> list[PlantProjection]:
+def list_plants(
+    database: Session, botanical_identity_id: UUID | None = None
+) -> list[PlantProjection]:
     statement = _plant_projection_statement()
+    if botanical_identity_id is not None:
+        statement = statement.where(Plant.botanical_identity_id == botanical_identity_id)
     return [
         PlantProjection(*row) for row in database.execute(statement.order_by(*_ordering(Plant)))
     ]
 
 
-def list_plant_groups(database: Session) -> list[PlantGroupProjection]:
+def list_plant_groups(
+    database: Session, botanical_identity_id: UUID | None = None
+) -> list[PlantGroupProjection]:
     statement = _plant_group_projection_statement()
+    if botanical_identity_id is not None:
+        statement = statement.where(PlantGroup.botanical_identity_id == botanical_identity_id)
     return [
         PlantGroupProjection(*row)
         for row in database.execute(statement.order_by(*_ordering(PlantGroup)))

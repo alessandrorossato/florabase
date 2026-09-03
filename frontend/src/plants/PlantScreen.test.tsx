@@ -1,6 +1,6 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { App } from "../App";
 
@@ -299,6 +299,10 @@ async function chooseReference(
   await user.click(screen.getByRole("combobox", { name: label }));
   await user.click(screen.getByRole("button", { name: new RegExp(option) }));
 }
+
+beforeEach(() => {
+  window.history.replaceState(null, "", "#/dashboard");
+});
 
 afterEach(() => {
   cleanup();
@@ -1158,6 +1162,7 @@ test("Plant Event history preserves API order, every label and partial-date prec
   );
   const user = await openPlants();
   await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(screen.getByRole("tab", { name: "Events" }));
   const timeline = await screen.findByRole("list", { name: "Event history" });
   const items = within(timeline).getAllByRole("listitem");
   expect(items).toHaveLength(12);
@@ -1207,6 +1212,7 @@ test("PlantGroup detail has the same responsive Event journal and a useful empty
   await user.click(
     await screen.findByRole("button", { name: /Seedlings 2026/ }),
   );
+  await user.click(screen.getByRole("tab", { name: "Events" }));
   expect(
     await screen.findByRole("heading", { name: "No Events recorded yet" }),
   ).toBeInTheDocument();
@@ -1247,6 +1253,7 @@ test("PlantGroup detail has the same responsive Event journal and a useful empty
   await parityUser.click(
     await screen.findByRole("button", { name: /Seedlings 2026/ }),
   );
+  await parityUser.click(screen.getByRole("tab", { name: "Events" }));
   expect(
     await screen.findByRole("heading", { name: "Flowering" }),
   ).toBeInTheDocument();
@@ -1297,6 +1304,7 @@ test("Event creation validates movement, explains side effects and authoritative
   );
   const user = await openPlants();
   await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(screen.getByRole("tab", { name: "Events" }));
   await user.click(await screen.findByRole("button", { name: "Add event" }));
   await user.type(screen.getByLabelText("Notes (optional)"), "New leaf.");
   await user.click(
@@ -1395,6 +1403,7 @@ test("historical edit and delete warn and never synthesize target rollback", asy
   );
   const user = await openPlants();
   await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(screen.getByRole("tab", { name: "Events" }));
   await screen.findByText("Moved for winter.");
   const readsAfterOpen = targetReads;
   await user.click(screen.getByRole("button", { name: "Edit" }));
@@ -1434,6 +1443,7 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
   );
   const user = await openPlants();
   await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(screen.getByRole("tab", { name: "Events" }));
   expect(await screen.findByRole("status", { name: "" })).toHaveTextContent(
     "Loading Events",
   );
@@ -1455,6 +1465,7 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
   await failingUser.click(
     await screen.findByRole("button", { name: /Avocado #1/ }),
   );
+  await failingUser.click(screen.getByRole("tab", { name: "Events" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "could not load this Event history",
   );
@@ -1479,6 +1490,7 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
   await mutationUser.click(
     await screen.findByRole("button", { name: /Avocado #1/ }),
   );
+  await mutationUser.click(screen.getByRole("tab", { name: "Events" }));
   await mutationUser.click(
     await screen.findByRole("button", { name: "Add the first event" }),
   );

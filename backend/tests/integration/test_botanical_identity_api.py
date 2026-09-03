@@ -252,6 +252,61 @@ def test_optional_blanks_normalize_to_null(
     assert body["display_label"] == "Solanum quitoense"
 
 
+def test_identity_update_and_guarded_delete_preserve_collection_records(
+    authenticated_browser: tuple[str, str],
+) -> None:
+    cookie, csrf_token = authenticated_browser
+    headers = {"cookie": cookie, "origin": ORIGIN, "x-csrf-token": csrf_token}
+    _, _, unused = create_identity(authenticated_browser, {"scientific_name": "Acer japonicum"})
+    _, _, referenced = create_identity(authenticated_browser, {"scientific_name": "Acer palmatum"})
+
+    update_status, _, updated = request(
+        "PUT",
+        f"/api/v1/botanical-identities/{unused['id']}",
+        body={
+            "scientific_name": "Acer japonicum",
+            "cultivar_name": "Aconitifolium",
+            "common_name": "Fullmoon maple",
+        },
+        headers=headers,
+    )
+    assert update_status == 200
+    assert updated["display_label"] == "Acer japonicum \u2018Aconitifolium\u2019"
+
+    seed_status, _, seed_lot = request(
+        "POST",
+        "/api/v1/seed-lots",
+        body={"botanical_identity_id": referenced["id"]},
+        headers=headers,
+    )
+    assert seed_status == 201
+    referenced_status, _, conflict = request(
+        "DELETE",
+        f"/api/v1/botanical-identities/{referenced['id']}",
+        headers=headers,
+    )
+    assert referenced_status == 409
+    assert conflict["detail"]["code"] == "botanical_identity_referenced"
+    assert (
+        request("GET", f"/api/v1/seed-lots/{seed_lot['id']}", headers={"cookie": cookie})[0] == 200
+    )
+
+    assert (
+        request(
+            "DELETE",
+            f"/api/v1/botanical-identities/{unused['id']}",
+            headers=headers,
+        )[0]
+        == 204
+    )
+    assert (
+        request("GET", f"/api/v1/botanical-identities/{unused['id']}", headers={"cookie": cookie})[
+            0
+        ]
+        == 404
+    )
+
+
 def test_authenticated_directory_is_empty_safe_and_does_not_mutate(
     authenticated_browser: tuple[str, str], database_connection: Connection
 ) -> None:

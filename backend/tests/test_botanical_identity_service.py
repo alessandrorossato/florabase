@@ -5,10 +5,13 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 
 from florabase.botanical_identities.model import BotanicalIdentity
-from florabase.botanical_identities.schemas import BotanicalIdentityCreate
+from florabase.botanical_identities.schemas import BotanicalIdentityCreate, BotanicalIdentityUpdate
 from florabase.botanical_identities.service import (
     BotanicalIdentityConflictError,
+    BotanicalIdentityReferencedError,
     create_botanical_identity,
+    delete_botanical_identity,
+    update_botanical_identity,
 )
 
 
@@ -49,3 +52,39 @@ def test_unrelated_integrity_error_is_not_misreported_as_a_duplicate() -> None:
         create_botanical_identity(database, payload)
 
     assert caught.value is failure
+
+
+def test_update_corrects_the_same_identity_and_rejects_a_duplicate() -> None:
+    database = MagicMock()
+    identity = BotanicalIdentity(id=uuid7(), scientific_name="Acer palmatum")
+    payload = BotanicalIdentityUpdate(
+        scientific_name="Acer japonicum", common_name="Fullmoon maple"
+    )
+    with patch("florabase.botanical_identities.service.find_duplicate", return_value=None):
+        assert update_botanical_identity(database, identity, payload) is identity
+    assert identity.scientific_name == "Acer japonicum"
+    assert identity.common_name == "Fullmoon maple"
+
+    duplicate = BotanicalIdentity(id=uuid7(), scientific_name="Acer japonicum")
+    with (
+        patch(
+            "florabase.botanical_identities.service.find_duplicate",
+            return_value=duplicate,
+        ),
+        pytest.raises(BotanicalIdentityConflictError),
+    ):
+        update_botanical_identity(database, identity, payload)
+
+
+def test_delete_allows_unused_identity_and_rejects_collection_references() -> None:
+    identity = BotanicalIdentity(id=uuid7(), scientific_name="Acer palmatum")
+    database = MagicMock()
+    database.scalar.side_effect = [0, 0, 0]
+    delete_botanical_identity(database, identity)
+    database.delete.assert_called_once_with(identity)
+
+    database = MagicMock()
+    database.scalar.side_effect = [1, 0, 0]
+    with pytest.raises(BotanicalIdentityReferencedError):
+        delete_botanical_identity(database, identity)
+    database.delete.assert_not_called()

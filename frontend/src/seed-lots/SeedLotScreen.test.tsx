@@ -6,7 +6,7 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { App } from "../App";
 import type { GeographicPlaceResponse } from "../geographic-places/api";
@@ -192,6 +192,10 @@ async function chooseReference(
   await user.click(picker);
   await user.click(await screen.findByRole("button", { name: option }));
 }
+
+beforeEach(() => {
+  window.history.replaceState(null, "", "#/dashboard");
+});
 
 afterEach(() => {
   cleanup();

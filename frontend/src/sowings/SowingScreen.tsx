@@ -10,6 +10,12 @@ import {
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
+import {
+  Breadcrumbs,
+  DetailHeader,
+  DetailTabs,
+} from "../components/CollectionUI";
+import { LineagePanel } from "../lineage/LineagePanel";
 import { listLocations, type LocationResponse } from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
 import { listSeedLots, type SeedLotResponse } from "../seed-lots/api";
@@ -185,10 +191,17 @@ function seedLotLabel(lot: SeedLotResponse): string {
 function Detail({
   sowing,
   headingRef,
+  onEdit,
+  initialTab,
 }: {
   sowing: SowingResponse;
   headingRef: RefObject<HTMLHeadingElement | null>;
+  onEdit: () => void;
+  initialTab?: string;
 }) {
+  const [tab, setTab] = useState(
+    initialTab === "lineage" ? "lineage" : "overview",
+  );
   const hasCultivation = Boolean(
     sowing.substrate ??
     sowing.method_container ??
@@ -207,91 +220,161 @@ function Detail({
           : null;
   return (
     <article className="sowing-detail">
-      <section aria-labelledby="sowing-origin-title">
-        <p className="eyebrow">Identity and origin</p>
-        <h3 id="sowing-origin-title" tabIndex={-1} ref={headingRef}>
-          {sowing.seed_lot.botanical_identity_display_label}
-        </h3>
-        {sowing.label && <p className="seed-label">{sowing.label}</p>}
-        <dl>
-          <div>
-            <dt>Lifecycle</dt>
-            <dd>{lifecycleLabels[sowing.lifecycle]}</dd>
-          </div>
-          <div>
-            <dt>Seed lot</dt>
-            <dd>
-              {sowing.seed_lot.label ?? "Unlabelled lot"} ·{" "}
-              {sowing.seed_lot.lifecycle}
-            </dd>
-          </div>
-        </dl>
-      </section>
-      <section aria-labelledby="sowing-facts-title">
-        <h4 id="sowing-facts-title">Sowing</h4>
-        <dl>
-          <div>
-            <dt>Sowing date</dt>
-            <dd>{dateLabel(sowing.sowing_date)}</dd>
-          </div>
-          <div>
-            <dt>Result</dt>
-            <dd>{quantityLabel(sowing)}</dd>
-          </div>
-          <div>
-            <dt>Current location</dt>
-            <dd>{sowing.location?.display_path ?? "Not recorded"}</dd>
-          </div>
-        </dl>
-      </section>
-      {hasCultivation && (
-        <section aria-labelledby="sowing-cultivation-title">
-          <h4 id="sowing-cultivation-title">Cultivation</h4>
-          <dl>
-            {sowing.substrate && (
+      <Breadcrumbs
+        items={[
+          { label: "Sowings", href: "#/sowings" },
+          {
+            label:
+              sowing.label ?? sowing.seed_lot.botanical_identity_display_label,
+          },
+        ]}
+      />
+      <DetailHeader
+        eyebrow="Sowing"
+        title={sowing.label ?? sowing.seed_lot.botanical_identity_display_label}
+        secondary={
+          <>
+            <a href={`#/identities/${sowing.seed_lot.botanical_identity_id}`}>
+              {sowing.seed_lot.botanical_identity_display_label}
+            </a>{" "}
+            ·{" "}
+            <a href={`#/seeds/${sowing.seed_lot.id}`}>
+              {sowing.seed_lot.label ?? "Unlabelled SeedLot"}
+            </a>
+          </>
+        }
+        status={
+          <>
+            <span
+              className={`lifecycle-badge lifecycle-badge--${sowing.lifecycle}`}
+            >
+              {lifecycleLabels[sowing.lifecycle]}
+            </span>
+            {sowing.location && <span>{sowing.location.display_path}</span>}
+          </>
+        }
+        editLabel="Edit Sowing"
+        onEdit={onEdit}
+      />
+      <DetailTabs
+        tabs={[
+          { id: "overview", label: "Overview" },
+          { id: "lineage", label: "Lineage" },
+        ]}
+        selected={tab}
+        onSelect={(next) => {
+          setTab(next);
+          window.history.replaceState(
+            null,
+            "",
+            `#/sowings/${sowing.id}?tab=${next}`,
+          );
+        }}
+      />
+      {tab === "overview" && (
+        <div className="detail-tab-panel overview-grid">
+          <section aria-labelledby="sowing-origin-title">
+            <p className="eyebrow">Identity and origin</p>
+            <h3 id="sowing-origin-title" tabIndex={-1} ref={headingRef}>
+              {sowing.seed_lot.botanical_identity_display_label}
+            </h3>
+            {sowing.label && <p className="seed-label">{sowing.label}</p>}
+            <dl>
               <div>
-                <dt>Substrate</dt>
-                <dd>{sowing.substrate}</dd>
+                <dt>Lifecycle</dt>
+                <dd>{lifecycleLabels[sowing.lifecycle]}</dd>
               </div>
-            )}
-            {sowing.method_container && (
               <div>
-                <dt>Method / container</dt>
-                <dd>{sowing.method_container}</dd>
+                <dt>Seed lot</dt>
+                <dd>
+                  {sowing.seed_lot.label ?? "Unlabelled lot"} ·{" "}
+                  {sowing.seed_lot.lifecycle}
+                </dd>
               </div>
-            )}
-            {sowing.pretreatment && (
+            </dl>
+          </section>
+          <section aria-labelledby="sowing-facts-title">
+            <h4 id="sowing-facts-title">Sowing</h4>
+            <dl>
               <div>
-                <dt>Pretreatment</dt>
-                <dd>{sowing.pretreatment}</dd>
+                <dt>Sowing date</dt>
+                <dd>{dateLabel(sowing.sowing_date)}</dd>
               </div>
-            )}
-            {temperature && (
               <div>
-                <dt>Temperature</dt>
-                <dd>{temperature}</dd>
+                <dt>Result</dt>
+                <dd>{quantityLabel(sowing)}</dd>
               </div>
-            )}
-            {sowing.environment && (
               <div>
-                <dt>Environment</dt>
-                <dd>{sowing.environment}</dd>
+                <dt>Current location</dt>
+                <dd>{sowing.location?.display_path ?? "Not recorded"}</dd>
               </div>
-            )}
-          </dl>
-        </section>
+            </dl>
+          </section>
+          {hasCultivation && (
+            <section aria-labelledby="sowing-cultivation-title">
+              <h4 id="sowing-cultivation-title">Cultivation</h4>
+              <dl>
+                {sowing.substrate && (
+                  <div>
+                    <dt>Substrate</dt>
+                    <dd>{sowing.substrate}</dd>
+                  </div>
+                )}
+                {sowing.method_container && (
+                  <div>
+                    <dt>Method / container</dt>
+                    <dd>{sowing.method_container}</dd>
+                  </div>
+                )}
+                {sowing.pretreatment && (
+                  <div>
+                    <dt>Pretreatment</dt>
+                    <dd>{sowing.pretreatment}</dd>
+                  </div>
+                )}
+                {temperature && (
+                  <div>
+                    <dt>Temperature</dt>
+                    <dd>{temperature}</dd>
+                  </div>
+                )}
+                {sowing.environment && (
+                  <div>
+                    <dt>Environment</dt>
+                    <dd>{sowing.environment}</dd>
+                  </div>
+                )}
+              </dl>
+            </section>
+          )}
+          {sowing.notes && (
+            <section aria-labelledby="sowing-notes-title">
+              <h4 id="sowing-notes-title">Notes</h4>
+              <p className="preserve-lines">{sowing.notes}</p>
+            </section>
+          )}
+        </div>
       )}
-      {sowing.notes && (
-        <section aria-labelledby="sowing-notes-title">
-          <h4 id="sowing-notes-title">Notes</h4>
-          <p className="preserve-lines">{sowing.notes}</p>
-        </section>
+      {tab === "lineage" && (
+        <div
+          className="detail-tab-panel"
+          role="tabpanel"
+          aria-labelledby="tab-lineage"
+        >
+          <LineagePanel kind="sowings" id={sowing.id} />
+        </div>
       )}
     </article>
   );
 }
 
-export function SowingScreen() {
+export function SowingScreen({
+  initialId,
+  initialTab,
+}: {
+  initialId?: string;
+  initialTab?: string;
+} = {}) {
   const auth = useAuth();
   const [collection, setCollection] = useState<CollectionState>({
     status: "loading",
@@ -300,11 +383,13 @@ export function SowingScreen() {
   const [attempt, setAttempt] = useState(0);
   const [detailAttempt, setDetailAttempt] = useState(0);
   const [detail, setDetail] = useState<DetailState>({ status: "idle" });
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initialId ?? null,
+  );
   const [filter, setFilter] = useState<"active" | "history" | "all">("active");
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState(false);
-  const [mobileDetail, setMobileDetail] = useState(false);
+  const [mobileDetail, setMobileDetail] = useState(Boolean(initialId));
   const [form, setForm] = useState<FormState>(blankForm);
   const [moreDetails, setMoreDetails] = useState(false);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
@@ -1137,17 +1222,14 @@ export function SowingScreen() {
             </div>
           ) : selected ? (
             <div className="selected-seed selected-sowing">
-              <Detail sowing={selected} headingRef={detailHeading} />
-              <div className="actions">
-                <button
-                  type="button"
-                  onClick={() => {
-                    startEdit(selected);
-                  }}
-                >
-                  Edit Sowing
-                </button>
-              </div>
+              <Detail
+                sowing={selected}
+                headingRef={detailHeading}
+                initialTab={initialTab}
+                onEdit={() => {
+                  startEdit(selected);
+                }}
+              />
             </div>
           ) : (
             <div className="selected-seed seed-detail-empty">

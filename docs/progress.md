@@ -4,6 +4,31 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-03 — UX-001
+
+- Reframed Florabase around a collection Dashboard; persistent grouped desktop navigation; a fixed
+  five-destination mobile bar with a secondary More tray; unified Plants browsing for distinct Plant
+  and PlantGroup records; and a complete global Events journal. The focused Dashboard endpoint
+  supplies authoritative collection counts and six recent Events, while the global endpoint keeps
+  EVENT-001 ordering and EVENT-002's All, Observations, Cultivation, and Status vocabulary.
+- Added shared breadcrumb, detail-header, accessible routed-tab, card, Event-feed, and explicit
+  lineage primitives across Plant, PlantGroup, SeedLot, Sowing, and BotanicalIdentity details.
+  BotanicalIdentity is now an identity-based collection hub with Overview, Seeds, Sowings, combined
+  Plants and Plant groups, and Events tabs; textual record types, concrete cross-links, and explicit
+  copy keep identity aggregation separate from recorded lineage.
+- Completed the editability audit: Plant, PlantGroup, SeedLot, and Sowing retain their lifecycle-aware
+  editors; Location, Supplier, and user-created GeographicPlace now share visible Edit and overflow
+  action placement; canonical geography remains immutable. BotanicalIdentity gained focused update
+  and guarded deletion: unused identities can be removed, while SeedLot, Plant, or PlantGroup
+  references produce a clear conflict and never cascade. Contextual form guidance remains UX-002.
+- Verification passed formatting, Ruff, ESLint, strict mypy, strict TypeScript, 176 backend unit
+  tests, 93 frontend tests, all 224 disposable PostgreSQL integration tests, generated API drift,
+  workflow-helper checks, production backend/frontend builds, and `git diff --check` through the
+  canonical `make ci` path. Browser QA on an isolated tmpfs PostgreSQL stack covered every required
+  detail, dashboard, global Events, menu, desktop sidebar, and 390×844 bottom-navigation flow with no
+  console errors or horizontal page overflow. No migration was required and no operator database or
+  persistent volume was modified. `UX-001` is verified.
+
 ## 2026-09-02 — EVENT-002
 
 - Added one protected Event journal to both Plant and PlantGroup detail pages. The complete

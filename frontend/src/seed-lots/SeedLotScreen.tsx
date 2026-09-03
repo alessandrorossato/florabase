@@ -11,6 +11,14 @@ import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import {
+  Breadcrumbs,
+  CollectionCard,
+  DetailHeader,
+  DetailTabs,
+} from "../components/CollectionUI";
+import { LineagePanel } from "../lineage/LineagePanel";
+import { listSowings, type SowingResponse } from "../sowings/api";
+import {
   conflictExistingId,
   createBotanicalIdentity,
   getBotanicalIdentity,
@@ -241,62 +249,187 @@ function ContextDialog({
   );
 }
 
-function Detail({ lot }: { lot: SeedLotResponse }) {
+function RelatedSowings({ seedLotId }: { seedLotId: string }) {
+  const [sowings, setSowings] = useState<SowingResponse[] | null>(null);
+  useEffect(() => {
+    const controller = new AbortController();
+    void listSowings(controller.signal)
+      .then((items) => {
+        setSowings(
+          items.filter(({ seed_lot_id }) => seed_lot_id === seedLotId),
+        );
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setSowings([]);
+      });
+    return () => {
+      controller.abort();
+    };
+  }, [seedLotId]);
+  if (sowings === null) return <p role="status">Loading Sowings…</p>;
+  if (!sowings.length)
+    return (
+      <div className="empty-state">
+        <p>No Sowings use this SeedLot.</p>
+      </div>
+    );
+  return (
+    <div className="card-grid">
+      {sowings.map((sowing) => (
+        <CollectionCard
+          key={sowing.id}
+          eyebrow={sowing.lifecycle}
+          href={`#/sowings/${sowing.id}`}
+          title={sowing.label ?? "Unlabelled Sowing"}
+        >
+          <p>{dateLabel(sowing.sowing_date)}</p>
+          <p>{sowing.location?.display_path ?? "Location not recorded"}</p>
+        </CollectionCard>
+      ))}
+    </div>
+  );
+}
+
+function Detail({
+  lot,
+  onEdit,
+  initialTab,
+}: {
+  lot: SeedLotResponse;
+  onEdit: () => void;
+  initialTab?: string;
+}) {
+  const [tab, setTab] = useState(
+    initialTab && ["overview", "sowings", "lineage"].includes(initialTab)
+      ? initialTab
+      : "overview",
+  );
   return (
     <section className="seed-detail" aria-labelledby="seed-detail-title">
-      <p className="eyebrow">Selected seed lot</p>
-      <h3 id="seed-detail-title">{lot.botanical_identity.display_label}</h3>
-      {lot.label && <p className="seed-label">{lot.label}</p>}
-      <dl>
-        <div>
-          <dt>Lifecycle</dt>
-          <dd>{lifecycleLabels[lot.lifecycle]}</dd>
+      <Breadcrumbs
+        items={[
+          { label: "Seeds", href: "#/seeds" },
+          { label: lot.label ?? lot.botanical_identity.display_label },
+        ]}
+      />
+      <DetailHeader
+        eyebrow="Seed lot"
+        title={lot.label ?? lot.botanical_identity.display_label}
+        secondary={
+          <a href={`#/identities/${lot.botanical_identity.id}`}>
+            {lot.botanical_identity.display_label}
+          </a>
+        }
+        status={
+          <>
+            <span
+              className={`lifecycle-badge lifecycle-badge--${lot.lifecycle}`}
+            >
+              {lifecycleLabels[lot.lifecycle]}
+            </span>
+            {lot.location && <span>{lot.location.display_path}</span>}
+          </>
+        }
+        editLabel="Edit seed lot"
+        onEdit={onEdit}
+      />
+      <DetailTabs
+        tabs={[
+          { id: "overview", label: "Overview" },
+          { id: "sowings", label: "Sowings" },
+          { id: "lineage", label: "Lineage" },
+        ]}
+        selected={tab}
+        onSelect={(next) => {
+          setTab(next);
+          window.history.replaceState(
+            null,
+            "",
+            `#/seeds/${lot.id}?tab=${next}`,
+          );
+        }}
+      />
+      {tab === "overview" && (
+        <div className="detail-tab-panel overview-grid">
+          <p className="eyebrow">Selected seed lot</p>
+          <h3 id="seed-detail-title">{lot.botanical_identity.display_label}</h3>
+          {lot.label && <p className="seed-label">{lot.label}</p>}
+          <dl>
+            <div>
+              <dt>Lifecycle</dt>
+              <dd>{lifecycleLabels[lot.lifecycle]}</dd>
+            </div>
+            <div>
+              <dt>Quantity</dt>
+              <dd>{quantityLabel(lot)}</dd>
+            </div>
+            <div>
+              <dt>Source</dt>
+              <dd>
+                {sourceLabels[lot.source_kind]}
+                {lot.source_detail ? ` — ${lot.source_detail}` : ""}
+              </dd>
+            </div>
+            <div>
+              <dt>Supplier</dt>
+              <dd>{lot.supplier?.name ?? "Not recorded"}</dd>
+            </div>
+            <div>
+              <dt>Storage</dt>
+              <dd>{lot.location?.display_path ?? "Not recorded"}</dd>
+            </div>
+            <div>
+              <dt>Material provenance</dt>
+              <dd>{lot.material_provenance?.display_path ?? "Not recorded"}</dd>
+            </div>
+            <div>
+              <dt>Acquired</dt>
+              <dd>{dateLabel(lot.acquisition_date)}</dd>
+            </div>
+            <div>
+              <dt>Harvested</dt>
+              <dd>{dateLabel(lot.harvest_date)}</dd>
+            </div>
+            <div>
+              <dt>Expected viability</dt>
+              <dd>{dateLabel(lot.expected_viability_until)}</dd>
+            </div>
+            <div>
+              <dt>Notes</dt>
+              <dd className="preserve-lines">{lot.notes ?? "Not recorded"}</dd>
+            </div>
+          </dl>
         </div>
-        <div>
-          <dt>Quantity</dt>
-          <dd>{quantityLabel(lot)}</dd>
+      )}
+      {tab === "sowings" && (
+        <div
+          className="detail-tab-panel"
+          role="tabpanel"
+          aria-labelledby="tab-sowings"
+        >
+          <RelatedSowings seedLotId={lot.id} />
         </div>
-        <div>
-          <dt>Source</dt>
-          <dd>
-            {sourceLabels[lot.source_kind]}
-            {lot.source_detail ? ` — ${lot.source_detail}` : ""}
-          </dd>
+      )}
+      {tab === "lineage" && (
+        <div
+          className="detail-tab-panel"
+          role="tabpanel"
+          aria-labelledby="tab-lineage"
+        >
+          <LineagePanel kind="seed-lots" id={lot.id} />
         </div>
-        <div>
-          <dt>Supplier</dt>
-          <dd>{lot.supplier?.name ?? "Not recorded"}</dd>
-        </div>
-        <div>
-          <dt>Storage</dt>
-          <dd>{lot.location?.display_path ?? "Not recorded"}</dd>
-        </div>
-        <div>
-          <dt>Material provenance</dt>
-          <dd>{lot.material_provenance?.display_path ?? "Not recorded"}</dd>
-        </div>
-        <div>
-          <dt>Acquired</dt>
-          <dd>{dateLabel(lot.acquisition_date)}</dd>
-        </div>
-        <div>
-          <dt>Harvested</dt>
-          <dd>{dateLabel(lot.harvest_date)}</dd>
-        </div>
-        <div>
-          <dt>Expected viability</dt>
-          <dd>{dateLabel(lot.expected_viability_until)}</dd>
-        </div>
-        <div>
-          <dt>Notes</dt>
-          <dd className="preserve-lines">{lot.notes ?? "Not recorded"}</dd>
-        </div>
-      </dl>
+      )}
     </section>
   );
 }
 
-export function SeedLotScreen() {
+export function SeedLotScreen({
+  initialId,
+  initialTab,
+}: {
+  initialId?: string;
+  initialTab?: string;
+} = {}) {
   const auth = useAuth();
   const [inventory, setInventory] = useState<InventoryState>({
     status: "loading",
@@ -305,7 +438,9 @@ export function SeedLotScreen() {
   const [attempt, setAttempt] = useState(0);
   const [filter, setFilter] = useState<"active" | "history" | "all">("active");
   const [search, setSearch] = useState("");
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initialId ?? null,
+  );
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState<FormState>(blankForm);
   const [moreDetails, setMoreDetails] = useState(false);
@@ -1126,15 +1261,13 @@ export function SeedLotScreen() {
             </form>
           ) : selected ? (
             <div className="selected-seed">
-              <Detail lot={selected} />
-              <button
-                type="button"
-                onClick={() => {
+              <Detail
+                lot={selected}
+                initialTab={initialTab}
+                onEdit={() => {
                   startEdit(selected);
                 }}
-              >
-                Edit seed lot
-              </button>
+              />
             </div>
           ) : (
             <div className="empty-state seed-detail-empty">

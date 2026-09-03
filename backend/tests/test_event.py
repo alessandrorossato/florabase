@@ -7,6 +7,7 @@ from uuid import uuid7
 import pytest
 from fastapi import HTTPException, Response
 
+from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.events import api, service
 from florabase.events.model import Event
 from florabase.events.schemas import EventCreate, EventResponse, EventUpdate, PlantEventTarget
@@ -144,6 +145,18 @@ def test_get_and_response_projection_are_typed_and_target_aware(
 ) -> None:
     plant, group, _, destination = _targets()
     now = datetime.now(UTC)
+    plant_identity = BotanicalIdentity(
+        id=plant.botanical_identity_id,
+        scientific_name="Solanum betaceum",
+        created_at=now,
+        updated_at=now,
+    )
+    group_identity = BotanicalIdentity(
+        id=group.botanical_identity_id,
+        scientific_name="Capsicum annuum",
+        created_at=now,
+        updated_at=now,
+    )
     plant_event = Event(
         id=uuid7(),
         plant_id=plant.id,
@@ -168,9 +181,11 @@ def test_get_and_response_projection_are_typed_and_target_aware(
         plant,
         None,
         destination,
+        plant_identity,
+        None,
     )
     assert service.get_event(database, plant_event.id) == EventProjection(
-        plant_event, plant, None, destination
+        plant_event, plant, None, destination, plant_identity, None
     )
     database.execute.return_value.one_or_none.return_value = None
     assert service.get_event(database, uuid7()) is None
@@ -178,8 +193,8 @@ def test_get_and_response_projection_are_typed_and_target_aware(
     responses = service.event_responses(
         database,
         [
-            EventProjection(plant_event, plant, None, destination),
-            EventProjection(group_event, None, group, None),
+            EventProjection(plant_event, plant, None, destination, plant_identity, None),
+            EventProjection(group_event, None, group, None, None, group_identity),
         ],
     )
     assert responses[0].target.type == "plant"
@@ -188,12 +203,20 @@ def test_get_and_response_projection_are_typed_and_target_aware(
     assert responses[0].destination_location.display_path == "Greenhouse"
     assert responses[1].target.type == "plant_group"
     with pytest.raises(RuntimeError):
-        service.event_responses(database, [EventProjection(group_event, None, None, None)])
+        service.event_responses(
+            database, [EventProjection(group_event, None, None, None, None, None)]
+        )
 
 
 def test_event_api_routes_and_errors(monkeypatch: pytest.MonkeyPatch) -> None:
     plant, _, _, _ = _targets()
     now = datetime.now(UTC)
+    identity = BotanicalIdentity(
+        id=plant.botanical_identity_id,
+        scientific_name="Solanum betaceum",
+        created_at=now,
+        updated_at=now,
+    )
     event = Event(
         id=uuid7(),
         plant_id=plant.id,
@@ -201,10 +224,18 @@ def test_event_api_routes_and_errors(monkeypatch: pytest.MonkeyPatch) -> None:
         created_at=now,
         updated_at=now,
     )
-    projection = EventProjection(event, plant, None, None)
+    projection = EventProjection(event, plant, None, None, identity, None)
     response_model = EventResponse(
         id=event.id,
-        target=PlantEventTarget(id=plant.id, label=plant.label, lifecycle="active"),
+        target=PlantEventTarget(
+            id=plant.id,
+            label=plant.label,
+            lifecycle="active",
+            botanical_identity={
+                "id": identity.id,
+                "display_label": "Solanum betaceum",
+            },
+        ),
         kind="observation",
         occurred_on=None,
         notes=None,

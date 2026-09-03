@@ -21,6 +21,7 @@ from florabase.events.service import (
     delete_event,
     event_responses,
     get_event,
+    list_all_events,
     list_events,
     update_event,
 )
@@ -130,6 +131,14 @@ def create_plant_group_event(
 ) -> EventResponse:
     require_owner(actor)
     return _create_target_event(database, "plant_group", plant_group_id, payload, response)
+
+
+@events_router.get("", response_model=list[EventResponse], operation_id="listEvents")
+def list_all_events_endpoint(
+    _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> list[EventResponse]:
+    return event_responses(database, list_all_events(database))
 
 
 @events_router.get("/{event_id}", response_model=EventResponse, operation_id="getEvent")

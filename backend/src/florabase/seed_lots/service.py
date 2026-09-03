@@ -218,8 +218,13 @@ def get_seed_lot(database: Session, seed_lot_id: UUID) -> SeedLotProjection | No
     return SeedLotProjection(*row) if row is not None else None
 
 
-def list_seed_lots(database: Session) -> list[SeedLotProjection]:
-    statement = _projection_statement().order_by(
+def list_seed_lots(
+    database: Session, botanical_identity_id: UUID | None = None
+) -> list[SeedLotProjection]:
+    statement = _projection_statement()
+    if botanical_identity_id is not None:
+        statement = statement.where(SeedLot.botanical_identity_id == botanical_identity_id)
+    statement = statement.order_by(
         case((SeedLot.lifecycle == "active", 0), else_=1),
         func.lower(BotanicalIdentity.scientific_name),
         func.lower(BotanicalIdentity.cultivar_name).nulls_first(),

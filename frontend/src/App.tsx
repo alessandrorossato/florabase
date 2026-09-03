@@ -5,6 +5,8 @@ import { AuthProvider } from "./auth/AuthProvider";
 import { useAuth } from "./auth/context";
 import { LoginForm } from "./auth/LoginForm";
 import { BotanicalIdentityScreen } from "./botanical-identities/BotanicalIdentityScreen";
+import { DashboardScreen } from "./collection/DashboardScreen";
+import { GlobalEventsScreen } from "./events/GlobalEventsScreen";
 import { GeographyScreen } from "./geographic-places/GeographyScreen";
 import { LocationScreen } from "./locations/LocationScreen";
 import { PlantScreen } from "./plants/PlantScreen";
@@ -18,19 +20,110 @@ type HealthState =
   | { status: "ready"; response: HealthResponse }
   | { status: "error" };
 
+type Section =
+  | "dashboard"
+  | "seeds"
+  | "sowings"
+  | "plants"
+  | "events"
+  | "identities"
+  | "suppliers"
+  | "locations"
+  | "geography";
+
+interface Route {
+  section: Section;
+  recordId?: string;
+  recordKind?: "plant" | "group";
+  recordTypeFilter?: "plant" | "group";
+  tab?: string;
+}
+
+function currentRoute(): Route {
+  const raw = window.location.hash.slice(1) || "/dashboard";
+  const [pathname, query = ""] = raw.split("?", 2);
+  const [first = "dashboard", id] = pathname.split("/").filter(Boolean);
+  const tab = new URLSearchParams(query).get("tab") ?? undefined;
+  const type = new URLSearchParams(query).get("type");
+  if (first === "plant-groups")
+    return { section: "plants", recordId: id, recordKind: "group", tab };
+  if (first === "plants")
+    return {
+      section: "plants",
+      recordId: id,
+      recordKind: "plant",
+      recordTypeFilter: type === "plant" || type === "group" ? type : undefined,
+      tab,
+    };
+  const valid: Section[] = [
+    "dashboard",
+    "seeds",
+    "sowings",
+    "events",
+    "identities",
+    "suppliers",
+    "locations",
+    "geography",
+  ];
+  return {
+    section: valid.includes(first as Section)
+      ? (first as Section)
+      : "dashboard",
+    recordId: id,
+    tab,
+  };
+}
+
+const desktopGroups: {
+  label: string;
+  items: { id: Section; label: string }[];
+}[] = [
+  { label: "Overview", items: [{ id: "dashboard", label: "Dashboard" }] },
+  {
+    label: "Collection",
+    items: [
+      { id: "plants", label: "Plants" },
+      { id: "seeds", label: "Seeds" },
+      { id: "sowings", label: "Sowings" },
+      { id: "events", label: "Events" },
+    ],
+  },
+  {
+    label: "Botany",
+    items: [{ id: "identities", label: "Botanical identities" }],
+  },
+  {
+    label: "Reference",
+    items: [
+      { id: "locations", label: "Locations" },
+      { id: "suppliers", label: "Suppliers" },
+      { id: "geography", label: "Geography" },
+    ],
+  },
+];
+
 function ApplicationShell() {
   const auth = useAuth();
   const state = auth.state;
   const [health, setHealth] = useState<HealthState>({ status: "loading" });
-  const [section, setSection] = useState<
-    | "seeds"
-    | "sowings"
-    | "plants"
-    | "identities"
-    | "suppliers"
-    | "locations"
-    | "geography"
-  >("identities");
+  const [route, setRoute] = useState<Route>(currentRoute);
+  const [moreOpen, setMoreOpen] = useState(false);
+
+  useEffect(() => {
+    const update = () => {
+      setRoute(currentRoute());
+    };
+    window.addEventListener("hashchange", update);
+    return () => {
+      window.removeEventListener("hashchange", update);
+    };
+  }, []);
+
+  function navigate(section: Section) {
+    window.history.pushState(null, "", `#/${section}`);
+    setRoute({ section });
+    setMoreOpen(false);
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -60,149 +153,173 @@ function ApplicationShell() {
   const signedInAs = state.session.display_name ?? state.session.login_name;
 
   return (
-    <section aria-labelledby="page-title" className="card card--application">
-      <div className="session-bar">
-        <p>Signed in as {signedInAs}</p>
-        <button
-          className="button--secondary"
-          type="button"
-          disabled={state.status === "logging-out"}
-          onClick={() => {
-            void auth.logOut();
-          }}
-        >
-          {state.status === "logging-out" ? "Signing out…" : "Sign out"}
-        </button>
-      </div>
-      <p className="eyebrow">Self-hosted botanical records</p>
-      <h1 id="page-title">Florabase</h1>
-      <nav aria-label="Primary navigation" className="primary-navigation">
-        <button
-          type="button"
-          className="navigation-link"
-          aria-current={section === "plants" ? "page" : undefined}
-          onClick={() => {
-            setSection("plants");
-          }}
-        >
-          Plants
-        </button>
-        <button
-          type="button"
-          className="navigation-link"
-          aria-current={section === "sowings" ? "page" : undefined}
-          onClick={() => {
-            setSection("sowings");
-          }}
-        >
-          Sowings
-        </button>
-        <button
-          type="button"
-          className="navigation-link"
-          aria-current={section === "seeds" ? "page" : undefined}
-          onClick={() => {
-            setSection("seeds");
-          }}
-        >
-          Seeds
-        </button>
-        <button
-          type="button"
-          className="navigation-link"
-          aria-current={section === "identities" ? "page" : undefined}
-          onClick={() => {
-            setSection("identities");
-          }}
-        >
-          Botanical identities
-        </button>
-        <button
-          type="button"
-          className="navigation-link"
-          aria-current={section === "suppliers" ? "page" : undefined}
-          onClick={() => {
-            setSection("suppliers");
-          }}
-        >
-          Suppliers
-        </button>
-        <button
-          type="button"
-          className="navigation-link"
-          aria-current={section === "locations" ? "page" : undefined}
-          onClick={() => {
-            setSection("locations");
-          }}
-        >
-          Locations
-        </button>
-        <button
-          type="button"
-          className="navigation-link"
-          aria-current={section === "geography" ? "page" : undefined}
-          onClick={() => {
-            setSection("geography");
-          }}
-        >
-          Geography
-        </button>
-      </nav>
-      {section === "seeds" ? (
-        <SeedLotScreen />
-      ) : section === "sowings" ? (
-        <SowingScreen />
-      ) : section === "plants" ? (
-        <PlantScreen />
-      ) : section === "identities" ? (
-        <BotanicalIdentityScreen />
-      ) : section === "suppliers" ? (
-        <SupplierScreen />
-      ) : section === "locations" ? (
-        <LocationScreen />
-      ) : (
-        <GeographyScreen />
-      )}
-      {state.status === "logout-failed" && (
-        <div className="notice notice--error" role="alert">
-          <p>{state.message}</p>
-          <div className="actions">
+    <div className="application-shell">
+      <aside className="desktop-sidebar">
+        <a className="brand" href="#/dashboard">
+          Florabase
+        </a>
+        <nav aria-label="Primary navigation">
+          {desktopGroups.map((group) => (
+            <section key={group.label} aria-label={group.label}>
+              <p>{group.label}</p>
+              {group.items.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className="navigation-link"
+                  aria-current={route.section === item.id ? "page" : undefined}
+                  onClick={() => {
+                    navigate(item.id);
+                  }}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </section>
+          ))}
+        </nav>
+      </aside>
+      <section aria-labelledby="page-title" className="app-content">
+        <div className="session-bar app-header">
+          <div>
+            <p className="eyebrow">Self-hosted botanical records</p>
+            <h1 id="page-title">Florabase</h1>
+          </div>
+          <div>
+            <p>Signed in as {signedInAs}</p>
             <button
+              className="button--secondary"
               type="button"
+              disabled={state.status === "logging-out"}
               onClick={() => {
                 void auth.logOut();
               }}
             >
-              Retry sign out
-            </button>
-            <button
-              className="button--secondary"
-              type="button"
-              onClick={() => {
-                auth.cancelLogout();
-              }}
-            >
-              Stay signed in
+              {state.status === "logging-out" ? "Signing out…" : "Sign out"}
             </button>
           </div>
         </div>
+        {route.section === "dashboard" ? (
+          <DashboardScreen />
+        ) : route.section === "seeds" ? (
+          <SeedLotScreen initialId={route.recordId} initialTab={route.tab} />
+        ) : route.section === "sowings" ? (
+          <SowingScreen initialId={route.recordId} initialTab={route.tab} />
+        ) : route.section === "plants" ? (
+          <PlantScreen
+            initialId={route.recordId}
+            initialKind={route.recordKind}
+            initialTypeFilter={route.recordTypeFilter}
+            initialTab={route.tab}
+          />
+        ) : route.section === "events" ? (
+          <GlobalEventsScreen />
+        ) : route.section === "identities" ? (
+          <BotanicalIdentityScreen
+            initialId={route.recordId}
+            initialTab={route.tab}
+          />
+        ) : route.section === "suppliers" ? (
+          <SupplierScreen />
+        ) : route.section === "locations" ? (
+          <LocationScreen />
+        ) : (
+          <GeographyScreen />
+        )}
+        {state.status === "logout-failed" && (
+          <div className="notice notice--error" role="alert">
+            <p>{state.message}</p>
+            <div className="actions">
+              <button
+                type="button"
+                onClick={() => {
+                  void auth.logOut();
+                }}
+              >
+                Retry sign out
+              </button>
+              <button
+                className="button--secondary"
+                type="button"
+                onClick={() => {
+                  auth.cancelLogout();
+                }}
+              >
+                Stay signed in
+              </button>
+            </div>
+          </div>
+        )}
+        <div
+          aria-live="polite"
+          className={`status status--compact status--${health.status}`}
+        >
+          {health.status === "loading" && <p>Checking backend connection…</p>}
+          {health.status === "ready" && (
+            <p>
+              <span aria-hidden="true">●</span> Backend status:{" "}
+              {health.response.status}
+            </p>
+          )}
+          {health.status === "error" && (
+            <p>Backend status is currently unavailable.</p>
+          )}
+        </div>
+      </section>
+      <nav aria-label="Mobile primary navigation" className="mobile-navigation">
+        {[
+          { id: "dashboard", label: "Home" },
+          { id: "plants", label: "Plants" },
+          { id: "seeds", label: "Seeds" },
+          { id: "events", label: "Events" },
+        ].map((item) => (
+          <a
+            key={item.id}
+            href={`#/${item.id}`}
+            aria-current={route.section === item.id ? "page" : undefined}
+            onClick={() => {
+              setMoreOpen(false);
+            }}
+          >
+            {item.label}
+          </a>
+        ))}
+        <button
+          type="button"
+          aria-expanded={moreOpen}
+          aria-controls="mobile-more-menu"
+          onClick={() => {
+            setMoreOpen((value) => !value);
+          }}
+        >
+          More
+        </button>
+      </nav>
+      {moreOpen && (
+        <nav
+          aria-label="More navigation"
+          className="mobile-more"
+          id="mobile-more-menu"
+        >
+          {desktopGroups
+            .slice(1)
+            .flatMap(({ items }) => items)
+            .filter(({ id }) => !["plants", "seeds", "events"].includes(id))
+            .map((item) => (
+              <button
+                key={item.id}
+                type="button"
+                aria-current={route.section === item.id ? "page" : undefined}
+                onClick={() => {
+                  navigate(item.id);
+                }}
+              >
+                {item.label}
+              </button>
+            ))}
+        </nav>
       )}
-      <div
-        aria-live="polite"
-        className={`status status--compact status--${health.status}`}
-      >
-        {health.status === "loading" && <p>Checking backend connection…</p>}
-        {health.status === "ready" && (
-          <p>
-            <span aria-hidden="true">●</span> Backend status:{" "}
-            {health.response.status}
-          </p>
-        )}
-        {health.status === "error" && (
-          <p>Backend status is currently unavailable.</p>
-        )}
-      </div>
-    </section>
+    </div>
   );
 }
 

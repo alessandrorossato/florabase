@@ -1,6 +1,58 @@
 {
   "components": {
     "schemas": {
+      "BotanicalIdentityCollectionResponse": {
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/EventResponse"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "identity": {
+            "$ref": "#/components/schemas/BotanicalIdentityResponse"
+          },
+          "plant_groups": {
+            "items": {
+              "$ref": "#/components/schemas/PlantGroupResponse"
+            },
+            "title": "Plant Groups",
+            "type": "array"
+          },
+          "plants": {
+            "items": {
+              "$ref": "#/components/schemas/PlantResponse"
+            },
+            "title": "Plants",
+            "type": "array"
+          },
+          "seed_lots": {
+            "items": {
+              "$ref": "#/components/schemas/SeedLotResponse"
+            },
+            "title": "Seed Lots",
+            "type": "array"
+          },
+          "sowings": {
+            "items": {
+              "$ref": "#/components/schemas/SowingResponse"
+            },
+            "title": "Sowings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "identity",
+          "seed_lots",
+          "sowings",
+          "plants",
+          "plant_groups",
+          "events"
+        ],
+        "title": "BotanicalIdentityCollectionResponse",
+        "type": "object"
+      },
       "BotanicalIdentityCreate": {
         "additionalProperties": false,
         "properties": {
@@ -117,6 +169,45 @@
           "display_label"
         ],
         "title": "BotanicalIdentitySummary",
+        "type": "object"
+      },
+      "BotanicalIdentityUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "common_name": {
+            "anyOf": [
+              {
+                "maxLength": 160,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Common Name"
+          },
+          "cultivar_name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cultivar Name"
+          },
+          "scientific_name": {
+            "maxLength": 255,
+            "title": "Scientific Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "scientific_name"
+        ],
+        "title": "BotanicalIdentityUpdate",
         "type": "object"
       },
       "BotanicalProfilePut": {
@@ -271,6 +362,64 @@
           "csrf_token"
         ],
         "title": "CsrfResponse",
+        "type": "object"
+      },
+      "DashboardCounts": {
+        "properties": {
+          "active_plant_groups": {
+            "title": "Active Plant Groups",
+            "type": "integer"
+          },
+          "active_plants": {
+            "title": "Active Plants",
+            "type": "integer"
+          },
+          "active_seed_lots": {
+            "title": "Active Seed Lots",
+            "type": "integer"
+          },
+          "active_sowings": {
+            "title": "Active Sowings",
+            "type": "integer"
+          },
+          "botanical_identities": {
+            "title": "Botanical Identities",
+            "type": "integer"
+          },
+          "events": {
+            "title": "Events",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "active_plants",
+          "active_plant_groups",
+          "active_seed_lots",
+          "active_sowings",
+          "botanical_identities",
+          "events"
+        ],
+        "title": "DashboardCounts",
+        "type": "object"
+      },
+      "DashboardResponse": {
+        "properties": {
+          "counts": {
+            "$ref": "#/components/schemas/DashboardCounts"
+          },
+          "recent_events": {
+            "items": {
+              "$ref": "#/components/schemas/EventResponse"
+            },
+            "title": "Recent Events",
+            "type": "array"
+          }
+        },
+        "required": [
+          "counts",
+          "recent_events"
+        ],
+        "title": "DashboardResponse",
         "type": "object"
       },
       "DirectOriginKind": {
@@ -1219,6 +1368,9 @@
       },
       "PlantEventTarget": {
         "properties": {
+          "botanical_identity": {
+            "$ref": "#/components/schemas/BotanicalIdentitySummary"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -1248,7 +1400,8 @@
         "required": [
           "id",
           "label",
-          "lifecycle"
+          "lifecycle",
+          "botanical_identity"
         ],
         "title": "PlantEventTarget",
         "type": "object"
@@ -1469,6 +1622,9 @@
       },
       "PlantGroupEventTarget": {
         "properties": {
+          "botanical_identity": {
+            "$ref": "#/components/schemas/BotanicalIdentitySummary"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -1498,7 +1654,8 @@
         "required": [
           "id",
           "label",
-          "lifecycle"
+          "lifecycle",
+          "botanical_identity"
         ],
         "title": "PlantGroupEventTarget",
         "type": "object"
@@ -4377,6 +4534,56 @@
       }
     },
     "/api/v1/botanical-identities/{botanical_identity_id}": {
+      "delete": {
+        "operationId": "deleteBotanicalIdentity",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete",
+        "tags": [
+          "botanical identities"
+        ]
+      },
       "get": {
         "operationId": "getBotanicalIdentity",
         "parameters": [
@@ -4420,6 +4627,116 @@
           }
         },
         "summary": "Read",
+        "tags": [
+          "botanical identities"
+        ]
+      },
+      "put": {
+        "operationId": "updateBotanicalIdentity",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BotanicalIdentityUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotanicalIdentityResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update",
+        "tags": [
+          "botanical identities"
+        ]
+      }
+    },
+    "/api/v1/botanical-identities/{botanical_identity_id}/collection": {
+      "get": {
+        "operationId": "getBotanicalIdentityCollection",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotanicalIdentityCollectionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Collection",
         "tags": [
           "botanical identities"
         ]
@@ -4546,6 +4863,52 @@
         "summary": "Put",
         "tags": [
           "botanical profiles"
+        ]
+      }
+    },
+    "/api/v1/dashboard": {
+      "get": {
+        "operationId": "getDashboard",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Dashboard",
+        "tags": [
+          "collection"
+        ]
+      }
+    },
+    "/api/v1/events": {
+      "get": {
+        "operationId": "listEvents",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/EventResponse"
+                  },
+                  "title": "Response Listevents",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List All Events Endpoint",
+        "tags": [
+          "events"
         ]
       }
     },

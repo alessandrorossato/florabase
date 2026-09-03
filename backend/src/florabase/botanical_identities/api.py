@@ -13,13 +13,19 @@ from florabase.auth.dependencies import (
 from florabase.botanical_identities.schemas import (
     BotanicalIdentityCreate,
     BotanicalIdentityResponse,
+    BotanicalIdentityUpdate,
 )
 from florabase.botanical_identities.service import (
     BotanicalIdentityConflictError,
+    BotanicalIdentityReferencedError,
     create_botanical_identity,
+    delete_botanical_identity,
     get_botanical_identity,
     list_botanical_identities,
+    update_botanical_identity,
 )
+from florabase.collection_views.schemas import BotanicalIdentityCollectionResponse
+from florabase.collection_views.service import botanical_identity_collection
 from florabase.db.session import get_database_session
 
 router = APIRouter(prefix="/botanical-identities", tags=["botanical identities"])
@@ -112,3 +118,91 @@ def read(
             },
         )
     return BotanicalIdentityResponse.from_model(botanical_identity)
+
+
+@router.get(
+    "/{botanical_identity_id}/collection",
+    response_model=BotanicalIdentityCollectionResponse,
+    operation_id="getBotanicalIdentityCollection",
+)
+def read_collection(
+    botanical_identity_id: UUID,
+    _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> BotanicalIdentityCollectionResponse:
+    result = botanical_identity_collection(database, botanical_identity_id)
+    if result is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "botanical_identity_not_found",
+                "message": "Botanical identity not found",
+            },
+        )
+    return result
+
+
+@router.put(
+    "/{botanical_identity_id}",
+    response_model=BotanicalIdentityResponse,
+    operation_id="updateBotanicalIdentity",
+)
+def update(
+    botanical_identity_id: UUID,
+    payload: BotanicalIdentityUpdate,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> BotanicalIdentityResponse:
+    require_owner(actor)
+    botanical_identity = get_botanical_identity(database, botanical_identity_id)
+    if botanical_identity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "botanical_identity_not_found",
+                "message": "Botanical identity not found",
+            },
+        )
+    try:
+        updated = update_botanical_identity(database, botanical_identity, payload)
+    except BotanicalIdentityConflictError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=_conflict_detail(error.existing_id),
+        ) from error
+    return BotanicalIdentityResponse.from_model(updated)
+
+
+@router.delete(
+    "/{botanical_identity_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="deleteBotanicalIdentity",
+)
+def delete(
+    botanical_identity_id: UUID,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> Response:
+    require_owner(actor)
+    botanical_identity = get_botanical_identity(database, botanical_identity_id)
+    if botanical_identity is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "code": "botanical_identity_not_found",
+                "message": "Botanical identity not found",
+            },
+        )
+    try:
+        delete_botanical_identity(database, botanical_identity)
+    except BotanicalIdentityReferencedError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "botanical_identity_referenced",
+                "message": (
+                    "This botanical identity is used by collection records and cannot be deleted."
+                ),
+            },
+        ) from error
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

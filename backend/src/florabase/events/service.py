@@ -4,8 +4,10 @@ from typing import Any, Literal, cast
 from uuid import UUID
 
 from sqlalchemy import case, desc, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 
+from florabase.botanical_identities.model import BotanicalIdentity
+from florabase.botanical_identities.schemas import BotanicalIdentityResponse
 from florabase.events.model import Event, EventKind
 from florabase.events.schemas import (
     EventCreate,
@@ -17,7 +19,7 @@ from florabase.events.schemas import (
 from florabase.locations.model import Location
 from florabase.locations.service import display_path, list_locations
 from florabase.plants.model import Plant, PlantGroup
-from florabase.plants.schemas import LocationSummary
+from florabase.plants.schemas import BotanicalIdentitySummary, LocationSummary
 from florabase.seed_lots.schemas import PartialDate
 
 TargetType = Literal["plant", "plant_group"]
@@ -42,6 +44,8 @@ class EventProjection:
     plant: Plant | None
     plant_group: PlantGroup | None
     destination_location: Location | None
+    plant_identity: BotanicalIdentity | None
+    plant_group_identity: BotanicalIdentity | None
 
 
 def _partial_date_values(value: PartialDate | None) -> dict[str, object]:
@@ -136,11 +140,18 @@ def delete_event(database: Session, event: Event) -> None:
 
 
 def _projection_statement() -> Any:
+    plant_identity = aliased(BotanicalIdentity)
+    plant_group_identity = aliased(BotanicalIdentity)
     return (
-        select(Event, Plant, PlantGroup, Location)
+        select(Event, Plant, PlantGroup, Location, plant_identity, plant_group_identity)
         .outerjoin(Plant, Plant.id == Event.plant_id)
         .outerjoin(PlantGroup, PlantGroup.id == Event.plant_group_id)
         .outerjoin(Location, Location.id == Event.destination_location_id)
+        .outerjoin(plant_identity, plant_identity.id == Plant.botanical_identity_id)
+        .outerjoin(
+            plant_group_identity,
+            plant_group_identity.id == PlantGroup.botanical_identity_id,
+        )
     )
 
 
@@ -178,6 +189,24 @@ def list_events(
     ]
 
 
+def list_all_events(
+    database: Session,
+    *,
+    botanical_identity_id: UUID | None = None,
+    limit: int | None = None,
+) -> list[EventProjection]:
+    statement = _projection_statement()
+    if botanical_identity_id is not None:
+        statement = statement.where(
+            (Plant.botanical_identity_id == botanical_identity_id)
+            | (PlantGroup.botanical_identity_id == botanical_identity_id)
+        )
+    statement = statement.order_by(*_timeline_ordering())
+    if limit is not None:
+        statement = statement.limit(limit)
+    return [EventProjection(*row) for row in database.execute(statement)]
+
+
 def _partial_date(event: Event) -> PartialDate | None:
     if event.occurred_on_precision is None:
         return None
@@ -196,16 +225,28 @@ def event_responses(database: Session, projections: list[EventProjection]) -> li
         event = projection.event
         target: PlantEventTarget | PlantGroupEventTarget
         if projection.plant is not None:
+            if projection.plant_identity is None:
+                raise RuntimeError("Plant botanical identity invariant was violated")
+            identity = BotanicalIdentityResponse.from_model(projection.plant_identity)
             target = PlantEventTarget(
                 id=projection.plant.id,
                 label=projection.plant.label,
                 lifecycle=projection.plant.lifecycle,
+                botanical_identity=BotanicalIdentitySummary(
+                    id=identity.id, display_label=identity.display_label
+                ),
             )
         elif projection.plant_group is not None:
+            if projection.plant_group_identity is None:
+                raise RuntimeError("PlantGroup botanical identity invariant was violated")
+            identity = BotanicalIdentityResponse.from_model(projection.plant_group_identity)
             target = PlantGroupEventTarget(
                 id=projection.plant_group.id,
                 label=projection.plant_group.label,
                 lifecycle=projection.plant_group.lifecycle,
+                botanical_identity=BotanicalIdentitySummary(
+                    id=identity.id, display_label=identity.display_label
+                ),
             )
         else:
             raise RuntimeError("Event target foreign key invariant was violated")
