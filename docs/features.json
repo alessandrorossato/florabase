@@ -636,7 +636,7 @@
       ],
       "dependencies": ["SEED-004", "SOWING-003", "PLANT-003"],
       "priority": "P2",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "UX-002",

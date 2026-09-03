@@ -8,6 +8,7 @@ import {
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
+import { DetailHeader } from "../components/CollectionUI";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import {
   createGeographicPlace,
@@ -132,6 +133,7 @@ export function GeographyScreen() {
   const [createName, setCreateName] = useState("");
   const [createParentId, setCreateParentId] = useState("");
   const [save, setSave] = useState<SaveState>({ status: "idle" });
+  const [editing, setEditing] = useState(false);
   const createNameInput = useRef<HTMLInputElement>(null);
   const feedback = useRef<HTMLDivElement>(null);
   const {
@@ -196,6 +198,7 @@ export function GeographyScreen() {
       const refreshed = await listGeographicPlaces();
       setDirectory({ status: "ready", places: refreshed });
       setSelectedId(place.id);
+      setEditing(false);
       setSave({ status: "success", message: message(place) });
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401)
@@ -229,6 +232,7 @@ export function GeographyScreen() {
 
   function selectPlace(id: string) {
     setSelectedId(id);
+    setEditing(false);
     setSave({ status: "idle" });
   }
 
@@ -449,11 +453,57 @@ export function GeographyScreen() {
           {selected ? (
             <article
               className="identity-result"
-              aria-labelledby="geographic-place-detail-title"
+              aria-label="Geographic place detail"
             >
-              <p className="eyebrow">Selected geographic place</p>
-              <h3 id="geographic-place-detail-title">{selected.name}</h3>
-              <p className="location-path">{selected.display_path}</p>
+              <DetailHeader
+                eyebrow={
+                  selected.place_kind === "canonical"
+                    ? "Canonical geographic place"
+                    : "Local geographic place"
+                }
+                title={selected.name}
+                secondary={selected.display_path}
+                editLabel="Edit geographic place"
+                onEdit={
+                  selected.place_kind === "custom"
+                    ? () => {
+                        setEditing(true);
+                      }
+                    : undefined
+                }
+                overflow={
+                  selected.place_kind === "custom" ? (
+                    <details className="overflow-menu">
+                      <summary aria-label="More geographic place actions">
+                        …
+                      </summary>
+                      <button
+                        className="button--secondary"
+                        type="button"
+                        disabled={pending}
+                        onClick={() =>
+                          void apply(
+                            () =>
+                              setGeographicPlaceRetired(
+                                selected.id,
+                                !selected.retired_at,
+                                csrfToken,
+                              ),
+                            (place) =>
+                              place.retired_at
+                                ? `${place.display_path} was retired.`
+                                : `${place.display_path} was reactivated.`,
+                          )
+                        }
+                      >
+                        {selected.retired_at
+                          ? "Reactivate local place"
+                          : "Retire local place"}
+                      </button>
+                    </details>
+                  ) : undefined
+                }
+              />
               <p>
                 <strong>
                   {selected.place_kind === "canonical"
@@ -491,7 +541,7 @@ export function GeographyScreen() {
                   Canonical names and ancestry are read-only. Add local detail
                   below this place.
                 </p>
-              ) : (
+              ) : editing ? (
                 <form
                   key={`${selected.id}-${selected.updated_at}`}
                   onSubmit={submitUpdate}
@@ -536,27 +586,16 @@ export function GeographyScreen() {
                       className="button--secondary"
                       type="button"
                       disabled={pending}
-                      onClick={() =>
-                        void apply(
-                          () =>
-                            setGeographicPlaceRetired(
-                              selected.id,
-                              !selected.retired_at,
-                              csrfToken,
-                            ),
-                          (place) =>
-                            place.retired_at
-                              ? `${place.display_path} was retired.`
-                              : `${place.display_path} was reactivated.`,
-                        )
-                      }
+                      onClick={() => {
+                        setEditing(false);
+                      }}
                     >
-                      {selected.retired_at
-                        ? "Reactivate local place"
-                        : "Retire local place"}
+                      Cancel
                     </button>
                   </div>
                 </form>
+              ) : (
+                <p>Select Edit to correct this local place.</p>
               )}
             </article>
           ) : (

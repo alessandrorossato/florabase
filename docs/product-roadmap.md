@@ -57,18 +57,19 @@ every P2 item release-critical.
 
 Planned P2 work deepens existing workflows: guarded attachment storage and photos, dated germination
 observations, Orders, richer events, tuber and cutting lots, labels/QR lookup, advanced search,
-dashboards, collection-first navigation, contextual help, guided import/export, visual lineage, and
-reviewable profile enrichment.
+analytical dashboards, contextual form help, guided import/export, visual lineage, and reviewable
+profile enrichment.
 
 PWA work means installability and a safe application shell, not offline-first mutation,
 synchronization, push, or a native mobile app. Those behaviors require separate contracts.
 
-`UX-001` remains a future cross-application review rather than part of EVENT-002. It will reconsider
-primary and mobile application navigation, navigation within detail pages, consistent detail-page
-information architecture, tabs or sections, action placement, cross-domain hierarchy, and a
-coherent visual and interaction language. That review will also evaluate—without preselecting a
-solution—whether Florabase benefits from a collection-wide Event timeline, dashboard activity feed,
-cross-Plant/PlantGroup filters, or an Events navigation entry.
+`UX-001` establishes the collection-first application structure: a persistent grouped desktop
+sidebar, five-destination mobile bottom navigation, an authoritative current-collection Dashboard,
+a global Event timeline, and a BotanicalIdentity hub that aggregates Seeds, Sowings, Plants,
+PlantGroups, and Events. Major record details share breadcrumbs, visible Edit actions, tabs, cards,
+and responsive states. Botanical identity aggregation is explicitly not lineage. `DASHBOARD-001`
+still represents later analytical/statistical work; `UX-002` still represents layered contextual
+help within forms.
 
 ## Longer-term capabilities
 
@@ -79,8 +80,8 @@ terms, availability, attribution, and quality review before selection.
 
 ## Deliberate boundaries
 
-Florabase does not currently provide a collection-wide Event timeline, Event attachments,
-dashboards, advanced collection search, offline writes, import/export, a generic
+Florabase does not currently provide Event attachments, analytical dashboards, advanced collection
+search, offline writes, import/export, a generic
 propagation-material hierarchy, a generic graph engine, or multi-user ownership. Future work should
 extend concrete workflows without weakening unknown-data, history, authorization, or provenance
 semantics.

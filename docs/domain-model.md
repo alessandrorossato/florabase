@@ -14,8 +14,9 @@ than becoming invented placeholders.
 A BotanicalIdentity is the stable, installation-wide identity Florabase assigns to material. It has
 an application-generated UUIDv7, required normalized scientific name, optional unquoted cultivar
 name, optional common name, and UTC timestamps. Scientific name plus cultivar is case-insensitively
-unique. Renaming corrects the same identity; merging duplicates, synonyms, external taxonomy IDs,
-and name history are deferred.
+unique. An identity can be corrected after creation. Deletion is allowed only while it is unused;
+references from SeedLots, Plants, or PlantGroups produce a domain conflict and no collection record
+is cascaded. Merging duplicates, synonyms, external taxonomy IDs, and name history are deferred.
 
 Collection records reference its UUID and do not copy botanical names as authoritative data.
 
@@ -140,8 +141,36 @@ API-ordered history as a vertical timeline, while narrow screens use compact wra
 supports All, Observations (observation, flowering, fruiting), Cultivation (movement, repotting,
 pruning, treatment, harvest), and Status (death, loss, discarded) filters; `other` remains in All.
 Creation explains current-state effects, and correction/deletion explains the non-event-sourced
-boundary. Structured per-kind payloads beyond movement destination, Event attachments, and a
-possible collection-wide Event timeline are deferred.
+boundary. A protected global Event read endpoint uses the same deterministic ordering and includes
+target and BotanicalIdentity summaries. The collection-wide Events page applies the same filters and
+links each item to its Plant or PlantGroup Event context. Structured per-kind payloads beyond
+movement destination and Event attachments are deferred.
+
+## Collection information architecture
+
+The authenticated application opens on a Dashboard backed by one focused aggregate endpoint. It
+reports authoritative counts for active Plants, active PlantGroups, active SeedLots, active Sowings,
+all BotanicalIdentities, and all Events, plus the six most recent Events. These are current overview
+counts, not the analytical/statistical definitions planned for `DASHBOARD-001`.
+
+Desktop navigation groups Dashboard, the Plants/Seeds/Sowings/Events collection workflows,
+Botanical identities, and Location/Supplier/GeographicPlace reference data in a persistent sidebar.
+Mobile exposes Home, Plants, Seeds, Events, and More in a fixed bottom navigation; More reaches the
+same secondary destinations.
+
+BotanicalIdentity is a collection hub with Overview, Seeds, Sowings, Plants, and Events tabs. Its
+Plants tab intentionally combines Plant and PlantGroup cards while labeling their distinct types.
+The hub uses stored identity relationships only: a Sowing belongs through its required SeedLot and
+Events belong through their current Plant or PlantGroup target. This aggregation never creates a
+lineage edge. Dedicated record details link back to the identity hub and retain their explicit
+lineage view separately.
+
+Plant and PlantGroup details use Overview, Events, and Lineage tabs; SeedLot uses Overview, Sowings,
+and Lineage; Sowing uses Overview and Lineage. Breadcrumbs and tab query parameters provide stable
+orientation and deep links. User-created BotanicalIdentity, SeedLot, Sowing, Plant, PlantGroup,
+Location, Supplier, and custom GeographicPlace data have visible correction flows. Canonical
+GeographicPlaces remain immutable by design, and lifecycle-bearing records retain their existing
+non-destructive lifecycle semantics.
 
 ## Explicit lineage
 
@@ -187,8 +216,8 @@ product workflows preserve historical rows rather than hard-deleting them.
 
 ## Deferred capabilities
 
-The Event timeline UI, Event attachments, richer structured Event payloads, attachment/photo
+Event attachments, richer structured Event payloads, attachment/photo
 storage, richer germination observations, Orders, other propagation material, advanced search,
-dashboards, contextual help, import/export, PWA installability, enrichment, taxonomy reconciliation,
-reminders, weather, and multi-user ownership remain planned. `docs/features.json` is the detailed
-source for their dependencies and acceptance criteria.
+analytical dashboards, contextual form help, import/export, PWA installability, enrichment, taxonomy
+reconciliation, reminders, weather, and multi-user ownership remain planned. `docs/features.json`
+is the detailed source for their dependencies and acceptance criteria.

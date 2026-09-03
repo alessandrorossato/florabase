@@ -1,6 +1,6 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { App } from "../App";
 
@@ -174,6 +174,10 @@ async function openSowings() {
   await user.click(await screen.findByRole("button", { name: "Sowings" }));
   return user;
 }
+
+beforeEach(() => {
+  window.history.replaceState(null, "", "#/dashboard");
+});
 
 afterEach(() => {
   cleanup();
@@ -593,7 +597,7 @@ test("the single full editor preserves exact values and failed edits, then chang
     lifecycle: "failed",
     label: "Unsaved correction",
   });
-  expect(screen.getByText("Failed")).toBeInTheDocument();
+  expect(screen.getAllByText("Failed").length).toBeGreaterThan(0);
 });
 
 test("validation, forbidden, and expired-session API failures remain explicit", async () => {

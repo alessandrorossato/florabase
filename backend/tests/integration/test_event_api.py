@@ -96,7 +96,9 @@ def event_targets(
 
 
 def test_event_partial_dates_listing_targets_and_optional_notes(
-    authenticated_browser: tuple[str, str], event_targets: dict[str, str]
+    authenticated_browser: tuple[str, str],
+    event_references: dict[str, str],
+    event_targets: dict[str, str],
 ) -> None:
     path = f"/api/v1/plants/{event_targets['plant']}/events"
     payloads: list[dict[str, object]] = [
@@ -119,6 +121,10 @@ def test_event_partial_dates_listing_targets_and_optional_notes(
         "id": event_targets["plant"],
         "label": None,
         "lifecycle": "active",
+        "botanical_identity": {
+            "id": event_references["identity"],
+            "display_label": "Eventus journalis",
+        },
     }
     assert created[-1]["notes"] == "First.\nSecond."
     cookie, _ = authenticated_browser
@@ -129,6 +135,60 @@ def test_event_partial_dates_listing_targets_and_optional_notes(
         request("GET", f"/api/v1/events/{created[-1]['id']}", headers={"cookie": cookie})[2]
         == created[-1]
     )
+
+
+def test_global_event_dashboard_and_identity_hub_views_are_authoritative(
+    authenticated_browser: tuple[str, str],
+    event_references: dict[str, str],
+    event_targets: dict[str, str],
+) -> None:
+    mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/plants/{event_targets['plant']}/events",
+        {"kind": "observation", "notes": "First"},
+    )
+    mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/plant-groups/{event_targets['group']}/events",
+        {
+            "kind": "flowering",
+            "occurred_on": {"precision": "year", "year": 2026},
+        },
+    )
+    cookie, _ = authenticated_browser
+
+    event_status, _, events = request("GET", "/api/v1/events", headers={"cookie": cookie})
+    assert event_status == 200
+    assert [item["kind"] for item in events] == ["flowering", "observation"]
+    assert {item["target"]["type"] for item in events} == {"plant", "plant_group"}
+    assert all(
+        item["target"]["botanical_identity"]["id"] == event_references["identity"]
+        for item in events
+    )
+
+    dashboard_status, _, dashboard = request("GET", "/api/v1/dashboard", headers={"cookie": cookie})
+    assert dashboard_status == 200
+    assert dashboard["counts"] == {
+        "active_plants": 1,
+        "active_plant_groups": 1,
+        "active_seed_lots": 0,
+        "active_sowings": 0,
+        "botanical_identities": 1,
+        "events": 2,
+    }
+    assert dashboard["recent_events"] == events
+
+    hub_status, _, hub = request(
+        "GET",
+        f"/api/v1/botanical-identities/{event_references['identity']}/collection",
+        headers={"cookie": cookie},
+    )
+    assert hub_status == 200
+    assert [item["id"] for item in hub["plants"]] == [event_targets["plant"]]
+    assert [item["id"] for item in hub["plant_groups"]] == [event_targets["group"]]
+    assert hub["events"] == events
 
 
 def test_movement_creation_is_atomic_and_put_delete_never_reapply_or_reverse(

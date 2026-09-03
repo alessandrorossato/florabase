@@ -5,7 +5,9 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from florabase.botanical_identities.model import BotanicalIdentity
-from florabase.botanical_identities.schemas import BotanicalIdentityCreate
+from florabase.botanical_identities.schemas import BotanicalIdentityCreate, BotanicalIdentityUpdate
+from florabase.plants.model import Plant, PlantGroup
+from florabase.seed_lots.model import SeedLot
 
 UNIQUE_IDENTITY_CONSTRAINT = "uq_botanical_identities_name_cultivar_ci"
 
@@ -14,6 +16,10 @@ class BotanicalIdentityConflictError(Exception):
     def __init__(self, existing_id: UUID | None) -> None:
         self.existing_id = existing_id
         super().__init__("Botanical identity already exists")
+
+
+class BotanicalIdentityReferencedError(Exception):
+    pass
 
 
 def find_duplicate(
@@ -57,6 +63,54 @@ def create_botanical_identity(
             existing.id if existing is not None else None
         ) from error
     return botanical_identity
+
+
+def update_botanical_identity(
+    database: Session,
+    botanical_identity: BotanicalIdentity,
+    payload: BotanicalIdentityUpdate,
+) -> BotanicalIdentity:
+    existing = find_duplicate(database, payload.scientific_name, payload.cultivar_name)
+    if existing is not None and existing.id != botanical_identity.id:
+        raise BotanicalIdentityConflictError(existing.id)
+    for field, value in payload.model_dump().items():
+        setattr(botanical_identity, field, value)
+    try:
+        with database.begin_nested():
+            database.flush()
+    except IntegrityError as error:
+        if _constraint_name(error) != UNIQUE_IDENTITY_CONSTRAINT:
+            raise
+        existing = find_duplicate(database, payload.scientific_name, payload.cultivar_name)
+        raise BotanicalIdentityConflictError(
+            existing.id if existing is not None else None
+        ) from error
+    return botanical_identity
+
+
+def delete_botanical_identity(database: Session, botanical_identity: BotanicalIdentity) -> None:
+    identity_id = botanical_identity.id
+    references = (
+        database.scalar(
+            select(func.count())
+            .select_from(SeedLot)
+            .where(SeedLot.botanical_identity_id == identity_id)
+        ),
+        database.scalar(
+            select(func.count())
+            .select_from(Plant)
+            .where(Plant.botanical_identity_id == identity_id)
+        ),
+        database.scalar(
+            select(func.count())
+            .select_from(PlantGroup)
+            .where(PlantGroup.botanical_identity_id == identity_id)
+        ),
+    )
+    if any(references):
+        raise BotanicalIdentityReferencedError
+    database.delete(botanical_identity)
+    database.flush()
 
 
 def get_botanical_identity(

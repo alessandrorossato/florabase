@@ -9,6 +9,7 @@ import {
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
+import { DetailHeader } from "../components/CollectionUI";
 import {
   createLocation,
   listLocations,
@@ -179,6 +180,7 @@ export function LocationScreen() {
   const [createParentId, setCreateParentId] = useState("");
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [attempt, setAttempt] = useState(0);
+  const [editing, setEditing] = useState(false);
   const createName = useRef<HTMLInputElement>(null);
   const feedback = useRef<HTMLDivElement>(null);
   const {
@@ -237,6 +239,7 @@ export function LocationScreen() {
       const refreshed = await listLocations();
       setDirectory({ status: "ready", locations: refreshed });
       setSelectedId(location.id);
+      setEditing(false);
       setSave({ status: "success", message: success(location) });
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401)
@@ -361,6 +364,7 @@ export function LocationScreen() {
                 selectedId={selectedId}
                 onSelect={(id) => {
                   setSelectedId(id);
+                  setEditing(false);
                   setSave({ status: "idle" });
                 }}
               />
@@ -426,13 +430,44 @@ export function LocationScreen() {
         </div>
         <div className="identity-panel" aria-live="polite">
           {selected ? (
-            <article
-              aria-labelledby="location-detail-title"
-              className="identity-result"
-            >
-              <p className="eyebrow">Selected location</p>
-              <h3 id="location-detail-title">{selected.name}</h3>
-              <p className="location-path">{selected.display_path}</p>
+            <article aria-label="Location detail" className="identity-result">
+              <DetailHeader
+                eyebrow="Location"
+                title={selected.name}
+                secondary={selected.display_path}
+                editLabel="Edit location"
+                onEdit={() => {
+                  setEditing(true);
+                }}
+                overflow={
+                  <details className="overflow-menu">
+                    <summary aria-label="More location actions">…</summary>
+                    <button
+                      className="button--secondary"
+                      type="button"
+                      disabled={pending}
+                      onClick={() =>
+                        void apply(
+                          () =>
+                            setLocationRetired(
+                              selected.id,
+                              !selected.retired_at,
+                              csrfToken,
+                            ),
+                          (location) =>
+                            location.retired_at
+                              ? `${location.display_path} was retired.`
+                              : `${location.display_path} was reactivated.`,
+                        )
+                      }
+                    >
+                      {selected.retired_at
+                        ? "Reactivate location"
+                        : "Retire location"}
+                    </button>
+                  </details>
+                }
+              />
               {selected.retired_at && (
                 <p className="notice notice--duplicate">
                   This location is retired and remains available for historical
@@ -454,57 +489,46 @@ export function LocationScreen() {
                   Create child here
                 </button>
               )}
-              <form
-                key={`${selected.id}-${selected.updated_at}`}
-                onSubmit={submitUpdate}
-              >
-                <h4>Edit location</h4>
-                <div className="field">
-                  <label htmlFor="edit-location-name">Name</label>
-                  <input
-                    id="edit-location-name"
-                    name="name"
-                    required
-                    maxLength={255}
+              {editing && (
+                <form
+                  key={`${selected.id}-${selected.updated_at}`}
+                  onSubmit={submitUpdate}
+                >
+                  <h4>Edit location</h4>
+                  <div className="field">
+                    <label htmlFor="edit-location-name">Name</label>
+                    <input
+                      id="edit-location-name"
+                      name="name"
+                      required
+                      maxLength={255}
+                      disabled={pending}
+                      defaultValue={selected.name}
+                    />
+                  </div>
+                  <ParentField
+                    id="edit-location-parent"
+                    locations={locations}
+                    selected={selected}
                     disabled={pending}
-                    defaultValue={selected.name}
                   />
-                </div>
-                <ParentField
-                  id="edit-location-parent"
-                  locations={locations}
-                  selected={selected}
-                  disabled={pending}
-                />
-                <div className="actions">
-                  <button type="submit" disabled={pending}>
-                    Save location
-                  </button>
-                  <button
-                    className="button--secondary"
-                    type="button"
-                    disabled={pending}
-                    onClick={() =>
-                      void apply(
-                        () =>
-                          setLocationRetired(
-                            selected.id,
-                            !selected.retired_at,
-                            csrfToken,
-                          ),
-                        (location) =>
-                          location.retired_at
-                            ? `${location.display_path} was retired.`
-                            : `${location.display_path} was reactivated.`,
-                      )
-                    }
-                  >
-                    {selected.retired_at
-                      ? "Reactivate location"
-                      : "Retire location"}
-                  </button>
-                </div>
-              </form>
+                  <div className="actions">
+                    <button type="submit" disabled={pending}>
+                      Save location
+                    </button>
+                    <button
+                      className="button--secondary"
+                      type="button"
+                      disabled={pending}
+                      onClick={() => {
+                        setEditing(false);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
             </article>
           ) : (
             <div className="empty-state">

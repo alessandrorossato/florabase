@@ -5,6 +5,8 @@ export type BotanicalIdentityCreate =
   components["schemas"]["BotanicalIdentityCreate"];
 export type BotanicalIdentityResponse =
   components["schemas"]["BotanicalIdentityResponse"];
+export type BotanicalIdentityUpdate =
+  components["schemas"]["BotanicalIdentityUpdate"];
 type HTTPValidationError = components["schemas"]["HTTPValidationError"];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -79,4 +81,32 @@ export function getBotanicalIdentity(
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(botanicalIdentityId)}`,
   );
+}
+
+export function updateBotanicalIdentity(
+  id: string,
+  payload: BotanicalIdentityUpdate,
+  csrfToken: string,
+): Promise<BotanicalIdentityResponse> {
+  return requestJson<BotanicalIdentityResponse>(
+    `/api/v1/botanical-identities/${id}`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": csrfToken,
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function deleteBotanicalIdentity(
+  id: string,
+  csrfToken: string,
+): Promise<undefined> {
+  return requestJson<undefined>(`/api/v1/botanical-identities/${id}`, {
+    method: "DELETE",
+    headers: { "X-CSRF-Token": csrfToken },
+  });
 }

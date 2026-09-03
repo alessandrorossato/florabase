@@ -108,8 +108,13 @@ def get_sowing(database: Session, sowing_id: UUID) -> SowingProjection | None:
     return SowingProjection(*row) if row is not None else None
 
 
-def list_sowings(database: Session) -> list[SowingProjection]:
-    statement = _projection_statement().order_by(
+def list_sowings(
+    database: Session, botanical_identity_id: UUID | None = None
+) -> list[SowingProjection]:
+    statement = _projection_statement()
+    if botanical_identity_id is not None:
+        statement = statement.where(SeedLot.botanical_identity_id == botanical_identity_id)
+    statement = statement.order_by(
         case((Sowing.lifecycle == "active", 0), else_=1),
         case((Sowing.sowing_date_precision.is_not(None), 0), else_=1),
         desc(Sowing.sowing_date_year).nulls_last(),

@@ -1,6 +1,6 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { App } from "./App";
 import type { GeographicPlaceResponse } from "./geographic-places/api";
@@ -52,6 +52,7 @@ function noSessionThen(
       restoring = false;
       return jsonResponse({ detail: "Authentication required" }, 401);
     }
+    if (path === "/api/v1/botanical-identities") return jsonResponse([]);
     return handler(path, init);
   });
 }
@@ -139,6 +140,10 @@ async function createSelectedIdentity() {
   });
   return user;
 }
+
+beforeEach(() => {
+  window.history.replaceState(null, "", "#/identities");
+});
 
 afterEach(() => {
   cleanup();
@@ -476,6 +481,7 @@ test("logout network failure retains explicit session state and actions", async 
     if (path.endsWith("/csrf"))
       return jsonResponse({ csrf_token: "fresh-csrf" });
     if (path.endsWith("/logout")) throw new TypeError("network unavailable");
+    if (path === "/api/v1/botanical-identities") return jsonResponse([]);
     return jsonResponse({ status: "ok" });
   });
   const user = userEvent.setup();
@@ -702,8 +708,8 @@ test("keyboard creation sends generated-contract fields with CSRF and renders th
       name: "Acer palmatum ‘Bloodgood’",
     }),
   ).toBeInTheDocument();
-  expect(screen.getAllByText("Japanese maple")).toHaveLength(2);
-  expect(screen.getByText(botanicalIdentity.id)).toBeInTheDocument();
+  expect(screen.getAllByText("Japanese maple")).toHaveLength(3);
+  expect(screen.queryByText(botanicalIdentity.id)).not.toBeInTheDocument();
   expect(
     screen.getByRole("button", { name: /Acer palmatum.*Japanese maple/i }),
   ).toHaveAttribute("aria-pressed", "true");
@@ -1285,7 +1291,8 @@ test("supplier filtering, keyboard selection, optional details, editing, and lif
   );
   expect(
     screen.getAllByText(/International seller\.\s+Ships seasonally\./),
-  ).toHaveLength(2);
+  ).toHaveLength(1);
+  await user.click(screen.getByRole("button", { name: "Edit supplier" }));
   const editName = screen.getByLabelText("Name", {
     selector: "#edit-supplier-name",
   });
@@ -1293,10 +1300,12 @@ test("supplier filtering, keyboard selection, optional details, editing, and lif
   await user.type(editName, "Rare Palm Seeds Europe");
   await user.click(screen.getByRole("button", { name: "Save supplier" }));
   expect(await screen.findByText(/was updated/i)).toBeInTheDocument();
+  await user.click(screen.getByLabelText("More supplier actions"));
   await user.click(screen.getByRole("button", { name: "Retire supplier" }));
   expect(
     await screen.findByText("This supplier is retired."),
   ).toBeInTheDocument();
+  await user.click(screen.getByLabelText("More supplier actions"));
   await user.click(screen.getByRole("button", { name: "Reactivate supplier" }));
   await waitFor(() => {
     expect(
@@ -1400,6 +1409,7 @@ test("location hierarchy renders paths and supports keyboard selection", async (
   expect(screen.getAllByText("House → Seed cabinet → Drawer A")).toHaveLength(
     2,
   );
+  await user.click(screen.getByRole("button", { name: "Edit location" }));
   const parent = screen.getByLabelText("Parent location", {
     selector: "#edit-location-parent",
   });
@@ -1407,6 +1417,7 @@ test("location hierarchy renders paths and supports keyboard selection", async (
     screen.queryByRole("option", { name: /Drawer A/ }),
   );
   await user.click(screen.getByRole("button", { name: /^HouseHouse$/i }));
+  await user.click(screen.getByRole("button", { name: "Edit location" }));
   const rootParent = screen.getByLabelText("Parent location", {
     selector: "#edit-location-parent",
   });
@@ -1529,6 +1540,7 @@ test("location rename reparent retire and reactivate use hierarchy-aware control
   await user.click(
     await screen.findByRole("button", { name: /Seed cabinet.*House/i }),
   );
+  await user.click(screen.getByRole("button", { name: "Edit location" }));
   const name = screen.getByLabelText("Name", {
     selector: "#edit-location-name",
   });
@@ -1544,10 +1556,12 @@ test("location rename reparent retire and reactivate use hierarchy-aware control
   expect(
     await screen.findByText(/Garden → Seed cupboard was updated/),
   ).toBeInTheDocument();
+  await user.click(screen.getByLabelText("More location actions"));
   await user.click(screen.getByRole("button", { name: "Retire location" }));
   expect(
     await screen.findByText(/remains available for historical records/i),
   ).toBeInTheDocument();
+  await user.click(screen.getByLabelText("More location actions"));
   await user.click(screen.getByRole("button", { name: "Reactivate location" }));
   await waitFor(() => {
     expect(
@@ -1778,6 +1792,9 @@ test("local geography creation supports Thailand to Chiang Mai to Doi Suthep and
 
   await user.clear(screen.getByLabelText("Filter geography"));
   await user.click(screen.getByRole("button", { name: /Chiang Mai.*Local/i }));
+  await user.click(
+    screen.getByRole("button", { name: "Edit geographic place" }),
+  );
   const editName = screen.getByLabelText("Name", {
     selector: "#edit-geographic-place-name",
   });
@@ -1793,10 +1810,12 @@ test("local geography creation supports Thailand to Chiang Mai to Doi Suthep and
   expect(
     await screen.findByText(/World → Chiang Mai Province was updated/i),
   ).toBeInTheDocument();
+  await user.click(screen.getByLabelText("More geographic place actions"));
   await user.click(screen.getByRole("button", { name: "Retire local place" }));
   expect(
     await screen.findByText(/retained for historical provenance/i),
   ).toBeInTheDocument();
+  await user.click(screen.getByLabelText("More geographic place actions"));
   await user.click(
     screen.getByRole("button", { name: "Reactivate local place" }),
   );

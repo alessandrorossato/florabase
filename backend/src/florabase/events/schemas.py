@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 from florabase.events.model import EventKind
 from florabase.plants.model import PlantGroupLifecycle, PlantLifecycle
-from florabase.plants.schemas import LocationSummary
+from florabase.plants.schemas import BotanicalIdentitySummary, LocationSummary
 from florabase.seed_lots.schemas import PartialDate
 
 
@@ -62,6 +62,7 @@ class PlantEventTarget(BaseModel):
     id: UUID
     label: str | None
     lifecycle: PlantLifecycle
+    botanical_identity: BotanicalIdentitySummary
 
 
 class PlantGroupEventTarget(BaseModel):
@@ -69,6 +70,7 @@ class PlantGroupEventTarget(BaseModel):
     id: UUID
     label: str | None
     lifecycle: PlantGroupLifecycle
+    botanical_identity: BotanicalIdentitySummary
 
 
 EventTarget = Annotated[

@@ -9,6 +9,7 @@ import {
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
+import { DetailHeader } from "../components/CollectionUI";
 import {
   createSupplier,
   listSuppliers,
@@ -169,6 +170,7 @@ export function SupplierScreen() {
   const [filter, setFilter] = useState("");
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [attempt, setAttempt] = useState(0);
+  const [editing, setEditing] = useState(false);
   const createForm = useRef<HTMLFormElement>(null);
   const feedback = useRef<HTMLDivElement>(null);
   const {
@@ -236,6 +238,7 @@ export function SupplierScreen() {
       const refreshed = await listSuppliers();
       setDirectory({ status: "ready", suppliers: refreshed });
       setSelectedId(supplier.id);
+      setEditing(false);
       setSave({ status: "success", message: success(supplier) });
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401)
@@ -373,6 +376,7 @@ export function SupplierScreen() {
                       aria-pressed={selectedId === supplier.id}
                       onClick={() => {
                         setSelectedId(supplier.id);
+                        setEditing(false);
                         setSave({ status: "idle" });
                       }}
                     >
@@ -429,12 +433,43 @@ export function SupplierScreen() {
         </div>
         <div className="identity-panel" aria-live="polite">
           {selected ? (
-            <article
-              aria-labelledby="supplier-detail-title"
-              className="identity-result"
-            >
-              <p className="eyebrow">Selected supplier</p>
-              <h3 id="supplier-detail-title">{selected.name}</h3>
+            <article aria-label="Supplier detail" className="identity-result">
+              <DetailHeader
+                eyebrow="Supplier"
+                title={selected.name}
+                editLabel="Edit supplier"
+                onEdit={() => {
+                  setEditing(true);
+                }}
+                overflow={
+                  <details className="overflow-menu">
+                    <summary aria-label="More supplier actions">…</summary>
+                    <button
+                      className="button--secondary"
+                      type="button"
+                      disabled={pending}
+                      onClick={() =>
+                        void apply(
+                          () =>
+                            setSupplierRetired(
+                              selected.id,
+                              !selected.retired_at,
+                              csrfToken,
+                            ),
+                          (supplier) =>
+                            supplier.retired_at
+                              ? `${supplier.name} was retired.`
+                              : `${supplier.name} was reactivated.`,
+                        )
+                      }
+                    >
+                      {selected.retired_at
+                        ? "Reactivate supplier"
+                        : "Retire supplier"}
+                    </button>
+                  </details>
+                }
+              />
               {selected.retired_at && (
                 <p className="notice notice--duplicate">
                   This supplier is retired.
@@ -480,41 +515,30 @@ export function SupplierScreen() {
                   </div>
                 )}
               </dl>
-              <form
-                key={`${selected.id}-${selected.updated_at}`}
-                onSubmit={submitUpdate}
-              >
-                <h4>Edit supplier</h4>
-                <SupplierFields supplier={selected} disabled={pending} />
-                <div className="actions">
-                  <button type="submit" disabled={pending}>
-                    Save supplier
-                  </button>
-                  <button
-                    className="button--secondary"
-                    type="button"
-                    disabled={pending}
-                    onClick={() =>
-                      void apply(
-                        () =>
-                          setSupplierRetired(
-                            selected.id,
-                            !selected.retired_at,
-                            csrfToken,
-                          ),
-                        (supplier) =>
-                          supplier.retired_at
-                            ? `${supplier.name} was retired.`
-                            : `${supplier.name} was reactivated.`,
-                      )
-                    }
-                  >
-                    {selected.retired_at
-                      ? "Reactivate supplier"
-                      : "Retire supplier"}
-                  </button>
-                </div>
-              </form>
+              {editing && (
+                <form
+                  key={`${selected.id}-${selected.updated_at}`}
+                  onSubmit={submitUpdate}
+                >
+                  <h4>Edit supplier</h4>
+                  <SupplierFields supplier={selected} disabled={pending} />
+                  <div className="actions">
+                    <button type="submit" disabled={pending}>
+                      Save supplier
+                    </button>
+                    <button
+                      className="button--secondary"
+                      type="button"
+                      disabled={pending}
+                      onClick={() => {
+                        setEditing(false);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
             </article>
           ) : (
             <div className="empty-state">
