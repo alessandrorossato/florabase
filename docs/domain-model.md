@@ -172,6 +172,27 @@ Location, Supplier, and custom GeographicPlace data have visible correction flow
 GeographicPlaces remain immutable by design, and lifecycle-bearing records retain their existing
 non-destructive lifecycle semantics.
 
+The current pages expose related information but do not yet provide a complete guided transition
+workflow. In particular, BotanicalIdentity detail does not consistently initiate related SeedLot,
+Sowing, Plant, or PlantGroup creation, and existing SeedLot-to-Sowing and Sowing-to-Plant/PlantGroup
+creation does not perform source quantity accounting. Planned `PROPAGATION-001` and
+`PROPAGATION-002` will define and then implement explicit total/partial-use choices, lifecycle
+outcomes, contextual entry points, and cross-links. Until then, the existing rows remain
+authoritative and no quantity or completion transition should be inferred from lineage alone.
+
+The intended product narrative is `BotanicalIdentity → SeedLot → Sowing → Plant / PlantGroup →
+Events / terminal state`. It is an interaction and comprehension direction over the explicit model,
+not a new relationship, automatic state machine, or claim that every record has complete ancestry.
+Later navigation work should make that lifecycle easier to follow across desktop and mobile without
+conflating BotanicalIdentity aggregation with recorded lineage.
+
+Future Location presentation may scope the one shared Location hierarchy by its Seeds, Sowings, or
+Plants usage and render it as a collapsible tree. This does not split Location into separate domain
+entities. Future Supplier detail may summarize explicitly connected records; it must not imply
+spending or price totals before an Order model exists. Finer-grained geography remains compatible
+with carefully scoped custom/local GeographicPlace nodes, while a canonical global city dataset is
+not part of the current or first-release model.
+
 ## Explicit lineage
 
 Florabase persists only direct relationships created by supported workflows:
@@ -219,5 +240,8 @@ product workflows preserve historical rows rather than hard-deleting them.
 Event attachments, richer structured Event payloads, attachment/photo
 storage, richer germination observations, Orders, other propagation material, advanced search,
 analytical dashboards, contextual form help, import/export, PWA installability, enrichment, taxonomy
-reconciliation, reminders, weather, and multi-user ownership remain planned. `docs/features.json`
-is the detailed source for their dependencies and acceptance criteria.
+reconciliation, guided propagation transitions, a transferred/ceded Plant outcome, scope-aware
+Location browsing, richer Supplier summaries, reminders, weather, and multi-user ownership remain
+planned. A transferred/ceded outcome is expected to coordinate lifecycle with an Event; whether it
+also applies to PlantGroup remains an explicit future decision. `docs/features.json` is the detailed
+source for dependencies and acceptance criteria.
