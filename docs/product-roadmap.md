@@ -30,10 +30,20 @@ This is substantial pre-release functionality, not a declaration of a stable fir
 
 ## First usable release direction
 
-The clearest remaining P1 product sequence is:
+UAT of the verified collection core exposed a more immediate P1 product sequence before release
+readiness:
 
-1. decide the operator-approved licensing and release/version policy;
-2. complete release readiness as a separate release increment.
+1. `PROPAGATION-001`: decide explicit quantity accounting and lifecycle transitions across SeedLot,
+   Sowing, and Plant/PlantGroup creation;
+2. `PROPAGATION-002`: implement those decisions as guided contextual transitions and cross-links;
+3. decide the operator-approved licensing and release/version policy;
+4. complete release readiness as a separate release increment.
+
+`PROPAGATION-001` is the recommended next implementation increment. It is deliberately a contract
+increment: total versus partial use, approximate or unknown quantities, active versus completed
+Sowings, transaction boundaries, and correction behavior must be understandable before application
+behavior is changed. `PROPAGATION-002` then supplies natural next-step actions from relevant
+BotanicalIdentity, SeedLot, and Sowing contexts rather than adding disconnected create shortcuts.
 
 `CI-001` now supplies the repository-side pull-request verification and repeatable feature-branch
 workflow. The active `Protect main` ruleset requires its `quality`, `integration`, and `build` checks,
@@ -70,6 +80,24 @@ PlantGroups, and Events. Major record details share breadcrumbs, visible Edit ac
 and responsive states. Botanical identity aggregation is explicitly not lineage. `DASHBOARD-001`
 still represents later analytical/statistical work; `UX-002` still represents layered contextual
 help within forms.
+
+The longer product/UX direction is an understandable collection lifecycle:
+`BotanicalIdentity → SeedLot → Sowing → Plant / PlantGroup → Events / terminal state`. This is a
+workflow narrative over explicit records, not a new persisted super-entity and not permission to
+infer missing lineage. `UX-003` will revisit Seeds, Sowings, Plants, Events, and their detail pages
+after the guided transitions exist, improving page purpose, consistent actions, cross-linking, and
+mobile/desktop navigation without changing what the verified `UX-001` increment delivered.
+
+`PLANT-005` records a future transferred/ceded outcome for a living Plant, coordinated with an Event;
+it must evaluate rather than assume equivalent PlantGroup semantics. `LOCATION-002` retains one
+Location concept while adding usage-scoped Seeds, Sowings, and Plants views plus an accessible
+collapsible hierarchy. `SUPPLIER-002` may add connected-record summaries, but financial totals wait
+for the separate `ORDER-001` transaction model.
+
+Geography remains precision-preserving and extensible. A complete canonical global city catalogue is
+not a first-release requirement. Existing custom GeographicPlace descendants can cover carefully
+scoped local knowledge; `GEOGRAPHY-003` defers any finer-grained reference-data decision until a
+demonstrated workflow justifies its granularity and maintenance cost.
 
 ## Longer-term capabilities
 

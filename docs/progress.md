@@ -4,6 +4,26 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-03 — post-UX-001 UAT roadmap refinement
+
+- Recorded the intended collection lifecycle narrative from BotanicalIdentity through SeedLot,
+  Sowing, Plant/PlantGroup, and Events or terminal state while preserving the distinction between
+  identity aggregation, explicit lineage, quantities, and lifecycle state.
+- Added planned `PROPAGATION-001` and `PROPAGATION-002` increments so quantity accounting,
+  total/partial-use choices, source lifecycle decisions, contextual creation entry points, and
+  cross-linking are decided and delivered in that order. `PROPAGATION-001` is the recommended next
+  increment; no application behavior is included in this planning pass.
+- Added later planned increments for transferred/ceded Plant lifecycle (`PLANT-005`), observed-use
+  navigation refinement (`UX-003`), scope-aware hierarchical Location browsing (`LOCATION-002`),
+  deliberately scoped finer-grained geography (`GEOGRAPHY-003`), and connected Supplier summaries
+  (`SUPPLIER-002`). PlantGroup transfer remains an evaluation, global city reference data is not a
+  first-release requirement, and Supplier financial totals remain gated by `ORDER-001`.
+- Preserved every existing verified status and acceptance criterion. Validation parsed all 67
+  feature records; checked required fields, allowed statuses and priorities, unique IDs, dependency
+  references, self-dependencies, DAG cycles, and verified prerequisites; structurally compared all
+  35 pre-existing verified records with `origin/main`; checked changed files with Prettier; and ran
+  `git diff --check`.
+
 ## 2026-09-03 — UX-001
 
 - Reframed Florabase around a collection Dashboard; persistent grouped desktop navigation; a fixed
@@ -221,8 +241,8 @@ implementation detail.
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
   protected Plant/PlantGroup Event backend journal and detail-page timeline UI.
-- No planned P1 product increment remains in `features.json`; licensing/version policy and release
-  readiness remain explicit operator/product decisions in the roadmap.
+- `PROPAGATION-001` is the next recommended P1 product increment, followed by `PROPAGATION-002`;
+  licensing/version policy and release readiness remain explicit later operator/product decisions.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.
   Other unblocked P2 product items are listed by the machine-readable dependency graph rather than

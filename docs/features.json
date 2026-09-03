@@ -652,6 +652,97 @@
       "status": "planned"
     },
     {
+      "id": "PROPAGATION-001",
+      "category": "workflow",
+      "description": "Define explicit propagation quantity and lifecycle transitions",
+      "acceptance_criteria": [
+        "SeedLot to Sowing and Sowing to Plant or PlantGroup transitions distinguish total use, partial use, and unknown or approximate quantities without manufacturing precision",
+        "The contract defines when source quantities change and when SeedLot or Sowing lifecycle remains active, becomes partially completed where that is a supported concept, or reaches a terminal state",
+        "Concurrency, correction, rollback, historical retention, and Event coordination boundaries are documented before persistence or UI changes are designed"
+      ],
+      "dependencies": ["LINEAGE-002", "EVENT-002"],
+      "priority": "P1",
+      "status": "planned"
+    },
+    {
+      "id": "PROPAGATION-002",
+      "category": "workflow",
+      "description": "Add guided contextual propagation transitions",
+      "acceptance_criteria": [
+        "Relevant BotanicalIdentity, SeedLot, and Sowing detail contexts offer clear entry points to create the next supported SeedLot, Sowing, Plant, or PlantGroup while preserving explicit lineage",
+        "Each transition asks the operator to confirm total or partial usage and the resulting source lifecycle when the known quantity and workflow make that decision meaningful",
+        "Successful transitions present understandable quantity and lifecycle outcomes, preserve correction and failure safety, and provide consistent cross-links between the records involved"
+      ],
+      "dependencies": ["PROPAGATION-001", "UX-001"],
+      "priority": "P1",
+      "status": "planned"
+    },
+    {
+      "id": "PLANT-005",
+      "category": "plant",
+      "description": "Add an explicit transferred or ceded Plant outcome",
+      "acceptance_criteria": [
+        "Plant lifecycle can record that a living specimen left the collection by transfer or cession without misclassifying it as dead, lost, or discarded",
+        "The increment decides whether PlantGroup needs the same outcome based on a concrete group-transfer workflow and records any quantity implications explicitly",
+        "A coordinated Event records transfer history while current lifecycle side effects, correction behavior, and the non-event-sourced boundary remain clear"
+      ],
+      "dependencies": ["PROPAGATION-002", "EVENT-003"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "UX-003",
+      "category": "frontend",
+      "description": "Refine collection navigation and detail-page coherence from observed use",
+      "acceptance_criteria": [
+        "Seeds, Sowings, Plants, Events, and their detail pages communicate a clear page purpose and use consistent interaction patterns without retroactively redefining UX-001",
+        "Desktop and mobile navigation keep related lifecycle work discoverable with stable orientation and accessible responsive behavior",
+        "Contextual actions and cross-links support the BotanicalIdentity to SeedLot to Sowing to Plant or PlantGroup to Event or terminal-state lifecycle without presenting identity aggregation as lineage"
+      ],
+      "dependencies": ["PROPAGATION-002", "UX-001"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "LOCATION-002",
+      "category": "location",
+      "description": "Add a scope-aware hierarchical Location browsing experience",
+      "acceptance_criteria": [
+        "One shared Location concept remains authoritative while views can scope usage to Seeds, Sowings, or Plants without creating parallel location entities",
+        "A hierarchical collapsible presentation keeps roots, descendants, current paths, retirement state, and empty branches understandable",
+        "Desktop and mobile interactions remain accessible and link Location usage to the relevant supported records"
+      ],
+      "dependencies": ["LOCATION-001", "UX-003"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "GEOGRAPHY-003",
+      "category": "geography",
+      "description": "Evaluate finer-grained local geography without a global city catalogue",
+      "acceptance_criteria": [
+        "A demonstrated provenance or native-range workflow defines the needed locality granularity before adding reference data",
+        "The design evaluates carefully scoped operator-defined local nodes before introducing another canonical dataset",
+        "City-level global reference data, geocoding, coordinates, and runtime geography integrations remain out of scope unless separately justified"
+      ],
+      "dependencies": ["GEOGRAPHY-001", "GEOGRAPHY-002"],
+      "priority": "P3",
+      "status": "planned"
+    },
+    {
+      "id": "SUPPLIER-002",
+      "category": "supplier",
+      "description": "Add richer Supplier connected-record summaries",
+      "acceptance_criteria": [
+        "Supplier detail can summarize and link supported related acquisitions and collection records without obscuring the Supplier directory purpose",
+        "Related SeedLots and, where explicit relationships exist, Plants or other material are derived from recorded links rather than inferred from names or notes",
+        "Spending, price, and order totals are not shown unless ORDER-001 supplies an implemented and tested transaction model"
+      ],
+      "dependencies": ["SUPPLIER-001", "SEED-004", "UX-003"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
       "id": "IMPORT-001",
       "category": "transfer",
       "description": "Add guided tabular import and simple operator-facing export",
