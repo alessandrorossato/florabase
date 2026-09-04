@@ -566,6 +566,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/seed-lots/{seed_lot_id}/create-sowing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Sowing Transition */
+        post: operations["createSowingFromSeedLot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/seed-lots/{seed_lot_id}/lineage": {
         parameters: {
             query?: never;
@@ -612,6 +629,57 @@ export interface paths {
         get: operations["getSowing"];
         /** Update */
         put: operations["updateSowing"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sowings/{sowing_id}/create-plant": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Plant Transition */
+        post: operations["createPlantFromSowing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sowings/{sowing_id}/create-plant-group": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Plant Group Transition */
+        post: operations["createPlantGroupFromSowing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sowings/{sowing_id}/propagation-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Propagation Summary */
+        get: operations["getSowingPropagationSummary"];
+        put?: never;
         post?: never;
         delete?: never;
         options?: never;
@@ -1026,6 +1094,14 @@ export interface components {
             /** Status */
             status: string;
         };
+        /** NoSourceAdjustment */
+        NoSourceAdjustment: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            mode: "none";
+        };
         /** OriginatingPlantGroupSummary */
         OriginatingPlantGroupSummary: {
             botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
@@ -1077,6 +1153,15 @@ export interface components {
          * @enum {string}
          */
         PartialDatePrecision: "year" | "month" | "day";
+        /** PartialSourceAdjustment */
+        PartialSourceAdjustment: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            mode: "partial";
+            resulting_quantity?: components["schemas"]["SeedQuantity-Input"] | null;
+        };
         /** PlantCreate */
         PlantCreate: {
             /**
@@ -1137,6 +1222,23 @@ export interface components {
             plant: components["schemas"]["PlantResponse"];
             plant_group: components["schemas"]["PlantGroupResponse"];
         };
+        /** PlantFromSowingCreate */
+        PlantFromSowingCreate: {
+            /**
+             * Botanical Identity Id
+             * Format: uuid
+             */
+            botanical_identity_id: string;
+            collection_entry_date?: components["schemas"]["PartialDate"] | null;
+            /** Label */
+            label?: string | null;
+            /** @default active */
+            lifecycle: components["schemas"]["PlantLifecycle"];
+            /** Location Id */
+            location_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+        };
         /** PlantGroupCreate */
         PlantGroupCreate: {
             /**
@@ -1180,6 +1282,24 @@ export interface components {
              * @enum {string}
              */
             type: "plant_group";
+        };
+        /** PlantGroupFromSowingCreate */
+        PlantGroupFromSowingCreate: {
+            /**
+             * Botanical Identity Id
+             * Format: uuid
+             */
+            botanical_identity_id: string;
+            collection_entry_date?: components["schemas"]["PartialDate"] | null;
+            /** Label */
+            label?: string | null;
+            /** @default active */
+            lifecycle: components["schemas"]["PlantGroupLifecycle"];
+            /** Location Id */
+            location_id?: string | null;
+            /** Notes */
+            notes?: string | null;
+            quantity?: components["schemas"]["PlantGroupQuantity"] | null;
         };
         /**
          * PlantGroupLifecycle
@@ -1403,6 +1523,39 @@ export interface components {
             label: string | null;
             lifecycle: components["schemas"]["PlantLifecycle"];
         };
+        /** PropagationPlantGroupSummary */
+        PropagationPlantGroupSummary: {
+            /**
+             * Botanical Identity Id
+             * Format: uuid
+             */
+            botanical_identity_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string | null;
+            lifecycle: components["schemas"]["PlantGroupLifecycle"];
+            quantity: components["schemas"]["PlantGroupQuantity"] | null;
+        };
+        /** PropagationPlantSummary */
+        PropagationPlantSummary: {
+            /**
+             * Botanical Identity Id
+             * Format: uuid
+             */
+            botanical_identity_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string | null;
+            lifecycle: components["schemas"]["PlantLifecycle"];
+        };
         /** SeedLotCreate */
         SeedLotCreate: {
             acquisition_date?: components["schemas"]["PartialDate"] | null;
@@ -1513,6 +1666,17 @@ export interface components {
          * @enum {string}
          */
         SeedLotSourceKind: "purchased" | "purchased_fruit" | "self_collected" | "collection_produced" | "gift_exchange" | "other" | "unknown";
+        /** SeedLotSowingTransitionCreate */
+        SeedLotSowingTransitionCreate: {
+            /** Source Adjustment */
+            source_adjustment: components["schemas"]["NoSourceAdjustment"] | components["schemas"]["PartialSourceAdjustment"] | components["schemas"]["UseAllSourceAdjustment"];
+            sowing: components["schemas"]["SowingDetails"];
+        };
+        /** SeedLotSowingTransitionResponse */
+        SeedLotSowingTransitionResponse: {
+            seed_lot: components["schemas"]["SeedLotResponse"];
+            sowing: components["schemas"]["SowingResponse"];
+        };
         /** SeedLotUpdate */
         SeedLotUpdate: {
             acquisition_date?: components["schemas"]["PartialDate"] | null;
@@ -1619,6 +1783,33 @@ export interface components {
             /** Temperature Min C */
             temperature_min_c?: number | string | null;
         };
+        /** SowingDetails */
+        SowingDetails: {
+            /** Environment */
+            environment?: string | null;
+            /** Germinated Count */
+            germinated_count?: number | null;
+            /** Label */
+            label?: string | null;
+            /** @default active */
+            lifecycle: components["schemas"]["SowingLifecycle"];
+            /** Location Id */
+            location_id?: string | null;
+            /** Method Container */
+            method_container?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Pretreatment */
+            pretreatment?: string | null;
+            quantity?: components["schemas"]["SowingQuantity-Input"] | null;
+            sowing_date?: components["schemas"]["PartialDate"] | null;
+            /** Substrate */
+            substrate?: string | null;
+            /** Temperature Max C */
+            temperature_max_c?: number | string | null;
+            /** Temperature Min C */
+            temperature_min_c?: number | string | null;
+        };
         /**
          * SowingLifecycle
          * @enum {string}
@@ -1649,6 +1840,47 @@ export interface components {
              * Format: uuid
              */
             id: string;
+        };
+        /** SowingPlantGroupTransitionCreate */
+        SowingPlantGroupTransitionCreate: {
+            plant_group: components["schemas"]["PlantGroupFromSowingCreate"];
+            resulting_sowing_lifecycle: components["schemas"]["SowingLifecycle"];
+        };
+        /** SowingPlantGroupTransitionResponse */
+        SowingPlantGroupTransitionResponse: {
+            plant_group: components["schemas"]["PlantGroupResponse"];
+            sowing: components["schemas"]["SowingResponse"];
+        };
+        /** SowingPlantTransitionCreate */
+        SowingPlantTransitionCreate: {
+            plant: components["schemas"]["PlantFromSowingCreate"];
+            resulting_sowing_lifecycle: components["schemas"]["SowingLifecycle"];
+        };
+        /** SowingPlantTransitionResponse */
+        SowingPlantTransitionResponse: {
+            plant: components["schemas"]["PlantResponse"];
+            sowing: components["schemas"]["SowingResponse"];
+        };
+        /** SowingPropagationSummary */
+        SowingPropagationSummary: {
+            /** Approximate Plant Group Count */
+            approximate_plant_group_count: number;
+            /** Exact Descendant Count */
+            exact_descendant_count: number;
+            /** Germinated Count */
+            germinated_count: number | null;
+            lifecycle: components["schemas"]["SowingLifecycle"];
+            /** Plant Groups */
+            plant_groups: components["schemas"]["PropagationPlantGroupSummary"][];
+            /** Plants */
+            plants: components["schemas"]["PropagationPlantSummary"][];
+            /**
+             * Sowing Id
+             * Format: uuid
+             */
+            sowing_id: string;
+            /** Unknown Plant Group Count */
+            unknown_plant_group_count: number;
         };
         /** SowingQuantity */
         "SowingQuantity-Input": {
@@ -1842,6 +2074,14 @@ export interface components {
             phone?: string | null;
             /** Website */
             website?: string | null;
+        };
+        /** UseAllSourceAdjustment */
+        UseAllSourceAdjustment: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            mode: "use_all";
         };
         /** ValidationError */
         ValidationError: {
@@ -3474,6 +3714,43 @@ export interface operations {
             };
         };
     };
+    createSowingFromSeedLot: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                seed_lot_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SeedLotSowingTransitionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeedLotSowingTransitionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     getSeedLotLineage: {
         parameters: {
             query?: never;
@@ -3615,6 +3892,111 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SowingResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createPlantFromSowing: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                sowing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SowingPlantTransitionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SowingPlantTransitionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createPlantGroupFromSowing: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                sowing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SowingPlantGroupTransitionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SowingPlantGroupTransitionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getSowingPropagationSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sowing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SowingPropagationSummary"];
                 };
             };
             /** @description Validation Error */

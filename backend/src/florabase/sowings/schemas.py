@@ -84,10 +84,9 @@ SignedDecimalString = Annotated[
 ]
 
 
-class SowingWrite(BaseModel):
+class SowingDetails(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    seed_lot_id: UUID
     label: str | None = Field(default=None, max_length=255)
     sowing_date: PartialDate | None = None
     quantity: SowingQuantity | None = None
@@ -142,6 +141,10 @@ class SowingWrite(BaseModel):
         ):
             raise ValueError("Germinated count must not exceed an exact seed count")
         return self
+
+
+class SowingWrite(SowingDetails):
+    seed_lot_id: UUID
 
 
 class SowingCreate(SowingWrite):

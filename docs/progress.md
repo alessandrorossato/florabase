@@ -4,6 +4,28 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-04 — PROPAGATION-001 verified
+
+- Added explicit atomic SeedLot-to-Sowing and Sowing-to-Plant/PlantGroup backend operations while
+  preserving every ordinary create and correction path. Exact compatible source quantities are
+  locked and subtracted without allowing a negative remainder; approximate partial use requires an
+  explicitly confirmed editable approximate remainder; unknown partial use remains unknown; and
+  explicit use-all exhausts the source without manufacturing exact zero for approximate or unknown
+  material.
+- Added explicit post-transition Sowing lifecycle selection and a strongly typed propagation
+  summary derived only from stored Sowing lineage. Each Plant contributes one exact tracked
+  individual, exact PlantGroup counts contribute their quantities, and approximate or unknown
+  groups remain separately visible without becoming exact counts. Germination observations are not
+  rewritten, Sowing completion is never inferred, later edits do not replay transition effects, and
+  no propagation log, redundant counter, automatic Event, frontend workflow, or migration was
+  introduced.
+- Independent review found the transition contract, explicit uncertainty handling, locking,
+  correction boundaries, derived summary, and deferred Event/UI boundaries aligned with the
+  acceptance criteria. Canonical `make ci` passed: workflow-helper tests; backend/frontend format,
+  lint, and strict type checks; 192 backend unit tests at 90.20% coverage; 93 frontend tests; API
+  generation drift check; 229 isolated PostgreSQL integration tests; and production image builds.
+  The OpenAPI and TypeScript declarations are regenerated and current. No migration was needed.
+
 ## 2026-09-03 — post-UX-001 UAT roadmap refinement
 
 - Recorded the intended collection lifecycle narrative from BotanicalIdentity through SeedLot,
@@ -241,7 +263,8 @@ implementation detail.
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
   protected Plant/PlantGroup Event backend journal and detail-page timeline UI.
-- `PROPAGATION-001` is the next recommended P1 product increment, followed by `PROPAGATION-002`;
+- `PROPAGATION-001` is verified; `PROPAGATION-002` is the
+  next recommended P1 product increment;
   licensing/version policy and release readiness remain explicit later operator/product decisions.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.

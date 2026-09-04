@@ -88,6 +88,42 @@ count is a non-negative total and cannot exceed an exact seed-count denominator.
 derive percentages when a trustworthy denominator is absent. Dated germination observations are
 planned separately.
 
+### Explicit propagation transitions
+
+Propagation operations are forward data-entry assistance, not inventory accounting, event sourcing,
+or an irreversible workflow engine. Ordinary SeedLot, Sowing, Plant, and PlantGroup creation and
+correction APIs remain valid. Executing an explicit transition applies its requested effects once;
+later edits do not replay, reverse, or recalculate an earlier source remainder, descendant lineage,
+or Sowing lifecycle decision.
+
+SeedLot-to-Sowing supports no source adjustment, partial use, and explicit use-all. No adjustment
+leaves the SeedLot untouched. Partial use of an exact quantity requires an exact Sowing quantity in
+the same dimension and unit; the locked source row is authoritatively subtracted, oversubscription is
+rejected, and an exact zero remainder exhausts the lot. Partial use of an approximate source requires
+the operator to submit a confirmed resulting approximate quantity in the same dimension and unit.
+A UI may propose an estimated remainder, but the persisted estimate is explicitly confirmable and
+editable rather than silent arithmetic. Partial use of an unknown source leaves it unknown. Use-all
+marks any active source exhausted; exact material becomes exact zero, while approximate or unknown
+material keeps its honest quantity semantics and no exact zero is invented. Count and weight are
+never mixed, and the existing `g` and `mg` units must match because Florabase has no established
+cross-unit conversion rule.
+
+Sowing-to-Plant and Sowing-to-PlantGroup operations create explicit Sowing lineage and apply the
+operator-selected resulting Sowing lifecycle atomically under a row lock. The existing vocabulary
+remains active, completed, failed, or abandoned; there is no partially-completed state, and creating
+a descendant never completes a Sowing automatically. `germinated_count` remains an independent
+operator-entered current observation and is neither rewritten nor required to equal materialized
+descendants.
+
+The protected Sowing propagation summary derives descendants only from stored immediate Sowing and
+PlantGroup-extraction links. Every Plant with that explicit ancestry contributes exactly one tracked
+individual. An exact PlantGroup contributes its current exact quantity; approximate and unknown
+PlantGroups are reported separately and never converted to exact individuals. This keeps extraction
+accounting coherent without a counter. Matching BotanicalIdentity values do not imply lineage.
+These concrete relationships do not automatically create Events, and no propagation-history table
+or redundant counter is persisted. Guided contextual controls belong to `PROPAGATION-002`;
+transferred or ceded Plant lifecycle belongs to `PLANT-005`.
+
 ### Plant
 
 A Plant is exactly one individually tracked specimen and never has quantity. It requires its own
@@ -173,12 +209,10 @@ GeographicPlaces remain immutable by design, and lifecycle-bearing records retai
 non-destructive lifecycle semantics.
 
 The current pages expose related information but do not yet provide a complete guided transition
-workflow. In particular, BotanicalIdentity detail does not consistently initiate related SeedLot,
-Sowing, Plant, or PlantGroup creation, and existing SeedLot-to-Sowing and Sowing-to-Plant/PlantGroup
-creation does not perform source quantity accounting. Planned `PROPAGATION-001` and
-`PROPAGATION-002` will define and then implement explicit total/partial-use choices, lifecycle
-outcomes, contextual entry points, and cross-links. Until then, the existing rows remain
-authoritative and no quantity or completion transition should be inferred from lineage alone.
+workflow. `PROPAGATION-001` supplies explicit typed backend operations for source quantity and
+lifecycle outcomes, while `PROPAGATION-002` remains responsible for contextual entry points,
+operator guidance, and cross-links. Existing rows remain authoritative and no quantity or completion
+transition is inferred from lineage alone.
 
 The intended product narrative is `BotanicalIdentity → SeedLot → Sowing → Plant / PlantGroup →
 Events / terminal state`. It is an interaction and comprehension direction over the explicit model,
@@ -240,7 +274,7 @@ product workflows preserve historical rows rather than hard-deleting them.
 Event attachments, richer structured Event payloads, attachment/photo
 storage, richer germination observations, Orders, other propagation material, advanced search,
 analytical dashboards, contextual form help, import/export, PWA installability, enrichment, taxonomy
-reconciliation, guided propagation transitions, a transferred/ceded Plant outcome, scope-aware
+reconciliation, guided propagation UI, a transferred/ceded Plant outcome, scope-aware
 Location browsing, richer Supplier summaries, reminders, weather, and multi-user ownership remain
 planned. A transferred/ceded outcome is expected to coordinate lifecycle with an Event; whether it
 also applies to PlantGroup remains an explicit future decision. `docs/features.json` is the detailed

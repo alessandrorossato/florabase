@@ -1096,6 +1096,19 @@
         "title": "LogoutResponse",
         "type": "object"
       },
+      "NoSourceAdjustment": {
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "const": "none",
+            "default": "none",
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "title": "NoSourceAdjustment",
+        "type": "object"
+      },
       "OriginatingPlantGroupSummary": {
         "properties": {
           "botanical_identity": {
@@ -1242,6 +1255,31 @@
         ],
         "title": "PartialDatePrecision",
         "type": "string"
+      },
+      "PartialSourceAdjustment": {
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "const": "partial",
+            "title": "Mode",
+            "type": "string"
+          },
+          "resulting_quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeedQuantity-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "PartialSourceAdjustment",
+        "type": "object"
       },
       "PlantCreate": {
         "additionalProperties": false,
@@ -1487,6 +1525,71 @@
         "title": "PlantExtractionResponse",
         "type": "object"
       },
+      "PlantFromSowingCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "botanical_identity_id": {
+            "format": "uuid",
+            "title": "Botanical Identity Id",
+            "type": "string"
+          },
+          "collection_entry_date": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/PlantLifecycle",
+            "default": "active"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "required": [
+          "botanical_identity_id"
+        ],
+        "title": "PlantFromSowingCreate",
+        "type": "object"
+      },
       "PlantGroupCreate": {
         "additionalProperties": false,
         "properties": {
@@ -1658,6 +1761,81 @@
           "botanical_identity"
         ],
         "title": "PlantGroupEventTarget",
+        "type": "object"
+      },
+      "PlantGroupFromSowingCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "botanical_identity_id": {
+            "format": "uuid",
+            "title": "Botanical Identity Id",
+            "type": "string"
+          },
+          "collection_entry_date": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/PlantGroupLifecycle",
+            "default": "active"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlantGroupQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "botanical_identity_id"
+        ],
+        "title": "PlantGroupFromSowingCreate",
         "type": "object"
       },
       "PlantGroupLifecycle": {
@@ -2528,6 +2706,89 @@
         "title": "ProducerPlantSummary",
         "type": "object"
       },
+      "PropagationPlantGroupSummary": {
+        "properties": {
+          "botanical_identity_id": {
+            "format": "uuid",
+            "title": "Botanical Identity Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/PlantGroupLifecycle"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PlantGroupQuantity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "botanical_identity_id",
+          "label",
+          "lifecycle",
+          "quantity"
+        ],
+        "title": "PropagationPlantGroupSummary",
+        "type": "object"
+      },
+      "PropagationPlantSummary": {
+        "properties": {
+          "botanical_identity_id": {
+            "format": "uuid",
+            "title": "Botanical Identity Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/PlantLifecycle"
+          }
+        },
+        "required": [
+          "id",
+          "botanical_identity_id",
+          "label",
+          "lifecycle"
+        ],
+        "title": "PropagationPlantSummary",
+        "type": "object"
+      },
       "SeedLotCreate": {
         "additionalProperties": false,
         "properties": {
@@ -2994,6 +3255,58 @@
         "title": "SeedLotSourceKind",
         "type": "string"
       },
+      "SeedLotSowingTransitionCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "source_adjustment": {
+            "discriminator": {
+              "mapping": {
+                "none": "#/components/schemas/NoSourceAdjustment",
+                "partial": "#/components/schemas/PartialSourceAdjustment",
+                "use_all": "#/components/schemas/UseAllSourceAdjustment"
+              },
+              "propertyName": "mode"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NoSourceAdjustment"
+              },
+              {
+                "$ref": "#/components/schemas/PartialSourceAdjustment"
+              },
+              {
+                "$ref": "#/components/schemas/UseAllSourceAdjustment"
+              }
+            ],
+            "title": "Source Adjustment"
+          },
+          "sowing": {
+            "$ref": "#/components/schemas/SowingDetails"
+          }
+        },
+        "required": [
+          "sowing",
+          "source_adjustment"
+        ],
+        "title": "SeedLotSowingTransitionCreate",
+        "type": "object"
+      },
+      "SeedLotSowingTransitionResponse": {
+        "properties": {
+          "seed_lot": {
+            "$ref": "#/components/schemas/SeedLotResponse"
+          },
+          "sowing": {
+            "$ref": "#/components/schemas/SowingResponse"
+          }
+        },
+        "required": [
+          "sowing",
+          "seed_lot"
+        ],
+        "title": "SeedLotSowingTransitionResponse",
+        "type": "object"
+      },
       "SeedLotUpdate": {
         "additionalProperties": false,
         "properties": {
@@ -3445,6 +3758,163 @@
         "title": "SowingCreate",
         "type": "object"
       },
+      "SowingDetails": {
+        "additionalProperties": false,
+        "properties": {
+          "environment": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Environment"
+          },
+          "germinated_count": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Germinated Count"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/SowingLifecycle",
+            "default": "active"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "method_container": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Method Container"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "pretreatment": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pretreatment"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SowingQuantity-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sowing_date": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "substrate": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Substrate"
+          },
+          "temperature_max_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Max C"
+          },
+          "temperature_min_c": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Temperature Min C"
+          }
+        },
+        "title": "SowingDetails",
+        "type": "object"
+      },
       "SowingLifecycle": {
         "enum": [
           "active",
@@ -3508,6 +3978,133 @@
           "display_path"
         ],
         "title": "SowingLocationSummary",
+        "type": "object"
+      },
+      "SowingPlantGroupTransitionCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "plant_group": {
+            "$ref": "#/components/schemas/PlantGroupFromSowingCreate"
+          },
+          "resulting_sowing_lifecycle": {
+            "$ref": "#/components/schemas/SowingLifecycle"
+          }
+        },
+        "required": [
+          "plant_group",
+          "resulting_sowing_lifecycle"
+        ],
+        "title": "SowingPlantGroupTransitionCreate",
+        "type": "object"
+      },
+      "SowingPlantGroupTransitionResponse": {
+        "properties": {
+          "plant_group": {
+            "$ref": "#/components/schemas/PlantGroupResponse"
+          },
+          "sowing": {
+            "$ref": "#/components/schemas/SowingResponse"
+          }
+        },
+        "required": [
+          "plant_group",
+          "sowing"
+        ],
+        "title": "SowingPlantGroupTransitionResponse",
+        "type": "object"
+      },
+      "SowingPlantTransitionCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "plant": {
+            "$ref": "#/components/schemas/PlantFromSowingCreate"
+          },
+          "resulting_sowing_lifecycle": {
+            "$ref": "#/components/schemas/SowingLifecycle"
+          }
+        },
+        "required": [
+          "plant",
+          "resulting_sowing_lifecycle"
+        ],
+        "title": "SowingPlantTransitionCreate",
+        "type": "object"
+      },
+      "SowingPlantTransitionResponse": {
+        "properties": {
+          "plant": {
+            "$ref": "#/components/schemas/PlantResponse"
+          },
+          "sowing": {
+            "$ref": "#/components/schemas/SowingResponse"
+          }
+        },
+        "required": [
+          "plant",
+          "sowing"
+        ],
+        "title": "SowingPlantTransitionResponse",
+        "type": "object"
+      },
+      "SowingPropagationSummary": {
+        "properties": {
+          "approximate_plant_group_count": {
+            "title": "Approximate Plant Group Count",
+            "type": "integer"
+          },
+          "exact_descendant_count": {
+            "title": "Exact Descendant Count",
+            "type": "integer"
+          },
+          "germinated_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Germinated Count"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/SowingLifecycle"
+          },
+          "plant_groups": {
+            "items": {
+              "$ref": "#/components/schemas/PropagationPlantGroupSummary"
+            },
+            "title": "Plant Groups",
+            "type": "array"
+          },
+          "plants": {
+            "items": {
+              "$ref": "#/components/schemas/PropagationPlantSummary"
+            },
+            "title": "Plants",
+            "type": "array"
+          },
+          "sowing_id": {
+            "format": "uuid",
+            "title": "Sowing Id",
+            "type": "string"
+          },
+          "unknown_plant_group_count": {
+            "title": "Unknown Plant Group Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "sowing_id",
+          "lifecycle",
+          "germinated_count",
+          "plants",
+          "plant_groups",
+          "exact_descendant_count",
+          "approximate_plant_group_count",
+          "unknown_plant_group_count"
+        ],
+        "title": "SowingPropagationSummary",
         "type": "object"
       },
       "SowingQuantity-Input": {
@@ -4249,6 +4846,21 @@
           "kind"
         ],
         "title": "SupplierUpdate",
+        "type": "object"
+      },
+      "UseAllSourceAdjustment": {
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "const": "use_all",
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "UseAllSourceAdjustment",
         "type": "object"
       },
       "ValidationError": {
@@ -6693,6 +7305,75 @@
         ]
       }
     },
+    "/api/v1/seed-lots/{seed_lot_id}/create-sowing": {
+      "post": {
+        "operationId": "createSowingFromSeedLot",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seed_lot_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Seed Lot Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeedLotSowingTransitionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SeedLotSowingTransitionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Sowing Transition",
+        "tags": [
+          "seed-lots"
+        ]
+      }
+    },
     "/api/v1/seed-lots/{seed_lot_id}/lineage": {
       "get": {
         "operationId": "getSeedLotLineage",
@@ -6923,6 +7604,187 @@
           }
         },
         "summary": "Update",
+        "tags": [
+          "sowings"
+        ]
+      }
+    },
+    "/api/v1/sowings/{sowing_id}/create-plant": {
+      "post": {
+        "operationId": "createPlantFromSowing",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sowing_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sowing Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SowingPlantTransitionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SowingPlantTransitionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Plant Transition",
+        "tags": [
+          "sowings"
+        ]
+      }
+    },
+    "/api/v1/sowings/{sowing_id}/create-plant-group": {
+      "post": {
+        "operationId": "createPlantGroupFromSowing",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sowing_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sowing Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SowingPlantGroupTransitionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SowingPlantGroupTransitionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Plant Group Transition",
+        "tags": [
+          "sowings"
+        ]
+      }
+    },
+    "/api/v1/sowings/{sowing_id}/propagation-summary": {
+      "get": {
+        "operationId": "getSowingPropagationSummary",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sowing_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sowing Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SowingPropagationSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Propagation Summary",
         "tags": [
           "sowings"
         ]
