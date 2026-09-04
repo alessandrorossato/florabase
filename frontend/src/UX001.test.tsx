@@ -246,6 +246,10 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
   expect(
     screen.getByRole("link", { name: /Bloodgood seed lot/ }),
   ).toHaveAttribute("href", "#/seeds/seed-1");
+  expect(screen.getByRole("link", { name: "Add SeedLot" })).toHaveAttribute(
+    "href",
+    `#/seeds?action=create&identity=${identity.id}`,
+  );
 
   await user.keyboard("{ArrowRight}");
   expect(screen.getByRole("tab", { name: "Sowings" })).toHaveAttribute(
@@ -256,6 +260,9 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
     "href",
     "#/sowings/sowing-1",
   );
+  expect(
+    screen.getByRole("link", { name: "Start from this SeedLot" }),
+  ).toHaveAttribute("href", "#/sowings?action=start&seedLot=seed-1");
 
   await user.click(screen.getByRole("tab", { name: "Plants" }));
   expect(screen.getByRole("link", { name: /Courtyard maple/ })).toHaveAttribute(
@@ -267,6 +274,16 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
     "#/plant-groups/group-1",
   );
   expect(screen.getByText("Plant group")).toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Direct / acquired Plant" }),
+  ).toHaveAttribute(
+    "href",
+    `#/plants?action=create&identity=${identity.id}&kind=plant`,
+  );
+  expect(screen.getByRole("link", { name: "Create Plant" })).toHaveAttribute(
+    "href",
+    "#/plants?action=from-sowing&sowing=sowing-1&kind=plant",
+  );
 
   await user.click(screen.getByRole("tab", { name: "Events" }));
   expect(screen.getByText("Strong new growth.")).toBeInTheDocument();
@@ -308,6 +325,52 @@ test("A Botanical identity tab deep link restores the selected collection view",
       "No Events belong to Plants or Plant groups with this identity.",
     ),
   ).toBeInTheDocument();
+});
+
+test("Botanical identity empty states require a SeedLot before Sowing and preserve direct Plant entry", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    `#/identities/${identity.id}?tab=sowings`,
+  );
+  mockAuthenticated((path) => {
+    if (path === "/api/v1/botanical-identities") return json([identity]);
+    if (path === `/api/v1/botanical-identities/${identity.id}/collection`)
+      return json({
+        identity,
+        seed_lots: [],
+        sowings: [],
+        plants: [],
+        plant_groups: [],
+        events: [],
+      });
+    if (path === `/api/v1/botanical-identities/${identity.id}/profile`)
+      return json({ detail: "not needed" }, 404);
+    throw new Error(`Unexpected request: ${path}`);
+  });
+  const user = userEvent.setup();
+  render(<App />);
+
+  expect(
+    await screen.findByText(/cannot exist without its source SeedLot/),
+  ).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Create SeedLot" })).toHaveAttribute(
+    "href",
+    `#/seeds?action=create&identity=${identity.id}`,
+  );
+  await user.click(screen.getByRole("tab", { name: "Plants" }));
+  expect(
+    screen.getByRole("heading", { name: "From a Sowing" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText(/No source Sowings are recorded yet/),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Direct / acquired Plant" }),
+  ).toHaveAttribute(
+    "href",
+    `#/plants?action=create&identity=${identity.id}&kind=plant`,
+  );
 });
 
 test("Botanical identity edit and guarded deletion stay explicit", async () => {

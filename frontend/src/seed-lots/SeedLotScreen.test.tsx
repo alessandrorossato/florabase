@@ -322,6 +322,10 @@ test("selection shows complete details without internal identifiers and opens co
   expect(detail).toHaveTextContent("World → Asia");
   expect(detail).toHaveTextContent("2024");
   expect(detail).not.toHaveTextContent("01900000");
+  expect(screen.getByRole("link", { name: "Start sowing" })).toHaveAttribute(
+    "href",
+    `#/sowings?action=start&seedLot=${lot().id}`,
+  );
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   expect(
     screen.getByRole("button", { name: "Save changes" }),
@@ -762,7 +766,10 @@ test("duplicate and failed contextual creation keep the seed form intact", async
     "Clitoria ternatea",
   );
   await user.click(screen.getByRole("button", { name: /Create identity/ }));
-  await user.click(screen.getByRole("button", { name: "Create and select" }));
+  const identityDialog = await screen.findByRole("dialog");
+  await user.click(
+    within(identityDialog).getByRole("button", { name: "Create and select" }),
+  );
   await waitFor(() => {
     expect(
       screen.getByRole("combobox", { name: "Botanical identity" }),
@@ -773,7 +780,10 @@ test("duplicate and failed contextual creation keep the seed form intact", async
     "Broken supplier",
   );
   await user.click(screen.getByRole("button", { name: /Create supplier/ }));
-  await user.click(screen.getByRole("button", { name: "Create and select" }));
+  const supplierDialog = await screen.findByRole("dialog");
+  await user.click(
+    within(supplierDialog).getByRole("button", { name: "Create and select" }),
+  );
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "seed lot details are still here",
   );

@@ -28,6 +28,7 @@ import {
 import { listLocations, type LocationResponse } from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
 import { ReferencePicker } from "../seed-lots/ReferencePicker";
+import { PropagationPath } from "../propagation/PropagationPath";
 import { listSowings, type SowingResponse } from "../sowings/api";
 import { listSuppliers, type SupplierResponse } from "../suppliers/api";
 import {
@@ -387,31 +388,69 @@ function Detail({
                 </div>
               </dl>
             ) : value.originating_sowing ? (
-              <dl>
-                <div>
-                  <dt>Origin Sowing</dt>
-                  <dd>
-                    {value.originating_sowing.label ?? "Unlabelled Sowing"}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Sowing lifecycle</dt>
-                  <dd>{value.originating_sowing.lifecycle}</dd>
-                </div>
-                <div>
-                  <dt>Upstream botanical context</dt>
-                  <dd>
-                    {value.originating_sowing.botanical_identity_display_label}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Seed lot</dt>
-                  <dd>
-                    {sowing?.seed_lot.label ??
-                      value.originating_sowing.seed_lot_id}
-                  </dd>
-                </div>
-              </dl>
+              <>
+                <PropagationPath
+                  title="Propagation origin"
+                  stages={[
+                    [
+                      {
+                        type: "SeedLot",
+                        label: sowing?.seed_lot.label ?? "Source SeedLot",
+                        href: `#/seeds/${value.originating_sowing.seed_lot_id}`,
+                      },
+                    ],
+                    [
+                      {
+                        type: "Sowing",
+                        label:
+                          value.originating_sowing.label ?? "Unlabelled Sowing",
+                        href: `#/sowings/${value.originating_sowing.id}`,
+                        state: value.originating_sowing.lifecycle,
+                      },
+                    ],
+                    [
+                      {
+                        type:
+                          record.kind === "plant"
+                            ? "This Plant"
+                            : "This Plant group",
+                        label:
+                          value.label ?? value.botanical_identity.display_label,
+                        href: `#/${route}/${value.id}`,
+                        state: value.lifecycle,
+                      },
+                    ],
+                  ]}
+                />
+                <dl>
+                  <div>
+                    <dt>Origin Sowing</dt>
+                    <dd>
+                      {value.originating_sowing.label ?? "Unlabelled Sowing"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Sowing lifecycle</dt>
+                    <dd>{value.originating_sowing.lifecycle}</dd>
+                  </div>
+                  <div>
+                    <dt>Upstream botanical context</dt>
+                    <dd>
+                      {
+                        value.originating_sowing
+                          .botanical_identity_display_label
+                      }
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Seed lot</dt>
+                    <dd>
+                      {sowing?.seed_lot.label ??
+                        value.originating_sowing.seed_lot_id}
+                    </dd>
+                  </div>
+                </dl>
+              </>
             ) : (
               <dl>
                 <div>
@@ -491,11 +530,17 @@ export function PlantScreen({
   initialKind = "plant",
   initialTypeFilter = "all",
   initialTab,
+  initialIdentityId,
+  initialCreationKind,
+  startCreating = false,
 }: {
   initialId?: string;
   initialKind?: RecordKind;
   initialTypeFilter?: "all" | RecordKind;
   initialTab?: string;
+  initialIdentityId?: string;
+  initialCreationKind?: RecordKind;
+  startCreating?: boolean;
 } = {}) {
   const auth = useAuth();
   const [collection, setCollection] = useState<CollectionState>({
@@ -528,6 +573,7 @@ export function PlantScreen({
   const extractionHeading = useRef<HTMLHeadingElement>(null);
   const extractionTrigger = useRef<HTMLButtonElement | null>(null);
   const selectedTrigger = useRef<HTMLButtonElement | null>(null);
+  const contextualCreationStarted = useRef(false);
   const {
     expanded: creationExpanded,
     triggerRef: creationTriggerRef,
@@ -536,6 +582,31 @@ export function PlantScreen({
     close: closeCreation,
     focusFirst: focusCreation,
   } = useCreationDisclosure();
+
+  useEffect(() => {
+    if (!startCreating || !references || contextualCreationStarted.current)
+      return;
+    contextualCreationStarted.current = true;
+    setExtractionSource(null);
+    setSelectedKey(null);
+    setDetail({ status: "idle" });
+    setCreationKind(initialCreationKind ?? null);
+    setEditing(true);
+    setMobileDetail(true);
+    setForm({
+      ...blankForm(),
+      botanicalIdentityId: initialIdentityId ?? "",
+    });
+    setMoreDetails(Boolean(initialCreationKind));
+    setSave({ status: "idle" });
+    openCreation();
+  }, [
+    initialCreationKind,
+    initialIdentityId,
+    openCreation,
+    references,
+    startCreating,
+  ]);
 
   useEffect(() => {
     if (editing && extractionSource) extractionHeading.current?.focus();
@@ -932,6 +1003,11 @@ export function PlantScreen({
           ? `${formKind === "plant" ? "Plant" : "Plant group"} was added to the collection.`
           : `${formKind === "plant" ? "Plant" : "Plant group"} changes were saved.`,
       });
+      if (wasCreating)
+        window.location.hash =
+          authoritative.kind === "plant"
+            ? `/plants/${authoritative.value.id}`
+            : `/plant-groups/${authoritative.value.id}`;
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();

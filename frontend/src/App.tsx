@@ -10,6 +10,8 @@ import { GlobalEventsScreen } from "./events/GlobalEventsScreen";
 import { GeographyScreen } from "./geographic-places/GeographyScreen";
 import { LocationScreen } from "./locations/LocationScreen";
 import { PlantScreen } from "./plants/PlantScreen";
+import { SeedLotSowingWizard } from "./propagation/SeedLotSowingWizard";
+import { SowingDescendantWizard } from "./propagation/SowingDescendantWizard";
 import { SeedLotScreen } from "./seed-lots/SeedLotScreen";
 import { SowingScreen } from "./sowings/SowingScreen";
 import { SupplierScreen } from "./suppliers/SupplierScreen";
@@ -37,6 +39,11 @@ interface Route {
   recordKind?: "plant" | "group";
   recordTypeFilter?: "plant" | "group";
   tab?: string;
+  action?: string;
+  identityId?: string;
+  seedLotId?: string;
+  sowingId?: string;
+  creationKind?: "plant" | "group";
 }
 
 function currentRoute(): Route {
@@ -44,7 +51,20 @@ function currentRoute(): Route {
   const [pathname, query = ""] = raw.split("?", 2);
   const [first = "dashboard", id] = pathname.split("/").filter(Boolean);
   const tab = new URLSearchParams(query).get("tab") ?? undefined;
-  const type = new URLSearchParams(query).get("type");
+  const params = new URLSearchParams(query);
+  const type = params.get("type");
+  const action = params.get("action") ?? undefined;
+  const identityId = params.get("identity") ?? undefined;
+  const seedLotId = params.get("seedLot") ?? undefined;
+  const sowingId = params.get("sowing") ?? undefined;
+  const kind = params.get("kind");
+  const context = {
+    action,
+    identityId,
+    seedLotId,
+    sowingId,
+    creationKind: kind === "plant" || kind === "group" ? kind : undefined,
+  } as const;
   if (first === "plant-groups")
     return { section: "plants", recordId: id, recordKind: "group", tab };
   if (first === "plants")
@@ -54,6 +74,7 @@ function currentRoute(): Route {
       recordKind: "plant",
       recordTypeFilter: type === "plant" || type === "group" ? type : undefined,
       tab,
+      ...context,
     };
   const valid: Section[] = [
     "dashboard",
@@ -71,6 +92,7 @@ function currentRoute(): Route {
       : "dashboard",
     recordId: id,
     tab,
+    ...context,
   };
 }
 
@@ -199,10 +221,27 @@ function ApplicationShell() {
             </button>
           </div>
         </div>
-        {route.section === "dashboard" ? (
+        {route.section === "sowings" &&
+        route.action === "start" &&
+        route.seedLotId ? (
+          <SeedLotSowingWizard seedLotId={route.seedLotId} />
+        ) : route.section === "plants" &&
+          route.action === "from-sowing" &&
+          route.sowingId &&
+          route.creationKind ? (
+          <SowingDescendantWizard
+            sowingId={route.sowingId}
+            kind={route.creationKind}
+          />
+        ) : route.section === "dashboard" ? (
           <DashboardScreen />
         ) : route.section === "seeds" ? (
-          <SeedLotScreen initialId={route.recordId} initialTab={route.tab} />
+          <SeedLotScreen
+            initialId={route.recordId}
+            initialTab={route.tab}
+            initialIdentityId={route.identityId}
+            startCreating={route.action === "create"}
+          />
         ) : route.section === "sowings" ? (
           <SowingScreen initialId={route.recordId} initialTab={route.tab} />
         ) : route.section === "plants" ? (
@@ -211,6 +250,9 @@ function ApplicationShell() {
             initialKind={route.recordKind}
             initialTypeFilter={route.recordTypeFilter}
             initialTab={route.tab}
+            initialIdentityId={route.identityId}
+            startCreating={route.action === "create"}
+            initialCreationKind={route.creationKind}
           />
         ) : route.section === "events" ? (
           <GlobalEventsScreen />

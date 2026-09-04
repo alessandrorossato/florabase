@@ -247,7 +247,7 @@ test("compact summaries, search fields, lifecycle views, selection, detail, and 
   });
   expect(screen.queryByText("GA3 test")).not.toBeInTheDocument();
 
-  await user.click(screen.getByRole("button", { name: "History" }));
+  await user.click(screen.getByRole("button", { name: "Completed" }));
   expect(screen.getByText("GA3 test")).toBeInTheDocument();
   expect(screen.getByText("12 germinated / ~20 sown")).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "All" }));

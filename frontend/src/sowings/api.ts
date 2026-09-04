@@ -7,6 +7,16 @@ export type SowingResponse = components["schemas"]["SowingResponse"];
 export type SowingLifecycle = components["schemas"]["SowingLifecycle"];
 export type SowingQuantityInput = components["schemas"]["SowingQuantity-Input"];
 export type PartialDate = components["schemas"]["PartialDate"];
+export type SowingPropagationSummary =
+  components["schemas"]["SowingPropagationSummary"];
+export type SowingPlantTransitionCreate =
+  components["schemas"]["SowingPlantTransitionCreate"];
+export type SowingPlantTransitionResponse =
+  components["schemas"]["SowingPlantTransitionResponse"];
+export type SowingPlantGroupTransitionCreate =
+  components["schemas"]["SowingPlantGroupTransitionCreate"];
+export type SowingPlantGroupTransitionResponse =
+  components["schemas"]["SowingPlantGroupTransitionResponse"];
 
 export function listSowings(signal?: AbortSignal): Promise<SowingResponse[]> {
   return requestJson("/api/v1/sowings", { signal });
@@ -40,6 +50,46 @@ export function updateSowing(
     headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
     body: JSON.stringify(payload),
   });
+}
+
+export function getSowingPropagationSummary(
+  id: string,
+  signal?: AbortSignal,
+): Promise<SowingPropagationSummary> {
+  return requestJson(
+    `/api/v1/sowings/${encodeURIComponent(id)}/propagation-summary`,
+    { signal },
+  );
+}
+
+export function createPlantFromSowing(
+  id: string,
+  payload: SowingPlantTransitionCreate,
+  csrfToken: string,
+): Promise<SowingPlantTransitionResponse> {
+  return requestJson(`/api/v1/sowings/${encodeURIComponent(id)}/create-plant`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function createPlantGroupFromSowing(
+  id: string,
+  payload: SowingPlantGroupTransitionCreate,
+  csrfToken: string,
+): Promise<SowingPlantGroupTransitionResponse> {
+  return requestJson(
+    `/api/v1/sowings/${encodeURIComponent(id)}/create-plant-group`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": csrfToken,
+      },
+      body: JSON.stringify(payload),
+    },
+  );
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

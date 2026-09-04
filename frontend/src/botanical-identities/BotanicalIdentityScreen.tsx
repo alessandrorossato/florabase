@@ -333,8 +333,12 @@ function IdentityDetails({
                 </button>
               </CollectionCard>
               <CollectionCard
-                eyebrow="Current"
-                title={String(counts.sowings.length)}
+                eyebrow="Active"
+                title={String(
+                  counts.sowings.filter(
+                    ({ lifecycle }) => lifecycle === "active",
+                  ).length,
+                )}
               >
                 <button
                   className="link-button"
@@ -345,6 +349,14 @@ function IdentityDetails({
                 >
                   Sowings
                 </button>
+                <small>
+                  {String(
+                    counts.sowings.filter(
+                      ({ lifecycle }) => lifecycle === "completed",
+                    ).length,
+                  )}{" "}
+                  completed
+                </small>
               </CollectionCard>
               <CollectionCard
                 eyebrow="Records"
@@ -414,26 +426,44 @@ function IdentityDetails({
       )}
       {counts && tab === "seeds" && (
         <div
-          className="detail-tab-panel card-grid"
+          className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-seeds"
         >
+          <div className="contextual-workflow">
+            <div>
+              <p className="eyebrow">Next step</p>
+              <h3>Seeds for this identity</h3>
+              <p>
+                Record seed material without choosing this Botanical identity
+                again.
+              </p>
+            </div>
+            <a
+              className="button-link"
+              href={`#/seeds?action=create&identity=${identity.id}`}
+            >
+              Add SeedLot
+            </a>
+          </div>
           {counts.seed_lots.length ? (
-            counts.seed_lots.map((lot) => (
-              <CollectionCard
-                key={lot.id}
-                eyebrow={lot.lifecycle}
-                href={`#/seeds/${lot.id}`}
-                title={lot.label ?? lot.botanical_identity.display_label}
-              >
-                <p>
-                  {lot.quantity
-                    ? `${lot.quantity.is_approximate ? "Approximately " : ""}${lot.quantity.value} ${lot.quantity.kind === "seed_count" ? "seeds" : (lot.quantity.unit ?? "weight")}`
-                    : "Quantity not recorded"}
-                </p>
-                <p>{lot.location?.display_path ?? "Location not recorded"}</p>
-              </CollectionCard>
-            ))
+            <div className="card-grid">
+              {counts.seed_lots.map((lot) => (
+                <CollectionCard
+                  key={lot.id}
+                  eyebrow={lot.lifecycle}
+                  href={`#/seeds/${lot.id}`}
+                  title={lot.label ?? lot.botanical_identity.display_label}
+                >
+                  <p>
+                    {lot.quantity
+                      ? `${lot.quantity.is_approximate ? "Approximately " : ""}${lot.quantity.value} ${lot.quantity.kind === "seed_count" ? "seeds" : (lot.quantity.unit ?? "weight")}`
+                      : "Quantity not recorded"}
+                  </p>
+                  <p>{lot.location?.display_path ?? "Location not recorded"}</p>
+                </CollectionCard>
+              ))}
+            </div>
           ) : (
             <div className="empty-state">
               <p>No SeedLots use this identity.</p>
@@ -443,24 +473,82 @@ function IdentityDetails({
       )}
       {counts && tab === "sowings" && (
         <div
-          className="detail-tab-panel card-grid"
+          className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-sowings"
         >
-          {counts.sowings.length ? (
-            counts.sowings.map((sowing) => (
-              <CollectionCard
-                key={sowing.id}
-                eyebrow={sowing.lifecycle}
-                href={`#/sowings/${sowing.id}`}
-                title={sowing.label ?? "Unlabelled Sowing"}
+          <section
+            className="contextual-workflow"
+            aria-labelledby="identity-start-sowing"
+          >
+            <div>
+              <p className="eyebrow">Next step</p>
+              <h3 id="identity-start-sowing">Start sowing</h3>
+              <p>
+                Choose the actual source SeedLot. Florabase does not infer
+                lineage from identity alone.
+              </p>
+            </div>
+          </section>
+          {counts.seed_lots.some(({ lifecycle }) => lifecycle === "active") ? (
+            <div className="source-choice-grid">
+              {counts.seed_lots
+                .filter(({ lifecycle }) => lifecycle === "active")
+                .map((lot) => (
+                  <article className="source-choice" key={lot.id}>
+                    <p>
+                      <strong>{lot.label ?? "Unlabelled SeedLot"}</strong>
+                    </p>
+                    <p>
+                      {lot.quantity
+                        ? `${lot.quantity.is_approximate ? "~" : ""}${lot.quantity.value} ${lot.quantity.kind === "seed_count" ? "seeds" : (lot.quantity.unit ?? "weight")}`
+                        : "Quantity unknown"}{" "}
+                      · {lot.lifecycle}
+                    </p>
+                    <p>
+                      {lot.location?.display_path ?? "Storage not recorded"}
+                      {lot.supplier ? ` · ${lot.supplier.name}` : ""}
+                    </p>
+                    <a
+                      className="button-link"
+                      href={`#/sowings?action=start&seedLot=${lot.id}`}
+                    >
+                      Start from this SeedLot
+                    </a>
+                  </article>
+                ))}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <p>
+                Record active seeds before starting a Sowing. A Sowing cannot
+                exist without its source SeedLot.
+              </p>
+              <a
+                className="button-link"
+                href={`#/seeds?action=create&identity=${identity.id}`}
               >
-                <p>From {sowing.seed_lot.label ?? "unlabelled SeedLot"}</p>
-                <p>
-                  {sowing.location?.display_path ?? "Location not recorded"}
-                </p>
-              </CollectionCard>
-            ))
+                Create SeedLot
+              </a>
+            </div>
+          )}
+          <h3>Recorded Sowings</h3>
+          {counts.sowings.length ? (
+            <div className="card-grid">
+              {counts.sowings.map((sowing) => (
+                <CollectionCard
+                  key={sowing.id}
+                  eyebrow={sowing.lifecycle}
+                  href={`#/sowings/${sowing.id}`}
+                  title={sowing.label ?? "Unlabelled Sowing"}
+                >
+                  <p>From {sowing.seed_lot.label ?? "unlabelled SeedLot"}</p>
+                  <p>
+                    {sowing.location?.display_path ?? "Location not recorded"}
+                  </p>
+                </CollectionCard>
+              ))}
+            </div>
           ) : (
             <div className="empty-state">
               <p>No Sowings originate from SeedLots with this identity.</p>
@@ -470,12 +558,74 @@ function IdentityDetails({
       )}
       {counts && tab === "plants" && (
         <div
-          className="detail-tab-panel card-grid"
+          className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-plants"
         >
+          <section
+            className="contextual-workflow"
+            aria-labelledby="identity-add-plant"
+          >
+            <div>
+              <p className="eyebrow">Next step</p>
+              <h3 id="identity-add-plant">Add to the living collection</h3>
+              <p>
+                Choose explicit propagation lineage or preserve a legitimate
+                direct/acquired origin.
+              </p>
+            </div>
+            <div className="actions">
+              <a
+                className="button-link button--secondary"
+                href={`#/plants?action=create&identity=${identity.id}&kind=plant`}
+              >
+                Direct / acquired Plant
+              </a>
+              <a
+                className="button-link button--secondary"
+                href={`#/plants?action=create&identity=${identity.id}&kind=group`}
+              >
+                Direct / acquired Plant group
+              </a>
+            </div>
+          </section>
+          <h3>From a Sowing</h3>
+          {counts.sowings.length > 0 && (
+            <div className="source-choice-grid">
+              {counts.sowings.map((sowing) => (
+                <article className="source-choice" key={sowing.id}>
+                  <p>
+                    <strong>{sowing.label ?? "Unlabelled Sowing"}</strong> ·{" "}
+                    {sowing.lifecycle}
+                  </p>
+                  <p>From {sowing.seed_lot.label ?? "unlabelled SeedLot"}</p>
+                  <div className="actions">
+                    <a
+                      href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=plant`}
+                    >
+                      Create Plant
+                    </a>
+                    <a
+                      href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=group`}
+                    >
+                      Create Plant group
+                    </a>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+          {counts.sowings.length === 0 && (
+            <div className="empty-state">
+              <p>
+                No source Sowings are recorded yet. Start from a SeedLot to
+                preserve propagation lineage.
+              </p>
+            </div>
+          )}
+          <h3>Plants and groups</h3>
           {counts.plants.length + counts.plant_groups.length ? (
-            <>
+            <div className="card-grid">
               {counts.plants.map((plant) => (
                 <CollectionCard
                   key={plant.id}
@@ -502,7 +652,7 @@ function IdentityDetails({
                   </p>
                 </CollectionCard>
               ))}
-            </>
+            </div>
           ) : (
             <div className="empty-state">
               <p>No Plants or Plant groups use this identity.</p>
