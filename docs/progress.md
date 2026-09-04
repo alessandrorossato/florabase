@@ -4,6 +4,40 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-04 — PROPAGATION-002 verified
+
+- Added contextual BotanicalIdentity actions for preselected SeedLot creation, explicit source
+  SeedLot selection before Sowing, and explicit Sowing-versus-direct paths for Plants and PlantGroups.
+  Successful guided creation opens the new record while preserving visible links to its source and
+  identity context.
+- Added a two-stage SeedLot-to-Sowing workflow over the verified atomic API. It previews exact
+  subtraction, requires confirmation before mutation, keeps approximate remainders visibly editable,
+  preserves unknown quantities, suppresses incompatible arithmetic, offers no adjustment and valid
+  use-all choices, prevents duplicate submission, and retains entered data on API failure.
+- Added Sowing source and descendant summaries, explicit Plant/PlantGroup actions, operator-selected
+  resulting Sowing lifecycle defaulting to active, deliberate completion summaries, and derived
+  exact non-germinated counts only when the exact seed-count denominator permits them. Completed
+  Sowings remain available under Completed and All; failed and abandoned records remain under All.
+- Added a responsive, textual, clickable propagation-path component for stored lineage on Sowing and
+  propagated Plant/PlantGroup overviews. Identity aggregation is still labeled as non-lineage;
+  direct creation, retroactive entry, correction, and no-replay semantics remain unchanged. No
+  backend, schema, migration, OpenAPI, or generated declaration change was needed.
+- Focused verification: baseline 93 frontend tests passed before changes; Prettier and ESLint passed
+  across the frontend; strict TypeScript passed; and 63 focused frontend tests passed across the new
+  PROPAGATION-002 coverage and the affected identity, SeedLot, Sowing, and Plant screens. Generated
+  API drift and `git diff --check` passed. An isolated migrated Compose stack verified contextual
+  identity-to-SeedLot entry, exact SeedLot subtraction, atomic Sowing and Plant creation, returned
+  record navigation, stored propagation links and summaries, and the compact responsive layout in a
+  real browser. A one-shot full frontend run reached 96/98 before two existing SeedLot tests hit the
+  15-second limit under host contention; the complete SeedLot file then passed 14/14 in isolation and
+  again within the 63-test focused regression run.
+- Independent verification passed `make check` and `make ci`: workflow-helper checks;
+  backend/frontend formatting, lint, and strict type checks; 192 backend unit tests at 90.20%
+  coverage; 108 frontend tests; API declaration drift; 229 disposable PostgreSQL integration tests;
+  and production image builds. Browser QA at desktop and 390 × 844 verified the responsive,
+  authenticated BotanicalIdentity → SeedLot → Sowing → Plant workflow, exact partial-use preview,
+  explicit Sowing completion, source and descendant summaries, and clickable stored-lineage links.
+
 ## 2026-09-04 — PROPAGATION-001 verified
 
 - Added explicit atomic SeedLot-to-Sowing and Sowing-to-Plant/PlantGroup backend operations while
@@ -263,8 +297,8 @@ implementation detail.
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
   protected Plant/PlantGroup Event backend journal and detail-page timeline UI.
-- `PROPAGATION-001` is verified; `PROPAGATION-002` is the
-  next recommended P1 product increment;
+- `PROPAGATION-001` and `PROPAGATION-002` are verified; the next recommended P1 product increment
+  is decided by the machine-readable dependency graph;
   licensing/version policy and release readiness remain explicit later operator/product decisions.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.

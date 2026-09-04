@@ -8,6 +8,10 @@ export type PartialDate = components["schemas"]["PartialDate"];
 export type SeedQuantityInput = components["schemas"]["SeedQuantity-Input"];
 export type SeedLotLifecycle = components["schemas"]["SeedLotLifecycle"];
 export type SeedLotSourceKind = components["schemas"]["SeedLotSourceKind"];
+export type SeedLotSowingTransitionCreate =
+  components["schemas"]["SeedLotSowingTransitionCreate"];
+export type SeedLotSowingTransitionResponse =
+  components["schemas"]["SeedLotSowingTransitionResponse"];
 
 export function listSeedLots(signal?: AbortSignal): Promise<SeedLotResponse[]> {
   return requestJson("/api/v1/seed-lots", { signal });
@@ -22,6 +26,24 @@ export function createSeedLot(
     headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken },
     body: JSON.stringify(payload),
   });
+}
+
+export function createSowingFromSeedLot(
+  id: string,
+  payload: SeedLotSowingTransitionCreate,
+  csrfToken: string,
+): Promise<SeedLotSowingTransitionResponse> {
+  return requestJson(
+    `/api/v1/seed-lots/${encodeURIComponent(id)}/create-sowing`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": csrfToken,
+      },
+      body: JSON.stringify(payload),
+    },
+  );
 }
 
 export function updateSeedLot(

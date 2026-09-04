@@ -322,6 +322,10 @@ test("selection shows complete details without internal identifiers and opens co
   expect(detail).toHaveTextContent("World → Asia");
   expect(detail).toHaveTextContent("2024");
   expect(detail).not.toHaveTextContent("01900000");
+  expect(screen.getByRole("link", { name: "Start sowing" })).toHaveAttribute(
+    "href",
+    `#/sowings?action=start&seedLot=${lot().id}`,
+  );
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   expect(
     screen.getByRole("button", { name: "Save changes" }),

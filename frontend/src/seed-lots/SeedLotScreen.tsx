@@ -283,6 +283,16 @@ function RelatedSowings({ seedLotId }: { seedLotId: string }) {
           title={sowing.label ?? "Unlabelled Sowing"}
         >
           <p>{dateLabel(sowing.sowing_date)}</p>
+          <p>
+            {sowing.quantity
+              ? `${sowing.quantity.is_approximate ? "~" : ""}${sowing.quantity.value} ${sowing.quantity.kind === "seed_count" ? "seeds used" : `${sowing.quantity.unit ?? "weight"} used`}`
+              : "Quantity used not recorded"}
+          </p>
+          <p>
+            {sowing.germinated_count === null
+              ? "Germination not recorded"
+              : `${String(sowing.germinated_count)} germinated`}
+          </p>
           <p>{sowing.location?.display_path ?? "Location not recorded"}</p>
         </CollectionCard>
       ))}
@@ -309,6 +319,10 @@ function Detail({
       <Breadcrumbs
         items={[
           { label: "Seeds", href: "#/seeds" },
+          {
+            label: lot.botanical_identity.display_label,
+            href: `#/identities/${lot.botanical_identity.id}?tab=seeds`,
+          },
           { label: lot.label ?? lot.botanical_identity.display_label },
         ]}
       />
@@ -333,6 +347,21 @@ function Detail({
         editLabel="Edit seed lot"
         onEdit={onEdit}
       />
+      <div className="actions contextual-actions">
+        {lot.lifecycle === "active" ? (
+          <a
+            className="button-link"
+            href={`#/sowings?action=start&seedLot=${lot.id}`}
+          >
+            Start sowing
+          </a>
+        ) : (
+          <p className="field-help">
+            This historical SeedLot remains available for review. Source
+            adjustment requires an active lot.
+          </p>
+        )}
+      </div>
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
@@ -407,6 +436,16 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-sowings"
         >
+          {lot.lifecycle === "active" && (
+            <div className="actions contextual-actions">
+              <a
+                className="button-link"
+                href={`#/sowings?action=start&seedLot=${lot.id}`}
+              >
+                Start another sowing
+              </a>
+            </div>
+          )}
           <RelatedSowings seedLotId={lot.id} />
         </div>
       )}
@@ -426,9 +465,13 @@ function Detail({
 export function SeedLotScreen({
   initialId,
   initialTab,
+  initialIdentityId,
+  startCreating = false,
 }: {
   initialId?: string;
   initialTab?: string;
+  initialIdentityId?: string;
+  startCreating?: boolean;
 } = {}) {
   const auth = useAuth();
   const [inventory, setInventory] = useState<InventoryState>({
@@ -453,6 +496,7 @@ export function SeedLotScreen({
   const [contextSaving, setContextSaving] = useState(false);
   const feedback = useRef<HTMLDivElement>(null);
   const contextTrigger = useRef<HTMLElement | null>(null);
+  const contextualCreationStarted = useRef(false);
   const {
     expanded: creationExpanded,
     triggerRef: creationTriggerRef,
@@ -461,6 +505,21 @@ export function SeedLotScreen({
     close: closeCreation,
     focusFirst: focusCreation,
   } = useCreationDisclosure();
+
+  useEffect(() => {
+    if (!startCreating || !references || contextualCreationStarted.current)
+      return;
+    contextualCreationStarted.current = true;
+    setSelectedId(null);
+    setEditing(true);
+    setForm({
+      ...blankForm(),
+      botanicalIdentityId: initialIdentityId ?? "",
+    });
+    setMoreDetails(false);
+    setSave({ status: "idle" });
+    openCreation();
+  }, [initialIdentityId, openCreation, references, startCreating]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -644,6 +703,7 @@ export function SeedLotScreen({
           ? "Seed lot changes were saved."
           : "Seed lot was added to the collection.",
       });
+      if (wasCreating) window.location.hash = `/seeds/${lot.id}`;
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();

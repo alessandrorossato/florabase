@@ -121,8 +121,8 @@ individual. An exact PlantGroup contributes its current exact quantity; approxim
 PlantGroups are reported separately and never converted to exact individuals. This keeps extraction
 accounting coherent without a counter. Matching BotanicalIdentity values do not imply lineage.
 These concrete relationships do not automatically create Events, and no propagation-history table
-or redundant counter is persisted. Guided contextual controls belong to `PROPAGATION-002`;
-transferred or ceded Plant lifecycle belongs to `PLANT-005`.
+or redundant counter is persisted. Guided contextual controls expose this contract without adding a
+second lineage model; transferred or ceded Plant lifecycle belongs to `PLANT-005`.
 
 ### Plant
 
@@ -208,11 +208,26 @@ Location, Supplier, and custom GeographicPlace data have visible correction flow
 GeographicPlaces remain immutable by design, and lifecycle-bearing records retain their existing
 non-destructive lifecycle semantics.
 
-The current pages expose related information but do not yet provide a complete guided transition
-workflow. `PROPAGATION-001` supplies explicit typed backend operations for source quantity and
-lifecycle outcomes, while `PROPAGATION-002` remains responsible for contextual entry points,
-operator guidance, and cross-links. Existing rows remain authoritative and no quantity or completion
-transition is inferred from lineage alone.
+The collection pages provide a guided `BotanicalIdentity → SeedLot → Sowing → Plant / PlantGroup`
+entry path. Identity tabs preselect identity context but require the operator to choose a real
+SeedLot or Sowing before storing lineage. SeedLot-to-Sowing entry separates normal Sowing details
+from a visible source-effect confirmation: exact compatible quantities can show an authoritative
+subtraction preview, approximate remainders remain editable estimates, unknown quantities stay
+unknown, and incompatible dimensions do not offer arithmetic. No adjustment and use-all remain
+explicit choices governed by the backend contract.
+
+Sowing detail links its source and displays the authoritative descendant summary without converting
+approximate or unknown PlantGroups into exact individuals. Plant and PlantGroup creation asks for an
+explicit resulting Sowing lifecycle and defaults to keeping it active. Completing an exact
+seed-count Sowing can display `not germinated` as `quantity - germinated_count`; approximate,
+unknown, and weight-based Sowings do not fabricate that remainder. Completed Sowings remain
+clickable under the Completed and All filters, while failed and abandoned history remains reachable
+through All. The Sowing propagation view and the SeedLot and Plant/PlantGroup Lineage views
+visualize only stored lineage.
+
+Ordinary direct Plant/PlantGroup creation, retroactive entry, and all correction forms remain valid.
+Later corrections do not replay previous source effects or lifecycle choices. Rich dated germination
+observations remain deferred to `GERMINATION-001`.
 
 The intended product narrative is `BotanicalIdentity → SeedLot → Sowing → Plant / PlantGroup →
 Events / terminal state`. It is an interaction and comprehension direction over the explicit model,

@@ -35,7 +35,8 @@ readiness:
 
 1. `PROPAGATION-001`: define and expose explicit quantity accounting and lifecycle transitions
    across SeedLot, Sowing, and Plant/PlantGroup creation (verified);
-2. `PROPAGATION-002`: present those operations as guided contextual transitions and cross-links;
+2. `PROPAGATION-002`: present those operations as guided contextual transitions and cross-links
+   (verified);
 3. decide the operator-approved licensing and release/version policy;
 4. complete release readiness as a separate release increment.
 
@@ -43,9 +44,11 @@ readiness:
 operations distinguish no adjustment, partial use, and use-all; lock mutable sources; preserve
 exact, approximate, and unknown quantity semantics; make Sowing lifecycle outcomes explicit; and
 derive descendant accounting only from stored lineage. Corrections remain direct and do not replay
-past effects, and propagation does not automatically emit Events. `PROPAGATION-002` is the next P1
-increment and will supply natural next-step actions from relevant BotanicalIdentity, SeedLot, and
-Sowing contexts rather than adding disconnected create shortcuts.
+past effects, and propagation does not automatically emit Events. `PROPAGATION-002` now supplies
+natural next-step actions from BotanicalIdentity, SeedLot, and Sowing contexts, two-stage source
+usage confirmation, explicit Sowing outcomes, authoritative descendant summaries, and restrained
+clickable propagation paths. Direct creation and correction remain available, completed Sowings
+remain historical, and richer germination observations remain deferred.
 
 `CI-001` now supplies the repository-side pull-request verification and repeatable feature-branch
 workflow. The active `Protect main` ruleset requires its `quality`, `integration`, and `build` checks,

@@ -13,6 +13,175 @@
   text-rendering: optimizeLegibility;
 }
 
+.button-link {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--accent-strong, #315b43);
+  border-radius: 0.55rem;
+  padding: 0.55rem 0.85rem;
+  background: var(--accent-strong, #315b43);
+  color: white;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.button-link.button--secondary {
+  background: transparent;
+  color: inherit;
+}
+
+.contextual-actions {
+  margin-block: 1rem;
+}
+
+.contextual-workflow,
+.source-choice,
+.propagation-form,
+.quantity-effect,
+.estimate-editor,
+.completion-outcome,
+.propagation-path {
+  border: 1px solid var(--border, #cad7cd);
+  border-radius: 0.75rem;
+  background: var(--surface, #fff);
+  padding: 1rem;
+}
+
+.contextual-workflow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.source-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.source-choice .actions {
+  flex-wrap: wrap;
+}
+
+.propagation-workspace {
+  max-width: 68rem;
+  margin-inline: auto;
+}
+
+.propagation-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.guided-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.guided-form-grid .quantity-field,
+.guided-form-grid .field--full {
+  grid-column: 1 / -1;
+}
+
+.choice-cards {
+  display: grid;
+  gap: 0.65rem;
+  border: 0;
+  padding: 0;
+}
+
+.choice-cards > label {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  min-height: 3rem;
+  border: 1px solid var(--border, #cad7cd);
+  border-radius: 0.65rem;
+  padding: 0.75rem;
+  cursor: pointer;
+}
+
+.choice-cards > label:has(input:checked) {
+  border-color: var(--accent-strong, #315b43);
+  background: var(--accent-soft, #eef6f0);
+}
+
+.choice-cards span,
+.propagation-path-node {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.propagation-path ol {
+  display: grid;
+  gap: 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.propagation-path li {
+  position: relative;
+}
+
+.propagation-path li + li::before {
+  content: "Then";
+  position: absolute;
+  top: -1.15rem;
+  left: 0.25rem;
+  color: var(--muted, #526057);
+  font-size: 0.75rem;
+}
+
+.propagation-path-stage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.propagation-path-node {
+  min-width: 10rem;
+  border-left: 3px solid var(--accent-strong, #315b43);
+  padding: 0.5rem 0.75rem;
+  color: inherit;
+  text-decoration: none;
+}
+
+.completion-outcome dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+@media (max-width: 540px) {
+  .contextual-workflow,
+  .guided-form-grid,
+  .propagation-path-stage,
+  .completion-outcome dl {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .propagation-form,
+  .propagation-path,
+  .quantity-effect,
+  .estimate-editor,
+  .completion-outcome {
+    min-width: 0;
+  }
+
+  .propagation-form .actions > *,
+  .contextual-workflow .button-link {
+    width: 100%;
+  }
+}
+
 * {
   box-sizing: border-box;
 }

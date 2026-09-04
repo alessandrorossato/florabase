@@ -15,13 +15,14 @@ import {
   DetailHeader,
   DetailTabs,
 } from "../components/CollectionUI";
-import { LineagePanel } from "../lineage/LineagePanel";
 import { listLocations, type LocationResponse } from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
 import { listSeedLots, type SeedLotResponse } from "../seed-lots/api";
+import { PropagationPath } from "../propagation/PropagationPath";
 import {
   createSowing,
   getSowing,
+  getSowingPropagationSummary,
   listSowings,
   sowingValidationMessages,
   updateSowing,
@@ -29,6 +30,7 @@ import {
   type SowingCreate,
   type SowingLifecycle,
   type SowingResponse,
+  type SowingPropagationSummary,
 } from "./api";
 
 type CollectionState =
@@ -199,6 +201,26 @@ function Detail({
   onEdit: () => void;
   initialTab?: string;
 }) {
+  const [summary, setSummary] = useState<
+    | { status: "loading" }
+    | { status: "ready"; value: SowingPropagationSummary }
+    | { status: "error" }
+  >({ status: "loading" });
+  useEffect(() => {
+    const controller = new AbortController();
+    void getSowingPropagationSummary(sowing.id, controller.signal)
+      .then((value) => {
+        if (!Array.isArray(value.plants) || !Array.isArray(value.plant_groups))
+          throw new Error("Invalid propagation summary");
+        setSummary({ status: "ready", value });
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setSummary({ status: "error" });
+      });
+    return () => {
+      controller.abort();
+    };
+  }, [sowing.id]);
   const [tab, setTab] = useState(
     initialTab === "lineage" ? "lineage" : "overview",
   );
@@ -256,10 +278,24 @@ function Detail({
         editLabel="Edit Sowing"
         onEdit={onEdit}
       />
+      <div className="actions contextual-actions">
+        <a
+          className="button-link"
+          href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=plant`}
+        >
+          Create Plant
+        </a>
+        <a
+          className="button-link button--secondary"
+          href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=group`}
+        >
+          Create PlantGroup
+        </a>
+      </div>
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
-          { id: "lineage", label: "Lineage" },
+          { id: "lineage", label: "Propagation" },
         ]}
         selected={tab}
         onSelect={(next) => {
@@ -274,7 +310,7 @@ function Detail({
       {tab === "overview" && (
         <div className="detail-tab-panel overview-grid">
           <section aria-labelledby="sowing-origin-title">
-            <p className="eyebrow">Identity and origin</p>
+            <p className="eyebrow">Source</p>
             <h3 id="sowing-origin-title" tabIndex={-1} ref={headingRef}>
               {sowing.seed_lot.botanical_identity_display_label}
             </h3>
@@ -287,11 +323,96 @@ function Detail({
               <div>
                 <dt>Seed lot</dt>
                 <dd>
-                  {sowing.seed_lot.label ?? "Unlabelled lot"} ·{" "}
-                  {sowing.seed_lot.lifecycle}
+                  <a href={`#/seeds/${sowing.seed_lot.id}`}>
+                    {sowing.seed_lot.label ?? "Unlabelled lot"}
+                  </a>{" "}
+                  · {sowing.seed_lot.lifecycle}
                 </dd>
               </div>
             </dl>
+          </section>
+          <section className="field--full" aria-labelledby="descendants-title">
+            <h4 id="descendants-title">Tracked descendants</h4>
+            {summary.status === "loading" && (
+              <p role="status">Loading propagation summary…</p>
+            )}
+            {summary.status === "error" && (
+              <p className="notice notice--error">
+                Florabase could not load the propagation summary.
+              </p>
+            )}
+            {summary.status === "ready" && (
+              <>
+                <p className="descendant-total">
+                  <strong>
+                    {summary.value.exact_descendant_count} exact{" "}
+                    {summary.value.exact_descendant_count === 1
+                      ? "individual"
+                      : "individuals"}
+                  </strong>
+                </p>
+                {summary.value.approximate_plant_group_count > 0 && (
+                  <p>
+                    + {summary.value.approximate_plant_group_count} approximate
+                    Plant{" "}
+                    {summary.value.approximate_plant_group_count === 1
+                      ? "group"
+                      : "groups"}
+                  </p>
+                )}
+                {summary.value.unknown_plant_group_count > 0 && (
+                  <p>
+                    + {summary.value.unknown_plant_group_count} Plant{" "}
+                    {summary.value.unknown_plant_group_count === 1
+                      ? "group"
+                      : "groups"}{" "}
+                    with unknown quantity
+                  </p>
+                )}
+                {summary.value.plants.length +
+                  summary.value.plant_groups.length ===
+                  0 && (
+                  <p>No directly originating Plants or Plant groups yet.</p>
+                )}
+                <PropagationPath
+                  title="Propagation path"
+                  stages={[
+                    [
+                      {
+                        type: "Source SeedLot",
+                        label: sowing.seed_lot.label ?? "Unlabelled SeedLot",
+                        href: `#/seeds/${sowing.seed_lot.id}`,
+                        state: sowing.seed_lot.lifecycle,
+                      },
+                    ],
+                    [
+                      {
+                        type: "Current Sowing",
+                        label: sowing.label ?? "Unlabelled Sowing",
+                        href: `#/sowings/${sowing.id}`,
+                        state: sowing.lifecycle,
+                      },
+                    ],
+                    [
+                      ...summary.value.plants.map((plant) => ({
+                        type: "Plant",
+                        label: plant.label ?? "Unlabelled Plant",
+                        href: `#/plants/${plant.id}`,
+                        state: plant.lifecycle,
+                      })),
+                      ...summary.value.plant_groups.map((group) => ({
+                        type: "Plant group",
+                        label: group.label ?? "Unlabelled Plant group",
+                        href: `#/plant-groups/${group.id}`,
+                        state: group.quantity
+                          ? `${group.quantity.is_approximate ? "~" : ""}${String(group.quantity.value)} · ${group.lifecycle}`
+                          : `quantity unknown · ${group.lifecycle}`,
+                      })),
+                    ],
+                  ]}
+                />
+              </>
+            )}
           </section>
           <section aria-labelledby="sowing-facts-title">
             <h4 id="sowing-facts-title">Sowing</h4>
@@ -361,7 +482,53 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-lineage"
         >
-          <LineagePanel kind="sowings" id={sowing.id} />
+          {summary.status === "loading" && (
+            <p role="status">Loading propagation summary…</p>
+          )}
+          {summary.status === "error" && (
+            <p className="notice notice--error">
+              Florabase could not load the propagation summary.
+            </p>
+          )}
+          {summary.status === "ready" && (
+            <PropagationPath
+              title="Recorded propagation"
+              stages={[
+                [
+                  {
+                    type: "Source SeedLot",
+                    label: sowing.seed_lot.label ?? "Unlabelled SeedLot",
+                    href: `#/seeds/${sowing.seed_lot.id}`,
+                    state: sowing.seed_lot.lifecycle,
+                  },
+                ],
+                [
+                  {
+                    type: "Current Sowing",
+                    label: sowing.label ?? "Unlabelled Sowing",
+                    href: `#/sowings/${sowing.id}`,
+                    state: sowing.lifecycle,
+                  },
+                ],
+                [
+                  ...summary.value.plants.map((plant) => ({
+                    type: "Plant",
+                    label: plant.label ?? "Unlabelled Plant",
+                    href: `#/plants/${plant.id}`,
+                    state: plant.lifecycle,
+                  })),
+                  ...summary.value.plant_groups.map((group) => ({
+                    type: "Plant group",
+                    label: group.label ?? "Unlabelled Plant group",
+                    href: `#/plant-groups/${group.id}`,
+                    state: group.quantity
+                      ? `${group.quantity.is_approximate ? "~" : ""}${String(group.quantity.value)} · ${group.lifecycle}`
+                      : `quantity unknown · ${group.lifecycle}`,
+                  })),
+                ],
+              ]}
+            />
+          )}
         </div>
       )}
     </article>
@@ -386,7 +553,9 @@ export function SowingScreen({
   const [selectedId, setSelectedId] = useState<string | null>(
     initialId ?? null,
   );
-  const [filter, setFilter] = useState<"active" | "history" | "all">("active");
+  const [filter, setFilter] = useState<"active" | "completed" | "all">(
+    "active",
+  );
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState(false);
   const [mobileDetail, setMobileDetail] = useState(Boolean(initialId));
@@ -468,7 +637,7 @@ export function SowingScreen({
         filter === "all" ||
         (filter === "active"
           ? sowing.lifecycle === "active"
-          : sowing.lifecycle !== "active");
+          : sowing.lifecycle === "completed");
       const textMatch =
         !query ||
         [
@@ -733,7 +902,7 @@ export function SowingScreen({
             </div>
             <fieldset className="lifecycle-filter">
               <legend>Show Sowings</legend>
-              {(["active", "history", "all"] as const).map((item) => (
+              {(["active", "completed", "all"] as const).map((item) => (
                 <button
                   key={item}
                   type="button"
@@ -744,8 +913,8 @@ export function SowingScreen({
                 >
                   {item === "active"
                     ? "Active"
-                    : item === "history"
-                      ? "History"
+                    : item === "completed"
+                      ? "Completed"
                       : "All"}
                 </button>
               ))}
@@ -1165,6 +1334,50 @@ export function SowingScreen({
                       )}
                     </select>
                   </div>
+                  {form.lifecycle === "completed" && (
+                    <div
+                      className="completion-outcome field--full"
+                      aria-live="polite"
+                    >
+                      <h4>Final Sowing outcome</h4>
+                      {form.quantityKind === "seed_count" &&
+                      !form.quantityApproximate &&
+                      form.quantityValue !== "" &&
+                      form.germinatedCount !== "" &&
+                      Number(form.germinatedCount) <=
+                        Number(form.quantityValue) ? (
+                        <dl>
+                          <div>
+                            <dt>Sown</dt>
+                            <dd>{form.quantityValue}</dd>
+                          </div>
+                          <div>
+                            <dt>Germinated</dt>
+                            <dd>{form.germinatedCount}</dd>
+                          </div>
+                          <div>
+                            <dt>Not germinated</dt>
+                            <dd>
+                              {String(
+                                Number(form.quantityValue) -
+                                  Number(form.germinatedCount),
+                              )}
+                            </dd>
+                          </div>
+                        </dl>
+                      ) : (
+                        <p>
+                          The exact non-germinated remainder cannot be derived
+                          from the available quantity precision. You may still
+                          complete this Sowing.
+                        </p>
+                      )}
+                      <p className="field-help">
+                        Review the germinated count above before saving. No
+                        separate remainder is persisted.
+                      </p>
+                    </div>
+                  )}
                   <div className="field field--full">
                     <label htmlFor="sowing-notes">
                       Notes <span className="optional">(optional)</span>
