@@ -33,17 +33,19 @@ This is substantial pre-release functionality, not a declaration of a stable fir
 UAT of the verified collection core exposed a more immediate P1 product sequence before release
 readiness:
 
-1. `PROPAGATION-001`: decide explicit quantity accounting and lifecycle transitions across SeedLot,
-   Sowing, and Plant/PlantGroup creation;
-2. `PROPAGATION-002`: implement those decisions as guided contextual transitions and cross-links;
+1. `PROPAGATION-001`: define and expose explicit quantity accounting and lifecycle transitions
+   across SeedLot, Sowing, and Plant/PlantGroup creation (verified);
+2. `PROPAGATION-002`: present those operations as guided contextual transitions and cross-links;
 3. decide the operator-approved licensing and release/version policy;
 4. complete release readiness as a separate release increment.
 
-`PROPAGATION-001` is the recommended next implementation increment. It is deliberately a contract
-increment: total versus partial use, approximate or unknown quantities, active versus completed
-Sowings, transaction boundaries, and correction behavior must be understandable before application
-behavior is changed. `PROPAGATION-002` then supplies natural next-step actions from relevant
-BotanicalIdentity, SeedLot, and Sowing contexts rather than adding disconnected create shortcuts.
+`PROPAGATION-001` now implements the domain/backend contract without a migration: explicit focused
+operations distinguish no adjustment, partial use, and use-all; lock mutable sources; preserve
+exact, approximate, and unknown quantity semantics; make Sowing lifecycle outcomes explicit; and
+derive descendant accounting only from stored lineage. Corrections remain direct and do not replay
+past effects, and propagation does not automatically emit Events. `PROPAGATION-002` is the next P1
+increment and will supply natural next-step actions from relevant BotanicalIdentity, SeedLot, and
+Sowing contexts rather than adding disconnected create shortcuts.
 
 `CI-001` now supplies the repository-side pull-request verification and repeatable feature-branch
 workflow. The active `Protect main` ruleset requires its `quality`, `integration`, and `build` checks,

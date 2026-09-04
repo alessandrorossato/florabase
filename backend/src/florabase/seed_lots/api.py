@@ -13,6 +13,15 @@ from florabase.auth.dependencies import (
 from florabase.db.session import get_database_session
 from florabase.lineage.schemas import LineageResponse
 from florabase.lineage.service import LineageCycleError, lineage
+from florabase.propagation.schemas import (
+    SeedLotSowingTransitionCreate,
+    SeedLotSowingTransitionResponse,
+)
+from florabase.propagation.service import (
+    PropagationConflictError,
+    PropagationNotFoundError,
+    create_sowing_from_seed_lot,
+)
 from florabase.seed_lots.schemas import SeedLotCreate, SeedLotResponse, SeedLotUpdate
 from florabase.seed_lots.service import (
     SeedLotProjection,
@@ -22,6 +31,13 @@ from florabase.seed_lots.service import (
     list_seed_lots,
     responses,
     update_seed_lot,
+)
+from florabase.sowings.service import (
+    SowingReferenceNotFoundError,
+    get_sowing,
+)
+from florabase.sowings.service import (
+    responses as sowing_responses,
 )
 
 router = APIRouter(prefix="/seed-lots", tags=["seed-lots"])
@@ -42,6 +58,13 @@ def _reference_not_found(error: SeedLotReferenceNotFoundError) -> HTTPException:
 
 
 def _lineage_conflict(error: LineageCycleError) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail={"code": error.code, "message": error.message},
+    )
+
+
+def _propagation_conflict(error: PropagationConflictError) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_409_CONFLICT,
         detail={"code": error.code, "message": error.message},
@@ -88,6 +111,44 @@ def create(
         raise _lineage_conflict(error) from error
     response.headers["Location"] = f"/api/v1/seed-lots/{seed_lot.id}"
     return _response(database, seed_lot.id)
+
+
+@router.post(
+    "/{seed_lot_id}/create-sowing",
+    response_model=SeedLotSowingTransitionResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="createSowingFromSeedLot",
+)
+def create_sowing_transition(
+    seed_lot_id: UUID,
+    payload: SeedLotSowingTransitionCreate,
+    response: Response,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> SeedLotSowingTransitionResponse:
+    require_owner(actor)
+    try:
+        sowing, seed_lot = create_sowing_from_seed_lot(database, seed_lot_id, payload)
+    except PropagationNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": error.code, "message": error.message},
+        ) from error
+    except SowingReferenceNotFoundError as error:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={"code": error.code, "message": error.message},
+        ) from error
+    except PropagationConflictError as error:
+        raise _propagation_conflict(error) from error
+    sowing_projection = get_sowing(database, sowing.id)
+    if sowing_projection is None:
+        raise RuntimeError("Created Sowing could not be projected")
+    response.headers["Location"] = f"/api/v1/sowings/{sowing.id}"
+    return SeedLotSowingTransitionResponse(
+        sowing=sowing_responses(database, [sowing_projection])[0],
+        seed_lot=_response(database, seed_lot.id),
+    )
 
 
 @router.get("/{seed_lot_id}", response_model=SeedLotResponse, operation_id="getSeedLot")

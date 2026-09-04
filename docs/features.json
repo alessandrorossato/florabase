@@ -662,7 +662,7 @@
       ],
       "dependencies": ["LINEAGE-002", "EVENT-002"],
       "priority": "P1",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "PROPAGATION-002",
