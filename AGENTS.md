@@ -56,14 +56,16 @@ then complete the relevant full verification before marking a feature `verified`
 acceptance criterion, not merely satisfied dependencies.
 
 After meaningful work, update affected documentation and append or consolidate a concise
-`docs/progress.md` milestone with the exact checks and unresolved issues. Review `git diff` and
-`git diff --check` before staging. Stage only intentional files, inspect the staged diff, commit the
-feature branch, and push it normally. Open a pull request into `main` and, when authenticated and
-supported by repository rules, enable squash auto-merge. Never bypass pending or failed required
-checks, force-push, rewrite shared history, manually force a merge, or commit feature work directly
-to `main`. If GitHub CLI authentication is unavailable, leave the pushed branch intact and report
-the normal pull-request URL. After GitHub merges the PR, use `make feature-finish` for conservative
-local cleanup.
+`docs/progress.md` milestone with the exact checks and unresolved issues. Review the implementation
+and diff independently, fix ordinary defects, then use `make feature-verify` as the canonical final
+local gate; do not manually repeat its covered verification stages. Review the resulting final diff,
+stage only intentional files, inspect the staged diff, and create the reviewed local commit. When a
+task boundary is `READY_FOR_DELIVERY`, do not push or create a PR: the operator runs deterministic
+`make feature-deliver`. It pushes normally, reuses or creates the PR, and waits for protected squash
+auto-merge without bypassing checks. Never force-push, rewrite shared history, manually force a
+merge, or commit feature work directly to `main`. After delivery reports a merged PR, use `make
+feature-finish` for conservative local cleanup, then use `make dev-upgrade` only when delivery
+reported a migration.
 
 Before finishing, run relevant formatting, lint, typing, tests, integration, API drift, migration,
 build, and health checks proportional to the change. Report environmental limits exactly and never

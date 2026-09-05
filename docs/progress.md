@@ -4,6 +4,28 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-05 — CI-002 verified
+
+- Added `make feature-verify` as the final local feature gate. It validates the feature graph and
+  repository workflow helpers, runs the quality, disposable PostgreSQL integration, and production
+  build gates exactly once, checks both staged and unstaged whitespace errors, and stores an ignored
+  local tree receipt rather than changing application files or requiring a clean working tree.
+- Added conditional Alembic detection against the `origin/main` merge base. A branch with revision
+  files receives `previous main head → feature head → previous main head → feature head` in a uniquely
+  named Compose project backed by tmpfs PostgreSQL; non-migration branches skip that extra cycle.
+- Added fail-closed `make feature-deliver`: it requires a clean reviewed commit and expected Florabase
+  origin, refuses unsafe branch/history states, verifies the receipt, makes only a normal push, reuses
+  one open PR or creates one deterministic PR, enables exact-SHA squash auto-merge, polls current-SHA
+  `quality`, `integration`, and `build` checks with bounded startup/completion waits, and confirms the
+  merge and remote-head deletion. Failed terminal checks leave the branch and PR untouched with
+  `DELIVERY_BLOCKED`; a migration is reported only as a later `make dev-upgrade` reminder after
+  `make feature-finish`.
+- Focused no-network helper tests exercise verification success/failure and migration paths, clean
+  delivery preconditions, normal non-force push, PR creation/reuse, exact SHA auto-merge/checks,
+  action registration delay, failure/cancel/timeout handling, and remote-branch deletion. Canonical
+  `make feature-verify`, `make check`, `make ci`, and `git diff --check` passed; delivery was not run
+  against GitHub.
+
 ## 2026-09-05 — REVERSAL-001 verified
 
 - Added one closed relational `operation_receipts` representation for the six supported forward

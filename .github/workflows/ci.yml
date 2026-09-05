@@ -30,7 +30,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Test repository workflow helpers
-        run: make test-workflow-helpers
+        run: make test-workflow-helpers test-feature-workflow
       - name: Run formatting, lint, typing, unit, frontend, and API drift checks
         run: make check
 

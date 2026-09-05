@@ -54,6 +54,8 @@ remain historical, and richer germination observations remain deferred.
 `CI-001` now supplies the repository-side pull-request verification and repeatable feature-branch
 workflow. The active `Protect main` ruleset requires its `quality`, `integration`, and `build` checks,
 and repository merge settings permit squash auto-merge while disabling merge commits and rebases.
+`CI-002` makes the final feature verification and protected delivery mechanics deterministic while
+leaving independent implementation review as a human/model judgment.
 
 EVENT-001 covers practical movement, repotting, flowering, fruiting, pruning, treatment, harvest,
 death/loss/discarded, transfer, extraction, and free observations without separate speculative
