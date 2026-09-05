@@ -162,13 +162,21 @@ class FailingCommands(FakeCommands):
         return super().run(*command, capture=capture)
 
 
-def pr(number: int = 7, sha: str = "feature-sha", state: str = "OPEN", merge: str | None = None) -> str:
+def pr(
+    number: int = 7,
+    sha: str = "feature-sha",
+    state: str = "open",
+    merge: str | None = None,
+    head: str = "ci/ci-002",
+    base: str = "main",
+) -> str:
     return json.dumps(
         {
             "number": number,
             "node_id": "PR_node",
             "state": state,
-            "head": {"sha": sha},
+            "head": {"ref": head, "sha": sha},
+            "base": {"ref": base},
             "merge_commit_sha": merge,
             "html_url": "https://example.invalid/pr/7",
         }
@@ -311,6 +319,41 @@ class DeliveryTests(unittest.TestCase):
         )
         feature_deliver.Delivery(commands).push("ci/ci-002", "feature-sha")
         self.assertNotIn("--force", " ".join(part for call in commands.calls for part in call))
+
+    def test_lowercase_rest_open_state_is_accepted_for_created_and_reused_prs(self) -> None:
+        delivery = self.delivery()
+        api_calls: list[tuple[str, str]] = []
+        delivery.api = lambda endpoint, method="GET", fields=None: (  # type: ignore[method-assign]
+            api_calls.append((method, endpoint)) or ([] if method == "GET" else json.loads(pr(state="open")))
+        )
+        created = delivery.find_or_create_pr("ci/ci-002", "feature-sha", False)
+        self.assertEqual(created.state, "OPEN")
+        delivery.api = lambda endpoint, method="GET", fields=None: [json.loads(pr(state="oPeN"))]  # type: ignore[method-assign]
+        reused = delivery.find_or_create_pr("ci/ci-002", "feature-sha", False)
+        self.assertEqual(reused.state, "OPEN")
+        self.assertEqual(api_calls.count(("POST", "repos/alessandrorossato/florabase/pulls")), 1)
+
+    def test_closed_merged_and_mismatched_prs_are_ignored_when_matching_open_pr_exists(self) -> None:
+        delivery = self.delivery()
+        responses = [
+            json.loads(pr(number=4, state="closed")),
+            json.loads(pr(number=5, state="merged")),
+            json.loads(pr(number=6, state="open", head="ci/other")),
+            json.loads(pr(number=7, state="open", base="release")),
+            json.loads(pr(number=8, state="open", sha="feature-sha")),
+        ]
+        delivery.api = lambda endpoint, method="GET", fields=None: responses  # type: ignore[method-assign]
+        reused = delivery.find_or_create_pr("ci/ci-002", "feature-sha", False)
+        self.assertEqual(reused.number, 8)
+
+    def test_created_pr_with_wrong_head_or_base_is_rejected(self) -> None:
+        for kwargs in ({"head": "ci/wrong"}, {"base": "release"}):
+            delivery = self.delivery()
+            delivery.api = lambda endpoint, method="GET", fields=None, kwargs=kwargs: (  # type: ignore[method-assign]
+                [] if method == "GET" else json.loads(pr(**kwargs))
+            )
+            with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(feature_deliver.DeliveryError):
+                delivery.find_or_create_pr("ci/ci-002", "feature-sha", False)
 
     def test_auto_merge_uses_the_exact_delivery_sha(self) -> None:
         commands = FakeCommands({})

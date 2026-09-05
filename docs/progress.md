@@ -25,6 +25,11 @@ implementation detail.
   action registration delay, failure/cancel/timeout handling, and remote-branch deletion. Canonical
   `make feature-verify`, `make check`, `make ci`, and `git diff --check` passed; delivery was not run
   against GitHub.
+- The first real delivery created PR #19 but then rejected GitHub REST's lowercase `open` state.
+  Delivery now normalizes REST state on parsing and validates the returned open PR's head branch,
+  base branch, and exact delivery SHA for both reuse and creation. Regression fixtures cover lowercase
+  and mixed-case state, historical closed/merged entries, mismatched branch/base data, and follow-up
+  reuse without a duplicate PR.
 
 ## 2026-09-05 — REVERSAL-001 verified
 

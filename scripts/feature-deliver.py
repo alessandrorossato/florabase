@@ -30,6 +30,8 @@ class PullRequest:
     head_sha: str
     merge_sha: str | None
     html_url: str
+    head_ref: str = ""
+    base_ref: str = ""
 
 
 class Commands:
@@ -97,13 +99,16 @@ class Delivery:
     @staticmethod
     def pr_from(value: dict[str, Any]) -> PullRequest:
         head = value.get("head") or {}
+        base = value.get("base") or {}
         return PullRequest(
             number=int(value["number"]),
             node_id=str(value["node_id"]),
-            state=str(value["state"]),
+            state=str(value["state"]).strip().upper(),
             head_sha=str(head.get("sha", "")),
             merge_sha=value.get("merge_commit_sha"),
             html_url=str(value.get("html_url", "")),
+            head_ref=str(head.get("ref", "")),
+            base_ref=str(base.get("ref", "")),
         )
 
     def require(self, condition: bool, message: str) -> None:
@@ -165,23 +170,48 @@ class Delivery:
         )
         return title, body
 
+    def validate_open_pr(self, pr: PullRequest, branch: str, delivery_sha: str) -> None:
+        if pr.state != "OPEN":
+            fail(f"pull request #{pr.number} is not open", blocked=True)
+        if pr.head_ref != branch or pr.base_ref != "main":
+            fail(f"pull request #{pr.number} does not match {branch} into main", blocked=True)
+        if pr.head_sha != delivery_sha:
+            fail(
+                f"pull request #{pr.number} points to {pr.head_sha}, not delivery SHA {delivery_sha}",
+                blocked=True,
+            )
+
     def find_or_create_pr(self, branch: str, delivery_sha: str, migration: bool) -> PullRequest:
         pulls = self.api(
             f"repos/{REPOSITORY}/pulls?state=open&head=alessandrorossato:{branch}&base=main"
         )
         if not isinstance(pulls, list):
             fail("GitHub returned an invalid pull-request list", blocked=True)
-        if len(pulls) > 1:
+        matching = [
+            self.pr_from(value)
+            for value in pulls
+            if isinstance(value, dict)
+            and str(value.get("state", "")).strip().upper() == "OPEN"
+            and str((value.get("head") or {}).get("ref", "")) == branch
+            and str((value.get("base") or {}).get("ref", "")) == "main"
+        ]
+        if len(matching) > 1:
             fail(f"multiple open pull requests exist for {branch}", blocked=True)
-        if pulls:
-            return self.pr_from(pulls[0])
+        if matching:
+            pr = matching[0]
+            self.validate_open_pr(pr, branch, delivery_sha)
+            return pr
         title, body = self.title_and_body(branch, delivery_sha, migration)
         created = self.api(
             f"repos/{REPOSITORY}/pulls",
             method="POST",
             fields={"title": title, "head": branch, "base": "main", "body": body},
         )
-        return self.pr_from(created)
+        if not isinstance(created, dict):
+            fail("GitHub returned an invalid created pull request", blocked=True)
+        pr = self.pr_from(created)
+        self.validate_open_pr(pr, branch, delivery_sha)
+        return pr
 
     def enable_auto_merge(self, pr: PullRequest, delivery_sha: str) -> None:
         mutation = (
@@ -281,13 +311,7 @@ class Delivery:
         migration = self.migration_detected(base, delivery_sha)
         self.push(branch, delivery_sha)
         pr = self.find_or_create_pr(branch, delivery_sha, migration)
-        if pr.state != "OPEN":
-            fail(f"pull request #{pr.number} is not open", blocked=True)
-        if pr.head_sha != delivery_sha:
-            fail(
-                f"pull request #{pr.number} points to {pr.head_sha}, not delivery SHA {delivery_sha}",
-                blocked=True,
-            )
+        self.validate_open_pr(pr, branch, delivery_sha)
         self.enable_auto_merge(pr, delivery_sha)
         self.wait_for_checks(pr, delivery_sha)
         merged = self.wait_for_merge(pr, delivery_sha)
