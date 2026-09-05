@@ -701,7 +701,7 @@
       ],
       "dependencies": ["PROPAGATION-002", "PLANT-005"],
       "priority": "P1",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "PLANT-006",

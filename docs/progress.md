@@ -4,6 +4,31 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-05 — REVERSAL-001 verified
+
+- Added one closed relational `operation_receipts` representation for the six supported forward
+  operation kinds. Explicit source/result/Event foreign keys and per-kind database checks replace a
+  generic JSON payload; UUIDv7 identity, UTC creation time, applied/reversed status, adjustment mode,
+  lifecycle, and exact/approximate/unknown quantity state are retained.
+- Wired receipt creation into the existing locked SeedLot-to-Sowing, Sowing-to-Plant,
+  Sowing-to-PlantGroup, PlantGroup extraction, Plant transfer, and PlantGroup transfer transactions.
+  Exact and unit-bearing values are copied directly, estimates retain both recorded values, unknown
+  remains all-null, group extraction records actual stored before/after state, and later aggregate
+  correction does not rewrite the receipt.
+- Added a unique operation-owned Event relationship for extraction and transfer. Ordinary Events
+  retain non-replay edit/delete behavior; ordinary deletion of an operation-owned Event is rejected
+  until a future purpose-specific undo exists. No historical receipts are fabricated, no receipt
+  CRUD API is exposed, and no undo, reintegration, reverse mutation, or UI was added.
+- Added migration `20260905_0016`, immutable-original-facts enforcement with a separately mutable
+  future status, kind/payload constraints, focused unit/integration coverage, rollback injection,
+  losing-concurrency receipt counts, and the disposable downgrade/re-upgrade cycle.
+- Verification passed: canonical `make check` and `make ci`; workflow-helper checks; backend and
+  frontend formatting, lint, strict typing, unit and frontend suites; API/generated-contract drift;
+  all 238 disposable PostgreSQL integration tests including concurrency coverage; production backend
+  and frontend builds; and `git diff --check`. The migration cycle passed after widening the stored
+  transfer predecessor lifecycle constraint so the receipt schema never assumes that the captured
+  prior lifecycle is always `active`.
+
 ## 2026-09-05 — reversible domain-operation planning refinement
 
 - Audited the verified forward operations without changing application behavior. Exact SeedLot

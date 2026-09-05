@@ -22,6 +22,7 @@ from florabase.main import app
 from florabase.plants.model import Plant, PlantGroup
 from florabase.plants.schemas import PlantExtractionCreate
 from florabase.plants.service import PlantDomainConflictError, extract_plant
+from florabase.reversals.model import OperationReceipt
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import Sowing
 from florabase.suppliers.model import Supplier
@@ -918,8 +919,19 @@ def test_concurrent_exact_extraction_serializes_without_overdraw(
                 )
                 == successes
             )
+            assert (
+                database.scalar(
+                    select(func.count())
+                    .select_from(OperationReceipt)
+                    .where(OperationReceipt.plant_group_id == group_id)
+                )
+                == successes
+            )
     finally:
         with Session(database_engine) as database:
+            database.execute(
+                delete(OperationReceipt).where(OperationReceipt.plant_group_id == group_id)
+            )
             database.execute(delete(Event).where(Event.plant_group_id == group_id))
             database.execute(delete(Plant).where(Plant.originating_plant_group_id == group_id))
             database.execute(delete(PlantGroup).where(PlantGroup.id == group_id))

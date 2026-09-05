@@ -24,6 +24,7 @@ from florabase.events.service import (
 )
 from florabase.locations.model import Location
 from florabase.plants.model import Plant, PlantGroup
+from florabase.reversals.model import OperationReceipt
 
 
 def _targets() -> tuple[Plant, PlantGroup, Location, Location]:
@@ -82,6 +83,7 @@ def test_movement_create_updates_location_but_update_and_delete_do_not_reapply_o
     plant, _, old_location, destination = _targets()
     plant.location_id = old_location.id
     database = _database(plant, old_location, destination)
+    database.scalar.side_effect = [plant, None]
     event = service.create_event(
         database,
         "plant",
@@ -95,6 +97,16 @@ def test_movement_create_updates_location_but_update_and_delete_do_not_reapply_o
     service.delete_event(database, event)
     assert plant.location_id == destination.id
     database.delete.assert_called_once_with(event)
+
+
+def test_operation_owned_event_cannot_use_ordinary_delete() -> None:
+    plant, _, _, _ = _targets()
+    database = _database(plant)
+    database.scalar.return_value = uuid7()
+    with pytest.raises(EventDomainConflictError) as conflict:
+        service.delete_event(database, Event(id=uuid7(), plant_id=plant.id, kind="transfer"))
+    assert conflict.value.code == "operation_event_requires_undo"
+    database.delete.assert_not_called()
 
 
 def test_event_update_never_applies_lifecycle_side_effect() -> None:
@@ -132,7 +144,15 @@ def test_transfer_is_atomic_focused_action_and_preserves_group_quantity(
     assert event.recipient == "Community garden"
     assert event.occurred_on_precision == "month"
     assert database.scalar.call_args.args[0]._for_update_arg is not None
-    database.add.assert_called_once_with(event)
+    assert database.add.call_args_list[0].args == (event,)
+    receipt = database.add.call_args_list[1].args[0]
+    assert isinstance(receipt, OperationReceipt)
+    assert receipt.kind == f"{target_kind}_transfer"
+    assert receipt.before_lifecycle == "active"
+    assert receipt.after_lifecycle == "transferred"
+    if target_kind == "plant_group":
+        assert receipt.before_quantity_value == 7
+        assert receipt.after_quantity_value == 7
 
     with pytest.raises(EventDomainConflictError) as conflict:
         service.transfer_target(database, target_kind, target.id, TransferCreate())
@@ -162,7 +182,9 @@ def test_generic_extraction_is_rejected_and_transfer_history_does_not_replay() -
     transfer, _ = service.transfer_target(database, "plant", plant.id, TransferCreate())
     plant.lifecycle = "active"
     service.update_event(database, transfer, EventUpdate(kind="observation"))
-    service.delete_event(database, transfer)
+    with pytest.raises(EventDomainConflictError) as conflict:
+        service.delete_event(database, transfer)
+    assert conflict.value.code == "operation_event_requires_undo"
     assert plant.lifecycle == "active"
     service.update_event(database, event, EventUpdate(kind="observation"))
     assert plant.lifecycle == "active"

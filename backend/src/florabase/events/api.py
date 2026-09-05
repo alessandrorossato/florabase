@@ -175,5 +175,8 @@ def delete_one_event(
     database: Annotated[Session, Depends(get_database_session)],
 ) -> Response:
     require_owner(actor)
-    delete_event(database, _require_event(database, event_id).event)
+    try:
+        delete_event(database, _require_event(database, event_id).event)
+    except EventDomainConflictError as error:
+        raise _translate(error) from error
     return Response(status_code=status.HTTP_204_NO_CONTENT)
