@@ -40,6 +40,8 @@ import {
   listPlantGroups,
   listPlants,
   plantValidationMessages,
+  transferPlant,
+  transferPlantGroup,
   updatePlant,
   updatePlantGroup,
   type DirectOriginKind,
@@ -72,6 +74,10 @@ type SaveState =
   | { status: "error"; messages: string[] };
 type QuantityKind = "unknown" | "exact" | "approximate";
 type OriginMode = "direct" | "sowing";
+type TransferState =
+  | { status: "idle" }
+  | { status: "saving" }
+  | { status: "error"; message: string };
 
 interface References {
   identities: BotanicalIdentityResponse[];
@@ -100,12 +106,14 @@ interface FormState {
 
 const plantLifecycleLabels: Record<PlantLifecycle, string> = {
   active: "Active",
+  transferred: "Transferred",
   dead: "Dead",
   lost: "Lost",
   discarded: "Discarded",
 };
 const groupLifecycleLabels: Record<PlantGroupLifecycle, string> = {
   active: "Active",
+  transferred: "Transferred",
   completed: "Completed",
   dead: "Dead",
   lost: "Lost",
@@ -553,6 +561,8 @@ export function PlantScreen({
   const [selectedKey, setSelectedKey] = useState<string | null>(
     initialId ? `${initialKind}:${initialId}` : null,
   );
+  const routedKey = initialId ? `${initialKind}:${initialId}` : null;
+  const lastRoutedKey = useRef(routedKey);
   const [lifecycleFilter, setLifecycleFilter] = useState<
     "active" | "history" | "all"
   >("active");
@@ -568,10 +578,20 @@ export function PlantScreen({
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [extractionSource, setExtractionSource] =
     useState<PlantGroupResponse | null>(null);
+  const [transferTarget, setTransferTarget] = useState<PlantRecord | null>(
+    null,
+  );
+  const [transferDate, setTransferDate] = useState<PartialDate | null>(null);
+  const [transferRecipient, setTransferRecipient] = useState("");
+  const [transferNotes, setTransferNotes] = useState("");
+  const [transferState, setTransferState] = useState<TransferState>({
+    status: "idle",
+  });
   const feedback = useRef<HTMLDivElement>(null);
   const detailHeading = useRef<HTMLHeadingElement>(null);
   const extractionHeading = useRef<HTMLHeadingElement>(null);
   const extractionTrigger = useRef<HTMLButtonElement | null>(null);
+  const transferDialog = useRef<HTMLDivElement | null>(null);
   const selectedTrigger = useRef<HTMLButtonElement | null>(null);
   const contextualCreationStarted = useRef(false);
   const {
@@ -582,6 +602,24 @@ export function PlantScreen({
     close: closeCreation,
     focusFirst: focusCreation,
   } = useCreationDisclosure();
+
+  useEffect(() => {
+    if (!routedKey || routedKey === lastRoutedKey.current) return;
+    lastRoutedKey.current = routedKey;
+    if (routedKey === selectedKey) return;
+    const timeout = window.setTimeout(() => {
+      setExtractionSource(null);
+      setDetail({ status: "loading", key: routedKey });
+      setSelectedKey(routedKey);
+      setMobileDetail(true);
+      setEditing(false);
+      setCreationKind(null);
+      setSave({ status: "idle" });
+    }, 0);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [routedKey, selectedKey]);
 
   useEffect(() => {
     if (!startCreating || !references || contextualCreationStarted.current)
@@ -832,6 +870,76 @@ export function PlantScreen({
     setMoreDetails(true);
     setEditing(true);
     setSave({ status: "idle" });
+  }
+
+  function startTransfer(record: PlantRecord) {
+    setTransferTarget(record);
+    setTransferDate(null);
+    setTransferRecipient("");
+    setTransferNotes("");
+    setTransferState({ status: "idle" });
+  }
+
+  async function submitTransfer(event: SyntheticEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!transferTarget || transferState.status === "saving") return;
+    setTransferState({ status: "saving" });
+    try {
+      const payload = {
+        occurred_on: transferDate,
+        recipient: transferRecipient.trim() || null,
+        notes: transferNotes.trim() || null,
+      };
+      let authoritative: PlantRecord;
+      if (transferTarget.kind === "plant") {
+        const result = await transferPlant(
+          transferTarget.value.id,
+          payload,
+          csrfToken,
+        );
+        authoritative = { kind: "plant", value: result.plant };
+      } else {
+        const result = await transferPlantGroup(
+          transferTarget.value.id,
+          payload,
+          csrfToken,
+        );
+        authoritative = { kind: "group", value: result.plant_group };
+      }
+      const [plants, groups] = await Promise.all([
+        listPlants(),
+        listPlantGroups(),
+      ]);
+      setCollection({
+        status: "ready",
+        records: [
+          ...plants.map((value): PlantRecord => ({ kind: "plant", value })),
+          ...groups.map((value): PlantRecord => ({ kind: "group", value })),
+        ],
+      });
+      setDetail({ status: "ready", record: authoritative });
+      setSelectedKey(recordKey(authoritative));
+      setTransferTarget(null);
+      setSave({
+        status: "success",
+        message:
+          authoritative.kind === "plant"
+            ? "Plant was transferred and remains available in history."
+            : "The entire Plant group was transferred and remains available in history.",
+      });
+    } catch (error: unknown) {
+      if (error instanceof ApiError && error.status === 401) {
+        auth.sessionExpired();
+        return;
+      }
+      setTransferState({
+        status: "error",
+        message:
+          error instanceof ApiError && error.status === 409
+            ? "This record is no longer active. Reload it before trying again."
+            : "Florabase could not transfer this record. Check the details and try again.",
+      });
+    }
   }
 
   function updateForm<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -1749,6 +1857,7 @@ export function PlantScreen({
           ) : selected ? (
             <div className="selected-seed selected-plant">
               <Detail
+                key={`${recordKey(selected)}:${selected.value.updated_at}`}
                 record={selected}
                 sowings={references.sowings}
                 locations={references.locations}
@@ -1762,6 +1871,19 @@ export function PlantScreen({
                 initialTab={initialTab}
               />
               <div className="actions">
+                {selected.value.lifecycle === "active" && (
+                  <button
+                    type="button"
+                    className="button--secondary"
+                    onClick={() => {
+                      startTransfer(selected);
+                    }}
+                  >
+                    {selected.kind === "plant"
+                      ? "Transfer / Cedi"
+                      : "Transfer group / Cedi gruppo"}
+                  </button>
+                )}
                 {selected.kind === "group" &&
                   (selected.value.lifecycle === "active" ? (
                     <button
@@ -1779,6 +1901,13 @@ export function PlantScreen({
                     </p>
                   ))}
               </div>
+              {selected.kind === "group" &&
+                selected.value.lifecycle === "active" && (
+                  <p className="field-help">
+                    To transfer only one individual, extract it as a Plant
+                    first.
+                  </p>
+                )}
             </div>
           ) : (
             <div className="selected-seed seed-detail-empty">
@@ -1788,6 +1917,132 @@ export function PlantScreen({
           )}
         </section>
       </div>
+      {transferTarget && (
+        <div
+          className="dialog-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (
+              event.target === event.currentTarget &&
+              transferState.status !== "saving"
+            )
+              setTransferTarget(null);
+          }}
+        >
+          <div
+            className="context-dialog event-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="transfer-title"
+            ref={transferDialog}
+            onKeyDown={(event) => {
+              if (event.key === "Escape" && transferState.status !== "saving") {
+                setTransferTarget(null);
+                return;
+              }
+              if (event.key !== "Tab" || !transferDialog.current) return;
+              const focusable = Array.from(
+                transferDialog.current.querySelectorAll<HTMLElement>(
+                  "button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])",
+                ),
+              );
+              const first = focusable.at(0);
+              const last = focusable.at(-1);
+              if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last?.focus();
+              } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first?.focus();
+              }
+            }}
+          >
+            <h3 id="transfer-title">
+              {transferTarget.kind === "plant"
+                ? "Transfer / Cedi"
+                : "Transfer group / Cedi gruppo"}
+            </h3>
+            <p>
+              {transferTarget.kind === "plant"
+                ? "This Plant will leave the active collection but remain fully available in history."
+                : "The entire Plant group will leave the active collection. Its quantity and historical record will be preserved."}
+            </p>
+            {transferTarget.kind === "group" && (
+              <p className="notice">
+                There is no partial group transfer. To transfer one individual,
+                cancel and extract it as a Plant first.
+              </p>
+            )}
+            <form
+              className="event-form"
+              onSubmit={(event) => void submitTransfer(event)}
+            >
+              <PartialDateField
+                id="transfer-date"
+                label="Transfer date"
+                value={transferDate}
+                disabled={transferState.status === "saving"}
+                onChange={setTransferDate}
+              />
+              <div className="field">
+                <label htmlFor="transfer-recipient">
+                  Recipient <span className="optional">(optional)</span>
+                </label>
+                <input
+                  id="transfer-recipient"
+                  autoFocus
+                  maxLength={255}
+                  value={transferRecipient}
+                  disabled={transferState.status === "saving"}
+                  onChange={(event) => {
+                    setTransferRecipient(event.currentTarget.value);
+                  }}
+                />
+              </div>
+              <div className="field">
+                <label htmlFor="transfer-notes">
+                  Notes <span className="optional">(optional)</span>
+                </label>
+                <textarea
+                  id="transfer-notes"
+                  value={transferNotes}
+                  disabled={transferState.status === "saving"}
+                  onChange={(event) => {
+                    setTransferNotes(event.currentTarget.value);
+                  }}
+                />
+              </div>
+              {transferState.status === "error" && (
+                <div className="notice notice--error" role="alert">
+                  {transferState.message}
+                </div>
+              )}
+              <div className="actions">
+                <button
+                  type="submit"
+                  disabled={transferState.status === "saving"}
+                >
+                  {transferState.status === "saving"
+                    ? "Transferring…"
+                    : transferTarget.kind === "plant"
+                      ? "Transfer Plant"
+                      : "Transfer entire group"}
+                </button>
+                <button
+                  type="button"
+                  className="button--secondary"
+                  disabled={transferState.status === "saving"}
+                  onClick={() => {
+                    setTransferTarget(null);
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

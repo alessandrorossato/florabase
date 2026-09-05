@@ -75,9 +75,16 @@ def test_plant_defaults_uuidv7_and_exact_vocabularies() -> None:
         "other",
         "unknown",
     }
-    assert {item.value for item in PlantLifecycle} == {"active", "dead", "lost", "discarded"}
+    assert {item.value for item in PlantLifecycle} == {
+        "active",
+        "transferred",
+        "dead",
+        "lost",
+        "discarded",
+    }
     assert {item.value for item in PlantGroupLifecycle} == {
         "active",
+        "transferred",
         "completed",
         "dead",
         "lost",

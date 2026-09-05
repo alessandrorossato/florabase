@@ -14,6 +14,9 @@ def test_minimum_origin_defaults_and_text_normalization() -> None:
     assert plant.lifecycle == "active"
     assert group.direct_origin_kind == "unknown"
     assert group.quantity is None
+    assert PlantCreate(botanical_identity_id=IDENTITY_ID, lifecycle="transferred").lifecycle == (
+        "transferred"
+    )
     full = PlantCreate(
         botanical_identity_id=IDENTITY_ID,
         direct_origin_kind="other",
@@ -54,11 +57,14 @@ def test_sowing_and_direct_origin_are_exclusive() -> None:
         ("active", None, True),
         ("active", {"value": 12, "is_approximate": False}, True),
         ("lost", {"value": 8, "is_approximate": True}, True),
+        ("transferred", {"value": 8, "is_approximate": False}, True),
+        ("transferred", None, True),
         ("completed", {"value": 0, "is_approximate": False}, True),
         ("dead", {"value": 0, "is_approximate": False}, True),
         ("discarded", {"value": 0, "is_approximate": False}, True),
         ("active", {"value": 0, "is_approximate": False}, False),
         ("lost", {"value": 0, "is_approximate": False}, False),
+        ("transferred", {"value": 0, "is_approximate": False}, False),
         ("dead", {"value": 0, "is_approximate": True}, False),
         ("active", {"value": -1, "is_approximate": False}, False),
         ("active", {"value": 1.5, "is_approximate": False}, False),

@@ -220,7 +220,7 @@ def test_extraction_service_locks_inherits_decrements_and_preserves_put_origin()
     group.lifecycle = "active"
     database = database_with_references((identity, location))
     database.scalar.return_value = group
-    extracted, updated_group = service.extract_plant(
+    extracted, updated_group, extraction_event = service.extract_plant(
         database, group.id, PlantExtractionCreate(label="Chosen")
     )
     assert extracted.originating_plant_group_id == group.id
@@ -229,8 +229,11 @@ def test_extraction_service_locks_inherits_decrements_and_preserves_put_origin()
     assert extracted.direct_origin_kind is None
     assert updated_group.quantity_value == 0
     assert updated_group.lifecycle == "completed"
-    database.add.assert_called_once_with(extracted)
-    database.flush.assert_called()
+    assert extraction_event.kind == "extraction"
+    assert extraction_event.plant_group_id == group.id
+    assert extraction_event.resulting_plant_id == extracted.id
+    assert database.add.call_args_list == [((extracted,),), ((extraction_event,),)]
+    assert database.flush.call_count == 2
 
     extracted.id = plant.id
     allowed = PlantUpdate(

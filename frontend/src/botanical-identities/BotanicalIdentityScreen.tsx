@@ -371,6 +371,20 @@ function IdentityDetails({
                 >
                   Plants
                 </button>
+                <small>
+                  {String(
+                    counts.plants.filter(
+                      ({ lifecycle }) => lifecycle === "active",
+                    ).length,
+                  )}{" "}
+                  active ·{" "}
+                  {String(
+                    counts.plants.filter(
+                      ({ lifecycle }) => lifecycle === "transferred",
+                    ).length,
+                  )}{" "}
+                  transferred
+                </small>
               </CollectionCard>
               <CollectionCard
                 eyebrow="Records"
@@ -385,6 +399,20 @@ function IdentityDetails({
                 >
                   Plant groups
                 </button>
+                <small>
+                  {String(
+                    counts.plant_groups.filter(
+                      ({ lifecycle }) => lifecycle === "active",
+                    ).length,
+                  )}{" "}
+                  active ·{" "}
+                  {String(
+                    counts.plant_groups.filter(
+                      ({ lifecycle }) => lifecycle === "transferred",
+                    ).length,
+                  )}{" "}
+                  transferred
+                </small>
               </CollectionCard>
             </div>
           )}

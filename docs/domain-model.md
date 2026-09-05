@@ -120,15 +120,18 @@ PlantGroup-extraction links. Every Plant with that explicit ancestry contributes
 individual. An exact PlantGroup contributes its current exact quantity; approximate and unknown
 PlantGroups are reported separately and never converted to exact individuals. This keeps extraction
 accounting coherent without a counter. Matching BotanicalIdentity values do not imply lineage.
-These concrete relationships do not automatically create Events, and no propagation-history table
-or redundant counter is persisted. Guided contextual controls expose this contract without adding a
-second lineage model; transferred or ceded Plant lifecycle belongs to `PLANT-005`.
+Propagation transitions do not automatically create Events, and no propagation-history table or
+redundant counter is persisted. PlantGroup extraction is the narrow exception: its authoritative
+operation records an extraction Event with a structured resulting-Plant link without adding a
+second lineage model.
 
 ### Plant
 
 A Plant is exactly one individually tracked specimen and never has quantity. It requires its own
 BotanicalIdentity and may have a label, precision-preserved collection-entry date, current Location,
-notes, and active, dead, lost, or discarded lifecycle.
+notes, and active, transferred, dead, lost, or discarded lifecycle. Transferred means the living
+specimen left the currently held collection; its historical record, last Location, provenance,
+lineage, labels, notes, and Events remain.
 
 Its immediate origin is exactly one of:
 
@@ -144,50 +147,65 @@ detach or replace an extraction origin.
 
 A PlantGroup represents multiple individuals of one BotanicalIdentity intentionally managed as one
 record. It shares Plant's optional label, collection-entry date, Location, notes, Sowing-or-direct
-origin, and provenance fields. Lifecycle is active, completed, dead, lost, or discarded.
+origin, and provenance fields. Lifecycle is active, transferred, completed, dead, lost, or
+discarded. Transfer always applies to the entire managed group and preserves its historical
+quantity. To transfer one individual, the operator first extracts it as a Plant and then transfers
+that Plant; direct partial-group transfer and decrement-on-transfer do not exist.
 
 Quantity is unknown or an exact/approximate whole count. Zero is allowed only as exact historical
 quantity for completed, dead, or discarded groups. A dedicated active-group extraction transaction
 creates one Plant with the group as immutable immediate origin. Exact quantities decrement; the last
 exact member completes the group. Approximate and unknown quantities remain unchanged because
-subtracting one would imply false precision.
+subtracting one would imply false precision. The same transaction creates an extraction Event on
+the source PlantGroup with a restrictive structured reference to the resulting Plant.
 
 ### Event
 
 An Event is an explicitly recorded historical occurrence for exactly one Plant or PlantGroup. It
 has a UUIDv7 identity, a controlled kind, an optional year/month/day-precision occurrence date,
 optional notes, and exact UTC creation/update timestamps. The initial vocabulary is observation,
-movement, repotting, flowering, fruiting, pruning, treatment, harvest, death, loss, discarded, and
-other. Collection observations remain separate from BotanicalProfile reference knowledge.
+movement, repotting, flowering, fruiting, pruning, treatment, harvest, extraction, transfer, death,
+loss, discarded, and other. Collection observations remain separate from BotanicalProfile reference
+knowledge.
 
 Movement additionally requires one destination Location. Creating a movement Event atomically
 updates the target's current Location. Creating death, loss, or discarded Events atomically updates
 the target's lifecycle to dead, lost, or discarded, subject to the existing PlantGroup quantity and
-lifecycle invariant. Target rows are locked for these state-changing transactions. Events remain
+lifecycle invariant. A focused transfer action locks a Plant or PlantGroup and atomically creates a
+transfer Event and sets lifecycle to transferred. Transfer may carry a partial occurrence date,
+optional free-text recipient, and notes; recipient is not a Supplier, Location, or GeographicPlace.
+Target rows are locked for these state-changing transactions. Events remain
 usable for inactive targets, and restrictive foreign keys preserve history when targets or movement
 destinations are referenced.
 
 Florabase is not event-sourced. The Plant or PlantGroup row is authoritative current state, and only
-initial Event creation applies a side effect. Correcting an Event's kind, partial date, notes, or
-movement destination changes history only; editing or deleting an Event never replays, reverses, or
-recomputes current Location or lifecycle. Ordinary Plant/PlantGroup edits do not create Events.
+initial Event creation applies a side effect. Correcting an Event's kind, partial date, notes,
+movement destination, recipient, or extraction result changes history only; editing or deleting an
+Event never replays, reverses, or recomputes current Location, lifecycle, quantity, lineage, or
+resulting Plant. Ordinary Plant/PlantGroup edits do not create Events and remain the correction path
+for current lifecycle.
 
 Plant and PlantGroup detail pages expose the same protected Event journal. Desktop presents the
 API-ordered history as a vertical timeline, while narrow screens use compact wrapping cards. The UI
 supports All, Observations (observation, flowering, fruiting), Cultivation (movement, repotting,
-pruning, treatment, harvest), and Status (death, loss, discarded) filters; `other` remains in All.
+pruning, treatment, harvest, extraction), and Status (transfer, death, loss, discarded) filters;
+`other` remains in All.
 Creation explains current-state effects, and correction/deletion explains the non-event-sourced
 boundary. A protected global Event read endpoint uses the same deterministic ordering and includes
 target and BotanicalIdentity summaries. The collection-wide Events page applies the same filters and
-links each item to its Plant or PlantGroup Event context. Structured per-kind payloads beyond
-movement destination and Event attachments are deferred.
+links each item to its Plant or PlantGroup Event context. Generic Event creation cannot fabricate an
+extraction; only the authoritative extraction operation creates one and its resulting-Plant link.
+Structured per-kind payloads beyond movement destination, transfer recipient, and the extraction
+result are deferred.
 
 ## Collection information architecture
 
 The authenticated application opens on a Dashboard backed by one focused aggregate endpoint. It
 reports authoritative counts for active Plants, active PlantGroups, active SeedLots, active Sowings,
 all BotanicalIdentities, and all Events, plus the six most recent Events. These are current overview
-counts, not the analytical/statistical definitions planned for `DASHBOARD-001`.
+counts, not the analytical/statistical definitions planned for `DASHBOARD-001`; transferred Plants
+and PlantGroups are excluded from the active counts while remaining in historical lists and identity
+aggregation.
 
 Desktop navigation groups Dashboard, the Plants/Seeds/Sowings/Events collection workflows,
 Botanical identities, and Location/Supplier/GeographicPlace reference data in a persistent sidebar.
@@ -196,6 +214,8 @@ same secondary destinations.
 
 BotanicalIdentity is a collection hub with Overview, Seeds, Sowings, Plants, and Events tabs. Its
 Plants tab intentionally combines Plant and PlantGroup cards while labeling their distinct types.
+The overview separates active and transferred Plant and PlantGroup counts rather than treating
+transferred material as currently held.
 The hub uses stored identity relationships only: a Sowing belongs through its required SeedLot and
 Events belong through their current Plant or PlantGroup target. This aggregation never creates a
 lineage edge. Dedicated record details link back to the identity hub and retain their explicit
@@ -289,8 +309,6 @@ product workflows preserve historical rows rather than hard-deleting them.
 Event attachments, richer structured Event payloads, attachment/photo
 storage, richer germination observations, Orders, other propagation material, advanced search,
 analytical dashboards, contextual form help, import/export, PWA installability, enrichment, taxonomy
-reconciliation, guided propagation UI, a transferred/ceded Plant outcome, scope-aware
+reconciliation, scope-aware
 Location browsing, richer Supplier summaries, reminders, weather, and multi-user ownership remain
-planned. A transferred/ceded outcome is expected to coordinate lifecycle with an Event; whether it
-also applies to PlantGroup remains an explicit future decision. `docs/features.json` is the detailed
-source for dependencies and acceptance criteria.
+planned. `docs/features.json` is the detailed source for dependencies and acceptance criteria.

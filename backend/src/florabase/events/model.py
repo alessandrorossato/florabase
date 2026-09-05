@@ -6,6 +6,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
     SmallInteger,
     String,
@@ -30,6 +31,8 @@ class EventKind(StrEnum):
     PRUNING = "pruning"
     TREATMENT = "treatment"
     HARVEST = "harvest"
+    EXTRACTION = "extraction"
+    TRANSFER = "transfer"
     DEATH = "death"
     LOSS = "loss"
     DISCARDED = "discarded"
@@ -45,7 +48,8 @@ class Event(Base):
         ),
         CheckConstraint(
             "kind IN ('observation', 'movement', 'repotting', 'flowering', 'fruiting', "
-            "'pruning', 'treatment', 'harvest', 'death', 'loss', 'discarded', 'other')",
+            "'pruning', 'treatment', 'harvest', 'extraction', 'transfer', 'death', 'loss', "
+            "'discarded', 'other')",
             name="ck_events_kind",
         ),
         CheckConstraint(
@@ -66,6 +70,24 @@ class Event(Base):
             "((kind = 'movement' AND destination_location_id IS NOT NULL) OR "
             "(kind <> 'movement' AND destination_location_id IS NULL)) IS TRUE",
             name="ck_events_movement_destination",
+        ),
+        CheckConstraint(
+            "recipient IS NULL OR (kind = 'transfer' AND char_length(recipient) BETWEEN 1 AND 255 "
+            "AND recipient = regexp_replace(btrim(recipient), '[[:space:]]+', ' ', 'g') "
+            "AND recipient !~ '[[:cntrl:]]')",
+            name="ck_events_transfer_recipient",
+        ),
+        CheckConstraint(
+            "((kind = 'extraction' AND plant_group_id IS NOT NULL AND "
+            "resulting_plant_id IS NOT NULL) OR "
+            "(kind <> 'extraction' AND resulting_plant_id IS NULL)) IS TRUE",
+            name="ck_events_extraction_result",
+        ),
+        ForeignKeyConstraint(
+            ["resulting_plant_id", "plant_group_id"],
+            ["plants.id", "plants.originating_plant_group_id"],
+            name="fk_events_resulting_plant_source_group",
+            ondelete="RESTRICT",
         ),
         CheckConstraint(
             "notes IS NULL OR (char_length(notes) BETWEEN 1 AND 20000 AND notes = btrim(notes) "
@@ -89,6 +111,10 @@ class Event(Base):
     notes: Mapped[str | None] = mapped_column(Text(), nullable=True)
     destination_location_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("locations.id", ondelete="RESTRICT"), nullable=True
+    )
+    recipient: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    resulting_plant_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("plants.id", ondelete="RESTRICT"), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
@@ -115,3 +141,4 @@ Index(
     Event.id,
 )
 Index("ix_events_destination_location_id", Event.destination_location_id)
+Index("ix_events_resulting_plant_id", Event.resulting_plant_id)

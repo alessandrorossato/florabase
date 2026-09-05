@@ -170,12 +170,16 @@ function journalEvent(kind: string, overrides: Record<string, unknown> = {}) {
       id: plantId,
       label: "Avocado #1",
       lifecycle: "active",
+      botanical_identity: { id: identityId, display_label: "Persea americana" },
     },
     kind,
     occurred_on: null,
     notes: null,
     destination_location_id: null,
     destination_location: null,
+    recipient: null,
+    resulting_plant_id: null,
+    resulting_plant: null,
     created_at: "2026-09-02T10:00:00Z",
     updated_at: "2026-09-02T10:00:00Z",
     ...overrides,
@@ -191,6 +195,8 @@ const eventKinds: Record<string, string> = {
   pruning: "Pruning",
   treatment: "Treatment",
   harvest: "Harvest",
+  extraction: "Extraction",
+  transfer: "Transfer",
   death: "Death",
   loss: "Loss",
   discarded: "Discarded",
@@ -1133,6 +1139,152 @@ test("source PlantGroup context is searchable for extracted Plants", async () =>
   ).toBeInTheDocument();
 });
 
+test("explicit Plant transfer records recipient and keeps the historical detail open", async () => {
+  let plants = [plant()];
+  const events: Record<string, unknown>[] = [];
+  mockApi(
+    plantHandler(plants, [], (path, init) => {
+      if (
+        path === `/api/v1/plants/${plantId}/transfer` &&
+        init?.method === "POST"
+      ) {
+        const payload = body(init);
+        expect(payload).toMatchObject({
+          occurred_on: { precision: "year", year: 2026 },
+          recipient: "Community garden",
+          notes: "Healthy handoff.",
+        });
+        plants = [
+          plant({
+            lifecycle: "transferred",
+            updated_at: "2026-09-04T12:00:00Z",
+          }),
+        ];
+        const event = journalEvent("transfer", {
+          target: {
+            type: "plant",
+            id: plantId,
+            label: "Avocado #1",
+            lifecycle: "transferred",
+            botanical_identity: {
+              id: identityId,
+              display_label: "Persea americana",
+            },
+          },
+          occurred_on: payload.occurred_on,
+          recipient: payload.recipient,
+          notes: payload.notes,
+        });
+        events.push(event);
+        return json({ plant: plants[0], event }, 201);
+      }
+      if (path === "/api/v1/plants" && (!init?.method || init.method === "GET"))
+        return json(plants);
+      if (path === `/api/v1/plants/${plantId}/events`) return json(events);
+      if (path === `/api/v1/plants/${plantId}`) return json(plants[0]);
+      return undefined;
+    }),
+  );
+  const user = await openPlants();
+  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(screen.getByRole("button", { name: "Transfer / Cedi" }));
+  expect(
+    screen.getByText(/remain fully available in history/),
+  ).toBeInTheDocument();
+  await user.selectOptions(screen.getByLabelText("Precision"), "year");
+  await user.clear(screen.getByLabelText("Year"));
+  await user.type(screen.getByLabelText("Year"), "2026");
+  await user.type(
+    screen.getByLabelText("Recipient (optional)"),
+    "Community garden",
+  );
+  await user.type(
+    screen.getByLabelText("Notes (optional)"),
+    "Healthy handoff.",
+  );
+  await user.click(screen.getByRole("button", { name: "Transfer Plant" }));
+  expect(
+    await screen.findByText(
+      "Plant was transferred and remains available in history.",
+    ),
+  ).toBeInTheDocument();
+  expect(screen.getAllByText("Transferred").length).toBeGreaterThan(0);
+  expect(
+    screen.queryByRole("button", { name: "Transfer / Cedi" }),
+  ).not.toBeInTheDocument();
+  await user.click(screen.getByRole("tab", { name: "Events" }));
+  expect(
+    await screen.findByRole("heading", { name: "Transfer" }),
+  ).toBeInTheDocument();
+  expect(screen.getByText("Community garden")).toBeInTheDocument();
+});
+
+test("whole-group transfer has no quantity control and extraction Events link the resulting Plant", async () => {
+  const activeGroup = group({
+    lifecycle: "active",
+    quantity: { value: 3, is_approximate: false },
+  });
+  const extraction = journalEvent("extraction", {
+    target: {
+      type: "plant_group",
+      id: groupId,
+      label: "Seedlings 2026",
+      lifecycle: "active",
+      botanical_identity: {
+        id: otherIdentityId,
+        display_label: "Cyphomandra betacea",
+      },
+    },
+    resulting_plant_id: plantId,
+    resulting_plant: {
+      id: plantId,
+      label: "Chosen seedling",
+      botanical_identity: {
+        id: otherIdentityId,
+        display_label: "Cyphomandra betacea",
+      },
+    },
+  });
+  mockApi(
+    plantHandler(
+      [plant({ label: "Chosen seedling" })],
+      [activeGroup],
+      (path) =>
+        path === `/api/v1/plant-groups/${groupId}/events`
+          ? json([extraction])
+          : undefined,
+    ),
+  );
+  const user = await openPlants();
+  await user.click(
+    await screen.findByRole("button", { name: /Seedlings 2026/ }),
+  );
+  expect(screen.getByText(/extract it as a Plant first/)).toBeInTheDocument();
+  await user.click(
+    screen.getByRole("button", { name: "Transfer group / Cedi gruppo" }),
+  );
+  const dialog = screen.getByRole("dialog");
+  expect(within(dialog).getByText(/entire Plant group/)).toBeInTheDocument();
+  expect(
+    within(dialog).queryByLabelText(/Quantity|Count/),
+  ).not.toBeInTheDocument();
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  await user.click(screen.getByRole("tab", { name: "Events" }));
+  const link = await screen.findByRole("link", { name: "Chosen seedling" });
+  expect(link).toHaveAttribute("href", `#/plants/${plantId}`);
+  await user.click(link);
+  expect(
+    await screen.findByRole("heading", { name: "Chosen seedling" }),
+  ).toBeInTheDocument();
+  await user.click(screen.getByRole("tab", { name: "Events" }));
+  await user.click(screen.getByRole("button", { name: "Add event" }));
+  expect(
+    within(screen.getByRole("dialog")).queryByRole("option", {
+      name: "Extraction",
+    }),
+  ).not.toBeInTheDocument();
+});
+
 test("Plant Event history preserves API order, every label and partial-date precision while filters stay predictable", async () => {
   const events = Object.keys(eventKinds).map((kind, index) =>
     journalEvent(kind, {
@@ -1165,7 +1317,7 @@ test("Plant Event history preserves API order, every label and partial-date prec
   await user.click(screen.getByRole("tab", { name: "Events" }));
   const timeline = await screen.findByRole("list", { name: "Event history" });
   const items = within(timeline).getAllByRole("listitem");
-  expect(items).toHaveLength(12);
+  expect(items).toHaveLength(14);
   expect(
     items.map((item) => within(item).getByRole("heading").textContent),
   ).toEqual(Object.values(eventKinds));
@@ -1186,11 +1338,11 @@ test("Plant Event history preserves API order, every label and partial-date prec
   await user.click(
     within(filters).getByRole("button", { name: "Cultivation" }),
   );
-  expect(within(timeline).getAllByRole("listitem")).toHaveLength(5);
+  expect(within(timeline).getAllByRole("listitem")).toHaveLength(6);
   await user.click(within(filters).getByRole("button", { name: "Status" }));
-  expect(within(timeline).getAllByRole("listitem")).toHaveLength(3);
+  expect(within(timeline).getAllByRole("listitem")).toHaveLength(4);
   await user.click(within(filters).getByRole("button", { name: "All" }));
-  expect(within(timeline).getAllByRole("listitem")).toHaveLength(12);
+  expect(within(timeline).getAllByRole("listitem")).toHaveLength(14);
 });
 
 test("PlantGroup detail has the same responsive Event journal and a useful empty state", async () => {

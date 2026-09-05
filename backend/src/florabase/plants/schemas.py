@@ -246,9 +246,4 @@ class PlantGroupResponse(PlantCommonResponse):
     lifecycle: PlantGroupLifecycle
 
 
-class PlantExtractionResponse(BaseModel):
-    plant: PlantResponse
-    plant_group: PlantGroupResponse
-
-
 assert {item.value for item in PartialDatePrecision} == {"year", "month", "day"}

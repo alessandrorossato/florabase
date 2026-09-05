@@ -16,6 +16,7 @@ from florabase.events.schemas import EventCreate, EventUpdate
         "pruning",
         "treatment",
         "harvest",
+        "transfer",
         "death",
         "loss",
         "discarded",
@@ -55,3 +56,17 @@ def test_movement_destination_is_whole_payload_invariant() -> None:
         EventCreate.model_validate({"kind": "watering"})
     with pytest.raises(ValidationError):
         EventCreate.model_validate({"kind": "observation", "plant_id": str(uuid7())})
+
+
+def test_transfer_and_extraction_fields_are_strictly_scoped() -> None:
+    plant_id = uuid7()
+    transfer = EventCreate(kind="transfer", recipient="  Garden   club ")
+    assert transfer.recipient == "Garden club"
+    extraction = EventCreate(kind="extraction", resulting_plant_id=plant_id)
+    assert extraction.resulting_plant_id == plant_id
+    with pytest.raises(ValidationError):
+        EventCreate(kind="observation", recipient="Garden club")
+    with pytest.raises(ValidationError):
+        EventCreate(kind="extraction")
+    with pytest.raises(ValidationError):
+        EventCreate(kind="observation", resulting_plant_id=plant_id)

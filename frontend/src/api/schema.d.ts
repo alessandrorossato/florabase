@@ -442,6 +442,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/plant-groups/{plant_group_id}/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Transfer One Plant Group */
+        post: operations["transferPlantGroup"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plants": {
         parameters: {
             query?: never;
@@ -507,6 +524,23 @@ export interface paths {
         get: operations["getPlantLineage"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plants/{plant_id}/transfer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Transfer One Plant */
+        post: operations["transferPlant"];
         delete?: never;
         options?: never;
         head?: never;
@@ -899,12 +933,16 @@ export interface components {
             /** Notes */
             notes?: string | null;
             occurred_on?: components["schemas"]["PartialDate"] | null;
+            /** Recipient */
+            recipient?: string | null;
+            /** Resulting Plant Id */
+            resulting_plant_id?: string | null;
         };
         /**
          * EventKind
          * @enum {string}
          */
-        EventKind: "observation" | "movement" | "repotting" | "flowering" | "fruiting" | "pruning" | "treatment" | "harvest" | "death" | "loss" | "discarded" | "other";
+        EventKind: "observation" | "movement" | "repotting" | "flowering" | "fruiting" | "pruning" | "treatment" | "harvest" | "extraction" | "transfer" | "death" | "loss" | "discarded" | "other";
         /** EventResponse */
         EventResponse: {
             /**
@@ -924,6 +962,11 @@ export interface components {
             /** Notes */
             notes: string | null;
             occurred_on: components["schemas"]["PartialDate"] | null;
+            /** Recipient */
+            recipient: string | null;
+            resulting_plant: components["schemas"]["ResultingPlantSummary"] | null;
+            /** Resulting Plant Id */
+            resulting_plant_id: string | null;
             /** Target */
             target: components["schemas"]["PlantEventTarget"] | components["schemas"]["PlantGroupEventTarget"];
             /**
@@ -940,6 +983,10 @@ export interface components {
             /** Notes */
             notes?: string | null;
             occurred_on?: components["schemas"]["PartialDate"] | null;
+            /** Recipient */
+            recipient?: string | null;
+            /** Resulting Plant Id */
+            resulting_plant_id?: string | null;
         };
         /** GeographicPlaceCreate */
         GeographicPlaceCreate: {
@@ -1219,6 +1266,7 @@ export interface components {
         };
         /** PlantExtractionResponse */
         PlantExtractionResponse: {
+            event: components["schemas"]["EventResponse"];
             plant: components["schemas"]["PlantResponse"];
             plant_group: components["schemas"]["PlantGroupResponse"];
         };
@@ -1305,7 +1353,7 @@ export interface components {
          * PlantGroupLifecycle
          * @enum {string}
          */
-        PlantGroupLifecycle: "active" | "completed" | "dead" | "lost" | "discarded";
+        PlantGroupLifecycle: "active" | "transferred" | "completed" | "dead" | "lost" | "discarded";
         /** PlantGroupLineageNode */
         PlantGroupLineageNode: {
             botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
@@ -1376,6 +1424,11 @@ export interface components {
              */
             updated_at: string;
         };
+        /** PlantGroupTransferResponse */
+        PlantGroupTransferResponse: {
+            event: components["schemas"]["EventResponse"];
+            plant_group: components["schemas"]["PlantGroupResponse"];
+        };
         /** PlantGroupUpdate */
         PlantGroupUpdate: {
             /**
@@ -1407,7 +1460,7 @@ export interface components {
          * PlantLifecycle
          * @enum {string}
          */
-        PlantLifecycle: "active" | "dead" | "lost" | "discarded";
+        PlantLifecycle: "active" | "transferred" | "dead" | "lost" | "discarded";
         /** PlantLineageNode */
         PlantLineageNode: {
             botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
@@ -1472,6 +1525,11 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+        };
+        /** PlantTransferResponse */
+        PlantTransferResponse: {
+            event: components["schemas"]["EventResponse"];
+            plant: components["schemas"]["PlantResponse"];
         };
         /** PlantUpdate */
         PlantUpdate: {
@@ -1555,6 +1613,17 @@ export interface components {
             /** Label */
             label: string | null;
             lifecycle: components["schemas"]["PlantLifecycle"];
+        };
+        /** ResultingPlantSummary */
+        ResultingPlantSummary: {
+            botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string | null;
         };
         /** SeedLotCreate */
         SeedLotCreate: {
@@ -2074,6 +2143,14 @@ export interface components {
             phone?: string | null;
             /** Website */
             website?: string | null;
+        };
+        /** TransferCreate */
+        TransferCreate: {
+            /** Notes */
+            notes?: string | null;
+            occurred_on?: components["schemas"]["PartialDate"] | null;
+            /** Recipient */
+            recipient?: string | null;
         };
         /** UseAllSourceAdjustment */
         UseAllSourceAdjustment: {
@@ -3349,6 +3426,43 @@ export interface operations {
             };
         };
     };
+    transferPlantGroup: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                plant_group_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantGroupTransferResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     listPlants: {
         parameters: {
             query?: never;
@@ -3558,6 +3672,43 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LineageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    transferPlant: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                plant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransferCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantTransferResponse"];
                 };
             };
             /** @description Validation Error */

@@ -11,12 +11,25 @@ from florabase.auth.dependencies import (
     require_owner,
 )
 from florabase.db.session import get_database_session
+from florabase.events.schemas import (
+    EventResponse,
+    PlantExtractionResponse,
+    PlantGroupTransferResponse,
+    PlantTransferResponse,
+    TransferCreate,
+)
+from florabase.events.service import (
+    EventDomainConflictError,
+    EventReferenceNotFoundError,
+    event_responses,
+    get_event,
+    transfer_target,
+)
 from florabase.lineage.schemas import LineageResponse
 from florabase.lineage.service import LineageCycleError, LineageKey, lineage
 from florabase.plants.schemas import (
     PlantCreate,
     PlantExtractionCreate,
-    PlantExtractionResponse,
     PlantGroupCreate,
     PlantGroupResponse,
     PlantGroupUpdate,
@@ -83,6 +96,13 @@ def _plant_response(database: Session, plant_id: UUID) -> PlantResponse:
 
 def _plant_group_response(database: Session, plant_group_id: UUID) -> PlantGroupResponse:
     return plant_group_responses(database, [_require_plant_group(database, plant_group_id)])[0]
+
+
+def _event_response(database: Session, event_id: UUID) -> EventResponse:
+    projection = get_event(database, event_id)
+    if projection is None:
+        raise RuntimeError("Newly created Event could not be read")
+    return event_responses(database, [projection])[0]
 
 
 def _lineage_response(database: Session, subject: LineageKey) -> LineageResponse:
@@ -163,6 +183,33 @@ def update_one_plant(
     return _plant_response(database, plant_id)
 
 
+@plants_router.post(
+    "/{plant_id}/transfer",
+    response_model=PlantTransferResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="transferPlant",
+)
+def transfer_one_plant(
+    plant_id: UUID,
+    payload: TransferCreate,
+    response: Response,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> PlantTransferResponse:
+    require_owner(actor)
+    try:
+        event, _target = transfer_target(database, "plant", plant_id, payload)
+    except EventReferenceNotFoundError as error:
+        raise _not_found(error.code, error.message) from error
+    except EventDomainConflictError as error:
+        raise _domain_conflict(PlantDomainConflictError(error.code, error.message)) from error
+    response.headers["Location"] = f"/api/v1/events/{event.id}"
+    return PlantTransferResponse(
+        plant=_plant_response(database, plant_id),
+        event=_event_response(database, event.id),
+    )
+
+
 @plant_groups_router.get(
     "", response_model=list[PlantGroupResponse], operation_id="listPlantGroups"
 )
@@ -209,7 +256,7 @@ def extract_one_plant(
 ) -> PlantExtractionResponse:
     require_owner(actor)
     try:
-        plant, plant_group = extract_plant(database, plant_group_id, payload)
+        plant, plant_group, event = extract_plant(database, plant_group_id, payload)
     except PlantReferenceNotFoundError as error:
         raise _reference_not_found(error) from error
     except PlantDomainConflictError as error:
@@ -218,6 +265,7 @@ def extract_one_plant(
     return PlantExtractionResponse(
         plant=_plant_response(database, plant.id),
         plant_group=_plant_group_response(database, plant_group.id),
+        event=_event_response(database, event.id),
     )
 
 
@@ -262,3 +310,30 @@ def update_one_plant_group(
     except PlantReferenceNotFoundError as error:
         raise _reference_not_found(error) from error
     return _plant_group_response(database, plant_group_id)
+
+
+@plant_groups_router.post(
+    "/{plant_group_id}/transfer",
+    response_model=PlantGroupTransferResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="transferPlantGroup",
+)
+def transfer_one_plant_group(
+    plant_group_id: UUID,
+    payload: TransferCreate,
+    response: Response,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> PlantGroupTransferResponse:
+    require_owner(actor)
+    try:
+        event, _target = transfer_target(database, "plant_group", plant_group_id, payload)
+    except EventReferenceNotFoundError as error:
+        raise _not_found(error.code, error.message) from error
+    except EventDomainConflictError as error:
+        raise _domain_conflict(PlantDomainConflictError(error.code, error.message)) from error
+    response.headers["Location"] = f"/api/v1/events/{event.id}"
+    return PlantGroupTransferResponse(
+        plant_group=_plant_group_response(database, plant_group_id),
+        event=_event_response(database, event.id),
+    )

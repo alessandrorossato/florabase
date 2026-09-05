@@ -1346,6 +1346,7 @@ button:disabled {
   background: #e8f6ed;
 }
 .lifecycle-badge--exhausted,
+.lifecycle-badge--transferred,
 .lifecycle-badge--discarded,
 .lifecycle-badge--lost,
 .lifecycle-badge--completed,

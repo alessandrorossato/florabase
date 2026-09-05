@@ -11,6 +11,8 @@ export const eventLabels: Record<EventResponse["kind"], string> = {
   pruning: "Pruning",
   treatment: "Treatment",
   harvest: "Harvest",
+  extraction: "Extraction",
+  transfer: "Transfer",
   death: "Death",
   loss: "Loss",
   discarded: "Discarded",
@@ -19,8 +21,15 @@ export const eventLabels: Record<EventResponse["kind"], string> = {
 
 const groups: Record<Exclude<EventFilter, "all">, EventResponse["kind"][]> = {
   observations: ["observation", "flowering", "fruiting"],
-  cultivation: ["movement", "repotting", "pruning", "treatment", "harvest"],
-  status: ["death", "loss", "discarded"],
+  cultivation: [
+    "movement",
+    "repotting",
+    "pruning",
+    "treatment",
+    "harvest",
+    "extraction",
+  ],
+  status: ["transfer", "death", "loss", "discarded"],
 };
 
 export function formatPartialDate(value: EventResponse["occurred_on"]): string {

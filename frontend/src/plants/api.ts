@@ -15,6 +15,11 @@ export type PlantGroupCreate = components["schemas"]["PlantGroupCreate"];
 export type PlantGroupUpdate = components["schemas"]["PlantGroupUpdate"];
 export type PlantGroupResponse = components["schemas"]["PlantGroupResponse"];
 export type PlantGroupLifecycle = components["schemas"]["PlantGroupLifecycle"];
+export type TransferCreate = components["schemas"]["TransferCreate"];
+export type PlantTransferResponse =
+  components["schemas"]["PlantTransferResponse"];
+export type PlantGroupTransferResponse =
+  components["schemas"]["PlantGroupTransferResponse"];
 
 export function listPlants(signal?: AbortSignal): Promise<PlantResponse[]> {
   return requestJson("/api/v1/plants", { signal });
@@ -88,6 +93,28 @@ export function extractPlantFromGroup(
 ): Promise<PlantExtractionResponse> {
   return requestJson(
     `/api/v1/plant-groups/${encodeURIComponent(id)}/extract-plant`,
+    mutation("POST", payload, csrfToken),
+  );
+}
+
+export function transferPlant(
+  id: string,
+  payload: TransferCreate,
+  csrfToken: string,
+): Promise<PlantTransferResponse> {
+  return requestJson(
+    `/api/v1/plants/${encodeURIComponent(id)}/transfer`,
+    mutation("POST", payload, csrfToken),
+  );
+}
+
+export function transferPlantGroup(
+  id: string,
+  payload: TransferCreate,
+  csrfToken: string,
+): Promise<PlantGroupTransferResponse> {
+  return requestJson(
+    `/api/v1/plant-groups/${encodeURIComponent(id)}/transfer`,
     mutation("POST", payload, csrfToken),
   );
 }

@@ -55,14 +55,17 @@ workflow. The active `Protect main` ruleset requires its `quality`, `integration
 and repository merge settings permit squash auto-merge while disabling merge commits and rebases.
 
 EVENT-001 covers practical movement, repotting, flowering, fruiting, pruning, treatment, harvest,
-death/loss/discarded, and free observations without separate speculative tables. Event creation can
+death/loss/discarded, transfer, extraction, and free observations without separate speculative
+tables. Event creation can
 atomically change current Location or lifecycle, but later Event edits/deletion never replay or roll
 back current state: Florabase is not event-sourced. Collection evidence stays separate from
 BotanicalProfile knowledge. EVENT-002 adds the shared protected Plant and PlantGroup journal UI: an
 API-ordered vertical desktop timeline that becomes wrapping cards on mobile, lightweight All,
-Observations, Cultivation, and Status filters, and accessible create/edit/delete flows. Creation
-effects and historical edit/delete non-rollback behavior are explicit. Structured payloads beyond
-movement and attachments remain deferred.
+Observations, Cultivation, and Status filters, and accessible create/edit/delete flows. Transfer is
+classified as Status and extraction as Cultivation. Creation
+effects and historical edit/delete non-rollback behavior are explicit. Further structured payloads beyond
+movement destination, transfer recipient, and the extraction-result Plant relation remain deferred;
+attachments also remain deferred.
 
 Attachment storage and photos are valuable but currently P2. Whether they are mandatory for the
 first public release is an explicit operator/product decision; this roadmap does not silently make
@@ -93,8 +96,12 @@ infer missing lineage. `UX-003` will revisit Seeds, Sowings, Plants, Events, and
 after the guided transitions exist, improving page purpose, consistent actions, cross-linking, and
 mobile/desktop navigation without changing what the verified `UX-001` increment delivered.
 
-`PLANT-005` records a future transferred/ceded outcome for a living Plant, coordinated with an Event;
-it must evaluate rather than assume equivalent PlantGroup semantics. `LOCATION-002` retains one
+`PLANT-005` implements transferred/ceded outcomes for Plants and entire PlantGroups. A locked focused
+operation atomically records the transfer Event and lifecycle, with optional free-text recipient,
+partial date, and notes; transferred records remain historical and direct lifecycle edits remain the
+correction path. Partial group transfer is deliberately absent: the operator extracts one Plant,
+then transfers it. Extraction now atomically records a source-group Event with a structured link to
+the resulting Plant. Event edits and deletes never replay or reverse either operation. `LOCATION-002` retains one
 Location concept while adding usage-scoped Seeds, Sowings, and Plants views plus an accessible
 collapsible hierarchy. `SUPPLIER-002` may add connected-record summaries, but financial totals wait
 for the separate `ORDER-001` transaction model.

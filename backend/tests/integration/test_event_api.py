@@ -80,7 +80,10 @@ def event_targets(
         authenticated_browser,
         "POST",
         "/api/v1/plant-groups",
-        {"botanical_identity_id": event_references["identity"]},
+        {
+            "botanical_identity_id": event_references["identity"],
+            "quantity": {"value": 4, "is_approximate": False},
+        },
     )
     with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
         destination = Location(name="Greenhouse")
@@ -288,6 +291,125 @@ def test_lifecycle_event_put_and_delete_do_not_reverse_or_apply_new_state(
     assert request("GET", target_path, headers={"cookie": cookie})[2]["lifecycle"] == "dead"
 
 
+@pytest.mark.parametrize(
+    ("target_key", "route", "response_key"),
+    [
+        ("plant", "plants", "plant"),
+        ("group", "plant-groups", "plant_group"),
+    ],
+)
+def test_explicit_transfer_is_atomic_correctable_and_non_replaying(
+    authenticated_browser: tuple[str, str],
+    event_targets: dict[str, str],
+    target_key: str,
+    route: str,
+    response_key: str,
+) -> None:
+    target_id = event_targets[target_key]
+    path = f"/api/v1/{route}/{target_id}"
+    payload = {
+        "occurred_on": {"precision": "month", "year": 2026, "month": 9},
+        "recipient": "  Community   garden ",
+        "notes": "Healthy handoff.",
+    }
+    status_code, headers, transferred = mutate(
+        authenticated_browser, "POST", f"{path}/transfer", payload
+    )
+    assert status_code == 201
+    assert headers["location"].endswith(transferred["event"]["id"])
+    assert transferred[response_key]["lifecycle"] == "transferred"
+    if route == "plant-groups":
+        assert transferred[response_key]["quantity"] == {
+            "value": 4,
+            "is_approximate": False,
+        }
+    assert transferred["event"]["kind"] == "transfer"
+    assert transferred["event"]["recipient"] == "Community garden"
+    assert transferred["event"]["occurred_on"] == {
+        "precision": "month",
+        "year": 2026,
+        "month": 9,
+        "day": None,
+    }
+    cookie, _csrf = authenticated_browser
+    assert request("GET", path, headers={"cookie": cookie})[2]["lifecycle"] == "transferred"
+    dashboard = request("GET", "/api/v1/dashboard", headers={"cookie": cookie})[2]
+    count_key = "active_plants" if route == "plants" else "active_plant_groups"
+    assert dashboard["counts"][count_key] == 0
+    identity_collection = request(
+        "GET",
+        f"/api/v1/botanical-identities/{transferred[response_key]['botanical_identity_id']}/collection",
+        headers={"cookie": cookie},
+    )[2]
+    collection_key = "plants" if route == "plants" else "plant_groups"
+    assert any(
+        item["id"] == target_id and item["lifecycle"] == "transferred"
+        for item in identity_collection[collection_key]
+    )
+    assert mutate(authenticated_browser, "POST", f"{path}/transfer", {})[0] == 409
+
+    event_id = transferred["event"]["id"]
+    assert (
+        mutate(
+            authenticated_browser,
+            "PUT",
+            f"/api/v1/events/{event_id}",
+            {"kind": "observation", "notes": "Corrected history only"},
+        )[0]
+        == 200
+    )
+    assert request("GET", path, headers={"cookie": cookie})[2]["lifecycle"] == "transferred"
+    assert mutate(authenticated_browser, "DELETE", f"/api/v1/events/{event_id}")[0] == 204
+    assert request("GET", path, headers={"cookie": cookie})[2]["lifecycle"] == "transferred"
+
+    correction = {"botanical_identity_id": transferred[response_key]["botanical_identity_id"]}
+    correction["lifecycle"] = "active"
+    if route == "plant-groups":
+        correction["quantity"] = transferred[response_key]["quantity"]
+    assert mutate(authenticated_browser, "PUT", path, correction)[2]["lifecycle"] == "active"
+
+
+def test_generic_event_mutation_cannot_fabricate_extraction_or_replay_transfer(
+    authenticated_browser: tuple[str, str], event_targets: dict[str, str]
+) -> None:
+    group_events = f"/api/v1/plant-groups/{event_targets['group']}/events"
+    assert (
+        mutate(
+            authenticated_browser,
+            "POST",
+            group_events,
+            {"kind": "extraction", "resulting_plant_id": event_targets["plant"]},
+        )[0]
+        == 409
+    )
+    _, _, ordinary = mutate(authenticated_browser, "POST", group_events, {"kind": "observation"})
+    assert (
+        mutate(
+            authenticated_browser,
+            "PUT",
+            f"/api/v1/events/{ordinary['id']}",
+            {"kind": "extraction", "resulting_plant_id": event_targets["plant"]},
+        )[0]
+        == 409
+    )
+    _, _, corrected = mutate(
+        authenticated_browser,
+        "PUT",
+        f"/api/v1/events/{ordinary['id']}",
+        {"kind": "transfer", "recipient": "Archive correction"},
+    )
+    assert corrected["kind"] == "transfer"
+    cookie, _csrf = authenticated_browser
+    assert (
+        request(
+            "GET",
+            f"/api/v1/plant-groups/{event_targets['group']}",
+            headers={"cookie": cookie},
+        )[2]["lifecycle"]
+        == "active"
+    )
+
+
 def test_event_security_validation_missing_references_and_rollback(
     authenticated_browser: tuple[str, str],
     event_references: dict[str, str],
@@ -295,15 +417,40 @@ def test_event_security_validation_missing_references_and_rollback(
     database_connection: Connection,
 ) -> None:
     path = f"/api/v1/plants/{event_targets['plant']}/events"
+    transfer_path = f"/api/v1/plants/{event_targets['plant']}/transfer"
     cookie, csrf = authenticated_browser
     assert request("GET", path)[0] == 401
     assert request("POST", path, body={"kind": "observation"})[0] == 401
+    assert request("POST", transfer_path, body={})[0] == 401
     assert (
         request(
             "POST", path, body={"kind": "observation"}, headers={"cookie": cookie, "origin": ORIGIN}
         )[0]
         == 403
     )
+    assert (
+        request(
+            "POST",
+            transfer_path,
+            body={},
+            headers={"cookie": cookie, "origin": ORIGIN},
+        )[0]
+        == 403
+    )
+    assert (
+        request(
+            "POST",
+            transfer_path,
+            body={},
+            headers={
+                "cookie": cookie,
+                "origin": "https://evil.example",
+                "x-csrf-token": csrf,
+            },
+        )[0]
+        == 403
+    )
+    assert mutate(authenticated_browser, "POST", f"/api/v1/plants/{uuid7()}/transfer", {})[0] == 404
     assert (
         request(
             "POST",

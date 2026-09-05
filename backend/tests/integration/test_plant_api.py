@@ -15,6 +15,7 @@ from florabase.auth.service import bootstrap_owner
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.core.config import get_settings
 from florabase.db.session import get_database_session
+from florabase.events.model import Event
 from florabase.geographic_places.model import GeographicPlace
 from florabase.locations.model import Location
 from florabase.main import app
@@ -613,9 +614,19 @@ def test_extract_plant_defaults_and_explicit_location_modes(
         },
     )
     path = f"/api/v1/plant-groups/{group['id']}/extract-plant"
-    inherited = mutate(authenticated_browser, "POST", path, {})[2]["plant"]
+    inherited_response = mutate(authenticated_browser, "POST", path, {})[2]
+    inherited = inherited_response["plant"]
     assert inherited["botanical_identity_id"] == plant_references["plant_identity"]
     assert inherited["location_id"] == plant_references["location"]
+    cookie, _csrf = authenticated_browser
+    extraction_events = request(
+        "GET", f"/api/v1/plant-groups/{group['id']}/events", headers={"cookie": cookie}
+    )[2]
+    assert extraction_events[0]["id"] == inherited_response["event"]["id"]
+    assert extraction_events[0]["kind"] == "extraction"
+    assert extraction_events[0]["target"]["id"] == group["id"]
+    assert extraction_events[0]["resulting_plant_id"] == inherited["id"]
+    assert extraction_events[0]["resulting_plant"]["id"] == inherited["id"]
     cleared = mutate(authenticated_browser, "POST", path, {"location_id": None})[2]["plant"]
     assert cleared["location_id"] is None
 
@@ -632,6 +643,52 @@ def test_extract_plant_defaults_and_explicit_location_modes(
         {"location_id": plant_references["location"]},
     )[2]["plant"]
     assert overridden["location_id"] == plant_references["location"]
+
+
+def test_extraction_event_cannot_reference_a_plant_from_another_group(
+    authenticated_browser: tuple[str, str], plant_references: dict[str, str]
+) -> None:
+    _, _, group = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/plant-groups",
+        {
+            "botanical_identity_id": plant_references["plant_identity"],
+            "quantity": {"value": 2, "is_approximate": False},
+        },
+    )
+    _, _, extraction = mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/plant-groups/{group['id']}/extract-plant",
+        {},
+    )
+    _, _, unrelated = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/plants",
+        {"botanical_identity_id": plant_references["plant_identity"]},
+    )
+
+    status_code, _, body = mutate(
+        authenticated_browser,
+        "PUT",
+        f"/api/v1/events/{extraction['event']['id']}",
+        {"kind": "extraction", "resulting_plant_id": unrelated["id"]},
+    )
+
+    assert status_code == 409
+    assert body["detail"]["code"] == "extraction_result_not_from_source_group"
+    cookie, _csrf = authenticated_browser
+    event = request(
+        "GET", f"/api/v1/events/{extraction['event']['id']}", headers={"cookie": cookie}
+    )[2]
+    assert event["resulting_plant_id"] == extraction["plant"]["id"]
+    updated_group = request(
+        "GET", f"/api/v1/plant-groups/{group['id']}", headers={"cookie": cookie}
+    )[2]
+    assert updated_group["quantity"] == {"value": 1, "is_approximate": False}
+    assert updated_group["lifecycle"] == "active"
 
 
 @pytest.mark.parametrize(
@@ -745,6 +802,14 @@ def test_extract_plant_security_missing_references_and_atomic_rollback(
             )
             == 0
         )
+        assert (
+            database.scalar(
+                select(func.count())
+                .select_from(Event)
+                .where(Event.plant_group_id == UUID(group["id"]))
+            )
+            == 0
+        )
 
 
 def test_extracted_plant_put_preserves_read_only_origin(
@@ -842,8 +907,20 @@ def test_concurrent_exact_extraction_serializes_without_overdraw(
                 )
                 == successes
             )
+            assert (
+                database.scalar(
+                    select(func.count())
+                    .select_from(Event)
+                    .where(
+                        Event.plant_group_id == group_id,
+                        Event.kind == "extraction",
+                    )
+                )
+                == successes
+            )
     finally:
         with Session(database_engine) as database:
+            database.execute(delete(Event).where(Event.plant_group_id == group_id))
             database.execute(delete(Plant).where(Plant.originating_plant_group_id == group_id))
             database.execute(delete(PlantGroup).where(PlantGroup.id == group_id))
             database.execute(delete(BotanicalIdentity).where(BotanicalIdentity.id == identity_id))

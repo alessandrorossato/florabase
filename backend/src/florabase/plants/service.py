@@ -9,6 +9,7 @@ from sqlalchemy.sql import Select
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
+from florabase.events.model import Event, EventKind
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.service import display_path as geographic_display_path
 from florabase.geographic_places.service import list_geographic_places
@@ -171,7 +172,7 @@ def update_plant(database: Session, plant: Plant, payload: PlantUpdate) -> Plant
 
 def extract_plant(
     database: Session, plant_group_id: UUID, payload: PlantExtractionCreate
-) -> tuple[Plant, PlantGroup]:
+) -> tuple[Plant, PlantGroup, Event]:
     plant_group = database.scalar(
         select(PlantGroup).where(PlantGroup.id == plant_group_id).with_for_update()
     )
@@ -219,7 +220,32 @@ def extract_plant(
             plant_group.lifecycle = "completed"
         plant_group.updated_at = datetime.now(UTC)
     database.flush()
-    return plant, plant_group
+    event = Event(
+        plant_group_id=plant_group.id,
+        kind=EventKind.EXTRACTION.value,
+        resulting_plant_id=plant.id,
+        occurred_on_precision=(
+            payload.collection_entry_date.precision.value
+            if payload.collection_entry_date is not None
+            else None
+        ),
+        occurred_on_year=(
+            payload.collection_entry_date.year
+            if payload.collection_entry_date is not None
+            else None
+        ),
+        occurred_on_month=(
+            payload.collection_entry_date.month
+            if payload.collection_entry_date is not None
+            else None
+        ),
+        occurred_on_day=(
+            payload.collection_entry_date.day if payload.collection_entry_date is not None else None
+        ),
+    )
+    database.add(event)
+    database.flush()
+    return plant, plant_group, event
 
 
 def create_plant_group(database: Session, payload: PlantGroupCreate) -> PlantGroup:

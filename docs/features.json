@@ -680,15 +680,15 @@
     {
       "id": "PLANT-005",
       "category": "plant",
-      "description": "Add an explicit transferred or ceded Plant outcome",
+      "description": "Add explicit transferred or ceded Plant and PlantGroup outcomes",
       "acceptance_criteria": [
-        "Plant lifecycle can record that a living specimen left the collection by transfer or cession without misclassifying it as dead, lost, or discarded",
-        "The increment decides whether PlantGroup needs the same outcome based on a concrete group-transfer workflow and records any quantity implications explicitly",
-        "A coordinated Event records transfer history while current lifecycle side effects, correction behavior, and the non-event-sourced boundary remain clear"
+        "Plant and whole-PlantGroup lifecycle can record transfer or cession without deletion, misclassifying living material, or erasing quantity, Location, provenance, lineage, and other history",
+        "Focused locked transfer operations atomically create a transfer Event with partial date, optional free-text recipient and notes, and set the target lifecycle to transferred; one-individual group transfer uses the existing extraction-first workflow",
+        "PlantGroup extraction atomically adds a source-targeted extraction Event with a structured resulting-Plant link, while direct lifecycle correction and Event edit/delete preserve the documented non-replay boundary"
       ],
-      "dependencies": ["PROPAGATION-002", "EVENT-003"],
+      "dependencies": ["PROPAGATION-002", "EVENT-002"],
       "priority": "P2",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "UX-003",
