@@ -4,6 +4,34 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-05 — PLANT-005 verified
+
+- Added an explicit `transferred` lifecycle for Plant and PlantGroup plus owner-authorized,
+  CSRF-protected transfer operations. Each operation locks the active target and atomically creates
+  a transfer Event with an optional precision-preserved date, free-text recipient, and notes; the
+  target remains editable as historical correction data, while later Event edits or deletion never
+  replay lifecycle effects.
+- Whole-group transfer preserves the stored group quantity and offers no partial quantity control.
+  The existing extraction operation is now the required partial-transfer path: it atomically creates
+  the resulting Plant, updates only an exact source count when applicable, and records a cultivation
+  extraction Event on the source group with a navigable resulting-Plant relationship. Generic Event
+  creation cannot manufacture extraction Events.
+- Updated the responsive Plants experience with explicit bilingual transfer actions, accessible
+  dialogs, active/history filtering, historical styling, transfer and extraction Event rendering,
+  corrected routed-result navigation, and active-versus-transferred BotanicalIdentity summaries.
+  Dashboard active totals continue to count only lifecycle `active` records.
+- Added Alembic revision `20260904_0015`, regenerated OpenAPI and TypeScript declarations, and
+  documented lifecycle, Event categories, quantity, correction, and relationship semantics.
+- Independent release review added a database-enforced source-group/result-Plant relation and
+  matching service validation, preventing an extraction Event from being reassigned to a Plant from
+  a different PlantGroup. It also corrected the integration migration-head expectation.
+- Canonical verification passed: `make check` (Ruff, Prettier, ESLint, strict mypy over 134 source
+  files, strict TypeScript, API drift, 203 backend tests at 90.02% coverage, and 110 frontend
+  tests) and `make ci` (workflow helpers, the same checks, 235 fresh PostgreSQL integration and
+  migration tests, and production image builds). Authenticated browser QA covered desktop
+  individual transfer and extraction journals plus the 390 × 844 responsive PlantGroup Events view
+  and mobile navigation. `PLANT-005` is `verified`.
+
 ## 2026-09-04 — PROPAGATION-002 verified
 
 - Added contextual BotanicalIdentity actions for preselected SeedLot creation, explicit source
@@ -292,11 +320,12 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260902_0014`.
+- Alembic head: `20260904_0015`.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
-  protected Plant/PlantGroup Event backend journal and detail-page timeline UI.
+  protected Plant/PlantGroup Event journal and timeline UI; atomic extraction history; and retained
+  transferred Plant/PlantGroup history.
 - `PROPAGATION-001` and `PROPAGATION-002` are verified; the next recommended P1 product increment
   is decided by the machine-readable dependency graph;
   licensing/version policy and release readiness remain explicit later operator/product decisions.
@@ -304,6 +333,5 @@ implementation detail.
   `main` checks.
   Other unblocked P2 product items are listed by the machine-readable dependency graph rather than
   prioritized here.
-- Deliberately absent: a collection-wide Event timeline, structured Event payloads beyond movement,
-  Event attachments/photos, advanced search, dashboards, import/export, PWA behavior,
+- Deliberately absent: Event attachments/photos, advanced search, import/export, PWA behavior,
   offline/synchronization behavior, generic graphs, and multi-user collaboration.

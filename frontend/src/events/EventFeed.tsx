@@ -57,6 +57,16 @@ export function EventFeed({
               {event.destination_location && (
                 <p>Moved to {event.destination_location.display_path}</p>
               )}
+              {event.recipient && <p>Recipient: {event.recipient}</p>}
+              {event.kind === "extraction" && event.resulting_plant && (
+                <p>
+                  1 individual extracted →{" "}
+                  <a href={`#/plants/${event.resulting_plant.id}`}>
+                    {event.resulting_plant.label ??
+                      event.resulting_plant.botanical_identity.display_label}
+                  </a>
+                </p>
+              )}
               {event.notes && <p className="preserve-lines">{event.notes}</p>}
             </article>
           </li>

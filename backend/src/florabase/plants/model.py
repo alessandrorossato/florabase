@@ -12,6 +12,7 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
+    UniqueConstraint,
     Uuid,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -33,6 +34,7 @@ class DirectOriginKind(StrEnum):
 
 class PlantLifecycle(StrEnum):
     ACTIVE = "active"
+    TRANSFERRED = "transferred"
     DEAD = "dead"
     LOST = "lost"
     DISCARDED = "discarded"
@@ -40,6 +42,7 @@ class PlantLifecycle(StrEnum):
 
 class PlantGroupLifecycle(StrEnum):
     ACTIVE = "active"
+    TRANSFERRED = "transferred"
     COMPLETED = "completed"
     DEAD = "dead"
     LOST = "lost"
@@ -109,8 +112,17 @@ def _common_constraints(
 
 class Plant(Base):
     __tablename__ = "plants"
-    __table_args__ = _common_constraints(
-        "plants", "'active', 'dead', 'lost', 'discarded'", plant_group_origin=True
+    __table_args__ = (
+        *_common_constraints(
+            "plants",
+            "'active', 'transferred', 'dead', 'lost', 'discarded'",
+            plant_group_origin=True,
+        ),
+        UniqueConstraint(
+            "id",
+            "originating_plant_group_id",
+            name="uq_plants_id_originating_plant_group_id",
+        ),
     )
 
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid7)
@@ -150,7 +162,9 @@ class Plant(Base):
 class PlantGroup(Base):
     __tablename__ = "plant_groups"
     __table_args__ = (
-        *_common_constraints("plant_groups", "'active', 'completed', 'dead', 'lost', 'discarded'"),
+        *_common_constraints(
+            "plant_groups", "'active', 'transferred', 'completed', 'dead', 'lost', 'discarded'"
+        ),
         CheckConstraint(
             "((quantity_value IS NULL AND quantity_is_approximate IS NULL) OR "
             "(quantity_value > 0 AND quantity_is_approximate IS NOT NULL) OR "

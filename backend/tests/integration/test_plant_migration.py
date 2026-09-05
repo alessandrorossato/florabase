@@ -242,10 +242,10 @@ def test_plant_database_invariants_and_restrictive_references(
         ):
             _insert(database_connection, table, refs["identity"], **valid_date)
 
-    for lifecycle in ("active", "dead", "lost", "discarded"):
+    for lifecycle in ("active", "transferred", "dead", "lost", "discarded"):
         _insert(database_connection, "plants", refs["identity"], lifecycle=lifecycle)
     _reject(database_connection, "plants", refs["identity"], lifecycle="completed")
-    for lifecycle in ("active", "completed", "dead", "lost", "discarded"):
+    for lifecycle in ("active", "transferred", "completed", "dead", "lost", "discarded"):
         _insert(database_connection, "plant_groups", refs["identity"], lifecycle=lifecycle)
     _reject(database_connection, "plant_groups", refs["identity"], lifecycle="failed")
     for lifecycle in ("completed", "dead", "discarded"):
@@ -264,6 +264,7 @@ def test_plant_database_invariants_and_restrictive_references(
         {"quantity_value": 0, "quantity_is_approximate": True, "lifecycle": "dead"},
         {"quantity_value": 0, "quantity_is_approximate": False, "lifecycle": "active"},
         {"quantity_value": 0, "quantity_is_approximate": False, "lifecycle": "lost"},
+        {"quantity_value": 0, "quantity_is_approximate": False, "lifecycle": "transferred"},
     ):
         _reject(database_connection, "plant_groups", refs["identity"], **invalid_quantity)
     _insert(

@@ -10,7 +10,13 @@ from fastapi import HTTPException, Response
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.events import api, service
 from florabase.events.model import Event
-from florabase.events.schemas import EventCreate, EventResponse, EventUpdate, PlantEventTarget
+from florabase.events.schemas import (
+    EventCreate,
+    EventResponse,
+    EventUpdate,
+    PlantEventTarget,
+    TransferCreate,
+)
 from florabase.events.service import (
     EventDomainConflictError,
     EventProjection,
@@ -98,8 +104,142 @@ def test_event_update_never_applies_lifecycle_side_effect() -> None:
     event = Event(plant_id=plant.id, kind="observation")
     service.update_event(database, event, EventUpdate(kind="death"))
     assert plant.lifecycle == "active"
+
+
+@pytest.mark.parametrize("target_kind", ["plant", "plant_group"])
+def test_transfer_is_atomic_focused_action_and_preserves_group_quantity(
+    target_kind: Literal["plant", "plant_group"],
+) -> None:
+    plant, group, _, _ = _targets()
+    group.quantity_value = 7
+    group.quantity_is_approximate = False
+    target = plant if target_kind == "plant" else group
+    database = _database(target)
+    event, updated = service.transfer_target(
+        database,
+        target_kind,
+        target.id,
+        TransferCreate(
+            occurred_on={"precision": "month", "year": 2026, "month": 9},
+            recipient="  Community   garden ",
+            notes="Healthy specimen.",
+        ),
+    )
+    assert updated is target
+    assert target.lifecycle == "transferred"
+    assert group.quantity_value == 7
+    assert event.kind == "transfer"
+    assert event.recipient == "Community garden"
+    assert event.occurred_on_precision == "month"
+    assert database.scalar.call_args.args[0]._for_update_arg is not None
+    database.add.assert_called_once_with(event)
+
+    with pytest.raises(EventDomainConflictError) as conflict:
+        service.transfer_target(database, target_kind, target.id, TransferCreate())
+    assert conflict.value.code == "target_not_active"
+
+
+def test_generic_extraction_is_rejected_and_transfer_history_does_not_replay() -> None:
+    plant, _, _, _ = _targets()
+    database = _database(plant)
+    with pytest.raises(EventDomainConflictError) as create_conflict:
+        service.create_event(
+            database,
+            "plant",
+            plant.id,
+            EventCreate(kind="extraction", resulting_plant_id=uuid7()),
+        )
+    assert create_conflict.value.code == "extraction_operation_required"
+
+    event = Event(plant_id=plant.id, kind="observation")
+    with pytest.raises(EventDomainConflictError):
+        service.update_event(
+            database,
+            event,
+            EventUpdate(kind="extraction", resulting_plant_id=uuid7()),
+        )
+
+    transfer, _ = service.transfer_target(database, "plant", plant.id, TransferCreate())
+    plant.lifecycle = "active"
+    service.update_event(database, transfer, EventUpdate(kind="observation"))
+    service.delete_event(database, transfer)
+    assert plant.lifecycle == "active"
     service.update_event(database, event, EventUpdate(kind="observation"))
     assert plant.lifecycle == "active"
+
+
+def test_extraction_event_cannot_be_retargeted_outside_its_source_group() -> None:
+    _, source_group, _, _ = _targets()
+    extracted = Plant(
+        id=uuid7(),
+        botanical_identity_id=uuid7(),
+        originating_plant_group_id=source_group.id,
+        lifecycle="active",
+    )
+    unrelated = Plant(
+        id=uuid7(),
+        botanical_identity_id=uuid7(),
+        direct_origin_kind="unknown",
+        lifecycle="active",
+    )
+    database = MagicMock()
+    database.get.side_effect = lambda model, item_id: {
+        (Plant, extracted.id): extracted,
+        (Plant, unrelated.id): unrelated,
+    }.get((model, item_id))
+    event = Event(
+        plant_group_id=source_group.id,
+        kind="extraction",
+        resulting_plant_id=extracted.id,
+    )
+
+    with pytest.raises(EventDomainConflictError) as conflict:
+        service.update_event(
+            database,
+            event,
+            EventUpdate(kind="extraction", resulting_plant_id=unrelated.id),
+        )
+
+    assert conflict.value.code == "extraction_result_not_from_source_group"
+    assert event.resulting_plant_id == extracted.id
+
+    assert (
+        service.update_event(
+            database,
+            event,
+            EventUpdate(kind="extraction", resulting_plant_id=extracted.id, notes="Corrected"),
+        )
+        is event
+    )
+    assert event.notes == "Corrected"
+
+
+def test_extraction_event_update_rejects_missing_source_or_resulting_plant() -> None:
+    _, source_group, _, _ = _targets()
+    result_id = uuid7()
+    malformed_event = Event(kind="extraction", resulting_plant_id=result_id)
+    with pytest.raises(EventDomainConflictError) as malformed_conflict:
+        service.update_event(
+            MagicMock(),
+            malformed_event,
+            EventUpdate(kind="extraction", resulting_plant_id=result_id),
+        )
+    assert malformed_conflict.value.code == "invalid_extraction_result"
+
+    database = MagicMock()
+    database.get.return_value = None
+    event = Event(
+        plant_group_id=source_group.id,
+        kind="extraction",
+        resulting_plant_id=result_id,
+    )
+    with pytest.raises(EventReferenceNotFoundError) as missing_result:
+        service.update_event(
+            database,
+            event,
+            EventUpdate(kind="extraction", resulting_plant_id=result_id),
+        )
+    assert missing_result.value.code == "resulting_plant_not_found"
 
 
 def test_missing_target_location_and_exact_zero_group_conflict_are_explicit() -> None:
@@ -138,6 +278,25 @@ def test_listing_uses_dated_known_component_order_and_requires_target() -> None:
     database.get.return_value = None
     with pytest.raises(EventReferenceNotFoundError):
         service.list_events(database, "plant", uuid7())
+
+
+def test_global_event_listing_filters_and_limits_projected_rows() -> None:
+    plant, _, _, _ = _targets()
+    event = Event(id=uuid7(), plant_id=plant.id, kind="observation")
+    row = (event, plant, None, None, None, None, None, None)
+    database = MagicMock()
+    database.execute.return_value = [row]
+
+    projections = service.list_all_events(
+        database, botanical_identity_id=plant.botanical_identity_id, limit=1
+    )
+
+    assert projections == [EventProjection(*row)]
+    statement = database.execute.call_args.args[0]
+    assert len(statement._order_by_clauses) == 6
+    assert statement._limit_clause is not None
+
+    service.list_all_events(database)
 
 
 def test_get_and_response_projection_are_typed_and_target_aware(
@@ -183,9 +342,11 @@ def test_get_and_response_projection_are_typed_and_target_aware(
         destination,
         plant_identity,
         None,
+        None,
+        None,
     )
     assert service.get_event(database, plant_event.id) == EventProjection(
-        plant_event, plant, None, destination, plant_identity, None
+        plant_event, plant, None, destination, plant_identity, None, None, None
     )
     database.execute.return_value.one_or_none.return_value = None
     assert service.get_event(database, uuid7()) is None
@@ -193,8 +354,10 @@ def test_get_and_response_projection_are_typed_and_target_aware(
     responses = service.event_responses(
         database,
         [
-            EventProjection(plant_event, plant, None, destination, plant_identity, None),
-            EventProjection(group_event, None, group, None, None, group_identity),
+            EventProjection(
+                plant_event, plant, None, destination, plant_identity, None, None, None
+            ),
+            EventProjection(group_event, None, group, None, None, group_identity, None, None),
         ],
     )
     assert responses[0].target.type == "plant"
@@ -204,7 +367,7 @@ def test_get_and_response_projection_are_typed_and_target_aware(
     assert responses[1].target.type == "plant_group"
     with pytest.raises(RuntimeError):
         service.event_responses(
-            database, [EventProjection(group_event, None, None, None, None, None)]
+            database, [EventProjection(group_event, None, None, None, None, None, None, None)]
         )
 
 
@@ -224,7 +387,7 @@ def test_event_api_routes_and_errors(monkeypatch: pytest.MonkeyPatch) -> None:
         created_at=now,
         updated_at=now,
     )
-    projection = EventProjection(event, plant, None, None, identity, None)
+    projection = EventProjection(event, plant, None, None, identity, None, None, None)
     response_model = EventResponse(
         id=event.id,
         target=PlantEventTarget(
@@ -241,6 +404,9 @@ def test_event_api_routes_and_errors(monkeypatch: pytest.MonkeyPatch) -> None:
         notes=None,
         destination_location_id=None,
         destination_location=None,
+        recipient=None,
+        resulting_plant_id=None,
+        resulting_plant=None,
         created_at=now,
         updated_at=now,
     )

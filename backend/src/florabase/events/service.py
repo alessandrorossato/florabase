@@ -15,6 +15,8 @@ from florabase.events.schemas import (
     EventUpdate,
     PlantEventTarget,
     PlantGroupEventTarget,
+    ResultingPlantSummary,
+    TransferCreate,
 )
 from florabase.locations.model import Location
 from florabase.locations.service import display_path, list_locations
@@ -46,6 +48,8 @@ class EventProjection:
     destination_location: Location | None
     plant_identity: BotanicalIdentity | None
     plant_group_identity: BotanicalIdentity | None
+    resulting_plant: Plant | None
+    resulting_plant_identity: BotanicalIdentity | None
 
 
 def _partial_date_values(value: PartialDate | None) -> dict[str, object]:
@@ -62,6 +66,8 @@ def _write_values(payload: EventCreate | EventUpdate) -> dict[str, object]:
         "kind": payload.kind.value,
         "notes": payload.notes,
         "destination_location_id": payload.destination_location_id,
+        "recipient": payload.recipient,
+        "resulting_plant_id": payload.resulting_plant_id,
         **_partial_date_values(payload.occurred_on),
     }
 
@@ -87,13 +93,37 @@ def _require_destination(database: Session, location_id: UUID | None) -> None:
         raise EventReferenceNotFoundError("location_not_found", "Location not found")
 
 
+def _require_extraction_result_from_source_group(
+    database: Session, event: Event, resulting_plant_id: UUID | None
+) -> None:
+    if resulting_plant_id is None or event.plant_group_id is None:
+        raise EventDomainConflictError(
+            "invalid_extraction_result",
+            "An extraction Event must reference its resulting Plant and source PlantGroup",
+        )
+    resulting_plant = database.get(Plant, resulting_plant_id)
+    if resulting_plant is None:
+        raise EventReferenceNotFoundError("resulting_plant_not_found", "Resulting Plant not found")
+    if resulting_plant.originating_plant_group_id != event.plant_group_id:
+        raise EventDomainConflictError(
+            "extraction_result_not_from_source_group",
+            "An extraction Event must reference a Plant extracted from its source PlantGroup",
+        )
+
+
 def _apply_creation_side_effect(target: Target, payload: EventCreate) -> None:
+    if payload.kind == EventKind.TRANSFER and target.lifecycle != "active":
+        label = "Plant" if isinstance(target, Plant) else "PlantGroup"
+        raise EventDomainConflictError(
+            "target_not_active", f"Only an active {label} can be transferred"
+        )
     if payload.kind == EventKind.MOVEMENT:
         target.location_id = payload.destination_location_id
     lifecycle = {
         EventKind.DEATH: "dead",
         EventKind.LOSS: "lost",
         EventKind.DISCARDED: "discarded",
+        EventKind.TRANSFER: "transferred",
     }.get(payload.kind)
     if lifecycle is not None:
         if isinstance(target, PlantGroup) and lifecycle == "lost" and target.quantity_value == 0:
@@ -102,7 +132,13 @@ def _apply_creation_side_effect(target: Target, payload: EventCreate) -> None:
                 "An exact-zero PlantGroup cannot be marked lost",
             )
         target.lifecycle = lifecycle
-    if payload.kind in {EventKind.MOVEMENT, EventKind.DEATH, EventKind.LOSS, EventKind.DISCARDED}:
+    if payload.kind in {
+        EventKind.MOVEMENT,
+        EventKind.DEATH,
+        EventKind.LOSS,
+        EventKind.DISCARDED,
+        EventKind.TRANSFER,
+    }:
         target.updated_at = datetime.now(UTC)
 
 
@@ -112,6 +148,11 @@ def create_event(
     target_id: UUID,
     payload: EventCreate,
 ) -> Event:
+    if payload.kind == EventKind.EXTRACTION:
+        raise EventDomainConflictError(
+            "extraction_operation_required",
+            "Extraction Events are created only by the PlantGroup extraction operation",
+        )
     _require_destination(database, payload.destination_location_id)
     target = _lock_target(database, target_type, target_id)
     event = Event(
@@ -119,13 +160,44 @@ def create_event(
         plant_group_id=target.id if isinstance(target, PlantGroup) else None,
         **_write_values(payload),
     )
-    database.add(event)
     _apply_creation_side_effect(target, payload)
+    database.add(event)
     database.flush()
     return event
 
 
+def transfer_target(
+    database: Session,
+    target_type: TargetType,
+    target_id: UUID,
+    payload: TransferCreate,
+) -> tuple[Event, Target]:
+    target = _lock_target(database, target_type, target_id)
+    event_payload = EventCreate(
+        kind=EventKind.TRANSFER,
+        occurred_on=payload.occurred_on,
+        recipient=payload.recipient,
+        notes=payload.notes,
+    )
+    event = Event(
+        plant_id=target.id if isinstance(target, Plant) else None,
+        plant_group_id=target.id if isinstance(target, PlantGroup) else None,
+        **_write_values(event_payload),
+    )
+    _apply_creation_side_effect(target, event_payload)
+    database.add(event)
+    database.flush()
+    return event, target
+
+
 def update_event(database: Session, event: Event, payload: EventUpdate) -> Event:
+    if payload.kind == EventKind.EXTRACTION and event.kind != EventKind.EXTRACTION.value:
+        raise EventDomainConflictError(
+            "extraction_operation_required",
+            "An existing Event cannot be converted into an extraction Event",
+        )
+    if payload.kind == EventKind.EXTRACTION:
+        _require_extraction_result_from_source_group(database, event, payload.resulting_plant_id)
     _require_destination(database, payload.destination_location_id)
     for field, value in _write_values(payload).items():
         setattr(event, field, value)
@@ -142,8 +214,19 @@ def delete_event(database: Session, event: Event) -> None:
 def _projection_statement() -> Any:
     plant_identity = aliased(BotanicalIdentity)
     plant_group_identity = aliased(BotanicalIdentity)
+    resulting_plant = aliased(Plant)
+    resulting_plant_identity = aliased(BotanicalIdentity)
     return (
-        select(Event, Plant, PlantGroup, Location, plant_identity, plant_group_identity)
+        select(
+            Event,
+            Plant,
+            PlantGroup,
+            Location,
+            plant_identity,
+            plant_group_identity,
+            resulting_plant,
+            resulting_plant_identity,
+        )
         .outerjoin(Plant, Plant.id == Event.plant_id)
         .outerjoin(PlantGroup, PlantGroup.id == Event.plant_group_id)
         .outerjoin(Location, Location.id == Event.destination_location_id)
@@ -151,6 +234,11 @@ def _projection_statement() -> Any:
         .outerjoin(
             plant_group_identity,
             plant_group_identity.id == PlantGroup.botanical_identity_id,
+        )
+        .outerjoin(resulting_plant, resulting_plant.id == Event.resulting_plant_id)
+        .outerjoin(
+            resulting_plant_identity,
+            resulting_plant_identity.id == resulting_plant.botanical_identity_id,
         )
     )
 
@@ -264,6 +352,23 @@ def event_responses(database: Session, projections: list[EventProjection]) -> li
                         id=destination.id, display_path=display_path(destination, locations)
                     )
                     if destination is not None
+                    else None
+                ),
+                recipient=event.recipient,
+                resulting_plant_id=event.resulting_plant_id,
+                resulting_plant=(
+                    ResultingPlantSummary(
+                        id=projection.resulting_plant.id,
+                        label=projection.resulting_plant.label,
+                        botanical_identity=BotanicalIdentitySummary(
+                            id=projection.resulting_plant_identity.id,
+                            display_label=BotanicalIdentityResponse.from_model(
+                                projection.resulting_plant_identity
+                            ).display_label,
+                        ),
+                    )
+                    if projection.resulting_plant is not None
+                    and projection.resulting_plant_identity is not None
                     else None
                 ),
                 created_at=event.created_at,

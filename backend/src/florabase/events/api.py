@@ -56,7 +56,7 @@ def _list_target_events(
 ) -> list[EventResponse]:
     try:
         return event_responses(database, list_events(database, target_type, target_id))
-    except EventReferenceNotFoundError as error:
+    except (EventReferenceNotFoundError, EventDomainConflictError) as error:
         raise _translate(error) from error
 
 
@@ -161,7 +161,7 @@ def update_one_event(
     projection = _require_event(database, event_id)
     try:
         update_event(database, projection.event, payload)
-    except EventReferenceNotFoundError as error:
+    except (EventReferenceNotFoundError, EventDomainConflictError) as error:
         raise _translate(error) from error
     return _event_response(database, event_id)
 

@@ -42,6 +42,8 @@ interface EventFormState {
   occurredOn: PartialDate | null;
   notes: string;
   destinationLocationId: string;
+  recipient: string;
+  resultingPlantId: string;
 }
 
 const eventKindLabels: Record<EventKind, string> = {
@@ -53,6 +55,8 @@ const eventKindLabels: Record<EventKind, string> = {
   pruning: "Pruning",
   treatment: "Treatment",
   harvest: "Harvest",
+  extraction: "Extraction",
+  transfer: "Transfer",
   death: "Death",
   loss: "Loss",
   discarded: "Discarded",
@@ -61,11 +65,23 @@ const eventKindLabels: Record<EventKind, string> = {
 
 const filterKinds: Record<Exclude<EventFilter, "all">, EventKind[]> = {
   observations: ["observation", "flowering", "fruiting"],
-  cultivation: ["movement", "repotting", "pruning", "treatment", "harvest"],
-  status: ["death", "loss", "discarded"],
+  cultivation: [
+    "movement",
+    "repotting",
+    "pruning",
+    "treatment",
+    "harvest",
+    "extraction",
+  ],
+  status: ["transfer", "death", "loss", "discarded"],
 };
 
-const lifecycleKinds = new Set<EventKind>(["death", "loss", "discarded"]);
+const lifecycleKinds = new Set<EventKind>([
+  "transfer",
+  "death",
+  "loss",
+  "discarded",
+]);
 
 function blankForm(): EventFormState {
   return {
@@ -73,6 +89,8 @@ function blankForm(): EventFormState {
     occurredOn: null,
     notes: "",
     destinationLocationId: "",
+    recipient: "",
+    resultingPlantId: "",
   };
 }
 
@@ -82,6 +100,8 @@ function formFrom(event: EventResponse): EventFormState {
     occurredOn: event.occurred_on,
     notes: event.notes ?? "",
     destinationLocationId: event.destination_location_id ?? "",
+    recipient: event.recipient ?? "",
+    resultingPlantId: event.resulting_plant_id ?? "",
   };
 }
 
@@ -247,6 +267,10 @@ export function EventJournal({
       notes: form.notes.trim() || null,
       destination_location_id:
         form.kind === "movement" ? form.destinationLocationId : null,
+      recipient:
+        form.kind === "transfer" ? form.recipient.trim() || null : null,
+      resulting_plant_id:
+        form.kind === "extraction" ? form.resultingPlantId : null,
     };
     setMutation({ status: "pending" });
     try {
@@ -456,6 +480,22 @@ export function EventJournal({
                         {item.destination_location.display_path}
                       </p>
                     )}
+                    {item.recipient && (
+                      <p className="event-destination">
+                        <strong>Recipient:</strong> {item.recipient}
+                      </p>
+                    )}
+                    {item.kind === "extraction" && item.resulting_plant && (
+                      <p className="event-destination">
+                        <strong>1 individual extracted</strong>
+                        {" → "}
+                        <a href={`#/plants/${item.resulting_plant.id}`}>
+                          {item.resulting_plant.label ??
+                            item.resulting_plant.botanical_identity
+                              .display_label}
+                        </a>
+                      </p>
+                    )}
                     {item.notes && <p className="event-notes">{item.notes}</p>}
                   </article>
                 </li>
@@ -493,11 +533,17 @@ export function EventJournal({
                   setMutation({ status: "idle" });
                 }}
               >
-                {(Object.keys(eventKindLabels) as EventKind[]).map((kind) => (
-                  <option value={kind} key={kind}>
-                    {eventKindLabels[kind]}
-                  </option>
-                ))}
+                {(Object.keys(eventKindLabels) as EventKind[])
+                  .filter(
+                    (kind) =>
+                      kind !== "extraction" ||
+                      (editor !== "create" && editor.kind === "extraction"),
+                  )
+                  .map((kind) => (
+                    <option value={kind} key={kind}>
+                      {eventKindLabels[kind]}
+                    </option>
+                  ))}
               </select>
             </div>
             <PartialDateField
@@ -540,6 +586,23 @@ export function EventJournal({
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+            {form.kind === "transfer" && (
+              <div className="field">
+                <label htmlFor={`event-recipient-${targetId}`}>
+                  Recipient <span className="optional">(optional)</span>
+                </label>
+                <input
+                  id={`event-recipient-${targetId}`}
+                  value={form.recipient}
+                  disabled={pending}
+                  maxLength={255}
+                  onChange={(event) => {
+                    const recipient = event.currentTarget.value;
+                    setForm((current) => ({ ...current, recipient }));
+                  }}
+                />
               </div>
             )}
             <div className="field">

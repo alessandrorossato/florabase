@@ -472,6 +472,30 @@
                 "type": "null"
               }
             ]
+          },
+          "recipient": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient"
+          },
+          "resulting_plant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resulting Plant Id"
           }
         },
         "required": [
@@ -490,6 +514,8 @@
           "pruning",
           "treatment",
           "harvest",
+          "extraction",
+          "transfer",
           "death",
           "loss",
           "discarded",
@@ -556,6 +582,39 @@
               }
             ]
           },
+          "recipient": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient"
+          },
+          "resulting_plant": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResultingPlantSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resulting_plant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resulting Plant Id"
+          },
           "target": {
             "discriminator": {
               "mapping": {
@@ -588,6 +647,9 @@
           "notes",
           "destination_location_id",
           "destination_location",
+          "recipient",
+          "resulting_plant_id",
+          "resulting_plant",
           "created_at",
           "updated_at"
         ],
@@ -633,6 +695,30 @@
                 "type": "null"
               }
             ]
+          },
+          "recipient": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient"
+          },
+          "resulting_plant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resulting Plant Id"
           }
         },
         "required": [
@@ -1511,6 +1597,9 @@
       },
       "PlantExtractionResponse": {
         "properties": {
+          "event": {
+            "$ref": "#/components/schemas/EventResponse"
+          },
           "plant": {
             "$ref": "#/components/schemas/PlantResponse"
           },
@@ -1520,7 +1609,8 @@
         },
         "required": [
           "plant",
-          "plant_group"
+          "plant_group",
+          "event"
         ],
         "title": "PlantExtractionResponse",
         "type": "object"
@@ -1841,6 +1931,7 @@
       "PlantGroupLifecycle": {
         "enum": [
           "active",
+          "transferred",
           "completed",
           "dead",
           "lost",
@@ -2114,6 +2205,22 @@
         "title": "PlantGroupResponse",
         "type": "object"
       },
+      "PlantGroupTransferResponse": {
+        "properties": {
+          "event": {
+            "$ref": "#/components/schemas/EventResponse"
+          },
+          "plant_group": {
+            "$ref": "#/components/schemas/PlantGroupResponse"
+          }
+        },
+        "required": [
+          "plant_group",
+          "event"
+        ],
+        "title": "PlantGroupTransferResponse",
+        "type": "object"
+      },
       "PlantGroupUpdate": {
         "additionalProperties": false,
         "properties": {
@@ -2250,6 +2357,7 @@
       "PlantLifecycle": {
         "enum": [
           "active",
+          "transferred",
           "dead",
           "lost",
           "discarded"
@@ -2513,6 +2621,22 @@
           "originating_plant_group"
         ],
         "title": "PlantResponse",
+        "type": "object"
+      },
+      "PlantTransferResponse": {
+        "properties": {
+          "event": {
+            "$ref": "#/components/schemas/EventResponse"
+          },
+          "plant": {
+            "$ref": "#/components/schemas/PlantResponse"
+          }
+        },
+        "required": [
+          "plant",
+          "event"
+        ],
+        "title": "PlantTransferResponse",
         "type": "object"
       },
       "PlantUpdate": {
@@ -2787,6 +2911,36 @@
           "lifecycle"
         ],
         "title": "PropagationPlantSummary",
+        "type": "object"
+      },
+      "ResultingPlantSummary": {
+        "properties": {
+          "botanical_identity": {
+            "$ref": "#/components/schemas/BotanicalIdentitySummary"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "botanical_identity"
+        ],
+        "title": "ResultingPlantSummary",
         "type": "object"
       },
       "SeedLotCreate": {
@@ -4848,6 +5002,47 @@
         "title": "SupplierUpdate",
         "type": "object"
       },
+      "TransferCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "occurred_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "recipient": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recipient"
+          }
+        },
+        "title": "TransferCreate",
+        "type": "object"
+      },
       "UseAllSourceAdjustment": {
         "additionalProperties": false,
         "properties": {
@@ -6743,6 +6938,75 @@
         ]
       }
     },
+    "/api/v1/plant-groups/{plant_group_id}/transfer": {
+      "post": {
+        "operationId": "transferPlantGroup",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plant_group_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plant Group Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantGroupTransferResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Transfer One Plant Group",
+        "tags": [
+          "plant-groups"
+        ]
+      }
+    },
     "/api/v1/plants": {
       "get": {
         "operationId": "listPlants",
@@ -7087,6 +7351,75 @@
           }
         },
         "summary": "Read Plant Lineage",
+        "tags": [
+          "plants"
+        ]
+      }
+    },
+    "/api/v1/plants/{plant_id}/transfer": {
+      "post": {
+        "operationId": "transferPlant",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransferCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantTransferResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Transfer One Plant",
         "tags": [
           "plants"
         ]
