@@ -4,6 +4,14 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-05 — CI-002 auto-merge delivery fix
+
+- Corrected `make feature-deliver` to recognize GitHub REST's `closed` plus `merged: true` response
+  after successful squash auto-merge, retain the resulting merge SHA, and continue blocking closed
+  unmerged pull requests. Focused no-network coverage includes open polling, both closed outcomes,
+  an auto-merge between polling reads, and resulting main-SHA reporting. Workflow tests, helper
+  compilation, and `git diff --check` passed.
+
 ## 2026-09-05 — CI-002 verified
 
 - Added `make feature-verify` as the final local feature gate. It validates the feature graph and

@@ -167,6 +167,7 @@ def pr(
     sha: str = "feature-sha",
     state: str = "open",
     merge: str | None = None,
+    merged: bool = False,
     head: str = "ci/ci-002",
     base: str = "main",
 ) -> str:
@@ -178,6 +179,7 @@ def pr(
             "head": {"ref": head, "sha": sha},
             "base": {"ref": base},
             "merge_commit_sha": merge,
+            "merged": merged,
             "html_url": "https://example.invalid/pr/7",
         }
     )
@@ -448,6 +450,56 @@ class DeliveryTests(unittest.TestCase):
         merged = feature_deliver.PullRequest(7, "node", "MERGED", "feature", "main-sha", "")
         delivery.current_pr = lambda _: merged  # type: ignore[method-assign]
         self.assertEqual(delivery.wait_for_merge(merged, "feature").merge_sha, "main-sha")
+
+    def test_open_pr_continues_until_closed_merged(self) -> None:
+        delivery = self.delivery()
+        snapshots = iter(
+            [
+                feature_deliver.Delivery.pr_from(json.loads(pr(state="open"))),
+                feature_deliver.Delivery.pr_from(
+                    json.loads(pr(state="closed", merge="squash-sha", merged=True))
+                ),
+            ]
+        )
+        delivery.current_pr = lambda _: next(snapshots)  # type: ignore[method-assign]
+        result = delivery.wait_for_merge(
+            feature_deliver.Delivery.pr_from(json.loads(pr(state="open"))), "feature-sha"
+        )
+        self.assertEqual(result.merge_sha, "squash-sha")
+
+    def test_closed_unmerged_pr_blocks_delivery(self) -> None:
+        delivery = self.delivery()
+        closed = feature_deliver.Delivery.pr_from(json.loads(pr(state="closed", merged=False)))
+        delivery.current_pr = lambda _: closed  # type: ignore[method-assign]
+        with contextlib.redirect_stderr(io.StringIO()) as error, self.assertRaises(
+            feature_deliver.DeliveryError
+        ):
+            delivery.wait_for_merge(closed, "feature-sha")
+        self.assertIn("DELIVERY_BLOCKED", error.getvalue())
+
+    def test_auto_merge_between_check_and_merge_polls_returns_resulting_main_sha(self) -> None:
+        delivery = self.delivery()
+        open_pr = feature_deliver.Delivery.pr_from(json.loads(pr(state="open", sha="feature-sha")))
+        merged_pr = feature_deliver.Delivery.pr_from(
+            json.loads(pr(state="closed", sha="feature-sha", merge="main-sha", merged=True))
+        )
+        snapshots = iter([open_pr, merged_pr])
+        delivery.current_pr = lambda _: next(snapshots)  # type: ignore[method-assign]
+        delivery.check_runs = lambda _: {  # type: ignore[method-assign]
+            name: {"status": "completed", "conclusion": "success"}
+            for name in feature_deliver.REQUIRED_CHECKS
+        }
+        delivery.wait_for_checks(open_pr, "feature-sha")
+        result = delivery.wait_for_merge(open_pr, "feature-sha")
+        self.assertEqual(result.merge_sha, "main-sha")
+
+    def test_closed_merged_rest_response_is_parsed_as_completed_delivery(self) -> None:
+        parsed = feature_deliver.Delivery.pr_from(
+            json.loads(pr(state="closed", merge="main-sha", merged=True))
+        )
+        self.assertEqual(parsed.state, "CLOSED")
+        self.assertTrue(parsed.merged)
+        self.assertEqual(parsed.merge_sha, "main-sha")
 
     def test_remote_branch_deletion_is_confirmed(self) -> None:
         commands = FakeCommands(

@@ -34,6 +34,7 @@ class PullRequest:
     html_url: str
     head_ref: str = ""
     base_ref: str = ""
+    merged: bool = False
 
 
 class Commands:
@@ -118,6 +119,7 @@ class Delivery:
             html_url=str(value.get("html_url", "")),
             head_ref=str(head.get("ref", "")),
             base_ref=str(base.get("ref", "")),
+            merged=value.get("merged") is True,
         )
 
     def require(self, condition: bool, message: str) -> None:
@@ -286,7 +288,7 @@ class Delivery:
         started = self.monotonic()
         while True:
             current = self.current_pr(pr.number)
-            if current.state == "MERGED":
+            if current.state == "MERGED" or current.merged:
                 return
             if current.state != "OPEN":
                 fail(f"pull request #{pr.number} is unexpectedly {current.state.lower()}", blocked=True)
@@ -327,7 +329,7 @@ class Delivery:
         started = self.monotonic()
         while True:
             current = self.current_pr(pr.number)
-            if current.state == "MERGED":
+            if current.state == "MERGED" or current.merged:
                 if not current.merge_sha:
                     fail(f"merged pull request #{pr.number} has no merge SHA", blocked=True)
                 return current
