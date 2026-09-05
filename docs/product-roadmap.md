@@ -10,6 +10,7 @@ acceptance criteria.
 - Botanical reference knowledge stays separate from collection observations.
 - Supplier, collection Location, and geographic provenance answer different questions.
 - Historical records and explicit workflow lineage are preserved.
+- Ordinary journal Events and authoritative domain operations have distinct mutation semantics.
 - Generic infrastructure waits for a demonstrated repeated need.
 - The initial product serves one self-hosted owner through a same-origin web application.
 
@@ -105,6 +106,65 @@ the resulting Plant. Event edits and deletes never replay or reverse either oper
 Location concept while adding usage-scoped Seeds, Sowings, and Plants views plus an accessible
 collapsible hierarchy. `SUPPLIER-002` may add connected-record summaries, but financial totals wait
 for the separate `ORDER-001` transaction model.
+
+### Reversible authoritative operations
+
+Before `LOCATION-002` or further geography work is selected in product sequencing, Florabase should
+complete a small reversible-workflow path: `REVERSAL-001` then `PLANT-006` and
+`PROPAGATION-003`. This is sequencing, not a new technical prerequisite for Location or geography:
+their existing feature-graph dependencies remain unchanged.
+
+`REVERSAL-001` will add a focused, immutable operation receipt for only the already-authoritative
+actions: SeedLot-to-Sowing, Sowing-to-Plant or PlantGroup, PlantGroup extraction, and Plant or
+PlantGroup transfer. A receipt records the controlled operation type and status, record identities,
+any operation-owned Event, and typed before-state needed to compensate it. It is not a general Event
+log: current aggregate rows remain authoritative, ordinary direct corrections remain corrections,
+and journal Events still do not replay.
+
+The numerical rule is restoration, not reverse arithmetic. An exact SeedLot can therefore round
+trip `100 → use 20 → 80 → undo → 100`, and an exact PlantGroup can round trip
+`10 → extract 1 → 9 → undo → 10`. A partial-use estimate such as `~100 → ~80` restores its
+recorded `~100` snapshot; it never computes a value by adding a delta. Unknown remains unknown.
+Undo accepts only the recorded quantity kind and unit, so count and weight (including `g` and `mg`,
+for which no conversion contract exists) cannot be mixed.
+
+`PLANT-006` is deliberately narrow: it reinserts the particular Plant created by a particular
+recorded extraction into that Plant's original PlantGroup. The preferred product direction is to
+retain the individual historically, its origin, lineage, and prior Events, while making it no longer
+active as a separate managed Plant; an operation-owned reinsertion history item links the two
+records. Product approval is still needed on whether that retained state is a new explicit
+`reintegrated` lifecycle or a separate immutable reintegration marker. Hard deletion is not the
+default because it would discard or conflict with historical Events and downstream lineage. A second
+decision is whether the one canonical reinsertion Event is group-targeted with a linked Plant, or
+whether a paired Plant-targeted journal item is useful enough to justify duplicate history.
+
+`PROPAGATION-003` will make the supported forward propagation actions compensable from their
+receipts. Its product decision is the historical treatment of a child record created by an undone
+operation: preserve a clearly marked undone historical record by default, or allow a tightly guarded
+hard delete only while it has no Events, corrections, or references. It must never erase dependent
+facts just to make an undo appear successful.
+
+Undo is dependency-aware. It may proceed automatically only when the receipt remains applied and
+every affected record still has the recorded post-operation state with no later dependent work. A
+later non-state-changing observation may be presented as a confirmation-required retained fact when
+the selected operation contract can preserve it honestly. Later lifecycle or Location changes,
+transfer, a new extraction, manual identity or quantity correction, any descendant or produced
+SeedLot, later Sowing/Plant/PlantGroup propagation, or another operation using the same mutable
+source blocks automatic undo and must be resolved first. Confirmation is never an override for a
+referential or numerical invariant.
+
+For transfer, the inverse restores the lifecycle captured in the transfer receipt; it must not
+assume `active`, even though the current forward contract admits only active targets. It is allowed
+only while the target is still in the recorded transferred state and has no incompatible later work.
+The recipient remains historical metadata in the receipt. The transfer Event is removed from the
+active journal or archived only inside the same successful inverse transaction; the receipt retains
+the audit evidence of the original action and its undo.
+
+The eventual UI boundary is explicit: an ordinary Event continues to offer **Delete event**, which
+changes only that journal item. An Event linked to an applied operation offers **Undo action**. That
+request calls the authoritative inverse first; only a successful atomic inverse may remove or archive
+the operation-owned Event. The UI must never delete such an Event and imply that the associated
+current state was reversed when it was not.
 
 Geography remains precision-preserving and extensible. A complete canonical global city catalogue is
 not a first-release requirement. Existing custom GeographicPlace descendants can cover carefully

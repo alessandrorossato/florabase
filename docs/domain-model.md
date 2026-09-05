@@ -125,6 +125,53 @@ redundant counter is persisted. PlantGroup extraction is the narrow exception: i
 operation records an extraction Event with a structured resulting-Plant link without adding a
 second lineage model.
 
+### Planned reversible authoritative operations
+
+The current forward operations are atomic, but they are not yet reliably reversible. They do not
+persist an operation identifier, adjustment mode, before-state snapshot, operation-owned Event link,
+or complete set of created-record identities. Existing current rows and extraction Event links are
+therefore evidence of some outcomes, not a sufficient authoritative basis for a later inverse. In
+particular, a Sowing is not distinguishable from a direct Sowing by its persisted source link; a
+transfer Event does not retain the previous lifecycle; and current approximate/unknown quantities
+cannot safely reveal their previous values.
+
+`REVERSAL-001` will introduce a deliberately small operation-receipt boundary, not event sourcing.
+One immutable receipt for each supported authoritative operation will retain: a controlled operation
+type and applied/undone status; the source, affected, and created record identifiers; an
+operation-owned Event identifier or serialized Event audit data where applicable; and type-specific
+before-state snapshots. The snapshots must include lifecycle and every quantity representation field
+(kind, value, unit, and exact/approximate flag, or all absent for unknown). Dedicated typed receipt
+records for propagation, extraction, and transfer are preferred over a free-form generic event
+payload. Aggregate rows remain the only current-state authority, and undo is a locked, validated,
+one-transaction compensation rather than replaying history.
+
+This makes the numerical contract explicit. Exact compatible values are restored exactly, including
+`100 → 80 → 100` for a consumed SeedLot and `10 → 9 → 10` for an extracted PlantGroup. Approximate
+and unknown values are restored only from the recorded before-state: an operator-confirmed
+`~100 → ~80` returns to recorded `~100`, and unknown returns to unknown. No inverse may derive an
+estimate, change count into weight, or convert `g` and `mg` without a separately approved conversion
+contract. The receipt also restores lifecycle snapshots, including use-all exhaustion and any future
+transfer predecessor, rather than inferring them from the currently visible Event.
+
+The inverse must lock every affected aggregate and verify deterministic dependency guards. It is
+safe automatically only when the receipt is still applied, the recorded post-state still matches,
+and no later dependent operation, correction, state-changing Event, or lineage has touched the
+operation's scope. A later non-state-changing observation can be a confirmation-required retained
+fact only where the operation contract explicitly says it remains truthful. Later lifecycle,
+Location, identity, quantity, transfer, or extraction changes; later Sowing/Plant/PlantGroup work;
+produced SeedLots; and descendants block undo until the dependent action is resolved. Neither
+confirmation nor Event deletion may override a database or numerical invariant.
+
+Future `PLANT-006` will compensate only the recorded extraction of a Plant back into its immutable
+originating PlantGroup, never arbitrary group membership. It restores an exact group quantity from
+the extraction receipt; approximate and unknown group quantities receive no invented arithmetic.
+The Plant and its existing Events and lineage must remain accessible. The preferred retention model
+is a non-active, historically retained reintegrated Plant plus one operation-owned reinsertion Event
+on the PlantGroup linked to that Plant. Product approval is required on whether `reintegrated` is a
+new lifecycle or a separate immutable reintegration marker, and on whether a paired Plant-targeted
+Event is worth the extra duplicated journal history. Hard deletion is excluded unless a later
+approved contract proves that no Event, correction, lineage, or reference can be lost.
+
 ### Plant
 
 A Plant is exactly one individually tracked specimen and never has quantity. It requires its own
@@ -184,6 +231,14 @@ movement destination, recipient, or extraction result changes history only; edit
 Event never replays, reverses, or recomputes current Location, lifecycle, quantity, lineage, or
 resulting Plant. Ordinary Plant/PlantGroup edits do not create Events and remain the correction path
 for current lifecycle.
+
+The planned reversible-operation boundary preserves this rule. An ordinary journal Event remains
+independently editable or deletable and never reverses current state. An Event owned by an applied
+authoritative operation is instead an undo affordance: its request resolves the operation receipt,
+checks dependencies, and applies the recorded inverse atomically. Only after success may the UI
+remove the Event from the active journal or archive it; the immutable receipt preserves audit
+evidence. A failed or blocked undo leaves both the Event and aggregate state unchanged, so deleting
+history can never be mistaken for reversing a domain action.
 
 Plant and PlantGroup detail pages expose the same protected Event journal. Desktop presents the
 API-ordered history as a vertical timeline, while narrow screens use compact wrapping cards. The UI
