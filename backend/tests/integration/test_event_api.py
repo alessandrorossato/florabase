@@ -359,7 +359,11 @@ def test_explicit_transfer_is_atomic_correctable_and_non_replaying(
         == 200
     )
     assert request("GET", path, headers={"cookie": cookie})[2]["lifecycle"] == "transferred"
-    assert mutate(authenticated_browser, "DELETE", f"/api/v1/events/{event_id}")[0] == 204
+    status_code, _, delete_body = mutate(
+        authenticated_browser, "DELETE", f"/api/v1/events/{event_id}"
+    )
+    assert status_code == 409
+    assert delete_body["detail"]["code"] == "operation_event_requires_undo"
     assert request("GET", path, headers={"cookie": cookie})[2]["lifecycle"] == "transferred"
 
     correction = {"botanical_identity_id": transferred[response_key]["botanical_identity_id"]}

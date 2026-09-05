@@ -22,6 +22,8 @@ from florabase.locations.model import Location
 from florabase.locations.service import display_path, list_locations
 from florabase.plants.model import Plant, PlantGroup
 from florabase.plants.schemas import BotanicalIdentitySummary, LocationSummary
+from florabase.reversals.model import OperationKind, OperationReceipt
+from florabase.reversals.service import add_receipt, group_quantity
 from florabase.seed_lots.schemas import PartialDate
 
 TargetType = Literal["plant", "plant_group"]
@@ -173,6 +175,8 @@ def transfer_target(
     payload: TransferCreate,
 ) -> tuple[Event, Target]:
     target = _lock_target(database, target_type, target_id)
+    before_lifecycle = target.lifecycle
+    before_quantity = group_quantity(target) if isinstance(target, PlantGroup) else None
     event_payload = EventCreate(
         kind=EventKind.TRANSFER,
         occurred_on=payload.occurred_on,
@@ -187,6 +191,21 @@ def transfer_target(
     _apply_creation_side_effect(target, event_payload)
     database.add(event)
     database.flush()
+    add_receipt(
+        database,
+        kind=(
+            OperationKind.PLANT_GROUP_TRANSFER
+            if isinstance(target, PlantGroup)
+            else OperationKind.PLANT_TRANSFER
+        ),
+        plant_id=target.id if isinstance(target, Plant) else None,
+        plant_group_id=target.id if isinstance(target, PlantGroup) else None,
+        event_id=event.id,
+        before_lifecycle=before_lifecycle,
+        after_lifecycle=target.lifecycle,
+        before_quantity=before_quantity,
+        after_quantity=group_quantity(target) if isinstance(target, PlantGroup) else None,
+    )
     return event, target
 
 
@@ -207,6 +226,14 @@ def update_event(database: Session, event: Event, payload: EventUpdate) -> Event
 
 
 def delete_event(database: Session, event: Event) -> None:
+    owner = database.scalar(
+        select(OperationReceipt.id).where(OperationReceipt.event_id == event.id)
+    )
+    if owner is not None:
+        raise EventDomainConflictError(
+            "operation_event_requires_undo",
+            "An Event owned by an authoritative operation cannot be deleted as an ordinary Event",
+        )
     database.delete(event)
     database.flush()
 

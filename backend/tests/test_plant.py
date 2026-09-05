@@ -25,6 +25,7 @@ from florabase.plants.service import (
     PlantProjection,
     PlantReferenceNotFoundError,
 )
+from florabase.reversals.model import OperationReceipt
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import Sowing
 from florabase.suppliers.model import Supplier
@@ -232,8 +233,15 @@ def test_extraction_service_locks_inherits_decrements_and_preserves_put_origin()
     assert extraction_event.kind == "extraction"
     assert extraction_event.plant_group_id == group.id
     assert extraction_event.resulting_plant_id == extracted.id
-    assert database.add.call_args_list == [((extracted,),), ((extraction_event,),)]
-    assert database.flush.call_count == 2
+    assert database.add.call_args_list[:2] == [((extracted,),), ((extraction_event,),)]
+    receipt = database.add.call_args_list[2].args[0]
+    assert isinstance(receipt, OperationReceipt)
+    assert receipt.kind == "plant_group_extraction"
+    assert receipt.before_lifecycle == "active"
+    assert receipt.after_lifecycle == "completed"
+    assert receipt.before_quantity_value == 1
+    assert receipt.after_quantity_value == 0
+    assert database.flush.call_count == 3
 
     extracted.id = plant.id
     allowed = PlantUpdate(

@@ -19,6 +19,7 @@ from florabase.propagation.service import (
     PropagationConflictError,
     create_sowing_from_seed_lot,
 )
+from florabase.reversals.model import OperationReceipt
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import Sowing
 from integration.test_seed_lot_api import (
@@ -508,8 +509,19 @@ def test_concurrent_exact_consumption_cannot_oversubscribe(database_engine: Engi
                 )
                 == 1
             )
+            assert (
+                database.scalar(
+                    select(func.count())
+                    .select_from(OperationReceipt)
+                    .where(OperationReceipt.seed_lot_id == seed_lot_id)
+                )
+                == 1
+            )
     finally:
         with Session(database_engine) as database:
+            database.execute(
+                delete(OperationReceipt).where(OperationReceipt.seed_lot_id == seed_lot_id)
+            )
             database.execute(
                 delete(Plant).where(
                     Plant.originating_sowing_id.in_(

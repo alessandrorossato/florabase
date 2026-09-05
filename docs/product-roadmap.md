@@ -114,12 +114,19 @@ complete a small reversible-workflow path: `REVERSAL-001` then `PLANT-006` and
 `PROPAGATION-003`. This is sequencing, not a new technical prerequisite for Location or geography:
 their existing feature-graph dependencies remain unchanged.
 
-`REVERSAL-001` will add a focused, immutable operation receipt for only the already-authoritative
-actions: SeedLot-to-Sowing, Sowing-to-Plant or PlantGroup, PlantGroup extraction, and Plant or
-PlantGroup transfer. A receipt records the controlled operation type and status, record identities,
-any operation-owned Event, and typed before-state needed to compensate it. It is not a general Event
-log: current aggregate rows remain authoritative, ordinary direct corrections remain corrections,
-and journal Events still do not replay.
+`REVERSAL-001` now provides the persistence foundation: each newly executed SeedLot-to-Sowing,
+Sowing-to-Plant or PlantGroup, PlantGroup extraction, and Plant or PlantGroup transfer writes one
+immutable relational receipt in the same transaction. Its controlled kind, status, source/result
+identities, one-to-one operation-owned Event link, and typed before/expected-after lifecycle and
+quantity snapshots are fixed original facts. The migration deliberately creates no receipts for
+historical operations. This is not a general Event log: current aggregate rows remain authoritative,
+ordinary direct corrections remain corrections, and journal Events still do not replay.
+
+Receipts have no generic JSON/custom metadata and no public creation, update, or delete API.
+Operation-owned Events reject ordinary deletion so the application cannot imply that state was
+reversed; ordinary Events keep their existing deletion semantics. `REVERSAL-001` does not implement
+undo, reverse quantity mutation, reintegration, dependency resolution, or Undo UI. Those remain in
+`PLANT-006` and `PROPAGATION-003`.
 
 The numerical rule is restoration, not reverse arithmetic. An exact SeedLot can therefore round
 trip `100 → use 20 → 80 → undo → 100`, and an exact PlantGroup can round trip

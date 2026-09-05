@@ -18,6 +18,8 @@ from florabase.propagation.schemas import (
     SeedLotSowingTransitionCreate,
     SowingPropagationSummary,
 )
+from florabase.reversals.model import OperationKind
+from florabase.reversals.service import add_receipt, seed_quantity
 from florabase.seed_lots.model import SeedLot
 from florabase.seed_lots.schemas import SeedQuantity
 from florabase.sowings.model import Sowing
@@ -161,6 +163,8 @@ def create_sowing_from_seed_lot(
     seed_lot = database.scalar(select(SeedLot).where(SeedLot.id == seed_lot_id).with_for_update())
     if seed_lot is None:
         raise PropagationNotFoundError("seed_lot_not_found", "SeedLot not found")
+    before_lifecycle = seed_lot.lifecycle
+    before_quantity = seed_quantity(seed_lot)
     sowing_payload = SowingCreate(seed_lot_id=seed_lot.id, **payload.sowing.model_dump())
     adjustment = payload.source_adjustment
     if adjustment.mode == "partial":
@@ -182,6 +186,17 @@ def create_sowing_from_seed_lot(
         seed_lot.updated_at = datetime.now(UTC)
     sowing = create_sowing(database, sowing_payload)
     database.flush()
+    add_receipt(
+        database,
+        kind=OperationKind.SEED_LOT_TO_SOWING,
+        seed_lot_id=seed_lot.id,
+        sowing_id=sowing.id,
+        adjustment_mode=adjustment.mode,
+        before_lifecycle=before_lifecycle,
+        after_lifecycle=seed_lot.lifecycle,
+        before_quantity=before_quantity,
+        after_quantity=seed_quantity(seed_lot),
+    )
     return sowing, seed_lot
 
 
@@ -199,6 +214,7 @@ def create_plant_from_sowing(
     resulting_lifecycle: str,
 ) -> tuple[Plant, Sowing]:
     sowing = _lock_sowing(database, sowing_id)
+    before_lifecycle = sowing.lifecycle
     plant = create_plant(
         database,
         PlantCreate(
@@ -209,6 +225,14 @@ def create_plant_from_sowing(
     sowing.lifecycle = resulting_lifecycle
     sowing.updated_at = datetime.now(UTC)
     database.flush()
+    add_receipt(
+        database,
+        kind=OperationKind.SOWING_TO_PLANT,
+        sowing_id=sowing.id,
+        plant_id=plant.id,
+        before_lifecycle=before_lifecycle,
+        after_lifecycle=sowing.lifecycle,
+    )
     return plant, sowing
 
 
@@ -219,6 +243,7 @@ def create_plant_group_from_sowing(
     resulting_lifecycle: str,
 ) -> tuple[PlantGroup, Sowing]:
     sowing = _lock_sowing(database, sowing_id)
+    before_lifecycle = sowing.lifecycle
     plant_group = create_plant_group(
         database,
         PlantGroupCreate(
@@ -229,6 +254,14 @@ def create_plant_group_from_sowing(
     sowing.lifecycle = resulting_lifecycle
     sowing.updated_at = datetime.now(UTC)
     database.flush()
+    add_receipt(
+        database,
+        kind=OperationKind.SOWING_TO_PLANT_GROUP,
+        sowing_id=sowing.id,
+        plant_group_id=plant_group.id,
+        before_lifecycle=before_lifecycle,
+        after_lifecycle=sowing.lifecycle,
+    )
     return plant_group, sowing
 
 

@@ -125,25 +125,28 @@ redundant counter is persisted. PlantGroup extraction is the narrow exception: i
 operation records an extraction Event with a structured resulting-Plant link without adding a
 second lineage model.
 
-### Planned reversible authoritative operations
+### Reversible authoritative-operation receipts
 
-The current forward operations are atomic, but they are not yet reliably reversible. They do not
-persist an operation identifier, adjustment mode, before-state snapshot, operation-owned Event link,
-or complete set of created-record identities. Existing current rows and extraction Event links are
-therefore evidence of some outcomes, not a sufficient authoritative basis for a later inverse. In
-particular, a Sowing is not distinguishable from a direct Sowing by its persisted source link; a
-transfer Event does not retain the previous lifecycle; and current approximate/unknown quantities
-cannot safely reveal their previous values.
+`REVERSAL-001` introduces a deliberately small operation-receipt boundary, not event sourcing.
+Every newly executed SeedLot-to-Sowing, Sowing-to-Plant, Sowing-to-PlantGroup, PlantGroup extraction,
+Plant transfer, or PlantGroup transfer operation creates one receipt in the same transaction. The
+receipt has a UUIDv7 identity, UTC creation timestamp, controlled kind and status, explicit foreign
+keys for its source/result records and operation-owned Event where applicable, adjustment mode where
+applicable, and typed lifecycle and quantity state before and expected after the operation. There is
+no generic JSON payload or public receipt CRUD API.
 
-`REVERSAL-001` will introduce a deliberately small operation-receipt boundary, not event sourcing.
-One immutable receipt for each supported authoritative operation will retain: a controlled operation
-type and applied/undone status; the source, affected, and created record identifiers; an
-operation-owned Event identifier or serialized Event audit data where applicable; and type-specific
-before-state snapshots. The snapshots must include lifecycle and every quantity representation field
-(kind, value, unit, and exact/approximate flag, or all absent for unknown). Dedicated typed receipt
-records for propagation, extraction, and transfer are preferred over a free-form generic event
-payload. Aggregate rows remain the only current-state authority, and undo is a locked, validated,
-one-transaction compensation rather than replaying history.
+The relational shape is closed by database checks for each supported kind. Quantity snapshots store
+kind/dimension, value, unit, and exact/approximate state; all four fields are absent for unknown.
+Original receipt facts are database-immutable, while the separate status may later move from applied
+to reversed through a purpose-specific undo operation. Aggregate rows remain the only current-state
+authority. Corrections made after an operation update those aggregates without modifying the
+receipt, deliberately leaving a detectable difference from its expected after-state.
+
+The migration does not backfill historical operations: their before-state is no longer safely
+reconstructable. Existing Sowings, lineage, transfer Events, and extraction Events remain valid but
+receive no fabricated receipt. Undo, dependency evaluation, reintegration, record archival, reverse
+mutation, and Undo UI are not implemented by this increment; `PLANT-006` and `PROPAGATION-003`
+remain separate work.
 
 This makes the numerical contract explicit. Exact compatible values are restored exactly, including
 `100 → 80 → 100` for a consumed SeedLot and `10 → 9 → 10` for an extracted PlantGroup. Approximate
@@ -232,13 +235,12 @@ Event never replays, reverses, or recomputes current Location, lifecycle, quanti
 resulting Plant. Ordinary Plant/PlantGroup edits do not create Events and remain the correction path
 for current lifecycle.
 
-The planned reversible-operation boundary preserves this rule. An ordinary journal Event remains
-independently editable or deletable and never reverses current state. An Event owned by an applied
-authoritative operation is instead an undo affordance: its request resolves the operation receipt,
-checks dependencies, and applies the recorded inverse atomically. Only after success may the UI
-remove the Event from the active journal or archive it; the immutable receipt preserves audit
-evidence. A failed or blocked undo leaves both the Event and aggregate state unchanged, so deleting
-history can never be mistaken for reversing a domain action.
+The receipt boundary preserves this rule. An ordinary journal Event remains independently editable
+or deletable and never reverses current state. A transfer or extraction Event created by an
+authoritative operation has a one-to-one receipt relationship and ordinary deletion is rejected;
+editing remains correction of journal history and never changes the immutable receipt or aggregate
+state. A future purpose-specific undo request will resolve that receipt, validate dependencies, and
+apply its inverse atomically. No undo behavior or UI is implemented yet.
 
 Plant and PlantGroup detail pages expose the same protected Event journal. Desktop presents the
 API-ordered history as a vertical timeline, while narrow screens use compact wrapping cards. The UI

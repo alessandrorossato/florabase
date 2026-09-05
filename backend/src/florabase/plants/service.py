@@ -34,6 +34,8 @@ from florabase.plants.schemas import (
     PlantUpdate,
     SupplierSummary,
 )
+from florabase.reversals.model import OperationKind
+from florabase.reversals.service import add_receipt, group_quantity
 from florabase.seed_lots.model import SeedLot
 from florabase.seed_lots.schemas import PartialDate
 from florabase.sowings.model import Sowing
@@ -182,6 +184,8 @@ def extract_plant(
         raise PlantDomainConflictError(
             "plant_group_not_active", "Only an active PlantGroup can have a Plant extracted"
         )
+    before_lifecycle = plant_group.lifecycle
+    before_quantity = group_quantity(plant_group)
     identity_id = payload.botanical_identity_id or plant_group.botanical_identity_id
     location_id = (
         payload.location_id
@@ -245,6 +249,17 @@ def extract_plant(
     )
     database.add(event)
     database.flush()
+    add_receipt(
+        database,
+        kind=OperationKind.PLANT_GROUP_EXTRACTION,
+        plant_id=plant.id,
+        plant_group_id=plant_group.id,
+        event_id=event.id,
+        before_lifecycle=before_lifecycle,
+        after_lifecycle=plant_group.lifecycle,
+        before_quantity=before_quantity,
+        after_quantity=group_quantity(plant_group),
+    )
     return plant, plant_group, event
 
 

@@ -106,6 +106,7 @@ def test_schema_uses_native_types_named_constraints_and_only_one_botanical_table
         "geographic_places",
         "locations",
         "login_throttles",
+        "operation_receipts",
         "plant_groups",
         "plants",
         "seed_lots",
