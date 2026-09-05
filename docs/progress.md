@@ -30,6 +30,13 @@ implementation detail.
   base branch, and exact delivery SHA for both reuse and creation. Regression fixtures cover lowercase
   and mixed-case state, historical closed/merged entries, mismatched branch/base data, and follow-up
   reuse without a duplicate PR.
+- A second real delivery confirmed GitHub's normal post-push REST propagation window: PR #19 initially
+  returned its prior head SHA before later reflecting the pushed SHA and registering new-SHA checks.
+  Delivery now validates the open PR target immediately, then waits at a bounded two-second/sixty-second
+  cadence only for a prior same-lineage head to advance to the delivery SHA. It rejects mismatched
+  branch, base, state, or unrelated SHA without waiting, and begins the separate current-SHA check
+  registration wait only after the PR head matches. No-network regression coverage includes delayed,
+  immediate, timeout, wrong-target, no-duplicate, and check-sequencing paths.
 
 ## 2026-09-05 — REVERSAL-001 verified
 

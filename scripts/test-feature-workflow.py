@@ -333,6 +333,78 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(reused.state, "OPEN")
         self.assertEqual(api_calls.count(("POST", "repos/alessandrorossato/florabase/pulls")), 1)
 
+    def test_pr_head_propagation_waits_for_current_delivery_sha_without_duplicate_pr(self) -> None:
+        sleeps: list[int] = []
+        delivery = feature_deliver.Delivery(FakeCommands({}), sleep=sleeps.append)
+        api_calls: list[tuple[str, str]] = []
+        stale = json.loads(pr(sha="old-sha"))
+        delivery.api = lambda endpoint, method="GET", fields=None: (  # type: ignore[method-assign]
+            api_calls.append((method, endpoint)) or [stale]
+        )
+        reused = delivery.find_or_create_pr("ci/ci-002", "new-sha", False)
+        snapshots = iter(
+            [
+                feature_deliver.Delivery.pr_from(json.loads(pr(sha="old-sha"))),
+                feature_deliver.Delivery.pr_from(json.loads(pr(sha="old-sha"))),
+                feature_deliver.Delivery.pr_from(json.loads(pr(sha="new-sha"))),
+            ]
+        )
+        delivery.current_pr = lambda _: next(snapshots)  # type: ignore[method-assign]
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            current = delivery.wait_for_pr_head(reused, "ci/ci-002", "new-sha")
+        self.assertEqual(current.head_sha, "new-sha")
+        self.assertEqual(sleeps, [delivery.pr_head_poll_seconds] * 3)
+        self.assertIn("waiting for PR #7 head to update to new-sha", output.getvalue())
+        self.assertNotIn(("POST", "repos/alessandrorossato/florabase/pulls"), api_calls)
+
+    def test_pr_head_already_current_does_not_poll(self) -> None:
+        sleeps: list[int] = []
+        delivery = feature_deliver.Delivery(FakeCommands({}), sleep=sleeps.append)
+        current = feature_deliver.Delivery.pr_from(json.loads(pr(sha="new-sha")))
+        delivery.current_pr = lambda _: self.fail("current PR should not be read")  # type: ignore[method-assign]
+        self.assertIs(delivery.wait_for_pr_head(current, "ci/ci-002", "new-sha"), current)
+        self.assertEqual(sleeps, [])
+
+    def test_pr_head_propagation_times_out_safely(self) -> None:
+        delivery = self.delivery()
+        delivery.pr_head_timeout_seconds = 0
+        stale = feature_deliver.Delivery.pr_from(json.loads(pr(sha="old-sha")))
+        delivery.current_pr = lambda _: self.fail("timeout must occur before another REST read")  # type: ignore[method-assign]
+        with contextlib.redirect_stderr(io.StringIO()) as error, self.assertRaises(feature_deliver.DeliveryError):
+            delivery.wait_for_pr_head(stale, "ci/ci-002", "new-sha")
+        self.assertIn("DELIVERY_BLOCKED", error.getvalue())
+
+    def test_wrong_pr_head_or_base_fails_before_propagation_polling(self) -> None:
+        for kwargs in ({"head": "ci/wrong"}, {"base": "release"}):
+            sleeps: list[int] = []
+            delivery = feature_deliver.Delivery(FakeCommands({}), sleep=sleeps.append)
+            unexpected = feature_deliver.Delivery.pr_from(json.loads(pr(sha="old-sha", **kwargs)))
+            delivery.current_pr = lambda _: self.fail("unexpected PR must not be polled")  # type: ignore[method-assign]
+            with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(feature_deliver.DeliveryError):
+                delivery.wait_for_pr_head(unexpected, "ci/ci-002", "new-sha")
+            self.assertEqual(sleeps, [])
+
+    def test_check_polling_starts_only_after_pr_head_reaches_delivery_sha(self) -> None:
+        delivery = self.delivery()
+        stale = feature_deliver.Delivery.pr_from(json.loads(pr(sha="old-sha")))
+        snapshots = iter(
+            [
+                feature_deliver.Delivery.pr_from(json.loads(pr(sha="old-sha"))),
+                feature_deliver.Delivery.pr_from(json.loads(pr(sha="new-sha"))),
+            ]
+        )
+        delivery.current_pr = lambda _: next(snapshots)  # type: ignore[method-assign]
+        check_calls: list[str] = []
+        delivery.check_runs = lambda sha: (  # type: ignore[method-assign]
+            check_calls.append(sha)
+            or {name: {"status": "completed", "conclusion": "success"} for name in feature_deliver.REQUIRED_CHECKS}
+        )
+        ready = delivery.wait_for_pr_head(stale, "ci/ci-002", "new-sha")
+        self.assertEqual(check_calls, [])
+        delivery.current_pr = lambda _: ready  # type: ignore[method-assign]
+        delivery.wait_for_checks(ready, "new-sha")
+        self.assertEqual(check_calls, ["new-sha"])
+
     def test_closed_merged_and_mismatched_prs_are_ignored_when_matching_open_pr_exists(self) -> None:
         delivery = self.delivery()
         responses = [

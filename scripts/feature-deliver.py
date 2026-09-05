@@ -16,6 +16,8 @@ from typing import Any
 REPOSITORY = "alessandrorossato/florabase"
 REQUIRED_CHECKS = ("quality", "integration", "build")
 BRANCH_PATTERN = re.compile(r"^(feat|fix|docs|ci)/[a-z0-9][a-z0-9._-]*$")
+DEFAULT_PR_HEAD_POLL_SECONDS = 2
+DEFAULT_PR_HEAD_TIMEOUT_SECONDS = 60
 
 
 class DeliveryError(Exception):
@@ -58,9 +60,10 @@ def fail(message: str, *, blocked: bool = False) -> None:
 
 
 class Delivery:
-    def __init__(self, commands: Commands, sleep: Any = time.sleep) -> None:
+    def __init__(self, commands: Commands, sleep: Any = time.sleep, monotonic: Any = time.monotonic) -> None:
         self.commands = commands
         self.sleep = sleep
+        self.monotonic = monotonic
         self.poll_seconds = int(os.environ.get("FEATURE_DELIVER_POLL_SECONDS", "10"))
         self.timeout_seconds = int(os.environ.get("FEATURE_DELIVER_TIMEOUT_SECONDS", "1800"))
         self.startup_timeout_seconds = int(
@@ -68,6 +71,12 @@ class Delivery:
         )
         self.delete_timeout_seconds = int(
             os.environ.get("FEATURE_DELIVER_DELETE_TIMEOUT_SECONDS", "120")
+        )
+        self.pr_head_poll_seconds = int(
+            os.environ.get("FEATURE_DELIVER_PR_HEAD_POLL_SECONDS", str(DEFAULT_PR_HEAD_POLL_SECONDS))
+        )
+        self.pr_head_timeout_seconds = int(
+            os.environ.get("FEATURE_DELIVER_PR_HEAD_TIMEOUT_SECONDS", str(DEFAULT_PR_HEAD_TIMEOUT_SECONDS))
         )
 
     def git(self, *args: str, capture: bool = False) -> str:
@@ -170,16 +179,46 @@ class Delivery:
         )
         return title, body
 
-    def validate_open_pr(self, pr: PullRequest, branch: str, delivery_sha: str) -> None:
+    def validate_open_pr_target(self, pr: PullRequest, branch: str) -> None:
         if pr.state != "OPEN":
             fail(f"pull request #{pr.number} is not open", blocked=True)
         if pr.head_ref != branch or pr.base_ref != "main":
             fail(f"pull request #{pr.number} does not match {branch} into main", blocked=True)
-        if pr.head_sha != delivery_sha:
+
+    def is_prior_head(self, head_sha: str, delivery_sha: str) -> bool:
+        try:
+            self.git("merge-base", "--is-ancestor", head_sha, delivery_sha)
+        except DeliveryError:
+            return False
+        return True
+
+    def wait_for_pr_head(self, pr: PullRequest, branch: str, delivery_sha: str) -> PullRequest:
+        self.validate_open_pr_target(pr, branch)
+        if pr.head_sha == delivery_sha:
+            return pr
+        if not self.is_prior_head(pr.head_sha, delivery_sha):
             fail(
-                f"pull request #{pr.number} points to {pr.head_sha}, not delivery SHA {delivery_sha}",
+                f"pull request #{pr.number} points to unexpected SHA {pr.head_sha}, not delivery SHA {delivery_sha}",
                 blocked=True,
             )
+        print(f"feature-deliver: waiting for PR #{pr.number} head to update to {delivery_sha}")
+        started = self.monotonic()
+        while True:
+            if self.monotonic() - started >= self.pr_head_timeout_seconds:
+                fail(
+                    f"timed out waiting for pull request #{pr.number} head to update to delivery SHA {delivery_sha}",
+                    blocked=True,
+                )
+            self.sleep(self.pr_head_poll_seconds)
+            current = self.current_pr(pr.number)
+            self.validate_open_pr_target(current, branch)
+            if current.head_sha == delivery_sha:
+                return current
+            if not self.is_prior_head(current.head_sha, delivery_sha):
+                fail(
+                    f"pull request #{pr.number} points to unexpected SHA {current.head_sha}, not delivery SHA {delivery_sha}",
+                    blocked=True,
+                )
 
     def find_or_create_pr(self, branch: str, delivery_sha: str, migration: bool) -> PullRequest:
         pulls = self.api(
@@ -199,7 +238,7 @@ class Delivery:
             fail(f"multiple open pull requests exist for {branch}", blocked=True)
         if matching:
             pr = matching[0]
-            self.validate_open_pr(pr, branch, delivery_sha)
+            self.validate_open_pr_target(pr, branch)
             return pr
         title, body = self.title_and_body(branch, delivery_sha, migration)
         created = self.api(
@@ -210,7 +249,7 @@ class Delivery:
         if not isinstance(created, dict):
             fail("GitHub returned an invalid created pull request", blocked=True)
         pr = self.pr_from(created)
-        self.validate_open_pr(pr, branch, delivery_sha)
+        self.validate_open_pr_target(pr, branch)
         return pr
 
     def enable_auto_merge(self, pr: PullRequest, delivery_sha: str) -> None:
@@ -244,7 +283,7 @@ class Delivery:
         return {str(run.get("name")): run for run in runs if isinstance(run, dict)}
 
     def wait_for_checks(self, pr: PullRequest, delivery_sha: str) -> None:
-        started = time.monotonic()
+        started = self.monotonic()
         while True:
             current = self.current_pr(pr.number)
             if current.state == "MERGED":
@@ -255,7 +294,7 @@ class Delivery:
                 fail(f"pull request #{pr.number} no longer points at delivery SHA {delivery_sha}", blocked=True)
             checks = self.check_runs(delivery_sha)
             missing = [name for name in REQUIRED_CHECKS if name not in checks]
-            elapsed = time.monotonic() - started
+            elapsed = self.monotonic() - started
             if missing:
                 if elapsed >= self.startup_timeout_seconds:
                     fail(f"Actions did not register current-SHA checks: {', '.join(missing)}", blocked=True)
@@ -285,7 +324,7 @@ class Delivery:
             return
 
     def wait_for_merge(self, pr: PullRequest, delivery_sha: str) -> PullRequest:
-        started = time.monotonic()
+        started = self.monotonic()
         while True:
             current = self.current_pr(pr.number)
             if current.state == "MERGED":
@@ -294,15 +333,15 @@ class Delivery:
                 return current
             if current.state != "OPEN" or current.head_sha != delivery_sha:
                 fail(f"pull request #{pr.number} cannot be auto-merged safely", blocked=True)
-            if time.monotonic() - started >= self.timeout_seconds:
+            if self.monotonic() - started >= self.timeout_seconds:
                 fail(f"timed out waiting for squash auto-merge of PR #{pr.number}", blocked=True)
             self.sleep(self.poll_seconds)
 
     def confirm_deleted_branch(self, branch: str) -> None:
-        started = time.monotonic()
+        started = self.monotonic()
         remote_ref = f"refs/heads/{branch}"
         while self.git("ls-remote", "--heads", "origin", remote_ref, capture=True):
-            if time.monotonic() - started >= self.delete_timeout_seconds:
+            if self.monotonic() - started >= self.delete_timeout_seconds:
                 fail(f"remote feature branch {branch} was not deleted after merge", blocked=True)
             self.sleep(self.poll_seconds)
 
@@ -311,7 +350,7 @@ class Delivery:
         migration = self.migration_detected(base, delivery_sha)
         self.push(branch, delivery_sha)
         pr = self.find_or_create_pr(branch, delivery_sha, migration)
-        self.validate_open_pr(pr, branch, delivery_sha)
+        pr = self.wait_for_pr_head(pr, branch, delivery_sha)
         self.enable_auto_merge(pr, delivery_sha)
         self.wait_for_checks(pr, delivery_sha)
         merged = self.wait_for_merge(pr, delivery_sha)
