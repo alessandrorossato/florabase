@@ -32,6 +32,8 @@ make api-check
 make build
 make check
 make ci
+make test-feature-workflow
+make feature-verify
 ```
 
 `make format` modifies Python and frontend-supported text; the other check commands are intended to
@@ -46,9 +48,13 @@ code changes. Run migration and integration checks for schema or persistence cha
 
 GitHub runs three stable checks for pull requests into `main`: `quality` runs `make check`,
 `integration` exercises the same disposable PostgreSQL suite as `make test-integration`, and `build`
-builds the production backend and frontend images. `make ci` runs all three gates locally in
-sequence; it is deliberately comprehensive, while focused commands remain the normal development
-loop.
+builds the production backend and frontend images. `make ci` remains the direct local equivalent of
+those three jobs. `make feature-verify` is the canonical feature-level final gate: it runs the
+workflow-helper and feature-graph checks, the same quality, integration, and build stages once,
+`git diff --check`, and records a local receipt for the verified working tree. It does not require a
+clean tree and never modifies application files. When the branch adds Alembic revisions, it also runs
+the previous-main-head → feature-head → previous-main-head → feature-head cycle in a uniquely named,
+tmpfs-backed disposable Compose project; it never touches the development database or its volume.
 
 ## Optional host tools
 
@@ -110,14 +116,25 @@ make feature-start BRANCH=feat/example
 
 The helper requires a clean tree and an `origin`, fetches and prunes, fast-forwards local `main`, and
 refuses unsafe or existing branches. It does not infer the next feature. Keep one increment per
-branch and document explicit exclusions. Before review, run focused tests and `make check` (plus the
-relevant integration/build gates), inspect `git diff` and `git diff --check`, update progress
-honestly, and stage only intentional files.
+branch and document explicit exclusions. Independently review the implementation and fixes, then run
+`make feature-verify`. Inspect the final diff, update progress honestly, stage only intentional files,
+and create the reviewed local commit. The verification receipt proves only that the final committed
+tree matches the locally verified tree; it is a machine-local guard, not a substitute for review.
 
-Push normally and open a pull request into `main`. Required GitHub checks are `quality`,
-`integration`, and `build`; the normal merge method is squash auto-merge, never bypassing a pending
-or failed check. GitHub should remove the merged remote head branch. From the clean local feature
-branch, finish with:
+The operator then runs:
+
+```bash
+make feature-deliver
+```
+
+This requires a clean, committed non-`main` feature branch and authenticated GitHub CLI access to the
+Florabase repository. It never rebases, merges, stashes, amends, force-pushes, or changes repository
+settings. It pushes normally, reuses an existing open PR for the branch or creates one deterministic
+PR, enables exact-SHA squash auto-merge, and waits with bounded polling for current-SHA `quality`,
+`integration`, and `build` checks. Failed, cancelled, skipped, or timed-out checks leave the PR open
+and end with `DELIVERY_BLOCKED`; fix, recommit, re-verify, and rerun delivery on the same PR. On
+success it confirms the merge and remote branch deletion. GitHub should remove the merged remote head
+branch. From the clean local feature branch, finish separately with:
 
 ```bash
 make feature-finish
@@ -126,5 +143,8 @@ make feature-finish
 This helper requires authenticated GitHub CLI evidence that the exact branch head was merged into
 `main`, verifies that merge on `origin/main`, fast-forwards local `main`, and only then removes the
 unchanged local branch. It stops without deletion when merge state cannot be established.
+
+If `make feature-deliver` reports a database migration, run `make dev-upgrade` only after
+`make feature-finish`; delivery never upgrades any database.
 
 See [CONTRIBUTING.md](../CONTRIBUTING.md) for the concise contributor checklist.

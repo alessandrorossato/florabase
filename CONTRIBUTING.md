@@ -10,15 +10,16 @@ Florabase is developed as small, dependency-aware increments. Start with the
    accepts focused `feat/`, `fix/`, `docs/`, and `ci/` names and creates the branch only from a clean,
    fast-forwarded `main`; it never chooses product scope for you.
 2. Keep the change within one backlog increment and state what is intentionally out of scope.
-3. Run focused checks while working and `make check` before requesting review. Run
-   `make test-integration` when persistence, API/database behavior, or migrations are affected;
-   `make ci` runs the complete local equivalent of all three pull-request jobs.
-4. Update tests and documentation with behavior. Only mark a feature `verified` when every listed
-   acceptance criterion was actually exercised.
-5. Use concise imperative commits, for example `docs: clarify deployment workflow`. Push normally,
-   open a pull request into `main`, and use squash auto-merge only after the required `quality`,
-   `integration`, and `build` checks pass. After GitHub merges and removes the remote branch, run
-   `make feature-finish` from the clean local feature branch.
+3. Run focused checks while working. Independently review the implementation and ordinary fixes, then
+   run `make feature-verify` as the one canonical final local gate. It covers the complete local
+   pull-request equivalent without duplicating expensive suites.
+4. Inspect the final diff, update tests and documentation, and create a reviewed local commit. Only
+   mark a feature `verified` when every listed acceptance criterion was actually exercised.
+5. The operator runs `make feature-deliver`. It performs a normal push, reuses or creates one pull
+   request into `main`, enables squash auto-merge with the exact delivery SHA, and waits for the
+   required `quality`, `integration`, and `build` checks. It never bypasses protections. After it
+   reports success, run `make feature-finish` from the clean local feature branch. If delivery reports
+   a migration, then run `make dev-upgrade` after finishing the branch.
 
 Database changes must use a new reviewed Alembic migration; never rewrite a deployed revision.
 FastAPI owns the OpenAPI contract. Run `make api-generate` after API changes and commit both

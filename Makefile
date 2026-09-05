@@ -5,7 +5,7 @@ COMPOSE := docker compose
 DEV_COMPOSE := $(COMPOSE) -f compose.yaml -f compose.dev.yaml
 BACKUP_DIR ?= backups
 
-.PHONY: help setup up dev down logs build test test-backend test-integration test-frontend lint format format-check typecheck check ci migrate dev-upgrade migration backup restore health api-generate api-check dependency-update feature-start feature-finish test-workflow-helpers
+.PHONY: help setup up dev down logs build test test-backend test-integration test-frontend lint format format-check typecheck check ci migrate dev-upgrade migration backup restore health api-generate api-check dependency-update feature-start feature-verify feature-deliver feature-finish test-workflow-helpers test-feature-workflow
 
 help:
 	@awk 'BEGIN {FS = ":.*## "; print "Florabase commands:"} /^[a-zA-Z_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -65,7 +65,7 @@ api-check: ## Verify generated API artifacts are current
 
 check: format-check lint typecheck test api-check ## Run the main non-destructive verification suite
 
-ci: test-workflow-helpers check test-integration build ## Run the complete local equivalent of pull-request CI
+ci: test-workflow-helpers test-feature-workflow check test-integration build ## Run the complete local equivalent of pull-request CI
 
 migrate: ## Apply all pending database migrations explicitly
 	$(COMPOSE) run --rm backend alembic upgrade head
@@ -101,8 +101,17 @@ feature-start: export BRANCH := $(BRANCH)
 feature-start: ## Create a branch from updated main: make feature-start BRANCH=feat/example
 	@./scripts/feature-start.sh
 
+feature-verify: ## Run the canonical final local verification gate for the current feature branch
+	@./scripts/feature-verify.sh
+
+feature-deliver: ## Push the verified committed feature and wait for protected squash auto-merge
+	@./scripts/feature-deliver.py
+
 feature-finish: ## Remove the current local branch after its GitHub PR was merged
 	@./scripts/feature-finish.sh
 
 test-workflow-helpers: ## Test Git and database-upgrade helper safety in isolated fixtures
 	@./scripts/test-workflow-helpers.sh
+
+test-feature-workflow: ## Test feature verification and delivery orchestration without GitHub
+	@python3 ./scripts/test-feature-workflow.py

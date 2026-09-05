@@ -60,6 +60,20 @@
       "status": "verified"
     },
     {
+      "id": "CI-002",
+      "category": "testing",
+      "description": "Add deterministic feature verification and protected delivery tooling",
+      "acceptance_criteria": [
+        "A canonical feature verification command runs each local pull-request-equivalent gate once, validates repository tooling and the feature graph, checks whitespace errors, and records only machine-local evidence for the verified working tree",
+        "Feature branches adding Alembic revisions receive a previous-main-head to feature-head downgrade/re-upgrade cycle in a disposable PostgreSQL environment without touching development data",
+        "A fail-closed delivery command verifies the exact reviewed commit, performs only a normal push, reuses or creates one pull request, validates current-SHA required checks, enables exact-SHA squash auto-merge, and reports migration follow-up without local cleanup or database mutation",
+        "Focused no-network helper tests cover verification orchestration, migration detection, delivery safety preconditions, current-SHA check handling, PR reuse, and terminal delivery states"
+      ],
+      "dependencies": ["CI-001"],
+      "priority": "P0",
+      "status": "verified"
+    },
+    {
       "id": "SECURITY-001",
       "category": "security",
       "description": "Decide the initial authentication and session architecture",
