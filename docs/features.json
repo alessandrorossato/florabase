@@ -691,6 +691,45 @@
       "status": "verified"
     },
     {
+      "id": "REVERSAL-001",
+      "category": "workflow",
+      "description": "Persist narrow reversible authoritative-operation receipts",
+      "acceptance_criteria": [
+        "The contract distinguishes ordinary journal Event deletion from validated undo of the explicitly supported SeedLot-to-Sowing, Sowing-to-descendant, PlantGroup extraction, and transfer operations; it does not make Event history replayable or introduce generic event sourcing",
+        "An Alembic-managed, immutable operation receipt persists a controlled operation type and status, its operation-owned Event where applicable, affected and created record identifiers, and typed authoritative before-state values needed for inversion, including quantity dimension, unit, exact or approximate state, and lifecycle",
+        "Forward execution and undo lock the affected records, use one transaction, preserve exact round trips without deriving approximate or unknown values, and expose deterministic safe, confirmation-required, and blocked dependency outcomes"
+      ],
+      "dependencies": ["PROPAGATION-002", "PLANT-005"],
+      "priority": "P1",
+      "status": "planned"
+    },
+    {
+      "id": "PLANT-006",
+      "category": "plant",
+      "description": "Reinsert an extracted Plant into its original PlantGroup",
+      "acceptance_criteria": [
+        "Only the specific Plant created by a recorded extraction can be reinserted into that extraction's original PlantGroup; arbitrary Plant-to-PlantGroup insertion remains out of scope",
+        "The approved historical-retention representation keeps the former individual and its prior Events and lineage accessible, records an operation-owned reinsertion history item, and restores the original PlantGroup state from the operation receipt: exact quantities round trip while approximate and unknown quantities are never reconstructed arithmetically",
+        "Undo or reinsertion is atomic and dependency-aware: later state-changing work, lineage, or incompatible correction blocks it until resolved, while any permitted confirmation path clearly identifies retained historical facts and never silently rewrites them"
+      ],
+      "dependencies": ["REVERSAL-001", "PLANT-005"],
+      "priority": "P1",
+      "status": "planned"
+    },
+    {
+      "id": "PROPAGATION-003",
+      "category": "workflow",
+      "description": "Undo supported propagation quantity and lifecycle transitions",
+      "acceptance_criteria": [
+        "A recorded SeedLot-to-Sowing or Sowing-to-Plant or PlantGroup operation can be undone only through its reversible-operation receipt, restoring the authoritative prior quantity and lifecycle rather than replaying Event history or inferring arithmetic from current values",
+        "Exact compatible SeedLot quantities round trip without negative or cross-dimension results; approximate estimates and unknown quantities restore their recorded prior state, and use-all restores its recorded lifecycle and quantity representation",
+        "Created descendants and later propagation work are guarded by deterministic dependency checks, and the chosen historical treatment of an undone created record preserves provenance and audit access without hard-deleting dependent facts"
+      ],
+      "dependencies": ["REVERSAL-001", "PROPAGATION-002"],
+      "priority": "P1",
+      "status": "planned"
+    },
+    {
       "id": "UX-003",
       "category": "frontend",
       "description": "Refine collection navigation and detail-page coherence from observed use",

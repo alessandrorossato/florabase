@@ -4,6 +4,23 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-05 — reversible domain-operation planning refinement
+
+- Audited the verified forward operations without changing application behavior. Exact SeedLot
+  partial use and exact PlantGroup extraction have reversible numerical invariants (`100 → 80 → 100`
+  and `10 → 9 → 10`); approximate values must restore their recorded estimate rather than use
+  inverse arithmetic, unknown remains unknown, and quantity dimensions/units cannot be crossed.
+- Recorded the current gap: forward transactions and extraction-result links exist, but no persisted
+  operation identity, adjustment mode, before-state snapshot, complete created-record set, or prior
+  transfer lifecycle exists. Current persistence is therefore insufficient for generally reliable
+  undo despite the deliberate non-replay Event contract.
+- Added planned `REVERSAL-001` for a narrow immutable authoritative-operation receipt,
+  `PLANT-006` for recorded extracted-Plant reinsertion, and `PROPAGATION-003` for guarded
+  propagation reversal. The plan keeps ordinary Event deletion separate from validated Undo action,
+  records deterministic dependency blocks, and preserves history rather than assuming destructive
+  cleanup. These increments are sequenced before later Location/geography selection, without adding
+  artificial Location or geography feature dependencies.
+
 ## 2026-09-05 — PLANT-005 verified
 
 - Added an explicit `transferred` lifecycle for Plant and PlantGroup plus owner-authorized,
