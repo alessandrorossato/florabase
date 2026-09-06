@@ -4,6 +4,15 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-06 — PLANT-006 delivery CI follow-up
+
+- Investigated a reported contextual SeedLot-creation test failure across isolated, in-file, and
+  Plant-before-SeedLot runs. The route-hash changes did not leak state; the affected test had an
+  ambiguous asynchronous modal lookup and did not reset browser storage during its own lifecycle.
+  It now identifies each intended contextual dialog by accessible name and resets hash plus browser
+  storage before and after every SeedLot screen test, while retaining the entered seed-lot details
+  assertion after duplicate identity and failed supplier creation.
+
 ## 2026-09-06 — PLANT-006 verified
 
 - Independent review confirmed the receipt-snapshot restoration, dependency guards, migration safety,
