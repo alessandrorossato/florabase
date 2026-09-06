@@ -77,6 +77,7 @@ def test_plant_defaults_uuidv7_and_exact_vocabularies() -> None:
     }
     assert {item.value for item in PlantLifecycle} == {
         "active",
+        "reintegrated",
         "transferred",
         "dead",
         "lost",

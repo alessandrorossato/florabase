@@ -32,6 +32,7 @@ class EventKind(StrEnum):
     TREATMENT = "treatment"
     HARVEST = "harvest"
     EXTRACTION = "extraction"
+    REINTEGRATION = "reintegration"
     TRANSFER = "transfer"
     DEATH = "death"
     LOSS = "loss"
@@ -48,7 +49,8 @@ class Event(Base):
         ),
         CheckConstraint(
             "kind IN ('observation', 'movement', 'repotting', 'flowering', 'fruiting', "
-            "'pruning', 'treatment', 'harvest', 'extraction', 'transfer', 'death', 'loss', "
+            "'pruning', 'treatment', 'harvest', 'extraction', 'reintegration', 'transfer', "
+            "'death', 'loss', "
             "'discarded', 'other')",
             name="ck_events_kind",
         ),
@@ -78,10 +80,15 @@ class Event(Base):
             name="ck_events_transfer_recipient",
         ),
         CheckConstraint(
-            "((kind = 'extraction' AND plant_group_id IS NOT NULL AND "
+            "((kind IN ('extraction', 'reintegration') AND plant_group_id IS NOT NULL AND "
             "resulting_plant_id IS NOT NULL) OR "
-            "(kind <> 'extraction' AND resulting_plant_id IS NULL)) IS TRUE",
+            "(kind NOT IN ('extraction', 'reintegration') AND resulting_plant_id IS NULL)) IS TRUE",
             name="ck_events_extraction_result",
+        ),
+        CheckConstraint(
+            "((kind = 'reintegration' AND reversed_operation_receipt_id IS NOT NULL) OR "
+            "(kind <> 'reintegration' AND reversed_operation_receipt_id IS NULL)) IS TRUE",
+            name="ck_events_reintegration_receipt",
         ),
         ForeignKeyConstraint(
             ["resulting_plant_id", "plant_group_id"],
@@ -115,6 +122,12 @@ class Event(Base):
     recipient: Mapped[str | None] = mapped_column(String(255), nullable=True)
     resulting_plant_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("plants.id", ondelete="RESTRICT"), nullable=True
+    )
+    reversed_operation_receipt_id: Mapped[UUID | None] = mapped_column(
+        Uuid(),
+        ForeignKey("operation_receipts.id", ondelete="RESTRICT"),
+        nullable=True,
+        unique=True,
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(

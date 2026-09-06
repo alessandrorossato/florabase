@@ -530,6 +530,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/plants/{plant_id}/reintegrate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reintegrate One Plant */
+        post: operations["reintegratePlant"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plants/{plant_id}/reintegration": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Plant Reintegration Eligibility */
+        get: operations["getPlantReintegrationEligibility"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plants/{plant_id}/transfer": {
         parameters: {
             query?: never;
@@ -942,7 +976,7 @@ export interface components {
          * EventKind
          * @enum {string}
          */
-        EventKind: "observation" | "movement" | "repotting" | "flowering" | "fruiting" | "pruning" | "treatment" | "harvest" | "extraction" | "transfer" | "death" | "loss" | "discarded" | "other";
+        EventKind: "observation" | "movement" | "repotting" | "flowering" | "fruiting" | "pruning" | "treatment" | "harvest" | "extraction" | "reintegration" | "transfer" | "death" | "loss" | "discarded" | "other";
         /** EventResponse */
         EventResponse: {
             /**
@@ -962,6 +996,10 @@ export interface components {
             /** Notes */
             notes: string | null;
             occurred_on: components["schemas"]["PartialDate"] | null;
+            /** Operation Kind */
+            operation_kind?: string | null;
+            /** Operation Status */
+            operation_status?: string | null;
             /** Recipient */
             recipient: string | null;
             resulting_plant: components["schemas"]["ResultingPlantSummary"] | null;
@@ -1460,7 +1498,7 @@ export interface components {
          * PlantLifecycle
          * @enum {string}
          */
-        PlantLifecycle: "active" | "transferred" | "dead" | "lost" | "discarded";
+        PlantLifecycle: "active" | "reintegrated" | "transferred" | "dead" | "lost" | "discarded";
         /** PlantLineageNode */
         PlantLineageNode: {
             botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
@@ -1477,6 +1515,37 @@ export interface components {
             /** Label */
             label: string | null;
             lifecycle: components["schemas"]["PlantLifecycle"];
+        };
+        /** PlantReintegrationCreate */
+        PlantReintegrationCreate: {
+            /**
+             * Confirm Retained Observations
+             * @default false
+             */
+            confirm_retained_observations: boolean;
+        };
+        /** PlantReintegrationEligibility */
+        PlantReintegrationEligibility: {
+            /** Operation Receipt Id */
+            operation_receipt_id: string | null;
+            /** Reasons */
+            reasons: components["schemas"]["ReintegrationReason"][];
+            /** Retained Observations */
+            retained_observations: components["schemas"]["RetainedObservation"][];
+            source_plant_group: components["schemas"]["OriginatingPlantGroupSummary"] | null;
+            status: components["schemas"]["ReintegrationEligibilityStatus"];
+        };
+        /** PlantReintegrationResponse */
+        PlantReintegrationResponse: {
+            event: components["schemas"]["EventResponse"];
+            /**
+             * Operation Status
+             * @default reversed
+             * @constant
+             */
+            operation_status: "reversed";
+            plant: components["schemas"]["PlantResponse"];
+            plant_group: components["schemas"]["PlantGroupResponse"];
         };
         /** PlantResponse */
         PlantResponse: {
@@ -1614,6 +1683,18 @@ export interface components {
             label: string | null;
             lifecycle: components["schemas"]["PlantLifecycle"];
         };
+        /**
+         * ReintegrationEligibilityStatus
+         * @enum {string}
+         */
+        ReintegrationEligibilityStatus: "safe" | "confirmation_required" | "blocked";
+        /** ReintegrationReason */
+        ReintegrationReason: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+        };
         /** ResultingPlantSummary */
         ResultingPlantSummary: {
             botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
@@ -1624,6 +1705,22 @@ export interface components {
             id: string;
             /** Label */
             label: string | null;
+        };
+        /** RetainedObservation */
+        RetainedObservation: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "observation" | "flowering" | "fruiting";
+            /** Notes */
+            notes: string | null;
+            occurred_on: components["schemas"]["PartialDate"] | null;
         };
         /** SeedLotCreate */
         SeedLotCreate: {
@@ -3672,6 +3769,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LineageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reintegratePlant: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                plant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlantReintegrationCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantReintegrationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getPlantReintegrationEligibility: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                plant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantReintegrationEligibility"];
                 };
             };
             /** @description Validation Error */

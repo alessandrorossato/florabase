@@ -15,6 +15,7 @@ from florabase.events.schemas import (
     EventResponse,
     PlantExtractionResponse,
     PlantGroupTransferResponse,
+    PlantReintegrationResponse,
     PlantTransferResponse,
     TransferCreate,
 )
@@ -33,8 +34,11 @@ from florabase.plants.schemas import (
     PlantGroupCreate,
     PlantGroupResponse,
     PlantGroupUpdate,
+    PlantReintegrationCreate,
+    PlantReintegrationEligibility,
     PlantResponse,
     PlantUpdate,
+    RetainedObservation,
 )
 from florabase.plants.service import (
     PlantDomainConflictError,
@@ -43,6 +47,7 @@ from florabase.plants.service import (
     PlantReferenceNotFoundError,
     create_plant,
     create_plant_group,
+    evaluate_reintegration,
     extract_plant,
     get_plant,
     get_plant_group,
@@ -50,6 +55,7 @@ from florabase.plants.service import (
     list_plants,
     plant_group_responses,
     plant_responses,
+    reintegrate_plant,
     update_plant,
     update_plant_group,
 )
@@ -163,6 +169,81 @@ def read_plant_lineage(
 ) -> LineageResponse:
     _require_plant(database, plant_id)
     return _lineage_response(database, ("plant", plant_id))
+
+
+@plants_router.get(
+    "/{plant_id}/reintegration",
+    response_model=PlantReintegrationEligibility,
+    operation_id="getPlantReintegrationEligibility",
+)
+def read_plant_reintegration_eligibility(
+    plant_id: UUID,
+    _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> PlantReintegrationEligibility:
+    try:
+        evaluation = evaluate_reintegration(database, plant_id)
+    except PlantReferenceNotFoundError as error:
+        raise _reference_not_found(error) from error
+    plant = _plant_response(database, plant_id)
+    return PlantReintegrationEligibility(
+        status=evaluation.status,
+        operation_receipt_id=evaluation.receipt.id if evaluation.receipt else None,
+        source_plant_group=plant.originating_plant_group,
+        reasons=list(evaluation.reasons),
+        retained_observations=[
+            RetainedObservation.model_validate(
+                {
+                    "id": event.id,
+                    "kind": event.kind,
+                    "occurred_on": (
+                        {
+                            "precision": event.occurred_on_precision,
+                            "year": event.occurred_on_year,
+                            "month": event.occurred_on_month,
+                            "day": event.occurred_on_day,
+                        }
+                        if event.occurred_on_precision
+                        else None
+                    ),
+                    "notes": event.notes,
+                }
+            )
+            for event in evaluation.retained_observations
+        ],
+    )
+
+
+@plants_router.post(
+    "/{plant_id}/reintegrate",
+    response_model=PlantReintegrationResponse,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="reintegratePlant",
+)
+def reintegrate_one_plant(
+    plant_id: UUID,
+    payload: PlantReintegrationCreate,
+    response: Response,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> PlantReintegrationResponse:
+    require_owner(actor)
+    try:
+        plant, plant_group, event, _receipt = reintegrate_plant(
+            database,
+            plant_id,
+            confirm_retained_observations=payload.confirm_retained_observations,
+        )
+    except PlantReferenceNotFoundError as error:
+        raise _reference_not_found(error) from error
+    except PlantDomainConflictError as error:
+        raise _domain_conflict(error) from error
+    response.headers["Location"] = f"/api/v1/events/{event.id}"
+    return PlantReintegrationResponse(
+        plant=_plant_response(database, plant.id),
+        plant_group=_plant_group_response(database, plant_group.id),
+        event=_event_response(database, event.id),
+    )
 
 
 @plants_router.put("/{plant_id}", response_model=PlantResponse, operation_id="updatePlant")

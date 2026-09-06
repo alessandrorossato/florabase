@@ -383,7 +383,13 @@ function IdentityDetails({
                       ({ lifecycle }) => lifecycle === "transferred",
                     ).length,
                   )}{" "}
-                  transferred
+                  transferred ·{" "}
+                  {String(
+                    counts.plants.filter(
+                      ({ lifecycle }) => lifecycle === "reintegrated",
+                    ).length,
+                  )}{" "}
+                  reintegrated
                 </small>
               </CollectionCard>
               <CollectionCard

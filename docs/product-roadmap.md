@@ -126,9 +126,9 @@ ordinary direct corrections remain corrections, and journal Events still do not 
 
 Receipts have no generic JSON/custom metadata and no public creation, update, or delete API.
 Operation-owned Events reject ordinary deletion so the application cannot imply that state was
-reversed; ordinary Events keep their existing deletion semantics. `REVERSAL-001` does not implement
-undo, reverse quantity mutation, reintegration, dependency resolution, or Undo UI. Those remain in
-`PLANT-006` and `PROPAGATION-003`.
+reversed; ordinary Events keep their existing deletion semantics. `PLANT-006` now supplies the one
+focused extraction-reintegration inverse. Other reverse quantity mutation and propagation undo
+remain in `PROPAGATION-003`; there is still no generic Undo API or Event replay.
 
 The numerical rule is restoration, not reverse arithmetic. An exact SeedLot can therefore round
 trip `100 → use 20 → 80 → undo → 100`, and an exact PlantGroup can round trip
@@ -138,14 +138,20 @@ Undo accepts only the recorded quantity kind and unit, so count and weight (incl
 for which no conversion contract exists) cannot be mixed.
 
 `PLANT-006` is deliberately narrow: it reinserts the particular Plant created by a particular
-recorded extraction into that Plant's original PlantGroup. The preferred product direction is to
-retain the individual historically, its origin, lineage, and prior Events, while making it no longer
-active as a separate managed Plant; an operation-owned reinsertion history item links the two
-records. Product approval is still needed on whether that retained state is a new explicit
-`reintegrated` lifecycle or a separate immutable reintegration marker. Hard deletion is not the
-default because it would discard or conflict with historical Events and downstream lineage. A second
-decision is whether the one canonical reinsertion Event is group-targeted with a linked Plant, or
-whether a paired Plant-targeted journal item is useful enough to justify duplicate history.
+recorded extraction into that Plant's original PlantGroup. The approved representation retains the
+individual historically with its origin, lineage, prior Events, and explicit non-active
+`reintegrated` lifecycle. It restores the group before-snapshot from the receipt without inverse
+arithmetic, marks that receipt reversed, retains the original extraction Event, and adds exactly one
+group-targeted reintegration Event linked to the Plant. There is no paired Plant-targeted Event,
+hard deletion, arbitrary group assignment, merge, split, bulk reintegration, or lineage rewrite.
+
+Eligibility is safe only while the resulting Plant and source group still match the receipt and
+have no dependent facts. Ordinary observation, flowering, and fruiting Events are the narrow
+confirmation-required class and remain historical. Lifecycle, identity, Location, transfer,
+produced SeedLot, downstream lineage, manual source-group correction, or later group operation is a
+typed block. The API and UI show the original group and these reasons; concurrent requests serialize
+on the receipt and affected rows. A future extraction creates a new Plant rather than reactivating
+the reintegrated record.
 
 `PROPAGATION-003` will make the supported forward propagation actions compensable from their
 receipts. Its product decision is the historical treatment of a child record created by an undone

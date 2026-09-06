@@ -12,6 +12,7 @@ export const eventLabels: Record<EventResponse["kind"], string> = {
   treatment: "Treatment",
   harvest: "Harvest",
   extraction: "Extraction",
+  reintegration: "Reintegration",
   transfer: "Transfer",
   death: "Death",
   loss: "Loss",
@@ -28,6 +29,7 @@ const groups: Record<Exclude<EventFilter, "all">, EventResponse["kind"][]> = {
     "treatment",
     "harvest",
     "extraction",
+    "reintegration",
   ],
   status: ["transfer", "death", "loss", "discarded"],
 };

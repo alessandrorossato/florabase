@@ -190,7 +190,8 @@ def test_generic_extraction_is_rejected_and_transfer_history_does_not_replay() -
     assert plant.lifecycle == "active"
 
 
-def test_extraction_event_cannot_be_retargeted_outside_its_source_group() -> None:
+@pytest.mark.parametrize("kind", ["extraction", "reintegration"])
+def test_authoritative_plant_group_operation_event_cannot_be_edited(kind: str) -> None:
     _, source_group, _, _ = _targets()
     extracted = Plant(
         id=uuid7(),
@@ -198,20 +199,10 @@ def test_extraction_event_cannot_be_retargeted_outside_its_source_group() -> Non
         originating_plant_group_id=source_group.id,
         lifecycle="active",
     )
-    unrelated = Plant(
-        id=uuid7(),
-        botanical_identity_id=uuid7(),
-        direct_origin_kind="unknown",
-        lifecycle="active",
-    )
     database = MagicMock()
-    database.get.side_effect = lambda model, item_id: {
-        (Plant, extracted.id): extracted,
-        (Plant, unrelated.id): unrelated,
-    }.get((model, item_id))
     event = Event(
         plant_group_id=source_group.id,
-        kind="extraction",
+        kind=kind,
         resulting_plant_id=extracted.id,
     )
 
@@ -219,49 +210,11 @@ def test_extraction_event_cannot_be_retargeted_outside_its_source_group() -> Non
         service.update_event(
             database,
             event,
-            EventUpdate(kind="extraction", resulting_plant_id=unrelated.id),
+            EventUpdate(kind=kind, resulting_plant_id=extracted.id),
         )
 
-    assert conflict.value.code == "extraction_result_not_from_source_group"
+    assert conflict.value.code == "operation_event_immutable"
     assert event.resulting_plant_id == extracted.id
-
-    assert (
-        service.update_event(
-            database,
-            event,
-            EventUpdate(kind="extraction", resulting_plant_id=extracted.id, notes="Corrected"),
-        )
-        is event
-    )
-    assert event.notes == "Corrected"
-
-
-def test_extraction_event_update_rejects_missing_source_or_resulting_plant() -> None:
-    _, source_group, _, _ = _targets()
-    result_id = uuid7()
-    malformed_event = Event(kind="extraction", resulting_plant_id=result_id)
-    with pytest.raises(EventDomainConflictError) as malformed_conflict:
-        service.update_event(
-            MagicMock(),
-            malformed_event,
-            EventUpdate(kind="extraction", resulting_plant_id=result_id),
-        )
-    assert malformed_conflict.value.code == "invalid_extraction_result"
-
-    database = MagicMock()
-    database.get.return_value = None
-    event = Event(
-        plant_group_id=source_group.id,
-        kind="extraction",
-        resulting_plant_id=result_id,
-    )
-    with pytest.raises(EventReferenceNotFoundError) as missing_result:
-        service.update_event(
-            database,
-            event,
-            EventUpdate(kind="extraction", resulting_plant_id=result_id),
-        )
-    assert missing_result.value.code == "resulting_plant_not_found"
 
 
 def test_missing_target_location_and_exact_zero_group_conflict_are_explicit() -> None:

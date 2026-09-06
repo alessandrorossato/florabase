@@ -34,6 +34,7 @@ class DirectOriginKind(StrEnum):
 
 class PlantLifecycle(StrEnum):
     ACTIVE = "active"
+    REINTEGRATED = "reintegrated"
     TRANSFERRED = "transferred"
     DEAD = "dead"
     LOST = "lost"
@@ -115,7 +116,7 @@ class Plant(Base):
     __table_args__ = (
         *_common_constraints(
             "plants",
-            "'active', 'transferred', 'dead', 'lost', 'discarded'",
+            "'active', 'reintegrated', 'transferred', 'dead', 'lost', 'discarded'",
             plant_group_origin=True,
         ),
         UniqueConstraint(

@@ -56,6 +56,7 @@ const eventKindLabels: Record<EventKind, string> = {
   treatment: "Treatment",
   harvest: "Harvest",
   extraction: "Extraction",
+  reintegration: "Reintegration",
   transfer: "Transfer",
   death: "Death",
   loss: "Loss",
@@ -72,6 +73,7 @@ const filterKinds: Record<Exclude<EventFilter, "all">, EventKind[]> = {
     "treatment",
     "harvest",
     "extraction",
+    "reintegration",
   ],
   status: ["transfer", "death", "loss", "discarded"],
 };
@@ -270,7 +272,9 @@ export function EventJournal({
       recipient:
         form.kind === "transfer" ? form.recipient.trim() || null : null,
       resulting_plant_id:
-        form.kind === "extraction" ? form.resultingPlantId : null,
+        form.kind === "extraction" || form.kind === "reintegration"
+          ? form.resultingPlantId
+          : null,
     };
     setMutation({ status: "pending" });
     try {
@@ -452,26 +456,50 @@ export function EventJournal({
                         className="event-actions"
                         aria-label={`${eventKindLabels[item.kind]} actions`}
                       >
-                        <button
-                          type="button"
-                          className="button--secondary"
-                          onClick={() => {
-                            openEdit(item);
-                          }}
-                        >
-                          Edit
-                        </button>
-                        <button
-                          type="button"
-                          className="button--secondary"
-                          onClick={() => {
-                            setMutation({ status: "idle" });
-                            setNotice(null);
-                            setDeleting(item);
-                          }}
-                        >
-                          Delete
-                        </button>
+                        {!["extraction", "reintegration"].includes(
+                          item.kind,
+                        ) && (
+                          <button
+                            type="button"
+                            className="button--secondary"
+                            onClick={() => {
+                              openEdit(item);
+                            }}
+                          >
+                            Edit
+                          </button>
+                        )}
+                        {item.operation_kind ? (
+                          item.kind === "extraction" &&
+                          item.operation_status === "applied" &&
+                          item.resulting_plant ? (
+                            <a
+                              className="button--secondary"
+                              href={`#/plants/${item.resulting_plant.id}`}
+                            >
+                              Reintegrate Plant
+                            </a>
+                          ) : (
+                            <span className="record-state">
+                              {item.kind === "extraction" &&
+                              item.operation_status === "reversed"
+                                ? "Reversed by reintegration"
+                                : "Authoritative operation"}
+                            </span>
+                          )
+                        ) : (
+                          <button
+                            type="button"
+                            className="button--secondary"
+                            onClick={() => {
+                              setMutation({ status: "idle" });
+                              setNotice(null);
+                              setDeleting(item);
+                            }}
+                          >
+                            Delete
+                          </button>
+                        )}
                       </div>
                     </div>
                     {item.destination_location && (
@@ -488,6 +516,17 @@ export function EventJournal({
                     {item.kind === "extraction" && item.resulting_plant && (
                       <p className="event-destination">
                         <strong>1 individual extracted</strong>
+                        {" → "}
+                        <a href={`#/plants/${item.resulting_plant.id}`}>
+                          {item.resulting_plant.label ??
+                            item.resulting_plant.botanical_identity
+                              .display_label}
+                        </a>
+                      </p>
+                    )}
+                    {item.kind === "reintegration" && item.resulting_plant && (
+                      <p className="event-destination">
+                        <strong>Plant returned to this group</strong>
                         {" → "}
                         <a href={`#/plants/${item.resulting_plant.id}`}>
                           {item.resulting_plant.label ??
@@ -536,8 +575,8 @@ export function EventJournal({
                 {(Object.keys(eventKindLabels) as EventKind[])
                   .filter(
                     (kind) =>
-                      kind !== "extraction" ||
-                      (editor !== "create" && editor.kind === "extraction"),
+                      !["extraction", "reintegration"].includes(kind) ||
+                      (editor !== "create" && editor.kind === kind),
                   )
                   .map((kind) => (
                     <option value={kind} key={kind}>
