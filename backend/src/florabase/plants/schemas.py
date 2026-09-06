@@ -1,6 +1,7 @@
 import unicodedata
 from datetime import datetime
-from typing import Self
+from enum import StrEnum
+from typing import Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -97,6 +98,8 @@ class PlantWrite(PlantCommonWrite):
 class PlantCreate(PlantWrite):
     @model_validator(mode="after")
     def default_direct_origin(self) -> Self:
+        if self.lifecycle == PlantLifecycle.REINTEGRATED:
+            raise ValueError("Reintegrated is assigned only by the reintegration operation")
         if self.originating_sowing_id is None and self.direct_origin_kind is None:
             self.direct_origin_kind = DirectOriginKind.UNKNOWN
         return self
@@ -233,6 +236,38 @@ class OriginatingPlantGroupSummary(BaseModel):
     lifecycle: PlantGroupLifecycle
     botanical_identity: BotanicalIdentitySummary
     quantity: PlantGroupQuantity | None
+
+
+class ReintegrationEligibilityStatus(StrEnum):
+    SAFE = "safe"
+    CONFIRMATION_REQUIRED = "confirmation_required"
+    BLOCKED = "blocked"
+
+
+class ReintegrationReason(BaseModel):
+    code: str
+    message: str
+
+
+class RetainedObservation(BaseModel):
+    id: UUID
+    kind: Literal["observation", "flowering", "fruiting"]
+    occurred_on: PartialDate | None
+    notes: str | None
+
+
+class PlantReintegrationEligibility(BaseModel):
+    status: ReintegrationEligibilityStatus
+    operation_receipt_id: UUID | None
+    source_plant_group: OriginatingPlantGroupSummary | None
+    reasons: list[ReintegrationReason]
+    retained_observations: list[RetainedObservation]
+
+
+class PlantReintegrationCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    confirm_retained_observations: bool = False
 
 
 class PlantResponse(PlantCommonResponse):

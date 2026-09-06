@@ -4,6 +4,50 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-06 — PLANT-006 delivery CI follow-up
+
+- Investigated a reported contextual SeedLot-creation test failure across isolated, in-file, and
+  Plant-before-SeedLot runs. The route-hash changes did not leak state; the affected test had an
+  ambiguous asynchronous modal lookup and did not reset browser storage during its own lifecycle.
+  It now identifies each intended contextual dialog by accessible name and resets hash plus browser
+  storage before and after every SeedLot screen test, while retaining the entered seed-lot details
+  assertion after duplicate identity and failed supplier creation.
+
+## 2026-09-06 — PLANT-006 verified
+
+- Independent review confirmed the receipt-snapshot restoration, dependency guards, migration safety,
+  and desktop/mobile reintegration workflow. It corrected two ordinary defects: operation-owned
+  extraction and reintegration Events can no longer be edited through the ordinary Event API or UI,
+  and successful extraction/reintegration now updates the Plant route hash to the authoritative
+  target.
+- Canonical `make feature-verify` passed: feature graph and workflow helpers; quality checks
+  (including 209 backend tests at 90.05% coverage and 111 frontend tests); 247 disposable
+  PostgreSQL integration tests; production builds; the `20260905_0016 → 0017 → 0016 → 0017`
+  migration cycle; whitespace validation; and the local verification receipt.
+
+## 2026-09-05 — PLANT-006 implemented
+
+- Added receipt-proven reintegration of an extracted Plant into only its original PlantGroup. The
+  locked atomic operation restores the immutable before-snapshot without inverse arithmetic, marks
+  the Plant `reintegrated`, retains its lineage and Events, records one group-targeted reintegration
+  Event, preserves the extraction Event, and changes only the receipt status to reversed.
+- Added focused eligibility and mutation APIs with safe, confirmation-required retained-observation,
+  and typed blocked outcomes. Guards cover receipt/result mismatch, lifecycle and structural Plant
+  changes, transfer or other active receipts, produced SeedLots and downstream lineage, later group
+  operations, group lifecycle/quantity correction, already-reversed receipts, and missing historical
+  receipts. Concurrent mutation serializes on the receipt and affected rows.
+- Added the responsive Plant and Event-journal experience: original-group context, retained-history
+  confirmation, actionable blocker explanations, authoritative post-success refresh, Reintegrated
+  historical state, lifecycle summaries, linked reintegration history, and operation-owned
+  extraction actions that no longer resemble ordinary Event deletion.
+- Added Alembic revision `20260905_0017`, generated API declarations, focused backend/frontend and
+  PostgreSQL coverage including migration cycle, snapshot variants, history, blockers, rollback,
+  repeat use, and concurrent requests. Implementation checks passed: Ruff and ESLint; strict mypy
+  over 141 source files and strict TypeScript; 209 backend unit tests at 90.08% coverage; 111
+  frontend tests; generated API drift; 247 disposable PostgreSQL integration tests; and
+  `git diff --check`. Final canonical `make feature-verify` is intentionally left to the independent
+  reviewer; `PROPAGATION-003` remains unimplemented.
+
 ## 2026-09-05 — CI-002 auto-merge delivery fix
 
 - Corrected `make feature-deliver` to recognize GitHub REST's `closed` plus `merged: true` response
@@ -404,7 +448,7 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260904_0015`.
+- Alembic head: `20260905_0017` on the PLANT-006 implementation branch.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the

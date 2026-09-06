@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from typing import Any, cast
 from unittest.mock import MagicMock
@@ -8,6 +8,8 @@ import pytest
 from fastapi import HTTPException, Response
 
 from florabase.botanical_identities.model import BotanicalIdentity
+from florabase.events.model import Event
+from florabase.events.schemas import EventResponse, PlantGroupEventTarget, ResultingPlantSummary
 from florabase.geographic_places.model import GeographicPlace
 from florabase.locations.model import Location
 from florabase.plants import api, service
@@ -17,7 +19,9 @@ from florabase.plants.schemas import (
     PlantExtractionCreate,
     PlantGroupCreate,
     PlantGroupUpdate,
+    PlantReintegrationCreate,
     PlantUpdate,
+    ReintegrationEligibilityStatus,
 )
 from florabase.plants.service import (
     PlantDomainConflictError,
@@ -25,7 +29,7 @@ from florabase.plants.service import (
     PlantProjection,
     PlantReferenceNotFoundError,
 )
-from florabase.reversals.model import OperationReceipt
+from florabase.reversals.model import OperationKind, OperationReceipt
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import Sowing
 from florabase.suppliers.model import Supplier
@@ -336,6 +340,77 @@ def test_api_routes_success_not_found_reference_and_owner_errors(
         ).id
         == group.id
     )
+    _, _, extraction_event, receipt = reintegration_models()
+    evaluation = service.ReintegrationEvaluation(
+        ReintegrationEligibilityStatus.SAFE,
+        receipt,
+        plant,
+        group,
+        (),
+        (),
+    )
+    monkeypatch.setattr(api, "evaluate_reintegration", lambda _db, _id: evaluation)
+    eligibility = api.read_plant_reintegration_eligibility(plant.id, actor, database)
+    assert eligibility.status == ReintegrationEligibilityStatus.SAFE
+    assert eligibility.operation_receipt_id == receipt.id
+    extraction_event.kind = "observation"
+    evaluation = service.ReintegrationEvaluation(
+        ReintegrationEligibilityStatus.CONFIRMATION_REQUIRED,
+        receipt,
+        plant,
+        group,
+        (),
+        (extraction_event,),
+    )
+    monkeypatch.setattr(api, "evaluate_reintegration", lambda _db, _id: evaluation)
+    eligibility = api.read_plant_reintegration_eligibility(plant.id, actor, database)
+    assert len(eligibility.retained_observations) == 1
+
+    reintegration_event = Event(id=uuid7(), plant_group_id=group.id, kind="reintegration")
+    reintegration_event_response = EventResponse(
+        id=reintegration_event.id,
+        target=PlantGroupEventTarget(
+            id=group.id,
+            label=group.label,
+            lifecycle=group_response.lifecycle,
+            botanical_identity=group_response.botanical_identity,
+        ),
+        kind="reintegration",
+        occurred_on=None,
+        notes=None,
+        destination_location_id=None,
+        destination_location=None,
+        recipient=None,
+        resulting_plant_id=plant.id,
+        resulting_plant=ResultingPlantSummary(
+            id=plant.id,
+            label=plant.label,
+            botanical_identity=plant_response.botanical_identity,
+        ),
+        operation_kind="plant_group_extraction",
+        operation_status="reversed",
+        created_at=identity.created_at,
+        updated_at=identity.updated_at,
+    )
+    with monkeypatch.context() as reintegration_patch:
+        reintegration_patch.setattr(
+            api,
+            "reintegrate_plant",
+            lambda *_args, **_kwargs: (plant, group, reintegration_event, receipt),
+        )
+        reintegration_patch.setattr(api, "_plant_response", lambda _db, _id: plant_response)
+        reintegration_patch.setattr(api, "_plant_group_response", lambda _db, _id: group_response)
+        reintegration_patch.setattr(
+            api, "_event_response", lambda _db, _id: reintegration_event_response
+        )
+        response = Response()
+        reintegrated = api.reintegrate_one_plant(
+            plant.id, PlantReintegrationCreate(), response, actor, database
+        )
+        assert reintegrated.plant.id == plant.id
+        assert reintegrated.plant_group.id == group.id
+        assert reintegrated.event.id == reintegration_event.id
+        assert response.headers["location"].endswith(str(reintegration_event.id))
 
     monkeypatch.setattr(api, "get_plant", lambda _db, _id: None)
     with pytest.raises(HTTPException) as missing:
@@ -356,3 +431,217 @@ def test_api_routes_success_not_found_reference_and_owner_errors(
             plant_write, Response(), cast(Any, SimpleNamespace(owner=False)), database
         )
     assert forbidden.value.status_code == 403
+
+
+def reintegration_models() -> tuple[Plant, PlantGroup, Event, OperationReceipt]:
+    now = datetime.now(UTC)
+    group = PlantGroup(
+        id=uuid7(),
+        botanical_identity_id=uuid7(),
+        direct_origin_kind="unknown",
+        quantity_value=9,
+        quantity_is_approximate=False,
+        lifecycle="active",
+        created_at=now - timedelta(days=1),
+        updated_at=now - timedelta(seconds=1),
+    )
+    plant = Plant(
+        id=uuid7(),
+        botanical_identity_id=group.botanical_identity_id,
+        originating_plant_group_id=group.id,
+        lifecycle="active",
+        created_at=now - timedelta(seconds=1),
+        updated_at=now - timedelta(seconds=1),
+    )
+    event = Event(
+        id=uuid7(),
+        plant_group_id=group.id,
+        kind="extraction",
+        resulting_plant_id=plant.id,
+        created_at=now - timedelta(seconds=1),
+        updated_at=now - timedelta(seconds=1),
+    )
+    receipt = OperationReceipt(
+        id=uuid7(),
+        kind="plant_group_extraction",
+        status="applied",
+        plant_id=plant.id,
+        plant_group_id=group.id,
+        event_id=event.id,
+        before_lifecycle="active",
+        after_lifecycle="active",
+        before_quantity_kind="count",
+        before_quantity_value=10,
+        before_quantity_is_approximate=False,
+        after_quantity_kind="count",
+        after_quantity_value=9,
+        after_quantity_is_approximate=False,
+        created_at=now,
+    )
+    return plant, group, event, receipt
+
+
+def reintegration_database(
+    plant: Plant,
+    group: PlantGroup,
+    event: Event,
+    receipt: OperationReceipt,
+    *,
+    seed_lot_count: int = 0,
+    cutoff: datetime | None = None,
+    later_plant_receipts: list[OperationReceipt] | None = None,
+    later_group_receipts: list[OperationReceipt] | None = None,
+    later_events: list[Event] | None = None,
+) -> MagicMock:
+    database = MagicMock()
+    database.scalar.side_effect = [receipt, group, plant, seed_lot_count, cutoff]
+    database.get.return_value = event
+    database.scalars.side_effect = [
+        later_plant_receipts or [],
+        later_group_receipts or [],
+        later_events or [],
+    ]
+    return database
+
+
+def test_reintegration_evaluation_safe_confirmation_and_missing_receipt() -> None:
+    plant, group, event, receipt = reintegration_models()
+    safe = service.evaluate_reintegration(
+        reintegration_database(plant, group, event, receipt), plant.id
+    )
+    assert safe.status == ReintegrationEligibilityStatus.SAFE
+    assert safe.reasons == ()
+
+    observation = Event(
+        id=uuid7(),
+        plant_id=plant.id,
+        kind="observation",
+        created_at=receipt.created_at + timedelta(seconds=1),
+    )
+    confirmation = service.evaluate_reintegration(
+        reintegration_database(plant, group, event, receipt, later_events=[observation]),
+        plant.id,
+    )
+    assert confirmation.status == ReintegrationEligibilityStatus.CONFIRMATION_REQUIRED
+    assert confirmation.retained_observations == (observation,)
+
+    database = MagicMock()
+    database.scalar.side_effect = [None, plant]
+    unavailable = service.evaluate_reintegration(database, plant.id)
+    assert unavailable.status == ReintegrationEligibilityStatus.BLOCKED
+    assert unavailable.reasons[0].code == "extraction_receipt_not_found"
+    database.scalar.side_effect = [None, None]
+    with pytest.raises(PlantReferenceNotFoundError):
+        service.evaluate_reintegration(database, uuid7())
+
+
+def test_reintegration_evaluation_reports_specific_blockers() -> None:
+    plant, group, _event, receipt = reintegration_models()
+    receipt.status = "reversed"
+    plant.originating_plant_group_id = uuid7()
+    plant.lifecycle = "transferred"
+    plant.updated_at = receipt.created_at + timedelta(seconds=2)
+    group.lifecycle = "completed"
+    group.quantity_value = 7
+    group.updated_at = receipt.created_at + timedelta(seconds=2)
+    transfer = OperationReceipt(
+        id=uuid7(),
+        kind=OperationKind.PLANT_TRANSFER.value,
+        status="applied",
+        plant_id=plant.id,
+        before_lifecycle="active",
+        after_lifecycle="transferred",
+        created_at=receipt.created_at + timedelta(seconds=1),
+    )
+    later_extraction = OperationReceipt(
+        id=uuid7(),
+        kind=OperationKind.PLANT_GROUP_EXTRACTION.value,
+        status="applied",
+        plant_id=uuid7(),
+        plant_group_id=group.id,
+        event_id=uuid7(),
+        before_lifecycle="active",
+        after_lifecycle="active",
+        created_at=receipt.created_at + timedelta(seconds=1),
+    )
+    group_transfer = OperationReceipt(
+        id=uuid7(),
+        kind=OperationKind.PLANT_GROUP_TRANSFER.value,
+        status="applied",
+        plant_group_id=group.id,
+        event_id=uuid7(),
+        before_lifecycle="active",
+        after_lifecycle="transferred",
+        created_at=receipt.created_at + timedelta(seconds=2),
+    )
+    later_event = Event(
+        id=uuid7(),
+        plant_id=plant.id,
+        kind="pruning",
+        created_at=receipt.created_at + timedelta(seconds=1),
+    )
+    evaluation = service.evaluate_reintegration(
+        reintegration_database(
+            plant,
+            group,
+            Event(id=uuid7(), kind="other"),
+            receipt,
+            seed_lot_count=1,
+            later_plant_receipts=[transfer],
+            later_group_receipts=[later_extraction, group_transfer],
+            later_events=[later_event],
+        ),
+        plant.id,
+    )
+    assert evaluation.status == ReintegrationEligibilityStatus.BLOCKED
+    assert {
+        "receipt_already_reversed",
+        "plant_state_changed",
+        "transfer_exists",
+        "produced_seed_lot_exists",
+        "later_extraction_exists",
+        "source_group_transferred",
+        "source_group_changed",
+        "downstream_dependency",
+    } <= {reason.code for reason in evaluation.reasons}
+
+
+def test_reintegration_mutation_restores_snapshot_and_requires_confirmation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    plant, group, _event, receipt = reintegration_models()
+    database = MagicMock()
+    blocked = service.ReintegrationEvaluation(
+        ReintegrationEligibilityStatus.BLOCKED,
+        receipt,
+        plant,
+        group,
+        (service._reason("source_group_changed", "Changed"),),
+        (),
+    )
+    monkeypatch.setattr(service, "evaluate_reintegration", lambda *_args, **_kwargs: blocked)
+    with pytest.raises(PlantDomainConflictError):
+        service.reintegrate_plant(database, plant.id, confirm_retained_observations=False)
+
+    observation = Event(id=uuid7(), plant_id=plant.id, kind="observation")
+    confirmation = service.ReintegrationEvaluation(
+        ReintegrationEligibilityStatus.CONFIRMATION_REQUIRED,
+        receipt,
+        plant,
+        group,
+        (),
+        (observation,),
+    )
+    monkeypatch.setattr(service, "evaluate_reintegration", lambda *_args, **_kwargs: confirmation)
+    with pytest.raises(PlantDomainConflictError) as required:
+        service.reintegrate_plant(database, plant.id, confirm_retained_observations=False)
+    assert required.value.code == "reintegration_confirmation_required"
+
+    result = service.reintegrate_plant(database, plant.id, confirm_retained_observations=True)
+    assert result[:2] == (plant, group)
+    assert plant.lifecycle == "reintegrated"
+    assert group.quantity_value == 10
+    assert result[2].kind == "reintegration"
+    assert result[2].reversed_operation_receipt_id == receipt.id
+    assert receipt.status == "reversed"
+    database.add.assert_called_once_with(result[2])

@@ -37,9 +37,11 @@ import {
   extractPlantFromGroup,
   getPlant,
   getPlantGroup,
+  getPlantReintegrationEligibility,
   listPlantGroups,
   listPlants,
   plantValidationMessages,
+  reintegratePlant,
   transferPlant,
   transferPlantGroup,
   updatePlant,
@@ -51,6 +53,8 @@ import {
   type PlantGroupLifecycle,
   type PlantGroupResponse,
   type PlantLifecycle,
+  type PlantReintegrationEligibility,
+  type PlantReintegrationResponse,
   type PlantResponse,
 } from "./api";
 
@@ -75,6 +79,15 @@ type SaveState =
 type QuantityKind = "unknown" | "exact" | "approximate";
 type OriginMode = "direct" | "sowing";
 type TransferState =
+  | { status: "idle" }
+  | { status: "saving" }
+  | { status: "error"; message: string };
+type ReintegrationState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "ready"; eligibility: PlantReintegrationEligibility }
+  | { status: "error" };
+type ReintegrationMutationState =
   | { status: "idle" }
   | { status: "saving" }
   | { status: "error"; message: string };
@@ -106,6 +119,7 @@ interface FormState {
 
 const plantLifecycleLabels: Record<PlantLifecycle, string> = {
   active: "Active",
+  reintegrated: "Reintegrated",
   transferred: "Transferred",
   dead: "Dead",
   lost: "Lost",
@@ -204,7 +218,7 @@ function plantPayload(form: FormState): PlantCreate {
 function groupPayload(form: FormState): PlantGroupCreate {
   return {
     ...commonPayload(form),
-    lifecycle: form.lifecycle,
+    lifecycle: form.lifecycle as PlantGroupLifecycle,
     quantity:
       form.quantityKind === "unknown"
         ? null
@@ -386,8 +400,10 @@ function Detail({
                 <div>
                   <dt>Extracted from group</dt>
                   <dd>
-                    {originatingGroup.label ??
-                      originatingGroup.botanical_identity.display_label}
+                    <a href={`#/plant-groups/${originatingGroup.id}`}>
+                      {originatingGroup.label ??
+                        originatingGroup.botanical_identity.display_label}
+                    </a>
                   </dd>
                 </div>
                 <div>
@@ -587,11 +603,18 @@ export function PlantScreen({
   const [transferState, setTransferState] = useState<TransferState>({
     status: "idle",
   });
+  const [reintegration, setReintegration] = useState<ReintegrationState>({
+    status: "idle",
+  });
+  const [reintegrationOpen, setReintegrationOpen] = useState(false);
+  const [reintegrationMutation, setReintegrationMutation] =
+    useState<ReintegrationMutationState>({ status: "idle" });
   const feedback = useRef<HTMLDivElement>(null);
   const detailHeading = useRef<HTMLHeadingElement>(null);
   const extractionHeading = useRef<HTMLHeadingElement>(null);
   const extractionTrigger = useRef<HTMLButtonElement | null>(null);
   const transferDialog = useRef<HTMLDivElement | null>(null);
+  const reintegrationDialog = useRef<HTMLDivElement | null>(null);
   const selectedTrigger = useRef<HTMLButtonElement | null>(null);
   const contextualCreationStarted = useRef(false);
   const {
@@ -707,7 +730,13 @@ export function PlantScreen({
         : getPlantGroup(id, controller.signal);
     void request
       .then((value) => {
-        setDetail({ status: "ready", record: { kind, value } as PlantRecord });
+        const record = { kind, value } as PlantRecord;
+        setReintegration(
+          record.kind === "plant" && record.value.originating_plant_group_id
+            ? { status: "loading" }
+            : { status: "idle" },
+        );
+        setDetail({ status: "ready", record });
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
@@ -719,6 +748,32 @@ export function PlantScreen({
       controller.abort();
     };
   }, [auth, detail, detailAttempt, selectedKey]);
+
+  useEffect(() => {
+    if (
+      detail.status !== "ready" ||
+      detail.record.kind !== "plant" ||
+      !detail.record.value.originating_plant_group_id
+    )
+      return;
+    const controller = new AbortController();
+    void getPlantReintegrationEligibility(
+      detail.record.value.id,
+      controller.signal,
+    )
+      .then((eligibility) => {
+        setReintegration({ status: "ready", eligibility });
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        if (error instanceof ApiError && error.status === 401)
+          auth.sessionExpired();
+        else setReintegration({ status: "error" });
+      });
+    return () => {
+      controller.abort();
+    };
+  }, [auth, detail]);
 
   useEffect(() => {
     if (save.status === "error") feedback.current?.focus();
@@ -942,6 +997,61 @@ export function PlantScreen({
     }
   }
 
+  async function applyReintegrationResult(result: PlantReintegrationResponse) {
+    const [plants, groups] = await Promise.all([
+      listPlants(),
+      listPlantGroups(),
+    ]);
+    const authoritative: PlantRecord = { kind: "plant", value: result.plant };
+    setCollection({
+      status: "ready",
+      records: [
+        ...plants.map((value): PlantRecord => ({ kind: "plant", value })),
+        ...groups.map((value): PlantRecord => ({ kind: "group", value })),
+      ],
+    });
+    setDetail({ status: "ready", record: authoritative });
+    setSelectedKey(recordKey(authoritative));
+    setSave({
+      status: "success",
+      message:
+        "Plant was reintegrated. Its record and observations remain in history, and the original group snapshot was restored.",
+    });
+    window.location.hash = `/plants/${result.plant.id}`;
+  }
+
+  async function submitReintegration() {
+    if (
+      selected?.kind !== "plant" ||
+      reintegration.status !== "ready" ||
+      reintegrationMutation.status === "saving"
+    )
+      return;
+    setReintegrationMutation({ status: "saving" });
+    try {
+      const result = await reintegratePlant(
+        selected.value.id,
+        reintegration.eligibility.status === "confirmation_required",
+        csrfToken,
+      );
+      await applyReintegrationResult(result);
+      setReintegrationOpen(false);
+      setReintegrationMutation({ status: "idle" });
+    } catch (error: unknown) {
+      if (error instanceof ApiError && error.status === 401) {
+        auth.sessionExpired();
+        return;
+      }
+      setReintegrationMutation({
+        status: "error",
+        message:
+          error instanceof ApiError && error.status === 409
+            ? "Reintegration is no longer safe. Close this dialog and review the updated eligibility details."
+            : "Florabase could not reintegrate this Plant. Check the connection and try again.",
+      });
+    }
+  }
+
   function updateForm<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((current) => ({ ...current, [key]: value }));
   }
@@ -1060,6 +1170,7 @@ export function PlantScreen({
           status: "success",
           message: "Plant was extracted from the group.",
         });
+        window.location.hash = `/plants/${authoritative.value.id}`;
         return;
       } else if (formKind === "plant") {
         const value = selected
@@ -1781,11 +1892,18 @@ export function PlantScreen({
                             formKind === "plant"
                               ? plantLifecycleLabels
                               : groupLifecycleLabels,
-                          ).map(([value, label]) => (
-                            <option key={value} value={value}>
-                              {label}
-                            </option>
-                          ))}
+                          )
+                            .filter(
+                              ([value]) =>
+                                value !== "reintegrated" ||
+                                (selected?.kind === "plant" &&
+                                  selected.value.lifecycle === "reintegrated"),
+                            )
+                            .map(([value, label]) => (
+                              <option key={value} value={value}>
+                                {label}
+                              </option>
+                            ))}
                         </select>
                       </div>
                     )}
@@ -1901,6 +2019,70 @@ export function PlantScreen({
                     </p>
                   ))}
               </div>
+              {selected.kind === "plant" &&
+                selected.value.originating_plant_group && (
+                  <section
+                    className="notice reintegration-panel"
+                    aria-labelledby="reintegration-action-title"
+                  >
+                    <h4 id="reintegration-action-title">
+                      Original Plant group
+                    </h4>
+                    <p>
+                      <a
+                        href={`#/plant-groups/${selected.value.originating_plant_group.id}`}
+                      >
+                        {selected.value.originating_plant_group.label ??
+                          selected.value.originating_plant_group
+                            .botanical_identity.display_label}
+                      </a>
+                    </p>
+                    {selected.value.lifecycle === "reintegrated" ? (
+                      <p>
+                        This Plant has been reintegrated and remains available
+                        as historical extraction evidence.
+                      </p>
+                    ) : reintegration.status === "loading" ? (
+                      <p role="status">Checking reintegration eligibility…</p>
+                    ) : reintegration.status === "error" ? (
+                      <p role="alert">
+                        Florabase could not check reintegration eligibility.
+                      </p>
+                    ) : reintegration.status === "ready" ? (
+                      <>
+                        {reintegration.eligibility.status === "blocked" && (
+                          <ul>
+                            {reintegration.eligibility.reasons.map((reason) => (
+                              <li key={reason.code}>{reason.message}</li>
+                            ))}
+                          </ul>
+                        )}
+                        {reintegration.eligibility.status ===
+                          "confirmation_required" && (
+                          <p>
+                            {
+                              reintegration.eligibility.retained_observations
+                                .length
+                            }{" "}
+                            observation(s) will remain on this historical Plant.
+                          </p>
+                        )}
+                        <button
+                          type="button"
+                          disabled={
+                            reintegration.eligibility.status === "blocked"
+                          }
+                          onClick={() => {
+                            setReintegrationMutation({ status: "idle" });
+                            setReintegrationOpen(true);
+                          }}
+                        >
+                          Reintegrate into group
+                        </button>
+                      </>
+                    ) : null}
+                  </section>
+                )}
               {selected.kind === "group" &&
                 selected.value.lifecycle === "active" && (
                   <p className="field-help">
@@ -1917,6 +2099,117 @@ export function PlantScreen({
           )}
         </section>
       </div>
+      {reintegrationOpen &&
+        selected?.kind === "plant" &&
+        selected.value.originating_plant_group &&
+        reintegration.status === "ready" && (
+          <div
+            className="dialog-backdrop"
+            role="presentation"
+            onMouseDown={(event) => {
+              if (
+                event.target === event.currentTarget &&
+                reintegrationMutation.status !== "saving"
+              )
+                setReintegrationOpen(false);
+            }}
+          >
+            <div
+              className="context-dialog event-dialog"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="reintegration-title"
+              ref={reintegrationDialog}
+              onKeyDown={(event) => {
+                if (
+                  event.key === "Escape" &&
+                  reintegrationMutation.status !== "saving"
+                ) {
+                  setReintegrationOpen(false);
+                  return;
+                }
+                if (event.key !== "Tab" || !reintegrationDialog.current) return;
+                const focusable = Array.from(
+                  reintegrationDialog.current.querySelectorAll<HTMLElement>(
+                    "button:not([disabled])",
+                  ),
+                );
+                const first = focusable.at(0);
+                const last = focusable.at(-1);
+                if (event.shiftKey && document.activeElement === first) {
+                  event.preventDefault();
+                  last?.focus();
+                } else if (!event.shiftKey && document.activeElement === last) {
+                  event.preventDefault();
+                  first?.focus();
+                }
+              }}
+            >
+              <h3 id="reintegration-title">Reintegrate into original group?</h3>
+              <p>
+                This Plant will stop being an active individual. Its identity,
+                lineage, notes, and Event history will remain available.
+              </p>
+              <p>
+                Florabase will restore the recorded pre-extraction state of{" "}
+                <strong>
+                  {selected.value.originating_plant_group.label ??
+                    selected.value.originating_plant_group.botanical_identity
+                      .display_label}
+                </strong>{" "}
+                and add one reintegration Event to that group.
+              </p>
+              {reintegration.eligibility.status === "confirmation_required" && (
+                <div className="notice">
+                  <p>
+                    Confirm that these observations should remain attached to
+                    the historical Plant:
+                  </p>
+                  <ul>
+                    {reintegration.eligibility.retained_observations.map(
+                      (observation) => (
+                        <li key={observation.id}>
+                          {observation.kind}
+                          {observation.notes ? ` — ${observation.notes}` : ""}
+                        </li>
+                      ),
+                    )}
+                  </ul>
+                </div>
+              )}
+              {reintegrationMutation.status === "error" && (
+                <div className="notice notice--error" role="alert">
+                  {reintegrationMutation.message}
+                </div>
+              )}
+              <div className="actions">
+                <button
+                  type="button"
+                  autoFocus
+                  disabled={reintegrationMutation.status === "saving"}
+                  onClick={() => void submitReintegration()}
+                >
+                  {reintegrationMutation.status === "saving"
+                    ? "Reintegrating…"
+                    : reintegration.eligibility.status ===
+                        "confirmation_required"
+                      ? "Confirm and reintegrate"
+                      : "Reintegrate Plant"}
+                </button>
+                <button
+                  type="button"
+                  className="button--secondary"
+                  disabled={reintegrationMutation.status === "saving"}
+                  onClick={() => {
+                    setReintegrationOpen(false);
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       {transferTarget && (
         <div
           className="dialog-backdrop"

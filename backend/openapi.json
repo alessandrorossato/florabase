@@ -515,6 +515,7 @@
           "treatment",
           "harvest",
           "extraction",
+          "reintegration",
           "transfer",
           "death",
           "loss",
@@ -581,6 +582,28 @@
                 "type": "null"
               }
             ]
+          },
+          "operation_kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operation Kind"
+          },
+          "operation_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operation Status"
           },
           "recipient": {
             "anyOf": [
@@ -2357,6 +2380,7 @@
       "PlantLifecycle": {
         "enum": [
           "active",
+          "reintegrated",
           "transferred",
           "dead",
           "lost",
@@ -2403,6 +2427,96 @@
           "botanical_identity"
         ],
         "title": "PlantLineageNode",
+        "type": "object"
+      },
+      "PlantReintegrationCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm_retained_observations": {
+            "default": false,
+            "title": "Confirm Retained Observations",
+            "type": "boolean"
+          }
+        },
+        "title": "PlantReintegrationCreate",
+        "type": "object"
+      },
+      "PlantReintegrationEligibility": {
+        "properties": {
+          "operation_receipt_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operation Receipt Id"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReintegrationReason"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "retained_observations": {
+            "items": {
+              "$ref": "#/components/schemas/RetainedObservation"
+            },
+            "title": "Retained Observations",
+            "type": "array"
+          },
+          "source_plant_group": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OriginatingPlantGroupSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "$ref": "#/components/schemas/ReintegrationEligibilityStatus"
+          }
+        },
+        "required": [
+          "status",
+          "operation_receipt_id",
+          "source_plant_group",
+          "reasons",
+          "retained_observations"
+        ],
+        "title": "PlantReintegrationEligibility",
+        "type": "object"
+      },
+      "PlantReintegrationResponse": {
+        "properties": {
+          "event": {
+            "$ref": "#/components/schemas/EventResponse"
+          },
+          "operation_status": {
+            "const": "reversed",
+            "default": "reversed",
+            "title": "Operation Status",
+            "type": "string"
+          },
+          "plant": {
+            "$ref": "#/components/schemas/PlantResponse"
+          },
+          "plant_group": {
+            "$ref": "#/components/schemas/PlantGroupResponse"
+          }
+        },
+        "required": [
+          "plant",
+          "plant_group",
+          "event"
+        ],
+        "title": "PlantReintegrationResponse",
         "type": "object"
       },
       "PlantResponse": {
@@ -2913,6 +3027,33 @@
         "title": "PropagationPlantSummary",
         "type": "object"
       },
+      "ReintegrationEligibilityStatus": {
+        "enum": [
+          "safe",
+          "confirmation_required",
+          "blocked"
+        ],
+        "title": "ReintegrationEligibilityStatus",
+        "type": "string"
+      },
+      "ReintegrationReason": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ReintegrationReason",
+        "type": "object"
+      },
       "ResultingPlantSummary": {
         "properties": {
           "botanical_identity": {
@@ -2941,6 +3082,53 @@
           "botanical_identity"
         ],
         "title": "ResultingPlantSummary",
+        "type": "object"
+      },
+      "RetainedObservation": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "observation",
+              "flowering",
+              "fruiting"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "occurred_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "occurred_on",
+          "notes"
+        ],
+        "title": "RetainedObservation",
         "type": "object"
       },
       "SeedLotCreate": {
@@ -7351,6 +7539,118 @@
           }
         },
         "summary": "Read Plant Lineage",
+        "tags": [
+          "plants"
+        ]
+      }
+    },
+    "/api/v1/plants/{plant_id}/reintegrate": {
+      "post": {
+        "operationId": "reintegratePlant",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plant Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlantReintegrationCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantReintegrationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reintegrate One Plant",
+        "tags": [
+          "plants"
+        ]
+      }
+    },
+    "/api/v1/plants/{plant_id}/reintegration": {
+      "get": {
+        "operationId": "getPlantReintegrationEligibility",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plant_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plant Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantReintegrationEligibility"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Plant Reintegration Eligibility",
         "tags": [
           "plants"
         ]

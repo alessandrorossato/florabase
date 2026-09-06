@@ -17,6 +17,8 @@ def test_minimum_origin_defaults_and_text_normalization() -> None:
     assert PlantCreate(botanical_identity_id=IDENTITY_ID, lifecycle="transferred").lifecycle == (
         "transferred"
     )
+    with pytest.raises(ValidationError):
+        PlantCreate(botanical_identity_id=IDENTITY_ID, lifecycle="reintegrated")
     full = PlantCreate(
         botanical_identity_id=IDENTITY_ID,
         direct_origin_kind="other",

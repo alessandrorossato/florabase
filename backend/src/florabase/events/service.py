@@ -52,6 +52,8 @@ class EventProjection:
     plant_group_identity: BotanicalIdentity | None
     resulting_plant: Plant | None
     resulting_plant_identity: BotanicalIdentity | None
+    original_operation_receipt: OperationReceipt | None = None
+    reversed_operation_receipt: OperationReceipt | None = None
 
 
 def _partial_date_values(value: PartialDate | None) -> dict[str, object]:
@@ -95,25 +97,23 @@ def _require_destination(database: Session, location_id: UUID | None) -> None:
         raise EventReferenceNotFoundError("location_not_found", "Location not found")
 
 
-def _require_extraction_result_from_source_group(
-    database: Session, event: Event, resulting_plant_id: UUID | None
-) -> None:
-    if resulting_plant_id is None or event.plant_group_id is None:
-        raise EventDomainConflictError(
-            "invalid_extraction_result",
-            "An extraction Event must reference its resulting Plant and source PlantGroup",
-        )
-    resulting_plant = database.get(Plant, resulting_plant_id)
-    if resulting_plant is None:
-        raise EventReferenceNotFoundError("resulting_plant_not_found", "Resulting Plant not found")
-    if resulting_plant.originating_plant_group_id != event.plant_group_id:
-        raise EventDomainConflictError(
-            "extraction_result_not_from_source_group",
-            "An extraction Event must reference a Plant extracted from its source PlantGroup",
-        )
-
-
 def _apply_creation_side_effect(target: Target, payload: EventCreate) -> None:
+    if (
+        isinstance(target, Plant)
+        and target.lifecycle == "reintegrated"
+        and payload.kind
+        in {
+            EventKind.MOVEMENT,
+            EventKind.TRANSFER,
+            EventKind.DEATH,
+            EventKind.LOSS,
+            EventKind.DISCARDED,
+        }
+    ):
+        raise EventDomainConflictError(
+            "reintegrated_plant_is_historical",
+            "A reintegrated Plant is historical and cannot receive a current-state Event",
+        )
     if payload.kind == EventKind.TRANSFER and target.lifecycle != "active":
         label = "Plant" if isinstance(target, Plant) else "PlantGroup"
         raise EventDomainConflictError(
@@ -150,10 +150,11 @@ def create_event(
     target_id: UUID,
     payload: EventCreate,
 ) -> Event:
-    if payload.kind == EventKind.EXTRACTION:
+    if payload.kind in {EventKind.EXTRACTION, EventKind.REINTEGRATION}:
         raise EventDomainConflictError(
             "extraction_operation_required",
-            "Extraction Events are created only by the PlantGroup extraction operation",
+            "Extraction and reintegration Events are created only by their "
+            "authoritative operations",
         )
     _require_destination(database, payload.destination_location_id)
     target = _lock_target(database, target_type, target_id)
@@ -210,13 +211,23 @@ def transfer_target(
 
 
 def update_event(database: Session, event: Event, payload: EventUpdate) -> Event:
-    if payload.kind == EventKind.EXTRACTION and event.kind != EventKind.EXTRACTION.value:
+    operation_kinds = {EventKind.EXTRACTION.value, EventKind.REINTEGRATION.value}
+    if event.kind in operation_kinds:
+        raise EventDomainConflictError(
+            "operation_event_immutable",
+            "An authoritative extraction or reintegration Event cannot be edited as ordinary "
+            "history",
+        )
+    if payload.kind.value in operation_kinds and event.kind != payload.kind.value:
         raise EventDomainConflictError(
             "extraction_operation_required",
-            "An existing Event cannot be converted into an extraction Event",
+            "An existing Event cannot be converted into an authoritative operation Event",
         )
-    if payload.kind == EventKind.EXTRACTION:
-        _require_extraction_result_from_source_group(database, event, payload.resulting_plant_id)
+    if event.kind in operation_kinds and payload.kind.value != event.kind:
+        raise EventDomainConflictError(
+            "operation_event_kind_immutable",
+            "An authoritative operation Event cannot be converted into another Event kind",
+        )
     _require_destination(database, payload.destination_location_id)
     for field, value in _write_values(payload).items():
         setattr(event, field, value)
@@ -229,7 +240,7 @@ def delete_event(database: Session, event: Event) -> None:
     owner = database.scalar(
         select(OperationReceipt.id).where(OperationReceipt.event_id == event.id)
     )
-    if owner is not None:
+    if owner is not None or event.reversed_operation_receipt_id is not None:
         raise EventDomainConflictError(
             "operation_event_requires_undo",
             "An Event owned by an authoritative operation cannot be deleted as an ordinary Event",
@@ -243,6 +254,8 @@ def _projection_statement() -> Any:
     plant_group_identity = aliased(BotanicalIdentity)
     resulting_plant = aliased(Plant)
     resulting_plant_identity = aliased(BotanicalIdentity)
+    original_receipt = aliased(OperationReceipt)
+    reversed_receipt = aliased(OperationReceipt)
     return (
         select(
             Event,
@@ -253,6 +266,8 @@ def _projection_statement() -> Any:
             plant_group_identity,
             resulting_plant,
             resulting_plant_identity,
+            original_receipt,
+            reversed_receipt,
         )
         .outerjoin(Plant, Plant.id == Event.plant_id)
         .outerjoin(PlantGroup, PlantGroup.id == Event.plant_group_id)
@@ -266,6 +281,11 @@ def _projection_statement() -> Any:
         .outerjoin(
             resulting_plant_identity,
             resulting_plant_identity.id == resulting_plant.botanical_identity_id,
+        )
+        .outerjoin(original_receipt, original_receipt.event_id == Event.id)
+        .outerjoin(
+            reversed_receipt,
+            reversed_receipt.id == Event.reversed_operation_receipt_id,
         )
     )
 
@@ -338,6 +358,9 @@ def event_responses(database: Session, projections: list[EventProjection]) -> li
     responses: list[EventResponse] = []
     for projection in projections:
         event = projection.event
+        operation_receipt = (
+            projection.original_operation_receipt or projection.reversed_operation_receipt
+        )
         target: PlantEventTarget | PlantGroupEventTarget
         if projection.plant is not None:
             if projection.plant_identity is None:
@@ -398,6 +421,8 @@ def event_responses(database: Session, projections: list[EventProjection]) -> li
                     and projection.resulting_plant_identity is not None
                     else None
                 ),
+                operation_kind=(operation_receipt.kind if operation_receipt else None),
+                operation_status=(operation_receipt.status if operation_receipt else None),
                 created_at=event.created_at,
                 updated_at=event.updated_at,
             )

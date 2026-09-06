@@ -196,6 +196,7 @@ const eventKinds: Record<string, string> = {
   treatment: "Treatment",
   harvest: "Harvest",
   extraction: "Extraction",
+  reintegration: "Reintegration",
   transfer: "Transfer",
   death: "Death",
   loss: "Loss",
@@ -984,8 +985,9 @@ test("active group extraction is focused, updates exact quantity, opens the Plan
   expect(
     await screen.findByText("Plant was extracted from the group."),
   ).toBeInTheDocument();
+  expect(window.location.hash).toBe("#/plants/extracted-plant");
   expect(screen.getByText("Extracted from group")).toBeInTheDocument();
-  expect(screen.getByText("Seedlings 2026")).toBeInTheDocument();
+  expect(screen.getAllByText("Seedlings 2026")).toHaveLength(2);
   await user.click(screen.getByRole("button", { name: "Edit Plant" }));
   expect(screen.getByText(/Origin is read-only/)).toBeInTheDocument();
   expect(screen.queryByLabelText("Direct origin")).not.toBeInTheDocument();
@@ -1049,6 +1051,147 @@ test("group extraction availability and quantity explanations cover inactive, ex
     cleanup();
     vi.restoreAllMocks();
   }
+});
+
+test("recorded extraction reintegration explains eligibility, restores authoritative results, and keeps history", async () => {
+  const source = group({
+    lifecycle: "active",
+    quantity: { value: 9, is_approximate: false },
+  });
+  const extracted = plant({
+    label: "Chosen one",
+    supplier_id: null,
+    supplier: null,
+    material_provenance_place_id: null,
+    material_provenance: null,
+    originating_plant_group_id: groupId,
+    originating_plant_group: {
+      id: groupId,
+      label: "Seedlings 2026",
+      lifecycle: "active",
+      botanical_identity: {
+        id: otherIdentityId,
+        display_label: "Cyphomandra betacea",
+      },
+      quantity: { value: 9, is_approximate: false },
+    },
+    direct_origin_kind: null,
+  });
+  const historical = plant({
+    ...extracted,
+    lifecycle: "reintegrated",
+    updated_at: "2026-09-05T12:00:00Z",
+  });
+  const restored = group({
+    lifecycle: "active",
+    quantity: { value: 10, is_approximate: false },
+  });
+  let completed = false;
+  let submitted: Record<string, unknown> | undefined;
+  mockApi(
+    plantHandler([extracted], [source], (path, init) => {
+      if (path === `/api/v1/plants/${plantId}/reintegration`)
+        return json({
+          status: completed ? "blocked" : "safe",
+          operation_receipt_id: eventId,
+          source_plant_group: extracted.originating_plant_group,
+          reasons: completed
+            ? [
+                {
+                  code: "receipt_already_reversed",
+                  message: "This extraction has already been reintegrated.",
+                },
+              ]
+            : [],
+          retained_observations: [],
+        });
+      if (
+        path === `/api/v1/plants/${plantId}/reintegrate` &&
+        init?.method === "POST"
+      ) {
+        submitted = body(init);
+        completed = true;
+        return json(
+          {
+            plant: historical,
+            plant_group: restored,
+            event: journalEvent("reintegration", {
+              target: {
+                type: "plant_group",
+                id: groupId,
+                label: "Seedlings 2026",
+                lifecycle: "active",
+                botanical_identity: {
+                  id: otherIdentityId,
+                  display_label: "Cyphomandra betacea",
+                },
+              },
+              resulting_plant_id: plantId,
+              operation_kind: "plant_group_extraction",
+              operation_status: "reversed",
+            }),
+            operation_status: "reversed",
+          },
+          201,
+        );
+      }
+      if (completed && path === "/api/v1/plants") return json([historical]);
+      if (completed && path === "/api/v1/plant-groups") return json([restored]);
+      return undefined;
+    }),
+  );
+  const user = await openPlants();
+  await user.click(await screen.findByRole("button", { name: /Chosen one/ }));
+  await user.click(
+    await screen.findByRole("button", { name: "Reintegrate into group" }),
+  );
+  const dialog = screen.getByRole("dialog", {
+    name: "Reintegrate into original group?",
+  });
+  expect(dialog).toHaveTextContent(
+    "identity, lineage, notes, and Event history",
+  );
+  expect(dialog).toHaveTextContent("restore the recorded pre-extraction state");
+  await user.click(
+    within(dialog).getByRole("button", { name: "Reintegrate Plant" }),
+  );
+  expect(submitted).toEqual({ confirm_retained_observations: false });
+  expect(await screen.findByText(/Plant was reintegrated/)).toBeInTheDocument();
+  expect(screen.getAllByText("Reintegrated").length).toBeGreaterThan(0);
+  expect(
+    screen.getByText(/historical extraction evidence/),
+  ).toBeInTheDocument();
+
+  cleanup();
+  vi.restoreAllMocks();
+  mockApi(
+    plantHandler([extracted], [source], (path) =>
+      path === `/api/v1/plants/${plantId}/reintegration`
+        ? json({
+            status: "blocked",
+            operation_receipt_id: eventId,
+            source_plant_group: extracted.originating_plant_group,
+            reasons: [
+              {
+                code: "later_extraction_exists",
+                message: "Reintegrate the later extracted Plant first.",
+              },
+            ],
+            retained_observations: [],
+          })
+        : undefined,
+    ),
+  );
+  const blockedUser = await openPlants();
+  await blockedUser.click(
+    await screen.findByRole("button", { name: /Chosen one/ }),
+  );
+  expect(
+    await screen.findByText("Reintegrate the later extracted Plant first."),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "Reintegrate into group" }),
+  ).toBeDisabled();
 });
 
 test("extraction conflict preserves the form, refreshes the group, and does not add a Plant", async () => {
@@ -1225,6 +1368,8 @@ test("whole-group transfer has no quantity control and extraction Events link th
     quantity: { value: 3, is_approximate: false },
   });
   const extraction = journalEvent("extraction", {
+    operation_kind: "plant_group_extraction",
+    operation_status: "applied",
     target: {
       type: "plant_group",
       id: groupId,
@@ -1270,6 +1415,15 @@ test("whole-group transfer has no quantity control and extraction Events link th
   ).not.toBeInTheDocument();
   await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
   await user.click(screen.getByRole("tab", { name: "Events" }));
+  expect(
+    await screen.findByRole("link", { name: "Reintegrate Plant" }),
+  ).toHaveAttribute("href", `#/plants/${plantId}`);
+  expect(
+    screen.queryByRole("button", { name: "Delete" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Edit" }),
+  ).not.toBeInTheDocument();
   const link = await screen.findByRole("link", { name: "Chosen seedling" });
   expect(link).toHaveAttribute("href", `#/plants/${plantId}`);
   await user.click(link);
@@ -1317,7 +1471,7 @@ test("Plant Event history preserves API order, every label and partial-date prec
   await user.click(screen.getByRole("tab", { name: "Events" }));
   const timeline = await screen.findByRole("list", { name: "Event history" });
   const items = within(timeline).getAllByRole("listitem");
-  expect(items).toHaveLength(14);
+  expect(items).toHaveLength(15);
   expect(
     items.map((item) => within(item).getByRole("heading").textContent),
   ).toEqual(Object.values(eventKinds));
@@ -1338,11 +1492,11 @@ test("Plant Event history preserves API order, every label and partial-date prec
   await user.click(
     within(filters).getByRole("button", { name: "Cultivation" }),
   );
-  expect(within(timeline).getAllByRole("listitem")).toHaveLength(6);
+  expect(within(timeline).getAllByRole("listitem")).toHaveLength(7);
   await user.click(within(filters).getByRole("button", { name: "Status" }));
   expect(within(timeline).getAllByRole("listitem")).toHaveLength(4);
   await user.click(within(filters).getByRole("button", { name: "All" }));
-  expect(within(timeline).getAllByRole("listitem")).toHaveLength(14);
+  expect(within(timeline).getAllByRole("listitem")).toHaveLength(15);
 });
 
 test("PlantGroup detail has the same responsive Event journal and a useful empty state", async () => {

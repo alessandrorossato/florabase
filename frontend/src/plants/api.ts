@@ -10,6 +10,10 @@ export type PlantExtractionCreate =
   components["schemas"]["PlantExtractionCreate"];
 export type PlantExtractionResponse =
   components["schemas"]["PlantExtractionResponse"];
+export type PlantReintegrationEligibility =
+  components["schemas"]["PlantReintegrationEligibility"];
+export type PlantReintegrationResponse =
+  components["schemas"]["PlantReintegrationResponse"];
 export type PlantLifecycle = components["schemas"]["PlantLifecycle"];
 export type PlantGroupCreate = components["schemas"]["PlantGroupCreate"];
 export type PlantGroupUpdate = components["schemas"]["PlantGroupUpdate"];
@@ -94,6 +98,30 @@ export function extractPlantFromGroup(
   return requestJson(
     `/api/v1/plant-groups/${encodeURIComponent(id)}/extract-plant`,
     mutation("POST", payload, csrfToken),
+  );
+}
+
+export function getPlantReintegrationEligibility(
+  id: string,
+  signal?: AbortSignal,
+): Promise<PlantReintegrationEligibility> {
+  return requestJson(`/api/v1/plants/${encodeURIComponent(id)}/reintegration`, {
+    signal,
+  });
+}
+
+export function reintegratePlant(
+  id: string,
+  confirmRetainedObservations: boolean,
+  csrfToken: string,
+): Promise<PlantReintegrationResponse> {
+  return requestJson(
+    `/api/v1/plants/${encodeURIComponent(id)}/reintegrate`,
+    mutation(
+      "POST",
+      { confirm_retained_observations: confirmRetainedObservations },
+      csrfToken,
+    ),
   );
 }
 

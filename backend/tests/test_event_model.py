@@ -21,6 +21,7 @@ def test_event_is_focused_uuidv7_mapping_with_exact_vocabulary() -> None:
         "destination_location_id",
         "recipient",
         "resulting_plant_id",
+        "reversed_operation_receipt_id",
         "created_at",
         "updated_at",
     ]
@@ -40,6 +41,7 @@ def test_event_is_focused_uuidv7_mapping_with_exact_vocabulary() -> None:
         "treatment",
         "harvest",
         "extraction",
+        "reintegration",
         "transfer",
         "death",
         "loss",

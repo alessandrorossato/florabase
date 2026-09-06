@@ -144,9 +144,8 @@ receipt, deliberately leaving a detectable difference from its expected after-st
 
 The migration does not backfill historical operations: their before-state is no longer safely
 reconstructable. Existing Sowings, lineage, transfer Events, and extraction Events remain valid but
-receive no fabricated receipt. Undo, dependency evaluation, reintegration, record archival, reverse
-mutation, and Undo UI are not implemented by this increment; `PLANT-006` and `PROPAGATION-003`
-remain separate work.
+receive no fabricated receipt. `PLANT-006` uses only recorded PlantGroup-extraction receipts;
+`PROPAGATION-003` remains separate work rather than a generic receipt or Event undo API.
 
 This makes the numerical contract explicit. Exact compatible values are restored exactly, including
 `100 → 80 → 100` for a consumed SeedLot and `10 → 9 → 10` for an extracted PlantGroup. Approximate
@@ -165,23 +164,29 @@ Location, identity, quantity, transfer, or extraction changes; later Sowing/Plan
 produced SeedLots; and descendants block undo until the dependent action is resolved. Neither
 confirmation nor Event deletion may override a database or numerical invariant.
 
-Future `PLANT-006` will compensate only the recorded extraction of a Plant back into its immutable
-originating PlantGroup, never arbitrary group membership. It restores an exact group quantity from
-the extraction receipt; approximate and unknown group quantities receive no invented arithmetic.
-The Plant and its existing Events and lineage must remain accessible. The preferred retention model
-is a non-active, historically retained reintegrated Plant plus one operation-owned reinsertion Event
-on the PlantGroup linked to that Plant. Product approval is required on whether `reintegrated` is a
-new lifecycle or a separate immutable reintegration marker, and on whether a paired Plant-targeted
-Event is worth the extra duplicated journal history. Hard deletion is excluded unless a later
-approved contract proves that no Event, correction, lineage, or reference can be lost.
+`PLANT-006` compensates only the recorded extraction of a Plant back into its immutable originating
+PlantGroup, never arbitrary group membership. Eligibility is proven by the applied extraction
+receipt and is safe, confirmation-required, or blocked. Retainable observation, flowering, and
+fruiting Events require confirmation and remain on the historical Plant; lifecycle, identity,
+Location, transfer, produced SeedLot, lineage, later group operation, or source-group snapshot
+changes block restoration rather than being overwritten.
+
+Successful reintegration restores the receipt's exact captured PlantGroup before-state, including
+lifecycle and exact, approximate, or unknown count representation, without inverse arithmetic. The
+Plant remains permanently readable with its origin, lineage, notes, and Events but moves to the
+non-active `reintegrated` lifecycle and cannot be reused by a future extraction. One new
+group-targeted reintegration Event structurally links that Plant; there is no duplicate Plant Event.
+The original extraction Event and immutable receipt facts remain, while the receipt status becomes
+reversed. A later extraction creates a distinct new Plant.
 
 ### Plant
 
 A Plant is exactly one individually tracked specimen and never has quantity. It requires its own
 BotanicalIdentity and may have a label, precision-preserved collection-entry date, current Location,
-notes, and active, transferred, dead, lost, or discarded lifecycle. Transferred means the living
-specimen left the currently held collection; its historical record, last Location, provenance,
-lineage, labels, notes, and Events remain.
+notes, and active, reintegrated, transferred, dead, lost, or discarded lifecycle. Transferred means
+the living specimen left the currently held collection. Reintegrated means a recorded extracted
+individual was returned to its original PlantGroup and is no longer separately active. Both retain
+their historical record, last Location, provenance, lineage, labels, notes, and Events.
 
 Its immediate origin is exactly one of:
 
@@ -215,8 +220,8 @@ An Event is an explicitly recorded historical occurrence for exactly one Plant o
 has a UUIDv7 identity, a controlled kind, an optional year/month/day-precision occurrence date,
 optional notes, and exact UTC creation/update timestamps. The initial vocabulary is observation,
 movement, repotting, flowering, fruiting, pruning, treatment, harvest, extraction, transfer, death,
-loss, discarded, and other. Collection observations remain separate from BotanicalProfile reference
-knowledge.
+loss, discarded, reintegration, and other. Collection observations remain separate from
+BotanicalProfile reference knowledge.
 
 Movement additionally requires one destination Location. Creating a movement Event atomically
 updates the target's current Location. Creating death, loss, or discarded Events atomically updates
@@ -239,13 +244,15 @@ The receipt boundary preserves this rule. An ordinary journal Event remains inde
 or deletable and never reverses current state. A transfer or extraction Event created by an
 authoritative operation has a one-to-one receipt relationship and ordinary deletion is rejected;
 editing remains correction of journal history and never changes the immutable receipt or aggregate
-state. A future purpose-specific undo request will resolve that receipt, validate dependencies, and
-apply its inverse atomically. No undo behavior or UI is implemented yet.
+state. The focused reintegration action resolves an applied extraction receipt, validates and locks
+its PlantGroup and resulting Plant, restores the snapshot, records one compensating reintegration
+Event, and marks the receipt reversed in one transaction. Other operation receipts have no undo UI.
 
 Plant and PlantGroup detail pages expose the same protected Event journal. Desktop presents the
 API-ordered history as a vertical timeline, while narrow screens use compact wrapping cards. The UI
 supports All, Observations (observation, flowering, fruiting), Cultivation (movement, repotting,
-pruning, treatment, harvest, extraction), and Status (transfer, death, loss, discarded) filters;
+pruning, treatment, harvest, extraction, reintegration), and Status (transfer, death, loss,
+discarded) filters;
 `other` remains in All.
 Creation explains current-state effects, and correction/deletion explains the non-event-sourced
 boundary. A protected global Event read endpoint uses the same deterministic ordering and includes

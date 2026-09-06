@@ -195,11 +195,16 @@ async function chooseReference(
 
 beforeEach(() => {
   window.history.replaceState(null, "", "#/dashboard");
+  localStorage.clear();
+  sessionStorage.clear();
 });
 
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+  localStorage.clear();
+  sessionStorage.clear();
+  window.history.replaceState(null, "", "#/dashboard");
 });
 
 test("Seeds navigation exposes the collection loading and global empty states", async () => {
@@ -766,7 +771,9 @@ test("duplicate and failed contextual creation keep the seed form intact", async
     "Clitoria ternatea",
   );
   await user.click(screen.getByRole("button", { name: /Create identity/ }));
-  const identityDialog = await screen.findByRole("dialog");
+  const identityDialog = await screen.findByRole("dialog", {
+    name: "Create botanical identity",
+  });
   await user.click(
     within(identityDialog).getByRole("button", { name: "Create and select" }),
   );
@@ -780,7 +787,9 @@ test("duplicate and failed contextual creation keep the seed form intact", async
     "Broken supplier",
   );
   await user.click(screen.getByRole("button", { name: /Create supplier/ }));
-  const supplierDialog = await screen.findByRole("dialog");
+  const supplierDialog = await screen.findByRole("dialog", {
+    name: "Create supplier",
+  });
   await user.click(
     within(supplierDialog).getByRole("button", { name: "Create and select" }),
   );

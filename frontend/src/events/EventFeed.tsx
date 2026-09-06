@@ -67,6 +67,19 @@ export function EventFeed({
                   </a>
                 </p>
               )}
+              {event.kind === "reintegration" && event.resulting_plant && (
+                <p>
+                  Plant returned to this group →{" "}
+                  <a href={`#/plants/${event.resulting_plant.id}`}>
+                    {event.resulting_plant.label ??
+                      event.resulting_plant.botanical_identity.display_label}
+                  </a>
+                </p>
+              )}
+              {event.kind === "extraction" &&
+                event.operation_status === "reversed" && (
+                  <p className="record-state">Reversed by reintegration</p>
+                )}
               {event.notes && <p className="preserve-lines">{event.notes}</p>}
             </article>
           </li>

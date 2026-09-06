@@ -21,7 +21,11 @@ from florabase.locations.model import Location
 from florabase.main import app
 from florabase.plants.model import Plant, PlantGroup
 from florabase.plants.schemas import PlantExtractionCreate
-from florabase.plants.service import PlantDomainConflictError, extract_plant
+from florabase.plants.service import (
+    PlantDomainConflictError,
+    extract_plant,
+    reintegrate_plant,
+)
 from florabase.reversals.model import OperationReceipt
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import Sowing
@@ -646,7 +650,7 @@ def test_extract_plant_defaults_and_explicit_location_modes(
     assert overridden["location_id"] == plant_references["location"]
 
 
-def test_extraction_event_cannot_reference_a_plant_from_another_group(
+def test_extraction_event_is_immutable(
     authenticated_browser: tuple[str, str], plant_references: dict[str, str]
 ) -> None:
     _, _, group = mutate(
@@ -664,22 +668,15 @@ def test_extraction_event_cannot_reference_a_plant_from_another_group(
         f"/api/v1/plant-groups/{group['id']}/extract-plant",
         {},
     )
-    _, _, unrelated = mutate(
-        authenticated_browser,
-        "POST",
-        "/api/v1/plants",
-        {"botanical_identity_id": plant_references["plant_identity"]},
-    )
-
     status_code, _, body = mutate(
         authenticated_browser,
         "PUT",
         f"/api/v1/events/{extraction['event']['id']}",
-        {"kind": "extraction", "resulting_plant_id": unrelated["id"]},
+        {"kind": "extraction", "resulting_plant_id": extraction["plant"]["id"]},
     )
 
     assert status_code == 409
-    assert body["detail"]["code"] == "extraction_result_not_from_source_group"
+    assert body["detail"]["code"] == "operation_event_immutable"
     cookie, _csrf = authenticated_browser
     event = request(
         "GET", f"/api/v1/events/{extraction['event']['id']}", headers={"cookie": cookie}
@@ -934,6 +931,368 @@ def test_concurrent_exact_extraction_serializes_without_overdraw(
             )
             database.execute(delete(Event).where(Event.plant_group_id == group_id))
             database.execute(delete(Plant).where(Plant.originating_plant_group_id == group_id))
+            database.execute(delete(PlantGroup).where(PlantGroup.id == group_id))
+            database.execute(delete(BotanicalIdentity).where(BotanicalIdentity.id == identity_id))
+            database.commit()
+
+
+@pytest.mark.parametrize(
+    ("quantity", "after_lifecycle"),
+    [
+        ({"value": 10, "is_approximate": False}, "active"),
+        ({"value": 100, "is_approximate": True}, "active"),
+        (None, "active"),
+        ({"value": 1, "is_approximate": False}, "completed"),
+    ],
+)
+def test_reintegration_restores_receipt_snapshot_and_retains_history(
+    authenticated_browser: tuple[str, str],
+    plant_references: dict[str, str],
+    database_connection: Connection,
+    quantity: dict[str, object] | None,
+    after_lifecycle: str,
+) -> None:
+    _, _, group = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/plant-groups",
+        {
+            "botanical_identity_id": plant_references["plant_identity"],
+            "quantity": quantity,
+        },
+    )
+    _, _, extraction = mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/plant-groups/{group['id']}/extract-plant",
+        {"label": "Recorded individual"},
+    )
+    plant_id = extraction["plant"]["id"]
+    assert extraction["plant_group"]["lifecycle"] == after_lifecycle
+    cookie, _ = authenticated_browser
+    eligibility = request(
+        "GET",
+        f"/api/v1/plants/{plant_id}/reintegration",
+        headers={"cookie": cookie},
+    )[2]
+    assert eligibility["status"] == "safe"
+    assert eligibility["source_plant_group"]["id"] == group["id"]
+
+    status_code, _, result = mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/plants/{plant_id}/reintegrate",
+        {"confirm_retained_observations": False},
+    )
+    assert status_code == 201
+    assert result["plant"]["lifecycle"] == "reintegrated"
+    assert result["plant_group"]["lifecycle"] == "active"
+    assert result["plant_group"]["quantity"] == quantity
+    assert result["event"]["kind"] == "reintegration"
+    assert result["event"]["target"]["id"] == group["id"]
+    assert result["event"]["resulting_plant_id"] == plant_id
+    assert result["event"]["operation_status"] == "reversed"
+    assert result["operation_status"] == "reversed"
+
+    group_events = request(
+        "GET",
+        f"/api/v1/plant-groups/{group['id']}/events",
+        headers={"cookie": cookie},
+    )[2]
+    assert [item["kind"] for item in group_events] == ["reintegration", "extraction"]
+    assert group_events[1]["operation_status"] == "reversed"
+    assert request("GET", f"/api/v1/plants/{plant_id}/events", headers={"cookie": cookie})[2] == []
+    assert (
+        request("GET", f"/api/v1/plants/{plant_id}/lineage", headers={"cookie": cookie})[2][
+            "ancestors"
+        ][0]["id"]
+        == group["id"]
+    )
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        receipt = database.scalars(
+            select(OperationReceipt).where(OperationReceipt.plant_id == UUID(plant_id))
+        ).one()
+        assert receipt.status == "reversed"
+        assert receipt.before_quantity_value == (
+            Decimal(str(quantity["value"])) if quantity is not None else None
+        )
+
+    repeated = mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/plants/{plant_id}/reintegrate",
+        {"confirm_retained_observations": False},
+    )
+    assert repeated[0] == 409
+    assert repeated[2]["detail"]["code"] == "receipt_already_reversed"
+
+    _, _, later = mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/plant-groups/{group['id']}/extract-plant",
+        {},
+    )
+    assert later["plant"]["id"] != plant_id
+    assert (
+        request("GET", f"/api/v1/plants/{plant_id}", headers={"cookie": cookie})[2]["lifecycle"]
+        == "reintegrated"
+    )
+
+
+def test_reintegration_confirmation_retains_observations(
+    authenticated_browser: tuple[str, str], plant_references: dict[str, str]
+) -> None:
+    _, _, group = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/plant-groups",
+        {
+            "botanical_identity_id": plant_references["plant_identity"],
+            "quantity": {"value": 4, "is_approximate": False},
+        },
+    )
+    extraction = mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/plant-groups/{group['id']}/extract-plant",
+        {},
+    )[2]
+    plant_id = extraction["plant"]["id"]
+    observation = mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/plants/{plant_id}/events",
+        {"kind": "observation", "notes": "New leaf"},
+    )[2]
+    cookie, _ = authenticated_browser
+    eligibility = request(
+        "GET", f"/api/v1/plants/{plant_id}/reintegration", headers={"cookie": cookie}
+    )[2]
+    assert eligibility["status"] == "confirmation_required"
+    assert eligibility["retained_observations"][0]["id"] == observation["id"]
+    denied = mutate(
+        authenticated_browser,
+        "POST",
+        f"/api/v1/plants/{plant_id}/reintegrate",
+        {"confirm_retained_observations": False},
+    )
+    assert denied[0] == 409
+    assert denied[2]["detail"]["code"] == "reintegration_confirmation_required"
+    assert (
+        mutate(
+            authenticated_browser,
+            "POST",
+            f"/api/v1/plants/{plant_id}/reintegrate",
+            {"confirm_retained_observations": True},
+        )[0]
+        == 201
+    )
+    retained = request("GET", f"/api/v1/plants/{plant_id}/events", headers={"cookie": cookie})[2]
+    assert [item["id"] for item in retained] == [observation["id"]]
+
+
+def test_reintegration_blocks_later_group_extraction_and_correction(
+    authenticated_browser: tuple[str, str], plant_references: dict[str, str]
+) -> None:
+    _, _, group = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/plant-groups",
+        {
+            "botanical_identity_id": plant_references["plant_identity"],
+            "quantity": {"value": 10, "is_approximate": False},
+        },
+    )
+    path = f"/api/v1/plant-groups/{group['id']}/extract-plant"
+    first = mutate(authenticated_browser, "POST", path, {})[2]["plant"]
+    second = mutate(authenticated_browser, "POST", path, {})[2]["plant"]
+    cookie, _ = authenticated_browser
+    blocked = request(
+        "GET",
+        f"/api/v1/plants/{first['id']}/reintegration",
+        headers={"cookie": cookie},
+    )[2]
+    assert blocked["status"] == "blocked"
+    assert "later_extraction_exists" in {reason["code"] for reason in blocked["reasons"]}
+
+    assert (
+        mutate(
+            authenticated_browser,
+            "POST",
+            f"/api/v1/plants/{second['id']}/reintegrate",
+            {"confirm_retained_observations": False},
+        )[0]
+        == 201
+    )
+    corrected = {
+        key: value
+        for key, value in group.items()
+        if key
+        in {
+            "botanical_identity_id",
+            "originating_sowing_id",
+            "direct_origin_kind",
+            "direct_origin_detail",
+            "supplier_id",
+            "material_provenance_place_id",
+            "label",
+            "location_id",
+            "collection_entry_date",
+            "notes",
+        }
+    }
+    corrected.update(lifecycle="active", quantity={"value": 8, "is_approximate": False})
+    assert (
+        mutate(
+            authenticated_browser,
+            "PUT",
+            f"/api/v1/plant-groups/{group['id']}",
+            corrected,
+        )[0]
+        == 200
+    )
+    blocked = request(
+        "GET",
+        f"/api/v1/plants/{first['id']}/reintegration",
+        headers={"cookie": cookie},
+    )[2]
+    assert "source_group_changed" in {reason["code"] for reason in blocked["reasons"]}
+
+
+def test_concurrent_reintegration_applies_once(database_engine: Engine) -> None:
+    identity_id, group_id = uuid7(), uuid7()
+    with Session(database_engine) as database:
+        database.add(
+            BotanicalIdentity(id=identity_id, scientific_name=f"Reintegration {identity_id.hex}")
+        )
+        group = PlantGroup(
+            id=group_id,
+            botanical_identity_id=identity_id,
+            direct_origin_kind="unknown",
+            quantity_value=2,
+            quantity_is_approximate=False,
+        )
+        database.add(group)
+        database.flush()
+        plant, _, _ = extract_plant(database, group_id, PlantExtractionCreate())
+        plant_id = plant.id
+        database.commit()
+    barrier = Barrier(2)
+
+    def perform() -> bool:
+        with Session(database_engine) as database:
+            barrier.wait()
+            try:
+                reintegrate_plant(database, plant_id, confirm_retained_observations=False)
+                database.commit()
+                return True
+            except PlantDomainConflictError:
+                database.rollback()
+                return False
+
+    try:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            assert sum(executor.map(lambda _: perform(), range(2))) == 1
+        with Session(database_engine) as database:
+            stored_plant = database.get(Plant, plant_id)
+            stored_group = database.get(PlantGroup, group_id)
+            receipt = database.scalars(
+                select(OperationReceipt).where(OperationReceipt.plant_id == plant_id)
+            ).one()
+            assert stored_plant is not None
+            assert stored_plant.lifecycle == "reintegrated"
+            assert stored_group is not None
+            assert stored_group.quantity_value == 2
+            assert receipt.status == "reversed"
+            assert (
+                database.scalar(
+                    select(func.count())
+                    .select_from(Event)
+                    .where(Event.kind == "reintegration", Event.resulting_plant_id == plant_id)
+                )
+                == 1
+            )
+    finally:
+        with Session(database_engine) as database:
+            database.execute(
+                delete(Event).where(
+                    Event.kind == "reintegration", Event.resulting_plant_id == plant_id
+                )
+            )
+            database.execute(delete(OperationReceipt).where(OperationReceipt.plant_id == plant_id))
+            database.execute(delete(Event).where(Event.resulting_plant_id == plant_id))
+            database.execute(delete(Plant).where(Plant.id == plant_id))
+            database.execute(delete(PlantGroup).where(PlantGroup.id == group_id))
+            database.execute(delete(BotanicalIdentity).where(BotanicalIdentity.id == identity_id))
+            database.commit()
+
+
+def test_reintegration_rollback_leaves_authoritative_state_unchanged(
+    database_engine: Engine, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    identity_id, group_id = uuid7(), uuid7()
+    with Session(database_engine) as database:
+        database.add(
+            BotanicalIdentity(id=identity_id, scientific_name=f"Rollback {identity_id.hex}")
+        )
+        database.add(
+            PlantGroup(
+                id=group_id,
+                botanical_identity_id=identity_id,
+                direct_origin_kind="unknown",
+                quantity_value=3,
+                quantity_is_approximate=False,
+            )
+        )
+        database.flush()
+        plant, _plant_group, extraction_event = extract_plant(
+            database, group_id, PlantExtractionCreate()
+        )
+        receipt = database.scalars(
+            select(OperationReceipt).where(OperationReceipt.plant_id == plant.id)
+        ).one()
+        plant_id, extraction_event_id, receipt_id = plant.id, extraction_event.id, receipt.id
+        database.commit()
+
+    try:
+        with Session(database_engine) as database:
+
+            def fail_flush(*_args: object, **_kwargs: object) -> None:
+                raise RuntimeError("injected reintegration failure")
+
+            monkeypatch.setattr(database, "flush", fail_flush)
+            with pytest.raises(RuntimeError, match="injected reintegration failure"):
+                reintegrate_plant(database, plant_id, confirm_retained_observations=False)
+            database.rollback()
+
+        with Session(database_engine) as database:
+            stored_plant = database.get(Plant, plant_id)
+            stored_group = database.get(PlantGroup, group_id)
+            stored_receipt = database.get(OperationReceipt, receipt_id)
+            assert stored_plant is not None
+            assert stored_plant.lifecycle == "active"
+            assert stored_group is not None
+            assert stored_group.lifecycle == "active"
+            assert stored_group.quantity_value == 2
+            assert stored_receipt is not None
+            assert stored_receipt.status == "applied"
+            assert database.get(Event, extraction_event_id) is not None
+            assert (
+                database.scalar(
+                    select(func.count())
+                    .select_from(Event)
+                    .where(
+                        Event.kind == "reintegration",
+                        Event.resulting_plant_id == plant_id,
+                    )
+                )
+                == 0
+            )
+    finally:
+        with Session(database_engine) as database:
+            database.execute(delete(OperationReceipt).where(OperationReceipt.id == receipt_id))
+            database.execute(delete(Event).where(Event.id == extraction_event_id))
+            database.execute(delete(Plant).where(Plant.id == plant_id))
             database.execute(delete(PlantGroup).where(PlantGroup.id == group_id))
             database.execute(delete(BotanicalIdentity).where(BotanicalIdentity.id == identity_id))
             database.commit()

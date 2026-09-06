@@ -73,10 +73,11 @@ class EventWrite(BaseModel):
             raise ValueError("Only movement may have a destination Location")
         if self.kind != EventKind.TRANSFER and self.recipient is not None:
             raise ValueError("Only transfer may have a recipient")
-        if self.kind == EventKind.EXTRACTION and self.resulting_plant_id is None:
-            raise ValueError("Extraction requires a resulting Plant")
-        if self.kind != EventKind.EXTRACTION and self.resulting_plant_id is not None:
-            raise ValueError("Only extraction may have a resulting Plant")
+        operation_kinds = {EventKind.EXTRACTION, EventKind.REINTEGRATION}
+        if self.kind in operation_kinds and self.resulting_plant_id is None:
+            raise ValueError("Extraction and reintegration require a resulting Plant")
+        if self.kind not in operation_kinds and self.resulting_plant_id is not None:
+            raise ValueError("Only extraction or reintegration may have a resulting Plant")
         return self
 
 
@@ -149,6 +150,8 @@ class EventResponse(BaseModel):
     recipient: str | None
     resulting_plant_id: UUID | None
     resulting_plant: ResultingPlantSummary | None
+    operation_kind: str | None = None
+    operation_status: str | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -157,6 +160,13 @@ class PlantExtractionResponse(BaseModel):
     plant: PlantResponse
     plant_group: PlantGroupResponse
     event: EventResponse
+
+
+class PlantReintegrationResponse(BaseModel):
+    plant: PlantResponse
+    plant_group: PlantGroupResponse
+    event: EventResponse
+    operation_status: Literal["reversed"] = "reversed"
 
 
 class PlantTransferResponse(BaseModel):
