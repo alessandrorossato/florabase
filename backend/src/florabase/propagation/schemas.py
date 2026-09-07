@@ -46,6 +46,12 @@ class SeedLotSowingTransitionCreate(BaseModel):
     sowing: SowingDetails
     source_adjustment: SourceAdjustment
 
+    @model_validator(mode="after")
+    def reject_reversed_result(self) -> Self:
+        if self.sowing.lifecycle == SowingLifecycle.REVERSED:
+            raise ValueError("Reversed is assigned only by propagation reversal")
+        return self
+
 
 class SeedLotSowingTransitionResponse(BaseModel):
     sowing: SowingResponse
@@ -100,6 +106,12 @@ class DescendantFromSowingDetails(BaseModel):
 class PlantFromSowingCreate(DescendantFromSowingDetails):
     lifecycle: PlantLifecycle = PlantLifecycle.ACTIVE
 
+    @model_validator(mode="after")
+    def reject_historical_operation_lifecycle(self) -> Self:
+        if self.lifecycle in {PlantLifecycle.REVERSED, PlantLifecycle.REINTEGRATED}:
+            raise ValueError("Historical operation lifecycles cannot be assigned at creation")
+        return self
+
 
 class PlantGroupFromSowingCreate(DescendantFromSowingDetails):
     quantity: PlantGroupQuantity | None = None
@@ -107,6 +119,8 @@ class PlantGroupFromSowingCreate(DescendantFromSowingDetails):
 
     @model_validator(mode="after")
     def validate_quantity_lifecycle(self) -> Self:
+        if self.lifecycle == PlantGroupLifecycle.REVERSED:
+            raise ValueError("Reversed is assigned only by propagation reversal")
         if (
             self.quantity is not None
             and self.quantity.value == 0
@@ -127,12 +141,24 @@ class SowingPlantTransitionCreate(BaseModel):
     plant: PlantFromSowingCreate
     resulting_sowing_lifecycle: SowingLifecycle
 
+    @model_validator(mode="after")
+    def reject_reversed_source(self) -> Self:
+        if self.resulting_sowing_lifecycle == SowingLifecycle.REVERSED:
+            raise ValueError("Reversed is assigned only by propagation reversal")
+        return self
+
 
 class SowingPlantGroupTransitionCreate(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     plant_group: PlantGroupFromSowingCreate
     resulting_sowing_lifecycle: SowingLifecycle
+
+    @model_validator(mode="after")
+    def reject_reversed_source(self) -> Self:
+        if self.resulting_sowing_lifecycle == SowingLifecycle.REVERSED:
+            raise ValueError("Reversed is assigned only by propagation reversal")
+        return self
 
 
 class SowingPlantTransitionResponse(BaseModel):

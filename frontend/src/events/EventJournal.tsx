@@ -291,12 +291,11 @@ export function EventJournal({
         setTimeline({ status: "error" });
       }
       let targetRefreshFailed = false;
-      if (creating)
-        try {
-          await onTargetRefresh();
-        } catch {
-          targetRefreshFailed = true;
-        }
+      try {
+        await onTargetRefresh();
+      } catch {
+        targetRefreshFailed = true;
+      }
       setNotice(
         historyRefreshFailed || targetRefreshFailed
           ? {
@@ -336,20 +335,32 @@ export function EventJournal({
       await deleteEvent(deleting.id, csrfToken);
       setDeleting(null);
       setMutation({ status: "idle" });
+      let historyRefreshFailed = false;
       try {
         await refreshTimeline();
-        setNotice({
-          tone: "success",
-          message: "Event was deleted from the history.",
-        });
       } catch {
+        historyRefreshFailed = true;
         setTimeline({ status: "error" });
-        setNotice({
-          tone: "error",
-          message:
-            "The Event was deleted, but Florabase could not refresh the history. Retry the Event history before making another change.",
-        });
       }
+      let targetRefreshFailed = false;
+      try {
+        await onTargetRefresh();
+      } catch {
+        targetRefreshFailed = true;
+      }
+      setNotice(
+        historyRefreshFailed || targetRefreshFailed
+          ? {
+              tone: "error",
+              message: historyRefreshFailed
+                ? "The Event was deleted, but Florabase could not refresh the history. Retry the Event history before making another change."
+                : "The Event was deleted and its history refreshed, but Florabase could not refresh the current record. Reload the record before making another change.",
+            }
+          : {
+              tone: "success",
+              message: "Event was deleted from the history.",
+            },
+      );
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401) {
         auth.sessionExpired();

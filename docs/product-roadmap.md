@@ -153,11 +153,14 @@ typed block. The API and UI show the original group and these reasons; concurren
 on the receipt and affected rows. A future extraction creates a new Plant rather than reactivating
 the reintegrated record.
 
-`PROPAGATION-003` will make the supported forward propagation actions compensable from their
-receipts. Its product decision is the historical treatment of a child record created by an undone
-operation: preserve a clearly marked undone historical record by default, or allow a tightly guarded
-hard delete only while it has no Events, corrections, or references. It must never erase dependent
-facts just to make an undo appear successful.
+`PROPAGATION-003` adds focused receipt-proven reversals for SeedLot-to-Sowing and Sowing-to-Plant
+or PlantGroup. New typed result snapshots prove lifecycle, quantity, identity, Location, and date;
+legacy receipts without those snapshots are explicitly non-reversible and are never backfilled.
+Reversal restores the source BEFORE snapshot without inverse arithmetic and retains the result
+permanently as `reversed`, distinct from extraction's `reintegrated`. It preserves lineage and
+informational history, requires downstream-first causal ordering, and never cascades. SAFE,
+CONFIRMATION_REQUIRED, and BLOCKED outcomes support contextual detail actions; repeated forward work
+creates a new record. No propagation journal Event, generic undo API, or receipt CRUD is introduced.
 
 Undo is dependency-aware. It may proceed automatically only when the receipt remains applied and
 every affected record still has the recorded post-operation state with no later dependent work. A

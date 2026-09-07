@@ -4,6 +4,33 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-07 — PROPAGATION-003 verified
+
+- Added receipt-proven reversal for SeedLot-to-Sowing, Sowing-to-Plant, and
+  Sowing-to-PlantGroup. New forward operations atomically capture a versioned typed result
+  expected-after snapshot with the receipt; historical receipts remain unchanged and report
+  `legacy_receipt_missing_result_snapshot` instead of reconstructing past state from current data.
+- Reversal restores the source's immutable BEFORE lifecycle and quantity representation without
+  inverse arithmetic, marks the created result `reversed`, retains lineage and informational
+  history, and marks only the receipt status reversed. Deterministic eligibility covers safe,
+  retained-observation confirmation, structural correction, downstream-first ordering, transfer,
+  extraction/reintegration, produced SeedLots, and other active-operation blockers.
+- Added purpose-specific authenticated eligibility and CSRF-protected mutation APIs, plus responsive
+  detail-page actions, typed blocker links, confirmation, authoritative refresh, historical badges,
+  active-filter exclusions, and forward-workflow guards for reversed records.
+- Independent review confirmed snapshot completeness and immutability, source restoration from the
+  receipt BEFORE state, expected-result guards, downstream-first and cross-operation dependencies,
+  global lock ordering, and the safe upgrade and guarded downgrade of Alembic revision
+  `20260907_0018`. It corrected the historical-lifecycle validation message and made reversal
+  eligibility refresh after Event creation, editing, or deletion so retained-history confirmation
+  never presents stale same-screen state.
+- Verification passed Ruff, strict mypy over 148 source files, 248 backend unit tests at 90.49%
+  coverage, 278 disposable PostgreSQL integration tests, generated API drift, ESLint, strict
+  TypeScript, all 119 frontend tests, and `git diff --check`. Manual QA in a disposable migrated
+  stack covered safe, confirmation-required, and blocked reversal; retained observations; linked
+  source, result, and dependent navigation; distinct repeated creation; active/history filters;
+  accessible status and controls; and responsive behavior at desktop and 390×844.
+
 ## 2026-09-06 — PLANT-006 delivery CI follow-up
 
 - Investigated a reported contextual SeedLot-creation test failure across isolated, in-file, and
@@ -448,14 +475,15 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260905_0017` on the PLANT-006 implementation branch.
+- Alembic head: `20260907_0018` on the PROPAGATION-003 implementation branch.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
   protected Plant/PlantGroup Event journal and timeline UI; atomic extraction history; and retained
   transferred Plant/PlantGroup history.
-- `PROPAGATION-001` and `PROPAGATION-002` are verified; the next recommended P1 product increment
-  is decided by the machine-readable dependency graph;
+- `PROPAGATION-001` and `PROPAGATION-002` are verified, and `PROPAGATION-003` is implemented pending
+  independent verification; the next recommended increment is decided by the machine-readable
+  dependency graph;
   licensing/version policy and release readiness remain explicit later operator/product decisions.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.

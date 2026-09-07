@@ -85,6 +85,7 @@ def _lock_target(database: Session, target_type: TargetType, target_id: UUID) ->
         select(_target_model(target_type))
         .where(_target_model(target_type).id == target_id)
         .with_for_update()
+        .execution_options(populate_existing=True)
     )
     if target is None:
         label = "Plant" if target_type == "plant" else "PlantGroup"
@@ -98,21 +99,18 @@ def _require_destination(database: Session, location_id: UUID | None) -> None:
 
 
 def _apply_creation_side_effect(target: Target, payload: EventCreate) -> None:
-    if (
-        isinstance(target, Plant)
-        and target.lifecycle == "reintegrated"
-        and payload.kind
-        in {
-            EventKind.MOVEMENT,
-            EventKind.TRANSFER,
-            EventKind.DEATH,
-            EventKind.LOSS,
-            EventKind.DISCARDED,
-        }
-    ):
+    if target.lifecycle in {"reintegrated", "reversed"} and payload.kind in {
+        EventKind.MOVEMENT,
+        EventKind.TRANSFER,
+        EventKind.DEATH,
+        EventKind.LOSS,
+        EventKind.DISCARDED,
+    }:
         raise EventDomainConflictError(
-            "reintegrated_plant_is_historical",
-            "A reintegrated Plant is historical and cannot receive a current-state Event",
+            "reversed_result_is_historical"
+            if target.lifecycle == "reversed"
+            else "reintegrated_plant_is_historical",
+            "A reversed or reintegrated record cannot receive a current-state Event",
         )
     if payload.kind == EventKind.TRANSFER and target.lifecycle != "active":
         label = "Plant" if isinstance(target, Plant) else "PlantGroup"

@@ -1,3 +1,4 @@
+import { CreationReversal } from "../propagation/CreationReversal";
 import {
   useEffect,
   useMemo,
@@ -76,6 +77,7 @@ interface FormState {
 
 const lifecycleLabels: Record<SowingLifecycle, string> = {
   active: "Active",
+  reversed: "Reversed",
   completed: "Completed",
   failed: "Failed",
   abandoned: "Abandoned",
@@ -278,20 +280,22 @@ function Detail({
         editLabel="Edit Sowing"
         onEdit={onEdit}
       />
-      <div className="actions contextual-actions">
-        <a
-          className="button-link"
-          href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=plant`}
-        >
-          Create Plant
-        </a>
-        <a
-          className="button-link button--secondary"
-          href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=group`}
-        >
-          Create PlantGroup
-        </a>
-      </div>
+      {sowing.lifecycle !== "reversed" && (
+        <div className="actions contextual-actions">
+          <a
+            className="button-link"
+            href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=plant`}
+          >
+            Create Plant
+          </a>
+          <a
+            className="button-link button--secondary"
+            href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=group`}
+          >
+            Create PlantGroup
+          </a>
+        </div>
+      )}
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
@@ -1325,13 +1329,17 @@ export function SowingScreen({
                         );
                       }}
                     >
-                      {(Object.keys(lifecycleLabels) as SowingLifecycle[]).map(
-                        (value) => (
+                      {(Object.keys(lifecycleLabels) as SowingLifecycle[])
+                        .filter(
+                          (value) =>
+                            value !== "reversed" ||
+                            selected?.lifecycle === "reversed",
+                        )
+                        .map((value) => (
                           <option key={value} value={value}>
                             {lifecycleLabels[value]}
                           </option>
-                        ),
-                      )}
+                        ))}
                     </select>
                   </div>
                   {form.lifecycle === "completed" && (
@@ -1435,7 +1443,43 @@ export function SowingScreen({
             </div>
           ) : selected ? (
             <div className="selected-seed selected-sowing">
+              <CreationReversal
+                key={`reversal:${selected.id}:${selected.updated_at}`}
+                kind="sowing"
+                id={selected.id}
+                lifecycle={selected.lifecycle}
+                revision={selected.updated_at}
+                onReversed={(result) => {
+                  if (!("seed_lot" in result)) return;
+                  setDetail({ status: "ready", sowing: result.sowing });
+                  setCollection((current) =>
+                    current.status === "ready"
+                      ? {
+                          ...current,
+                          sowings: current.sowings.map((value) =>
+                            value.id === result.sowing.id
+                              ? result.sowing
+                              : value,
+                          ),
+                        }
+                      : current,
+                  );
+                  setReferences((current) =>
+                    current
+                      ? {
+                          ...current,
+                          seedLots: current.seedLots.map((value) =>
+                            value.id === result.seed_lot.id
+                              ? result.seed_lot
+                              : value,
+                          ),
+                        }
+                      : current,
+                  );
+                }}
+              />
               <Detail
+                key={selected.updated_at}
                 sowing={selected}
                 headingRef={detailHeading}
                 initialTab={initialTab}

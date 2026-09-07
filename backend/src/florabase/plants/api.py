@@ -144,6 +144,8 @@ def create_one_plant(
     require_owner(actor)
     try:
         plant = create_plant(database, payload)
+    except PlantDomainConflictError as error:
+        raise _domain_conflict(error) from error
     except PlantReferenceNotFoundError as error:
         raise _reference_not_found(error) from error
     response.headers["Location"] = f"/api/v1/plants/{plant.id}"
@@ -234,10 +236,10 @@ def reintegrate_one_plant(
             plant_id,
             confirm_retained_observations=payload.confirm_retained_observations,
         )
-    except PlantReferenceNotFoundError as error:
-        raise _reference_not_found(error) from error
     except PlantDomainConflictError as error:
         raise _domain_conflict(error) from error
+    except PlantReferenceNotFoundError as error:
+        raise _reference_not_found(error) from error
     response.headers["Location"] = f"/api/v1/events/{event.id}"
     return PlantReintegrationResponse(
         plant=_plant_response(database, plant.id),
@@ -257,10 +259,10 @@ def update_one_plant(
     projection = _require_plant(database, plant_id)
     try:
         update_plant(database, projection.plant, payload)
-    except PlantReferenceNotFoundError as error:
-        raise _reference_not_found(error) from error
     except PlantDomainConflictError as error:
         raise _domain_conflict(error) from error
+    except PlantReferenceNotFoundError as error:
+        raise _reference_not_found(error) from error
     return _plant_response(database, plant_id)
 
 
@@ -316,6 +318,8 @@ def create_one_plant_group(
     require_owner(actor)
     try:
         plant_group = create_plant_group(database, payload)
+    except PlantDomainConflictError as error:
+        raise _domain_conflict(error) from error
     except PlantReferenceNotFoundError as error:
         raise _reference_not_found(error) from error
     response.headers["Location"] = f"/api/v1/plant-groups/{plant_group.id}"
@@ -338,10 +342,10 @@ def extract_one_plant(
     require_owner(actor)
     try:
         plant, plant_group, event = extract_plant(database, plant_group_id, payload)
-    except PlantReferenceNotFoundError as error:
-        raise _reference_not_found(error) from error
     except PlantDomainConflictError as error:
         raise _domain_conflict(error) from error
+    except PlantReferenceNotFoundError as error:
+        raise _reference_not_found(error) from error
     response.headers["Location"] = f"/api/v1/plants/{plant.id}"
     return PlantExtractionResponse(
         plant=_plant_response(database, plant.id),
@@ -388,6 +392,8 @@ def update_one_plant_group(
     projection = _require_plant_group(database, plant_group_id)
     try:
         update_plant_group(database, projection.plant_group, payload)
+    except PlantDomainConflictError as error:
+        raise _domain_conflict(error) from error
     except PlantReferenceNotFoundError as error:
         raise _reference_not_found(error) from error
     return _plant_group_response(database, plant_group_id)

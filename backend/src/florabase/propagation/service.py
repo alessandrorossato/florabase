@@ -18,6 +18,7 @@ from florabase.propagation.schemas import (
     SeedLotSowingTransitionCreate,
     SowingPropagationSummary,
 )
+from florabase.propagation.snapshots import propagation_snapshot
 from florabase.reversals.model import OperationKind
 from florabase.reversals.service import add_receipt, seed_quantity
 from florabase.seed_lots.model import SeedLot
@@ -189,6 +190,7 @@ def create_sowing_from_seed_lot(
     add_receipt(
         database,
         kind=OperationKind.SEED_LOT_TO_SOWING,
+        propagation_snapshot=propagation_snapshot(seed_lot, sowing),
         seed_lot_id=seed_lot.id,
         sowing_id=sowing.id,
         adjustment_mode=adjustment.mode,
@@ -204,6 +206,10 @@ def _lock_sowing(database: Session, sowing_id: UUID) -> Sowing:
     sowing = database.scalar(select(Sowing).where(Sowing.id == sowing_id).with_for_update())
     if sowing is None:
         raise PropagationNotFoundError("sowing_not_found", "Sowing not found")
+    if sowing.lifecycle == "reversed":
+        raise PropagationConflictError(
+            "reversed_sowing_is_historical", "A reversed Sowing cannot create descendants"
+        )
     return sowing
 
 
@@ -215,6 +221,7 @@ def create_plant_from_sowing(
 ) -> tuple[Plant, Sowing]:
     sowing = _lock_sowing(database, sowing_id)
     before_lifecycle = sowing.lifecycle
+    before_quantity = seed_quantity(sowing)
     plant = create_plant(
         database,
         PlantCreate(
@@ -228,6 +235,9 @@ def create_plant_from_sowing(
     add_receipt(
         database,
         kind=OperationKind.SOWING_TO_PLANT,
+        propagation_snapshot=propagation_snapshot(sowing, plant),
+        before_quantity=before_quantity,
+        after_quantity=seed_quantity(sowing),
         sowing_id=sowing.id,
         plant_id=plant.id,
         before_lifecycle=before_lifecycle,
@@ -244,6 +254,7 @@ def create_plant_group_from_sowing(
 ) -> tuple[PlantGroup, Sowing]:
     sowing = _lock_sowing(database, sowing_id)
     before_lifecycle = sowing.lifecycle
+    before_quantity = seed_quantity(sowing)
     plant_group = create_plant_group(
         database,
         PlantGroupCreate(
@@ -257,6 +268,9 @@ def create_plant_group_from_sowing(
     add_receipt(
         database,
         kind=OperationKind.SOWING_TO_PLANT_GROUP,
+        propagation_snapshot=propagation_snapshot(sowing, plant_group),
+        before_quantity=before_quantity,
+        after_quantity=seed_quantity(sowing),
         sowing_id=sowing.id,
         plant_group_id=plant_group.id,
         before_lifecycle=before_lifecycle,
@@ -290,7 +304,9 @@ def propagation_summary(database: Session, sowing_id: UUID) -> SowingPropagation
         )
     )
     exact_group_individuals = sum(
-        group.quantity_value or 0 for group in groups if group.quantity_is_approximate is False
+        group.quantity_value or 0
+        for group in groups
+        if group.quantity_is_approximate is False and group.lifecycle != "reversed"
     )
     return SowingPropagationSummary(
         sowing_id=sowing.id,
@@ -323,9 +339,13 @@ def propagation_summary(database: Session, sowing_id: UUID) -> SowingPropagation
             )
             for group in groups
         ],
-        exact_descendant_count=len(plants) + exact_group_individuals,
+        exact_descendant_count=sum(p.lifecycle not in {"reversed", "reintegrated"} for p in plants)
+        + exact_group_individuals,
         approximate_plant_group_count=sum(
-            group.quantity_is_approximate is True for group in groups
+            group.quantity_is_approximate is True and group.lifecycle != "reversed"
+            for group in groups
         ),
-        unknown_plant_group_count=sum(group.quantity_value is None for group in groups),
+        unknown_plant_group_count=sum(
+            group.quantity_value is None and group.lifecycle != "reversed" for group in groups
+        ),
     )

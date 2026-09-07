@@ -1668,7 +1668,7 @@ test("Event creation validates movement, explains side effects and authoritative
   expect(targetReads).toBeGreaterThanOrEqual(4);
 });
 
-test("historical edit and delete warn and never synthesize target rollback", async () => {
+test("historical edit and delete refresh the target without synthesizing rollback", async () => {
   let events = [
     journalEvent("movement", {
       destination_location_id: locationId,
@@ -1724,7 +1724,7 @@ test("historical edit and delete warn and never synthesize target rollback", asy
   expect(
     await screen.findByRole("heading", { name: "Death" }),
   ).toBeInTheDocument();
-  expect(targetReads).toBe(readsAfterOpen);
+  expect(targetReads).toBe(readsAfterOpen + 1);
 
   await user.click(screen.getByRole("button", { name: "Delete" }));
   expect(screen.getByRole("dialog")).toHaveTextContent(
@@ -1734,7 +1734,7 @@ test("historical edit and delete warn and never synthesize target rollback", asy
   expect(
     await screen.findByRole("heading", { name: "No Events recorded yet" }),
   ).toBeInTheDocument();
-  expect(targetReads).toBe(readsAfterOpen);
+  expect(targetReads).toBe(readsAfterOpen + 2);
 });
 
 test("Event loading, fetch failure and mutation failure remain explicit", async () => {

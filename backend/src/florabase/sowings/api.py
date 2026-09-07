@@ -26,6 +26,7 @@ from florabase.propagation.schemas import (
     SowingPropagationSummary,
 )
 from florabase.propagation.service import (
+    PropagationConflictError,
     PropagationNotFoundError,
     create_plant_from_sowing,
     create_plant_group_from_sowing,
@@ -33,6 +34,7 @@ from florabase.propagation.service import (
 )
 from florabase.sowings.schemas import SowingCreate, SowingResponse, SowingUpdate
 from florabase.sowings.service import (
+    SowingDomainConflictError,
     SowingProjection,
     SowingReferenceNotFoundError,
     create_sowing,
@@ -107,6 +109,8 @@ def create(
     require_owner(actor)
     try:
         sowing = create_sowing(database, payload)
+    except SowingDomainConflictError as error:
+        raise HTTPException(409, detail={"code": error.code, "message": error.message}) from error
     except SowingReferenceNotFoundError as error:
         raise _reference_not_found(error) from error
     response.headers["Location"] = f"/api/v1/sowings/{sowing.id}"
@@ -134,6 +138,8 @@ def create_plant_transition(
             payload.plant,
             payload.resulting_sowing_lifecycle.value,
         )
+    except PropagationConflictError as error:
+        raise HTTPException(409, detail={"code": error.code, "message": error.message}) from error
     except PropagationNotFoundError as error:
         raise _propagation_not_found(error) from error
     except PlantReferenceNotFoundError as error:
@@ -169,6 +175,8 @@ def create_plant_group_transition(
             payload.plant_group,
             payload.resulting_sowing_lifecycle.value,
         )
+    except PropagationConflictError as error:
+        raise HTTPException(409, detail={"code": error.code, "message": error.message}) from error
     except PropagationNotFoundError as error:
         raise _propagation_not_found(error) from error
     except PlantReferenceNotFoundError as error:
@@ -204,6 +212,8 @@ def read_propagation_summary(
 ) -> SowingPropagationSummary:
     try:
         return propagation_summary(database, sowing_id)
+    except PropagationConflictError as error:
+        raise HTTPException(409, detail={"code": error.code, "message": error.message}) from error
     except PropagationNotFoundError as error:
         raise _propagation_not_found(error) from error
 
@@ -219,6 +229,8 @@ def update(
     projection = _require_sowing(database, sowing_id)
     try:
         update_sowing(database, projection.sowing, payload)
+    except SowingDomainConflictError as error:
+        raise HTTPException(409, detail={"code": error.code, "message": error.message}) from error
     except SowingReferenceNotFoundError as error:
         raise _reference_not_found(error) from error
     return _response(database, sowing_id)

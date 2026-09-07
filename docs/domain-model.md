@@ -145,7 +145,9 @@ receipt, deliberately leaving a detectable difference from its expected after-st
 The migration does not backfill historical operations: their before-state is no longer safely
 reconstructable. Existing Sowings, lineage, transfer Events, and extraction Events remain valid but
 receive no fabricated receipt. `PLANT-006` uses only recorded PlantGroup-extraction receipts;
-`PROPAGATION-003` remains separate work rather than a generic receipt or Event undo API.
+`PROPAGATION-003` uses only complete version-1 propagation receipts. Older propagation receipts
+remain readable but return `legacy_receipt_missing_result_snapshot`; no current record is used to
+backfill missing historical facts.
 
 This makes the numerical contract explicit. Exact compatible values are restored exactly, including
 `100 → 80 → 100` for a consumed SeedLot and `10 → 9 → 10` for an extracted PlantGroup. Approximate
@@ -376,3 +378,51 @@ analytical dashboards, contextual form help, import/export, PWA installability, 
 reconciliation, scope-aware
 Location browsing, richer Supplier summaries, reminders, weather, and multi-user ownership remain
 planned. `docs/features.json` is the detailed source for dependencies and acceptance criteria.
+
+
+### Propagation reversal
+
+The three focused reversals are SeedLot → Sowing, Sowing → Plant, and Sowing → PlantGroup.
+One action compensates one receipt in one transaction. Source lifecycle and SeedLot quantity return
+to the immutable BEFORE snapshot; no inverse arithmetic or unit conversion occurs. Sowing
+transitions restore only their captured lifecycle; quantity is checked, and the independent
+`germinated_count` is never rewritten.
+
+New propagation receipts capture version-1 typed relational result snapshots on their original
+INSERT: lifecycle, quantity kind/value/unit/approximation, BotanicalIdentity where applicable,
+Location, and partial sowing/collection-entry date. Source IDs and result IDs prove the origin;
+source Location and Sowing's SeedLot plus source quantity guard later corrections. Original facts
+remain immutable under the existing database trigger. Labels, notes, cultivation descriptions,
+and germinated counts are informational; they do not themselves block reversal and are retained.
+There is no JSON snapshot, generic receipt CRUD, reconstruction, or event-sourcing framework.
+
+Eligibility is `safe`, `confirmation_required`, or `blocked`. Current source and result state must
+match their expected snapshots. Later applied operations sharing the source require newest-first
+reversal, even when they did not change its lifecycle or quantity. Applied downstream operations,
+uncompensated lineage, produced SeedLots, transfer, terminal state, structural corrections, and
+non-informational Events block reversal. Observation, flowering, and fruiting Events on Plants and
+PlantGroups are the narrow explicit-confirmation category; they remain attached. Sowings have no
+such journal Events. Confirmation never overrides a structural blocker.
+
+Causal ordering is downstream-first, without cascading. Reversed propagation receipts with reversed
+results, and reintegrated extraction receipts with reintegrated Plants, are historical rather than
+active dependencies. Their lineage and operation-owned historical Events remain stored.
+
+Results retain their UUID, notes, history, and lineage permanently with lifecycle `reversed`.
+This differs from `reintegrated`, which identifies an extracted Plant returned to its original group.
+Reversed results remain readable through detail and All/history views, but do not contribute to
+active holdings or propagation material totals. They cannot be reactivated through correction,
+acquire a new origin, create descendants, produce new SeedLots, transfer, extract, or receive
+current-state Events. A repeated forward transition creates a distinct new result and receipt.
+Propagation reversal emits no journal Event and never deletes lineage or results.
+
+Lock order follows receipt → SeedLot → Sowing → PlantGroup → Plant where applicable; a reversal
+locks only its own receipt and affected source/result rows. Forward descendant and producer creation
+also lock their source, Event operations lock their target, and correction validates refreshed locked
+rows. Competing duplicate reversals serialize and the loser gets an explicit conflict. Transaction
+failure rolls back source, result, and receipt together. Expected-state reads are advisory until the
+mutation repeats all validation under locks.
+
+Migration `20260907_0018` adds nullable typed snapshot fields and the three `reversed` lifecycles.
+It does not backfill. Downgrade refuses while new snapshot or reversal history exists, rather than
+discard immutable evidence; an empty disposable database supports the full downgrade/re-upgrade cycle.

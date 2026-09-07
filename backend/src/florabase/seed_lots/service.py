@@ -142,6 +142,7 @@ def _write_values(payload: SeedLotCreate | SeedLotUpdate) -> dict[str, object]:
 
 
 def create_seed_lot(database: Session, payload: SeedLotCreate) -> SeedLot:
+    _lock_new_producers(database, payload)
     _require_references(database, payload)
     seed_lot = SeedLot(id=uuid7(), **_write_values(payload))
     validate_producer_assignment(
@@ -153,6 +154,8 @@ def create_seed_lot(database: Session, payload: SeedLotCreate) -> SeedLot:
 
 
 def update_seed_lot(database: Session, seed_lot: SeedLot, payload: SeedLotUpdate) -> SeedLot:
+    database.refresh(seed_lot, with_for_update=True)
+    _lock_new_producers(database, payload, seed_lot)
     _require_references(database, payload)
     validate_producer_assignment(
         database, seed_lot.id, payload.producer_plant_id, payload.producer_plant_group_id
@@ -347,3 +350,26 @@ def responses(database: Session, projections: list[SeedLotProjection]) -> list[S
             )
         )
     return result
+
+
+def _lock_new_producers(
+    database: Session, payload: SeedLotCreate | SeedLotUpdate, existing: SeedLot | None = None
+) -> None:
+    for model, field in ((PlantGroup, "producer_plant_group_id"), (Plant, "producer_plant_id")):
+        producer_id = getattr(payload, field)
+        if producer_id is None or (
+            existing is not None and producer_id == getattr(existing, field)
+        ):
+            continue
+        producer = database.scalar(
+            select(model)
+            .where(model.id == producer_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        assert producer is None or isinstance(producer, (Plant, PlantGroup))
+        if producer is not None and producer.lifecycle in {"reversed", "reintegrated"}:
+            raise SeedLotReferenceNotFoundError(
+                "producer_is_historical",
+                "A reversed or reintegrated record cannot produce a new SeedLot",
+            )

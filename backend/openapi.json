@@ -1513,6 +1513,34 @@
         "title": "PlantCreate",
         "type": "object"
       },
+      "PlantCreationReversalResponse": {
+        "properties": {
+          "operation_receipt_id": {
+            "format": "uuid",
+            "title": "Operation Receipt Id",
+            "type": "string"
+          },
+          "operation_status": {
+            "const": "reversed",
+            "default": "reversed",
+            "title": "Operation Status",
+            "type": "string"
+          },
+          "plant": {
+            "$ref": "#/components/schemas/PlantResponse"
+          },
+          "sowing": {
+            "$ref": "#/components/schemas/SowingResponse"
+          }
+        },
+        "required": [
+          "plant",
+          "sowing",
+          "operation_receipt_id"
+        ],
+        "title": "PlantCreationReversalResponse",
+        "type": "object"
+      },
       "PlantEventTarget": {
         "properties": {
           "botanical_identity": {
@@ -1836,6 +1864,34 @@
         "title": "PlantGroupCreate",
         "type": "object"
       },
+      "PlantGroupCreationReversalResponse": {
+        "properties": {
+          "operation_receipt_id": {
+            "format": "uuid",
+            "title": "Operation Receipt Id",
+            "type": "string"
+          },
+          "operation_status": {
+            "const": "reversed",
+            "default": "reversed",
+            "title": "Operation Status",
+            "type": "string"
+          },
+          "plant_group": {
+            "$ref": "#/components/schemas/PlantGroupResponse"
+          },
+          "sowing": {
+            "$ref": "#/components/schemas/SowingResponse"
+          }
+        },
+        "required": [
+          "plant_group",
+          "sowing",
+          "operation_receipt_id"
+        ],
+        "title": "PlantGroupCreationReversalResponse",
+        "type": "object"
+      },
       "PlantGroupEventTarget": {
         "properties": {
           "botanical_identity": {
@@ -1954,6 +2010,7 @@
       "PlantGroupLifecycle": {
         "enum": [
           "active",
+          "reversed",
           "transferred",
           "completed",
           "dead",
@@ -2380,6 +2437,7 @@
       "PlantLifecycle": {
         "enum": [
           "active",
+          "reversed",
           "reintegrated",
           "transferred",
           "dead",
@@ -3027,6 +3085,104 @@
         "title": "PropagationPlantSummary",
         "type": "object"
       },
+      "PropagationReversalCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "confirm_retained_observations": {
+            "default": false,
+            "title": "Confirm Retained Observations",
+            "type": "boolean"
+          }
+        },
+        "title": "PropagationReversalCreate",
+        "type": "object"
+      },
+      "PropagationReversalEligibility": {
+        "properties": {
+          "operation_receipt_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operation Receipt Id"
+          },
+          "operation_status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "applied",
+                  "reversed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Operation Status"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/ReversalReason"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "retained_observation_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Retained Observation Ids",
+            "type": "array"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
+          },
+          "source_type": {
+            "enum": [
+              "seed_lot",
+              "sowing"
+            ],
+            "title": "Source Type",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "safe",
+              "confirmation_required",
+              "blocked"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "operation_receipt_id",
+          "operation_status",
+          "source_id",
+          "source_type",
+          "reasons",
+          "retained_observation_ids"
+        ],
+        "title": "PropagationReversalEligibility",
+        "type": "object"
+      },
       "ReintegrationEligibilityStatus": {
         "enum": [
           "safe",
@@ -3129,6 +3285,72 @@
           "notes"
         ],
         "title": "RetainedObservation",
+        "type": "object"
+      },
+      "ReversalReason": {
+        "properties": {
+          "code": {
+            "enum": [
+              "propagation_receipt_not_found",
+              "receipt_relationship_mismatch",
+              "receipt_already_reversed",
+              "legacy_receipt_missing_result_snapshot",
+              "result_lifecycle_changed",
+              "result_structural_state_changed",
+              "result_terminal_lifecycle",
+              "source_lifecycle_changed",
+              "source_quantity_changed",
+              "source_structural_state_changed",
+              "later_source_operation",
+              "transfer_exists",
+              "active_downstream_operation",
+              "downstream_lineage",
+              "produced_seed_lot_exists",
+              "later_extraction_exists",
+              "incompatible_result_history"
+            ],
+            "title": "Code",
+            "type": "string"
+          },
+          "entity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Id"
+          },
+          "entity_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "seed_lot",
+                  "sowing",
+                  "plant",
+                  "plant_group"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Entity Type"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "ReversalReason",
         "type": "object"
       },
       "SeedLotCreate": {
@@ -4100,6 +4322,34 @@
         "title": "SowingCreate",
         "type": "object"
       },
+      "SowingCreationReversalResponse": {
+        "properties": {
+          "operation_receipt_id": {
+            "format": "uuid",
+            "title": "Operation Receipt Id",
+            "type": "string"
+          },
+          "operation_status": {
+            "const": "reversed",
+            "default": "reversed",
+            "title": "Operation Status",
+            "type": "string"
+          },
+          "seed_lot": {
+            "$ref": "#/components/schemas/SeedLotResponse"
+          },
+          "sowing": {
+            "$ref": "#/components/schemas/SowingResponse"
+          }
+        },
+        "required": [
+          "sowing",
+          "seed_lot",
+          "operation_receipt_id"
+        ],
+        "title": "SowingCreationReversalResponse",
+        "type": "object"
+      },
       "SowingDetails": {
         "additionalProperties": false,
         "properties": {
@@ -4260,6 +4510,7 @@
       "SowingLifecycle": {
         "enum": [
           "active",
+          "reversed",
           "completed",
           "failed",
           "abandoned"
@@ -7195,6 +7446,118 @@
         ]
       }
     },
+    "/api/v1/plant-groups/{result_id}/creation-reversal": {
+      "get": {
+        "operationId": "getPlantGroupCreationReversalEligibility",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "result_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Result Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropagationReversalEligibility"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Plant Group Eligibility",
+        "tags": [
+          "propagation"
+        ]
+      }
+    },
+    "/api/v1/plant-groups/{result_id}/reverse-creation": {
+      "post": {
+        "operationId": "reversePlantGroupCreation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "result_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Result Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropagationReversalCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantGroupCreationReversalResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reverse Plant Group Creation",
+        "tags": [
+          "propagation"
+        ]
+      }
+    },
     "/api/v1/plants": {
       "get": {
         "operationId": "listPlants",
@@ -7725,6 +8088,118 @@
         ]
       }
     },
+    "/api/v1/plants/{result_id}/creation-reversal": {
+      "get": {
+        "operationId": "getPlantCreationReversalEligibility",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "result_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Result Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropagationReversalEligibility"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Plant Eligibility",
+        "tags": [
+          "propagation"
+        ]
+      }
+    },
+    "/api/v1/plants/{result_id}/reverse-creation": {
+      "post": {
+        "operationId": "reversePlantCreation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "result_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Result Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropagationReversalCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlantCreationReversalResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reverse Plant Creation",
+        "tags": [
+          "propagation"
+        ]
+      }
+    },
     "/api/v1/ready": {
       "get": {
         "operationId": "getReadiness",
@@ -8129,6 +8604,118 @@
         "summary": "Create",
         "tags": [
           "sowings"
+        ]
+      }
+    },
+    "/api/v1/sowings/{result_id}/creation-reversal": {
+      "get": {
+        "operationId": "getSowingCreationReversalEligibility",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "result_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Result Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PropagationReversalEligibility"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sowing Eligibility",
+        "tags": [
+          "propagation"
+        ]
+      }
+    },
+    "/api/v1/sowings/{result_id}/reverse-creation": {
+      "post": {
+        "operationId": "reverseSowingCreation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "result_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Result Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PropagationReversalCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SowingCreationReversalResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reverse Sowing Creation",
+        "tags": [
+          "propagation"
         ]
       }
     },

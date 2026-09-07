@@ -1751,3 +1751,17 @@ button:disabled {
     }
   }
 }
+
+.lifecycle-badge--reversed {
+  background: #eeece7;
+  color: #514f49;
+}
+.creation-reversal {
+  overflow-wrap: anywhere;
+}
+.retained-history-confirmation {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin-block: 1rem;
+}
