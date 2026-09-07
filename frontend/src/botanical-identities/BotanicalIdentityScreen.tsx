@@ -355,7 +355,13 @@ function IdentityDetails({
                       ({ lifecycle }) => lifecycle === "completed",
                     ).length,
                   )}{" "}
-                  completed
+                  completed ·{" "}
+                  {
+                    counts.sowings.filter(
+                      ({ lifecycle }) => lifecycle === "reversed",
+                    ).length
+                  }{" "}
+                  reversed
                 </small>
               </CollectionCard>
               <CollectionCard
@@ -389,7 +395,13 @@ function IdentityDetails({
                       ({ lifecycle }) => lifecycle === "reintegrated",
                     ).length,
                   )}{" "}
-                  reintegrated
+                  reintegrated ·{" "}
+                  {
+                    counts.plants.filter(
+                      ({ lifecycle }) => lifecycle === "reversed",
+                    ).length
+                  }{" "}
+                  reversed
                 </small>
               </CollectionCard>
               <CollectionCard
@@ -417,7 +429,13 @@ function IdentityDetails({
                       ({ lifecycle }) => lifecycle === "transferred",
                     ).length,
                   )}{" "}
-                  transferred
+                  transferred ·{" "}
+                  {
+                    counts.plant_groups.filter(
+                      ({ lifecycle }) => lifecycle === "reversed",
+                    ).length
+                  }{" "}
+                  reversed
                 </small>
               </CollectionCard>
             </div>

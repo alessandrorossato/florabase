@@ -98,8 +98,8 @@ class PlantWrite(PlantCommonWrite):
 class PlantCreate(PlantWrite):
     @model_validator(mode="after")
     def default_direct_origin(self) -> Self:
-        if self.lifecycle == PlantLifecycle.REINTEGRATED:
-            raise ValueError("Reintegrated is assigned only by the reintegration operation")
+        if self.lifecycle in {PlantLifecycle.REINTEGRATED, PlantLifecycle.REVERSED}:
+            raise ValueError("Historical lifecycles are assigned only by their owning operation")
         if self.originating_sowing_id is None and self.direct_origin_kind is None:
             self.direct_origin_kind = DirectOriginKind.UNKNOWN
         return self
@@ -163,6 +163,7 @@ class PlantGroupWrite(PlantCommonWrite):
             and self.quantity.value == 0
             and self.lifecycle
             not in {
+                PlantGroupLifecycle.REVERSED,
                 PlantGroupLifecycle.COMPLETED,
                 PlantGroupLifecycle.DEAD,
                 PlantGroupLifecycle.DISCARDED,
@@ -173,7 +174,11 @@ class PlantGroupWrite(PlantCommonWrite):
 
 
 class PlantGroupCreate(PlantGroupWrite):
-    pass
+    @model_validator(mode="after")
+    def reject_reversed(self) -> Self:
+        if self.lifecycle == PlantGroupLifecycle.REVERSED:
+            raise ValueError("Reversed is assigned only by propagation reversal")
+        return self
 
 
 class PlantGroupUpdate(PlantGroupWrite):

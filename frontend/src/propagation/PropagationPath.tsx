@@ -29,7 +29,11 @@ export function PropagationPath({
                 >
                   <span className="eyebrow">{node.type}</span>
                   <strong>{node.label}</strong>
-                  {node.state && <small>{node.state}</small>}
+                  {node.state && (
+                    <small>
+                      {node.state === "reversed" ? "Reversed" : node.state}
+                    </small>
+                  )}
                 </a>
               ))}
             </div>

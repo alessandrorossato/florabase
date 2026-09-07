@@ -22,7 +22,10 @@ import { PropagationPath } from "./PropagationPath";
 type Kind = "plant" | "group";
 type QuantityKind = "unknown" | "exact" | "approximate";
 
-const sowingLifecycleLabels: Record<SowingLifecycle, string> = {
+const sowingLifecycleLabels: Record<
+  Exclude<SowingLifecycle, "reversed">,
+  string
+> = {
   active: "Keep active",
   completed: "Complete Sowing",
   failed: "Mark failed",
@@ -95,6 +98,15 @@ export function SowingDescendantWizard({
       </section>
     );
   const { sowing, identities, locations } = data;
+  if (sowing.lifecycle === "reversed")
+    return (
+      <section className="workspace">
+        <p role="alert">
+          This Sowing is Reversed and cannot create new descendants.
+        </p>
+        <a href={`#/sowings/${sowing.id}`}>View historical Sowing</a>
+      </section>
+    );
 
   const completionOutcome = (() => {
     if (resultingLifecycle !== "completed") return null;
@@ -387,28 +399,31 @@ export function SowingDescendantWizard({
         </div>
         <fieldset className="choice-cards">
           <legend>Resulting Sowing lifecycle</legend>
-          {(Object.keys(sowingLifecycleLabels) as SowingLifecycle[]).map(
-            (value) => (
-              <label key={value}>
-                <input
-                  type="radio"
-                  name="resulting-lifecycle"
-                  checked={resultingLifecycle === value}
-                  onChange={() => {
-                    setResultingLifecycle(value);
-                  }}
-                />
-                <span>
-                  <strong>{sowingLifecycleLabels[value]}</strong>
-                  <small>
-                    {value === "active"
-                      ? "Default. Descendant counts never complete a Sowing automatically."
-                      : `The Sowing will become ${value} in the same atomic operation.`}
-                  </small>
-                </span>
-              </label>
-            ),
-          )}
+          {(
+            Object.keys(sowingLifecycleLabels) as Exclude<
+              SowingLifecycle,
+              "reversed"
+            >[]
+          ).map((value) => (
+            <label key={value}>
+              <input
+                type="radio"
+                name="resulting-lifecycle"
+                checked={resultingLifecycle === value}
+                onChange={() => {
+                  setResultingLifecycle(value);
+                }}
+              />
+              <span>
+                <strong>{sowingLifecycleLabels[value]}</strong>
+                <small>
+                  {value === "active"
+                    ? "Default. Descendant counts never complete a Sowing automatically."
+                    : `The Sowing will become ${value} in the same atomic operation.`}
+                </small>
+              </span>
+            </label>
+          ))}
         </fieldset>
         {completionOutcome}
         {messages.length > 0 && (

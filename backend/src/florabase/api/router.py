@@ -9,6 +9,7 @@ from florabase.events.api import events_router, plant_groups_events_router, plan
 from florabase.geographic_places.api import router as geographic_places_router
 from florabase.locations.api import router as locations_router
 from florabase.plants.api import plant_groups_router, plants_router
+from florabase.propagation.api import router as propagation_router
 from florabase.seed_lots.api import router as seed_lots_router
 from florabase.sowings.api import router as sowings_router
 from florabase.suppliers.api import router as suppliers_router
@@ -29,3 +30,5 @@ api_router.include_router(plant_groups_router)
 api_router.include_router(plants_events_router)
 api_router.include_router(plant_groups_events_router)
 api_router.include_router(events_router)
+
+api_router.include_router(propagation_router)

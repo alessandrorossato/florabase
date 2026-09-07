@@ -145,6 +145,7 @@ def _common_write_values(payload: PlantCommonWrite) -> dict[str, object]:
 
 
 def create_plant(database: Session, payload: PlantCreate) -> Plant:
+    _lock_forward_sowing(database, payload.originating_sowing_id)
     _require_references(database, payload)
     plant = Plant(**_common_write_values(payload), lifecycle=payload.lifecycle.value)
     database.add(plant)
@@ -153,6 +154,21 @@ def create_plant(database: Session, payload: PlantCreate) -> Plant:
 
 
 def update_plant(database: Session, plant: Plant, payload: PlantUpdate) -> Plant:
+    if payload.originating_sowing_id != plant.originating_sowing_id:
+        _lock_forward_sowing(database, payload.originating_sowing_id)
+    database.refresh(plant, with_for_update=True)
+    if (plant.lifecycle == "reversed") != (payload.lifecycle.value == "reversed"):
+        raise PlantDomainConflictError(
+            "reversed_lifecycle_immutable",
+            "Reversed lifecycle is assigned only by reversal and cannot be changed",
+        )
+    if (
+        plant.lifecycle == "reversed"
+        and payload.originating_sowing_id != plant.originating_sowing_id
+    ):
+        raise PlantDomainConflictError(
+            "reversed_origin_immutable", "Historical propagation origin cannot be changed"
+        )
     _require_references(database, payload)
     if plant.lifecycle == "reintegrated" and payload.lifecycle.value != "reintegrated":
         raise PlantDomainConflictError(
@@ -541,6 +557,7 @@ def reintegrate_plant(
 
 
 def create_plant_group(database: Session, payload: PlantGroupCreate) -> PlantGroup:
+    _lock_forward_sowing(database, payload.originating_sowing_id)
     _require_references(database, payload)
     values = _common_write_values(payload)
     values.update(
@@ -559,6 +576,21 @@ def create_plant_group(database: Session, payload: PlantGroupCreate) -> PlantGro
 def update_plant_group(
     database: Session, plant_group: PlantGroup, payload: PlantGroupUpdate
 ) -> PlantGroup:
+    if payload.originating_sowing_id != plant_group.originating_sowing_id:
+        _lock_forward_sowing(database, payload.originating_sowing_id)
+    database.refresh(plant_group, with_for_update=True)
+    if (plant_group.lifecycle == "reversed") != (payload.lifecycle.value == "reversed"):
+        raise PlantDomainConflictError(
+            "reversed_lifecycle_immutable",
+            "Reversed lifecycle is assigned only by reversal and cannot be changed",
+        )
+    if (
+        plant_group.lifecycle == "reversed"
+        and payload.originating_sowing_id != plant_group.originating_sowing_id
+    ):
+        raise PlantDomainConflictError(
+            "reversed_origin_immutable", "Historical propagation origin cannot be changed"
+        )
     _require_references(database, payload)
     values = _common_write_values(payload)
     values.update(
@@ -887,3 +919,18 @@ def plant_group_responses(
             )
         )
     return result
+
+
+def _lock_forward_sowing(database: Session, sowing_id: UUID | None) -> None:
+    if sowing_id is None:
+        return
+    sowing = database.scalar(
+        select(Sowing)
+        .where(Sowing.id == sowing_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if sowing is not None and sowing.lifecycle == "reversed":
+        raise PlantDomainConflictError(
+            "reversed_sowing_is_historical", "A reversed Sowing cannot acquire new descendants"
+        )

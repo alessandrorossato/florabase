@@ -148,7 +148,11 @@ class SowingWrite(SowingDetails):
 
 
 class SowingCreate(SowingWrite):
-    pass
+    @model_validator(mode="after")
+    def reject_reversed(self) -> Self:
+        if self.lifecycle == SowingLifecycle.REVERSED:
+            raise ValueError("Reversed is assigned only by propagation reversal")
+        return self
 
 
 class SowingUpdate(SowingWrite):

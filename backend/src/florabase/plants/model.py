@@ -34,6 +34,7 @@ class DirectOriginKind(StrEnum):
 
 class PlantLifecycle(StrEnum):
     ACTIVE = "active"
+    REVERSED = "reversed"
     REINTEGRATED = "reintegrated"
     TRANSFERRED = "transferred"
     DEAD = "dead"
@@ -43,6 +44,7 @@ class PlantLifecycle(StrEnum):
 
 class PlantGroupLifecycle(StrEnum):
     ACTIVE = "active"
+    REVERSED = "reversed"
     TRANSFERRED = "transferred"
     COMPLETED = "completed"
     DEAD = "dead"
@@ -116,7 +118,7 @@ class Plant(Base):
     __table_args__ = (
         *_common_constraints(
             "plants",
-            "'active', 'reintegrated', 'transferred', 'dead', 'lost', 'discarded'",
+            "'active', 'reversed', 'reintegrated', 'transferred', 'dead', 'lost', 'discarded'",
             plant_group_origin=True,
         ),
         UniqueConstraint(
@@ -164,13 +166,14 @@ class PlantGroup(Base):
     __tablename__ = "plant_groups"
     __table_args__ = (
         *_common_constraints(
-            "plant_groups", "'active', 'transferred', 'completed', 'dead', 'lost', 'discarded'"
+            "plant_groups",
+            "'active', 'reversed', 'transferred', 'completed', 'dead', 'lost', 'discarded'",
         ),
         CheckConstraint(
             "((quantity_value IS NULL AND quantity_is_approximate IS NULL) OR "
             "(quantity_value > 0 AND quantity_is_approximate IS NOT NULL) OR "
             "(quantity_value = 0 AND quantity_is_approximate = false "
-            "AND lifecycle IN ('completed', 'dead', 'discarded'))) IS TRUE",
+            "AND lifecycle IN ('completed', 'dead', 'discarded', 'reversed'))) IS TRUE",
             name="ck_plant_groups_quantity",
         ),
     )

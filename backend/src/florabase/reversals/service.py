@@ -74,8 +74,10 @@ def add_receipt(
     plant_group_id: UUID | None = None,
     event_id: UUID | None = None,
     adjustment_mode: str | None = None,
+    propagation_snapshot: dict[str, object] | None = None,
 ) -> OperationReceipt:
     receipt = OperationReceipt(
+        **(propagation_snapshot or {}),
         kind=kind.value,
         seed_lot_id=seed_lot_id,
         sowing_id=sowing_id,

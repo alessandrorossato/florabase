@@ -77,6 +77,7 @@ def test_plant_defaults_uuidv7_and_exact_vocabularies() -> None:
     }
     assert {item.value for item in PlantLifecycle} == {
         "active",
+        "reversed",
         "reintegrated",
         "transferred",
         "dead",
@@ -85,6 +86,7 @@ def test_plant_defaults_uuidv7_and_exact_vocabularies() -> None:
     }
     assert {item.value for item in PlantGroupLifecycle} == {
         "active",
+        "reversed",
         "transferred",
         "completed",
         "dead",

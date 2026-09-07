@@ -31,6 +31,12 @@ class SowingReferenceNotFoundError(Exception):
 
 
 @dataclass(frozen=True)
+class SowingDomainConflictError(Exception):
+    code: str
+    message: str
+
+
+@dataclass(frozen=True)
 class SowingProjection:
     sowing: Sowing
     seed_lot: SeedLot
@@ -86,6 +92,16 @@ def create_sowing(database: Session, payload: SowingCreate) -> Sowing:
 
 
 def update_sowing(database: Session, sowing: Sowing, payload: SowingUpdate) -> Sowing:
+    database.refresh(sowing, with_for_update=True)
+    if (sowing.lifecycle == "reversed") != (payload.lifecycle.value == "reversed"):
+        raise SowingDomainConflictError(
+            "reversed_lifecycle_immutable",
+            "Reversed lifecycle is assigned only by reversal and cannot be changed",
+        )
+    if sowing.lifecycle == "reversed" and payload.seed_lot_id != sowing.seed_lot_id:
+        raise SowingDomainConflictError(
+            "reversed_origin_immutable", "Historical propagation origin cannot be changed"
+        )
     _require_references(database, payload)
     for field, value in _write_values(payload).items():
         setattr(sowing, field, value)

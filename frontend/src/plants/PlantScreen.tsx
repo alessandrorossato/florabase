@@ -1,3 +1,4 @@
+import { CreationReversal } from "../propagation/CreationReversal";
 import {
   useEffect,
   useMemo,
@@ -119,6 +120,7 @@ interface FormState {
 
 const plantLifecycleLabels: Record<PlantLifecycle, string> = {
   active: "Active",
+  reversed: "Reversed",
   reintegrated: "Reintegrated",
   transferred: "Transferred",
   dead: "Dead",
@@ -127,6 +129,7 @@ const plantLifecycleLabels: Record<PlantLifecycle, string> = {
 };
 const groupLifecycleLabels: Record<PlantGroupLifecycle, string> = {
   active: "Active",
+  reversed: "Reversed",
   transferred: "Transferred",
   completed: "Completed",
   dead: "Dead",
@@ -573,6 +576,7 @@ export function PlantScreen({
   const [references, setReferences] = useState<References | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [detailAttempt, setDetailAttempt] = useState(0);
+  const [reversalRevision, setReversalRevision] = useState(0);
   const [detail, setDetail] = useState<DetailState>({ status: "idle" });
   const [selectedKey, setSelectedKey] = useState<string | null>(
     initialId ? `${initialKind}:${initialId}` : null,
@@ -1686,10 +1690,16 @@ export function PlantScreen({
                               onChange={(value) => {
                                 updateForm("sowingId", value);
                               }}
-                              choices={references.sowings.map((sowing) => ({
-                                id: sowing.id,
-                                label: sowingChoice(sowing),
-                              }))}
+                              choices={references.sowings
+                                .filter(
+                                  (sowing) =>
+                                    sowing.lifecycle !== "reversed" ||
+                                    sowing.id === form.sowingId,
+                                )
+                                .map((sowing) => ({
+                                  id: sowing.id,
+                                  label: sowingChoice(sowing),
+                                }))}
                             />
                             <small>
                               Active and historical Sowings are available.
@@ -1895,9 +1905,12 @@ export function PlantScreen({
                           )
                             .filter(
                               ([value]) =>
-                                value !== "reintegrated" ||
-                                (selected?.kind === "plant" &&
-                                  selected.value.lifecycle === "reintegrated"),
+                                (value !== "reversed" ||
+                                  selected?.value.lifecycle === "reversed") &&
+                                (value !== "reintegrated" ||
+                                  (selected?.kind === "plant" &&
+                                    selected.value.lifecycle ===
+                                      "reintegrated")),
                             )
                             .map(([value, label]) => (
                               <option key={value} value={value}>
@@ -1974,15 +1987,60 @@ export function PlantScreen({
             </div>
           ) : selected ? (
             <div className="selected-seed selected-plant">
+              {selected.value.originating_sowing_id && (
+                <CreationReversal
+                  key={`reversal:${recordKey(selected)}:${selected.value.updated_at}:${String(reversalRevision)}`}
+                  kind={selected.kind === "plant" ? "plant" : "plant_group"}
+                  id={selected.value.id}
+                  lifecycle={selected.value.lifecycle}
+                  revision={`${selected.value.updated_at}:${String(reversalRevision)}`}
+                  onReversed={(result) => {
+                    if ("seed_lot" in result) return;
+                    const authoritative: PlantRecord =
+                      "plant" in result
+                        ? { kind: "plant", value: result.plant }
+                        : { kind: "group", value: result.plant_group };
+                    setDetail({ status: "ready", record: authoritative });
+                    setCollection((current) =>
+                      current.status === "ready"
+                        ? {
+                            ...current,
+                            records: current.records.map((record) =>
+                              recordKey(record) === recordKey(authoritative)
+                                ? authoritative
+                                : record,
+                            ),
+                          }
+                        : current,
+                    );
+                    setReferences((current) =>
+                      current
+                        ? {
+                            ...current,
+                            sowings: current.sowings.map((sowing) =>
+                              sowing.id === result.sowing.id
+                                ? result.sowing
+                                : sowing,
+                            ),
+                          }
+                        : current,
+                    );
+                  }}
+                />
+              )}
               <Detail
                 key={`${recordKey(selected)}:${selected.value.updated_at}`}
                 record={selected}
                 sowings={references.sowings}
                 locations={references.locations}
                 headingRef={detailHeading}
-                onEventTargetRefresh={() =>
-                  refreshEventTarget(selected.kind, selected.value.id)
-                }
+                onEventTargetRefresh={async () => {
+                  try {
+                    await refreshEventTarget(selected.kind, selected.value.id);
+                  } finally {
+                    setReversalRevision((value) => value + 1);
+                  }
+                }}
                 onEdit={() => {
                   startEdit(selected);
                 }}

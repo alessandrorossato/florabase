@@ -741,7 +741,7 @@
       ],
       "dependencies": ["REVERSAL-001", "PROPAGATION-002"],
       "priority": "P1",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "UX-003",

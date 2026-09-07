@@ -459,6 +459,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/plant-groups/{result_id}/creation-reversal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plant Group Eligibility */
+        get: operations["getPlantGroupCreationReversalEligibility"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plant-groups/{result_id}/reverse-creation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reverse Plant Group Creation */
+        post: operations["reversePlantGroupCreation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plants": {
         parameters: {
             query?: never;
@@ -581,6 +615,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/plants/{result_id}/creation-reversal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Plant Eligibility */
+        get: operations["getPlantCreationReversalEligibility"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/plants/{result_id}/reverse-creation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reverse Plant Creation */
+        post: operations["reversePlantCreation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/ready": {
         parameters: {
             query?: never;
@@ -680,6 +748,40 @@ export interface paths {
         put?: never;
         /** Create */
         post: operations["createSowing"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sowings/{result_id}/creation-reversal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Sowing Eligibility */
+        get: operations["getSowingCreationReversalEligibility"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sowings/{result_id}/reverse-creation": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reverse Sowing Creation */
+        post: operations["reverseSowingCreation"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1273,6 +1375,22 @@ export interface components {
             /** Supplier Id */
             supplier_id?: string | null;
         };
+        /** PlantCreationReversalResponse */
+        PlantCreationReversalResponse: {
+            /**
+             * Operation Receipt Id
+             * Format: uuid
+             */
+            operation_receipt_id: string;
+            /**
+             * Operation Status
+             * @default reversed
+             * @constant
+             */
+            operation_status: "reversed";
+            plant: components["schemas"]["PlantResponse"];
+            sowing: components["schemas"]["SowingResponse"];
+        };
         /** PlantEventTarget */
         PlantEventTarget: {
             botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
@@ -1352,6 +1470,22 @@ export interface components {
             /** Supplier Id */
             supplier_id?: string | null;
         };
+        /** PlantGroupCreationReversalResponse */
+        PlantGroupCreationReversalResponse: {
+            /**
+             * Operation Receipt Id
+             * Format: uuid
+             */
+            operation_receipt_id: string;
+            /**
+             * Operation Status
+             * @default reversed
+             * @constant
+             */
+            operation_status: "reversed";
+            plant_group: components["schemas"]["PlantGroupResponse"];
+            sowing: components["schemas"]["SowingResponse"];
+        };
         /** PlantGroupEventTarget */
         PlantGroupEventTarget: {
             botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
@@ -1391,7 +1525,7 @@ export interface components {
          * PlantGroupLifecycle
          * @enum {string}
          */
-        PlantGroupLifecycle: "active" | "transferred" | "completed" | "dead" | "lost" | "discarded";
+        PlantGroupLifecycle: "active" | "reversed" | "transferred" | "completed" | "dead" | "lost" | "discarded";
         /** PlantGroupLineageNode */
         PlantGroupLineageNode: {
             botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
@@ -1498,7 +1632,7 @@ export interface components {
          * PlantLifecycle
          * @enum {string}
          */
-        PlantLifecycle: "active" | "reintegrated" | "transferred" | "dead" | "lost" | "discarded";
+        PlantLifecycle: "active" | "reversed" | "reintegrated" | "transferred" | "dead" | "lost" | "discarded";
         /** PlantLineageNode */
         PlantLineageNode: {
             botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
@@ -1683,6 +1817,37 @@ export interface components {
             label: string | null;
             lifecycle: components["schemas"]["PlantLifecycle"];
         };
+        /** PropagationReversalCreate */
+        PropagationReversalCreate: {
+            /**
+             * Confirm Retained Observations
+             * @default false
+             */
+            confirm_retained_observations: boolean;
+        };
+        /** PropagationReversalEligibility */
+        PropagationReversalEligibility: {
+            /** Operation Receipt Id */
+            operation_receipt_id: string | null;
+            /** Operation Status */
+            operation_status: ("applied" | "reversed") | null;
+            /** Reasons */
+            reasons: components["schemas"]["ReversalReason"][];
+            /** Retained Observation Ids */
+            retained_observation_ids: string[];
+            /** Source Id */
+            source_id: string | null;
+            /**
+             * Source Type
+             * @enum {string}
+             */
+            source_type: "seed_lot" | "sowing";
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "safe" | "confirmation_required" | "blocked";
+        };
         /**
          * ReintegrationEligibilityStatus
          * @enum {string}
@@ -1721,6 +1886,20 @@ export interface components {
             /** Notes */
             notes: string | null;
             occurred_on: components["schemas"]["PartialDate"] | null;
+        };
+        /** ReversalReason */
+        ReversalReason: {
+            /**
+             * Code
+             * @enum {string}
+             */
+            code: "propagation_receipt_not_found" | "receipt_relationship_mismatch" | "receipt_already_reversed" | "legacy_receipt_missing_result_snapshot" | "result_lifecycle_changed" | "result_structural_state_changed" | "result_terminal_lifecycle" | "source_lifecycle_changed" | "source_quantity_changed" | "source_structural_state_changed" | "later_source_operation" | "transfer_exists" | "active_downstream_operation" | "downstream_lineage" | "produced_seed_lot_exists" | "later_extraction_exists" | "incompatible_result_history";
+            /** Entity Id */
+            entity_id?: string | null;
+            /** Entity Type */
+            entity_type?: ("seed_lot" | "sowing" | "plant" | "plant_group") | null;
+            /** Message */
+            message: string;
         };
         /** SeedLotCreate */
         SeedLotCreate: {
@@ -1949,6 +2128,22 @@ export interface components {
             /** Temperature Min C */
             temperature_min_c?: number | string | null;
         };
+        /** SowingCreationReversalResponse */
+        SowingCreationReversalResponse: {
+            /**
+             * Operation Receipt Id
+             * Format: uuid
+             */
+            operation_receipt_id: string;
+            /**
+             * Operation Status
+             * @default reversed
+             * @constant
+             */
+            operation_status: "reversed";
+            seed_lot: components["schemas"]["SeedLotResponse"];
+            sowing: components["schemas"]["SowingResponse"];
+        };
         /** SowingDetails */
         SowingDetails: {
             /** Environment */
@@ -1980,7 +2175,7 @@ export interface components {
          * SowingLifecycle
          * @enum {string}
          */
-        SowingLifecycle: "active" | "completed" | "failed" | "abandoned";
+        SowingLifecycle: "active" | "reversed" | "completed" | "failed" | "abandoned";
         /** SowingLineageNode */
         SowingLineageNode: {
             /**
@@ -3560,6 +3755,74 @@ export interface operations {
             };
         };
     };
+    getPlantGroupCreationReversalEligibility: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                result_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PropagationReversalEligibility"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reversePlantGroupCreation: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                result_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PropagationReversalCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantGroupCreationReversalResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     listPlants: {
         parameters: {
             query?: never;
@@ -3887,6 +4150,74 @@ export interface operations {
             };
         };
     };
+    getPlantCreationReversalEligibility: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                result_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PropagationReversalEligibility"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reversePlantCreation: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                result_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PropagationReversalCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PlantCreationReversalResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     getReadiness: {
         parameters: {
             query?: never;
@@ -4140,6 +4471,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SowingResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getSowingCreationReversalEligibility: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                result_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PropagationReversalEligibility"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reverseSowingCreation: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                result_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PropagationReversalCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SowingCreationReversalResponse"];
                 };
             };
             /** @description Validation Error */

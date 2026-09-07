@@ -27,6 +27,7 @@ def utc_now() -> datetime:
 
 class SowingLifecycle(StrEnum):
     ACTIVE = "active"
+    REVERSED = "reversed"
     COMPLETED = "completed"
     FAILED = "failed"
     ABANDONED = "abandoned"
@@ -87,7 +88,7 @@ class Sowing(Base):
         ),
         _single_line_constraint("environment", 1000),
         CheckConstraint(
-            "lifecycle IN ('active', 'completed', 'failed', 'abandoned')",
+            "lifecycle IN ('active', 'reversed', 'completed', 'failed', 'abandoned')",
             name="ck_sowings_lifecycle",
         ),
         CheckConstraint(

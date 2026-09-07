@@ -53,6 +53,7 @@ def test_sowing_application_defaults_and_lifecycle() -> None:
     assert Sowing.__table__.c.lifecycle.default.arg == "active"
     assert {item.value for item in SowingLifecycle} == {
         "active",
+        "reversed",
         "completed",
         "failed",
         "abandoned",
