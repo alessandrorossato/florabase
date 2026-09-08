@@ -9,15 +9,27 @@ from fastapi import HTTPException, Response
 from pydantic import ValidationError
 
 from florabase.locations import api
+from florabase.locations import service as location_service
 from florabase.locations.model import Location
-from florabase.locations.schemas import LocationCreate, LocationResponse, LocationUpdate
+from florabase.locations.schemas import (
+    LocationCreate,
+    LocationResponse,
+    LocationUpdate,
+    LocationUsageCount,
+    LocationUsageScope,
+    LocationUsageSummary,
+)
 from florabase.locations.service import (
     LocationHierarchyError,
+    LocationIntegrityError,
     LocationNotFoundError,
     create_location,
+    delete_location,
     display_path,
     get_location,
     list_locations,
+    location_usage,
+    require_location_for_scope,
     set_location_retired,
     update_location,
 )
@@ -28,6 +40,9 @@ def location(**overrides: object) -> Location:
         "id": uuid7(),
         "name": "Greenhouse",
         "parent_id": None,
+        "supports_plants": True,
+        "supports_sowings": True,
+        "supports_seed_lots": True,
         "retired_at": None,
         "created_at": datetime.now(UTC),
         "updated_at": datetime.now(UTC),
@@ -43,6 +58,8 @@ def test_location_payload_normalizes_name_and_rejects_invalid_values() -> None:
             LocationCreate(name=name)
     with pytest.raises(ValidationError):
         LocationCreate.model_validate({"name": "Shelf", "unknown": True})
+    with pytest.raises(ValidationError):
+        LocationCreate(name="Shelf", usage_scopes=set())
 
 
 def test_location_response_and_display_path_are_derived() -> None:
@@ -61,9 +78,18 @@ def test_location_service_create_get_list_and_update() -> None:
     root = location(name="Greenhouse")
     database = MagicMock()
     database.scalars.return_value = [root]
-    created = create_location(database, LocationCreate(name="Shelf 1", parent_id=root.id))
+    created = create_location(
+        database,
+        LocationCreate(
+            name="Shelf 1",
+            parent_id=root.id,
+            usage_scopes={LocationUsageScope.SEED_LOTS},
+        ),
+    )
     assert created.name == "Shelf 1"
     assert created.parent_id == root.id
+    assert created.supports_seed_lots is True
+    assert created.supports_plants is False
     database.add.assert_called_once_with(created)
 
     database.get.return_value = created
@@ -190,3 +216,70 @@ def test_location_model_uses_uuid_identity() -> None:
     item = location()
     assert isinstance(item.id, UUID)
     assert item.id.version == 7
+
+
+def test_location_assignment_scope_is_locked_and_authoritative() -> None:
+    item = location(supports_plants=False, supports_sowings=True)
+    database = MagicMock()
+    database.get.return_value = item
+    with pytest.raises(LocationIntegrityError) as blocked:
+        require_location_for_scope(database, item.id, LocationUsageScope.PLANTS)
+    assert blocked.value.code == "location_scope_not_supported"
+    assert require_location_for_scope(database, item.id, LocationUsageScope.SOWINGS) is item
+    assert database.get.call_args.kwargs == {
+        "with_for_update": True,
+        "populate_existing": True,
+    }
+
+
+def test_location_usage_combines_plants_and_groups_and_separates_active() -> None:
+    location_id = uuid7()
+    database = MagicMock()
+    database.execute.side_effect = [
+        [(location_id, 2, 1)],
+        [(location_id, 3, 1)],
+        [(location_id, 4, 2)],
+        [(location_id, 5, 3)],
+    ]
+    usage = location_usage(database)[location_id]
+    assert usage.plants == LocationUsageCount(active=2, total=5)
+    assert usage.sowings == LocationUsageCount(active=2, total=4)
+    assert usage.seed_lots == LocationUsageCount(active=3, total=5)
+
+
+def test_scope_removal_and_delete_preserve_references(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    item = location()
+    child = location(parent_id=item.id)
+    database = MagicMock()
+    database.scalars.return_value = [item]
+    monkeypatch.setattr(
+        location_service,
+        "location_usage",
+        lambda _database: {
+            item.id: LocationUsageSummary(plants=LocationUsageCount(active=1, total=2))
+        },
+    )
+    with pytest.raises(LocationIntegrityError) as scope:
+        update_location(
+            database,
+            item.id,
+            LocationUpdate(name=item.name, usage_scopes={LocationUsageScope.SOWINGS}),
+        )
+    assert scope.value.code == "location_scope_in_use"
+
+    database.scalars.return_value = [item, child]
+    with pytest.raises(LocationIntegrityError) as children:
+        delete_location(database, item.id)
+    assert children.value.code == "location_has_children"
+
+    database.scalars.return_value = [item]
+    with pytest.raises(LocationIntegrityError) as used:
+        delete_location(database, item.id)
+    assert used.value.code == "location_in_use"
+
+    monkeypatch.setattr(location_service, "location_usage", lambda _database: {})
+    database.scalar.return_value = 0
+    delete_location(database, item.id)
+    database.delete.assert_called_once_with(item)

@@ -314,7 +314,8 @@ export interface paths {
         /** Update */
         put: operations["updateLocation"];
         post?: never;
-        delete?: never;
+        /** Delete */
+        delete: operations["deleteLocation"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1220,6 +1221,8 @@ export interface components {
             name: string;
             /** Parent Id */
             parent_id?: string | null;
+            /** Usage Scopes */
+            usage_scopes?: components["schemas"]["LocationUsageScope"][];
         };
         /** LocationResponse */
         LocationResponse: {
@@ -1246,6 +1249,9 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            usage: components["schemas"]["LocationUsageSummary"];
+            /** Usage Scopes */
+            usage_scopes: components["schemas"]["LocationUsageScope"][];
         };
         /** LocationSummary */
         LocationSummary: {
@@ -1263,6 +1269,32 @@ export interface components {
             name: string;
             /** Parent Id */
             parent_id?: string | null;
+            /** Usage Scopes */
+            usage_scopes?: components["schemas"]["LocationUsageScope"][];
+        };
+        /** LocationUsageCount */
+        LocationUsageCount: {
+            /**
+             * Active
+             * @default 0
+             */
+            active: number;
+            /**
+             * Total
+             * @default 0
+             */
+            total: number;
+        };
+        /**
+         * LocationUsageScope
+         * @enum {string}
+         */
+        LocationUsageScope: "plants" | "sowings" | "seed_lots";
+        /** LocationUsageSummary */
+        LocationUsageSummary: {
+            plants?: components["schemas"]["LocationUsageCount"];
+            seed_lots?: components["schemas"]["LocationUsageCount"];
+            sowings?: components["schemas"]["LocationUsageCount"];
         };
         /** LoginRequest */
         LoginRequest: {
@@ -3381,6 +3413,37 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["LocationResponse"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteLocation: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                location_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

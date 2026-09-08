@@ -641,6 +641,23 @@ button:disabled {
   right: 0;
   white-space: nowrap;
 }
+.overflow-menu .overflow-actions {
+  position: absolute;
+  z-index: 2;
+  top: calc(100% + 0.4rem);
+  right: 0;
+  display: grid;
+  gap: 0.4rem;
+  min-width: max-content;
+  padding: 0.5rem;
+  background: #fff;
+  border: 1px solid #cfdbd2;
+  border-radius: 0.55rem;
+  box-shadow: 0 0.5rem 1.2rem rgb(20 58 43 / 15%);
+}
+.overflow-menu .overflow-actions button {
+  position: static;
+}
 .button--danger {
   color: #fff;
   background: #8f2929;
@@ -716,6 +733,53 @@ button:disabled {
   margin-left: 1rem;
   padding-left: 0.75rem;
   border-left: 2px solid #dce6de;
+}
+.location-tree-node {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  align-items: start;
+  gap: 0.35rem;
+}
+.location-tree-toggle,
+.location-tree-spacer {
+  width: 2.25rem;
+  min-height: 2.75rem;
+}
+.location-tree-toggle {
+  padding: 0;
+  color: #1d6542;
+  background: #edf5ef;
+  border-color: #b9cbbf;
+}
+.location-scope-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.location-scope {
+  padding: 0.1rem 0.35rem;
+  color: #315a48;
+  background: #edf5ef;
+  border-radius: 999px;
+}
+.scope-fields {
+  display: grid;
+  gap: 0.45rem;
+  margin: 1rem 0;
+  padding: 1rem;
+  border: 1px solid #cfdbd2;
+  border-radius: 0.55rem;
+}
+.scope-fields label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.scope-fields input {
+  width: auto;
+}
+.location-usage {
+  margin-top: 1rem;
 }
 .location-path {
   overflow-wrap: anywhere;

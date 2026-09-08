@@ -10,7 +10,14 @@ from sqlalchemy.sql import Select
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
 from florabase.locations.model import Location
-from florabase.locations.service import display_path, list_locations
+from florabase.locations.schemas import LocationUsageScope
+from florabase.locations.service import (
+    LocationIntegrityError,
+    LocationNotFoundError,
+    display_path,
+    list_locations,
+    require_location_for_scope,
+)
 from florabase.seed_lots.model import SeedLot
 from florabase.seed_lots.schemas import PartialDate
 from florabase.sowings.model import Sowing
@@ -50,9 +57,14 @@ def _require_references(
     seed_lot = database.get(SeedLot, payload.seed_lot_id)
     if seed_lot is None:
         raise SowingReferenceNotFoundError("seed_lot_not_found", "SeedLot not found")
-    location = database.get(Location, payload.location_id) if payload.location_id else None
-    if payload.location_id is not None and location is None:
-        raise SowingReferenceNotFoundError("location_not_found", "Location not found")
+    try:
+        location = require_location_for_scope(
+            database, payload.location_id, LocationUsageScope.SOWINGS
+        )
+    except LocationNotFoundError as error:
+        raise SowingReferenceNotFoundError("location_not_found", "Location not found") from error
+    except LocationIntegrityError as error:
+        raise SowingDomainConflictError(error.code, error.message) from error
     return seed_lot, location
 
 

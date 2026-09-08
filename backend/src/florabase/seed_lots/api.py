@@ -24,6 +24,7 @@ from florabase.propagation.service import (
 )
 from florabase.seed_lots.schemas import SeedLotCreate, SeedLotResponse, SeedLotUpdate
 from florabase.seed_lots.service import (
+    SeedLotDomainConflictError,
     SeedLotProjection,
     SeedLotReferenceNotFoundError,
     create_seed_lot,
@@ -33,6 +34,7 @@ from florabase.seed_lots.service import (
     update_seed_lot,
 )
 from florabase.sowings.service import (
+    SowingDomainConflictError,
     SowingReferenceNotFoundError,
     get_sowing,
 )
@@ -53,6 +55,15 @@ def _not_found() -> HTTPException:
 def _reference_not_found(error: SeedLotReferenceNotFoundError) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_404_NOT_FOUND,
+        detail={"code": error.code, "message": error.message},
+    )
+
+
+def _domain_conflict(
+    error: SeedLotDomainConflictError | SowingDomainConflictError,
+) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
         detail={"code": error.code, "message": error.message},
     )
 
@@ -105,6 +116,8 @@ def create(
     require_owner(actor)
     try:
         seed_lot = create_seed_lot(database, payload)
+    except SeedLotDomainConflictError as error:
+        raise _domain_conflict(error) from error
     except SeedLotReferenceNotFoundError as error:
         raise _reference_not_found(error) from error
     except LineageCycleError as error:
@@ -139,6 +152,8 @@ def create_sowing_transition(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"code": error.code, "message": error.message},
         ) from error
+    except SowingDomainConflictError as error:
+        raise _domain_conflict(error) from error
     except PropagationConflictError as error:
         raise _propagation_conflict(error) from error
     sowing_projection = get_sowing(database, sowing.id)
@@ -188,6 +203,8 @@ def update(
     projection = _require_seed_lot(database, seed_lot_id)
     try:
         update_seed_lot(database, projection.seed_lot, payload)
+    except SeedLotDomainConflictError as error:
+        raise _domain_conflict(error) from error
     except SeedLotReferenceNotFoundError as error:
         raise _reference_not_found(error) from error
     except LineageCycleError as error:

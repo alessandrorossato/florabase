@@ -765,9 +765,9 @@
         "A hierarchical collapsible presentation keeps roots, descendants, current paths, retirement state, and empty branches understandable",
         "Desktop and mobile interactions remain accessible and link Location usage to the relevant supported records"
       ],
-      "dependencies": ["LOCATION-001", "UX-003"],
+      "dependencies": ["LOCATION-001", "UX-001"],
       "priority": "P2",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "GEOGRAPHY-003",
@@ -791,7 +791,7 @@
         "Related SeedLots and, where explicit relationships exist, Plants or other material are derived from recorded links rather than inferred from names or notes",
         "Spending, price, and order totals are not shown unless ORDER-001 supplies an implemented and tested transaction model"
       ],
-      "dependencies": ["SUPPLIER-001", "SEED-004", "UX-003"],
+      "dependencies": ["SUPPLIER-001", "SEED-004"],
       "priority": "P2",
       "status": "planned"
     },

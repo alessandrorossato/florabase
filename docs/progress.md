@@ -4,6 +4,25 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-07 — LOCATION-002 implemented
+
+- Corrected the feature graph so global `UX-003` stabilization follows, rather than blocks, the
+  remaining V1 feature surfaces. `LOCATION-002` now retains only its verified Location and UX
+  foundations; the same stale prerequisite was removed from later `SUPPLIER-002`. `UX-003` remains
+  planned and untouched.
+- Added explicit Plants, Sowings, and Seed Lots scopes to the one shared hierarchical Location
+  model, including safe migration defaults, API validation, backend-enforced assignments and moves,
+  scope-aware selectors, and current-path preservation.
+- Added an accessible collapsed-by-default Location tree with scope badges, usage summaries and
+  directory links, child creation, reparenting, retirement/reactivation, and guarded leaf deletion.
+  Active counts exclude historical records while totals retain them; used scopes cannot be removed,
+  and referenced or parent Locations cannot be deleted.
+- Implementation verification passed Ruff and formatting checks, ESLint, strict mypy over 148 source
+  files, strict TypeScript, 251 backend unit tests at 90.13% coverage, 121 frontend tests, 282
+  disposable PostgreSQL integration tests, generated API drift, feature-graph validation, and
+  `git diff --check`. Canonical `make feature-verify` was intentionally not run; `LOCATION-002`
+  remains implemented pending independent review.
+
 ## 2026-09-07 — PROPAGATION-003 verified
 
 - Added receipt-proven reversal for SeedLot-to-Sowing, Sowing-to-Plant, and
@@ -475,15 +494,15 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260907_0018` on the PROPAGATION-003 implementation branch.
+- Alembic head: `20260907_0019` on the LOCATION-002 implementation branch.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
-  protected Plant/PlantGroup Event journal and timeline UI; atomic extraction history; and retained
-  transferred Plant/PlantGroup history.
-- `PROPAGATION-001` and `PROPAGATION-002` are verified, and `PROPAGATION-003` is implemented pending
-  independent verification; the next recommended increment is decided by the machine-readable
-  dependency graph;
+  protected Plant/PlantGroup Event journal and timeline UI; atomic extraction history; retained
+  transferred Plant/PlantGroup history; and scope-aware hierarchical collection Locations.
+- `PROPAGATION-001` through `PROPAGATION-003` are verified, and `LOCATION-002` is implemented pending
+  independent verification. The next increment remains decided by the machine-readable dependency
+  graph;
   licensing/version policy and release readiness remain explicit later operator/product decisions.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.

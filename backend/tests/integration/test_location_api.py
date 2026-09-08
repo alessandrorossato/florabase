@@ -1,20 +1,24 @@
 import asyncio
 import json
 from collections.abc import Iterator, Mapping
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, cast
 from uuid import UUID, uuid7
 
 import pytest
-from sqlalchemy import Connection, func, select
+from sqlalchemy import Connection, Engine, func, select
 from sqlalchemy.orm import Session
 from starlette.types import Message, Receive, Scope, Send
 
 from florabase.auth.dependencies import AuthenticatedActor, require_csrf
 from florabase.auth.model import AuthSession
 from florabase.auth.service import bootstrap_owner
+from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.core.config import CookieMode, Environment, Settings, get_settings
 from florabase.db.session import get_database_session
 from florabase.locations.model import Location
+from florabase.locations.schemas import LocationUpdate
+from florabase.locations.service import LocationHierarchyError, display_path, update_location
 from florabase.main import app
 
 pytestmark = pytest.mark.integration
@@ -139,9 +143,15 @@ def mutate(
 
 
 def create_location(
-    browser: tuple[str, str], name: str, parent_id: str | None = None
+    browser: tuple[str, str],
+    name: str,
+    parent_id: str | None = None,
+    usage_scopes: list[str] | None = None,
 ) -> tuple[int, dict[str, str], Any]:
-    return mutate(browser, "POST", "/api/v1/locations", {"name": name, "parent_id": parent_id})
+    payload: dict[str, object] = {"name": name, "parent_id": parent_id}
+    if usage_scopes is not None:
+        payload["usage_scopes"] = usage_scopes
+    return mutate(browser, "POST", "/api/v1/locations", payload)
 
 
 def test_root_child_deep_hierarchy_rename_reparent_paths_and_deterministic_list(
@@ -295,3 +305,202 @@ def test_not_found_authentication_origin_csrf_and_owner(
         app.dependency_overrides.pop(require_csrf, None)
     assert status_code == 403
     assert body["detail"] == "Request forbidden"
+
+
+def test_scopes_are_authoritative_usage_is_semantic_and_removal_is_safe(
+    authenticated_browser: tuple[str, str], database_connection: Connection
+) -> None:
+    _, _, plants = create_location(authenticated_browser, "Greenhouse", usage_scopes=["plants"])
+    _, _, sowings = create_location(
+        authenticated_browser, "Propagation bench", usage_scopes=["sowings"]
+    )
+    _, _, seeds = create_location(authenticated_browser, "Seed cabinet", usage_scopes=["seed_lots"])
+    _, _, shared = create_location(
+        authenticated_browser,
+        "Indoor shelf",
+        usage_scopes=["plants", "sowings", "seed_lots"],
+    )
+    assert plants["usage_scopes"] == ["plants"]
+    assert shared["usage_scopes"] == ["plants", "sowings", "seed_lots"]
+
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        identity = BotanicalIdentity(scientific_name="Clitoria ternatea")
+        database.add(identity)
+        database.commit()
+        identity_id = str(identity.id)
+
+    assert (
+        mutate(
+            authenticated_browser,
+            "POST",
+            "/api/v1/seed-lots",
+            {"botanical_identity_id": identity_id, "location_id": plants["id"]},
+        )[0]
+        == 409
+    )
+    seed_status, _, lot = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/seed-lots",
+        {"botanical_identity_id": identity_id, "location_id": seeds["id"]},
+    )
+    assert seed_status == 201
+    assert (
+        mutate(
+            authenticated_browser,
+            "POST",
+            "/api/v1/sowings",
+            {"seed_lot_id": lot["id"], "location_id": seeds["id"]},
+        )[0]
+        == 409
+    )
+    assert (
+        mutate(
+            authenticated_browser,
+            "POST",
+            "/api/v1/sowings",
+            {"seed_lot_id": lot["id"], "location_id": sowings["id"]},
+        )[0]
+        == 201
+    )
+    for route in ("plants", "plant-groups"):
+        assert (
+            mutate(
+                authenticated_browser,
+                "POST",
+                f"/api/v1/{route}",
+                {"botanical_identity_id": identity_id, "location_id": sowings["id"]},
+            )[0]
+            == 409
+        )
+        lifecycle = "dead" if route == "plants" else "completed"
+        assert (
+            mutate(
+                authenticated_browser,
+                "POST",
+                f"/api/v1/{route}",
+                {
+                    "botanical_identity_id": identity_id,
+                    "location_id": plants["id"],
+                    "lifecycle": lifecycle,
+                },
+            )[0]
+            == 201
+        )
+    assert (
+        mutate(
+            authenticated_browser,
+            "POST",
+            "/api/v1/plants",
+            {"botanical_identity_id": identity_id, "location_id": plants["id"]},
+        )[0]
+        == 201
+    )
+
+    cookie, _ = authenticated_browser
+    listing = request("GET", "/api/v1/locations", headers={"cookie": cookie})[2]
+    by_id = {item["id"]: item for item in listing}
+    assert by_id[plants["id"]]["usage"]["plants"] == {"active": 1, "total": 3}
+    assert by_id[sowings["id"]]["usage"]["sowings"] == {"active": 1, "total": 1}
+    assert by_id[seeds["id"]]["usage"]["seed_lots"] == {"active": 1, "total": 1}
+
+    blocked_status, _, blocked = mutate(
+        authenticated_browser,
+        "PUT",
+        f"/api/v1/locations/{plants['id']}",
+        {"name": "Greenhouse", "parent_id": None, "usage_scopes": ["sowings"]},
+    )
+    assert blocked_status == 409
+    assert blocked["detail"]["code"] == "location_scope_in_use"
+    assert (
+        request("GET", "/api/v1/plants", headers={"cookie": cookie})[2][0]["location_id"]
+        == plants["id"]
+    )
+    assert (
+        mutate(
+            authenticated_browser,
+            "PUT",
+            f"/api/v1/locations/{shared['id']}",
+            {"name": "Indoor shelf", "parent_id": None, "usage_scopes": ["plants"]},
+        )[0]
+        == 200
+    )
+
+
+def test_delete_is_leaf_only_and_preserves_references(
+    authenticated_browser: tuple[str, str], database_connection: Connection
+) -> None:
+    _, _, root = create_location(authenticated_browser, "Home")
+    _, _, leaf = create_location(authenticated_browser, "Shelf", root["id"])
+    blocked_status, _, blocked = mutate(
+        authenticated_browser, "DELETE", f"/api/v1/locations/{root['id']}"
+    )
+    assert blocked_status == 409
+    assert blocked["detail"]["code"] == "location_has_children"
+    assert mutate(authenticated_browser, "DELETE", f"/api/v1/locations/{leaf['id']}")[0] == 204
+
+    _, _, used = create_location(authenticated_browser, "Occupied", usage_scopes=["plants"])
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        identity = BotanicalIdentity(scientific_name="Persea americana")
+        database.add(identity)
+        database.commit()
+        identity_id = str(identity.id)
+    assert (
+        mutate(
+            authenticated_browser,
+            "POST",
+            "/api/v1/plants",
+            {"botanical_identity_id": identity_id, "location_id": used["id"]},
+        )[0]
+        == 201
+    )
+    blocked_status, _, blocked = mutate(
+        authenticated_browser, "DELETE", f"/api/v1/locations/{used['id']}"
+    )
+    assert blocked_status == 409
+    assert blocked["detail"]["code"] == "location_in_use"
+
+
+def test_concurrent_opposite_reparents_cannot_persist_a_cycle(database_engine: Engine) -> None:
+    with Session(database_engine) as database:
+        first = Location(name="First")
+        second = Location(name="Second")
+        database.add_all([first, second])
+        database.commit()
+        first_id, second_id = first.id, second.id
+
+    def move(location_id: UUID, parent_id: UUID) -> str:
+        with Session(database_engine) as database:
+            try:
+                update_location(
+                    database,
+                    location_id,
+                    LocationUpdate(
+                        name="First" if location_id == first_id else "Second", parent_id=parent_id
+                    ),
+                )
+                database.commit()
+                return "updated"
+            except LocationHierarchyError as error:
+                database.rollback()
+                return error.code
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        outcomes = list(
+            executor.map(
+                lambda arguments: move(*arguments),
+                ((first_id, second_id), (second_id, first_id)),
+            )
+        )
+    assert sorted(outcomes) == ["location_cycle", "updated"]
+    with Session(database_engine) as database:
+        locations = list(
+            database.scalars(select(Location).where(Location.id.in_([first_id, second_id])))
+        )
+        assert all(display_path(location, locations) for location in locations)
+        for location in locations:
+            location.parent_id = None
+        database.flush()
+        for location in locations:
+            database.delete(location)
+        database.commit()

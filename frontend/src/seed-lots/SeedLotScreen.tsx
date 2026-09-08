@@ -35,6 +35,7 @@ import {
 import {
   createLocation,
   listLocations,
+  locationsForScope,
   locationValidationMessages,
   type LocationResponse,
 } from "../locations/api";
@@ -1166,7 +1167,10 @@ export function SeedLotScreen({
                 <ReferencePicker
                   label="Storage location (optional)"
                   disabled={pending}
-                  choices={references.locations.map((item) => ({
+                  choices={locationsForScope(
+                    references.locations,
+                    "seed_lots",
+                  ).map((item) => ({
                     id: item.id,
                     label: item.display_path,
                     retired: Boolean(item.retired_at),
@@ -1421,7 +1425,10 @@ export function SeedLotScreen({
                   required={context.kind === "place"}
                   choices={
                     context.kind === "location"
-                      ? references.locations.map((item) => ({
+                      ? locationsForScope(
+                          references.locations,
+                          "seed_lots",
+                        ).map((item) => ({
                           id: item.id,
                           label: item.display_path,
                           retired: Boolean(item.retired_at),

@@ -53,7 +53,7 @@ def _targets() -> tuple[Plant, PlantGroup, Location, Location]:
 def _database(target: Plant | PlantGroup, *locations: Location) -> MagicMock:
     database = MagicMock()
     lookup = {(type(item), item.id): item for item in (target, *locations)}
-    database.get.side_effect = lambda model, item_id: lookup.get((model, item_id))
+    database.get.side_effect = lambda model, item_id, **_kwargs: lookup.get((model, item_id))
     database.scalar.return_value = target
     return database
 

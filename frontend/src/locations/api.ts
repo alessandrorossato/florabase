@@ -4,6 +4,7 @@ import { ApiError, requestJson } from "../auth/api";
 export type LocationCreate = components["schemas"]["LocationCreate"];
 export type LocationUpdate = components["schemas"]["LocationUpdate"];
 export type LocationResponse = components["schemas"]["LocationResponse"];
+export type LocationUsageScope = components["schemas"]["LocationUsageScope"];
 type HTTPValidationError = components["schemas"]["HTTPValidationError"];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -44,6 +45,14 @@ export function locationConflictMessage(error: ApiError): string | null {
     return "Reactivate retired ancestors before making this location active.";
   if (code === "location_parent_not_found")
     return "The selected parent no longer exists. Refresh the directory and choose again.";
+  if (code === "location_scope_in_use")
+    return typeof error.body.detail.message === "string"
+      ? error.body.detail.message
+      : "That scope is still used by collection records.";
+  if (code === "location_has_children")
+    return "Move or delete child Locations before deleting this Location.";
+  if (code === "location_in_use")
+    return "This Location is retained by collection or Event history and cannot be deleted.";
   return null;
 }
 
@@ -51,6 +60,18 @@ export function listLocations(
   signal?: AbortSignal,
 ): Promise<LocationResponse[]> {
   return requestJson("/api/v1/locations", { signal });
+}
+
+export function locationsForScope(
+  locations: LocationResponse[],
+  scope: LocationUsageScope,
+): LocationResponse[] {
+  return locations.filter(
+    (location) =>
+      (
+        location as unknown as { usage_scopes?: LocationUsageScope[] }
+      ).usage_scopes?.includes(scope) ?? true,
+  );
 }
 
 export function createLocation(
@@ -84,6 +105,13 @@ export function setLocationRetired(
   const action = retired ? "retire" : "reactivate";
   return requestJson(`/api/v1/locations/${encodeURIComponent(id)}/${action}`, {
     method: "POST",
+    headers: { "X-CSRF-Token": csrfToken },
+  });
+}
+
+export function deleteLocation(id: string, csrfToken: string): Promise<void> {
+  return requestJson(`/api/v1/locations/${encodeURIComponent(id)}`, {
+    method: "DELETE",
     headers: { "X-CSRF-Token": csrfToken },
   });
 }

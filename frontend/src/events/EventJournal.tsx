@@ -10,7 +10,7 @@ import {
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import type { LocationResponse } from "../locations/api";
+import { locationsForScope, type LocationResponse } from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
 import type { PartialDate } from "../seed-lots/api";
 import {
@@ -625,7 +625,7 @@ export function EventJournal({
                   }}
                 >
                   <option value="">Choose a Location</option>
-                  {locations.map((location) => (
+                  {locationsForScope(locations, "plants").map((location) => (
                     <option
                       value={location.id}
                       key={location.id}

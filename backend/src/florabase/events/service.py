@@ -19,7 +19,14 @@ from florabase.events.schemas import (
     TransferCreate,
 )
 from florabase.locations.model import Location
-from florabase.locations.service import display_path, list_locations
+from florabase.locations.schemas import LocationUsageScope
+from florabase.locations.service import (
+    LocationIntegrityError,
+    LocationNotFoundError,
+    display_path,
+    list_locations,
+    require_location_for_scope,
+)
 from florabase.plants.model import Plant, PlantGroup
 from florabase.plants.schemas import BotanicalIdentitySummary, LocationSummary
 from florabase.reversals.model import OperationKind, OperationReceipt
@@ -94,8 +101,12 @@ def _lock_target(database: Session, target_type: TargetType, target_id: UUID) ->
 
 
 def _require_destination(database: Session, location_id: UUID | None) -> None:
-    if location_id is not None and database.get(Location, location_id) is None:
-        raise EventReferenceNotFoundError("location_not_found", "Location not found")
+    try:
+        require_location_for_scope(database, location_id, LocationUsageScope.PLANTS)
+    except LocationNotFoundError as error:
+        raise EventReferenceNotFoundError("location_not_found", "Location not found") from error
+    except LocationIntegrityError as error:
+        raise EventDomainConflictError(error.code, error.message) from error
 
 
 def _apply_creation_side_effect(target: Target, payload: EventCreate) -> None:

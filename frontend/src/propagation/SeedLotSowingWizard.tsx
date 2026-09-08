@@ -9,7 +9,11 @@ import {
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { Breadcrumbs } from "../components/CollectionUI";
-import { listLocations, type LocationResponse } from "../locations/api";
+import {
+  listLocations,
+  locationsForScope,
+  type LocationResponse,
+} from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
 import {
   createSowingFromSeedLot,
@@ -438,7 +442,7 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
                   }}
                 >
                   <option value="">Not recorded</option>
-                  {locations.map((location) => (
+                  {locationsForScope(locations, "sowings").map((location) => (
                     <option
                       key={location.id}
                       value={location.id}
