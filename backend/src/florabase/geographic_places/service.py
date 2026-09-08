@@ -7,6 +7,9 @@ from sqlalchemy.orm import Session
 
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.schemas import GeographicPlaceCreate, GeographicPlaceUpdate
+from florabase.plants.model import Plant, PlantGroup
+from florabase.provenance_sites.model import ProvenanceSite
+from florabase.seed_lots.model import SeedLot
 
 
 @dataclass(frozen=True)
@@ -17,6 +20,29 @@ class GeographicPlaceHierarchyError(Exception):
 
 class GeographicPlaceNotFoundError(Exception):
     pass
+
+
+def geographic_place_usage(database: Session) -> tuple[dict[UUID, int], dict[UUID, int]]:
+    direct: dict[UUID, int] = {}
+    for model in (SeedLot, Plant, PlantGroup):
+        rows = database.execute(
+            select(model.material_provenance_place_id, func.count())
+            .where(model.material_provenance_place_id.is_not(None))
+            .group_by(model.material_provenance_place_id)
+        )
+        for place_id, count in rows:
+            if place_id is not None:
+                direct[place_id] = direct.get(place_id, 0) + count
+    sites = {
+        place_id: count
+        for place_id, count in database.execute(
+            select(ProvenanceSite.geographic_place_id, func.count())
+            .where(ProvenanceSite.geographic_place_id.is_not(None))
+            .group_by(ProvenanceSite.geographic_place_id)
+        )
+        if place_id is not None
+    }
+    return direct, sites
 
 
 def _all_places(database: Session, *, lock: bool = False) -> list[GeographicPlace]:
@@ -116,9 +142,38 @@ def update_geographic_place(
     _validate_parent(place, payload.parent_id, places)
     place.name = payload.name
     place.parent_id = payload.parent_id
+    place.place_type = payload.place_type
     place.updated_at = datetime.now(UTC)
     database.flush()
     return place
+
+
+def delete_geographic_place(database: Session, place_id: UUID) -> None:
+    places = _all_places(database, lock=True)
+    place = _require(places, place_id)
+    if place.place_kind == "canonical":
+        raise GeographicPlaceHierarchyError(
+            "canonical_geographic_place_immutable",
+            "Canonical geographic places cannot be deleted",
+        )
+    if any(item.parent_id == place.id for item in places):
+        raise GeographicPlaceHierarchyError(
+            "geographic_place_has_children",
+            "Move or delete child GeographicPlaces before deleting this place",
+        )
+    direct, sites = geographic_place_usage(database)
+    if direct.get(place.id, 0):
+        raise GeographicPlaceHierarchyError(
+            "geographic_place_in_use",
+            "This geographic place is retained by collection records and cannot be deleted",
+        )
+    if sites.get(place.id, 0):
+        raise GeographicPlaceHierarchyError(
+            "geographic_place_has_provenance_sites",
+            "Move or delete dependent ProvenanceSites before deleting this place",
+        )
+    database.delete(place)
+    database.flush()
 
 
 def set_geographic_place_retired(

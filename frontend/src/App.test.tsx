@@ -69,6 +69,7 @@ function authenticatedThen(
     if (path.endsWith("/auth/csrf"))
       return jsonResponse({ csrf_token: "botanical-csrf" });
     if (path.endsWith("/health")) return jsonResponse({ status: "ok" });
+    if (path === "/api/v1/provenance-sites") return jsonResponse([]);
     if (
       path === "/api/v1/botanical-identities" &&
       (init?.method === undefined || init.method === "GET")
@@ -218,6 +219,9 @@ const worldPlace = {
   parent_id: null as string | null,
   display_path: "World",
   place_kind: "canonical" as const,
+  place_type: null,
+  provenance_site_count: 0,
+  direct_usage_count: 0,
   source_name: "unicode_cldr" as string | null,
   source_version: "48.2.1" as string | null,
   source_code_type: "un_m49" as string | null,

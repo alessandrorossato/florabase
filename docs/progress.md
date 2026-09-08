@@ -4,6 +4,30 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-08 — GEOGRAPHY-003 implemented
+
+- Superseded the stale evaluation-only planning contract and removed planned GEOGRAPHY-002 as a
+  prerequisite. GEOGRAPHY-003 now depends on verified GEOGRAPHY-001 and UX-001; GEOGRAPHY-002
+  remains planned for separate structured botanical native distribution.
+- Preserved the immutable canonical World-rooted CLDR hierarchy and extended editable custom
+  descendants with descriptive city/town, locality, and other named-area types. Added collapsed
+  browsing, derived paths, bulk usage summaries, safe leaf deletion, and existing locked cycle-safe
+  reparenting without inferred parents or a bundled city catalogue.
+- Added relational ProvenanceSite records with optional GeographicPlace, coherent optional WGS84
+  coordinates, optional non-negative metre accuracy, notes, timestamps, focused CRUD, usage-aware
+  deletion, and reference support for SeedLots and directly entered Plants/PlantGroups. Location,
+  Supplier, and planned botanical native distribution remain separate.
+- Added an accessible responsive ProvenanceSite manager and path-aware selectors. The API exposes
+  labels, coordinates, parent place paths, and supported collection usage for future MAP-001 without
+  adding a map, geocoding, external requests, or botanical occurrence data.
+- Focused verification passed 262 backend unit tests at 90.27% coverage, 123 frontend tests, 292
+  disposable PostgreSQL integration tests, Ruff and Prettier formatting, Ruff and ESLint linting,
+  strict mypy over 156 source files, strict TypeScript, generated API drift, feature-graph
+  validation, and `git diff --check`. The disposable migration coverage exercises
+  `20260907_0019 → 20260908_0020 → 20260907_0019 → 20260908_0020` and explicit downgrade refusal
+  when ProvenanceSite data would be lost. Canonical `make feature-verify` remains reserved for
+  independent review.
+
 ## 2026-09-07 — LOCATION-002 implemented
 
 - Corrected the feature graph so global `UX-003` stabilization follows, rather than blocks, the
@@ -494,15 +518,15 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260907_0019` on the LOCATION-002 implementation branch.
+- Alembic head: `20260908_0020` on the GEOGRAPHY-003 implementation branch.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
   protected Plant/PlantGroup Event journal and timeline UI; atomic extraction history; retained
   transferred Plant/PlantGroup history; and scope-aware hierarchical collection Locations.
-- `PROPAGATION-001` through `PROPAGATION-003` are verified, and `LOCATION-002` is implemented pending
-  independent verification. The next increment remains decided by the machine-readable dependency
-  graph;
+- `PROPAGATION-001` through `PROPAGATION-003` are verified; `LOCATION-002` and `GEOGRAPHY-003` are
+  implemented pending independent verification. The next increment remains decided by the
+  machine-readable dependency graph;
   licensing/version policy and release readiness remain explicit later operator/product decisions.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.

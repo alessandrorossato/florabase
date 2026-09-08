@@ -19,6 +19,10 @@ import {
 import { LineagePanel } from "../lineage/LineagePanel";
 import { listSowings, type SowingResponse } from "../sowings/api";
 import {
+  listProvenanceSites,
+  type ProvenanceSiteResponse,
+} from "../provenance-sites/api";
+import {
   conflictExistingId,
   createBotanicalIdentity,
   getBotanicalIdentity,
@@ -68,6 +72,7 @@ interface References {
   suppliers: SupplierResponse[];
   locations: LocationResponse[];
   places: GeographicPlaceResponse[];
+  sites: ProvenanceSiteResponse[];
 }
 type SaveState =
   | { status: "idle" }
@@ -87,6 +92,7 @@ interface FormState {
   supplierId: string;
   locationId: string;
   materialProvenancePlaceId: string;
+  provenanceSiteId: string;
   acquisitionDate: PartialDate | null;
   harvestDate: PartialDate | null;
   expectedViabilityUntil: PartialDate | null;
@@ -122,6 +128,7 @@ function blankForm(): FormState {
     supplierId: "",
     locationId: "",
     materialProvenancePlaceId: "",
+    provenanceSiteId: "",
     acquisitionDate: null,
     harvestDate: null,
     expectedViabilityUntil: null,
@@ -143,6 +150,7 @@ function formFrom(lot: SeedLotResponse): FormState {
     supplierId: lot.supplier_id ?? "",
     locationId: lot.location_id ?? "",
     materialProvenancePlaceId: lot.material_provenance_place_id ?? "",
+    provenanceSiteId: lot.provenance_site_id ?? "",
     acquisitionDate: lot.acquisition_date,
     harvestDate: lot.harvest_date,
     expectedViabilityUntil: lot.expected_viability_until,
@@ -170,6 +178,7 @@ function payloadFrom(form: FormState): SeedLotCreate {
     supplier_id: form.supplierId || null,
     location_id: form.locationId || null,
     material_provenance_place_id: form.materialProvenancePlaceId || null,
+    provenance_site_id: form.provenanceSiteId || null,
     acquisition_date: form.acquisitionDate,
     harvest_date: form.harvestDate,
     expected_viability_until: form.expectedViabilityUntil,
@@ -413,6 +422,14 @@ function Detail({
               <dd>{lot.material_provenance?.display_path ?? "Not recorded"}</dd>
             </div>
             <div>
+              <dt>ProvenanceSite</dt>
+              <dd>
+                {lot.provenance_site
+                  ? `${lot.provenance_site.geographic_place_path ? `${lot.provenance_site.geographic_place_path} → ` : ""}${lot.provenance_site.name}`
+                  : "Not recorded"}
+              </dd>
+            </div>
+            <div>
               <dt>Acquired</dt>
               <dd>{dateLabel(lot.acquisition_date)}</dd>
             </div>
@@ -530,10 +547,11 @@ export function SeedLotScreen({
       listSuppliers(controller.signal),
       listLocations(controller.signal),
       listGeographicPlaces(controller.signal),
+      listProvenanceSites(controller.signal),
     ])
-      .then(([lots, identities, suppliers, locations, places]) => {
+      .then(([lots, identities, suppliers, locations, places, sites]) => {
         setInventory({ status: "ready", lots });
-        setReferences({ identities, suppliers, locations, places });
+        setReferences({ identities, suppliers, locations, places, sites });
         setSelectedId((current) =>
           current && lots.some(({ id }) => id === current) ? current : null,
         );
@@ -785,7 +803,11 @@ export function SeedLotScreen({
         setForm((current) => ({ ...current, locationId: location.id }));
       } else {
         const place = await createGeographicPlace(
-          { name: value("name"), parent_id: value("parent_id") },
+          {
+            name: value("name"),
+            parent_id: value("parent_id"),
+            place_type: "other_named_area",
+          },
           csrfToken,
         );
         const places = await listGeographicPlaces();
@@ -1216,6 +1238,21 @@ export function SeedLotScreen({
                       openContext("place", query);
                     }}
                     createLabel="Create local place"
+                  />
+                  <ReferencePicker
+                    label="Precise ProvenanceSite (optional)"
+                    disabled={pending}
+                    choices={references.sites.map((site) => ({
+                      id: site.id,
+                      label: `${site.geographic_place_path ? `${site.geographic_place_path} → ` : ""}${site.name}`,
+                    }))}
+                    value={form.provenanceSiteId}
+                    onChange={(id) => {
+                      setForm((current) => ({
+                        ...current,
+                        provenanceSiteId: id,
+                      }));
+                    }}
                   />
                   <div className="partial-date-grid">
                     <PartialDateField

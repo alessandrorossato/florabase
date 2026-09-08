@@ -71,6 +71,7 @@ const fieldLabels: Record<string, string> = {
   source_detail: "Source detail",
   supplier_id: "Supplier",
   material_provenance_place_id: "Material provenance",
+  provenance_site_id: "ProvenanceSite",
   location_id: "Storage location",
   notes: "Notes",
   quantity: "Quantity",

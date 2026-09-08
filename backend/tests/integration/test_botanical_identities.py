@@ -109,6 +109,7 @@ def test_schema_uses_native_types_named_constraints_and_only_one_botanical_table
         "operation_receipts",
         "plant_groups",
         "plants",
+        "provenance_sites",
         "seed_lots",
         "sowings",
         "suppliers",

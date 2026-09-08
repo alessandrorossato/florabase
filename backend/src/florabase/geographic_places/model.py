@@ -31,6 +31,12 @@ class GeographicPlace(Base):
             name="ck_geographic_places_kind",
         ),
         CheckConstraint(
+            "(place_kind = 'canonical' AND place_type IS NULL) OR "
+            "(place_kind = 'custom' AND place_type IN "
+            "('city_town', 'locality', 'other_named_area'))",
+            name="ck_geographic_places_type",
+        ),
+        CheckConstraint(
             "(place_kind = 'canonical' AND source_name IS NOT NULL "
             "AND source_version IS NOT NULL AND source_code_type IS NOT NULL "
             "AND source_code IS NOT NULL AND retired_at IS NULL) OR "
@@ -46,6 +52,7 @@ class GeographicPlace(Base):
         Uuid(), ForeignKey("geographic_places.id", ondelete="RESTRICT"), index=True
     )
     place_kind: Mapped[str] = mapped_column(String(16), default="custom")
+    place_type: Mapped[str | None] = mapped_column(String(32), default="other_named_area")
     source_name: Mapped[str | None] = mapped_column(String(64))
     source_version: Mapped[str | None] = mapped_column(String(32))
     source_code_type: Mapped[str | None] = mapped_column(String(32))

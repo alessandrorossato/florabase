@@ -34,6 +34,10 @@ import {
 import { PartialDateField } from "../seed-lots/PartialDateField";
 import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import { PropagationPath } from "../propagation/PropagationPath";
+import {
+  listProvenanceSites,
+  type ProvenanceSiteResponse,
+} from "../provenance-sites/api";
 import { listSowings, type SowingResponse } from "../sowings/api";
 import { listSuppliers, type SupplierResponse } from "../suppliers/api";
 import {
@@ -103,6 +107,7 @@ interface References {
   suppliers: SupplierResponse[];
   places: GeographicPlaceResponse[];
   locations: LocationResponse[];
+  sites: ProvenanceSiteResponse[];
 }
 
 interface FormState {
@@ -114,6 +119,7 @@ interface FormState {
   directOriginDetail: string;
   supplierId: string;
   provenanceId: string;
+  provenanceSiteId: string;
   locationId: string;
   collectionEntryDate: PartialDate | null;
   lifecycle: PlantLifecycle | PlantGroupLifecycle;
@@ -162,6 +168,7 @@ function blankForm(): FormState {
     directOriginDetail: "",
     supplierId: "",
     provenanceId: "",
+    provenanceSiteId: "",
     locationId: "",
     collectionEntryDate: null,
     lifecycle: "active",
@@ -183,6 +190,7 @@ function formFrom(record: PlantRecord): FormState {
     directOriginDetail: value.direct_origin_detail ?? "",
     supplierId: value.supplier_id ?? "",
     provenanceId: value.material_provenance_place_id ?? "",
+    provenanceSiteId: value.provenance_site_id ?? "",
     locationId: value.location_id ?? "",
     collectionEntryDate: value.collection_entry_date,
     lifecycle: value.lifecycle,
@@ -209,6 +217,7 @@ function commonPayload(form: FormState) {
         : null,
     supplier_id: direct ? form.supplierId || null : null,
     material_provenance_place_id: direct ? form.provenanceId || null : null,
+    provenance_site_id: direct ? form.provenanceSiteId || null : null,
     location_id: form.locationId || null,
     collection_entry_date: form.collectionEntryDate,
     notes: form.notes || null,
@@ -507,6 +516,17 @@ function Detail({
                     <dd>{value.material_provenance.display_path}</dd>
                   </div>
                 )}
+                {value.provenance_site && (
+                  <div>
+                    <dt>ProvenanceSite</dt>
+                    <dd>
+                      {value.provenance_site.geographic_place_path
+                        ? `${value.provenance_site.geographic_place_path} → `
+                        : ""}
+                      {value.provenance_site.name}
+                    </dd>
+                  </div>
+                )}
               </dl>
             )}
             {!hasDirectOrigin && !originatingGroup && (
@@ -691,6 +711,7 @@ export function PlantScreen({
       listSuppliers(controller.signal),
       listGeographicPlaces(controller.signal),
       listLocations(controller.signal),
+      listProvenanceSites(controller.signal),
     ])
       .then(
         ([
@@ -701,13 +722,21 @@ export function PlantScreen({
           suppliers,
           places,
           locations,
+          sites,
         ]) => {
           const records: PlantRecord[] = [
             ...plants.map((value): PlantRecord => ({ kind: "plant", value })),
             ...groups.map((value): PlantRecord => ({ kind: "group", value })),
           ];
           setCollection({ status: "ready", records });
-          setReferences({ identities, sowings, suppliers, places, locations });
+          setReferences({
+            identities,
+            sowings,
+            suppliers,
+            places,
+            locations,
+            sites,
+          });
           setSelectedKey((current) =>
             current && records.some((record) => recordKey(record) === current)
               ? current
@@ -1834,6 +1863,33 @@ export function PlantScreen({
                                 Where the biological material originated or was
                                 collected, when known.
                               </small>
+                            </div>
+                            <div className="field">
+                              <label htmlFor="plant-provenance-site">
+                                Precise ProvenanceSite{" "}
+                                <span className="optional">(optional)</span>
+                              </label>
+                              <select
+                                id="plant-provenance-site"
+                                value={form.provenanceSiteId}
+                                disabled={pending}
+                                onChange={(event) => {
+                                  updateForm(
+                                    "provenanceSiteId",
+                                    event.currentTarget.value,
+                                  );
+                                }}
+                              >
+                                <option value="">Not recorded</option>
+                                {references.sites.map((site) => (
+                                  <option key={site.id} value={site.id}>
+                                    {site.geographic_place_path
+                                      ? `${site.geographic_place_path} → `
+                                      : ""}
+                                    {site.name}
+                                  </option>
+                                ))}
+                              </select>
                             </div>
                           </>
                         )}

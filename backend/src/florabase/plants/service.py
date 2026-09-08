@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
@@ -44,6 +45,9 @@ from florabase.plants.schemas import (
     ReintegrationReason,
     SupplierSummary,
 )
+from florabase.provenance_sites.model import ProvenanceSite
+from florabase.provenance_sites.schemas import ProvenanceSiteResponse, ProvenanceSiteSummary
+from florabase.provenance_sites.service import responses as provenance_site_responses
 from florabase.reversals.model import OperationKind, OperationReceipt, OperationStatus
 from florabase.reversals.service import add_receipt, group_quantity
 from florabase.seed_lots.model import SeedLot
@@ -76,6 +80,7 @@ class PlantProjection:
     location: Location | None
     originating_plant_group: PlantGroup | None
     originating_plant_group_identity: BotanicalIdentity | None
+    provenance_site: ProvenanceSite | None = None
 
 
 @dataclass(frozen=True)
@@ -88,6 +93,7 @@ class PlantGroupProjection:
     supplier: Supplier | None
     material_provenance: GeographicPlace | None
     location: Location | None
+    provenance_site: ProvenanceSite | None = None
 
 
 @dataclass(frozen=True)
@@ -115,6 +121,12 @@ def _require_references(database: Session, payload: PlantCommonWrite) -> None:
             payload.material_provenance_place_id,
             "geographic_place_not_found",
             "Geographic place not found",
+        ),
+        (
+            ProvenanceSite,
+            payload.provenance_site_id,
+            "provenance_site_not_found",
+            "ProvenanceSite not found",
         ),
     )
     for model, item_id, code, message in references:
@@ -149,6 +161,7 @@ def _common_write_values(payload: PlantCommonWrite) -> dict[str, object]:
         "direct_origin_detail": payload.direct_origin_detail,
         "supplier_id": payload.supplier_id,
         "material_provenance_place_id": payload.material_provenance_place_id,
+        "provenance_site_id": payload.provenance_site_id,
         "label": payload.label,
         "location_id": payload.location_id,
         "notes": payload.notes,
@@ -195,6 +208,7 @@ def update_plant(database: Session, plant: Plant, payload: PlantUpdate) -> Plant
             "direct_origin_detail",
             "supplier_id",
             "material_provenance_place_id",
+            "provenance_site_id",
         }
         if payload.model_fields_set & forbidden:
             raise PlantDomainConflictError(
@@ -256,6 +270,7 @@ def extract_plant(
         direct_origin_detail=None,
         supplier_id=None,
         material_provenance_place_id=None,
+        provenance_site_id=None,
         label=payload.label,
         location_id=location_id,
         notes=payload.notes,
@@ -636,6 +651,7 @@ def _plant_projection_statement() -> Select[
         Location,
         PlantGroup,
         BotanicalIdentity,
+        ProvenanceSite,
     ]
 ]:
     sowing = aliased(Sowing)
@@ -643,6 +659,7 @@ def _plant_projection_statement() -> Select[
     origin_identity = aliased(BotanicalIdentity)
     supplier = aliased(Supplier)
     place = aliased(GeographicPlace)
+    site = aliased(ProvenanceSite)
     location = aliased(Location)
     originating_group = aliased(PlantGroup)
     originating_group_identity = aliased(BotanicalIdentity)
@@ -658,6 +675,7 @@ def _plant_projection_statement() -> Select[
             location,
             originating_group,
             originating_group_identity,
+            site,
         )
         .join(BotanicalIdentity, BotanicalIdentity.id == Plant.botanical_identity_id)
         .outerjoin(sowing, sowing.id == Plant.originating_sowing_id)
@@ -671,6 +689,7 @@ def _plant_projection_statement() -> Select[
             originating_group_identity,
             originating_group_identity.id == originating_group.botanical_identity_id,
         )
+        .outerjoin(site, site.id == Plant.provenance_site_id)
     )
 
 
@@ -684,6 +703,7 @@ def _plant_group_projection_statement() -> Select[
         Supplier,
         GeographicPlace,
         Location,
+        ProvenanceSite,
     ]
 ]:
     sowing = aliased(Sowing)
@@ -691,6 +711,7 @@ def _plant_group_projection_statement() -> Select[
     origin_identity = aliased(BotanicalIdentity)
     supplier = aliased(Supplier)
     place = aliased(GeographicPlace)
+    site = aliased(ProvenanceSite)
     location = aliased(Location)
     return (
         select(
@@ -702,6 +723,7 @@ def _plant_group_projection_statement() -> Select[
             supplier,
             place,
             location,
+            site,
         )
         .join(BotanicalIdentity, BotanicalIdentity.id == PlantGroup.botanical_identity_id)
         .outerjoin(sowing, sowing.id == PlantGroup.originating_sowing_id)
@@ -710,6 +732,7 @@ def _plant_group_projection_statement() -> Select[
         .outerjoin(supplier, supplier.id == PlantGroup.supplier_id)
         .outerjoin(place, place.id == PlantGroup.material_provenance_place_id)
         .outerjoin(location, location.id == PlantGroup.location_id)
+        .outerjoin(site, site.id == PlantGroup.provenance_site_id)
     )
 
 
@@ -789,9 +812,11 @@ def _common_response_values(
     originating_botanical_identity: BotanicalIdentity | None,
     supplier: Supplier | None,
     material_provenance: GeographicPlace | None,
+    provenance_site: ProvenanceSite | None,
     location: Location | None,
     places: list[GeographicPlace],
     locations: list[Location],
+    site_by_id: Mapping[UUID, ProvenanceSiteResponse],
 ) -> dict[str, object]:
     botanical = BotanicalIdentityResponse.from_model(botanical_identity)
     origin_botanical = (
@@ -831,6 +856,12 @@ def _common_response_values(
             if material_provenance
             else None
         ),
+        "provenance_site_id": record.provenance_site_id,
+        "provenance_site": (
+            ProvenanceSiteSummary.model_validate(site_by_id[provenance_site.id].model_dump())
+            if provenance_site
+            else None
+        ),
         "label": record.label,
         "collection_entry_date": _partial_date(record),
         "location_id": record.location_id,
@@ -852,6 +883,12 @@ def plant_responses(database: Session, projections: list[PlantProjection]) -> li
         else []
     )
     locations = list_locations(database) if any(item.location for item in projections) else []
+    site_models = [item.provenance_site for item in projections if item.provenance_site]
+    site_by_id = (
+        {response.id: response for response in provenance_site_responses(database, site_models)}
+        if site_models
+        else {}
+    )
     return [
         PlantResponse(
             **_common_response_values(
@@ -862,9 +899,11 @@ def plant_responses(database: Session, projections: list[PlantProjection]) -> li
                 item.originating_botanical_identity,
                 item.supplier,
                 item.material_provenance,
+                item.provenance_site,
                 item.location,
                 places,
                 locations,
+                site_by_id,
             ),
             lifecycle=item.plant.lifecycle,
             originating_plant_group_id=item.plant.originating_plant_group_id,
@@ -906,6 +945,12 @@ def plant_group_responses(
         else []
     )
     locations = list_locations(database) if any(item.location for item in projections) else []
+    site_models = [item.provenance_site for item in projections if item.provenance_site]
+    site_by_id = (
+        {response.id: response for response in provenance_site_responses(database, site_models)}
+        if site_models
+        else {}
+    )
     result: list[PlantGroupResponse] = []
     for item in projections:
         quantity = (
@@ -927,9 +972,11 @@ def plant_group_responses(
                     item.originating_botanical_identity,
                     item.supplier,
                     item.material_provenance,
+                    item.provenance_site,
                     item.location,
                     places,
                     locations,
+                    site_by_id,
                 ),
                 quantity=quantity,
                 lifecycle=item.plant_group.lifecycle,

@@ -10,6 +10,7 @@ from florabase.geographic_places.api import router as geographic_places_router
 from florabase.locations.api import router as locations_router
 from florabase.plants.api import plant_groups_router, plants_router
 from florabase.propagation.api import router as propagation_router
+from florabase.provenance_sites.api import router as provenance_sites_router
 from florabase.seed_lots.api import router as seed_lots_router
 from florabase.sowings.api import router as sowings_router
 from florabase.suppliers.api import router as suppliers_router
@@ -23,6 +24,7 @@ api_router.include_router(collection_views_router)
 api_router.include_router(suppliers_router)
 api_router.include_router(locations_router)
 api_router.include_router(geographic_places_router)
+api_router.include_router(provenance_sites_router)
 api_router.include_router(seed_lots_router)
 api_router.include_router(sowings_router)
 api_router.include_router(plants_router)

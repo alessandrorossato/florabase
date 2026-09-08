@@ -713,6 +713,11 @@ button:disabled {
   gap: clamp(1.5rem, 4vw, 3rem);
   margin-top: 2rem;
 }
+.coordinate-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
 .primary-navigation {
   display: flex;
   flex-wrap: wrap;
@@ -1725,6 +1730,7 @@ button:disabled {
   .seed-primary-fields,
   .sowing-fast-fields,
   .advanced-fields,
+  .coordinate-fields,
   .partial-date-grid,
   .seed-detail dl,
   .sowing-detail dl {

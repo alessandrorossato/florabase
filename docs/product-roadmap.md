@@ -188,10 +188,12 @@ request calls the authoritative inverse first; only a successful atomic inverse 
 the operation-owned Event. The UI must never delete such an Event and imply that the associated
 current state was reversed when it was not.
 
-Geography remains precision-preserving and extensible. A complete canonical global city catalogue is
-not a first-release requirement. Existing custom GeographicPlace descendants can cover carefully
-scoped local knowledge; `GEOGRAPHY-003` defers any finer-grained reference-data decision until a
-demonstrated workflow justifies its granularity and maintenance cost.
+Geography remains precision-preserving and extensible. `GEOGRAPHY-003` adds descriptive custom
+city/town, locality, and other named-area descendants beneath the preserved canonical World-rooted
+hierarchy without shipping a global city catalogue. Precise collection origin is represented by the
+separate `ProvenanceSite` concept with optional WGS84 coordinates and accuracy. This internal data
+prepares MAP-001 without implementing maps, geocoding, external providers, or the independently
+planned GEOGRAPHY-002 botanical native-distribution relationships.
 
 ## Longer-term capabilities
 
