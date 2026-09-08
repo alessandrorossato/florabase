@@ -54,6 +54,9 @@ const place = {
   parent_id: null as string | null,
   display_path: "World → Asia → Southeast Asia → Thailand",
   place_kind: "canonical" as const,
+  place_type: null,
+  provenance_site_count: 0,
+  direct_usage_count: 0,
   source_name: "unicode_cldr",
   source_version: "48.2.1",
   source_code_type: "iso_3166_1_alpha_2",
@@ -133,6 +136,7 @@ function mockApi(handler: Handler) {
       );
     if (path.endsWith("/auth/csrf"))
       return Promise.resolve(json({ csrf_token: "csrf" }));
+    if (path === "/api/v1/provenance-sites") return Promise.resolve(json([]));
     if (path.endsWith("/health"))
       return Promise.resolve(json({ status: "ok" }));
     const response = handler(path, init);

@@ -1,12 +1,21 @@
 from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor
+from uuid import UUID
 
 import pytest
-from sqlalchemy import Connection
+from sqlalchemy import Connection, Engine, select
 from sqlalchemy.orm import Session
 
 from florabase.auth.service import bootstrap_owner
 from florabase.core.config import get_settings
 from florabase.db.session import get_database_session
+from florabase.geographic_places.model import GeographicPlace
+from florabase.geographic_places.schemas import GeographicPlaceUpdate
+from florabase.geographic_places.service import (
+    GeographicPlaceHierarchyError,
+    display_path,
+    update_geographic_place,
+)
 from florabase.main import app
 
 from .test_location_api import PASSWORD, mutate, override_database, request, settings
@@ -159,3 +168,113 @@ def test_canonical_mutations_and_security_boundaries(
             401,
             403,
         }
+
+
+def test_delete_blocks_children_and_direct_provenance_references(
+    authenticated_browser: tuple[str, str],
+) -> None:
+    world = _canonical(authenticated_browser, "001")
+    _, _, parent = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/geographic-places",
+        {"name": "Parent area", "parent_id": world["id"], "place_type": "locality"},
+    )
+    _, _, child = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/geographic-places",
+        {"name": "Child area", "parent_id": parent["id"], "place_type": "locality"},
+    )
+    status, _, conflict = mutate(
+        authenticated_browser, "DELETE", f"/api/v1/geographic-places/{parent['id']}"
+    )
+    assert status == 409
+    assert conflict["detail"]["code"] == "geographic_place_has_children"
+    assert (
+        mutate(authenticated_browser, "DELETE", f"/api/v1/geographic-places/{child['id']}")[0]
+        == 204
+    )
+
+    _, _, identity = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/botanical-identities",
+        {"scientific_name": "Testa geographica"},
+    )
+    assert (
+        mutate(
+            authenticated_browser,
+            "POST",
+            "/api/v1/seed-lots",
+            {
+                "botanical_identity_id": identity["id"],
+                "source_kind": "self_collected",
+                "material_provenance_place_id": parent["id"],
+            },
+        )[0]
+        == 201
+    )
+    status, _, conflict = mutate(
+        authenticated_browser, "DELETE", f"/api/v1/geographic-places/{parent['id']}"
+    )
+    assert status == 409
+    assert conflict["detail"]["code"] == "geographic_place_in_use"
+
+
+def test_concurrent_opposite_reparents_cannot_persist_a_cycle(database_engine: Engine) -> None:
+    with Session(database_engine) as database:
+        world = database.scalar(select(GeographicPlace).where(GeographicPlace.source_code == "001"))
+        assert world is not None
+        first = GeographicPlace(
+            name="Concurrent first",
+            parent_id=world.id,
+            place_kind="custom",
+            place_type="locality",
+        )
+        second = GeographicPlace(
+            name="Concurrent second",
+            parent_id=world.id,
+            place_kind="custom",
+            place_type="locality",
+        )
+        database.add_all([first, second])
+        database.commit()
+        first_id, second_id, world_id = first.id, second.id, world.id
+
+    def move(place_id: UUID, parent_id: UUID, name: str) -> str:
+        with Session(database_engine) as database:
+            try:
+                update_geographic_place(
+                    database,
+                    place_id,
+                    GeographicPlaceUpdate(name=name, parent_id=parent_id, place_type="locality"),
+                )
+                database.commit()
+                return "updated"
+            except GeographicPlaceHierarchyError as error:
+                database.rollback()
+                return error.code
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        outcomes = list(
+            executor.map(
+                lambda arguments: move(*arguments),
+                (
+                    (first_id, second_id, "Concurrent first"),
+                    (second_id, first_id, "Concurrent second"),
+                ),
+            )
+        )
+    assert sorted(outcomes) == ["geographic_place_cycle", "updated"]
+
+    with Session(database_engine) as database:
+        places = list(database.scalars(select(GeographicPlace)))
+        moved = [place for place in places if place.id in (first_id, second_id)]
+        assert all(display_path(place, places) for place in moved)
+        for place in moved:
+            place.parent_id = world_id
+        database.flush()
+        for place in moved:
+            database.delete(place)
+        database.commit()

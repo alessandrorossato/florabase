@@ -10,6 +10,7 @@ import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { DetailHeader } from "../components/CollectionUI";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
+import { ProvenanceSiteManager } from "../provenance-sites/ProvenanceSiteManager";
 import {
   createGeographicPlace,
   geographyConflictMessage,
@@ -17,6 +18,7 @@ import {
   listGeographicPlaces,
   setGeographicPlaceRetired,
   updateGeographicPlace,
+  deleteGeographicPlace,
   type GeographicPlaceResponse,
 } from "./api";
 
@@ -89,11 +91,15 @@ function PlaceTree({
   parentId,
   selectedId,
   onSelect,
+  expanded,
+  onToggle,
 }: {
   places: GeographicPlaceResponse[];
   parentId: string | null;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  expanded: Set<string>;
+  onToggle: (id: string) => void;
 }) {
   const children = places.filter((place) => place.parent_id === parentId);
   if (children.length === 0) return null;
@@ -103,21 +109,41 @@ function PlaceTree({
         parentId ? "location-tree location-tree--nested" : "location-tree"
       }
     >
-      {children.map((place) => (
-        <li key={place.id}>
-          <PlaceButton
-            place={place}
-            selectedId={selectedId}
-            onSelect={onSelect}
-          />
-          <PlaceTree
-            places={places}
-            parentId={place.id}
-            selectedId={selectedId}
-            onSelect={onSelect}
-          />
-        </li>
-      ))}
+      {children.map((place) => {
+        const hasChildren = places.some((item) => item.parent_id === place.id);
+        return (
+          <li key={place.id}>
+            {hasChildren && (
+              <button
+                type="button"
+                className="tree-toggle"
+                aria-label={`${expanded.has(place.id) ? "Collapse" : "Expand"} ${place.name}`}
+                aria-expanded={expanded.has(place.id)}
+                onClick={() => {
+                  onToggle(place.id);
+                }}
+              >
+                {expanded.has(place.id) ? "−" : "+"}
+              </button>
+            )}
+            <PlaceButton
+              place={place}
+              selectedId={selectedId}
+              onSelect={onSelect}
+            />
+            {expanded.has(place.id) && (
+              <PlaceTree
+                places={places}
+                parentId={place.id}
+                selectedId={selectedId}
+                onSelect={onSelect}
+                expanded={expanded}
+                onToggle={onToggle}
+              />
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -132,8 +158,12 @@ export function GeographyScreen() {
   const [filter, setFilter] = useState("");
   const [createName, setCreateName] = useState("");
   const [createParentId, setCreateParentId] = useState("");
+  const [createType, setCreateType] = useState<
+    "city_town" | "locality" | "other_named_area"
+  >("other_named_area");
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [editing, setEditing] = useState(false);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const createNameInput = useRef<HTMLInputElement>(null);
   const feedback = useRef<HTMLDivElement>(null);
   const {
@@ -197,6 +227,16 @@ export function GeographyScreen() {
       const place = await action();
       const refreshed = await listGeographicPlaces();
       setDirectory({ status: "ready", places: refreshed });
+      setExpanded((current) => {
+        const next = new Set(current);
+        const byId = new Map(refreshed.map((item) => [item.id, item]));
+        let parentId = place.parent_id;
+        while (parentId) {
+          next.add(parentId);
+          parentId = byId.get(parentId)?.parent_id ?? null;
+        }
+        return next;
+      });
       setSelectedId(place.id);
       setEditing(false);
       setSave({ status: "success", message: message(place) });
@@ -242,7 +282,11 @@ export function GeographyScreen() {
     void apply(
       () =>
         createGeographicPlace(
-          { name: createName, parent_id: createParentId },
+          {
+            name: createName,
+            parent_id: createParentId,
+            place_type: createType,
+          },
           csrfToken,
         ),
       (place) => {
@@ -265,6 +309,8 @@ export function GeographyScreen() {
           {
             name: formString(data, "name"),
             parent_id: formString(data, "parent_id"),
+            place_type: formString(data, "place_type") as
+              "city_town" | "locality" | "other_named_area",
           },
           csrfToken,
         ),
@@ -371,6 +417,15 @@ export function GeographyScreen() {
                   parentId={null}
                   selectedId={selectedId}
                   onSelect={selectPlace}
+                  expanded={expanded}
+                  onToggle={(id) => {
+                    setExpanded((current) => {
+                      const next = new Set(current);
+                      if (next.has(id)) next.delete(id);
+                      else next.add(id);
+                      return next;
+                    });
+                  }}
                 />
               ))}
           </section>
@@ -403,6 +458,25 @@ export function GeographyScreen() {
                       setCreateName(event.currentTarget.value);
                     }}
                   />
+                </div>
+                <div className="field">
+                  <label htmlFor="new-geographic-place-type">
+                    Local place type
+                  </label>
+                  <select
+                    id="new-geographic-place-type"
+                    value={createType}
+                    disabled={pending}
+                    onChange={(event) => {
+                      setCreateType(
+                        event.currentTarget.value as typeof createType,
+                      );
+                    }}
+                  >
+                    <option value="city_town">City or town</option>
+                    <option value="locality">Locality</option>
+                    <option value="other_named_area">Other named area</option>
+                  </select>
                 </div>
                 <div className="field">
                   <label htmlFor="new-geographic-place-parent">
@@ -517,24 +591,67 @@ export function GeographyScreen() {
                   </span>
                 )}
               </p>
+              <p>
+                Direct collection references: {selected.direct_usage_count} ·
+                ProvenanceSites: {selected.provenance_site_count}
+              </p>
               {selected.retired_at && (
                 <p className="notice">
                   Retired; retained for historical provenance.
                 </p>
               )}
               {!selected.retired_at && (
-                <button
-                  className="button--secondary"
-                  type="button"
-                  onClick={() => {
-                    setCreateParentId(selected.id);
-                    setSave({ status: "idle" });
-                    if (creationExpanded) createNameInput.current?.focus();
-                    else openCreation();
-                  }}
-                >
-                  Create local child here
-                </button>
+                <div className="actions">
+                  <button
+                    className="button--secondary"
+                    type="button"
+                    onClick={() => {
+                      setCreateParentId(selected.id);
+                      setSave({ status: "idle" });
+                      if (creationExpanded) createNameInput.current?.focus();
+                      else openCreation();
+                    }}
+                  >
+                    Create local child here
+                  </button>
+                  {selected.place_kind === "custom" && (
+                    <button
+                      className="button--danger"
+                      type="button"
+                      disabled={pending}
+                      onClick={() => {
+                        setSave({ status: "saving" });
+                        void deleteGeographicPlace(selected.id, csrfToken)
+                          .then(async () => {
+                            const refreshed = await listGeographicPlaces();
+                            setDirectory({
+                              status: "ready",
+                              places: refreshed,
+                            });
+                            setSelectedId(null);
+                            setSave({
+                              status: "success",
+                              message:
+                                "The local geographic place was deleted.",
+                            });
+                          })
+                          .catch((error: unknown) => {
+                            setSave({
+                              status: "error",
+                              message:
+                                error instanceof ApiError &&
+                                error.status === 409
+                                  ? (geographyConflictMessage(error) ??
+                                    "This place is still in use.")
+                                  : "Florabase could not delete this geographic place.",
+                            });
+                          });
+                      }}
+                    >
+                      Delete local place
+                    </button>
+                  )}
+                </div>
               )}
               {selected.place_kind === "canonical" ? (
                 <p>
@@ -556,6 +673,20 @@ export function GeographyScreen() {
                       maxLength={255}
                       defaultValue={selected.name}
                     />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="edit-geographic-place-type">
+                      Local place type
+                    </label>
+                    <select
+                      id="edit-geographic-place-type"
+                      name="place_type"
+                      defaultValue={selected.place_type ?? "other_named_area"}
+                    >
+                      <option value="city_town">City or town</option>
+                      <option value="locality">Locality</option>
+                      <option value="other_named_area">Other named area</option>
+                    </select>
                   </div>
                   <div className="field">
                     <label htmlFor="edit-geographic-place-parent">
@@ -626,6 +757,9 @@ export function GeographyScreen() {
           </div>
         )}
       </div>
+      {directory.status === "ready" && (
+        <ProvenanceSiteManager places={places} csrfToken={csrfToken} />
+      )}
     </section>
   );
 }

@@ -7,6 +7,7 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from florabase.plants.model import DirectOriginKind, PlantGroupLifecycle, PlantLifecycle
+from florabase.provenance_sites.schemas import ProvenanceSiteSummary
 from florabase.seed_lots.model import PartialDatePrecision
 from florabase.seed_lots.schemas import PartialDate
 from florabase.sowings.model import SowingLifecycle
@@ -50,6 +51,7 @@ class PlantCommonWrite(BaseModel):
     direct_origin_detail: str | None = Field(default=None, max_length=255)
     supplier_id: UUID | None = None
     material_provenance_place_id: UUID | None = None
+    provenance_site_id: UUID | None = None
     label: str | None = Field(default=None, max_length=255)
     collection_entry_date: PartialDate | None = None
     location_id: UUID | None = None
@@ -79,6 +81,7 @@ class PlantCommonWrite(BaseModel):
                     self.direct_origin_detail,
                     self.supplier_id,
                     self.material_provenance_place_id,
+                    self.provenance_site_id,
                 )
             ):
                 raise ValueError("Sowing origin and direct-origin data are mutually exclusive")
@@ -226,6 +229,8 @@ class PlantCommonResponse(BaseModel):
     supplier: SupplierSummary | None
     material_provenance_place_id: UUID | None
     material_provenance: GeographicPlaceSummary | None
+    provenance_site_id: UUID | None
+    provenance_site: ProvenanceSiteSummary | None
     label: str | None
     collection_entry_date: PartialDate | None
     location_id: UUID | None

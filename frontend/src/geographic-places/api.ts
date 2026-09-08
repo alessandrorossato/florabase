@@ -88,3 +88,13 @@ export function setGeographicPlaceRetired(
     { method: "POST", headers: { "X-CSRF-Token": csrfToken } },
   );
 }
+
+export function deleteGeographicPlace(
+  id: string,
+  csrfToken: string,
+): Promise<void> {
+  return requestJson(`/api/v1/geographic-places/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+    headers: { "X-CSRF-Token": csrfToken },
+  });
+}

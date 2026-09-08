@@ -27,6 +27,7 @@ def test_plant_and_group_are_distinct_focused_mappings() -> None:
         "direct_origin_detail",
         "supplier_id",
         "material_provenance_place_id",
+        "provenance_site_id",
         "label",
         "collection_entry_date_precision",
         "collection_entry_date_year",

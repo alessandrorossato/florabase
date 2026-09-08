@@ -227,7 +227,8 @@ export interface paths {
         /** Update */
         put: operations["updateGeographicPlace"];
         post?: never;
-        delete?: never;
+        /** Delete */
+        delete: operations["deleteGeographicPlace"];
         options?: never;
         head?: never;
         patch?: never;
@@ -645,6 +646,43 @@ export interface paths {
         /** Reverse Plant Creation */
         post: operations["reversePlantCreation"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/provenance-sites": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List All */
+        get: operations["listProvenanceSites"];
+        put?: never;
+        /** Create */
+        post: operations["createProvenanceSite"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/provenance-sites/{site_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read */
+        get: operations["getProvenanceSite"];
+        /** Update */
+        put: operations["updateProvenanceSite"];
+        post?: never;
+        /** Delete */
+        delete: operations["deleteProvenanceSite"];
         options?: never;
         head?: never;
         patch?: never;
@@ -1138,6 +1176,12 @@ export interface components {
              * Format: uuid
              */
             parent_id: string;
+            /**
+             * Place Type
+             * @default other_named_area
+             * @enum {string}
+             */
+            place_type: "city_town" | "locality" | "other_named_area";
         };
         /** GeographicPlaceResponse */
         GeographicPlaceResponse: {
@@ -1146,6 +1190,11 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Direct Usage Count
+             * @default 0
+             */
+            direct_usage_count: number;
             /** Display Path */
             display_path: string;
             /**
@@ -1162,6 +1211,13 @@ export interface components {
              * @enum {string}
              */
             place_kind: "canonical" | "custom";
+            /** Place Type */
+            place_type: ("city_town" | "locality" | "other_named_area") | null;
+            /**
+             * Provenance Site Count
+             * @default 0
+             */
+            provenance_site_count: number;
             /** Retired At */
             retired_at: string | null;
             /** Source Code */
@@ -1197,6 +1253,12 @@ export interface components {
              * Format: uuid
              */
             parent_id: string;
+            /**
+             * Place Type
+             * @default other_named_area
+             * @enum {string}
+             */
+            place_type: "city_town" | "locality" | "other_named_area";
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1404,6 +1466,8 @@ export interface components {
             notes?: string | null;
             /** Originating Sowing Id */
             originating_sowing_id?: string | null;
+            /** Provenance Site Id */
+            provenance_site_id?: string | null;
             /** Supplier Id */
             supplier_id?: string | null;
         };
@@ -1498,6 +1562,8 @@ export interface components {
             notes?: string | null;
             /** Originating Sowing Id */
             originating_sowing_id?: string | null;
+            /** Provenance Site Id */
+            provenance_site_id?: string | null;
             quantity?: components["schemas"]["PlantGroupQuantity"] | null;
             /** Supplier Id */
             supplier_id?: string | null;
@@ -1618,6 +1684,9 @@ export interface components {
             originating_sowing: components["schemas"]["OriginatingSowingSummary"] | null;
             /** Originating Sowing Id */
             originating_sowing_id: string | null;
+            provenance_site: components["schemas"]["ProvenanceSiteSummary"] | null;
+            /** Provenance Site Id */
+            provenance_site_id: string | null;
             quantity: components["schemas"]["PlantGroupQuantity"] | null;
             supplier: components["schemas"]["SupplierSummary"] | null;
             /** Supplier Id */
@@ -1656,6 +1725,8 @@ export interface components {
             notes?: string | null;
             /** Originating Sowing Id */
             originating_sowing_id?: string | null;
+            /** Provenance Site Id */
+            provenance_site_id?: string | null;
             quantity?: components["schemas"]["PlantGroupQuantity"] | null;
             /** Supplier Id */
             supplier_id?: string | null;
@@ -1752,6 +1823,9 @@ export interface components {
             originating_sowing: components["schemas"]["OriginatingSowingSummary"] | null;
             /** Originating Sowing Id */
             originating_sowing_id: string | null;
+            provenance_site: components["schemas"]["ProvenanceSiteSummary"] | null;
+            /** Provenance Site Id */
+            provenance_site_id: string | null;
             supplier: components["schemas"]["SupplierSummary"] | null;
             /** Supplier Id */
             supplier_id: string | null;
@@ -1789,6 +1863,8 @@ export interface components {
             notes?: string | null;
             /** Originating Sowing Id */
             originating_sowing_id?: string | null;
+            /** Provenance Site Id */
+            provenance_site_id?: string | null;
             /** Supplier Id */
             supplier_id?: string | null;
         };
@@ -1880,6 +1956,103 @@ export interface components {
              */
             status: "safe" | "confirmation_required" | "blocked";
         };
+        /** ProvenanceSiteCreate */
+        ProvenanceSiteCreate: {
+            /** Coordinate Accuracy M */
+            coordinate_accuracy_m?: number | string | null;
+            /** Geographic Place Id */
+            geographic_place_id?: string | null;
+            /** Latitude */
+            latitude?: number | string | null;
+            /** Longitude */
+            longitude?: number | string | null;
+            /** Name */
+            name: string;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** ProvenanceSiteResponse */
+        ProvenanceSiteResponse: {
+            /** Coordinate Accuracy M */
+            coordinate_accuracy_m?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Geographic Place Id */
+            geographic_place_id?: string | null;
+            /** Geographic Place Path */
+            geographic_place_path: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Latitude */
+            latitude?: string | null;
+            /** Longitude */
+            longitude?: string | null;
+            /** Name */
+            name: string;
+            /** Notes */
+            notes?: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            usage: components["schemas"]["ProvenanceSiteUsage"];
+        };
+        /** ProvenanceSiteSummary */
+        ProvenanceSiteSummary: {
+            /** Geographic Place Path */
+            geographic_place_path: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Latitude */
+            latitude: string | null;
+            /** Longitude */
+            longitude: string | null;
+            /** Name */
+            name: string;
+        };
+        /** ProvenanceSiteUpdate */
+        ProvenanceSiteUpdate: {
+            /** Coordinate Accuracy M */
+            coordinate_accuracy_m?: number | string | null;
+            /** Geographic Place Id */
+            geographic_place_id?: string | null;
+            /** Latitude */
+            latitude?: number | string | null;
+            /** Longitude */
+            longitude?: number | string | null;
+            /** Name */
+            name: string;
+            /** Notes */
+            notes?: string | null;
+        };
+        /** ProvenanceSiteUsage */
+        ProvenanceSiteUsage: {
+            /**
+             * Plant Groups
+             * @default 0
+             */
+            plant_groups: number;
+            /**
+             * Plants
+             * @default 0
+             */
+            plants: number;
+            /**
+             * Seed Lots
+             * @default 0
+             */
+            seed_lots: number;
+        };
         /**
          * ReintegrationEligibilityStatus
          * @enum {string}
@@ -1957,6 +2130,8 @@ export interface components {
             producer_plant_group_id?: string | null;
             /** Producer Plant Id */
             producer_plant_id?: string | null;
+            /** Provenance Site Id */
+            provenance_site_id?: string | null;
             quantity?: components["schemas"]["SeedQuantity-Input"] | null;
             /** Source Detail */
             source_detail?: string | null;
@@ -2025,6 +2200,9 @@ export interface components {
             producer_plant_group_id: string | null;
             /** Producer Plant Id */
             producer_plant_id: string | null;
+            provenance_site: components["schemas"]["ProvenanceSiteSummary"] | null;
+            /** Provenance Site Id */
+            provenance_site_id: string | null;
             quantity: components["schemas"]["SeedQuantity-Output"] | null;
             /** Source Detail */
             source_detail: string | null;
@@ -2078,6 +2256,8 @@ export interface components {
             producer_plant_group_id?: string | null;
             /** Producer Plant Id */
             producer_plant_id?: string | null;
+            /** Provenance Site Id */
+            provenance_site_id?: string | null;
             quantity?: components["schemas"]["SeedQuantity-Input"] | null;
             /** Source Detail */
             source_detail?: string | null;
@@ -3216,6 +3396,37 @@ export interface operations {
             };
         };
     };
+    deleteGeographicPlace: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                place_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     reactivateGeographicPlace: {
         parameters: {
             query?: never;
@@ -4269,6 +4480,160 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["PlantCreationReversalResponse"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listProvenanceSites: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProvenanceSiteResponse"][];
+                };
+            };
+        };
+    };
+    createProvenanceSite: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProvenanceSiteCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProvenanceSiteResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getProvenanceSite: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                site_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProvenanceSiteResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateProvenanceSite: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                site_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProvenanceSiteUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProvenanceSiteResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteProvenanceSite: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                site_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

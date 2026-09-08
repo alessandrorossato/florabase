@@ -21,7 +21,9 @@ from florabase.geographic_places.service import (
     GeographicPlaceHierarchyError,
     GeographicPlaceNotFoundError,
     create_geographic_place,
+    delete_geographic_place,
     display_path,
+    geographic_place_usage,
     get_geographic_place,
     list_geographic_places,
     set_geographic_place_retired,
@@ -54,7 +56,13 @@ def _require_place(database: Session, place_id: UUID) -> GeographicPlace:
 
 def _response(database: Session, place: GeographicPlace) -> GeographicPlaceResponse:
     places = list_geographic_places(database)
-    return GeographicPlaceResponse.from_model(place, display_path=display_path(place, places))
+    direct, sites = geographic_place_usage(database)
+    return GeographicPlaceResponse.from_model(
+        place,
+        display_path=display_path(place, places),
+        provenance_site_count=sites.get(place.id, 0),
+        direct_usage_count=direct.get(place.id, 0),
+    )
 
 
 @router.get("", response_model=list[GeographicPlaceResponse], operation_id="listGeographicPlaces")
@@ -63,8 +71,14 @@ def list_all(
     database: Annotated[Session, Depends(get_database_session)],
 ) -> list[GeographicPlaceResponse]:
     places = list_geographic_places(database)
+    direct, sites = geographic_place_usage(database)
     responses = [
-        GeographicPlaceResponse.from_model(place, display_path=display_path(place, places))
+        GeographicPlaceResponse.from_model(
+            place,
+            display_path=display_path(place, places),
+            provenance_site_count=sites.get(place.id, 0),
+            direct_usage_count=direct.get(place.id, 0),
+        )
         for place in places
     ]
     return sorted(
@@ -92,6 +106,26 @@ def create(
         raise _conflict(error) from error
     response.headers["Location"] = f"/api/v1/geographic-places/{place.id}"
     return _response(database, place)
+
+
+@router.delete(
+    "/{place_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="deleteGeographicPlace",
+)
+def delete(
+    place_id: UUID,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> Response:
+    require_owner(actor)
+    try:
+        delete_geographic_place(database, place_id)
+    except GeographicPlaceNotFoundError as error:
+        raise _not_found() from error
+    except GeographicPlaceHierarchyError as error:
+        raise _conflict(error) from error
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get(

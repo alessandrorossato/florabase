@@ -63,6 +63,9 @@ const place = {
   parent_id: "world",
   display_path: "World → Europe → Italy → Sicily",
   place_kind: "custom",
+  place_type: "other_named_area",
+  provenance_site_count: 0,
+  direct_usage_count: 0,
   source_name: null,
   source_version: null,
   source_code_type: null,
@@ -242,6 +245,7 @@ function mockApi(handler: Handler, identityRecords = identities) {
       return Promise.resolve(json({ csrf_token: "csrf" }));
     if (path.endsWith("/health"))
       return Promise.resolve(json({ status: "ok" }));
+    if (path === "/api/v1/provenance-sites") return Promise.resolve(json([]));
     if (path === "/api/v1/botanical-identities")
       return Promise.resolve(json(identityRecords));
     const response = handler(path, init);

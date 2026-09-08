@@ -15,6 +15,7 @@ from pydantic import (
 )
 
 from florabase.plants.model import PlantGroupLifecycle, PlantLifecycle
+from florabase.provenance_sites.schemas import ProvenanceSiteSummary
 from florabase.seed_lots.model import (
     PartialDatePrecision,
     SeedLotLifecycle,
@@ -127,6 +128,7 @@ class SeedLotWrite(BaseModel):
     producer_plant_group_id: UUID | None = None
     supplier_id: UUID | None = None
     material_provenance_place_id: UUID | None = None
+    provenance_site_id: UUID | None = None
     acquisition_date: PartialDate | None = None
     harvest_date: PartialDate | None = None
     quantity: SeedQuantity | None = None
@@ -225,6 +227,8 @@ class SeedLotResponse(BaseModel):
     supplier: SupplierSummary | None
     material_provenance_place_id: UUID | None
     material_provenance: GeographicPlaceSummary | None
+    provenance_site_id: UUID | None
+    provenance_site: ProvenanceSiteSummary | None
     acquisition_date: PartialDate | None
     harvest_date: PartialDate | None
     quantity: SeedQuantity | None

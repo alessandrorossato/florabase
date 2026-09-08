@@ -762,6 +762,16 @@
             "format": "uuid",
             "title": "Parent Id",
             "type": "string"
+          },
+          "place_type": {
+            "default": "other_named_area",
+            "enum": [
+              "city_town",
+              "locality",
+              "other_named_area"
+            ],
+            "title": "Place Type",
+            "type": "string"
           }
         },
         "required": [
@@ -777,6 +787,11 @@
             "format": "date-time",
             "title": "Created At",
             "type": "string"
+          },
+          "direct_usage_count": {
+            "default": 0,
+            "title": "Direct Usage Count",
+            "type": "integer"
           },
           "display_path": {
             "title": "Display Path",
@@ -810,6 +825,27 @@
             ],
             "title": "Place Kind",
             "type": "string"
+          },
+          "place_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "city_town",
+                  "locality",
+                  "other_named_area"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Place Type"
+          },
+          "provenance_site_count": {
+            "default": 0,
+            "title": "Provenance Site Count",
+            "type": "integer"
           },
           "retired_at": {
             "anyOf": [
@@ -879,6 +915,7 @@
           "parent_id",
           "display_path",
           "place_kind",
+          "place_type",
           "source_name",
           "source_version",
           "source_code_type",
@@ -920,6 +957,16 @@
           "parent_id": {
             "format": "uuid",
             "title": "Parent Id",
+            "type": "string"
+          },
+          "place_type": {
+            "default": "other_named_area",
+            "enum": [
+              "city_town",
+              "locality",
+              "other_named_area"
+            ],
+            "title": "Place Type",
             "type": "string"
           }
         },
@@ -1564,6 +1611,18 @@
             ],
             "title": "Originating Sowing Id"
           },
+          "provenance_site_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Site Id"
+          },
           "supplier_id": {
             "anyOf": [
               {
@@ -1904,6 +1963,18 @@
               }
             ],
             "title": "Originating Sowing Id"
+          },
+          "provenance_site_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Site Id"
           },
           "quantity": {
             "anyOf": [
@@ -2292,6 +2363,28 @@
             ],
             "title": "Originating Sowing Id"
           },
+          "provenance_site": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProvenanceSiteSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "provenance_site_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Site Id"
+          },
           "quantity": {
             "anyOf": [
               {
@@ -2342,6 +2435,8 @@
           "supplier",
           "material_provenance_place_id",
           "material_provenance",
+          "provenance_site_id",
+          "provenance_site",
           "label",
           "collection_entry_date",
           "location_id",
@@ -2474,6 +2569,18 @@
               }
             ],
             "title": "Originating Sowing Id"
+          },
+          "provenance_site_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Site Id"
           },
           "quantity": {
             "anyOf": [
@@ -2811,6 +2918,28 @@
             ],
             "title": "Originating Sowing Id"
           },
+          "provenance_site": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProvenanceSiteSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "provenance_site_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Site Id"
+          },
           "supplier": {
             "anyOf": [
               {
@@ -2851,6 +2980,8 @@
           "supplier",
           "material_provenance_place_id",
           "material_provenance",
+          "provenance_site_id",
+          "provenance_site",
           "label",
           "collection_entry_date",
           "location_id",
@@ -2984,6 +3115,18 @@
               }
             ],
             "title": "Originating Sowing Id"
+          },
+          "provenance_site_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Site Id"
           },
           "supplier_id": {
             "anyOf": [
@@ -3251,6 +3394,371 @@
           "retained_observation_ids"
         ],
         "title": "PropagationReversalEligibility",
+        "type": "object"
+      },
+      "ProvenanceSiteCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "coordinate_accuracy_m": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,9}|(?=[\\d.]{1,13}0*$)\\d{0,9}\\.\\d{0,3}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coordinate Accuracy M"
+          },
+          "geographic_place_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geographic Place Id"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "maximum": 90.0,
+                "minimum": -90.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,10}0*$)\\d{0,3}\\.\\d{0,6}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "maximum": 180.0,
+                "minimum": -180.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,10}0*$)\\d{0,3}\\.\\d{0,6}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "name": {
+            "maxLength": 255,
+            "title": "Name",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ProvenanceSiteCreate",
+        "type": "object"
+      },
+      "ProvenanceSiteResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "coordinate_accuracy_m": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,9}|(?=[\\d.]{1,13}0*$)\\d{0,9}\\.\\d{0,3}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coordinate Accuracy M"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "geographic_place_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geographic Place Id"
+          },
+          "geographic_place_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geographic Place Path"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,10}0*$)\\d{0,3}\\.\\d{0,6}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,10}0*$)\\d{0,3}\\.\\d{0,6}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "name": {
+            "maxLength": 255,
+            "title": "Name",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/ProvenanceSiteUsage"
+          }
+        },
+        "required": [
+          "name",
+          "id",
+          "geographic_place_path",
+          "usage",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "ProvenanceSiteResponse",
+        "type": "object"
+      },
+      "ProvenanceSiteSummary": {
+        "properties": {
+          "geographic_place_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geographic Place Path"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "geographic_place_path",
+          "latitude",
+          "longitude"
+        ],
+        "title": "ProvenanceSiteSummary",
+        "type": "object"
+      },
+      "ProvenanceSiteUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "coordinate_accuracy_m": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,9}|(?=[\\d.]{1,13}0*$)\\d{0,9}\\.\\d{0,3}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coordinate Accuracy M"
+          },
+          "geographic_place_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geographic Place Id"
+          },
+          "latitude": {
+            "anyOf": [
+              {
+                "maximum": 90.0,
+                "minimum": -90.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,10}0*$)\\d{0,3}\\.\\d{0,6}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Latitude"
+          },
+          "longitude": {
+            "anyOf": [
+              {
+                "maximum": 180.0,
+                "minimum": -180.0,
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*(?:\\d{0,3}|(?=[\\d.]{1,10}0*$)\\d{0,3}\\.\\d{0,6}0*$)",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Longitude"
+          },
+          "name": {
+            "maxLength": 255,
+            "title": "Name",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "ProvenanceSiteUpdate",
+        "type": "object"
+      },
+      "ProvenanceSiteUsage": {
+        "properties": {
+          "plant_groups": {
+            "default": 0,
+            "title": "Plant Groups",
+            "type": "integer"
+          },
+          "plants": {
+            "default": 0,
+            "title": "Plants",
+            "type": "integer"
+          },
+          "seed_lots": {
+            "default": 0,
+            "title": "Seed Lots",
+            "type": "integer"
+          }
+        },
+        "title": "ProvenanceSiteUsage",
         "type": "object"
       },
       "ReintegrationEligibilityStatus": {
@@ -3537,6 +4045,18 @@
             ],
             "title": "Producer Plant Id"
           },
+          "provenance_site_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Site Id"
+          },
           "quantity": {
             "anyOf": [
               {
@@ -3795,6 +4315,28 @@
             ],
             "title": "Producer Plant Id"
           },
+          "provenance_site": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ProvenanceSiteSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "provenance_site_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Site Id"
+          },
           "quantity": {
             "anyOf": [
               {
@@ -3862,6 +4404,8 @@
           "supplier",
           "material_provenance_place_id",
           "material_provenance",
+          "provenance_site_id",
+          "provenance_site",
           "acquisition_date",
           "harvest_date",
           "quantity",
@@ -4054,6 +4598,18 @@
               }
             ],
             "title": "Producer Plant Id"
+          },
+          "provenance_site_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provenance Site Id"
           },
           "quantity": {
             "anyOf": [
@@ -6471,6 +7027,56 @@
       }
     },
     "/api/v1/geographic-places/{place_id}": {
+      "delete": {
+        "operationId": "deleteGeographicPlace",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "place_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Place Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete",
+        "tags": [
+          "geographic-places"
+        ]
+      },
       "get": {
         "operationId": "getGeographicPlace",
         "parameters": [
@@ -8317,6 +8923,248 @@
         "summary": "Reverse Plant Creation",
         "tags": [
           "propagation"
+        ]
+      }
+    },
+    "/api/v1/provenance-sites": {
+      "get": {
+        "operationId": "listProvenanceSites",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ProvenanceSiteResponse"
+                  },
+                  "title": "Response Listprovenancesites",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "List All",
+        "tags": [
+          "provenance-sites"
+        ]
+      },
+      "post": {
+        "operationId": "createProvenanceSite",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvenanceSiteCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvenanceSiteResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create",
+        "tags": [
+          "provenance-sites"
+        ]
+      }
+    },
+    "/api/v1/provenance-sites/{site_id}": {
+      "delete": {
+        "operationId": "deleteProvenanceSite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Site Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete",
+        "tags": [
+          "provenance-sites"
+        ]
+      },
+      "get": {
+        "operationId": "getProvenanceSite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Site Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvenanceSiteResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read",
+        "tags": [
+          "provenance-sites"
+        ]
+      },
+      "put": {
+        "operationId": "updateProvenanceSite",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "site_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Site Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProvenanceSiteUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvenanceSiteResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update",
+        "tags": [
+          "provenance-sites"
         ]
       }
     },

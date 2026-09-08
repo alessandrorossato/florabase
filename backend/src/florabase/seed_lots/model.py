@@ -151,6 +151,9 @@ class SeedLot(Base):
     material_provenance_place_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("geographic_places.id", ondelete="RESTRICT"), nullable=True, index=True
     )
+    provenance_site_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("provenance_sites.id", ondelete="RESTRICT"), nullable=True, index=True
+    )
     acquisition_date_precision: Mapped[str | None] = mapped_column(String(8), nullable=True)
     acquisition_date_year: Mapped[int | None] = mapped_column(SmallInteger(), nullable=True)
     acquisition_date_month: Mapped[int | None] = mapped_column(SmallInteger(), nullable=True)

@@ -166,6 +166,7 @@ const fieldLabels: Record<string, string> = {
   direct_origin_detail: "Other origin detail",
   supplier_id: "Supplier",
   material_provenance_place_id: "Material provenance",
+  provenance_site_id: "ProvenanceSite",
   location_id: "Current location",
   collection_entry_date: "Collection-entry date",
   lifecycle: "Lifecycle",

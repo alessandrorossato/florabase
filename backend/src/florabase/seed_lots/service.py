@@ -23,6 +23,9 @@ from florabase.locations.service import (
 )
 from florabase.locations.service import display_path as location_display_path
 from florabase.plants.model import Plant, PlantGroup
+from florabase.provenance_sites.model import ProvenanceSite
+from florabase.provenance_sites.schemas import ProvenanceSiteSummary
+from florabase.provenance_sites.service import responses as provenance_site_responses
 from florabase.seed_lots.model import SeedLot
 from florabase.seed_lots.schemas import (
     BotanicalIdentitySummary,
@@ -63,6 +66,7 @@ class SeedLotProjection:
     producer_plant_identity: BotanicalIdentity | None = None
     producer_plant_group: PlantGroup | None = None
     producer_plant_group_identity: BotanicalIdentity | None = None
+    provenance_site: ProvenanceSite | None = None
 
 
 def _require_references(
@@ -71,6 +75,7 @@ def _require_references(
     BotanicalIdentity,
     Supplier | None,
     GeographicPlace | None,
+    ProvenanceSite | None,
     Location | None,
     Plant | None,
     PlantGroup | None,
@@ -92,6 +97,13 @@ def _require_references(
         raise SeedLotReferenceNotFoundError(
             "geographic_place_not_found", "Geographic place not found"
         )
+    site = (
+        database.get(ProvenanceSite, payload.provenance_site_id)
+        if payload.provenance_site_id
+        else None
+    )
+    if payload.provenance_site_id is not None and site is None:
+        raise SeedLotReferenceNotFoundError("provenance_site_not_found", "ProvenanceSite not found")
     try:
         location = require_location_for_scope(
             database, payload.location_id, LocationUsageScope.SEED_LOTS
@@ -114,7 +126,7 @@ def _require_references(
         raise SeedLotReferenceNotFoundError(
             "producer_plant_group_not_found", "Producer PlantGroup not found"
         )
-    return botanical_identity, supplier, place, location, producer_plant, producer_group
+    return botanical_identity, supplier, place, site, location, producer_plant, producer_group
 
 
 def _partial_date_values(prefix: str, value: PartialDate | None) -> dict[str, object]:
@@ -145,6 +157,7 @@ def _write_values(payload: SeedLotCreate | SeedLotUpdate) -> dict[str, object]:
         "producer_plant_group_id": payload.producer_plant_group_id,
         "supplier_id": payload.supplier_id,
         "material_provenance_place_id": payload.material_provenance_place_id,
+        "provenance_site_id": payload.provenance_site_id,
         "location_id": payload.location_id,
         "lifecycle": payload.lifecycle.value,
         "notes": payload.notes,
@@ -195,10 +208,12 @@ def _projection_statement() -> Select[
         BotanicalIdentity,
         PlantGroup,
         BotanicalIdentity,
+        ProvenanceSite,
     ]
 ]:
     supplier = aliased(Supplier)
     place = aliased(GeographicPlace)
+    site = aliased(ProvenanceSite)
     location = aliased(Location)
     producer_plant = aliased(Plant)
     producer_plant_identity = aliased(BotanicalIdentity)
@@ -215,6 +230,7 @@ def _projection_statement() -> Select[
             producer_plant_identity,
             producer_group,
             producer_group_identity,
+            site,
         )
         .join(BotanicalIdentity, BotanicalIdentity.id == SeedLot.botanical_identity_id)
         .outerjoin(supplier, supplier.id == SeedLot.supplier_id)
@@ -230,6 +246,7 @@ def _projection_statement() -> Select[
             producer_group_identity,
             producer_group_identity.id == producer_group.botanical_identity_id,
         )
+        .outerjoin(site, site.id == SeedLot.provenance_site_id)
     )
 
 
@@ -286,6 +303,12 @@ def responses(database: Session, projections: list[SeedLotProjection]) -> list[S
         else []
     )
     locations = list_locations(database) if any(item.location for item in projections) else []
+    site_models = [item.provenance_site for item in projections if item.provenance_site]
+    site_by_id = (
+        {response.id: response for response in provenance_site_responses(database, site_models)}
+        if site_models
+        else {}
+    )
     result: list[SeedLotResponse] = []
     for item in projections:
         seed_lot = item.seed_lot
@@ -345,6 +368,14 @@ def responses(database: Session, projections: list[SeedLotProjection]) -> list[S
                         display_path=geographic_display_path(item.material_provenance, places),
                     )
                     if item.material_provenance
+                    else None
+                ),
+                provenance_site_id=seed_lot.provenance_site_id,
+                provenance_site=(
+                    ProvenanceSiteSummary.model_validate(
+                        site_by_id[item.provenance_site.id].model_dump()
+                    )
+                    if item.provenance_site
                     else None
                 ),
                 acquisition_date=_partial_date(seed_lot, "acquisition_date"),

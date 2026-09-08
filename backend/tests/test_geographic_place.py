@@ -11,6 +11,7 @@ from fastapi import HTTPException, Response
 from pydantic import ValidationError
 
 from florabase.geographic_places import api
+from florabase.geographic_places import service as geographic_service
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.schemas import (
     GeographicPlaceCreate,
@@ -20,6 +21,7 @@ from florabase.geographic_places.schemas import (
 from florabase.geographic_places.service import (
     GeographicPlaceHierarchyError,
     create_geographic_place,
+    delete_geographic_place,
     display_path,
     get_geographic_place,
     list_geographic_places,
@@ -99,6 +101,18 @@ def test_payload_response_path_and_custom_hierarchy_rules() -> None:
     )
     places = [world, asia, thailand, custom]
     assert display_path(custom, places) == "World → Asia → Thailand → Chiang Mai"
+    duplicate = place(
+        name="Chiang Mai",
+        parent_id=world.id,
+        place_kind="custom",
+        source_name=None,
+        source_version=None,
+        source_code_type=None,
+        source_code=None,
+    )
+    assert display_path(custom, [*places, duplicate]) != display_path(
+        duplicate, [*places, duplicate]
+    )
     response = GeographicPlaceResponse.from_model(custom, display_path=display_path(custom, places))
     assert response.place_kind == "custom"
     assert response.source_code is None
@@ -227,3 +241,66 @@ def test_geographic_place_api_success_conflict_not_found_and_owner(
     with pytest.raises(HTTPException) as forbidden:
         api.create(payload, Response(), cast(Any, SimpleNamespace(owner=False)), database)
     assert forbidden.value.status_code == 403
+
+
+def test_geographic_usage_and_safe_leaf_delete(monkeypatch: pytest.MonkeyPatch) -> None:
+    used_id = uuid7()
+    database = MagicMock()
+    database.execute.side_effect = [
+        [(used_id, 1)],
+        [(used_id, 2)],
+        [(used_id, 3)],
+        [(used_id, 4)],
+    ]
+    direct, sites = geographic_service.geographic_place_usage(database)
+    assert direct[used_id] == 6
+    assert sites[used_id] == 4
+
+    world = place(name="World", source_code="001", source_code_type="un_m49")
+    custom = place(
+        name="Local area",
+        parent_id=world.id,
+        place_kind="custom",
+        source_name=None,
+        source_version=None,
+        source_code_type=None,
+        source_code=None,
+    )
+    child = place(
+        name="Child area",
+        parent_id=custom.id,
+        place_kind="custom",
+        source_name=None,
+        source_version=None,
+        source_code_type=None,
+        source_code=None,
+    )
+
+    database.scalars.return_value = [world, custom]
+    with pytest.raises(GeographicPlaceHierarchyError) as canonical:
+        delete_geographic_place(database, world.id)
+    assert canonical.value.code == "canonical_geographic_place_immutable"
+
+    database.scalars.return_value = [world, custom, child]
+    with pytest.raises(GeographicPlaceHierarchyError) as children:
+        delete_geographic_place(database, custom.id)
+    assert children.value.code == "geographic_place_has_children"
+
+    database.scalars.return_value = [world, custom]
+    monkeypatch.setattr(
+        geographic_service, "geographic_place_usage", lambda _: ({custom.id: 1}, {})
+    )
+    with pytest.raises(GeographicPlaceHierarchyError) as retained:
+        delete_geographic_place(database, custom.id)
+    assert retained.value.code == "geographic_place_in_use"
+
+    monkeypatch.setattr(
+        geographic_service, "geographic_place_usage", lambda _: ({}, {custom.id: 1})
+    )
+    with pytest.raises(GeographicPlaceHierarchyError) as site_dependency:
+        delete_geographic_place(database, custom.id)
+    assert site_dependency.value.code == "geographic_place_has_provenance_sites"
+
+    monkeypatch.setattr(geographic_service, "geographic_place_usage", lambda _: ({}, {}))
+    delete_geographic_place(database, custom.id)
+    database.delete.assert_called_once_with(custom)

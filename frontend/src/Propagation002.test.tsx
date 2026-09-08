@@ -258,7 +258,8 @@ test("BotanicalIdentity contextual SeedLot creation preselects the identity", as
     if (
       path === "/api/v1/suppliers" ||
       path === "/api/v1/locations" ||
-      path === "/api/v1/geographic-places"
+      path === "/api/v1/geographic-places" ||
+      path === "/api/v1/provenance-sites"
     )
       return json([]);
     return undefined;

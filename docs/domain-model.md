@@ -69,6 +69,34 @@ precision.
 Current collection records use GeographicPlace for material provenance. Botanical native-range
 relationships remain planned.
 
+Custom GeographicPlaces may describe a city or town, locality, or another named local area. These
+types are descriptive; parent links remain authoritative and impose no country-specific
+administrative-depth rules. The one canonical World root and canonical CLDR nodes remain immutable,
+while custom descendants can be renamed, reparented, retired, or safely deleted. Paths are derived
+from current ancestry, so rename and reparent operations update every displayed descendant path.
+No global city catalogue is bundled and no parent is inferred from a name.
+
+### ProvenanceSite
+
+A ProvenanceSite is a precise known real-world origin site, distinct from the named area represented
+by GeographicPlace. It has a stable UUID, name, optional GeographicPlace, optional notes, and an
+optional WGS84 decimal latitude/longitude pair. Both coordinates must be present together;
+latitude is -90 through 90, longitude is -180 through 180, and optional accuracy is a non-negative
+distance in metres. A site with unknown coordinates remains valid historical provenance. Florabase
+does not fabricate coordinates from its parent place, geocode, or call an external service.
+
+SeedLots and directly entered Plants or PlantGroups may reference a ProvenanceSite wherever they may
+already record material provenance. Propagated and extracted records continue to derive origin from
+their stored lineage rather than duplicating provenance. A referenced site cannot be deleted, and a
+GeographicPlace cannot be deleted while children, ProvenanceSites, or direct collection references
+depend on it. Reparenting a GeographicPlace changes the site's derived place path but never its
+coordinates or collection relationships.
+
+ProvenanceSite coordinates are the internal data boundary for future MAP-001. They are collection
+provenance, not the independently planned GEOGRAPHY-002 botanical native distribution dataset.
+Location remains the current physical storage/cultivation place, and Supplier remains who supplied
+the material.
+
 ## Collection concepts
 
 ### SeedLot

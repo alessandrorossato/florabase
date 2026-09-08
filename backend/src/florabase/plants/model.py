@@ -58,16 +58,18 @@ def _common_constraints(
     origin_constraint = (
         "((originating_plant_group_id IS NOT NULL AND originating_sowing_id IS NULL "
         "AND direct_origin_kind IS NULL AND direct_origin_detail IS NULL "
-        "AND supplier_id IS NULL AND material_provenance_place_id IS NULL) OR "
+        "AND supplier_id IS NULL AND material_provenance_place_id IS NULL "
+        "AND provenance_site_id IS NULL) OR "
         "(originating_plant_group_id IS NULL AND ((originating_sowing_id IS NOT NULL "
         "AND direct_origin_kind IS NULL AND direct_origin_detail IS NULL AND supplier_id IS NULL "
-        "AND material_provenance_place_id IS NULL) OR (originating_sowing_id IS NULL "
+        "AND material_provenance_place_id IS NULL AND provenance_site_id IS NULL) OR "
+        "(originating_sowing_id IS NULL "
         "AND direct_origin_kind IN ('purchased', 'gift_exchange', 'collection_produced', "
         "'other', 'unknown'))))) IS TRUE"
         if plant_group_origin
         else "((originating_sowing_id IS NOT NULL AND direct_origin_kind IS NULL "
         "AND direct_origin_detail IS NULL AND supplier_id IS NULL "
-        "AND material_provenance_place_id IS NULL) OR "
+        "AND material_provenance_place_id IS NULL AND provenance_site_id IS NULL) OR "
         "(originating_sowing_id IS NULL AND direct_origin_kind IN "
         "('purchased', 'gift_exchange', 'collection_produced', 'other', 'unknown'))) IS TRUE"
     )
@@ -146,6 +148,9 @@ class Plant(Base):
     material_provenance_place_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("geographic_places.id", ondelete="RESTRICT"), nullable=True, index=True
     )
+    provenance_site_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("provenance_sites.id", ondelete="RESTRICT"), nullable=True, index=True
+    )
     label: Mapped[str | None] = mapped_column(String(255), nullable=True)
     collection_entry_date_precision: Mapped[str | None] = mapped_column(String(8), nullable=True)
     collection_entry_date_year: Mapped[int | None] = mapped_column(SmallInteger(), nullable=True)
@@ -192,6 +197,9 @@ class PlantGroup(Base):
     )
     material_provenance_place_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("geographic_places.id", ondelete="RESTRICT"), nullable=True, index=True
+    )
+    provenance_site_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("provenance_sites.id", ondelete="RESTRICT"), nullable=True, index=True
     )
     label: Mapped[str | None] = mapped_column(String(255), nullable=True)
     collection_entry_date_precision: Mapped[str | None] = mapped_column(String(8), nullable=True)

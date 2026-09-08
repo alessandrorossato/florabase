@@ -772,15 +772,15 @@
     {
       "id": "GEOGRAPHY-003",
       "category": "geography",
-      "description": "Evaluate finer-grained local geography without a global city catalogue",
+      "description": "Add finer-grained geography and precise ProvenanceSites",
       "acceptance_criteria": [
-        "A demonstrated provenance or native-range workflow defines the needed locality granularity before adding reference data",
-        "The design evaluates carefully scoped operator-defined local nodes before introducing another canonical dataset",
-        "City-level global reference data, geocoding, coordinates, and runtime geography integrations remain out of scope unless separately justified"
+        "The immutable canonical World-rooted hierarchy remains authoritative while editable custom city, town, locality, and other named-area descendants support collection-relevant detail without a bundled global city catalogue",
+        "A focused ProvenanceSite model stores an optional named GeographicPlace, an optional coherent WGS84 latitude/longitude pair, optional non-negative coordinate accuracy, notes, and safe collection-record relationships without conflating Location, Supplier, or botanical native distribution",
+        "Flat protected APIs and the accessible responsive Geography hub provide derived paths, collapsed hierarchy management, usage-aware safe deletion, ProvenanceSite CRUD and coordinate entry, and map-ready internal provenance data without maps, geocoding, or external services"
       ],
-      "dependencies": ["GEOGRAPHY-001", "GEOGRAPHY-002"],
+      "dependencies": ["GEOGRAPHY-001", "UX-001"],
       "priority": "P3",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "SUPPLIER-002",
