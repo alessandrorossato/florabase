@@ -12,6 +12,7 @@ import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import { DetailHeader } from "../components/CollectionUI";
 import {
   createLocation,
+  deleteLocation,
   listLocations,
   locationConflictMessage,
   locationValidationMessages,
@@ -20,6 +21,7 @@ import {
   type LocationCreate,
   type LocationResponse,
   type LocationUpdate,
+  type LocationUsageScope,
 } from "./api";
 
 type DirectoryState =
@@ -37,10 +39,58 @@ function payloadFrom(form: HTMLFormElement): LocationCreate {
   const data = new FormData(form);
   const name = data.get("name");
   const parentId = data.get("parent_id");
+  const usageScopes = data
+    .getAll("usage_scopes")
+    .filter(
+      (value): value is LocationUsageScope =>
+        value === "plants" || value === "sowings" || value === "seed_lots",
+    );
   return {
     name: typeof name === "string" ? name : "",
     parent_id: typeof parentId === "string" && parentId ? parentId : undefined,
+    usage_scopes: usageScopes,
   };
+}
+
+const scopeLabels: Record<LocationUsageScope, string> = {
+  plants: "Plants",
+  sowings: "Sowings",
+  seed_lots: "Seed lots",
+};
+
+const allScopes: LocationUsageScope[] = ["plants", "sowings", "seed_lots"];
+
+function scopesOf(location: LocationResponse): LocationUsageScope[] {
+  return location.usage_scopes;
+}
+
+function ScopeFields({
+  selected,
+  disabled,
+}: {
+  selected?: LocationResponse;
+  disabled: boolean;
+}) {
+  const selectedScopes = selected ? scopesOf(selected) : allScopes;
+  return (
+    <fieldset className="scope-fields" disabled={disabled}>
+      <legend>Used for</legend>
+      <p className="field-help">
+        Choose at least one. Scopes are explicit and do not inherit.
+      </p>
+      {allScopes.map((scope) => (
+        <label key={scope}>
+          <input
+            type="checkbox"
+            name="usage_scopes"
+            value={scope}
+            defaultChecked={selectedScopes.includes(scope)}
+          />{" "}
+          {scopeLabels[scope]}
+        </label>
+      ))}
+    </fieldset>
+  );
 }
 
 function descendantsOf(id: string, locations: LocationResponse[]): Set<string> {
@@ -124,11 +174,15 @@ function LocationTree({
   parentId,
   selectedId,
   onSelect,
+  expanded,
+  onToggle,
 }: {
   locations: LocationResponse[];
   parentId: string | null;
   selectedId: string | null;
   onSelect: (id: string) => void;
+  expanded: Set<string>;
+  onToggle: (id: string) => void;
 }) {
   const children = locations.filter(
     (location) => location.parent_id === parentId,
@@ -140,32 +194,66 @@ function LocationTree({
         parentId ? "location-tree location-tree--nested" : "location-tree"
       }
     >
-      {children.map((location) => (
-        <li key={location.id}>
-          <button
-            type="button"
-            className="identity-list-item"
-            aria-pressed={selectedId === location.id}
-            onClick={() => {
-              onSelect(location.id);
-            }}
-          >
-            <span>
-              {location.name}
-              {location.retired_at && (
-                <span className="record-state">Retired</span>
+      {children.map((location) => {
+        const hasChildren = locations.some(
+          (item) => item.parent_id === location.id,
+        );
+        const isExpanded = expanded.has(location.id);
+        return (
+          <li key={location.id}>
+            <div className="location-tree-node">
+              {hasChildren ? (
+                <button
+                  type="button"
+                  className="location-tree-toggle"
+                  aria-label={`${isExpanded ? "Collapse" : "Expand"} ${location.name}`}
+                  aria-expanded={isExpanded}
+                  onClick={() => {
+                    onToggle(location.id);
+                  }}
+                >
+                  {isExpanded ? "−" : "+"}
+                </button>
+              ) : (
+                <span className="location-tree-spacer" aria-hidden="true" />
               )}
-            </span>
-            <small>{location.display_path}</small>
-          </button>
-          <LocationTree
-            locations={locations}
-            parentId={location.id}
-            selectedId={selectedId}
-            onSelect={onSelect}
-          />
-        </li>
-      ))}
+              <button
+                type="button"
+                className="identity-list-item"
+                aria-pressed={selectedId === location.id}
+                onClick={() => {
+                  onSelect(location.id);
+                }}
+              >
+                <span>
+                  {location.name}
+                  {location.retired_at && (
+                    <span className="record-state">Retired</span>
+                  )}
+                </span>
+                <span className="location-scope-list" aria-label="Usage scopes">
+                  {scopesOf(location).map((scope) => (
+                    <small className="location-scope" key={scope}>
+                      {scopeLabels[scope]}
+                    </small>
+                  ))}
+                </span>
+                <small>{location.display_path}</small>
+              </button>
+            </div>
+            {hasChildren && isExpanded && (
+              <LocationTree
+                locations={locations}
+                parentId={location.id}
+                selectedId={selectedId}
+                onSelect={onSelect}
+                expanded={expanded}
+                onToggle={onToggle}
+              />
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
@@ -181,6 +269,7 @@ export function LocationScreen() {
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [attempt, setAttempt] = useState(0);
   const [editing, setEditing] = useState(false);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const createName = useRef<HTMLInputElement>(null);
   const feedback = useRef<HTMLDivElement>(null);
   const {
@@ -267,6 +356,41 @@ export function LocationScreen() {
           status: "error",
           message:
             "Florabase could not save or refresh this location. Check the connection and try again.",
+        });
+    }
+  }
+
+  async function removeSelected() {
+    if (!selected || pending) return;
+    if (
+      !window.confirm(`Delete ${selected.display_path}? This cannot be undone.`)
+    )
+      return;
+    setSave({ status: "saving" });
+    try {
+      await deleteLocation(selected.id, csrfToken);
+      const refreshed = await listLocations();
+      setDirectory({ status: "ready", locations: refreshed });
+      setSelectedId(null);
+      setEditing(false);
+      setSave({
+        status: "success",
+        message: `${selected.display_path} was deleted.`,
+      });
+    } catch (error: unknown) {
+      if (error instanceof ApiError && error.status === 401)
+        auth.sessionExpired();
+      else if (error instanceof ApiError && error.status === 409)
+        setSave({
+          status: "error",
+          message:
+            locationConflictMessage(error) ??
+            "This Location cannot be deleted safely.",
+        });
+      else
+        setSave({
+          status: "error",
+          message: "Florabase could not delete this Location.",
         });
     }
   }
@@ -367,6 +491,15 @@ export function LocationScreen() {
                   setEditing(false);
                   setSave({ status: "idle" });
                 }}
+                expanded={expanded}
+                onToggle={(id) => {
+                  setExpanded((current) => {
+                    const next = new Set(current);
+                    if (next.has(id)) next.delete(id);
+                    else next.add(id);
+                    return next;
+                  });
+                }}
               />
             )}
           </section>
@@ -406,6 +539,7 @@ export function LocationScreen() {
                   disabled={pending}
                   onChange={setCreateParentId}
                 />
+                <ScopeFields disabled={pending} />
                 <div className="actions">
                   <button type="submit" disabled={pending}>
                     {pending ? "Saving location…" : "Create location"}
@@ -442,29 +576,39 @@ export function LocationScreen() {
                 overflow={
                   <details className="overflow-menu">
                     <summary aria-label="More location actions">…</summary>
-                    <button
-                      className="button--secondary"
-                      type="button"
-                      disabled={pending}
-                      onClick={() =>
-                        void apply(
-                          () =>
-                            setLocationRetired(
-                              selected.id,
-                              !selected.retired_at,
-                              csrfToken,
-                            ),
-                          (location) =>
-                            location.retired_at
-                              ? `${location.display_path} was retired.`
-                              : `${location.display_path} was reactivated.`,
-                        )
-                      }
-                    >
-                      {selected.retired_at
-                        ? "Reactivate location"
-                        : "Retire location"}
-                    </button>
+                    <div className="overflow-actions">
+                      <button
+                        className="button--secondary"
+                        type="button"
+                        disabled={pending}
+                        onClick={() =>
+                          void apply(
+                            () =>
+                              setLocationRetired(
+                                selected.id,
+                                !selected.retired_at,
+                                csrfToken,
+                              ),
+                            (location) =>
+                              location.retired_at
+                                ? `${location.display_path} was retired.`
+                                : `${location.display_path} was reactivated.`,
+                          )
+                        }
+                      >
+                        {selected.retired_at
+                          ? "Reactivate location"
+                          : "Retire location"}
+                      </button>
+                      <button
+                        className="button--danger"
+                        type="button"
+                        disabled={pending}
+                        onClick={() => void removeSelected()}
+                      >
+                        Delete location
+                      </button>
+                    </div>
                   </details>
                 }
               />
@@ -489,6 +633,28 @@ export function LocationScreen() {
                   Create child here
                 </button>
               )}
+              <section
+                aria-labelledby="location-usage-title"
+                className="location-usage"
+              >
+                <h4 id="location-usage-title">Usage</h4>
+                <ul>
+                  {allScopes.map((scope) => {
+                    const counts = selected.usage[scope] ?? {
+                      active: 0,
+                      total: 0,
+                    };
+                    const href =
+                      scope === "seed_lots" ? "#/seeds" : `#/${scope}`;
+                    return (
+                      <li key={scope}>
+                        <a href={href}>{scopeLabels[scope]}</a>: {counts.active}{" "}
+                        active, {counts.total} total
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
               {editing && (
                 <form
                   key={`${selected.id}-${selected.updated_at}`}
@@ -512,6 +678,7 @@ export function LocationScreen() {
                     selected={selected}
                     disabled={pending}
                   />
+                  <ScopeFields selected={selected} disabled={pending} />
                   <div className="actions">
                     <button type="submit" disabled={pending}>
                       Save location

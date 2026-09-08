@@ -26,6 +26,41 @@ def test_location_migration_upgrade_downgrade_and_reupgrade(database_engine: Eng
     assert inspect(database_engine).has_table("locations")
 
 
+def test_location_scope_migration_preserves_existing_rows_with_all_scopes(
+    database_engine: Engine,
+) -> None:
+    config = Config("alembic.ini")
+    location_id = uuid7()
+    now = datetime.now(UTC)
+    try:
+        command.downgrade(config, "20260907_0018")
+        with database_engine.begin() as connection:
+            connection.execute(
+                text(
+                    "INSERT INTO locations (id, name, created_at, updated_at) "
+                    "VALUES (:id, 'Existing shelf', :now, :now)"
+                ),
+                {"id": location_id, "now": now},
+            )
+        command.upgrade(config, "20260907_0019")
+        with database_engine.begin() as connection:
+            row = connection.execute(
+                text(
+                    "SELECT supports_plants, supports_sowings, supports_seed_lots "
+                    "FROM locations WHERE id = :id"
+                ),
+                {"id": location_id},
+            ).one()
+            assert row == (True, True, True)
+            connection.execute(text("DELETE FROM locations WHERE id = :id"), {"id": location_id})
+        command.downgrade(config, "20260907_0018")
+        assert "supports_plants" not in {
+            column["name"] for column in inspect(database_engine).get_columns("locations")
+        }
+    finally:
+        command.upgrade(config, "head")
+
+
 def test_location_schema_constraints_foreign_key_and_same_names(
     database_connection: Connection,
 ) -> None:
@@ -36,12 +71,19 @@ def test_location_schema_constraints_foreign_key_and_same_names(
         "id",
         "name",
         "parent_id",
+        "supports_plants",
+        "supports_sowings",
+        "supports_seed_lots",
         "retired_at",
         "created_at",
         "updated_at",
     }
     assert columns["parent_id"]["nullable"] is True
     assert columns["retired_at"]["nullable"] is True
+    assert all(
+        columns[name]["nullable"] is False
+        for name in ("supports_plants", "supports_sowings", "supports_seed_lots")
+    )
     assert "TIMESTAMP" in str(columns["created_at"]["type"])
     assert "user_id" not in columns
 
@@ -97,6 +139,15 @@ def test_location_schema_constraints_foreign_key_and_same_names(
                 "VALUES (:id, 'Orphan', :parent_id, :now, :now)"
             ),
             {"id": uuid7(), "parent_id": uuid7(), "now": now},
+        )
+    with pytest.raises(DBAPIError), database_connection.begin_nested():
+        database_connection.execute(
+            text(
+                "INSERT INTO locations "
+                "(id, name, supports_plants, supports_sowings, supports_seed_lots, "
+                "created_at, updated_at) VALUES (:id, 'No scope', false, false, false, :now, :now)"
+            ),
+            {"id": uuid7(), "now": now},
         )
     with pytest.raises(IntegrityError), database_connection.begin_nested():
         database_connection.execute(

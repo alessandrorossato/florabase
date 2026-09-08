@@ -105,7 +105,7 @@ def test_seed_lot_service_create_update_query_and_response(
         place.id: place,
         location.id: location,
     }
-    database.get.side_effect = lambda _model, item_id: by_id.get(item_id)
+    database.get.side_effect = lambda _model, item_id, **_kwargs: by_id.get(item_id)
 
     created = service.create_seed_lot(database, payload)
     assert payload.quantity is not None
@@ -174,7 +174,7 @@ def test_seed_lot_service_reports_each_missing_reference(field: str, code: str) 
     }
     missing_id = getattr(payload, field)
     by_id.pop(missing_id)
-    database.get.side_effect = lambda _model, item_id: by_id.get(item_id)
+    database.get.side_effect = lambda _model, item_id, **_kwargs: by_id.get(item_id)
     with pytest.raises(SeedLotReferenceNotFoundError) as error:
         service.create_seed_lot(database, payload)
     assert error.value.code == code

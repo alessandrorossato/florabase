@@ -26,7 +26,11 @@ import {
   listGeographicPlaces,
   type GeographicPlaceResponse,
 } from "../geographic-places/api";
-import { listLocations, type LocationResponse } from "../locations/api";
+import {
+  listLocations,
+  locationsForScope,
+  type LocationResponse,
+} from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
 import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import { PropagationPath } from "../propagation/PropagationPath";
@@ -1865,19 +1869,21 @@ export function PlantScreen({
                         }}
                       >
                         <option value="">Not recorded</option>
-                        {references.locations.map((location) => (
-                          <option
-                            key={location.id}
-                            value={location.id}
-                            disabled={
-                              Boolean(location.retired_at) &&
-                              location.id !== form.locationId
-                            }
-                          >
-                            {location.display_path}
-                            {location.retired_at ? " (retired)" : ""}
-                          </option>
-                        ))}
+                        {locationsForScope(references.locations, "plants").map(
+                          (location) => (
+                            <option
+                              key={location.id}
+                              value={location.id}
+                              disabled={
+                                Boolean(location.retired_at) &&
+                                location.id !== form.locationId
+                              }
+                            >
+                              {location.display_path}
+                              {location.retired_at ? " (retired)" : ""}
+                            </option>
+                          ),
+                        )}
                       </select>
                       <small>
                         The record's current physical collection position.

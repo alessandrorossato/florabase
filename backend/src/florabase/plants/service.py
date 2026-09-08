@@ -14,8 +14,16 @@ from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.service import display_path as geographic_display_path
 from florabase.geographic_places.service import list_geographic_places
 from florabase.locations.model import Location
-from florabase.locations.service import display_path as location_display_path
-from florabase.locations.service import list_locations
+from florabase.locations.schemas import LocationUsageScope
+from florabase.locations.service import (
+    LocationIntegrityError,
+    LocationNotFoundError,
+    list_locations,
+    require_location_for_scope,
+)
+from florabase.locations.service import (
+    display_path as location_display_path,
+)
 from florabase.plants.model import Plant, PlantGroup
 from florabase.plants.schemas import (
     BotanicalIdentitySummary,
@@ -108,11 +116,16 @@ def _require_references(database: Session, payload: PlantCommonWrite) -> None:
             "geographic_place_not_found",
             "Geographic place not found",
         ),
-        (Location, payload.location_id, "location_not_found", "Location not found"),
     )
     for model, item_id, code, message in references:
         if item_id is not None and database.get(model, item_id) is None:
             raise PlantReferenceNotFoundError(code, message)
+    try:
+        require_location_for_scope(database, payload.location_id, LocationUsageScope.PLANTS)
+    except LocationNotFoundError as error:
+        raise PlantReferenceNotFoundError("location_not_found", "Location not found") from error
+    except LocationIntegrityError as error:
+        raise PlantDomainConflictError(error.code, error.message) from error
 
 
 def _partial_date_values(value: PartialDate | None) -> dict[str, object]:
@@ -229,8 +242,12 @@ def extract_plant(
         raise PlantReferenceNotFoundError(
             "botanical_identity_not_found", "Botanical identity not found"
         )
-    if location_id is not None and database.get(Location, location_id) is None:
-        raise PlantReferenceNotFoundError("location_not_found", "Location not found")
+    try:
+        require_location_for_scope(database, location_id, LocationUsageScope.PLANTS)
+    except LocationNotFoundError as error:
+        raise PlantReferenceNotFoundError("location_not_found", "Location not found") from error
+    except LocationIntegrityError as error:
+        raise PlantDomainConflictError(error.code, error.message) from error
     plant = Plant(
         botanical_identity_id=identity_id,
         originating_plant_group_id=plant_group.id,

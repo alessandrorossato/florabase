@@ -44,7 +44,19 @@ A Location is a physical place inside the collection, such as `Greenhouse → Sh
 non-destructive retirement. The API derives display paths, prevents cycles, blocks retirement while
 active descendants exist, and blocks reactivation beneath retired ancestors.
 
+Each Location explicitly enables one or more independent usage scopes: `plants`, `sowings`, and
+`seed_lots`. The `plants` scope covers both Plant and PlantGroup. Scopes do not inherit through the
+physical containment hierarchy. Every assignment is checked by backend domain logic, and a scope
+cannot be removed while any current or historical record still uses it. Assignment selectors show
+only compatible Locations and use the derived path to disambiguate repeated names.
+
+Reparenting moves the subtree without changing collection assignments or scopes. A Location may be
+deleted only when it is a leaf and no Plant, PlantGroup, Sowing, SeedLot, or Event history references
+it; retirement remains the non-destructive choice for retained reference data. Renames and moves
+change the current derived path. Florabase does not event-source historical Location names or paths.
+
 Location answers where managed material currently sits. It is not geographic provenance.
+It also does not identify a Supplier.
 
 ### GeographicPlace
 

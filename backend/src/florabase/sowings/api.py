@@ -12,6 +12,7 @@ from florabase.auth.dependencies import (
 )
 from florabase.db.session import get_database_session
 from florabase.plants.service import (
+    PlantDomainConflictError,
     PlantReferenceNotFoundError,
     get_plant,
     get_plant_group,
@@ -86,6 +87,13 @@ def _plant_reference_not_found(error: PlantReferenceNotFoundError) -> HTTPExcept
     )
 
 
+def _plant_domain_conflict(error: PlantDomainConflictError) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_409_CONFLICT,
+        detail={"code": error.code, "message": error.message},
+    )
+
+
 @router.get("", response_model=list[SowingResponse], operation_id="listSowings")
 def list_all(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
@@ -144,6 +152,8 @@ def create_plant_transition(
         raise _propagation_not_found(error) from error
     except PlantReferenceNotFoundError as error:
         raise _plant_reference_not_found(error) from error
+    except PlantDomainConflictError as error:
+        raise _plant_domain_conflict(error) from error
     plant_projection = get_plant(database, plant.id)
     if plant_projection is None:
         raise RuntimeError("Created Plant could not be projected")
@@ -181,6 +191,8 @@ def create_plant_group_transition(
         raise _propagation_not_found(error) from error
     except PlantReferenceNotFoundError as error:
         raise _plant_reference_not_found(error) from error
+    except PlantDomainConflictError as error:
+        raise _plant_domain_conflict(error) from error
     group_projection = get_plant_group(database, plant_group.id)
     if group_projection is None:
         raise RuntimeError("Created PlantGroup could not be projected")

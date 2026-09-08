@@ -15,11 +15,14 @@ from florabase.locations.model import Location
 from florabase.locations.schemas import LocationCreate, LocationResponse, LocationUpdate
 from florabase.locations.service import (
     LocationHierarchyError,
+    LocationIntegrityError,
     LocationNotFoundError,
     create_location,
+    delete_location,
     display_path,
     get_location,
     list_locations,
+    location_usage,
     set_location_retired,
     update_location,
 )
@@ -34,7 +37,7 @@ def _not_found() -> HTTPException:
     )
 
 
-def _conflict(error: LocationHierarchyError) -> HTTPException:
+def _conflict(error: LocationHierarchyError | LocationIntegrityError) -> HTTPException:
     return HTTPException(
         status_code=status.HTTP_409_CONFLICT,
         detail={"code": error.code, "message": error.message},
@@ -50,7 +53,10 @@ def _require_location(database: Session, location_id: UUID) -> Location:
 
 def _response(database: Session, location: Location) -> LocationResponse:
     locations = list_locations(database)
-    return LocationResponse.from_model(location, display_path=display_path(location, locations))
+    usage = location_usage(database).get(location.id)
+    return LocationResponse.from_model(
+        location, display_path=display_path(location, locations), usage=usage
+    )
 
 
 @router.get("", response_model=list[LocationResponse], operation_id="listLocations")
@@ -59,8 +65,13 @@ def list_all(
     database: Annotated[Session, Depends(get_database_session)],
 ) -> list[LocationResponse]:
     locations = list_locations(database)
+    usage = location_usage(database)
     responses = [
-        LocationResponse.from_model(location, display_path=display_path(location, locations))
+        LocationResponse.from_model(
+            location,
+            display_path=display_path(location, locations),
+            usage=usage.get(location.id),
+        )
         for location in locations
     ]
     return sorted(
@@ -84,7 +95,7 @@ def create(
     require_owner(actor)
     try:
         location = create_location(database, payload)
-    except LocationHierarchyError as error:
+    except (LocationHierarchyError, LocationIntegrityError) as error:
         raise _conflict(error) from error
     response.headers["Location"] = f"/api/v1/locations/{location.id}"
     return _response(database, location)
@@ -111,9 +122,29 @@ def update(
         location = update_location(database, location_id, payload)
     except LocationNotFoundError as error:
         raise _not_found() from error
-    except LocationHierarchyError as error:
+    except (LocationHierarchyError, LocationIntegrityError) as error:
         raise _conflict(error) from error
     return _response(database, location)
+
+
+@router.delete(
+    "/{location_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="deleteLocation",
+)
+def delete(
+    location_id: UUID,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> Response:
+    require_owner(actor)
+    try:
+        delete_location(database, location_id)
+    except LocationNotFoundError as error:
+        raise _not_found() from error
+    except LocationIntegrityError as error:
+        raise _conflict(error) from error
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 def _set_retired(database: Session, location_id: UUID, *, retired: bool) -> LocationResponse:

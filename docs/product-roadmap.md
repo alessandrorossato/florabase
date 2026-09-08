@@ -109,6 +109,10 @@ Location concept while adding usage-scoped Seeds, Sowings, and Plants views plus
 collapsible hierarchy. `SUPPLIER-002` may add connected-record summaries, but financial totals wait
 for the separate `ORDER-001` transaction model.
 
+The remaining V1 surface order is `LOCATION-002`, `GEOGRAPHY-003`, `SUPPLIER-002`, then the
+botanical/map increments. `UX-003` follows those feature-specific surfaces as global stabilization
+and polish; it is not a prerequisite for their implementation.
+
 ### Reversible authoritative operations
 
 Before `LOCATION-002` or further geography work is selected in product sequencing, Florabase should

@@ -7,7 +7,11 @@ import {
   listBotanicalIdentities,
   type BotanicalIdentityResponse,
 } from "../botanical-identities/api";
-import { listLocations, type LocationResponse } from "../locations/api";
+import {
+  listLocations,
+  locationsForScope,
+  type LocationResponse,
+} from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
 import {
   createPlantFromSowing,
@@ -336,7 +340,7 @@ export function SowingDescendantWizard({
               }}
             >
               <option value="">Not recorded</option>
-              {locations.map((location) => (
+              {locationsForScope(locations, "plants").map((location) => (
                 <option
                   key={location.id}
                   value={location.id}

@@ -73,7 +73,7 @@ def test_sowing_service_create_update_projection_and_inventory_regression(
     sowing, lot, identity, location = models()
     write = payload(lot, location)
     database = MagicMock()
-    database.get.side_effect = lambda model, item_id: (
+    database.get.side_effect = lambda model, item_id, **_kwargs: (
         lot
         if model is SeedLot and item_id == lot.id
         else location
@@ -111,7 +111,7 @@ def test_sowing_service_reports_missing_references(missing: str, code: str) -> N
     _, lot, _, location = models()
     write = payload(lot, location)
     database = MagicMock()
-    database.get.side_effect = lambda model, _id: (
+    database.get.side_effect = lambda model, _id, **_kwargs: (
         None
         if (missing == "lot" and model is SeedLot) or (missing == "location" and model is Location)
         else lot

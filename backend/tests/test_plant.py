@@ -127,7 +127,7 @@ def direct_payload(
 def database_with_references(items: tuple[object, ...]) -> MagicMock:
     database = MagicMock()
     lookup = {(type(item), item.id): item for item in items if hasattr(item, "id")}
-    database.get.side_effect = lambda model, item_id: lookup.get((model, item_id))
+    database.get.side_effect = lambda model, item_id, **_kwargs: lookup.get((model, item_id))
     return database
 
 
@@ -208,7 +208,7 @@ def test_service_friendly_missing_reference(missing_type: type[object], code: st
         payload = direct_payload(identity, supplier, place, location)
     database = database_with_references((identity, sowing, supplier, place, location))
     original = database.get.side_effect
-    database.get.side_effect = lambda model, item_id: (
+    database.get.side_effect = lambda model, item_id, **_kwargs: (
         None if model is missing_type else original(model, item_id)
     )
     with pytest.raises(PlantReferenceNotFoundError) as error:

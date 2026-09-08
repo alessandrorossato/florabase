@@ -1040,6 +1040,15 @@
               }
             ],
             "title": "Parent Id"
+          },
+          "usage_scopes": {
+            "items": {
+              "$ref": "#/components/schemas/LocationUsageScope"
+            },
+            "minItems": 1,
+            "title": "Usage Scopes",
+            "type": "array",
+            "uniqueItems": true
           }
         },
         "required": [
@@ -1096,12 +1105,24 @@
             "format": "date-time",
             "title": "Updated At",
             "type": "string"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/LocationUsageSummary"
+          },
+          "usage_scopes": {
+            "items": {
+              "$ref": "#/components/schemas/LocationUsageScope"
+            },
+            "title": "Usage Scopes",
+            "type": "array"
           }
         },
         "required": [
           "id",
           "name",
           "parent_id",
+          "usage_scopes",
+          "usage",
           "display_path",
           "retired_at",
           "created_at",
@@ -1148,12 +1169,61 @@
               }
             ],
             "title": "Parent Id"
+          },
+          "usage_scopes": {
+            "items": {
+              "$ref": "#/components/schemas/LocationUsageScope"
+            },
+            "minItems": 1,
+            "title": "Usage Scopes",
+            "type": "array",
+            "uniqueItems": true
           }
         },
         "required": [
           "name"
         ],
         "title": "LocationUpdate",
+        "type": "object"
+      },
+      "LocationUsageCount": {
+        "properties": {
+          "active": {
+            "default": 0,
+            "title": "Active",
+            "type": "integer"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "title": "LocationUsageCount",
+        "type": "object"
+      },
+      "LocationUsageScope": {
+        "enum": [
+          "plants",
+          "sowings",
+          "seed_lots"
+        ],
+        "title": "LocationUsageScope",
+        "type": "string"
+      },
+      "LocationUsageSummary": {
+        "properties": {
+          "plants": {
+            "$ref": "#/components/schemas/LocationUsageCount"
+          },
+          "seed_lots": {
+            "$ref": "#/components/schemas/LocationUsageCount"
+          },
+          "sowings": {
+            "$ref": "#/components/schemas/LocationUsageCount"
+          }
+        },
+        "title": "LocationUsageSummary",
         "type": "object"
       },
       "LoginRequest": {
@@ -6732,6 +6802,56 @@
       }
     },
     "/api/v1/locations/{location_id}": {
+      "delete": {
+        "operationId": "deleteLocation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "location_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Location Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete",
+        "tags": [
+          "locations"
+        ]
+      },
       "get": {
         "operationId": "getLocation",
         "parameters": [

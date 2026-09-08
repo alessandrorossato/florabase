@@ -4,6 +4,7 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { App } from "./App";
 import type { GeographicPlaceResponse } from "./geographic-places/api";
+import type { LocationResponse } from "./locations/api";
 
 const session = {
   user_id: "01900000-0000-7000-8000-000000000001",
@@ -172,11 +173,17 @@ async function openSuppliers() {
   return user;
 }
 
-const houseLocation = {
+const houseLocation: LocationResponse = {
   id: "01900000-0000-7000-8000-000000000300",
   name: "House",
   parent_id: null as string | null,
   display_path: "House",
+  usage_scopes: ["plants", "sowings", "seed_lots"],
+  usage: {
+    plants: { active: 1, total: 2 },
+    sowings: { active: 0, total: 1 },
+    seed_lots: { active: 1, total: 1 },
+  },
   retired_at: null as string | null,
   created_at: "2026-08-30T10:00:00Z",
   updated_at: "2026-08-30T10:00:00Z",
@@ -1399,6 +1406,11 @@ test("location hierarchy renders paths and supports keyboard selection", async (
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await openLocations();
+  expect(
+    screen.queryByRole("button", { name: /Seed cabinet/ }),
+  ).not.toBeInTheDocument();
+  await user.click(await screen.findByRole("button", { name: "Expand House" }));
+  await user.click(screen.getByRole("button", { name: "Expand Seed cabinet" }));
   const drawer = await screen.findByRole("button", {
     name: /Drawer A.*House → Seed cabinet → Drawer A/i,
   });
@@ -1409,6 +1421,17 @@ test("location hierarchy renders paths and supports keyboard selection", async (
   expect(screen.getAllByText("House → Seed cabinet → Drawer A")).toHaveLength(
     2,
   );
+  expect(
+    screen
+      .getAllByRole("link", { name: "Plants" })
+      .some((link) => link.getAttribute("href") === "#/plants"),
+  ).toBe(true);
+  expect(screen.getByText(/1 active, 2 total/)).toBeInTheDocument();
+  expect(
+    screen
+      .getAllByLabelText("Usage scopes")
+      .some((item) => item.textContent.includes("Seed lots")),
+  ).toBe(true);
   await user.click(screen.getByRole("button", { name: "Edit location" }));
   const parent = screen.getByLabelText("Parent location", {
     selector: "#edit-location-parent",
@@ -1416,7 +1439,7 @@ test("location hierarchy renders paths and supports keyboard selection", async (
   expect(parent).not.toContainElement(
     screen.queryByRole("option", { name: /Drawer A/ }),
   );
-  await user.click(screen.getByRole("button", { name: /^HouseHouse$/i }));
+  await user.click(screen.getByRole("button", { name: /^House.*House$/i }));
   await user.click(screen.getByRole("button", { name: "Edit location" }));
   const rootParent = screen.getByLabelText("Parent location", {
     selector: "#edit-location-parent",
@@ -1477,9 +1500,16 @@ test("location creation supports roots and the selected create-child shortcut", 
   ).toBeInTheDocument();
   const posts = requests.filter(({ init }) => init?.method === "POST");
   expect(posts).toHaveLength(2);
-  expect(posts[0]?.init?.body).toBe(JSON.stringify({ name: "House" }));
+  const scopes = ["plants", "sowings", "seed_lots"];
+  expect(posts[0]?.init?.body).toBe(
+    JSON.stringify({ name: "House", usage_scopes: scopes }),
+  );
   expect(posts[1]?.init?.body).toBe(
-    JSON.stringify({ name: "Seed cabinet", parent_id: houseLocation.id }),
+    JSON.stringify({
+      name: "Seed cabinet",
+      parent_id: houseLocation.id,
+      usage_scopes: scopes,
+    }),
   );
   expect(new Headers(posts[1]?.init?.headers).get("X-CSRF-Token")).toBe(
     "botanical-csrf",
@@ -1493,7 +1523,20 @@ test("location rename reparent retire and reactivate use hierarchy-aware control
     name: "Garden",
     display_path: "Garden",
   };
-  let locations = [garden, houseLocation, cabinetLocation, drawerLocation];
+  const cabinetForEdit = {
+    ...cabinetLocation,
+    usage: {
+      ...cabinetLocation.usage,
+      sowings: { active: 0, total: 0 },
+    },
+  };
+  let updateBody: Record<string, unknown> | undefined;
+  let locations: LocationResponse[] = [
+    garden,
+    houseLocation,
+    cabinetForEdit,
+    drawerLocation,
+  ];
   authenticatedThen((path, init) => {
     if (path === "/api/v1/locations" && !init?.method)
       return jsonResponse(locations);
@@ -1501,6 +1544,8 @@ test("location rename reparent retire and reactivate use hierarchy-aware control
       path === `/api/v1/locations/${cabinetLocation.id}` &&
       init?.method === "PUT"
     ) {
+      if (typeof init.body !== "string") throw new Error("expected JSON body");
+      updateBody = JSON.parse(init.body) as Record<string, unknown>;
       locations = locations.map((item) =>
         item.id === cabinetLocation.id
           ? {
@@ -1508,6 +1553,10 @@ test("location rename reparent retire and reactivate use hierarchy-aware control
               name: "Seed cupboard",
               parent_id: garden.id,
               display_path: "Garden → Seed cupboard",
+              usage_scopes: [
+                "plants",
+                "seed_lots",
+              ] as LocationResponse["usage_scopes"],
               updated_at: "2026-08-30T11:00:00Z",
             }
           : item,
@@ -1537,6 +1586,7 @@ test("location rename reparent retire and reactivate use hierarchy-aware control
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await openLocations();
+  await user.click(await screen.findByRole("button", { name: "Expand House" }));
   await user.click(
     await screen.findByRole("button", { name: /Seed cabinet.*House/i }),
   );
@@ -1552,10 +1602,16 @@ test("location rename reparent retire and reactivate use hierarchy-aware control
     }),
     garden.id,
   );
+  await user.click(screen.getByRole("checkbox", { name: "Sowings" }));
   await user.click(screen.getByRole("button", { name: "Save location" }));
   expect(
     await screen.findByText(/Garden → Seed cupboard was updated/),
   ).toBeInTheDocument();
+  expect(updateBody).toMatchObject({
+    name: "Seed cupboard",
+    parent_id: garden.id,
+    usage_scopes: ["plants", "seed_lots"],
+  });
   await user.click(screen.getByLabelText("More location actions"));
   await user.click(screen.getByRole("button", { name: "Retire location" }));
   expect(
@@ -1568,6 +1624,64 @@ test("location rename reparent retire and reactivate use hierarchy-aware control
       screen.queryByText(/remains available for historical records/i),
     ).not.toBeInTheDocument();
   });
+});
+
+test("location deletion confirms safe leaves and explains blocked parents", async () => {
+  const garden = {
+    ...houseLocation,
+    id: "01900000-0000-7000-8000-000000000303",
+    name: "Garden",
+    display_path: "Garden",
+    usage: {
+      plants: { active: 0, total: 0 },
+      sowings: { active: 0, total: 0 },
+      seed_lots: { active: 0, total: 0 },
+    },
+  };
+  let locations = [garden, houseLocation, cabinetLocation];
+  authenticatedThen((path, init) => {
+    if (path === "/api/v1/locations" && !init?.method)
+      return jsonResponse(locations);
+    if (
+      path === `/api/v1/locations/${houseLocation.id}` &&
+      init?.method === "DELETE"
+    )
+      return jsonResponse(
+        {
+          detail: {
+            code: "location_has_children",
+            message: "Move or delete child Locations first",
+          },
+        },
+        409,
+      );
+    if (
+      path === `/api/v1/locations/${garden.id}` &&
+      init?.method === "DELETE"
+    ) {
+      locations = locations.filter(({ id }) => id !== garden.id);
+      return new Response(null, { status: 204 });
+    }
+    throw new Error(`unexpected request: ${path}`);
+  });
+  vi.spyOn(window, "confirm").mockReturnValue(true);
+  const user = await openLocations();
+  await user.click(
+    await screen.findByRole("button", { name: /^House.*House$/i }),
+  );
+  await user.click(screen.getByLabelText("More location actions"));
+  await user.click(screen.getByRole("button", { name: "Delete location" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    /move or delete child locations/i,
+  );
+
+  await user.click(screen.getByRole("button", { name: /^Garden.*Garden$/i }));
+  await user.click(screen.getByLabelText("More location actions"));
+  await user.click(screen.getByRole("button", { name: "Delete location" }));
+  expect(await screen.findByText(/Garden was deleted/)).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: /^Garden.*Garden$/i }),
+  ).not.toBeInTheDocument();
 });
 
 test("location loading failures hierarchy conflicts authorization and expiry are explicit", async () => {

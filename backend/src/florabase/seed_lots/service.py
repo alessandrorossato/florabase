@@ -14,8 +14,14 @@ from florabase.geographic_places.service import display_path as geographic_displ
 from florabase.geographic_places.service import list_geographic_places
 from florabase.lineage.service import validate_producer_assignment
 from florabase.locations.model import Location
+from florabase.locations.schemas import LocationUsageScope
+from florabase.locations.service import (
+    LocationIntegrityError,
+    LocationNotFoundError,
+    list_locations,
+    require_location_for_scope,
+)
 from florabase.locations.service import display_path as location_display_path
-from florabase.locations.service import list_locations
 from florabase.plants.model import Plant, PlantGroup
 from florabase.seed_lots.model import SeedLot
 from florabase.seed_lots.schemas import (
@@ -36,6 +42,12 @@ from florabase.suppliers.model import Supplier
 
 @dataclass(frozen=True)
 class SeedLotReferenceNotFoundError(Exception):
+    code: str
+    message: str
+
+
+@dataclass(frozen=True)
+class SeedLotDomainConflictError(Exception):
     code: str
     message: str
 
@@ -80,9 +92,14 @@ def _require_references(
         raise SeedLotReferenceNotFoundError(
             "geographic_place_not_found", "Geographic place not found"
         )
-    location = database.get(Location, payload.location_id) if payload.location_id else None
-    if payload.location_id is not None and location is None:
-        raise SeedLotReferenceNotFoundError("location_not_found", "Location not found")
+    try:
+        location = require_location_for_scope(
+            database, payload.location_id, LocationUsageScope.SEED_LOTS
+        )
+    except LocationNotFoundError as error:
+        raise SeedLotReferenceNotFoundError("location_not_found", "Location not found") from error
+    except LocationIntegrityError as error:
+        raise SeedLotDomainConflictError(error.code, error.message) from error
     producer_plant = (
         database.get(Plant, payload.producer_plant_id) if payload.producer_plant_id else None
     )
