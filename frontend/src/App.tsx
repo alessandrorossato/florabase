@@ -262,7 +262,7 @@ function ApplicationShell() {
             initialTab={route.tab}
           />
         ) : route.section === "suppliers" ? (
-          <SupplierScreen />
+          <SupplierScreen initialId={route.recordId} initialTab={route.tab} />
         ) : route.section === "locations" ? (
           <LocationScreen />
         ) : (

@@ -411,7 +411,15 @@ function Detail({
             </div>
             <div>
               <dt>Supplier</dt>
-              <dd>{lot.supplier?.name ?? "Not recorded"}</dd>
+              <dd>
+                {lot.supplier ? (
+                  <a href={`#/suppliers/${lot.supplier.id}`}>
+                    {lot.supplier.name}
+                  </a>
+                ) : (
+                  "Not recorded"
+                )}
+              </dd>
             </div>
             <div>
               <dt>Storage</dt>

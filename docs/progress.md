@@ -4,6 +4,28 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-08 — SUPPLIER-002 verified
+
+- Promoted Supplier from CRUD reference data to a focused detail hub while preserving its precise
+  meaning: the direct acquisition source for a SeedLot, directly acquired Plant, or directly
+  acquired PlantGroup. Sowing-derived and extracted descendants are not attributed to an ancestor's
+  Supplier; GeographicPlace, ProvenanceSite, and physical collection Location remain independent.
+- Added one-query Supplier-directory summaries and a focused detail projection with direct
+  active/total counts, BotanicalIdentity-aware linked records, and deterministic recent acquisitions.
+  SeedLots use their acquisition date, while directly acquired Plants and PlantGroups use their
+  collection-entry date; unknown dates remain visible on linked records but are not presented as
+  recent activity.
+- Added responsive Overview and Linked material sections, useful empty states, direct navigation
+  between Supplier and collection-record details, identity links, and historical lifecycle labels.
+  Existing optional metadata and retirement/reactivation remain unchanged; retirement preserves all
+  retained references, and no delete, order, purchase, price, or financial-analytics model was added.
+- Focused implementation verification passed 263 backend unit tests at 90.41% coverage, 124 frontend
+  tests, 293 disposable PostgreSQL integration tests, Ruff and Prettier formatting, Ruff and ESLint
+  linting, strict mypy over 156 source files, strict TypeScript, generated API drift, production
+  image builds, validation of all 71 feature-graph entries, and `git diff --check`. Alembic remains at
+  `20260908_0020`; the feature required no schema change. Independent canonical verification is
+  recorded with the reviewed feature branch.
+
 ## 2026-09-08 — GEOGRAPHY-003 implemented
 
 - Superseded the stale evaluation-only planning contract and removed planned GEOGRAPHY-002 as a
@@ -518,15 +540,17 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260908_0020` on the GEOGRAPHY-003 implementation branch.
+- Alembic head: `20260908_0020` on the SUPPLIER-002 implementation branch; SUPPLIER-002 adds no
+  migration.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
   protected Plant/PlantGroup Event journal and timeline UI; atomic extraction history; retained
-  transferred Plant/PlantGroup history; and scope-aware hierarchical collection Locations.
-- `PROPAGATION-001` through `PROPAGATION-003` are verified; `LOCATION-002` and `GEOGRAPHY-003` are
-  implemented pending independent verification. The next increment remains decided by the
-  machine-readable dependency graph;
+  transferred Plant/PlantGroup history; scope-aware hierarchical collection Locations; and direct,
+  connected-record Supplier summaries.
+- `PROPAGATION-001` through `PROPAGATION-003` and `SUPPLIER-002` are verified; `LOCATION-002` and
+  `GEOGRAPHY-003` remain implemented pending independent verification. The next increment remains
+  decided by the machine-readable dependency graph;
   licensing/version policy and release readiness remain explicit later operator/product decisions.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.

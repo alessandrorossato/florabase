@@ -2,6 +2,10 @@ import type { components } from "../api/schema";
 import { ApiError, requestJson } from "../auth/api";
 
 export type SupplierCreate = components["schemas"]["SupplierCreate"];
+export type SupplierDetailResponse =
+  components["schemas"]["SupplierDetailResponse"];
+export type SupplierListResponse =
+  components["schemas"]["SupplierListResponse"];
 export type SupplierUpdate = components["schemas"]["SupplierUpdate"];
 export type SupplierResponse = components["schemas"]["SupplierResponse"];
 type HTTPValidationError = components["schemas"]["HTTPValidationError"];
@@ -44,8 +48,15 @@ export function supplierValidationMessages(error: ApiError): string[] {
 
 export function listSuppliers(
   signal?: AbortSignal,
-): Promise<SupplierResponse[]> {
+): Promise<SupplierListResponse[]> {
   return requestJson("/api/v1/suppliers", { signal });
+}
+
+export function getSupplier(
+  id: string,
+  signal?: AbortSignal,
+): Promise<SupplierDetailResponse> {
+  return requestJson(`/api/v1/suppliers/${encodeURIComponent(id)}`, { signal });
 }
 
 export function createSupplier(

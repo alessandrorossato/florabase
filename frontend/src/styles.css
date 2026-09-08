@@ -844,6 +844,32 @@ button:disabled {
 .identity-panel {
   min-width: 0;
 }
+.supplier-hub {
+  min-width: 0;
+}
+.supplier-hub h3,
+.supplier-hub h4,
+.supplier-hub dd {
+  overflow-wrap: anywhere;
+}
+.supplier-counts {
+  margin-block: 0 1.5rem;
+}
+.supplier-counts h4 {
+  margin: 0.2rem 0;
+  font-size: 1.65rem;
+}
+.supplier-counts p:last-child {
+  margin: 0;
+  color: #587064;
+}
+.supplier-material {
+  display: grid;
+  gap: 2rem;
+}
+.compact-empty-state {
+  padding: 1rem;
+}
 .identity-detail-stack {
   display: grid;
   gap: 1.5rem;

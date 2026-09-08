@@ -507,7 +507,11 @@ function Detail({
                 {value.supplier && (
                   <div>
                     <dt>Supplier</dt>
-                    <dd>{value.supplier.name}</dd>
+                    <dd>
+                      <a href={`#/suppliers/${value.supplier.id}`}>
+                        {value.supplier.name}
+                      </a>
+                    </dd>
                   </div>
                 )}
                 {value.material_provenance && (

@@ -473,6 +473,10 @@ test("full entry maps count, approximate g/mg quantity, Other source, references
   );
   await user.click(screen.getByRole("button", { name: "Add to collection" }));
   await screen.findByText("Seed lot was added to the collection.");
+  expect(screen.getByRole("link", { name: "Rare Seed House" })).toHaveAttribute(
+    "href",
+    `#/suppliers/${supplier.id}`,
+  );
   expect(payloads[0]).toMatchObject({
     quantity: { value: "2.5", kind: "weight", unit: "g", is_approximate: true },
     source_kind: "other",
