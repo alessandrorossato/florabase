@@ -165,6 +165,24 @@ const supplier = {
   retired_at: null as string | null,
   created_at: "2026-08-30T10:00:00Z",
   updated_at: "2026-08-30T10:00:00Z",
+  usage_counts: {
+    seed_lots_active: 0,
+    seed_lots_total: 0,
+    plants_active: 0,
+    plants_total: 0,
+    plant_groups_active: 0,
+    plant_groups_total: 0,
+    direct_records_active: 0,
+    direct_records_total: 0,
+  },
+};
+
+const supplierDetail = {
+  ...supplier,
+  seed_lots: [],
+  plants: [],
+  plant_groups: [],
+  recent_acquisitions: [],
 };
 
 async function openSuppliers() {
@@ -1219,6 +1237,8 @@ test("keyboard supplier creation needs only name and kind and sends CSRF", async
       return jsonResponse(supplier, 201);
     }
     if (path === "/api/v1/suppliers") return jsonResponse(suppliers);
+    if (path === `/api/v1/suppliers/${supplier.id}`)
+      return jsonResponse(supplierDetail);
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await openSuppliers();
@@ -1260,6 +1280,7 @@ test("supplier filtering, keyboard selection, optional details, editing, and lif
     notes: null,
   };
   let suppliers = [nursery, supplier];
+  let detail = supplierDetail;
   authenticatedThen((path, init) => {
     if (path === "/api/v1/suppliers" && !init?.method)
       return jsonResponse(suppliers);
@@ -1270,17 +1291,22 @@ test("supplier filtering, keyboard selection, optional details, editing, and lif
         { ...supplier, ...body, updated_at: "2026-08-30T11:00:00Z" },
         nursery,
       ];
+      detail = { ...detail, ...body, updated_at: "2026-08-30T11:00:00Z" };
       return jsonResponse(suppliers[0]);
     }
+    if (path === `/api/v1/suppliers/${supplier.id}`)
+      return jsonResponse(detail);
     if (path === `/api/v1/suppliers/${supplier.id}/retire`) {
       suppliers = [
         { ...suppliers[0], retired_at: "2026-08-30T12:00:00Z" },
         nursery,
       ];
+      detail = { ...detail, retired_at: "2026-08-30T12:00:00Z" };
       return jsonResponse(suppliers[0]);
     }
     if (path === `/api/v1/suppliers/${supplier.id}/reactivate`) {
       suppliers = [{ ...suppliers[0], retired_at: null }, nursery];
+      detail = { ...detail, retired_at: null };
       return jsonResponse(suppliers[0]);
     }
     throw new Error(`unexpected request: ${path}`);
@@ -1314,15 +1340,135 @@ test("supplier filtering, keyboard selection, optional details, editing, and lif
   await user.click(screen.getByLabelText("More supplier actions"));
   await user.click(screen.getByRole("button", { name: "Retire supplier" }));
   expect(
-    await screen.findByText("This supplier is retired."),
+    await screen.findByText(
+      /This supplier is retired.*history remains available/i,
+    ),
   ).toBeInTheDocument();
   await user.click(screen.getByLabelText("More supplier actions"));
   await user.click(screen.getByRole("button", { name: "Reactivate supplier" }));
   await waitFor(() => {
     expect(
-      screen.queryByText("This supplier is retired."),
+      screen.queryByText(
+        /This supplier is retired.*history remains available/i,
+      ),
     ).not.toBeInTheDocument();
   });
+});
+
+test("supplier hub links direct material, identity context, counts, dates, and history", async () => {
+  const identity = {
+    id: "01900000-0000-7000-8000-000000000210",
+    display_label: "Clitoria ternatea",
+  };
+  const detail = {
+    ...supplierDetail,
+    usage_counts: {
+      seed_lots_active: 1,
+      seed_lots_total: 2,
+      plants_active: 0,
+      plants_total: 1,
+      plant_groups_active: 1,
+      plant_groups_total: 1,
+      direct_records_active: 2,
+      direct_records_total: 4,
+    },
+    seed_lots: [
+      {
+        id: "01900000-0000-7000-8000-000000000211",
+        label: "Thai blue seeds",
+        botanical_identity: identity,
+        lifecycle: "active",
+        acquisition_date: { precision: "day", year: 2026, month: 8, day: 30 },
+      },
+      {
+        id: "01900000-0000-7000-8000-000000000212",
+        label: null,
+        botanical_identity: identity,
+        lifecycle: "lost",
+        acquisition_date: null,
+      },
+    ],
+    plants: [
+      {
+        id: "01900000-0000-7000-8000-000000000213",
+        label: "Purchased vine",
+        botanical_identity: identity,
+        lifecycle: "transferred",
+        collection_entry_date: { precision: "year", year: 2025 },
+      },
+    ],
+    plant_groups: [
+      {
+        id: "01900000-0000-7000-8000-000000000214",
+        label: "Blue group",
+        botanical_identity: identity,
+        lifecycle: "active",
+        collection_entry_date: { precision: "month", year: 2026, month: 7 },
+      },
+    ],
+    recent_acquisitions: [
+      {
+        record_type: "seed_lot",
+        id: "01900000-0000-7000-8000-000000000211",
+        label: "Thai blue seeds",
+        botanical_identity: identity,
+        lifecycle: "active",
+        acquired_on: { precision: "day", year: 2026, month: 8, day: 30 },
+      },
+      {
+        record_type: "plant_group",
+        id: "01900000-0000-7000-8000-000000000214",
+        label: "Blue group",
+        botanical_identity: identity,
+        lifecycle: "active",
+        acquired_on: { precision: "month", year: 2026, month: 7 },
+      },
+    ],
+  };
+  authenticatedThen((path) => {
+    if (path === "/api/v1/suppliers")
+      return jsonResponse([{ ...supplier, usage_counts: detail.usage_counts }]);
+    if (path === `/api/v1/suppliers/${supplier.id}`)
+      return jsonResponse(detail);
+    throw new Error(`unexpected request: ${path}`);
+  });
+  window.history.replaceState(null, "", `#/suppliers/${supplier.id}`);
+  const user = userEvent.setup();
+  render(<App />);
+
+  expect(
+    await screen.findByRole("heading", { name: supplier.name }),
+  ).toBeInTheDocument();
+  expect(screen.getByLabelText("Direct supplier usage")).toHaveTextContent("4");
+  expect(
+    screen.getByRole("heading", { name: "Recent acquisitions" }),
+  ).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Thai blue seeds" })).toHaveAttribute(
+    "href",
+    "#/seeds/01900000-0000-7000-8000-000000000211",
+  );
+  expect(screen.queryByText("Date not recorded")).not.toBeInTheDocument();
+
+  await user.click(screen.getByRole("tab", { name: "Linked material (4)" }));
+  expect(
+    screen.getByRole("heading", { name: "SeedLots (2)" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("heading", { name: "Plants (2)" }),
+  ).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Purchased vine" })).toHaveAttribute(
+    "href",
+    "#/plants/01900000-0000-7000-8000-000000000213",
+  );
+  expect(
+    screen.getByText(/collection entry 2025 · transferred/i),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText(/acquired date not recorded · lost/i),
+  ).toBeInTheDocument();
+  expect(
+    screen.getAllByRole("link", { name: "Clitoria ternatea" }).length,
+  ).toBeGreaterThan(1);
 });
 
 test("supplier validation, forbidden saves, and session expiry are explicit", async () => {

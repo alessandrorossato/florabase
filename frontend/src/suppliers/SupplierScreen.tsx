@@ -9,21 +9,34 @@ import {
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
-import { DetailHeader } from "../components/CollectionUI";
+import {
+  Breadcrumbs,
+  CollectionCard,
+  DetailHeader,
+  DetailTabs,
+} from "../components/CollectionUI";
 import {
   createSupplier,
+  getSupplier,
   listSuppliers,
   setSupplierRetired,
   supplierValidationMessages,
   updateSupplier,
   type SupplierCreate,
+  type SupplierDetailResponse,
+  type SupplierListResponse,
   type SupplierResponse,
   type SupplierUpdate,
 } from "./api";
 
 type DirectoryState =
   | { status: "loading" }
-  | { status: "ready"; suppliers: SupplierResponse[] }
+  | { status: "ready"; suppliers: SupplierListResponse[] }
+  | { status: "error" };
+type DetailState =
+  | { status: "idle" }
+  | { status: "loading" }
+  | { status: "ready"; supplier: SupplierDetailResponse }
   | { status: "error" };
 type SaveState =
   | { status: "idle" }
@@ -40,6 +53,378 @@ const kindLabels: Record<SupplierResponse["kind"], string> = {
   exchange: "Exchange",
   other: "Other",
 };
+
+const lifecycleLabels: Record<string, string> = {
+  active: "Active",
+  exhausted: "Exhausted",
+  discarded: "Discarded",
+  lost: "Lost",
+  transferred: "Transferred",
+  completed: "Completed",
+  dead: "Dead",
+  reversed: "Reversed",
+  reintegrated: "Reintegrated",
+};
+
+function dateLabel(
+  date: {
+    precision: string;
+    year: number;
+    month?: number | null;
+    day?: number | null;
+  } | null,
+): string {
+  if (!date) return "Date not recorded";
+  const year = String(date.year).padStart(4, "0");
+  if (date.precision === "year") return year;
+  const month = String(date.month).padStart(2, "0");
+  if (date.precision === "month") return `${year}-${month}`;
+  return `${year}-${month}-${String(date.day).padStart(2, "0")}`;
+}
+
+function recordTitle(record: {
+  label: string | null;
+  botanical_identity: { display_label: string };
+}): string {
+  return record.label ?? record.botanical_identity.display_label;
+}
+
+function SupplierHub({
+  supplier,
+  editing,
+  pending,
+  csrfToken,
+  onEdit,
+  onSubmitUpdate,
+  onCancelEdit,
+  onLifecycle,
+  initialTab,
+}: {
+  supplier: SupplierDetailResponse;
+  editing: boolean;
+  pending: boolean;
+  csrfToken: string;
+  onEdit: () => void;
+  onSubmitUpdate: (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => void;
+  onCancelEdit: () => void;
+  onLifecycle: (
+    action: () => Promise<SupplierResponse>,
+    success: (value: SupplierResponse) => string,
+  ) => void;
+  initialTab?: string;
+}) {
+  const [tab, setTab] = useState(
+    initialTab && ["overview", "material"].includes(initialTab)
+      ? initialTab
+      : "overview",
+  );
+  const counts = supplier.usage_counts;
+  const linkedTotal = counts.direct_records_total;
+  return (
+    <article
+      aria-label="Supplier detail"
+      className="identity-result supplier-hub"
+    >
+      <Breadcrumbs
+        items={[
+          { label: "Suppliers", href: "#/suppliers" },
+          { label: supplier.name },
+        ]}
+      />
+      <DetailHeader
+        eyebrow="Supplier"
+        title={supplier.name}
+        status={
+          <span
+            className={`lifecycle-badge lifecycle-badge--${supplier.retired_at ? "retired" : "active"}`}
+          >
+            {supplier.retired_at ? "Retired" : "Active"}
+          </span>
+        }
+        editLabel="Edit supplier"
+        onEdit={onEdit}
+        overflow={
+          <details className="overflow-menu">
+            <summary aria-label="More supplier actions">…</summary>
+            <button
+              className="button--secondary"
+              type="button"
+              disabled={pending}
+              onClick={() => {
+                onLifecycle(
+                  () =>
+                    setSupplierRetired(
+                      supplier.id,
+                      !supplier.retired_at,
+                      csrfToken,
+                    ),
+                  (value) =>
+                    value.retired_at
+                      ? `${value.name} was retired. Historical links are preserved.`
+                      : `${value.name} was reactivated.`,
+                );
+              }}
+            >
+              {supplier.retired_at ? "Reactivate supplier" : "Retire supplier"}
+            </button>
+          </details>
+        }
+      />
+      {supplier.retired_at && (
+        <p className="notice notice--duplicate">
+          This supplier is retired. Existing acquisition history remains
+          available.
+        </p>
+      )}
+      <DetailTabs
+        tabs={[
+          { id: "overview", label: "Overview" },
+          { id: "material", label: `Linked material (${String(linkedTotal)})` },
+        ]}
+        selected={tab}
+        onSelect={(next) => {
+          setTab(next);
+          window.history.replaceState(
+            null,
+            "",
+            `#/suppliers/${supplier.id}?tab=${next}`,
+          );
+        }}
+      />
+      {tab === "overview" && (
+        <div
+          className="detail-tab-panel"
+          role="tabpanel"
+          aria-labelledby="tab-overview"
+        >
+          <div
+            className="summary-grid supplier-counts"
+            aria-label="Direct supplier usage"
+          >
+            <section className="fact-card">
+              <p className="card-type">Direct records</p>
+              <h4>{counts.direct_records_total}</h4>
+              <p>{counts.direct_records_active} current</p>
+            </section>
+            <section className="fact-card">
+              <p className="card-type">SeedLots</p>
+              <h4>{counts.seed_lots_total}</h4>
+              <p>{counts.seed_lots_active} active</p>
+            </section>
+            <section className="fact-card">
+              <p className="card-type">Plants</p>
+              <h4>{counts.plants_total + counts.plant_groups_total}</h4>
+              <p>
+                {counts.plants_total} individual · {counts.plant_groups_total}{" "}
+                groups
+              </p>
+            </section>
+          </div>
+          <div className="overview-grid">
+            <section aria-labelledby="supplier-about-title">
+              <h4 id="supplier-about-title">About this supplier</h4>
+              <dl>
+                <div>
+                  <dt>Kind</dt>
+                  <dd>{kindLabels[supplier.kind]}</dd>
+                </div>
+                <div>
+                  <dt>Website</dt>
+                  <dd>
+                    {supplier.website ? (
+                      <a
+                        href={supplier.website}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Visit supplier website
+                      </a>
+                    ) : (
+                      "Not recorded"
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Email</dt>
+                  <dd>
+                    {supplier.email ? (
+                      <a href={`mailto:${supplier.email}`}>{supplier.email}</a>
+                    ) : (
+                      "Not recorded"
+                    )}
+                  </dd>
+                </div>
+                <div>
+                  <dt>Phone</dt>
+                  <dd>{supplier.phone ?? "Not recorded"}</dd>
+                </div>
+                <div>
+                  <dt>Notes</dt>
+                  <dd className="preserve-lines">
+                    {supplier.notes ?? "Not recorded"}
+                  </dd>
+                </div>
+              </dl>
+            </section>
+            <section aria-labelledby="recent-acquisitions-title">
+              <h4 id="recent-acquisitions-title">Recent acquisitions</h4>
+              {supplier.recent_acquisitions.length === 0 ? (
+                <div className="empty-state compact-empty-state">
+                  <p>
+                    No directly linked acquisitions have a recorded acquisition
+                    date.
+                  </p>
+                </div>
+              ) : (
+                <div className="card-grid">
+                  {supplier.recent_acquisitions.map((record) => {
+                    const route =
+                      record.record_type === "seed_lot"
+                        ? "seeds"
+                        : record.record_type === "plant"
+                          ? "plants"
+                          : "plant-groups";
+                    return (
+                      <CollectionCard
+                        key={`${record.record_type}:${record.id}`}
+                        eyebrow={
+                          record.record_type === "seed_lot"
+                            ? "SeedLot"
+                            : record.record_type === "plant"
+                              ? "Plant"
+                              : "Plant group"
+                        }
+                        title={recordTitle(record)}
+                        href={`#/${route}/${record.id}`}
+                      >
+                        <p>
+                          <a
+                            href={`#/identities/${record.botanical_identity.id}`}
+                          >
+                            {record.botanical_identity.display_label}
+                          </a>
+                        </p>
+                        <p>
+                          Acquired {dateLabel(record.acquired_on)} ·{" "}
+                          {lifecycleLabels[record.lifecycle] ??
+                            record.lifecycle}
+                        </p>
+                      </CollectionCard>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          </div>
+        </div>
+      )}
+      {tab === "material" && (
+        <div
+          className="detail-tab-panel supplier-material"
+          role="tabpanel"
+          aria-labelledby="tab-material"
+        >
+          <section aria-labelledby="supplier-seed-lots-title">
+            <h4 id="supplier-seed-lots-title">
+              SeedLots ({supplier.seed_lots.length})
+            </h4>
+            {supplier.seed_lots.length === 0 ? (
+              <p className="empty-state compact-empty-state">
+                No SeedLots directly reference this supplier.
+              </p>
+            ) : (
+              <div className="card-grid">
+                {supplier.seed_lots.map((record) => (
+                  <CollectionCard
+                    key={record.id}
+                    eyebrow="SeedLot"
+                    title={recordTitle(record)}
+                    href={`#/seeds/${record.id}`}
+                  >
+                    <p>
+                      <a href={`#/identities/${record.botanical_identity.id}`}>
+                        {record.botanical_identity.display_label}
+                      </a>
+                    </p>
+                    <p>
+                      Acquired {dateLabel(record.acquisition_date)} ·{" "}
+                      {lifecycleLabels[record.lifecycle]}
+                    </p>
+                  </CollectionCard>
+                ))}
+              </div>
+            )}
+          </section>
+          <section aria-labelledby="supplier-plants-title">
+            <h4 id="supplier-plants-title">
+              Plants ({supplier.plants.length + supplier.plant_groups.length})
+            </h4>
+            {supplier.plants.length + supplier.plant_groups.length === 0 ? (
+              <p className="empty-state compact-empty-state">
+                No directly acquired Plants or Plant groups reference this
+                supplier.
+              </p>
+            ) : (
+              <div className="card-grid">
+                {[
+                  ...supplier.plants.map((record) => ({
+                    ...record,
+                    recordType: "plant" as const,
+                  })),
+                  ...supplier.plant_groups.map((record) => ({
+                    ...record,
+                    recordType: "plant_group" as const,
+                  })),
+                ].map((record) => (
+                  <CollectionCard
+                    key={`${record.recordType}:${record.id}`}
+                    eyebrow={
+                      record.recordType === "plant" ? "Plant" : "Plant group"
+                    }
+                    title={recordTitle(record)}
+                    href={`#/${record.recordType === "plant" ? "plants" : "plant-groups"}/${record.id}`}
+                  >
+                    <p>
+                      <a href={`#/identities/${record.botanical_identity.id}`}>
+                        {record.botanical_identity.display_label}
+                      </a>
+                    </p>
+                    <p>
+                      Collection entry {dateLabel(record.collection_entry_date)}{" "}
+                      · {lifecycleLabels[record.lifecycle]}
+                    </p>
+                  </CollectionCard>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
+      )}
+      {editing && (
+        <form
+          key={`${supplier.id}-${supplier.updated_at}`}
+          onSubmit={onSubmitUpdate}
+        >
+          <h4>Edit supplier</h4>
+          <SupplierFields supplier={supplier} disabled={pending} />
+          <div className="actions">
+            <button type="submit" disabled={pending}>
+              Save supplier
+            </button>
+            <button
+              className="button--secondary"
+              type="button"
+              disabled={pending}
+              onClick={onCancelEdit}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+    </article>
+  );
+}
 
 function payloadFrom(form: HTMLFormElement): SupplierCreate {
   const data = new FormData(form);
@@ -161,12 +546,21 @@ function SupplierFields({
   );
 }
 
-export function SupplierScreen() {
+export function SupplierScreen({
+  initialId,
+  initialTab,
+}: { initialId?: string; initialTab?: string } = {}) {
   const auth = useAuth();
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
   });
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initialId ?? null,
+  );
+  const [detail, setDetail] = useState<DetailState>(
+    initialId ? { status: "loading" } : { status: "idle" },
+  );
+  const [detailRefresh, setDetailRefresh] = useState(0);
   const [filter, setFilter] = useState("");
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [attempt, setAttempt] = useState(0);
@@ -199,6 +593,24 @@ export function SupplierScreen() {
       controller.abort();
     };
   }, [auth, attempt]);
+
+  useEffect(() => {
+    if (!selectedId) return;
+    const controller = new AbortController();
+    void getSupplier(selectedId, controller.signal)
+      .then((supplier) => {
+        setDetail({ status: "ready", supplier });
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        if (error instanceof ApiError && error.status === 401)
+          auth.sessionExpired();
+        else setDetail({ status: "error" });
+      });
+    return () => {
+      controller.abort();
+    };
+  }, [auth, detailRefresh, selectedId]);
 
   useEffect(() => {
     if (save.status === "validation" || save.status === "error")
@@ -238,6 +650,8 @@ export function SupplierScreen() {
       const refreshed = await listSuppliers();
       setDirectory({ status: "ready", suppliers: refreshed });
       setSelectedId(supplier.id);
+      setDetail({ status: "loading" });
+      setDetailRefresh((value) => value + 1);
       setEditing(false);
       setSave({ status: "success", message: success(supplier) });
     } catch (error: unknown) {
@@ -294,7 +708,10 @@ export function SupplierScreen() {
         <div>
           <p className="eyebrow">Collection reference</p>
           <h2 id="suppliers-title">Suppliers</h2>
-          <p>Maintain the people and places that supply collection material.</p>
+          <p>
+            Maintain who supplied collection material, separately from its
+            geographic provenance and current Location.
+          </p>
         </div>
         <button
           type="button"
@@ -376,6 +793,13 @@ export function SupplierScreen() {
                       aria-pressed={selectedId === supplier.id}
                       onClick={() => {
                         setSelectedId(supplier.id);
+                        setDetail({ status: "loading" });
+                        setDetailRefresh((value) => value + 1);
+                        window.history.replaceState(
+                          null,
+                          "",
+                          `#/suppliers/${supplier.id}`,
+                        );
                         setEditing(false);
                         setSave({ status: "idle" });
                       }}
@@ -388,7 +812,10 @@ export function SupplierScreen() {
                       </span>
                       <small>
                         {kindLabels[supplier.kind]}
-                        {supplier.email ? ` · ${supplier.email}` : ""}
+                        {` · ${String(supplier.usage_counts.direct_records_total)} direct records`}
+                        {supplier.usage_counts.direct_records_active > 0
+                          ? ` · ${String(supplier.usage_counts.direct_records_active)} current`
+                          : ""}
                       </small>
                     </button>
                   </li>
@@ -432,114 +859,42 @@ export function SupplierScreen() {
           )}
         </div>
         <div className="identity-panel" aria-live="polite">
-          {selected ? (
-            <article aria-label="Supplier detail" className="identity-result">
-              <DetailHeader
-                eyebrow="Supplier"
-                title={selected.name}
-                editLabel="Edit supplier"
-                onEdit={() => {
-                  setEditing(true);
+          {selectedId && detail.status === "loading" ? (
+            <p className="notice" aria-live="polite">
+              Loading supplier hub…
+            </p>
+          ) : selectedId && detail.status === "error" ? (
+            <div className="notice notice--error" role="alert">
+              <p>Florabase could not load this supplier’s linked material.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setDetail({ status: "loading" });
+                  setDetailRefresh((value) => value + 1);
                 }}
-                overflow={
-                  <details className="overflow-menu">
-                    <summary aria-label="More supplier actions">…</summary>
-                    <button
-                      className="button--secondary"
-                      type="button"
-                      disabled={pending}
-                      onClick={() =>
-                        void apply(
-                          () =>
-                            setSupplierRetired(
-                              selected.id,
-                              !selected.retired_at,
-                              csrfToken,
-                            ),
-                          (supplier) =>
-                            supplier.retired_at
-                              ? `${supplier.name} was retired.`
-                              : `${supplier.name} was reactivated.`,
-                        )
-                      }
-                    >
-                      {selected.retired_at
-                        ? "Reactivate supplier"
-                        : "Retire supplier"}
-                    </button>
-                  </details>
-                }
-              />
-              {selected.retired_at && (
-                <p className="notice notice--duplicate">
-                  This supplier is retired.
-                </p>
-              )}
-              <dl>
-                <div>
-                  <dt>Kind</dt>
-                  <dd>{kindLabels[selected.kind]}</dd>
-                </div>
-                {selected.website && (
-                  <div>
-                    <dt>Website</dt>
-                    <dd>
-                      <a
-                        href={selected.website}
-                        target="_blank"
-                        rel="noreferrer"
-                      >
-                        Visit supplier website
-                      </a>
-                    </dd>
-                  </div>
-                )}
-                {selected.email && (
-                  <div>
-                    <dt>Email</dt>
-                    <dd>
-                      <a href={`mailto:${selected.email}`}>{selected.email}</a>
-                    </dd>
-                  </div>
-                )}
-                {selected.phone && (
-                  <div>
-                    <dt>Phone</dt>
-                    <dd>{selected.phone}</dd>
-                  </div>
-                )}
-                {selected.notes && (
-                  <div>
-                    <dt>Notes</dt>
-                    <dd className="preserve-lines">{selected.notes}</dd>
-                  </div>
-                )}
-              </dl>
-              {editing && (
-                <form
-                  key={`${selected.id}-${selected.updated_at}`}
-                  onSubmit={submitUpdate}
-                >
-                  <h4>Edit supplier</h4>
-                  <SupplierFields supplier={selected} disabled={pending} />
-                  <div className="actions">
-                    <button type="submit" disabled={pending}>
-                      Save supplier
-                    </button>
-                    <button
-                      className="button--secondary"
-                      type="button"
-                      disabled={pending}
-                      onClick={() => {
-                        setEditing(false);
-                      }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              )}
-            </article>
+              >
+                Retry supplier
+              </button>
+            </div>
+          ) : detail.status === "ready" ? (
+            <SupplierHub
+              key={detail.supplier.id}
+              supplier={detail.supplier}
+              editing={editing}
+              pending={pending}
+              csrfToken={csrfToken}
+              initialTab={initialTab}
+              onEdit={() => {
+                setEditing(true);
+              }}
+              onSubmitUpdate={submitUpdate}
+              onCancelEdit={() => {
+                setEditing(false);
+              }}
+              onLifecycle={(action, success) => {
+                void apply(action, success);
+              }}
+            />
           ) : (
             <div className="empty-state">
               <h3>Select a supplier</h3>

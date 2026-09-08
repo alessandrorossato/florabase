@@ -1,12 +1,15 @@
 import re
 import unicodedata
 from datetime import datetime
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Literal, Self
 from urllib.parse import urlsplit
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from florabase.plants.model import PlantGroupLifecycle, PlantLifecycle
+from florabase.seed_lots.model import SeedLotLifecycle
+from florabase.seed_lots.schemas import PartialDate
 from florabase.suppliers.model import SupplierKind
 
 if TYPE_CHECKING:
@@ -124,3 +127,64 @@ class SupplierResponse(BaseModel):
     @classmethod
     def from_model(cls, supplier: Supplier) -> Self:
         return cls.model_validate(supplier)
+
+
+class SupplierUsageCounts(BaseModel):
+    seed_lots_active: int
+    seed_lots_total: int
+    plants_active: int
+    plants_total: int
+    plant_groups_active: int
+    plant_groups_total: int
+    direct_records_active: int
+    direct_records_total: int
+
+
+class SupplierListResponse(SupplierResponse):
+    usage_counts: SupplierUsageCounts
+
+
+class SupplierBotanicalIdentitySummary(BaseModel):
+    id: UUID
+    display_label: str
+
+
+class SupplierSeedLotLink(BaseModel):
+    id: UUID
+    label: str | None
+    botanical_identity: SupplierBotanicalIdentitySummary
+    lifecycle: SeedLotLifecycle
+    acquisition_date: PartialDate | None
+
+
+class SupplierPlantLink(BaseModel):
+    id: UUID
+    label: str | None
+    botanical_identity: SupplierBotanicalIdentitySummary
+    lifecycle: PlantLifecycle
+    collection_entry_date: PartialDate | None
+
+
+class SupplierPlantGroupLink(BaseModel):
+    id: UUID
+    label: str | None
+    botanical_identity: SupplierBotanicalIdentitySummary
+    lifecycle: PlantGroupLifecycle
+    collection_entry_date: PartialDate | None
+
+
+class SupplierRecentAcquisition(BaseModel):
+    record_type: Literal["seed_lot", "plant", "plant_group"]
+    id: UUID
+    label: str | None
+    botanical_identity: SupplierBotanicalIdentitySummary
+    lifecycle: SeedLotLifecycle | PlantLifecycle | PlantGroupLifecycle
+    acquired_on: PartialDate
+
+
+class SupplierDetailResponse(SupplierResponse):
+    usage_counts: SupplierUsageCounts
+    seed_lots: list[SupplierSeedLotLink]
+    plants: list[SupplierPlantLink]
+    plant_groups: list[SupplierPlantGroupLink]
+    recent_acquisitions: list[SupplierRecentAcquisition]

@@ -8,12 +8,16 @@ import pytest
 from fastapi import HTTPException, Response
 from pydantic import ValidationError
 
+from florabase.botanical_identities.model import BotanicalIdentity
+from florabase.plants.model import Plant, PlantGroup
+from florabase.seed_lots.model import SeedLot
 from florabase.suppliers import api
 from florabase.suppliers.model import Supplier, SupplierKind
 from florabase.suppliers.schemas import SupplierCreate, SupplierResponse, SupplierUpdate
 from florabase.suppliers.service import (
     create_supplier,
     get_supplier,
+    get_supplier_detail,
     list_suppliers,
     set_supplier_retired,
     update_supplier,
@@ -111,8 +115,14 @@ def test_supplier_service_create_get_list_update_and_lifecycle() -> None:
     database.get.return_value = created
     assert get_supplier(database, created.id) is created
     listed = [supplier(name="Alpha"), supplier(name="Beta")]
-    database.scalars.return_value = listed
-    assert list_suppliers(database) == listed
+    database.execute.return_value.tuples.return_value = [
+        (listed[0], 1, 2, 3, 4, 5, 6),
+        (listed[1], 0, 0, 0, 0, 0, 0),
+    ]
+    summaries = list_suppliers(database)
+    assert [item.name for item in summaries] == ["Alpha", "Beta"]
+    assert summaries[0].usage_counts.direct_records_active == 9
+    assert summaries[0].usage_counts.direct_records_total == 12
 
     updated = update_supplier(
         database,
@@ -129,11 +139,80 @@ def test_supplier_service_create_get_list_update_and_lifecycle() -> None:
     assert reactivated.retired_at is None
 
 
+def test_supplier_detail_builds_direct_links_counts_and_known_recent_dates() -> None:
+    now = datetime.now(UTC)
+    item = supplier()
+    identity = BotanicalIdentity(
+        id=uuid7(),
+        scientific_name="Clitoria ternatea",
+        cultivar_name=None,
+        common_name=None,
+        created_at=now,
+        updated_at=now,
+    )
+    seed_lot = SeedLot(
+        id=uuid7(),
+        botanical_identity_id=identity.id,
+        label="Thai seeds",
+        source_kind="purchased",
+        supplier_id=item.id,
+        acquisition_date_precision="day",
+        acquisition_date_year=2026,
+        acquisition_date_month=8,
+        acquisition_date_day=30,
+        lifecycle="active",
+    )
+    plant = Plant(
+        id=uuid7(),
+        botanical_identity_id=identity.id,
+        direct_origin_kind="purchased",
+        supplier_id=item.id,
+        collection_entry_date_precision=None,
+        collection_entry_date_year=None,
+        collection_entry_date_month=None,
+        collection_entry_date_day=None,
+        lifecycle="transferred",
+    )
+    group = PlantGroup(
+        id=uuid7(),
+        botanical_identity_id=identity.id,
+        direct_origin_kind="gift_exchange",
+        supplier_id=item.id,
+        collection_entry_date_precision="month",
+        collection_entry_date_year=2026,
+        collection_entry_date_month=9,
+        collection_entry_date_day=None,
+        lifecycle="active",
+    )
+    count_result = MagicMock()
+    count_result.one.return_value = (1, 1, 0, 1, 1, 1)
+    seed_result = MagicMock()
+    seed_result.tuples.return_value = [(seed_lot, identity)]
+    plant_result = MagicMock()
+    plant_result.tuples.return_value = [(plant, identity)]
+    group_result = MagicMock()
+    group_result.tuples.return_value = [(group, identity)]
+    database = MagicMock()
+    database.execute.side_effect = [count_result, seed_result, plant_result, group_result]
+
+    detail = get_supplier_detail(database, item)
+
+    assert detail.usage_counts.direct_records_active == 2
+    assert detail.usage_counts.direct_records_total == 3
+    assert detail.seed_lots[0].botanical_identity.display_label == "Clitoria ternatea"
+    assert detail.plants[0].collection_entry_date is None
+    assert [recent.record_type for recent in detail.recent_acquisitions] == [
+        "plant_group",
+        "seed_lot",
+    ]
+
+
 def test_supplier_api_success_and_not_found(monkeypatch: pytest.MonkeyPatch) -> None:
     item = supplier()
     actor = cast(Any, SimpleNamespace(owner=True))
     database = MagicMock()
-    monkeypatch.setattr(api, "list_suppliers", lambda _: [item])
+    summary = SimpleNamespace(id=item.id)
+    monkeypatch.setattr(api, "list_suppliers", lambda _: [summary])
     assert api.list_all(actor, database)[0].id == item.id
 
     monkeypatch.setattr(api, "create_supplier", lambda _database, _payload: item)
@@ -143,6 +222,8 @@ def test_supplier_api_success_and_not_found(monkeypatch: pytest.MonkeyPatch) -> 
     assert response.headers["location"].endswith(str(item.id))
 
     monkeypatch.setattr(api, "get_supplier", lambda _database, _id: item)
+    detail = SimpleNamespace(id=item.id)
+    monkeypatch.setattr(api, "get_supplier_detail", lambda _database, _supplier: detail)
     assert api.read(item.id, actor, database).id == item.id
     monkeypatch.setattr(api, "update_supplier", lambda _database, existing, _payload: existing)
     assert (

@@ -12,10 +12,17 @@ from florabase.auth.dependencies import (
 )
 from florabase.db.session import get_database_session
 from florabase.suppliers.model import Supplier
-from florabase.suppliers.schemas import SupplierCreate, SupplierResponse, SupplierUpdate
+from florabase.suppliers.schemas import (
+    SupplierCreate,
+    SupplierDetailResponse,
+    SupplierListResponse,
+    SupplierResponse,
+    SupplierUpdate,
+)
 from florabase.suppliers.service import (
     create_supplier,
     get_supplier,
+    get_supplier_detail,
     list_suppliers,
     set_supplier_retired,
     update_supplier,
@@ -38,12 +45,12 @@ def _require_supplier(database: Session, supplier_id: UUID) -> Supplier:
     return supplier
 
 
-@router.get("", response_model=list[SupplierResponse], operation_id="listSuppliers")
+@router.get("", response_model=list[SupplierListResponse], operation_id="listSuppliers")
 def list_all(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
     database: Annotated[Session, Depends(get_database_session)],
-) -> list[SupplierResponse]:
-    return [SupplierResponse.from_model(item) for item in list_suppliers(database)]
+) -> list[SupplierListResponse]:
+    return list_suppliers(database)
 
 
 @router.post(
@@ -64,13 +71,13 @@ def create(
     return SupplierResponse.from_model(supplier)
 
 
-@router.get("/{supplier_id}", response_model=SupplierResponse, operation_id="getSupplier")
+@router.get("/{supplier_id}", response_model=SupplierDetailResponse, operation_id="getSupplier")
 def read(
     supplier_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
     database: Annotated[Session, Depends(get_database_session)],
-) -> SupplierResponse:
-    return SupplierResponse.from_model(_require_supplier(database, supplier_id))
+) -> SupplierDetailResponse:
+    return get_supplier_detail(database, _require_supplier(database, supplier_id))
 
 
 @router.put("/{supplier_id}", response_model=SupplierResponse, operation_id="updateSupplier")

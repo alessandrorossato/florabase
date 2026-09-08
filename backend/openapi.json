@@ -5806,6 +5806,25 @@
         "title": "SowingUpdate",
         "type": "object"
       },
+      "SupplierBotanicalIdentitySummary": {
+        "properties": {
+          "display_label": {
+            "title": "Display Label",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "display_label"
+        ],
+        "title": "SupplierBotanicalIdentitySummary",
+        "type": "object"
+      },
       "SupplierCreate": {
         "additionalProperties": false,
         "properties": {
@@ -5873,6 +5892,138 @@
         "title": "SupplierCreate",
         "type": "object"
       },
+      "SupplierDetailResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SupplierKind"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "plant_groups": {
+            "items": {
+              "$ref": "#/components/schemas/SupplierPlantGroupLink"
+            },
+            "title": "Plant Groups",
+            "type": "array"
+          },
+          "plants": {
+            "items": {
+              "$ref": "#/components/schemas/SupplierPlantLink"
+            },
+            "title": "Plants",
+            "type": "array"
+          },
+          "recent_acquisitions": {
+            "items": {
+              "$ref": "#/components/schemas/SupplierRecentAcquisition"
+            },
+            "title": "Recent Acquisitions",
+            "type": "array"
+          },
+          "retired_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retired At"
+          },
+          "seed_lots": {
+            "items": {
+              "$ref": "#/components/schemas/SupplierSeedLotLink"
+            },
+            "title": "Seed Lots",
+            "type": "array"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "usage_counts": {
+            "$ref": "#/components/schemas/SupplierUsageCounts"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "website",
+          "email",
+          "phone",
+          "notes",
+          "retired_at",
+          "created_at",
+          "updated_at",
+          "usage_counts",
+          "seed_lots",
+          "plants",
+          "plant_groups",
+          "recent_acquisitions"
+        ],
+        "title": "SupplierDetailResponse",
+        "type": "object"
+      },
       "SupplierKind": {
         "enum": [
           "seller",
@@ -5884,6 +6035,255 @@
         ],
         "title": "SupplierKind",
         "type": "string"
+      },
+      "SupplierListResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SupplierKind"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "phone": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phone"
+          },
+          "retired_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Retired At"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "usage_counts": {
+            "$ref": "#/components/schemas/SupplierUsageCounts"
+          },
+          "website": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Website"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "kind",
+          "website",
+          "email",
+          "phone",
+          "notes",
+          "retired_at",
+          "created_at",
+          "updated_at",
+          "usage_counts"
+        ],
+        "title": "SupplierListResponse",
+        "type": "object"
+      },
+      "SupplierPlantGroupLink": {
+        "properties": {
+          "botanical_identity": {
+            "$ref": "#/components/schemas/SupplierBotanicalIdentitySummary"
+          },
+          "collection_entry_date": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/PlantGroupLifecycle"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "botanical_identity",
+          "lifecycle",
+          "collection_entry_date"
+        ],
+        "title": "SupplierPlantGroupLink",
+        "type": "object"
+      },
+      "SupplierPlantLink": {
+        "properties": {
+          "botanical_identity": {
+            "$ref": "#/components/schemas/SupplierBotanicalIdentitySummary"
+          },
+          "collection_entry_date": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/PlantLifecycle"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "botanical_identity",
+          "lifecycle",
+          "collection_entry_date"
+        ],
+        "title": "SupplierPlantLink",
+        "type": "object"
+      },
+      "SupplierRecentAcquisition": {
+        "properties": {
+          "acquired_on": {
+            "$ref": "#/components/schemas/PartialDate"
+          },
+          "botanical_identity": {
+            "$ref": "#/components/schemas/SupplierBotanicalIdentitySummary"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeedLotLifecycle"
+              },
+              {
+                "$ref": "#/components/schemas/PlantLifecycle"
+              },
+              {
+                "$ref": "#/components/schemas/PlantGroupLifecycle"
+              }
+            ],
+            "title": "Lifecycle"
+          },
+          "record_type": {
+            "enum": [
+              "seed_lot",
+              "plant",
+              "plant_group"
+            ],
+            "title": "Record Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "record_type",
+          "id",
+          "label",
+          "botanical_identity",
+          "lifecycle",
+          "acquired_on"
+        ],
+        "title": "SupplierRecentAcquisition",
+        "type": "object"
       },
       "SupplierResponse": {
         "properties": {
@@ -5981,6 +6381,51 @@
         "title": "SupplierResponse",
         "type": "object"
       },
+      "SupplierSeedLotLink": {
+        "properties": {
+          "acquisition_date": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "botanical_identity": {
+            "$ref": "#/components/schemas/SupplierBotanicalIdentitySummary"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "$ref": "#/components/schemas/SeedLotLifecycle"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "botanical_identity",
+          "lifecycle",
+          "acquisition_date"
+        ],
+        "title": "SupplierSeedLotLink",
+        "type": "object"
+      },
       "SupplierSummary": {
         "properties": {
           "id": {
@@ -6065,6 +6510,54 @@
           "kind"
         ],
         "title": "SupplierUpdate",
+        "type": "object"
+      },
+      "SupplierUsageCounts": {
+        "properties": {
+          "direct_records_active": {
+            "title": "Direct Records Active",
+            "type": "integer"
+          },
+          "direct_records_total": {
+            "title": "Direct Records Total",
+            "type": "integer"
+          },
+          "plant_groups_active": {
+            "title": "Plant Groups Active",
+            "type": "integer"
+          },
+          "plant_groups_total": {
+            "title": "Plant Groups Total",
+            "type": "integer"
+          },
+          "plants_active": {
+            "title": "Plants Active",
+            "type": "integer"
+          },
+          "plants_total": {
+            "title": "Plants Total",
+            "type": "integer"
+          },
+          "seed_lots_active": {
+            "title": "Seed Lots Active",
+            "type": "integer"
+          },
+          "seed_lots_total": {
+            "title": "Seed Lots Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "seed_lots_active",
+          "seed_lots_total",
+          "plants_active",
+          "plants_total",
+          "plant_groups_active",
+          "plant_groups_total",
+          "direct_records_active",
+          "direct_records_total"
+        ],
+        "title": "SupplierUsageCounts",
         "type": "object"
       },
       "TransferCreate": {
@@ -9987,7 +10480,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/SupplierResponse"
+                    "$ref": "#/components/schemas/SupplierListResponse"
                   },
                   "title": "Response Listsuppliers",
                   "type": "array"
@@ -10080,7 +10573,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/SupplierResponse"
+                  "$ref": "#/components/schemas/SupplierDetailResponse"
                 }
               }
             },

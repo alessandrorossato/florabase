@@ -2574,6 +2574,16 @@ export interface components {
             /** Temperature Min C */
             temperature_min_c?: number | string | null;
         };
+        /** SupplierBotanicalIdentitySummary */
+        SupplierBotanicalIdentitySummary: {
+            /** Display Label */
+            display_label: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+        };
         /** SupplierCreate */
         SupplierCreate: {
             /** Email */
@@ -2588,11 +2598,128 @@ export interface components {
             /** Website */
             website?: string | null;
         };
+        /** SupplierDetailResponse */
+        SupplierDetailResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Email */
+            email: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["SupplierKind"];
+            /** Name */
+            name: string;
+            /** Notes */
+            notes: string | null;
+            /** Phone */
+            phone: string | null;
+            /** Plant Groups */
+            plant_groups: components["schemas"]["SupplierPlantGroupLink"][];
+            /** Plants */
+            plants: components["schemas"]["SupplierPlantLink"][];
+            /** Recent Acquisitions */
+            recent_acquisitions: components["schemas"]["SupplierRecentAcquisition"][];
+            /** Retired At */
+            retired_at: string | null;
+            /** Seed Lots */
+            seed_lots: components["schemas"]["SupplierSeedLotLink"][];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            usage_counts: components["schemas"]["SupplierUsageCounts"];
+            /** Website */
+            website: string | null;
+        };
         /**
          * SupplierKind
          * @enum {string}
          */
         SupplierKind: "seller" | "nursery" | "supermarket" | "person" | "exchange" | "other";
+        /** SupplierListResponse */
+        SupplierListResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Email */
+            email: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["SupplierKind"];
+            /** Name */
+            name: string;
+            /** Notes */
+            notes: string | null;
+            /** Phone */
+            phone: string | null;
+            /** Retired At */
+            retired_at: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            usage_counts: components["schemas"]["SupplierUsageCounts"];
+            /** Website */
+            website: string | null;
+        };
+        /** SupplierPlantGroupLink */
+        SupplierPlantGroupLink: {
+            botanical_identity: components["schemas"]["SupplierBotanicalIdentitySummary"];
+            collection_entry_date: components["schemas"]["PartialDate"] | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string | null;
+            lifecycle: components["schemas"]["PlantGroupLifecycle"];
+        };
+        /** SupplierPlantLink */
+        SupplierPlantLink: {
+            botanical_identity: components["schemas"]["SupplierBotanicalIdentitySummary"];
+            collection_entry_date: components["schemas"]["PartialDate"] | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string | null;
+            lifecycle: components["schemas"]["PlantLifecycle"];
+        };
+        /** SupplierRecentAcquisition */
+        SupplierRecentAcquisition: {
+            acquired_on: components["schemas"]["PartialDate"];
+            botanical_identity: components["schemas"]["SupplierBotanicalIdentitySummary"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string | null;
+            /** Lifecycle */
+            lifecycle: components["schemas"]["SeedLotLifecycle"] | components["schemas"]["PlantLifecycle"] | components["schemas"]["PlantGroupLifecycle"];
+            /**
+             * Record Type
+             * @enum {string}
+             */
+            record_type: "seed_lot" | "plant" | "plant_group";
+        };
         /** SupplierResponse */
         SupplierResponse: {
             /**
@@ -2624,6 +2751,19 @@ export interface components {
             /** Website */
             website: string | null;
         };
+        /** SupplierSeedLotLink */
+        SupplierSeedLotLink: {
+            acquisition_date: components["schemas"]["PartialDate"] | null;
+            botanical_identity: components["schemas"]["SupplierBotanicalIdentitySummary"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string | null;
+            lifecycle: components["schemas"]["SeedLotLifecycle"];
+        };
         /** SupplierSummary */
         SupplierSummary: {
             /**
@@ -2647,6 +2787,25 @@ export interface components {
             phone?: string | null;
             /** Website */
             website?: string | null;
+        };
+        /** SupplierUsageCounts */
+        SupplierUsageCounts: {
+            /** Direct Records Active */
+            direct_records_active: number;
+            /** Direct Records Total */
+            direct_records_total: number;
+            /** Plant Groups Active */
+            plant_groups_active: number;
+            /** Plant Groups Total */
+            plant_groups_total: number;
+            /** Plants Active */
+            plants_active: number;
+            /** Plants Total */
+            plants_total: number;
+            /** Seed Lots Active */
+            seed_lots_active: number;
+            /** Seed Lots Total */
+            seed_lots_total: number;
         };
         /** TransferCreate */
         TransferCreate: {
@@ -5168,7 +5327,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SupplierResponse"][];
+                    "application/json": components["schemas"]["SupplierListResponse"][];
                 };
             };
         };
@@ -5225,7 +5384,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["SupplierResponse"];
+                    "application/json": components["schemas"]["SupplierDetailResponse"];
                 };
             };
             /** @description Validation Error */

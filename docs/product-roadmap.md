@@ -106,8 +106,11 @@ correction path. Partial group transfer is deliberately absent: the operator ext
 then transfers it. Extraction now atomically records a source-group Event with a structured link to
 the resulting Plant. Event edits and deletes never replay or reverse either operation. `LOCATION-002` retains one
 Location concept while adding usage-scoped Seeds, Sowings, and Plants views plus an accessible
-collapsible hierarchy. `SUPPLIER-002` may add connected-record summaries, but financial totals wait
-for the separate `ORDER-001` transaction model.
+collapsible hierarchy. `SUPPLIER-002` adds a focused Supplier hub with explicit direct-reference
+counts, linked SeedLots and directly acquired Plants/PlantGroups, BotanicalIdentity context, and
+precision-preserving recent acquisition summaries. Propagated or extracted descendants do not
+inherit Supplier, retained historical records do not become active holdings, and financial totals
+wait for the separate `ORDER-001` transaction model.
 
 The remaining V1 surface order is `LOCATION-002`, `GEOGRAPHY-003`, `SUPPLIER-002`, then the
 botanical/map increments. `UX-003` follows those feature-specific surfaces as global stabilization

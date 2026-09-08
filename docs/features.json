@@ -793,7 +793,7 @@
       ],
       "dependencies": ["SUPPLIER-001", "SEED-004"],
       "priority": "P2",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "IMPORT-001",

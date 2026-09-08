@@ -35,7 +35,23 @@ origin/distribution text is independent and must not be silently replaced by fut
 A Supplier is an installation-wide acquisition source such as a seller, nursery, supermarket,
 person, exchange, or other source. Name is non-unique; stable UUID is identity. Optional website,
 email, phone, and notes are descriptive. Retirement is non-destructive. Supplier answers who or what
-supplied material, not where that material originated.
+supplied material, not where that material originated or where it is currently kept.
+
+The Supplier hub derives connected material only from explicit `supplier_id` references on
+SeedLots and directly entered Plants or PlantGroups. It reports active/current and retained-total
+counts for each type, combines Plant and PlantGroup presentation under the established Plants UI,
+and links every record and BotanicalIdentity. Propagated Plants and PlantGroups and extracted Plants
+do not inherit their ancestor's Supplier, so lineage-derived descendants do not inflate direct
+counts. Historical lost, discarded, exhausted, completed, dead, transferred, reversed, or
+reintegrated records remain readable where a direct relationship can validly exist, but only the
+`active` lifecycle contributes to current counts.
+
+Recent acquisitions merge the existing SeedLot acquisition date and direct Plant/PlantGroup
+collection-entry date, preserve their year/month/day precision, omit undated records from the
+recency claim, and use record type and stable UUID as deterministic ties. Undated records remain in
+the linked-material sections. Supplier retirement preserves every relationship and there is no
+Supplier hard-delete workflow. Orders, invoices, spending, prices, currencies, and other financial
+analytics remain deferred to an explicit transaction model.
 
 ### Location
 
@@ -361,12 +377,12 @@ not a new relationship, automatic state machine, or claim that every record has 
 Later navigation work should make that lifecycle easier to follow across desktop and mobile without
 conflating BotanicalIdentity aggregation with recorded lineage.
 
-Future Location presentation may scope the one shared Location hierarchy by its Seeds, Sowings, or
-Plants usage and render it as a collapsible tree. This does not split Location into separate domain
-entities. Future Supplier detail may summarize explicitly connected records; it must not imply
-spending or price totals before an Order model exists. Finer-grained geography remains compatible
-with carefully scoped custom/local GeographicPlace nodes, while a canonical global city dataset is
-not part of the current or first-release model.
+Location presentation scopes the one shared Location hierarchy by its Seeds, Sowings, or Plants
+usage without splitting Location into separate domain entities. Supplier detail summarizes only
+explicitly connected records and does not imply spending or price totals before an Order model
+exists. Finer-grained geography remains compatible with carefully scoped custom/local
+GeographicPlace nodes, while a canonical global city dataset is not part of the current or
+first-release model.
 
 ## Explicit lineage
 
@@ -415,8 +431,7 @@ product workflows preserve historical rows rather than hard-deleting them.
 Event attachments, richer structured Event payloads, attachment/photo
 storage, richer germination observations, Orders, other propagation material, advanced search,
 analytical dashboards, contextual form help, import/export, PWA installability, enrichment, taxonomy
-reconciliation, scope-aware
-Location browsing, richer Supplier summaries, reminders, weather, and multi-user ownership remain
+reconciliation, deeper Supplier analytics, reminders, weather, and multi-user ownership remain
 planned. `docs/features.json` is the detailed source for dependencies and acceptance criteria.
 
 

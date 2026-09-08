@@ -584,6 +584,9 @@ test("direct origin, references, partial date, Location, lifecycle, notes, and s
     "Retained history.",
   );
   await user.click(screen.getByRole("button", { name: "Record Plant" }));
+  expect(
+    await screen.findByRole("link", { name: "Rossi Nursery" }),
+  ).toHaveAttribute("href", `#/suppliers/${supplierId}`);
   expect(payloads[0]).toMatchObject({
     label: "Courtyard avocado",
     direct_origin_kind: "purchased",
