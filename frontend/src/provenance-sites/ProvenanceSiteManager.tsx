@@ -31,9 +31,11 @@ const blank: SiteForm = {
 export function ProvenanceSiteManager({
   places,
   csrfToken,
+  initialSiteId,
 }: {
   places: GeographicPlaceResponse[];
   csrfToken: string;
+  initialSiteId?: string;
 }) {
   const [sites, setSites] = useState<ProvenanceSiteResponse[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -51,6 +53,18 @@ export function ProvenanceSiteManager({
     void listProvenanceSites(controller.signal)
       .then((loaded) => {
         setSites(loaded);
+        const initial = loaded.find(({ id }) => id === initialSiteId);
+        if (initial) {
+          setSelectedId(initial.id);
+          setForm({
+            name: initial.name,
+            geographicPlaceId: initial.geographic_place_id ?? "",
+            latitude: initial.latitude ?? "",
+            longitude: initial.longitude ?? "",
+            accuracy: initial.coordinate_accuracy_m ?? "",
+            notes: initial.notes ?? "",
+          });
+        }
       })
       .catch(() => {
         if (!controller.signal.aborted) {
@@ -60,7 +74,7 @@ export function ProvenanceSiteManager({
     return () => {
       controller.abort();
     };
-  }, []);
+  }, [initialSiteId]);
 
   function select(site: ProvenanceSiteResponse) {
     setSelectedId(site.id);

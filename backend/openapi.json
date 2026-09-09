@@ -3396,6 +3396,210 @@
         "title": "PropagationReversalEligibility",
         "type": "object"
       },
+      "ProvenanceMapBotanicalIdentity": {
+        "properties": {
+          "display_label": {
+            "title": "Display Label",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "display_label"
+        ],
+        "title": "ProvenanceMapBotanicalIdentity",
+        "type": "object"
+      },
+      "ProvenanceMapRecord": {
+        "properties": {
+          "botanical_identity": {
+            "$ref": "#/components/schemas/ProvenanceMapBotanicalIdentity"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "record_type": {
+            "enum": [
+              "seed_lot",
+              "plant",
+              "plant_group"
+            ],
+            "title": "Record Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "record_type",
+          "id",
+          "label",
+          "botanical_identity",
+          "lifecycle",
+          "is_active"
+        ],
+        "title": "ProvenanceMapRecord",
+        "type": "object"
+      },
+      "ProvenanceMapResponse": {
+        "properties": {
+          "coordinate_less_sites": {
+            "title": "Coordinate Less Sites",
+            "type": "integer"
+          },
+          "sites": {
+            "items": {
+              "$ref": "#/components/schemas/ProvenanceMapSite"
+            },
+            "title": "Sites",
+            "type": "array"
+          },
+          "total_provenance_sites": {
+            "title": "Total Provenance Sites",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total_provenance_sites",
+          "coordinate_less_sites",
+          "sites"
+        ],
+        "title": "ProvenanceMapResponse",
+        "type": "object"
+      },
+      "ProvenanceMapSite": {
+        "properties": {
+          "coordinate_accuracy_m": {
+            "anyOf": [
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Coordinate Accuracy M"
+          },
+          "geographic_place_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geographic Place Id"
+          },
+          "geographic_place_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Geographic Place Path"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "latitude": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Latitude",
+            "type": "string"
+          },
+          "longitude": {
+            "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+            "title": "Longitude",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/ProvenanceMapRecord"
+            },
+            "title": "Records",
+            "type": "array"
+          },
+          "usage": {
+            "$ref": "#/components/schemas/ProvenanceMapUsage"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "latitude",
+          "longitude",
+          "coordinate_accuracy_m",
+          "geographic_place_id",
+          "geographic_place_path",
+          "usage",
+          "records"
+        ],
+        "title": "ProvenanceMapSite",
+        "type": "object"
+      },
+      "ProvenanceMapUsage": {
+        "properties": {
+          "plant_groups": {
+            "title": "Plant Groups",
+            "type": "integer"
+          },
+          "plants": {
+            "title": "Plants",
+            "type": "integer"
+          },
+          "seed_lots": {
+            "title": "Seed Lots",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "seed_lots",
+          "plants",
+          "plant_groups",
+          "total"
+        ],
+        "title": "ProvenanceMapUsage",
+        "type": "object"
+      },
       "ProvenanceSiteCreate": {
         "additionalProperties": false,
         "properties": {
@@ -9496,6 +9700,27 @@
           }
         },
         "summary": "Create",
+        "tags": [
+          "provenance-sites"
+        ]
+      }
+    },
+    "/api/v1/provenance-sites/map": {
+      "get": {
+        "operationId": "getCollectionProvenanceMap",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProvenanceMapResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read Map",
         "tags": [
           "provenance-sites"
         ]

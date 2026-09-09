@@ -669,6 +669,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/provenance-sites/map": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Map */
+        get: operations["getCollectionProvenanceMap"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/provenance-sites/{site_id}": {
         parameters: {
             query?: never;
@@ -1955,6 +1972,79 @@ export interface components {
              * @enum {string}
              */
             status: "safe" | "confirmation_required" | "blocked";
+        };
+        /** ProvenanceMapBotanicalIdentity */
+        ProvenanceMapBotanicalIdentity: {
+            /** Display Label */
+            display_label: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+        };
+        /** ProvenanceMapRecord */
+        ProvenanceMapRecord: {
+            botanical_identity: components["schemas"]["ProvenanceMapBotanicalIdentity"];
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Active */
+            is_active: boolean;
+            /** Label */
+            label: string | null;
+            /** Lifecycle */
+            lifecycle: string;
+            /**
+             * Record Type
+             * @enum {string}
+             */
+            record_type: "seed_lot" | "plant" | "plant_group";
+        };
+        /** ProvenanceMapResponse */
+        ProvenanceMapResponse: {
+            /** Coordinate Less Sites */
+            coordinate_less_sites: number;
+            /** Sites */
+            sites: components["schemas"]["ProvenanceMapSite"][];
+            /** Total Provenance Sites */
+            total_provenance_sites: number;
+        };
+        /** ProvenanceMapSite */
+        ProvenanceMapSite: {
+            /** Coordinate Accuracy M */
+            coordinate_accuracy_m: string | null;
+            /** Geographic Place Id */
+            geographic_place_id: string | null;
+            /** Geographic Place Path */
+            geographic_place_path: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Latitude */
+            latitude: string;
+            /** Longitude */
+            longitude: string;
+            /** Name */
+            name: string;
+            /** Records */
+            records: components["schemas"]["ProvenanceMapRecord"][];
+            usage: components["schemas"]["ProvenanceMapUsage"];
+        };
+        /** ProvenanceMapUsage */
+        ProvenanceMapUsage: {
+            /** Plant Groups */
+            plant_groups: number;
+            /** Plants */
+            plants: number;
+            /** Seed Lots */
+            seed_lots: number;
+            /** Total */
+            total: number;
         };
         /** ProvenanceSiteCreate */
         ProvenanceSiteCreate: {
@@ -4702,6 +4792,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getCollectionProvenanceMap: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProvenanceMapResponse"];
                 };
             };
         };

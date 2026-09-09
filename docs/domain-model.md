@@ -108,10 +108,18 @@ GeographicPlace cannot be deleted while children, ProvenanceSites, or direct col
 depend on it. Reparenting a GeographicPlace changes the site's derived place path but never its
 coordinates or collection relationships.
 
-ProvenanceSite coordinates are the internal data boundary for future MAP-001. They are collection
-provenance, not the independently planned GEOGRAPHY-002 botanical native distribution dataset.
+ProvenanceSite coordinates are the authoritative marker boundary for the MAP-001 collection
+provenance map. One marker represents one coordinate-bearing site and may expose several directly
+associated SeedLots, directly entered Plants, or directly entered PlantGroups. Retained historical
+records remain provenance history with their actual lifecycle. Propagated and extracted descendants
+do not acquire a duplicate direct site for map convenience, and Florabase never guesses coordinates
+from a GeographicPlace name or centroid.
+
+This map describes origins recorded for the operator's collection. It is not the independently
+planned GEOGRAPHY-002 botanical native-distribution dataset or future MAP-002 occurrence map.
 Location remains the current physical storage/cultivation place, and Supplier remains who supplied
-the material.
+the material. The map performs no geocoding, reverse geocoding, browser geolocation, or external
+botanical lookup.
 
 ## Collection concepts
 

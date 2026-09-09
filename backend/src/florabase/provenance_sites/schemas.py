@@ -1,7 +1,7 @@
 import unicodedata
 from datetime import datetime
 from decimal import Decimal
-from typing import Self
+from typing import Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -89,3 +89,42 @@ class ProvenanceSiteSummary(BaseModel):
     geographic_place_path: str | None
     latitude: Decimal | None
     longitude: Decimal | None
+
+
+class ProvenanceMapBotanicalIdentity(BaseModel):
+    id: UUID
+    display_label: str
+
+
+class ProvenanceMapRecord(BaseModel):
+    record_type: Literal["seed_lot", "plant", "plant_group"]
+    id: UUID
+    label: str | None
+    botanical_identity: ProvenanceMapBotanicalIdentity
+    lifecycle: str
+    is_active: bool
+
+
+class ProvenanceMapUsage(BaseModel):
+    seed_lots: int
+    plants: int
+    plant_groups: int
+    total: int
+
+
+class ProvenanceMapSite(BaseModel):
+    id: UUID
+    name: str
+    latitude: Decimal
+    longitude: Decimal
+    coordinate_accuracy_m: Decimal | None
+    geographic_place_id: UUID | None
+    geographic_place_path: str | None
+    usage: ProvenanceMapUsage
+    records: list[ProvenanceMapRecord]
+
+
+class ProvenanceMapResponse(BaseModel):
+    total_provenance_sites: int
+    coordinate_less_sites: int
+    sites: list[ProvenanceMapSite]
