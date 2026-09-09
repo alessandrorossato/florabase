@@ -4,8 +4,11 @@ SHELL := /bin/bash
 COMPOSE := docker compose
 DEV_COMPOSE := $(COMPOSE) -f compose.yaml -f compose.dev.yaml
 BACKUP_DIR ?= backups
+REF ?= origin/main
+PREVIEW_PATH ?= ../florabase-preview
+LOGIN ?= owner
 
-.PHONY: help setup up dev down logs build test test-backend test-integration test-frontend lint format format-check typecheck check ci migrate dev-upgrade migration backup restore health api-generate api-check dependency-update feature-start feature-verify feature-deliver feature-finish test-workflow-helpers test-feature-workflow
+.PHONY: help setup up dev down logs build test test-backend test-integration test-frontend lint format format-check typecheck check ci migrate dev-upgrade migration backup restore health api-generate api-check dependency-update preview preview-status preview-stop preview-bootstrap-owner preview-import-dev preview-remove feature-start feature-verify feature-deliver feature-finish test-workflow-helpers test-feature-workflow test-preview-workflow
 
 help:
 	@awk 'BEGIN {FS = ":.*## "; print "Florabase commands:"} /^[a-zA-Z_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -65,7 +68,7 @@ api-check: ## Verify generated API artifacts are current
 
 check: format-check lint typecheck test api-check ## Run the main non-destructive verification suite
 
-ci: test-workflow-helpers test-feature-workflow check test-integration build ## Run the complete local equivalent of pull-request CI
+ci: test-workflow-helpers test-feature-workflow test-preview-workflow check test-integration build ## Run the complete local equivalent of pull-request CI
 
 migrate: ## Apply all pending database migrations explicitly
 	$(COMPOSE) run --rm backend alembic upgrade head
@@ -92,6 +95,24 @@ restore: ## Restore dump: make restore FILE=backups/file.dump CONFIRM_REPLACE=ye
 health: ## Verify frontend, liveness, and database readiness through the proxy
 	./scripts/health.sh
 
+preview: ## Start/update isolated stable preview: make preview REF=origin/main
+	@python3 ./scripts/preview.py --path "$(PREVIEW_PATH)" start --ref "$(REF)"
+
+preview-status: ## Show isolated preview Git, Compose, database, and URL state
+	@python3 ./scripts/preview.py --path "$(PREVIEW_PATH)" status
+
+preview-stop: ## Stop preview containers while preserving its worktree and database
+	@python3 ./scripts/preview.py --path "$(PREVIEW_PATH)" stop
+
+preview-bootstrap-owner: ## Interactively create the preview owner: make preview-bootstrap-owner LOGIN=owner
+	@python3 ./scripts/preview.py --path "$(PREVIEW_PATH)" bootstrap-owner --login "$(LOGIN)"
+
+preview-import-dev: ## Replace preview data from development with explicit confirmation
+	@python3 ./scripts/preview.py --path "$(PREVIEW_PATH)" import-dev --confirm "$(CONFIRM_REPLACE_PREVIEW)" --confirm-database "$(CONFIRM_DATABASE)"
+
+preview-remove: ## Stop preview and safely remove its clean worktree, preserving its database
+	@python3 ./scripts/preview.py --path "$(PREVIEW_PATH)" remove
+
 dependency-update: ## Refresh lockfiles after reviewing direct pins
 	$(DEV_COMPOSE) run --rm --no-deps backend pip-compile --strip-extras --output-file requirements.lock pyproject.toml
 	$(DEV_COMPOSE) run --rm --no-deps backend pip-compile --strip-extras --extra dev --output-file requirements-dev.lock pyproject.toml
@@ -115,3 +136,6 @@ test-workflow-helpers: ## Test Git and database-upgrade helper safety in isolate
 
 test-feature-workflow: ## Test feature verification and delivery orchestration without GitHub
 	@python3 ./scripts/test-feature-workflow.py
+
+test-preview-workflow: ## Test stable-preview safety and isolation without Docker or network
+	@python3 ./scripts/test-preview-workflow.py
