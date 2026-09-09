@@ -1,13 +1,15 @@
-import { divIcon, latLngBounds, type Marker as LeafletMarker } from "leaflet";
-import { useEffect, useMemo, useRef } from "react";
 import {
-  Circle,
-  MapContainer,
-  Marker,
-  Popup,
-  TileLayer,
-  useMap,
-} from "react-leaflet";
+  circle,
+  divIcon,
+  latLngBounds,
+  map as createMap,
+  marker as createMarker,
+  tileLayer,
+  type Layer,
+  type Map as LeafletMap,
+  type Marker as LeafletMarker,
+} from "leaflet";
+import { useEffect, useRef } from "react";
 
 import type { ProvenanceMapSite } from "./api";
 import { mapRuntimeConfig } from "./config";
@@ -20,80 +22,30 @@ const markerIcon = divIcon({
   popupAnchor: [0, -12],
 });
 
-function ViewController({
-  sites,
-  selected,
-}: {
-  sites: ProvenanceMapSite[];
-  selected: ProvenanceMapSite | null;
-}) {
-  const map = useMap();
-  useEffect(() => {
-    if (selected) {
-      map.flyTo(
-        [Number(selected.latitude), Number(selected.longitude)],
-        Math.max(map.getZoom(), 10),
-      );
-      return;
-    }
-    const bounds = latLngBounds(
-      sites.map((site) => [Number(site.latitude), Number(site.longitude)]),
-    );
-    if (sites.length === 1) map.setView(bounds.getCenter(), 10);
-    else map.fitBounds(bounds, { padding: [36, 36], maxZoom: 12 });
-  }, [map, selected, sites]);
-  return null;
+function position(site: ProvenanceMapSite): [number, number] {
+  return [Number(site.latitude), Number(site.longitude)];
 }
 
-function SiteMarker({
-  site,
-  selected,
-  onSelect,
-}: {
-  site: ProvenanceMapSite;
-  selected: boolean;
-  onSelect: (id: string) => void;
-}) {
-  const marker = useRef<LeafletMarker | null>(null);
-  useEffect(() => {
-    if (selected) marker.current?.openPopup();
-  }, [selected]);
-  const position: [number, number] = [
-    Number(site.latitude),
-    Number(site.longitude),
-  ];
-  return (
-    <>
-      {site.coordinate_accuracy_m !== null &&
-        Number(site.coordinate_accuracy_m) > 0 && (
-          <Circle
-            center={position}
-            radius={Number(site.coordinate_accuracy_m)}
-            pathOptions={{ color: "#30624b", fillOpacity: 0.08, weight: 1 }}
-          />
-        )}
-      <Marker
-        ref={marker}
-        icon={markerIcon}
-        position={position}
-        eventHandlers={{
-          click: () => {
-            onSelect(site.id);
-          },
-        }}
-        title={site.name}
-      >
-        <Popup>
-          <strong>{site.name}</strong>
-          <br />
-          {site.geographic_place_path ?? "No named geographic place"}
-          <br />
-          {site.usage.total} linked{" "}
-          {site.usage.total === 1 ? "record" : "records"}
-        </Popup>
-      </Marker>
-    </>
+function popupContent(site: ProvenanceMapSite): HTMLElement {
+  const container = document.createElement("div");
+
+  const title = document.createElement("strong");
+  title.textContent = site.name;
+  container.append(title, document.createElement("br"));
+
+  container.append(
+    document.createTextNode(
+      site.geographic_place_path ?? "No named geographic place",
+    ),
+    document.createElement("br"),
+    document.createTextNode(
+      `${String(site.usage.total)} linked ${
+        site.usage.total === 1 ? "record" : "records"
+      }`,
+    ),
   );
+
+  return container;
 }
 
 export function ProvenanceMap({
@@ -105,31 +57,116 @@ export function ProvenanceMap({
   selectedId: string | null;
   onSelect: (id: string) => void;
 }) {
-  const selected = useMemo(
-    () => sites.find(({ id }) => id === selectedId) ?? null,
-    [selectedId, sites],
-  );
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<LeafletMap | null>(null);
+  const siteLayersRef = useRef<Layer[]>([]);
+  const markersRef = useRef<Map<string, LeafletMarker>>(new Map());
+  const onSelectRef = useRef(onSelect);
+
+  useEffect(() => {
+    onSelectRef.current = onSelect;
+  }, [onSelect]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const map = createMap(container, {
+      scrollWheelZoom: true,
+    }).setView([0, 0], 2);
+
+    tileLayer(mapRuntimeConfig.tileUrl, {
+      attribution: mapRuntimeConfig.attribution,
+    }).addTo(map);
+
+    mapRef.current = map;
+
+    const markers = markersRef.current;
+
+    return () => {
+      siteLayersRef.current = [];
+      markers.clear();
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    for (const layer of siteLayersRef.current) {
+      layer.remove();
+    }
+
+    siteLayersRef.current = [];
+    markersRef.current.clear();
+
+    for (const site of sites) {
+      const sitePosition = position(site);
+      const accuracy = Number(site.coordinate_accuracy_m);
+
+      if (
+        site.coordinate_accuracy_m !== null &&
+        Number.isFinite(accuracy) &&
+        accuracy > 0
+      ) {
+        const accuracyCircle = circle(sitePosition, {
+          radius: accuracy,
+          color: "#30624b",
+          fillOpacity: 0.08,
+          weight: 1,
+        }).addTo(map);
+
+        siteLayersRef.current.push(accuracyCircle);
+      }
+
+      const siteMarker = createMarker(sitePosition, {
+        icon: markerIcon,
+        title: site.name,
+        keyboard: true,
+      })
+        .bindPopup(popupContent(site))
+        .on("click", () => {
+          onSelectRef.current(site.id);
+        })
+        .addTo(map);
+
+      markersRef.current.set(site.id, siteMarker);
+      siteLayersRef.current.push(siteMarker);
+    }
+  }, [sites]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || sites.length === 0) return;
+
+    const selected = sites.find((site) => site.id === selectedId) ?? null;
+
+    if (selected) {
+      map.flyTo(position(selected), Math.max(map.getZoom(), 10));
+      markersRef.current.get(selected.id)?.openPopup();
+      return;
+    }
+
+    const bounds = latLngBounds(sites.map(position));
+
+    if (sites.length === 1) {
+      map.setView(bounds.getCenter(), 10);
+    } else {
+      map.fitBounds(bounds, {
+        padding: [36, 36],
+        maxZoom: 12,
+      });
+    }
+  }, [selectedId, sites]);
+
   return (
-    <MapContainer
+    <div
+      ref={containerRef}
       aria-label="Interactive collection provenance map"
-      center={[0, 0]}
       className="provenance-map"
-      scrollWheelZoom
-      zoom={2}
-    >
-      <TileLayer
-        attribution={mapRuntimeConfig.attribution}
-        url={mapRuntimeConfig.tileUrl}
-      />
-      <ViewController sites={sites} selected={selected} />
-      {sites.map((site) => (
-        <SiteMarker
-          key={site.id}
-          site={site}
-          selected={site.id === selectedId}
-          onSelect={onSelect}
-        />
-      ))}
-    </MapContainer>
+      role="region"
+    />
   );
 }
