@@ -148,7 +148,7 @@ function PlaceTree({
   );
 }
 
-export function GeographyScreen() {
+export function GeographyScreen({ initialSiteId }: { initialSiteId?: string }) {
   const auth = useAuth();
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
@@ -758,7 +758,11 @@ export function GeographyScreen() {
         )}
       </div>
       {directory.status === "ready" && (
-        <ProvenanceSiteManager places={places} csrfToken={csrfToken} />
+        <ProvenanceSiteManager
+          places={places}
+          csrfToken={csrfToken}
+          initialSiteId={initialSiteId}
+        />
       )}
     </section>
   );

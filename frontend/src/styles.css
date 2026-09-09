@@ -1861,3 +1861,250 @@ button:disabled {
   gap: 0.6rem;
   margin-block: 1rem;
 }
+
+.map-screen {
+  min-width: 0;
+}
+
+.screen-heading,
+.map-site-detail__header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.screen-heading > div > p:last-child {
+  max-width: 50rem;
+  color: #486056;
+  line-height: 1.55;
+}
+
+.map-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem 1.25rem;
+  margin: 1.5rem 0 1rem;
+  padding: 1rem;
+  border: 1px solid #cfdbd2;
+  border-radius: 0.75rem;
+}
+
+.map-filters legend {
+  padding-inline: 0.25rem;
+  font-weight: 800;
+}
+
+.map-filters > label:not(.map-identity-filter) {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.75rem;
+}
+
+.map-filters input[type="checkbox"] {
+  width: auto;
+}
+
+.map-identity-filter {
+  display: grid;
+  flex: 1 1 18rem;
+  gap: 0.35rem;
+}
+
+.map-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(16rem, 0.75fr);
+  align-items: start;
+  gap: 1rem;
+}
+
+.map-canvas-card,
+.map-companion,
+.map-site-detail {
+  min-width: 0;
+  border: 1px solid #cfdbd2;
+  border-radius: 0.85rem;
+  background: #fff;
+  overflow: hidden;
+}
+
+.provenance-map {
+  width: 100%;
+  min-height: 30rem;
+  background: #edf3ec;
+}
+
+.provenance-map-marker {
+  display: grid !important;
+  place-items: center;
+  border: 3px solid #fff;
+  border-radius: 999px;
+  background: #1d6542;
+  box-shadow: 0 2px 7px rgb(20 58 43 / 45%);
+}
+
+.provenance-map-marker span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #fff;
+}
+
+.map-provider-note {
+  margin: 0;
+  padding: 0.65rem 0.8rem;
+  color: #587064;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.map-companion {
+  max-height: 34rem;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.map-companion > p {
+  color: #587064;
+}
+
+.map-site-list,
+.map-record-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.map-site-list button {
+  display: grid;
+  width: 100%;
+  gap: 0.25rem;
+  color: #17352a;
+  text-align: left;
+  overflow-wrap: anywhere;
+  background: #fff;
+  border-color: #b9cbbf;
+}
+
+.map-site-list button[aria-pressed="true"] {
+  background: #dfeee3;
+  border-color: #1d6542;
+  box-shadow: inset 0.25rem 0 #1d6542;
+}
+
+.map-site-list span,
+.map-site-list small {
+  color: #587064;
+  font-weight: 400;
+}
+
+.map-site-detail {
+  grid-column: 1 / -1;
+  padding: 1.25rem;
+  overflow-wrap: anywhere;
+}
+
+.map-selection-prompt {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 1rem;
+  color: #587064;
+  background: #f7faf7;
+  border: 1px dashed #9eb2a5;
+  border-radius: 0.75rem;
+}
+
+.map-site-detail__header p {
+  color: #587064;
+}
+
+.detail-list--compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 2rem;
+  padding: 0;
+}
+
+.detail-list--compact div {
+  min-width: 12rem;
+}
+
+.detail-list--compact dt {
+  color: #587064;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.detail-list--compact dd {
+  margin: 0.2rem 0 0;
+}
+
+.map-record-list li {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem;
+  border: 1px solid #dce6de;
+  border-radius: 0.65rem;
+  background: #f7faf7;
+}
+
+.map-record-list li > div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.map-identity-link {
+  color: #587064;
+  font-size: 0.86rem;
+}
+
+.lifecycle-badge--historical {
+  color: #5d4715;
+  background: #fff5d9;
+}
+
+@media (max-width: 64rem) {
+  .map-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .map-companion {
+    max-height: none;
+  }
+
+  .map-site-detail {
+    grid-column: auto;
+  }
+
+  .map-selection-prompt {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 48rem) {
+  .screen-heading,
+  .map-site-detail__header {
+    flex-direction: column;
+  }
+
+  .map-filters {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .provenance-map {
+    min-height: 21rem;
+  }
+
+  .map-record-list li {
+    flex-direction: column;
+  }
+}

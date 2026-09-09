@@ -4,6 +4,33 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-09 — MAP-001 implemented
+
+- Added the first-class authenticated collection provenance map using one Leaflet marker per
+  coordinate-bearing ProvenanceSite. The initial viewport fits the available sites; accuracy is
+  shown as an optional metre-radius circle, and explicit no-site, no-coordinate, and filter-empty
+  states avoid inventing positions from broader geography or any other record.
+- Added a deterministic bulk API projection for directly associated SeedLots, Plants, and
+  PlantGroups with BotanicalIdentity and lifecycle context. Historical records remain visible,
+  while Sowing-derived and PlantGroup-extracted descendants are deliberately excluded rather than
+  inheriting an ancestor's provenance.
+- Added record-type and BotanicalIdentity filtering with marker counts derived from the visible
+  records, synchronized marker/list/detail selection, keyboard-operable companion navigation, and
+  links to each collection record, BotanicalIdentity, and ProvenanceSite management route. The
+  responsive layout preserves those non-map representations on narrow screens.
+- Added pinned Leaflet 1.9.4, React Leaflet 5.0.0, and Leaflet type declarations. Operators can
+  replace the OpenStreetMap-compatible tile URL and required attribution through an uncached runtime
+  configuration asset; documentation calls out third-party tile-request privacy and self-hosting.
+  The browser sends no Florabase record metadata, and no geocoding, geolocation, analytics,
+  backend tile proxy, PostGIS, native-range data, or database migration was introduced.
+- Implementation verification passed 265 backend unit tests at 90.45% coverage, 129 frontend tests,
+  294 disposable PostgreSQL integration tests, Ruff and Prettier formatting, Ruff and ESLint
+  linting, strict mypy over 156 source files, strict TypeScript, generated API drift, production
+  backend and frontend image builds, validation of all 72 feature-graph entries, and
+  `git diff --check`. The production frontend build retains Vite's non-failing warning for a
+  roughly 601 kB main chunk. Canonical `make feature-verify` remains reserved for independent
+  review.
+
 ## 2026-09-08 — SUPPLIER-002 verified
 
 - Promoted Supplier from CRUD reference data to a focused detail hub while preserving its precise

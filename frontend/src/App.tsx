@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 
 import type { components } from "./api/schema";
 import { AuthProvider } from "./auth/AuthProvider";
@@ -16,6 +16,11 @@ import { SeedLotScreen } from "./seed-lots/SeedLotScreen";
 import { SowingScreen } from "./sowings/SowingScreen";
 import { SupplierScreen } from "./suppliers/SupplierScreen";
 
+const ProvenanceMapScreen = lazy(async () => {
+  const module = await import("./provenance-map/ProvenanceMapScreen");
+  return { default: module.ProvenanceMapScreen };
+});
+
 type HealthResponse = components["schemas"]["HealthResponse"];
 type HealthState =
   | { status: "loading" }
@@ -28,6 +33,7 @@ type Section =
   | "sowings"
   | "plants"
   | "events"
+  | "map"
   | "identities"
   | "suppliers"
   | "locations"
@@ -81,6 +87,7 @@ function currentRoute(): Route {
     "seeds",
     "sowings",
     "events",
+    "map",
     "identities",
     "suppliers",
     "locations",
@@ -108,6 +115,7 @@ const desktopGroups: {
       { id: "seeds", label: "Seeds" },
       { id: "sowings", label: "Sowings" },
       { id: "events", label: "Events" },
+      { id: "map", label: "Provenance map" },
     ],
   },
   {
@@ -256,6 +264,12 @@ function ApplicationShell() {
           />
         ) : route.section === "events" ? (
           <GlobalEventsScreen />
+        ) : route.section === "map" ? (
+          <Suspense
+            fallback={<p aria-live="polite">Loading provenance map…</p>}
+          >
+            <ProvenanceMapScreen />
+          </Suspense>
         ) : route.section === "identities" ? (
           <BotanicalIdentityScreen
             initialId={route.recordId}
@@ -266,7 +280,7 @@ function ApplicationShell() {
         ) : route.section === "locations" ? (
           <LocationScreen />
         ) : (
-          <GeographyScreen />
+          <GeographyScreen initialSiteId={route.recordId} />
         )}
         {state.status === "logout-failed" && (
           <div className="notice notice--error" role="alert">

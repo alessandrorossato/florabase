@@ -13,12 +13,14 @@ from florabase.auth.dependencies import (
 from florabase.db.session import get_database_session
 from florabase.provenance_sites.model import ProvenanceSite
 from florabase.provenance_sites.schemas import (
+    ProvenanceMapResponse,
     ProvenanceSiteCreate,
     ProvenanceSiteResponse,
     ProvenanceSiteUpdate,
 )
 from florabase.provenance_sites.service import (
     ProvenanceSiteError,
+    collection_provenance_map,
     create_provenance_site,
     delete_provenance_site,
     get_provenance_site,
@@ -86,6 +88,18 @@ def create(
         raise _conflict(error) from error
     response.headers["Location"] = f"/api/v1/provenance-sites/{site.id}"
     return _response(database, site)
+
+
+@router.get(
+    "/map",
+    response_model=ProvenanceMapResponse,
+    operation_id="getCollectionProvenanceMap",
+)
+def read_map(
+    _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> ProvenanceMapResponse:
+    return collection_provenance_map(database)
 
 
 @router.get("/{site_id}", response_model=ProvenanceSiteResponse, operation_id="getProvenanceSite")

@@ -194,9 +194,11 @@ current state was reversed when it was not.
 Geography remains precision-preserving and extensible. `GEOGRAPHY-003` adds descriptive custom
 city/town, locality, and other named-area descendants beneath the preserved canonical World-rooted
 hierarchy without shipping a global city catalogue. Precise collection origin is represented by the
-separate `ProvenanceSite` concept with optional WGS84 coordinates and accuracy. This internal data
-prepares MAP-001 without implementing maps, geocoding, external providers, or the independently
-planned GEOGRAPHY-002 botanical native-distribution relationships.
+separate `ProvenanceSite` concept with optional WGS84 coordinates and accuracy. `MAP-001` uses that
+internal data for an authenticated collection-provenance map with one marker per coordinate-bearing
+site, filtered direct collection links, and an accessible companion list. It does not geocode,
+derive coordinates, map Locations or Suppliers, or show the independently planned GEOGRAPHY-002
+botanical native-distribution relationships and MAP-002 occurrence data.
 
 ## Longer-term capabilities
 

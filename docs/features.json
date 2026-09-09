@@ -783,6 +783,24 @@
       "status": "implemented"
     },
     {
+      "id": "MAP-001",
+      "category": "map",
+      "description": "Collection provenance map",
+      "acceptance_criteria": [
+        "A first-class owner-authenticated collection provenance map uses one logical marker per coordinate-bearing ProvenanceSite, fits the available site bounds, and distinguishes no-site, no-coordinate, and filter-empty states without inferring coordinates from GeographicPlace, Supplier, Location, lineage, or other data",
+        "A focused efficiently queried dataset exposes direct SeedLot, direct-origin Plant, and direct-origin PlantGroup associations with BotanicalIdentity, navigation, and accurate lifecycle context while retaining historical records and never fabricating direct provenance for propagated or extracted descendants",
+        "Leaflet and a compatible React integration render a configurable OpenStreetMap-compatible tile URL and required attribution without geocoding, reverse geocoding, browser geolocation, external botanical providers, PostGIS, analytics, backend tile proxying, or transmission of Florabase record metadata to the tile provider",
+        "Record-type and BotanicalIdentity filters retain a ProvenanceSite only when at least one directly associated record matches, and marker counts and details reflect those filtered records without changing the site's identity",
+        "An accessible keyboard-operable companion list and detail representation synchronizes selection with the map where practical and links existing SeedLot, Plant, PlantGroup, BotanicalIdentity, and ProvenanceSite management routes so provenance is never map-only",
+        "Desktop and approximately 390 by 844 mobile layouts keep the map, filters, list, details, attribution, loading, error, and empty states usable without horizontal overflow",
+        "Existing Geography and provenance workflows remain valid, production frontend assets build successfully, and no database migration is introduced unless an explicitly justified persistence defect requires one",
+        "The collection provenance map remains distinct from future botanical native-range and occurrence or distribution mapping in MAP-002"
+      ],
+      "dependencies": ["GEOGRAPHY-003", "UX-001"],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "SUPPLIER-002",
       "category": "supplier",
       "description": "Add richer Supplier connected-record summaries",

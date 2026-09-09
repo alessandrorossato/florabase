@@ -40,6 +40,19 @@ loopback-only development cookie; those settings cannot be used in production.
 Keep `APP_BIND_ADDRESS=127.0.0.1` when the HTTPS proxy is on the same host. If the proxy is elsewhere,
 expose the frontend deliberately and protect the network path. Do not publish PostgreSQL or FastAPI.
 
+### Provenance-map basemap
+
+The frontend image includes `/usr/share/nginx/html/runtime-config.js` with OpenStreetMap tile and
+attribution defaults. An operator may replace or bind-mount that file to configure `mapTileUrl` and
+`mapAttribution` for another compatible provider or a local/self-hosted tile server without changing
+Florabase provenance code. Preserve the provider's required attribution.
+
+Tiles are requested directly by the browser; Florabase does not proxy them. The provider therefore
+sees normal tile requests and the viewed map area, but Florabase does not put entity names,
+BotanicalIdentities, notes, or other record metadata in those requests. Configure a self-hosted tile
+server when disclosing the viewed area to an external provider is undesirable. The map does not use
+geocoding, browser geolocation, analytics, or botanical-data services.
+
 ## First installation
 
 Build the images, start PostgreSQL, apply all reviewed migrations, and start the application:
