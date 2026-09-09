@@ -50,12 +50,24 @@ MAP-001 collection-provenance map; those remain separate planned increments.
 ### BotanicalProfile
 
 A BotanicalProfile is optional general reference knowledge for exactly one BotanicalIdentity. Its
-identity foreign key is also its primary key, enforcing at most one profile. The five optional text
-sections are description, origin/distribution, cultivation, uses, and warnings; at least one must be
-present. Profiles are operator-authored and distinct from observations of Plants or Sowings.
+identity foreign key is also its primary key, enforcing at most one profile. It is the aggregate for
+meaningful profile-owned knowledge rather than only a text-section container. A profile exists while
+it owns at least one populated text section or structured native-range relationship, and a deferred
+database invariant rejects a completely empty profile at transaction completion.
 
-Structured native-range relationships to GeographicPlace are not implemented. Existing profile
-origin/distribution text is independent and must not be silently replaced by future enrichment.
+The five optional text sections are description, origin/distribution, cultivation, uses, and
+warnings. Adding the first native range atomically creates a profile when necessary, without
+placeholder text. Clearing the last text section preserves a profile that still owns a native range;
+removing its last range deletes the profile only when no text or other profile-owned data remains.
+Profiles are operator-authored and distinct from observations of Plants or Sowings.
+
+A structured native range records each exact GeographicPlace explicitly selected as an area where
+the taxon is considered botanically native. A profile may retain zero, one, or many places at mixed
+granularity. Ancestors, descendants, neighbors, and common ancestors are neither inferred nor
+persisted as additional ranges; explicitly selected parent and child places may coexist. Paths are
+derived from the current Geography hierarchy, so reparenting changes display without changing the
+relationship. Existing profile origin/distribution text remains independent and is never silently
+overwritten.
 
 ### Supplier
 
@@ -109,8 +121,9 @@ move, rename, retire, and reactivate custom descendants. Canonical nodes are imm
 node records the most precise known place and derives its ancestors without manufacturing greater
 precision.
 
-Current collection records use GeographicPlace for material provenance. Botanical native-range
-relationships remain planned.
+Current collection records use GeographicPlace for material provenance. BotanicalProfile uses the
+same hierarchy for independently managed botanical native ranges; its exact-place associations do
+not imply collection origin.
 
 Custom GeographicPlaces may describe a city or town, locality, or another named local area. These
 types are descriptive; parent links remain authoritative and impose no country-specific
@@ -143,7 +156,7 @@ do not acquire a duplicate direct site for map convenience, and Florabase never 
 from a GeographicPlace name or centroid.
 
 This map describes origins recorded for the operator's collection. It is not the independently
-planned GEOGRAPHY-002 botanical native-distribution dataset or future MAP-002 occurrence map.
+managed GEOGRAPHY-002 botanical native-range dataset or future MAP-002 occurrence map.
 Location remains the current physical storage/cultivation place, and Supplier remains who supplied
 the material. The map performs no geocoding, reverse geocoding, browser geolocation, or external
 botanical lookup.

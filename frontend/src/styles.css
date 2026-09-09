@@ -1035,6 +1035,57 @@ button:disabled {
   resize: vertical;
   line-height: 1.5;
 }
+.native-range {
+  margin-top: 1.25rem;
+  padding: 1.25rem;
+  background: #f7faf7;
+  border: 1px solid #dce6de;
+  border-radius: 0.85rem;
+}
+.native-range > div:first-child h4,
+.native-range > div:first-child p {
+  margin: 0;
+}
+.native-range > div:first-child p {
+  margin-top: 0.35rem;
+  color: #587064;
+  line-height: 1.55;
+}
+.native-range-list {
+  display: grid;
+  gap: 0.65rem;
+  margin: 1rem 0;
+  padding: 0;
+  list-style: none;
+}
+.native-range-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem;
+  overflow-wrap: anywhere;
+  background: #fff;
+  border: 1px solid #dce6de;
+  border-radius: 0.65rem;
+}
+.native-range-list li > div {
+  display: grid;
+  gap: 0.2rem;
+  min-width: 0;
+}
+.native-range-list small {
+  color: #587064;
+}
+.native-range-add {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 0.75rem;
+}
+.native-range-add .field {
+  margin: 0;
+}
 
 .seed-heading,
 .seed-form-heading {
@@ -2157,6 +2208,15 @@ button:disabled {
   }
 
   .map-record-list li {
+    flex-direction: column;
+  }
+
+  .native-range-add {
+    grid-template-columns: 1fr;
+  }
+
+  .native-range-list li {
+    align-items: stretch;
     flex-direction: column;
   }
 }

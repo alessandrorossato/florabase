@@ -50,6 +50,7 @@ class GeographicPlaceResponse(BaseModel):
     place_type: Literal["city_town", "locality", "other_named_area"] | None
     provenance_site_count: int = 0
     direct_usage_count: int = 0
+    native_range_count: int = 0
     source_name: str | None
     source_version: str | None
     source_code_type: str | None
@@ -66,6 +67,7 @@ class GeographicPlaceResponse(BaseModel):
         display_path: str,
         provenance_site_count: int = 0,
         direct_usage_count: int = 0,
+        native_range_count: int = 0,
     ) -> Self:
         return cls.model_validate(
             {
@@ -78,5 +80,6 @@ class GeographicPlaceResponse(BaseModel):
                 "display_path": display_path,
                 "provenance_site_count": provenance_site_count,
                 "direct_usage_count": direct_usage_count,
+                "native_range_count": native_range_count,
             }
         )

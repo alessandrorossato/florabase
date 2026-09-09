@@ -210,6 +210,57 @@
         "title": "BotanicalIdentityUpdate",
         "type": "object"
       },
+      "BotanicalNativeRangeCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "geographic_place_id": {
+            "format": "uuid",
+            "title": "Geographic Place Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "geographic_place_id"
+        ],
+        "title": "BotanicalNativeRangeCreate",
+        "type": "object"
+      },
+      "BotanicalNativeRangeResponse": {
+        "properties": {
+          "botanical_profile_id": {
+            "format": "uuid",
+            "title": "Botanical Profile Id",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "geographic_place_id": {
+            "format": "uuid",
+            "title": "Geographic Place Id",
+            "type": "string"
+          },
+          "geographic_place_name": {
+            "title": "Geographic Place Name",
+            "type": "string"
+          },
+          "geographic_place_path": {
+            "title": "Geographic Place Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "botanical_profile_id",
+          "geographic_place_id",
+          "geographic_place_name",
+          "geographic_place_path",
+          "created_at"
+        ],
+        "title": "BotanicalNativeRangeResponse",
+        "type": "object"
+      },
       "BotanicalProfilePut": {
         "additionalProperties": false,
         "properties": {
@@ -1040,6 +1091,11 @@
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "native_range_count": {
+            "default": 0,
+            "title": "Native Range Count",
+            "type": "integer"
           },
           "parent_id": {
             "anyOf": [
@@ -8162,7 +8218,7 @@
             "description": "Botanical profile created"
           },
           "204": {
-            "description": "Final section cleared; profile removed"
+            "description": "Final meaningful profile datum cleared; profile removed"
           },
           "401": {
             "description": "Authentication required"
@@ -8178,6 +8234,182 @@
           }
         },
         "summary": "Put",
+        "tags": [
+          "botanical profiles"
+        ]
+      }
+    },
+    "/api/v1/botanical-identities/{botanical_identity_id}/profile/native-ranges": {
+      "get": {
+        "operationId": "listBotanicalNativeRanges",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/BotanicalNativeRangeResponse"
+                  },
+                  "title": "Response Listbotanicalnativeranges",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Native Ranges",
+        "tags": [
+          "botanical profiles"
+        ]
+      },
+      "post": {
+        "operationId": "addBotanicalNativeRange",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BotanicalNativeRangeCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BotanicalNativeRangeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Native Range",
+        "tags": [
+          "botanical profiles"
+        ]
+      }
+    },
+    "/api/v1/botanical-identities/{botanical_identity_id}/profile/native-ranges/{geographic_place_id}": {
+      "delete": {
+        "operationId": "removeBotanicalNativeRange",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "geographic_place_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Geographic Place Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Native Range",
         "tags": [
           "botanical profiles"
         ]

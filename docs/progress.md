@@ -4,6 +4,29 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-09 — GEOGRAPHY-002 implemented
+
+- Added exact, many-valued BotanicalProfile native-range relationships to the shared
+  GeographicPlace hierarchy. Broad and precise places can coexist without inferred ancestor or
+  descendant links, and reparenting a custom place changes its derived display path without changing
+  the stable relationship.
+- Generalized the BotanicalProfile lifecycle: a profile exists while it owns any populated text
+  section or structured native range. Adding the first range creates the profile atomically; clearing
+  final text preserves range-only profiles; removing the final range deletes the profile only when
+  no other meaningful profile-owned data remains. A deferred database constraint prevents persistent
+  completely empty profiles.
+- Added protected focused list/add/remove APIs, generated contracts, responsive identity-detail
+  controls with path-disambiguated choices and accessible mutation feedback, and Geography usage
+  visibility/deletion guards. Material provenance, ProvenanceSites, collection Locations, Suppliers,
+  BotanicalIdentity fields, GBIF linking, and occurrence/distribution maps remain separate.
+- Verification passed Ruff and Prettier formatting, Ruff and ESLint linting, strict mypy over 169
+  source files, strict TypeScript, 286 backend unit tests at 90.78% coverage, 134 frontend tests, and
+  304 disposable PostgreSQL integration tests. Revision `20260909_0022` was exercised through
+  upgrade, populated-data downgrade refusal, cleanup, downgrade to `20260909_0021`, re-upgrade,
+  deferred empty-profile rejection, and concurrent duplicate-add convergence. Generated API drift,
+  both production image builds, all 75 feature-graph entries, and diff whitespace checks pass.
+  `GEOGRAPHY-002` is implemented pending independent review.
+
 ## 2026-09-09 — BOTANY-002 verified
 
 - Added the canonical BOTANY-002 external-data foundation and aligned separate planned
@@ -629,16 +652,17 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260909_0021` on the BOTANY-002 implementation branch.
+- Alembic head: `20260909_0022` on the GEOGRAPHY-002 implementation branch.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
   protected Plant/PlantGroup Event journal and timeline UI; atomic extraction history; retained
-  transferred Plant/PlantGroup history; scope-aware hierarchical collection Locations; and direct,
-  connected-record Supplier summaries.
+  transferred Plant/PlantGroup history; scope-aware hierarchical collection Locations; direct,
+  connected-record Supplier summaries; and exact structured BotanicalProfile native ranges over the
+  shared GeographicPlace hierarchy.
 - `PROPAGATION-001` through `PROPAGATION-003`, `SUPPLIER-002`, `LOCATION-002`, `GEOGRAPHY-003`, and
-  `MAP-001` are verified; `BOTANY-002` is implemented pending independent verification. The next
-  increment remains decided by the machine-readable dependency graph;
+  `MAP-001` and `BOTANY-002` are verified; `GEOGRAPHY-002` is implemented pending independent
+  review. The next increment remains decided by the machine-readable dependency graph;
   licensing/version policy and release readiness remain explicit later operator/product decisions.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.

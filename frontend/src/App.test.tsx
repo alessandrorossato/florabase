@@ -94,6 +94,13 @@ function authenticatedDirectoryThen(
     if (path.endsWith("/health")) return jsonResponse({ status: "ok" });
     if (path.endsWith("/external-taxon-link") && init?.method === undefined)
       return jsonResponse(null);
+    if (path.includes("/profile/native-ranges") && init?.method === undefined)
+      return jsonResponse([]);
+    if (
+      path === "/api/v1/geographic-places" &&
+      window.location.hash.startsWith("#/identities")
+    )
+      return jsonResponse([worldPlace, southAmericaPlace, brazilPlace]);
     return handler(path, init);
   });
 }
@@ -127,6 +134,13 @@ function createIdentityThenProfile(
       return jsonResponse(botanicalIdentity, 201);
     if (path === `/api/v1/botanical-identities/${botanicalIdentity.id}/profile`)
       return profileHandler(init);
+    if (
+      path ===
+      `/api/v1/botanical-identities/${botanicalIdentity.id}/profile/native-ranges`
+    )
+      return jsonResponse([]);
+    if (path === "/api/v1/geographic-places")
+      return jsonResponse([worldPlace, southAmericaPlace, brazilPlace]);
     throw new Error(`unexpected request: ${path}`);
   });
 }
@@ -244,6 +258,7 @@ const worldPlace = {
   place_type: null,
   provenance_site_count: 0,
   direct_usage_count: 0,
+  native_range_count: 0,
   source_name: "unicode_cldr" as string | null,
   source_version: "48.2.1" as string | null,
   source_code_type: "un_m49" as string | null,
@@ -1125,7 +1140,7 @@ test("profile validation and network failures are announced without duplicate sa
   await user.click(await screen.findByRole("button", { name: "Save profile" }));
   const validation = await screen.findByRole("alert");
   expect(validation).toHaveTextContent(
-    /add content to at least one profile section/i,
+    /add profile text or a structured native range/i,
   );
   expect(validation).toHaveFocus();
 
@@ -1160,6 +1175,164 @@ test("profile session expiry returns to the shared login boundary", async () => 
     /session expired.*sign in again/i,
   );
   expect(screen.getByRole("button", { name: "Sign in" })).toBeInTheDocument();
+});
+
+test("structured native ranges distinguish paths and support add and remove with focus", async () => {
+  Object.defineProperties(window, {
+    innerWidth: { configurable: true, value: 390 },
+    innerHeight: { configurable: true, value: 844 },
+  });
+  const georgiaUs = {
+    ...worldPlace,
+    id: "georgia-us",
+    name: "Georgia",
+    parent_id: worldPlace.id,
+    display_path: "World → North America → United States → Georgia",
+    place_kind: "custom" as const,
+    source_name: null,
+    source_version: null,
+    source_code_type: null,
+    source_code: null,
+  };
+  const georgiaAsia = {
+    ...georgiaUs,
+    id: "georgia-asia",
+    display_path: "World → Asia → Georgia",
+  };
+  let ranges: {
+    botanical_profile_id: string;
+    geographic_place_id: string;
+    geographic_place_name: string;
+    geographic_place_path: string;
+    created_at: string;
+  }[] = [];
+  let firstAdd = true;
+  const mutations: { path: string; init?: RequestInit }[] = [];
+  authenticatedThen((path, init) => {
+    if (path === "/api/v1/botanical-identities" && init?.method === "POST")
+      return jsonResponse(botanicalIdentity, 201);
+    if (path === `/api/v1/botanical-identities/${botanicalIdentity.id}/profile`)
+      return jsonResponse(
+        { detail: { code: "botanical_profile_not_found" } },
+        404,
+      );
+    if (path === "/api/v1/geographic-places")
+      return jsonResponse([worldPlace, georgiaUs, georgiaAsia]);
+    if (
+      path ===
+      `/api/v1/botanical-identities/${botanicalIdentity.id}/profile/native-ranges`
+    ) {
+      if (init?.method === "POST") {
+        mutations.push({ path, init });
+        if (firstAdd) {
+          firstAdd = false;
+          return jsonResponse(
+            { detail: { code: "botanical_native_range_exists" } },
+            409,
+          );
+        }
+        if (typeof init.body !== "string") throw new Error("expected body");
+        const placeId = (
+          JSON.parse(init.body) as { geographic_place_id: string }
+        ).geographic_place_id;
+        const place = [georgiaUs, georgiaAsia].find(({ id }) => id === placeId);
+        if (!place) throw new Error("place missing");
+        const added = {
+          botanical_profile_id: botanicalIdentity.id,
+          geographic_place_id: place.id,
+          geographic_place_name: place.name,
+          geographic_place_path: place.display_path,
+          created_at: "2026-09-09T12:00:00Z",
+        };
+        ranges = [...ranges, added];
+        return jsonResponse(added, 201);
+      }
+      return jsonResponse(ranges);
+    }
+    if (
+      path.endsWith("/profile/native-ranges/georgia-us") &&
+      init?.method === "DELETE"
+    ) {
+      mutations.push({ path, init });
+      ranges = ranges.filter(
+        ({ geographic_place_id }) => geographic_place_id !== "georgia-us",
+      );
+      return new Response(undefined, { status: 204 });
+    }
+    throw new Error(`unexpected request: ${path}`);
+  });
+  const user = await createSelectedIdentity();
+
+  expect(
+    await screen.findByText("No structured native range recorded."),
+  ).toBeInTheDocument();
+  const selector = screen.getByLabelText("Geographic place");
+  expect(
+    screen.getByRole("option", {
+      name: "Georgia — World → North America → United States → Georgia",
+    }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("option", { name: "Georgia — World → Asia → Georgia" }),
+  ).toBeInTheDocument();
+
+  await user.selectOptions(selector, georgiaUs.id);
+  await user.click(screen.getByRole("button", { name: "Add native range" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(/already/i);
+  await user.click(screen.getByRole("button", { name: "Add native range" }));
+  const remove = await screen.findByRole("button", {
+    name: "Remove Georgia from native range",
+  });
+  expect(remove).toHaveFocus();
+  expect(screen.getByText(georgiaUs.display_path)).toBeInTheDocument();
+  expect(
+    screen.queryByRole("option", {
+      name: "Georgia — World → North America → United States → Georgia",
+    }),
+  ).not.toBeInTheDocument();
+  await user.click(remove);
+  await waitFor(() => {
+    expect(selector).toHaveFocus();
+  });
+  expect(
+    screen.getByText(/was removed from the native range/i),
+  ).toBeInTheDocument();
+  expect(
+    mutations.every(({ init }) => {
+      return (
+        new Headers(init?.headers).get("X-CSRF-Token") === "botanical-csrf"
+      );
+    }),
+  ).toBe(true);
+  expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(
+    document.documentElement.clientWidth,
+  );
+});
+
+test("native-range loading failure is explicit and retryable", async () => {
+  let nativeCalls = 0;
+  authenticatedThen((path, init) => {
+    if (path === "/api/v1/botanical-identities" && init?.method === "POST")
+      return jsonResponse(botanicalIdentity, 201);
+    if (path === `/api/v1/botanical-identities/${botanicalIdentity.id}/profile`)
+      return jsonResponse(botanicalProfile);
+    if (path === "/api/v1/geographic-places") return jsonResponse([worldPlace]);
+    if (path.endsWith("/profile/native-ranges")) {
+      nativeCalls += 1;
+      return nativeCalls === 1
+        ? jsonResponse({ detail: "failure" }, 500)
+        : jsonResponse([]);
+    }
+    throw new Error(`unexpected request: ${path}`);
+  });
+  const user = await createSelectedIdentity();
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    /could not load this native range/i,
+  );
+  await user.click(screen.getByRole("button", { name: "Retry native range" }));
+  expect(
+    await screen.findByText("No structured native range recorded."),
+  ).toBeInTheDocument();
 });
 
 test("primary navigation switches accessibly to the empty supplier directory", async () => {
@@ -1943,6 +2116,7 @@ test("Geography navigation loads, filters, and selects broad and country canonic
     1,
   );
   expect(screen.getByText(/Canonical CLDR place/)).toBeInTheDocument();
+  expect(screen.getByText(/Botanical native ranges: 0/)).toBeInTheDocument();
   expect(
     screen.queryByRole("heading", { name: "Edit local place" }),
   ).not.toBeInTheDocument();

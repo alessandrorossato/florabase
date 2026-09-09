@@ -44,27 +44,49 @@ def test_put_profile_handles_missing_parent_empty_create_and_final_clear() -> No
     ):
         put_botanical_profile(database, identity_id, BotanicalProfilePut(description="Reference"))
 
-    with (
-        patch(
-            "florabase.botanical_profiles.service.botanical_identity_exists",
-            return_value=True,
-        ),
-        patch("florabase.botanical_profiles.service.get_botanical_profile", return_value=None),
-        pytest.raises(EmptyProfileError),
-    ):
+    database.scalar.side_effect = [
+        BotanicalIdentity(id=identity_id, scientific_name="Acer palmatum"),
+        None,
+    ]
+    with pytest.raises(EmptyProfileError):
         put_botanical_profile(database, identity_id, BotanicalProfilePut())
 
     profile = BotanicalProfile(botanical_identity_id=identity_id, description="Reference")
+    database.scalar.side_effect = [
+        BotanicalIdentity(id=identity_id, scientific_name="Acer palmatum"),
+        profile,
+    ]
     with (
         patch(
-            "florabase.botanical_profiles.service.botanical_identity_exists",
-            return_value=True,
+            "florabase.botanical_profiles.service._profile_has_structured_data",
+            return_value=False,
         ),
-        patch("florabase.botanical_profiles.service.get_botanical_profile", return_value=profile),
     ):
         result = put_botanical_profile(database, identity_id, BotanicalProfilePut())
     assert result == PutProfileResult(profile=None, created=False)
     database.delete.assert_called_once_with(profile)
+    database.flush.assert_called_once_with()
+
+
+def test_clearing_profile_text_preserves_profile_with_structured_data() -> None:
+    database = MagicMock()
+    identity_id = uuid7()
+    profile = BotanicalProfile(botanical_identity_id=identity_id, description="Reference")
+    database.scalar.side_effect = [
+        BotanicalIdentity(id=identity_id, scientific_name="Acer palmatum"),
+        profile,
+    ]
+    with (
+        patch(
+            "florabase.botanical_profiles.service._profile_has_structured_data",
+            return_value=True,
+        ),
+    ):
+        result = put_botanical_profile(database, identity_id, BotanicalProfilePut())
+
+    assert result == PutProfileResult(profile=profile, created=False)
+    assert profile.description is None
+    database.delete.assert_not_called()
     database.flush.assert_called_once_with()
 
 

@@ -15,11 +15,17 @@ from florabase.auth.dependencies import AuthenticatedActor, require_csrf
 from florabase.auth.model import AuthSession
 from florabase.auth.service import bootstrap_owner
 from florabase.botanical_identities.model import BotanicalIdentity
-from florabase.botanical_profiles.model import BotanicalProfile
+from florabase.botanical_profiles.model import BotanicalProfile, BotanicalProfileNativeRange
 from florabase.botanical_profiles.schemas import BotanicalProfilePut
-from florabase.botanical_profiles.service import put_botanical_profile
+from florabase.botanical_profiles.service import (
+    BotanicalNativeRangeConflictError,
+    add_botanical_native_range,
+    put_botanical_profile,
+    remove_botanical_native_range,
+)
 from florabase.core.config import CookieMode, Environment, Settings, get_settings
 from florabase.db.session import get_database_session
+from florabase.geographic_places.model import GeographicPlace
 from florabase.main import app
 
 pytestmark = pytest.mark.integration
@@ -157,6 +163,31 @@ def put_profile(
     return request(
         "PUT",
         profile_path(identity_id),
+        body=body,
+        headers={"cookie": cookie, "origin": ORIGIN, "x-csrf-token": csrf_token},
+    )
+
+
+def native_ranges_path(identity_id: UUID) -> str:
+    return f"{profile_path(identity_id)}/native-ranges"
+
+
+def mutate_native_range(
+    browser: tuple[str, str],
+    method: str,
+    identity_id: UUID,
+    place_id: UUID,
+) -> tuple[int, dict[str, str], Any]:
+    cookie, csrf_token = browser
+    path = native_ranges_path(identity_id)
+    body: Mapping[str, object] | None = None
+    if method == "POST":
+        body = {"geographic_place_id": str(place_id)}
+    else:
+        path = f"{path}/{place_id}"
+    return request(
+        method,
+        path,
         body=body,
         headers={"cookie": cookie, "origin": ORIGIN, "x-csrf-token": csrf_token},
     )
@@ -338,4 +369,315 @@ def test_concurrent_first_writes_converge_on_one_profile(database_engine: Engine
                 )
             )
             database.execute(delete(BotanicalIdentity).where(BotanicalIdentity.id == identity_id))
+            database.commit()
+
+
+def test_native_range_profile_lifecycle_and_exact_place_semantics(
+    authenticated_browser: tuple[str, str],
+    identity_id: UUID,
+    database_connection: Connection,
+) -> None:
+    cookie, _ = authenticated_browser
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        brazil = database.scalars(
+            select(GeographicPlace).where(GeographicPlace.source_code == "BR")
+        ).one()
+        south_america = database.scalars(
+            select(GeographicPlace).where(GeographicPlace.source_code == "005")
+        ).one()
+        identity = database.get(BotanicalIdentity, identity_id)
+        assert identity is not None
+        identity_snapshot = (
+            identity.scientific_name,
+            identity.cultivar_name,
+            identity.common_name,
+            identity.updated_at,
+        )
+
+    status_code, _, empty = request(
+        "GET", native_ranges_path(identity_id), headers={"cookie": cookie}
+    )
+    assert status_code == 200
+    assert empty == []
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        assert database.get(BotanicalProfile, identity_id) is None
+
+    status_code, headers, added_brazil = mutate_native_range(
+        authenticated_browser, "POST", identity_id, brazil.id
+    )
+    assert status_code == 201
+    assert headers["location"].endswith(str(brazil.id))
+    assert added_brazil["geographic_place_name"] == "Brazil"
+    assert added_brazil["geographic_place_path"].endswith("South America → Brazil")
+
+    duplicate_status, _, duplicate = mutate_native_range(
+        authenticated_browser, "POST", identity_id, brazil.id
+    )
+    assert duplicate_status == 409
+    assert duplicate["detail"]["code"] == "botanical_native_range_exists"
+
+    assert (
+        mutate_native_range(authenticated_browser, "POST", identity_id, south_america.id)[0] == 201
+    )
+    status_code, _, ranges = request(
+        "GET", native_ranges_path(identity_id), headers={"cookie": cookie}
+    )
+    assert status_code == 200
+    assert {item["geographic_place_id"] for item in ranges} == {
+        str(brazil.id),
+        str(south_america.id),
+    }
+    assert all("World" not in item["geographic_place_name"] for item in ranges)
+
+    clear_status, _, cleared = put_profile(authenticated_browser, identity_id, {})
+    assert clear_status == 200
+    assert all(
+        cleared[field] is None
+        for field in ("description", "origin_distribution", "cultivation", "uses", "warnings")
+    )
+    assert mutate_native_range(authenticated_browser, "DELETE", identity_id, brazil.id)[0] == 204
+
+    assert (
+        put_profile(authenticated_browser, identity_id, {"description": "Reference text"})[0] == 200
+    )
+    assert (
+        mutate_native_range(authenticated_browser, "DELETE", identity_id, south_america.id)[0]
+        == 204
+    )
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        profile = database.get(BotanicalProfile, identity_id)
+        assert profile is not None
+        assert profile.description == "Reference text"
+    assert put_profile(authenticated_browser, identity_id, {})[0] == 204
+
+    assert mutate_native_range(authenticated_browser, "POST", identity_id, brazil.id)[0] == 201
+    assert mutate_native_range(authenticated_browser, "DELETE", identity_id, brazil.id)[0] == 204
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        assert database.get(BotanicalProfile, identity_id) is None
+        assert database.get(GeographicPlace, brazil.id) is not None
+        identity = database.get(BotanicalIdentity, identity_id)
+        assert identity is not None
+        assert (
+            identity.scientific_name,
+            identity.cultivar_name,
+            identity.common_name,
+            identity.updated_at,
+        ) == identity_snapshot
+
+
+def test_native_range_reparenting_updates_path_and_blocks_place_deletion(
+    authenticated_browser: tuple[str, str],
+    identity_id: UUID,
+    database_connection: Connection,
+) -> None:
+    cookie, csrf_token = authenticated_browser
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        world = database.scalars(
+            select(GeographicPlace).where(GeographicPlace.source_code == "001")
+        ).one()
+        brazil = database.scalars(
+            select(GeographicPlace).where(GeographicPlace.source_code == "BR")
+        ).one()
+    headers = {"cookie": cookie, "origin": ORIGIN, "x-csrf-token": csrf_token}
+    create_status, _, local = request(
+        "POST",
+        "/api/v1/geographic-places",
+        body={"name": "Test native locality", "parent_id": str(world.id)},
+        headers=headers,
+    )
+    assert create_status == 201
+    place_id = UUID(local["id"])
+    assert mutate_native_range(authenticated_browser, "POST", identity_id, place_id)[0] == 201
+
+    blocked_status, _, blocked = request(
+        "DELETE", f"/api/v1/geographic-places/{place_id}", headers=headers
+    )
+    assert blocked_status == 409
+    assert blocked["detail"]["code"] == "geographic_place_has_native_ranges"
+
+    update_status, _, moved = request(
+        "PUT",
+        f"/api/v1/geographic-places/{place_id}",
+        body={"name": "Test native locality", "parent_id": str(brazil.id)},
+        headers=headers,
+    )
+    assert update_status == 200
+    assert moved["display_path"].endswith("Brazil → Test native locality")
+    _, _, ranges = request("GET", native_ranges_path(identity_id), headers={"cookie": cookie})
+    assert len(ranges) == 1
+    assert ranges[0]["geographic_place_id"] == str(place_id)
+    assert ranges[0]["geographic_place_path"].endswith("Brazil → Test native locality")
+    assert mutate_native_range(authenticated_browser, "DELETE", identity_id, place_id)[0] == 204
+    assert request("DELETE", f"/api/v1/geographic-places/{place_id}", headers=headers)[0] == 204
+
+
+def test_native_range_security_and_missing_place_errors_are_stable(
+    authenticated_browser: tuple[str, str], identity_id: UUID
+) -> None:
+    path = native_ranges_path(identity_id)
+    assert request("GET", path)[0] == 401
+    cookie, csrf_token = authenticated_browser
+    missing_place_id = uuid7()
+    for headers in (
+        {"origin": ORIGIN, "x-csrf-token": csrf_token},
+        {"cookie": cookie, "origin": ORIGIN},
+        {"cookie": cookie, "x-csrf-token": csrf_token},
+        {"cookie": cookie, "origin": "https://evil.example", "x-csrf-token": csrf_token},
+    ):
+        assert request(
+            "POST",
+            path,
+            body={"geographic_place_id": str(missing_place_id)},
+            headers=headers,
+        )[0] in {401, 403}
+
+    status_code, _, body = mutate_native_range(
+        authenticated_browser, "POST", identity_id, missing_place_id
+    )
+    assert status_code == 404
+    assert body["detail"]["code"] == "geographic_place_not_found"
+
+
+def test_concurrent_duplicate_native_range_adds_converge(
+    database_engine: Engine,
+) -> None:
+    identity_id = uuid7()
+    with Session(database_engine) as database:
+        database.add(
+            BotanicalIdentity(
+                id=identity_id,
+                scientific_name=f"Concurrent native range {identity_id}",
+            )
+        )
+        place = database.scalars(
+            select(GeographicPlace).where(GeographicPlace.source_code == "BR")
+        ).one()
+        place_id = place.id
+        database.commit()
+
+    barrier = Barrier(2)
+
+    def add() -> str:
+        with Session(database_engine) as database:
+            barrier.wait()
+            try:
+                add_botanical_native_range(database, identity_id, place_id)
+                database.commit()
+                return "created"
+            except BotanicalNativeRangeConflictError:
+                database.rollback()
+                return "duplicate"
+
+    try:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            assert sorted(executor.map(lambda _: add(), range(2))) == [
+                "created",
+                "duplicate",
+            ]
+    finally:
+        with Session(database_engine) as database:
+            profile = database.get(BotanicalProfile, identity_id)
+            if profile is not None:
+                database.delete(profile)
+            identity = database.get(BotanicalIdentity, identity_id)
+            if identity is not None:
+                database.delete(identity)
+            database.commit()
+
+
+def test_native_range_concurrency_preserves_a_meaningful_profile(
+    database_engine: Engine,
+) -> None:
+    identity_id = uuid7()
+    with Session(database_engine) as database:
+        database.add(
+            BotanicalIdentity(
+                id=identity_id,
+                scientific_name=f"Concurrent native range lifecycle {identity_id}",
+            )
+        )
+        argentina, brazil = database.scalars(
+            select(GeographicPlace)
+            .where(GeographicPlace.source_code.in_(("BR", "AR")))
+            .order_by(GeographicPlace.source_code)
+        ).all()
+        argentina_id = argentina.id
+        brazil_id = brazil.id
+        database.commit()
+
+    barrier = Barrier(2)
+
+    def add(place_id: UUID) -> None:
+        with Session(database_engine) as database:
+            barrier.wait()
+            add_botanical_native_range(database, identity_id, place_id)
+            database.commit()
+
+    try:
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [
+                executor.submit(add, brazil_id),
+                executor.submit(add, argentina_id),
+            ]
+            for future in futures:
+                future.result()
+
+        with Session(database_engine) as database:
+            assert database.get(BotanicalProfile, identity_id) is not None
+            assert (
+                database.scalar(
+                    select(func.count())
+                    .select_from(BotanicalProfileNativeRange)
+                    .where(BotanicalProfileNativeRange.botanical_profile_id == identity_id)
+                )
+                == 2
+            )
+
+        with Session(database_engine) as database:
+            remove_botanical_native_range(database, identity_id, brazil_id)
+            database.commit()
+
+        barrier = Barrier(2)
+
+        def remove_last_range() -> None:
+            with Session(database_engine) as database:
+                barrier.wait()
+                remove_botanical_native_range(database, identity_id, argentina_id)
+                database.commit()
+
+        def write_text() -> None:
+            with Session(database_engine) as database:
+                barrier.wait()
+                put_botanical_profile(
+                    database,
+                    identity_id,
+                    BotanicalProfilePut(description="Concurrent reference text"),
+                )
+                database.commit()
+
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            futures = [executor.submit(remove_last_range), executor.submit(write_text)]
+            for future in futures:
+                future.result()
+
+        with Session(database_engine) as database:
+            profile = database.get(BotanicalProfile, identity_id)
+            assert profile is not None
+            assert profile.description == "Concurrent reference text"
+            assert (
+                database.scalar(
+                    select(func.count())
+                    .select_from(BotanicalProfileNativeRange)
+                    .where(BotanicalProfileNativeRange.botanical_profile_id == identity_id)
+                )
+                == 0
+            )
+    finally:
+        with Session(database_engine) as database:
+            profile = database.get(BotanicalProfile, identity_id)
+            if profile is not None:
+                database.delete(profile)
+            identity = database.get(BotanicalIdentity, identity_id)
+            if identity is not None:
+                database.delete(identity)
             database.commit()

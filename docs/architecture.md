@@ -53,8 +53,9 @@ both and `make api-check` detects drift.
 
 ## Implemented domain modules
 
-The application currently persists and exposes BotanicalIdentity, BotanicalProfile, Supplier,
-Location, GeographicPlace, SeedLot, Sowing, Plant, and PlantGroup. Direct foreign keys express the
+The application currently persists and exposes BotanicalIdentity, BotanicalProfile, structured
+BotanicalProfile native ranges, Supplier, Location, GeographicPlace, SeedLot, Sowing, Plant, and
+PlantGroup. Direct foreign keys express the
 supported workflow lineage: SeedLot to Sowing to Plant/PlantGroup, PlantGroup extraction to Plant,
 and Plant/PlantGroup production of a collection-produced SeedLot. The implementation does not use a
 generic graph, polymorphic collection item, event framework, or attachment subsystem.

@@ -116,10 +116,10 @@ precision-preserving recent acquisition summaries. Propagated or extracted desce
 inherit Supplier, retained historical records do not become active holdings, and financial totals
 wait for the separate `ORDER-001` transaction model.
 
-After the implemented collection, geography, supplier, and provenance-map surfaces, the remaining
-V1 product sequence is `BOTANY-002` external provider/link/cache foundation, `GEOGRAPHY-002`
-structured native ranges, `BOTANY-003` reviewable profile enrichment, `MAP-002` botanical
-distribution/occurrence mapping, and `ATTACHMENT-002/003` storage and photos. `UX-003` follows those
+After the implemented collection, geography, supplier, provenance-map, external botanical-data, and
+structured native-range surfaces, the remaining V1 product sequence is `BOTANY-003` reviewable
+profile enrichment, `MAP-002` botanical distribution/occurrence mapping, and
+`ATTACHMENT-002/003` storage and photos. `UX-003` follows those
 feature-specific surfaces as global stabilization and polish, then `UX-002` adds contextual help;
 neither blocks the botanical, geography, map, or photo increments.
 
@@ -127,8 +127,9 @@ neither blocks the botanical, geography, map, or photo increments.
 first fixed advisory provider, accessed only by the backend. Search results require explicit
 operator confirmation before a provider taxon is linked; no match automatically renames, reparents,
 merges, or enriches an identity. Provider responses are cached with truthful fetch/freshness
-metadata, and botanical-name queries are disclosed as external requests. Profile enrichment,
-structured native range, and occurrence mapping remain separately planned.
+metadata, and botanical-name queries are disclosed as external requests. Profile enrichment and
+occurrence mapping remain separately planned. Structured native ranges are separately
+operator-managed BotanicalProfile knowledge and are never refreshed from GBIF.
 
 The final V1 phase is release hardening rather than another product surface. It will exercise fresh
 installation, upgrades and the full Alembic chain, backup/restore, production Docker deployment,
@@ -217,7 +218,7 @@ hierarchy without shipping a global city catalogue. Precise collection origin is
 separate `ProvenanceSite` concept with optional WGS84 coordinates and accuracy. `MAP-001` uses that
 internal data for an authenticated collection-provenance map with one marker per coordinate-bearing
 site, filtered direct collection links, and an accessible companion list. It does not geocode,
-derive coordinates, map Locations or Suppliers, or show the independently planned GEOGRAPHY-002
+derive coordinates, map Locations or Suppliers, or show the independent GEOGRAPHY-002
 botanical native-distribution relationships and MAP-002 occurrence data.
 
 ## Longer-term capabilities

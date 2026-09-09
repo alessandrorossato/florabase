@@ -45,6 +45,8 @@ export function geographyConflictMessage(error: ApiError): string | null {
     return "The selected parent no longer exists. Refresh and choose again.";
   if (code === "canonical_geographic_place_immutable")
     return "Canonical geographic places are maintained from CLDR and cannot be changed here.";
+  if (code === "geographic_place_has_native_ranges")
+    return "Remove botanical native-range references before deleting this place.";
   return null;
 }
 

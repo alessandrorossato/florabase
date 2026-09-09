@@ -309,7 +309,7 @@
       ],
       "dependencies": ["GEOGRAPHY-001", "PROFILE-002"],
       "priority": "P2",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "SEED-001",

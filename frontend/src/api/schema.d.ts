@@ -197,6 +197,41 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/botanical-identities/{botanical_identity_id}/profile/native-ranges": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Native Ranges */
+        get: operations["listBotanicalNativeRanges"];
+        put?: never;
+        /** Add Native Range */
+        post: operations["addBotanicalNativeRange"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/botanical-identities/{botanical_identity_id}/profile/native-ranges/{geographic_place_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Native Range */
+        delete: operations["removeBotanicalNativeRange"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/dashboard": {
         parameters: {
             query?: never;
@@ -1108,6 +1143,36 @@ export interface components {
             /** Scientific Name */
             scientific_name: string;
         };
+        /** BotanicalNativeRangeCreate */
+        BotanicalNativeRangeCreate: {
+            /**
+             * Geographic Place Id
+             * Format: uuid
+             */
+            geographic_place_id: string;
+        };
+        /** BotanicalNativeRangeResponse */
+        BotanicalNativeRangeResponse: {
+            /**
+             * Botanical Profile Id
+             * Format: uuid
+             */
+            botanical_profile_id: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Geographic Place Id
+             * Format: uuid
+             */
+            geographic_place_id: string;
+            /** Geographic Place Name */
+            geographic_place_name: string;
+            /** Geographic Place Path */
+            geographic_place_path: string;
+        };
         /** BotanicalProfilePut */
         BotanicalProfilePut: {
             /** Cultivation */
@@ -1337,6 +1402,11 @@ export interface components {
             id: string;
             /** Name */
             name: string;
+            /**
+             * Native Range Count
+             * @default 0
+             */
+            native_range_count: number;
             /** Parent Id */
             parent_id: string | null;
             /**
@@ -3684,7 +3754,7 @@ export interface operations {
                 };
                 content?: never;
             };
-            /** @description Final section cleared; profile removed */
+            /** @description Final meaningful profile datum cleared; profile removed */
             204: {
                 headers: {
                     [name: string]: unknown;
@@ -3718,6 +3788,106 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    listBotanicalNativeRanges: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BotanicalNativeRangeResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    addBotanicalNativeRange: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BotanicalNativeRangeCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BotanicalNativeRangeResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    removeBotanicalNativeRange: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                botanical_identity_id: string;
+                geographic_place_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
             };
         };
     };
