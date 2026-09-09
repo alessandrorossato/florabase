@@ -4,6 +4,41 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-09 — isolated stable-preview workflow implemented
+
+- Added an operator-only stable-preview lifecycle around a detached adjacent Git worktree, with
+  `origin/main` as the fetched default and an explicit-ref override. Existing clean previews move
+  through safe detached switches; dirty previews and malformed worktree registrations fail closed,
+  while targeted Git worktree repair covers a safely moved linked checkout without changing the
+  primary branch, HEAD, index, or files; concurrent primary edits do not block preview preparation.
+- Added a production-runtime Compose override and guarded orchestration for the explicit
+  `florabase-preview` project. Rendered configuration validation pins build contexts to the preview
+  worktree, publishes only `127.0.0.1:15173`, uses the matching loopback development origin/cookie
+  policy, and requires isolated `florabase-preview_internal` and
+  `florabase-preview_postgres_data` resources.
+- Added explicit forward-only preview migration handling, interactive reuse of the existing owner
+  bootstrap CLI, guarded development-to-preview custom-format dump/restore, bounded readiness,
+  concise status, and stop/remove behavior that never deletes the preview volume. Development is
+  hard-coded as import source and preflighted for migration compatibility before preview data is
+  replaced; ordinary preview startup never imports data or runs a downgrade.
+- Added 17 no-network workflow tests covering Git safety, fetched detached explicit-ref selection,
+  invalid-ref and dirty-preview refusal, Compose paths/projects/resources/ports/configuration,
+  persistent stop/remove semantics, preview-only migration/bootstrap targeting, guarded import
+  direction and revision checks, readiness failures, status output, and unchanged disposable
+  integration isolation. The new Python
+  helpers pass Ruff formatting and lint; existing workflow and delivery helper suites, the 72-entry
+  feature graph, Python compilation, and `git diff --check` pass.
+- Real Docker verification created the clean sibling preview at
+  `073ebf97c88e3a876280cfebfc23980b1048e4d2`, built from `origin/main`, migrated its new isolated
+  volume to `20260908_0020`, reached both health endpoints through `http://localhost:15173`, and
+  created an owner through the interactive preview bootstrap. Repeated startup was idempotent;
+  stop and remove each preserved the volume; recreating the worktree retained both schema and owner;
+  status accurately reported all three healthy services, exact SHA/ref, URL, volume, and revision.
+  The exact temporary bootstrap test owner was removed afterward, leaving the running preview ready
+  for the operator to create their own credentials.
+  The persistent development stack was not running, so a real data import was deliberately not
+  attempted. No product feature entry or Alembic revision was added for this developer workflow.
+
 ## 2026-09-09 — MAP-001 implemented
 
 - Added the first-class authenticated collection provenance map using one Leaflet marker per

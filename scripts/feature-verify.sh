@@ -38,6 +38,7 @@ base_sha="$(git merge-base origin/main HEAD)"
 run_stage "feature graph" python3 ./scripts/check-features.py
 run_stage "workflow helpers" make test-workflow-helpers
 run_stage "feature workflow helpers" make test-feature-workflow
+run_stage "preview workflow helpers" make test-preview-workflow
 run_stage "quality" make check
 run_stage "integration" make test-integration
 run_stage "production builds" make build

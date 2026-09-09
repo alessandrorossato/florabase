@@ -16,6 +16,99 @@ loopback ports: Vite at `http://localhost:5173`, FastAPI at `http://localhost:80
 Run `make migrate`, bootstrap a local owner as documented in [deployment.md](deployment.md), and do
 not use valuable data for development tests.
 
+## Isolated stable preview
+
+`make dev` runs the current worktree with hot reload, the normal `florabase` Compose project,
+development ports, and the persistent development database. For stable manual browser QA while that
+worktree remains on a feature branch or has local changes, use:
+
+```bash
+make preview
+```
+
+The preview helper fetches `origin`, resolves `origin/main` to an exact commit, and creates or safely
+updates a detached Git worktree at `../florabase-preview`. It then builds production runtime targets
+from that preview worktree, explicitly starts the `florabase-preview` Compose project, upgrades only
+its database to the selected code's Alembic head, waits for service health and host reachability, and
+prints the resolved ref, SHA, and canonical URL: `http://localhost:15173`.
+
+Select another reviewed commit or ref explicitly when needed:
+
+```bash
+make preview REF=<commit-or-ref>
+```
+
+The helper never checks out, resets, stashes, cleans, rebases, or otherwise changes the primary
+worktree, and does not require it to remain idle while preview preparation runs. An existing preview
+worktree must be clean before its detached revision can move. The
+Compose project directory and build contexts are validated against the preview worktree, so preview
+images cannot accidentally be built from the active feature worktree. If that linked worktree was
+safely moved on disk, startup uses Git's targeted worktree-repair primitive and then verifies the
+exact registered path; malformed or ambiguous worktree metadata is rejected.
+
+Preview uses production/static backend and frontend image targets without development bind mounts.
+Only `127.0.0.1:15173` is published; FastAPI and PostgreSQL remain internal. The backend retains the
+unchanged production security validation, while this loopback-only environment explicitly uses
+`FLORABASE_ENVIRONMENT=development`, canonical origin `http://localhost:15173`, and
+`loopback-development` cookies. Its fixed internal-only database credentials are local non-secret
+defaults; no primary `.env` is copied into the preview worktree.
+
+The `florabase-preview_postgres_data` volume is distinct from the normal development and disposable
+integration databases. It survives container recreation, `make preview-stop`, and
+`make preview-remove`. On an empty database, `make preview` applies migrations but does not invent an
+owner password. When startup reports that no owner exists, create one through the existing secure,
+interactive bootstrap implementation:
+
+```bash
+make preview-bootstrap-owner LOGIN=owner
+```
+
+To explicitly replace preview data with a snapshot of the currently running persistent development
+database, use both target guards:
+
+```bash
+make preview-import-dev CONFIRM_REPLACE_PREVIEW=yes CONFIRM_DATABASE=florabase_preview
+```
+
+The command hard-codes the normal `florabase` development project as source and
+`florabase-preview` as target, creates and validates a temporary custom-format dump, preflights its
+Alembic revision against the selected preview code, coordinates preview application containers,
+restores only the preview database, upgrades it forward when necessary, and removes the temporary
+dump. It never runs during ordinary preview startup and never modifies development data. Treat all
+database copies as sensitive even though the temporary artifact is deleted.
+
+Preview migration handling is forward-only. If the persistent preview database—or the development
+snapshot selected for import—has a revision that the selected code cannot safely upgrade, the helper
+fails without downgrading or deleting the preview volume. Choose a compatible ref; for an import,
+the compatibility check happens before preview data is replaced.
+
+Lifecycle and troubleshooting commands are:
+
+```bash
+make preview-status
+make preview-stop
+make preview-remove
+```
+
+Status reports the worktree path and exact SHA, clean/dirty state, known requested ref, Compose
+project, container state/health text, URL, persistent volume presence, and the Alembic revision when
+the preview database is running. Stop removes preview containers but preserves its worktree and
+database. Remove first performs that same non-volume stop, then removes only a clean preview Git
+worktree; it refuses local preview changes and still preserves the database volume.
+
+For logs, use the exact isolated project and both configuration files (paths shown here assume the
+default adjacent worktree):
+
+```bash
+docker compose --project-name florabase-preview \
+  --project-directory ../florabase-preview \
+  --file ../florabase-preview/compose.yaml \
+  --file compose.preview.yaml logs --tail=100
+```
+
+The persistent preview database is not a test fixture. `make test-integration` remains a separate
+tmpfs-backed `florabase-integration` project, and feature verification never targets preview data.
+
 ## Checks
 
 Use the narrowest relevant command while working:
