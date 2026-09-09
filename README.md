@@ -99,5 +99,11 @@ data in PostgreSQL only; deployment configuration and secrets need a separate pr
 - [Product roadmap](docs/product-roadmap.md)
 - [Engineering progress](docs/progress.md)
 
-No license has been selected. Until the repository owner adds one, the source is publicly visible
-but no open-source license is granted.
+## License
+
+Florabase is free and open-source software licensed under the
+GNU Affero General Public License v3.0 or later.
+
+SPDX-License-Identifier: AGPL-3.0-or-later
+
+See [LICENSE](LICENSE) for the full license text.
