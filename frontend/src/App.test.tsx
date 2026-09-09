@@ -69,6 +69,8 @@ function authenticatedThen(
     if (path.endsWith("/auth/csrf"))
       return jsonResponse({ csrf_token: "botanical-csrf" });
     if (path.endsWith("/health")) return jsonResponse({ status: "ok" });
+    if (path.endsWith("/external-taxon-link") && init?.method === undefined)
+      return jsonResponse(null);
     if (path === "/api/v1/provenance-sites") return jsonResponse([]);
     if (
       path === "/api/v1/botanical-identities" &&
@@ -90,6 +92,8 @@ function authenticatedDirectoryThen(
     if (path.endsWith("/auth/csrf"))
       return jsonResponse({ csrf_token: "botanical-csrf" });
     if (path.endsWith("/health")) return jsonResponse({ status: "ok" });
+    if (path.endsWith("/external-taxon-link") && init?.method === undefined)
+      return jsonResponse(null);
     return handler(path, init);
   });
 }

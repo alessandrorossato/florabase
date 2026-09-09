@@ -57,6 +57,46 @@
   margin-bottom: 1rem;
 }
 
+.external-botany {
+  display: grid;
+  gap: 1rem;
+  border: 1px solid var(--border, #cad7cd);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  background: var(--surface, #fff);
+}
+
+.external-botany .section-heading,
+.external-link-card {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.external-botany h3,
+.external-botany h4,
+.external-botany p {
+  margin-block: 0.25rem;
+}
+
+.external-search form {
+  display: flex;
+  align-items: end;
+  gap: 0.75rem;
+}
+
+.external-search form .field {
+  flex: 1;
+}
+
+.external-candidates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
 .source-choice-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 16rem), 1fr));
@@ -178,6 +218,18 @@
 
   .propagation-form .actions > *,
   .contextual-workflow .button-link {
+    width: 100%;
+  }
+
+  .external-botany .section-heading,
+  .external-link-card,
+  .external-search form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .external-link-card .actions > *,
+  .external-search form button {
     width: 100%;
   }
 }

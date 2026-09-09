@@ -21,6 +21,7 @@ import {
 } from "../components/CollectionUI";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import { EventFeed } from "../events/EventFeed";
+import { ExternalBotanicalDataPanel } from "./ExternalBotanicalDataPanel";
 import {
   conflictExistingId,
   createBotanicalIdentity,
@@ -464,6 +465,12 @@ function IdentityDetails({
             </dl>
           </article>
           <BotanicalProfilePanel identityId={identity.id} key={identity.id} />
+          <ExternalBotanicalDataPanel
+            key={`external-${identity.id}`}
+            csrfToken={csrfToken}
+            identityId={identity.id}
+            scientificName={identity.scientific_name}
+          />
           {counts && counts.events.length > 0 && (
             <section>
               <h3>Recent Events</h3>

@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     login_throttle_retention_seconds: int = Field(default=86_400, ge=3_600, le=604_800)
     log_level: str = "INFO"
     log_format: LogFormat = LogFormat.JSON
+    botanical_cache_ttl_seconds: int = Field(default=86_400, ge=300, le=2_592_000)
+    botanical_provider_connect_timeout_seconds: float = Field(default=3.0, ge=0.1, le=30)
+    botanical_provider_read_timeout_seconds: float = Field(default=8.0, ge=0.1, le=60)
 
     @model_validator(mode="after")
     def validate_secure_production_settings(self) -> Self:

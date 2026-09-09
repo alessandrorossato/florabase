@@ -126,6 +126,59 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/botanical-identities/{botanical_identity_id}/external-taxa/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search */
+        get: operations["searchExternalTaxa"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/botanical-identities/{botanical_identity_id}/external-taxon-link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Link */
+        get: operations["getExternalTaxonLink"];
+        /** Confirm */
+        put: operations["confirmExternalTaxonLink"];
+        post?: never;
+        /** Remove Link */
+        delete: operations["unlinkExternalTaxon"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/botanical-identities/{botanical_identity_id}/external-taxon-link/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refresh */
+        post: operations["refreshExternalTaxonLink"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/botanical-identities/{botanical_identity_id}/profile": {
         parameters: {
             query?: never;
@@ -1183,6 +1236,69 @@ export interface components {
             recipient?: string | null;
             /** Resulting Plant Id */
             resulting_plant_id?: string | null;
+        };
+        /** ExternalTaxonLinkCreate */
+        ExternalTaxonLinkCreate: {
+            /** External Id */
+            external_id: string;
+            /** Scientific Name */
+            scientific_name: string;
+        };
+        /** ExternalTaxonLinkResponse */
+        ExternalTaxonLinkResponse: {
+            /** Accepted External Id */
+            accepted_external_id: string | null;
+            /** Accepted Name */
+            accepted_name: string | null;
+            /** Authorship */
+            authorship: string | null;
+            /** Canonical Name */
+            canonical_name: string | null;
+            /** Class Name */
+            class_name: string | null;
+            /** External Id */
+            external_id: string;
+            /** Family */
+            family: string | null;
+            /** Genus */
+            genus: string | null;
+            /** Kingdom */
+            kingdom: string | null;
+            /**
+             * Last Refresh Attempt At
+             * Format: date-time
+             */
+            last_refresh_attempt_at: string;
+            /**
+             * Last Refreshed At
+             * Format: date-time
+             */
+            last_refreshed_at: string;
+            /**
+             * Linked At
+             * Format: date-time
+             */
+            linked_at: string;
+            /** Order Name */
+            order_name: string | null;
+            /** Phylum */
+            phylum: string | null;
+            /** Provider */
+            provider: string;
+            /** Provider Display Name */
+            provider_display_name: string;
+            /** Provider Url */
+            provider_url: string;
+            /** Rank */
+            rank: string | null;
+            /** Refresh Error */
+            refresh_error: string | null;
+            /** Scientific Name */
+            scientific_name: string;
+            /** Stale */
+            stale: boolean;
+            /** Taxonomic Status */
+            taxonomic_status: string | null;
         };
         /** GeographicPlaceCreate */
         GeographicPlaceCreate: {
@@ -2897,6 +3013,63 @@ export interface components {
             /** Seed Lots Total */
             seed_lots_total: number;
         };
+        /** TaxonCandidate */
+        TaxonCandidate: {
+            /** Accepted External Id */
+            accepted_external_id?: string | null;
+            /** Accepted Name */
+            accepted_name?: string | null;
+            /** Authorship */
+            authorship?: string | null;
+            /** Canonical Name */
+            canonical_name?: string | null;
+            /** Class Name */
+            class_name?: string | null;
+            /** Confidence */
+            confidence?: number | null;
+            /** External Id */
+            external_id: string;
+            /** Family */
+            family?: string | null;
+            /** Genus */
+            genus?: string | null;
+            /** Issues */
+            issues?: string[];
+            /** Kingdom */
+            kingdom?: string | null;
+            /** Match Type */
+            match_type?: string | null;
+            /** Order Name */
+            order_name?: string | null;
+            /** Phylum */
+            phylum?: string | null;
+            /** Rank */
+            rank?: string | null;
+            /** Scientific Name */
+            scientific_name: string;
+            /** Taxonomic Status */
+            taxonomic_status?: string | null;
+        };
+        /** TaxonSearchResponse */
+        TaxonSearchResponse: {
+            /** Candidates */
+            candidates: components["schemas"]["TaxonCandidate"][];
+            /**
+             * Fetched At
+             * Format: date-time
+             */
+            fetched_at: string;
+            /** From Cache */
+            from_cache: boolean;
+            /** Provider */
+            provider: string;
+            /** Provider Error */
+            provider_error?: string | null;
+            /** Query */
+            query: string;
+            /** Stale */
+            stale: boolean;
+        };
         /** TransferCreate */
         TransferCreate: {
             /** Notes */
@@ -3255,6 +3428,171 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["BotanicalIdentityCollectionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    searchExternalTaxa: {
+        parameters: {
+            query: {
+                query: string;
+            };
+            header?: never;
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonSearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getExternalTaxonLink: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExternalTaxonLinkResponse"] | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirmExternalTaxonLink: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExternalTaxonLinkCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExternalTaxonLinkResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unlinkExternalTaxon: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refreshExternalTaxonLink: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExternalTaxonLinkResponse"];
                 };
             };
             /** @description Validation Error */

@@ -7,6 +7,9 @@ export type BotanicalIdentityResponse =
   components["schemas"]["BotanicalIdentityResponse"];
 export type BotanicalIdentityUpdate =
   components["schemas"]["BotanicalIdentityUpdate"];
+export type ExternalTaxonLinkResponse =
+  components["schemas"]["ExternalTaxonLinkResponse"];
+export type TaxonSearchResponse = components["schemas"]["TaxonSearchResponse"];
 type HTTPValidationError = components["schemas"]["HTTPValidationError"];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -109,4 +112,66 @@ export function deleteBotanicalIdentity(
     method: "DELETE",
     headers: { "X-CSRF-Token": csrfToken },
   });
+}
+
+export function getExternalTaxonLink(
+  id: string,
+  signal?: AbortSignal,
+): Promise<ExternalTaxonLinkResponse | null> {
+  return requestJson(
+    `/api/v1/botanical-identities/${encodeURIComponent(id)}/external-taxon-link`,
+    { signal },
+  );
+}
+
+export function searchExternalTaxa(
+  id: string,
+  query: string,
+): Promise<TaxonSearchResponse> {
+  const params = new URLSearchParams({ query });
+  return requestJson(
+    `/api/v1/botanical-identities/${encodeURIComponent(id)}/external-taxa/search?${params.toString()}`,
+  );
+}
+
+export function confirmExternalTaxonLink(
+  id: string,
+  externalId: string,
+  scientificName: string,
+  csrfToken: string,
+): Promise<ExternalTaxonLinkResponse> {
+  return requestJson(
+    `/api/v1/botanical-identities/${encodeURIComponent(id)}/external-taxon-link`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": csrfToken,
+      },
+      body: JSON.stringify({
+        external_id: externalId,
+        scientific_name: scientificName,
+      }),
+    },
+  );
+}
+
+export function refreshExternalTaxonLink(
+  id: string,
+  csrfToken: string,
+): Promise<ExternalTaxonLinkResponse> {
+  return requestJson(
+    `/api/v1/botanical-identities/${encodeURIComponent(id)}/external-taxon-link/refresh`,
+    { method: "POST", headers: { "X-CSRF-Token": csrfToken } },
+  );
+}
+
+export function unlinkExternalTaxon(
+  id: string,
+  csrfToken: string,
+): Promise<undefined> {
+  return requestJson(
+    `/api/v1/botanical-identities/${encodeURIComponent(id)}/external-taxon-link`,
+    { method: "DELETE", headers: { "X-CSRF-Token": csrfToken } },
+  );
 }

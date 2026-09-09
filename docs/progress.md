@@ -4,6 +4,33 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-09 — BOTANY-002 verified
+
+- Added the canonical BOTANY-002 external-data foundation and aligned separate planned
+  GEOGRAPHY-002 native ranges, BOTANY-003 profile enrichment, MAP-002 botanical distribution,
+  existing ATTACHMENT-002/003 photo work, later UX stabilization/help, and prose-only release
+  hardening. V1 now denotes product scope while `0.1.0` is the intended first distributable release.
+- Added a narrow backend-only GBIF adapter using the documented v2 matching service and Catalogue of
+  Life eXtended Release checklist selection. Bounded requests normalize names, authorship, rank,
+  status, accepted-name context, classification, match diagnostics, and alternatives while
+  translating network, rate-limit, not-found, server, and malformed-response failures.
+- Added one explicit current provider link per BotanicalIdentity/provider and a deterministic
+  PostgreSQL JSONB response cache with a configurable one-day default freshness period. Link,
+  replacement, stale-preserving refresh, and unlink operations never modify Florabase identity or
+  profile facts; cache entries remain independent of links.
+- Added protected focused APIs and a responsive BotanicalIdentity panel for editable search,
+  ambiguous candidates, explicit confirmation, linked provenance, trusted GBIF navigation,
+  refresh/failure freshness, replacement, and unlinking. The UI discloses that only botanical search
+  terms leave Florabase and keeps enrichment, native ranges, occurrences, and MAP-001 out of scope.
+- Independent verification passed 281 backend unit tests at 90.59% coverage, 132 frontend tests,
+  298 disposable PostgreSQL integration tests, Ruff and Prettier formatting, Ruff and ESLint
+  linting, strict mypy over 167 source files, strict TypeScript, and the migration cycle
+  `20260908_0020 → 20260909_0021 → 20260908_0020 → 20260909_0021`, including populated-data
+  downgrade refusal and concurrent link/cache convergence. Generated API drift, backend and
+  frontend production image builds, validation of all 75 feature-graph entries, and final diff
+  hygiene also pass. Canonical `make feature-verify` passed, including workflow helper coverage,
+  production builds, the disposable migration cycle, and final whitespace and working-tree checks.
+
 ## 2026-09-09 — isolated stable-preview workflow implemented
 
 - Added an operator-only stable-preview lifecycle around a detached adjacent Git worktree, with
@@ -602,17 +629,16 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260908_0020` on the SUPPLIER-002 implementation branch; SUPPLIER-002 adds no
-  migration.
+- Alembic head: `20260909_0021` on the BOTANY-002 implementation branch.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
   protected Plant/PlantGroup Event journal and timeline UI; atomic extraction history; retained
   transferred Plant/PlantGroup history; scope-aware hierarchical collection Locations; and direct,
   connected-record Supplier summaries.
-- `PROPAGATION-001` through `PROPAGATION-003` and `SUPPLIER-002` are verified; `LOCATION-002` and
-  `GEOGRAPHY-003` remain implemented pending independent verification. The next increment remains
-  decided by the machine-readable dependency graph;
+- `PROPAGATION-001` through `PROPAGATION-003`, `SUPPLIER-002`, `LOCATION-002`, `GEOGRAPHY-003`, and
+  `MAP-001` are verified; `BOTANY-002` is implemented pending independent verification. The next
+  increment remains decided by the machine-readable dependency graph;
   licensing/version policy and release readiness remain explicit later operator/product decisions.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.
