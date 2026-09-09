@@ -6,6 +6,7 @@ from florabase.botanical_identities.api import router as botanical_identities_ro
 from florabase.botanical_profiles.api import router as botanical_profiles_router
 from florabase.collection_views.api import router as collection_views_router
 from florabase.events.api import events_router, plant_groups_events_router, plants_events_router
+from florabase.external_botany.api import router as external_botany_router
 from florabase.geographic_places.api import router as geographic_places_router
 from florabase.locations.api import router as locations_router
 from florabase.plants.api import plant_groups_router, plants_router
@@ -20,6 +21,7 @@ api_router.include_router(health_router)
 api_router.include_router(auth_router)
 api_router.include_router(botanical_identities_router)
 api_router.include_router(botanical_profiles_router)
+api_router.include_router(external_botany_router)
 api_router.include_router(collection_views_router)
 api_router.include_router(suppliers_router)
 api_router.include_router(locations_router)

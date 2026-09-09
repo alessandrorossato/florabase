@@ -233,6 +233,33 @@
       "status": "verified"
     },
     {
+      "id": "BOTANY-002",
+      "category": "botany",
+      "description": "External botanical data foundation",
+      "acceptance_criteria": [
+        "A narrow backend provider boundary uses GBIF as the first fixed provider, normalizes documented Catalogue of Life eXtended Release search and match results, and translates bounded network, rate-limit, not-found, and malformed-response failures without exposing provider response shapes or arbitrary URLs",
+        "Authenticated BotanicalIdentity workflows search advisory candidates and require explicit operator confirmation before creating or replacing at most one current provider link, while unlink and refresh retain Florabase-owned identity and profile data unchanged",
+        "Alembic-managed relational provider links retain opaque external IDs and link-time provenance, while a concurrency-safe PostgreSQL response cache records payload and fetch time under a configurable freshness policy without becoming canonical botanical data",
+        "The accessible responsive BotanicalIdentity UI exposes unlinked, search, ambiguous-candidate, linked, stale, refresh-failure, change, and unlink states with trusted GBIF references and no automatic taxonomy correction, profile enrichment, native-range import, or occurrence mapping"
+      ],
+      "dependencies": ["PROFILE-002", "UX-001"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "BOTANY-003",
+      "category": "botany",
+      "description": "Botanical profile enrichment",
+      "acceptance_criteria": [
+        "External botanical reference facts use the confirmed provider-link foundation and remain visibly source-scoped with retrieval provenance",
+        "Operator-approved import or display decisions preserve manually authored BotanicalProfile content and never silently overwrite it",
+        "The implemented field set, attribution, refresh, removal, and conflict behavior are reviewed against provider terms and data quality before use"
+      ],
+      "dependencies": ["BOTANY-002", "PROFILE-002"],
+      "priority": "P1",
+      "status": "planned"
+    },
+    {
       "id": "SUPPLIER-001",
       "category": "supplier",
       "description": "Add a reusable Supplier and acquisition-source directory",
@@ -274,7 +301,7 @@
     {
       "id": "GEOGRAPHY-002",
       "category": "geography",
-      "description": "Relate BotanicalIdentity native range to GeographicPlace",
+      "description": "Structured botanical native ranges",
       "acceptance_criteria": [
         "Structured native range uses the shared GeographicPlace hierarchy and remains independent from SeedLot material provenance",
         "A BotanicalIdentity or profile may reference one or more broad or precise known places without replacing disjunct areas with their common ancestor",
@@ -661,7 +688,7 @@
         "Additional examples use keyboard-, focus-, and screen-reader-accessible information controls rather than hover-only tooltips",
         "Deeper help is reserved for genuinely complex concepts and self-explanatory fields avoid excessive help chrome"
       ],
-      "dependencies": ["SEED-004", "SOWING-003", "PLANT-003"],
+      "dependencies": ["UX-003"],
       "priority": "P2",
       "status": "planned"
     },
@@ -799,6 +826,19 @@
       "dependencies": ["GEOGRAPHY-003", "UX-001"],
       "priority": "P2",
       "status": "implemented"
+    },
+    {
+      "id": "MAP-002",
+      "category": "map",
+      "description": "Botanical distribution and occurrence map",
+      "acceptance_criteria": [
+        "A botanical distribution view uses explicitly reviewed external occurrence or distribution information tied to the confirmed external taxon foundation rather than collection ProvenanceSite records",
+        "Source, retrieval time, licensing, attribution, uncertainty, record density, and privacy behavior are visible and tested without presenting occurrence points as a BotanicalIdentity's authoritative native range",
+        "The accessible desktop and mobile map remains distinct from MAP-001 collection provenance and from GEOGRAPHY-002 structured native-range relationships"
+      ],
+      "dependencies": ["BOTANY-002", "UX-001"],
+      "priority": "P2",
+      "status": "planned"
     },
     {
       "id": "SUPPLIER-002",

@@ -750,6 +750,241 @@
         "title": "EventUpdate",
         "type": "object"
       },
+      "ExternalTaxonLinkCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "external_id": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "External Id",
+            "type": "string"
+          },
+          "scientific_name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Scientific Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "external_id",
+          "scientific_name"
+        ],
+        "title": "ExternalTaxonLinkCreate",
+        "type": "object"
+      },
+      "ExternalTaxonLinkResponse": {
+        "properties": {
+          "accepted_external_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted External Id"
+          },
+          "accepted_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Name"
+          },
+          "authorship": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authorship"
+          },
+          "canonical_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Name"
+          },
+          "class_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Name"
+          },
+          "external_id": {
+            "title": "External Id",
+            "type": "string"
+          },
+          "family": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family"
+          },
+          "genus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Genus"
+          },
+          "kingdom": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kingdom"
+          },
+          "last_refresh_attempt_at": {
+            "format": "date-time",
+            "title": "Last Refresh Attempt At",
+            "type": "string"
+          },
+          "last_refreshed_at": {
+            "format": "date-time",
+            "title": "Last Refreshed At",
+            "type": "string"
+          },
+          "linked_at": {
+            "format": "date-time",
+            "title": "Linked At",
+            "type": "string"
+          },
+          "order_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Name"
+          },
+          "phylum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phylum"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "provider_display_name": {
+            "title": "Provider Display Name",
+            "type": "string"
+          },
+          "provider_url": {
+            "title": "Provider Url",
+            "type": "string"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "refresh_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refresh Error"
+          },
+          "scientific_name": {
+            "title": "Scientific Name",
+            "type": "string"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          },
+          "taxonomic_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taxonomic Status"
+          }
+        },
+        "required": [
+          "provider",
+          "provider_display_name",
+          "external_id",
+          "provider_url",
+          "scientific_name",
+          "canonical_name",
+          "authorship",
+          "rank",
+          "taxonomic_status",
+          "accepted_external_id",
+          "accepted_name",
+          "kingdom",
+          "phylum",
+          "class_name",
+          "order_name",
+          "family",
+          "genus",
+          "linked_at",
+          "last_refreshed_at",
+          "last_refresh_attempt_at",
+          "refresh_error",
+          "stale"
+        ],
+        "title": "ExternalTaxonLinkResponse",
+        "type": "object"
+      },
       "GeographicPlaceCreate": {
         "additionalProperties": false,
         "properties": {
@@ -6764,6 +6999,238 @@
         "title": "SupplierUsageCounts",
         "type": "object"
       },
+      "TaxonCandidate": {
+        "properties": {
+          "accepted_external_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted External Id"
+          },
+          "accepted_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Name"
+          },
+          "authorship": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authorship"
+          },
+          "canonical_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Name"
+          },
+          "class_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Class Name"
+          },
+          "confidence": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Confidence"
+          },
+          "external_id": {
+            "title": "External Id",
+            "type": "string"
+          },
+          "family": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Family"
+          },
+          "genus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Genus"
+          },
+          "issues": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Issues",
+            "type": "array"
+          },
+          "kingdom": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kingdom"
+          },
+          "match_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Match Type"
+          },
+          "order_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Order Name"
+          },
+          "phylum": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Phylum"
+          },
+          "rank": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Rank"
+          },
+          "scientific_name": {
+            "title": "Scientific Name",
+            "type": "string"
+          },
+          "taxonomic_status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Taxonomic Status"
+          }
+        },
+        "required": [
+          "external_id",
+          "scientific_name"
+        ],
+        "title": "TaxonCandidate",
+        "type": "object"
+      },
+      "TaxonSearchResponse": {
+        "properties": {
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/TaxonCandidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "fetched_at": {
+            "format": "date-time",
+            "title": "Fetched At",
+            "type": "string"
+          },
+          "from_cache": {
+            "title": "From Cache",
+            "type": "boolean"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "provider_error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Provider Error"
+          },
+          "query": {
+            "title": "Query",
+            "type": "string"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "provider",
+          "query",
+          "fetched_at",
+          "from_cache",
+          "stale",
+          "candidates"
+        ],
+        "title": "TaxonSearchResponse",
+        "type": "object"
+      },
       "TransferCreate": {
         "additionalProperties": false,
         "properties": {
@@ -7308,6 +7775,287 @@
         "summary": "Read Collection",
         "tags": [
           "botanical identities"
+        ]
+      }
+    },
+    "/api/v1/botanical-identities/{botanical_identity_id}/external-taxa/search": {
+      "get": {
+        "operationId": "searchExternalTaxa",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": true,
+            "schema": {
+              "maxLength": 255,
+              "minLength": 1,
+              "title": "Query",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonSearchResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search",
+        "tags": [
+          "external botanical data"
+        ]
+      }
+    },
+    "/api/v1/botanical-identities/{botanical_identity_id}/external-taxon-link": {
+      "delete": {
+        "operationId": "unlinkExternalTaxon",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Link",
+        "tags": [
+          "external botanical data"
+        ]
+      },
+      "get": {
+        "operationId": "getExternalTaxonLink",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/ExternalTaxonLinkResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Getexternaltaxonlink"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Link",
+        "tags": [
+          "external botanical data"
+        ]
+      },
+      "put": {
+        "operationId": "confirmExternalTaxonLink",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExternalTaxonLinkCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalTaxonLinkResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm",
+        "tags": [
+          "external botanical data"
+        ]
+      }
+    },
+    "/api/v1/botanical-identities/{botanical_identity_id}/external-taxon-link/refresh": {
+      "post": {
+        "operationId": "refreshExternalTaxonLink",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExternalTaxonLinkResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Refresh",
+        "tags": [
+          "external botanical data"
         ]
       }
     },

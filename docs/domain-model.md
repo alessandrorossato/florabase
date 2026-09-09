@@ -16,9 +16,36 @@ an application-generated UUIDv7, required normalized scientific name, optional u
 name, optional common name, and UTC timestamps. Scientific name plus cultivar is case-insensitively
 unique. An identity can be corrected after creation. Deletion is allowed only while it is unused;
 references from SeedLots, Plants, or PlantGroups produce a domain conflict and no collection record
-is cascaded. Merging duplicates, synonyms, external taxonomy IDs, and name history are deferred.
+is cascaded. Merging duplicates, automatic synonym correction, and name history are deferred.
 
 Collection records reference its UUID and do not copy botanical names as authoritative data.
+
+### External botanical references
+
+An optional provider taxon link associates a BotanicalIdentity with at most one current taxon per
+stable provider ID. GBIF is the first supported provider. Its taxon key is stored as an opaque string
+alongside link-time name, authorship, rank, status, accepted-name context, higher classification,
+link time, last refresh attempt, and last successful refresh. The external reference is advisory:
+search and match candidates require explicit operator confirmation, and linking, replacing,
+refreshing, or unlinking never changes the BotanicalIdentity scientific name, cultivar, common name,
+relationships, or BotanicalProfile.
+
+GBIF access is backend-only and fixed to the documented API host. Matching selects the Catalogue of
+Life eXtended Release with `checklistKey=7ddf754f-d193-4cc9-b351-99906754a03b`, following GBIF's
+current taxonomy interpretation guidance; diagnostics and alternatives remain visible evidence, not
+automatic authority. A trusted provider function constructs GBIF taxon-page URLs. API callers cannot
+supply a provider host or URL.
+
+Provider match and taxon responses are bounded and cached in PostgreSQL under deterministic request
+keys. The default freshness period is one day and is configurable with
+`FLORABASE_BOTANICAL_CACHE_TTL_SECONDS`; no scheduler or background refresh exists. A failed explicit
+refresh retains cached link metadata, records the failed attempt, and identifies it as stale rather
+than presenting it as newly fetched. Unlinking does not delete shared cache entries.
+
+Only the searched botanical name or selected opaque taxon ID is sent to GBIF. Florabase sends no
+account, note, Supplier, Location, ProvenanceSite, SeedLot, Plant, or other collection data. This
+foundation does not enrich BotanicalProfile, import native ranges, request occurrences, or alter the
+MAP-001 collection-provenance map; those remain separate planned increments.
 
 ### BotanicalProfile
 

@@ -27,7 +27,10 @@ Plant or PlantGroup producing a collection-produced SeedLot. The verified EVENT-
 typed, partial-date Plant/PlantGroup history with creation-time movement and lifecycle effects.
 Inactive records retain history.
 
-This is substantial pre-release functionality, not a declaration of a stable first release.
+This is substantial pre-release functionality, not a declaration of a stable first release. The
+roadmap's **V1 scope** means the first complete intended product scope; after those features and
+release hardening, the expected first distributable pre-1.0 release is `0.1.0`. A future `1.0.0`
+remains a stability milestone after real-world use and compatibility expectations mature.
 
 ## First usable release direction
 
@@ -70,9 +73,10 @@ effects and historical edit/delete non-rollback behavior are explicit. Further s
 movement destination, transfer recipient, and the extraction-result Plant relation remain deferred;
 attachments also remain deferred.
 
-Attachment storage and photos are valuable but currently P2. Whether they are mandatory for the
-first public release is an explicit operator/product decision; this roadmap does not silently make
-every P2 item release-critical.
+Guarded attachment storage and collection photos (`ATTACHMENT-002` and `ATTACHMENT-003`) are part of
+the intended V1 scope after the botanical and map increments. Plant and Event are the essential
+targets; the existing planned contract also covers justified SeedLot, Sowing, and PlantGroup
+relationships without making any record depend on an image.
 
 ## Later collection enhancements
 
@@ -112,9 +116,25 @@ precision-preserving recent acquisition summaries. Propagated or extracted desce
 inherit Supplier, retained historical records do not become active holdings, and financial totals
 wait for the separate `ORDER-001` transaction model.
 
-The remaining V1 surface order is `LOCATION-002`, `GEOGRAPHY-003`, `SUPPLIER-002`, then the
-botanical/map increments. `UX-003` follows those feature-specific surfaces as global stabilization
-and polish; it is not a prerequisite for their implementation.
+After the implemented collection, geography, supplier, and provenance-map surfaces, the remaining
+V1 product sequence is `BOTANY-002` external provider/link/cache foundation, `GEOGRAPHY-002`
+structured native ranges, `BOTANY-003` reviewable profile enrichment, `MAP-002` botanical
+distribution/occurrence mapping, and `ATTACHMENT-002/003` storage and photos. `UX-003` follows those
+feature-specific surfaces as global stabilization and polish, then `UX-002` adds contextual help;
+neither blocks the botanical, geography, map, or photo increments.
+
+`BOTANY-002` keeps Florabase BotanicalIdentity and BotanicalProfile data authoritative. GBIF is the
+first fixed advisory provider, accessed only by the backend. Search results require explicit
+operator confirmation before a provider taxon is linked; no match automatically renames, reparents,
+merges, or enriches an identity. Provider responses are cached with truthful fetch/freshness
+metadata, and botanical-name queries are disclosed as external requests. Profile enrichment,
+structured native range, and occurrence mapping remain separately planned.
+
+The final V1 phase is release hardening rather than another product surface. It will exercise fresh
+installation, upgrades and the full Alembic chain, backup/restore, production Docker deployment,
+owner bootstrap and production settings, health/readiness, desktop/mobile browser QA, security and
+documentation review, performance sanity, and `0.1.0` release/versioning. No feature ID is assigned
+until that increment receives an explicit contract.
 
 ### Reversible authoritative operations
 
