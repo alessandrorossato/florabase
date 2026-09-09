@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
+import { BotanicalNativeRangeManager } from "./BotanicalNativeRangeManager";
 import {
   getBotanicalProfile,
   putBotanicalProfile,
@@ -134,7 +135,7 @@ export function BotanicalProfilePanel({ identityId }: { identityId: string }) {
         setSaveState({
           status: "error",
           message:
-            "Add content to at least one profile section, or leave the profile absent.",
+            "Add profile text or a structured native range, or leave the profile absent.",
         });
       } else if (error instanceof ApiError && error.status === 403) {
         setSaveState({
@@ -222,7 +223,8 @@ export function BotanicalProfilePanel({ identityId }: { identityId: string }) {
           >
             <h4>{loadState.profile ? "Edit profile" : "Add profile"}</h4>
             <p>
-              All sections are optional, but a saved profile needs at least one.
+              Text sections are optional. A profile is retained while it has
+              text or structured native-range knowledge.
             </p>
             {sections.map(({ field, label }) => (
               <div className="field" key={field}>
@@ -262,6 +264,7 @@ export function BotanicalProfilePanel({ identityId }: { identityId: string }) {
                 : "Save profile"}
             </button>
           </form>
+          <BotanicalNativeRangeManager identityId={identityId} />
           {saveState.status === "saved" && (
             <p className="notice notice--success" role="status">
               {saveState.message}

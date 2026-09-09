@@ -5,6 +5,7 @@ from uuid import UUID
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from florabase.botanical_profiles.model import BotanicalProfileNativeRange
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.schemas import GeographicPlaceCreate, GeographicPlaceUpdate
 from florabase.plants.model import Plant, PlantGroup
@@ -22,7 +23,9 @@ class GeographicPlaceNotFoundError(Exception):
     pass
 
 
-def geographic_place_usage(database: Session) -> tuple[dict[UUID, int], dict[UUID, int]]:
+def geographic_place_usage(
+    database: Session,
+) -> tuple[dict[UUID, int], dict[UUID, int], dict[UUID, int]]:
     direct: dict[UUID, int] = {}
     for model in (SeedLot, Plant, PlantGroup):
         rows = database.execute(
@@ -42,7 +45,14 @@ def geographic_place_usage(database: Session) -> tuple[dict[UUID, int], dict[UUI
         )
         if place_id is not None
     }
-    return direct, sites
+    native_ranges: dict[UUID, int] = {}
+    for place_id, count in database.execute(
+        select(BotanicalProfileNativeRange.geographic_place_id, func.count()).group_by(
+            BotanicalProfileNativeRange.geographic_place_id
+        )
+    ):
+        native_ranges[place_id] = count
+    return direct, sites, native_ranges
 
 
 def _all_places(database: Session, *, lock: bool = False) -> list[GeographicPlace]:
@@ -161,7 +171,7 @@ def delete_geographic_place(database: Session, place_id: UUID) -> None:
             "geographic_place_has_children",
             "Move or delete child GeographicPlaces before deleting this place",
         )
-    direct, sites = geographic_place_usage(database)
+    direct, sites, native_ranges = geographic_place_usage(database)
     if direct.get(place.id, 0):
         raise GeographicPlaceHierarchyError(
             "geographic_place_in_use",
@@ -171,6 +181,11 @@ def delete_geographic_place(database: Session, place_id: UUID) -> None:
         raise GeographicPlaceHierarchyError(
             "geographic_place_has_provenance_sites",
             "Move or delete dependent ProvenanceSites before deleting this place",
+        )
+    if native_ranges.get(place.id, 0):
+        raise GeographicPlaceHierarchyError(
+            "geographic_place_has_native_ranges",
+            "Remove botanical native-range references before deleting this place",
         )
     database.delete(place)
     database.flush()

@@ -71,7 +71,7 @@ def test_profile_database_constraints_and_parent_cascade(
     }
     assert "pk_botanical_profiles" in constraints
     assert "fk_botanical_profiles_identity" in constraints
-    assert "ck_botanical_profiles_at_least_one_section" in constraints
+    assert "ck_botanical_profiles_at_least_one_section" not in constraints
     assert "ck_botanical_profiles_description_no_control" in constraints
 
     with pytest.raises(DBAPIError), database_connection.begin_nested():
@@ -83,7 +83,6 @@ def test_profile_database_constraints_and_parent_cascade(
         )
 
     for values in (
-        {},
         {"description": ""},
         {"description": " surrounding whitespace "},
         {"description": "unsupported\x1fcontrol"},

@@ -251,10 +251,12 @@ def test_geographic_usage_and_safe_leaf_delete(monkeypatch: pytest.MonkeyPatch) 
         [(used_id, 2)],
         [(used_id, 3)],
         [(used_id, 4)],
+        [(used_id, 5)],
     ]
-    direct, sites = geographic_service.geographic_place_usage(database)
+    direct, sites, native_ranges = geographic_service.geographic_place_usage(database)
     assert direct[used_id] == 6
     assert sites[used_id] == 4
+    assert native_ranges[used_id] == 5
 
     world = place(name="World", source_code="001", source_code_type="un_m49")
     custom = place(
@@ -288,19 +290,32 @@ def test_geographic_usage_and_safe_leaf_delete(monkeypatch: pytest.MonkeyPatch) 
 
     database.scalars.return_value = [world, custom]
     monkeypatch.setattr(
-        geographic_service, "geographic_place_usage", lambda _: ({custom.id: 1}, {})
+        geographic_service,
+        "geographic_place_usage",
+        lambda _: ({custom.id: 1}, {}, {}),
     )
     with pytest.raises(GeographicPlaceHierarchyError) as retained:
         delete_geographic_place(database, custom.id)
     assert retained.value.code == "geographic_place_in_use"
 
     monkeypatch.setattr(
-        geographic_service, "geographic_place_usage", lambda _: ({}, {custom.id: 1})
+        geographic_service,
+        "geographic_place_usage",
+        lambda _: ({}, {custom.id: 1}, {}),
     )
     with pytest.raises(GeographicPlaceHierarchyError) as site_dependency:
         delete_geographic_place(database, custom.id)
     assert site_dependency.value.code == "geographic_place_has_provenance_sites"
 
-    monkeypatch.setattr(geographic_service, "geographic_place_usage", lambda _: ({}, {}))
+    monkeypatch.setattr(
+        geographic_service,
+        "geographic_place_usage",
+        lambda _: ({}, {}, {custom.id: 1}),
+    )
+    with pytest.raises(GeographicPlaceHierarchyError) as native_range_dependency:
+        delete_geographic_place(database, custom.id)
+    assert native_range_dependency.value.code == "geographic_place_has_native_ranges"
+
+    monkeypatch.setattr(geographic_service, "geographic_place_usage", lambda _: ({}, {}, {}))
     delete_geographic_place(database, custom.id)
     database.delete.assert_called_once_with(custom)

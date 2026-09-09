@@ -1,4 +1,5 @@
 import unicodedata
+from datetime import datetime
 from typing import TYPE_CHECKING, Self
 from uuid import UUID
 
@@ -7,7 +8,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from florabase.botanical_profiles.model import MAX_PROFILE_SECTION_LENGTH, PROFILE_FIELDS
 
 if TYPE_CHECKING:
-    from florabase.botanical_profiles.model import BotanicalProfile
+    from florabase.botanical_profiles.model import BotanicalProfile, BotanicalProfileNativeRange
+    from florabase.geographic_places.model import GeographicPlace
 
 
 def _normalize_profile_text(value: str | None) -> str | None:
@@ -65,3 +67,33 @@ class BotanicalProfileResponse(BaseModel):
     @classmethod
     def from_model(cls, profile: BotanicalProfile) -> Self:
         return cls.model_validate(profile)
+
+
+class BotanicalNativeRangeCreate(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    geographic_place_id: UUID
+
+
+class BotanicalNativeRangeResponse(BaseModel):
+    botanical_profile_id: UUID
+    geographic_place_id: UUID
+    geographic_place_name: str
+    geographic_place_path: str
+    created_at: datetime
+
+    @classmethod
+    def from_models(
+        cls,
+        native_range: BotanicalProfileNativeRange,
+        place: GeographicPlace,
+        *,
+        geographic_place_path: str,
+    ) -> Self:
+        return cls(
+            botanical_profile_id=native_range.botanical_profile_id,
+            geographic_place_id=native_range.geographic_place_id,
+            geographic_place_name=place.name,
+            geographic_place_path=geographic_place_path,
+            created_at=native_range.created_at,
+        )

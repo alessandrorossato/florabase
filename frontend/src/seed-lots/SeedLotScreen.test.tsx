@@ -56,6 +56,7 @@ const place = {
   place_kind: "canonical" as const,
   place_type: null,
   provenance_site_count: 0,
+  native_range_count: 0,
   direct_usage_count: 0,
   source_name: "unicode_cldr",
   source_version: "48.2.1",

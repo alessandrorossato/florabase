@@ -56,12 +56,13 @@ def _require_place(database: Session, place_id: UUID) -> GeographicPlace:
 
 def _response(database: Session, place: GeographicPlace) -> GeographicPlaceResponse:
     places = list_geographic_places(database)
-    direct, sites = geographic_place_usage(database)
+    direct, sites, native_ranges = geographic_place_usage(database)
     return GeographicPlaceResponse.from_model(
         place,
         display_path=display_path(place, places),
         provenance_site_count=sites.get(place.id, 0),
         direct_usage_count=direct.get(place.id, 0),
+        native_range_count=native_ranges.get(place.id, 0),
     )
 
 
@@ -71,13 +72,14 @@ def list_all(
     database: Annotated[Session, Depends(get_database_session)],
 ) -> list[GeographicPlaceResponse]:
     places = list_geographic_places(database)
-    direct, sites = geographic_place_usage(database)
+    direct, sites, native_ranges = geographic_place_usage(database)
     responses = [
         GeographicPlaceResponse.from_model(
             place,
             display_path=display_path(place, places),
             provenance_site_count=sites.get(place.id, 0),
             direct_usage_count=direct.get(place.id, 0),
+            native_range_count=native_ranges.get(place.id, 0),
         )
         for place in places
     ]

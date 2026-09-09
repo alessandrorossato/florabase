@@ -102,6 +102,7 @@ def test_schema_uses_native_types_named_constraints_and_only_one_botanical_table
         "auth_sessions",
         "botanical_identities",
         "botanical_profiles",
+        "botanical_profile_native_ranges",
         "events",
         "external_provider_cache",
         "external_taxon_links",
