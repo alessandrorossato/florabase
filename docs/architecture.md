@@ -54,11 +54,14 @@ both and `make api-check` detects drift.
 ## Implemented domain modules
 
 The application currently persists and exposes BotanicalIdentity, BotanicalProfile, structured
-BotanicalProfile native ranges, Supplier, Location, GeographicPlace, SeedLot, Sowing, Plant, and
-PlantGroup. Direct foreign keys express the
-supported workflow lineage: SeedLot to Sowing to Plant/PlantGroup, PlantGroup extraction to Plant,
-and Plant/PlantGroup production of a collection-produced SeedLot. The implementation does not use a
-generic graph, polymorphic collection item, event framework, or attachment subsystem.
+BotanicalProfile native ranges, external botanical reference links, Supplier, Location,
+GeographicPlace, ProvenanceSite, SeedLot, Sowing, Plant, PlantGroup, Event, and typed authoritative
+operation receipts. Direct foreign keys express the supported workflow lineage: SeedLot to Sowing
+to Plant/PlantGroup, PlantGroup extraction to Plant, and Plant/PlantGroup production of a
+collection-produced SeedLot. Events record Plant and PlantGroup history without making the system
+event-sourced; operation receipts support the deliberately bounded reintegration and propagation
+reversals. The implementation does not use a generic graph, polymorphic collection item, generic
+event framework, or attachment subsystem.
 
 See [domain-model.md](domain-model.md) for semantics and current limitations.
 
@@ -75,7 +78,8 @@ proxy.
 
 ## Deliberately deferred
 
-Attachments and uploads, Plant events and observation history, advanced search, dashboards,
-import/export, PWA installability, multi-user collaboration, taxonomy reconciliation, and external
-integrations remain backlog items. Their storage and service infrastructure will be designed only
-when a concrete feature requires it.
+Attachments and uploads, richer germination observations and Event payloads, advanced search,
+analytical dashboards, import/export, PWA installability, multi-user collaboration, automatic
+taxonomy reconciliation, provider-backed profile enrichment, and additional external integrations
+remain backlog items. Their storage and service infrastructure will be designed only when a
+concrete feature requires it.

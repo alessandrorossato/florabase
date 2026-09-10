@@ -4,6 +4,30 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-10 — repository consistency and delivery reliability implemented
+
+- Reconciled the public current-state summary and architecture overview with the verified Events,
+  propagation lineage and reversal, geographic provenance, collection map, structured native-range,
+  and external botanical-reference surfaces. Attachments/photos, richer germination and Event data,
+  advanced search/analytics, import/export, contextual help, and PWA installability remain explicit
+  deferrals; the V1 sequence and domain contracts are unchanged.
+- Recorded the open-source-readiness follow-up already present on `main`: commit `a9c4391` adopted
+  AGPL-3.0-or-later across the root license and package metadata, removed React Leaflet and its core
+  package from the frontend manifest and lockfile, and retained Leaflet 1.9.4 directly for MAP-001.
+  This pass reconfirmed those manifests, the lockfile, direct dependency tree, and direct Leaflet map
+  implementation without adding dependency-audit infrastructure or changing runtime behavior.
+- Corrected the delivery rerun gap after protected squash merge. Once `origin/main` advances, the
+  reviewed feature SHA is no longer its ancestor; delivery now checks that SHA's associated
+  same-repository PR before pushing and accepts the terminal state only when the exact branch/SHA was
+  merged into `main`, every required current-SHA check passed, the reported merge SHA is on fetched
+  `origin/main`, and the remote feature branch is deleted. Closed-unmerged, mismatched, ambiguous,
+  missing-check, and unproven-divergence states remain blocked.
+- Added deterministic no-network regression coverage for the merged-and-deleted rerun and retained
+  exact-SHA failure cases. All 34 delivery/workflow helper tests pass. The complete SeedLot component
+  file also passed nine consecutive focused runs (126 test executions); the reported contextual
+  `Create identity` CI flake was not reproduced, its existing route/storage/dialog isolation remains
+  sound, and no frontend code was changed.
+
 ## 2026-09-09 — GEOGRAPHY-002 implemented
 
 - Added exact, many-valued BotanicalProfile native-range relationships to the shared

@@ -227,7 +227,10 @@ PR, enables exact-SHA squash auto-merge, and waits with bounded polling for curr
 `integration`, and `build` checks. Failed, cancelled, skipped, or timed-out checks leave the PR open
 and end with `DELIVERY_BLOCKED`; fix, recommit, re-verify, and rerun delivery on the same PR. On
 success it confirms the merge and remote branch deletion. GitHub should remove the merged remote head
-branch. From the clean local feature branch, finish separately with:
+branch. If GitHub completes that squash merge and deletion between delivery observations, rerunning
+the command recognizes success only after it revalidates the exact reviewed feature SHA, associated
+PR and `main` target, required checks, merge SHA on `origin/main`, and deleted remote branch. From
+the clean local feature branch, finish separately with:
 
 ```bash
 make feature-finish
