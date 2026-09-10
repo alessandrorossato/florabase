@@ -18,6 +18,20 @@ REQUIRED_CHECKS = ("quality", "integration", "build")
 BRANCH_PATTERN = re.compile(r"^(feat|fix|docs|ci)/[a-z0-9][a-z0-9._-]*$")
 DEFAULT_PR_HEAD_POLL_SECONDS = 2
 DEFAULT_PR_HEAD_TIMEOUT_SECONDS = 60
+COMPLETED_DELIVERY_QUERY = """
+query($owner:String!,$name:String!,$expression:String!){
+  repository(owner:$owner,name:$name){
+    object(expression:$expression){
+      ... on Commit {
+        associatedPullRequests(first:100){
+          nodes { number headRefName headRefOid baseRefName headRepository { nameWithOwner } }
+          pageInfo { hasNextPage }
+        }
+      }
+    }
+  }
+}
+"""
 
 
 class DeliveryError(Exception):
@@ -34,7 +48,15 @@ class PullRequest:
     html_url: str
     head_ref: str = ""
     base_ref: str = ""
+    head_repo: str = ""
     merged: bool = False
+
+
+@dataclass(frozen=True)
+class Preflight:
+    branch: str
+    base_sha: str
+    delivery_sha: str
 
 
 class Commands:
@@ -99,6 +121,19 @@ class Delivery:
         except json.JSONDecodeError as error:
             fail(f"GitHub API returned invalid JSON for {endpoint}: {error}", blocked=True)
 
+    def graphql(self, query: str, fields: dict[str, str]) -> dict[str, Any]:
+        command = ["api", "graphql", "-f", f"query={query}"]
+        for name, value in fields.items():
+            command.extend(["-f", f"{name}={value}"])
+        raw = self.gh(*command, capture=True)
+        try:
+            value = json.loads(raw)
+        except json.JSONDecodeError as error:
+            fail(f"GitHub GraphQL returned invalid JSON: {error}", blocked=True)
+        if not isinstance(value, dict) or value.get("errors"):
+            fail("GitHub GraphQL completed-delivery lookup failed", blocked=True)
+        return value
+
     @staticmethod
     def normalize_origin(url: str) -> str:
         value = url.strip()
@@ -110,6 +145,7 @@ class Delivery:
     def pr_from(value: dict[str, Any]) -> PullRequest:
         head = value.get("head") or {}
         base = value.get("base") or {}
+        head_repo = head.get("repo") or {}
         return PullRequest(
             number=int(value["number"]),
             node_id=str(value["node_id"]),
@@ -119,6 +155,7 @@ class Delivery:
             html_url=str(value.get("html_url", "")),
             head_ref=str(head.get("ref", "")),
             base_ref=str(base.get("ref", "")),
+            head_repo=str(head_repo.get("full_name", "")),
             merged=value.get("merged") is True,
         )
 
@@ -126,7 +163,7 @@ class Delivery:
         if not condition:
             fail(message)
 
-    def preflight(self) -> tuple[str, str, str]:
+    def preflight(self) -> Preflight:
         self.commands.run("git", "--version")
         self.commands.run("gh", "--version")
         branch = self.git("branch", "--show-current", capture=True)
@@ -143,7 +180,6 @@ class Delivery:
         self.gh("auth", "status")
         self.git("fetch", "origin", "main")
         self.git("show-ref", "--verify", "--quiet", "refs/remotes/origin/main")
-        self.git("merge-base", "--is-ancestor", "origin/main", "HEAD")
         base = self.git("merge-base", "origin/main", "HEAD", capture=True)
         self.commands.run("python3", "./scripts/feature-tree-fingerprint.py", "verify", "--branch", branch, "--base", base)
         self.api(f"repos/{REPOSITORY}")
@@ -154,7 +190,18 @@ class Delivery:
             remote_oid = remote_sha.split()[0]
             self.git("fetch", "origin", f"{remote_ref}:refs/remotes/origin/{branch}")
             self.git("merge-base", "--is-ancestor", remote_oid, "HEAD")
-        return branch, base, self.git("rev-parse", "HEAD", capture=True)
+        return Preflight(
+            branch=branch,
+            base_sha=base,
+            delivery_sha=self.git("rev-parse", "HEAD", capture=True),
+        )
+
+    def is_ancestor(self, ancestor: str, descendant: str) -> bool:
+        try:
+            self.git("merge-base", "--is-ancestor", ancestor, descendant)
+        except DeliveryError:
+            return False
+        return True
 
     def migration_detected(self, base: str, delivery_sha: str) -> bool:
         changed = self.git(
@@ -181,11 +228,16 @@ class Delivery:
         )
         return title, body
 
+    def validate_pr_target(self, pr: PullRequest, branch: str, delivery_sha: str | None = None) -> None:
+        if pr.head_ref != branch or pr.base_ref != "main" or pr.head_repo != REPOSITORY:
+            fail(f"pull request #{pr.number} does not match {branch} from {REPOSITORY} into main", blocked=True)
+        if delivery_sha is not None and pr.head_sha != delivery_sha:
+            fail(f"pull request #{pr.number} no longer points at delivery SHA {delivery_sha}", blocked=True)
+
     def validate_open_pr_target(self, pr: PullRequest, branch: str) -> None:
+        self.validate_pr_target(pr, branch)
         if pr.state != "OPEN":
             fail(f"pull request #{pr.number} is not open", blocked=True)
-        if pr.head_ref != branch or pr.base_ref != "main":
-            fail(f"pull request #{pr.number} does not match {branch} into main", blocked=True)
 
     def is_prior_head(self, head_sha: str, delivery_sha: str) -> bool:
         try:
@@ -234,6 +286,8 @@ class Delivery:
             if isinstance(value, dict)
             and str(value.get("state", "")).strip().upper() == "OPEN"
             and str((value.get("head") or {}).get("ref", "")) == branch
+            and str((((value.get("head") or {}).get("repo") or {}).get("full_name", "")))
+            == REPOSITORY
             and str((value.get("base") or {}).get("ref", "")) == "main"
         ]
         if len(matching) > 1:
@@ -277,6 +331,61 @@ class Delivery:
             fail("GitHub returned an invalid pull request", blocked=True)
         return self.pr_from(value)
 
+    def completed_pr_for_delivery(self, branch: str, delivery_sha: str) -> PullRequest | None:
+        owner, name = REPOSITORY.split("/", 1)
+        value = self.graphql(
+            COMPLETED_DELIVERY_QUERY,
+            {"owner": owner, "name": name, "expression": delivery_sha},
+        )
+        data = value.get("data")
+        repository = data.get("repository") if isinstance(data, dict) else None
+        if not isinstance(repository, dict):
+            fail("GitHub GraphQL returned invalid completed-delivery repository data", blocked=True)
+        commit = repository.get("object")
+        if commit is None:
+            return None
+        if not isinstance(commit, dict):
+            fail("GitHub GraphQL returned invalid completed-delivery commit data", blocked=True)
+        associated = commit.get("associatedPullRequests")
+        if not isinstance(associated, dict):
+            fail("GitHub GraphQL commit lookup did not return associated pull requests", blocked=True)
+        page_info = associated.get("pageInfo")
+        if not isinstance(page_info, dict):
+            fail("GitHub GraphQL returned invalid associated pull-request pagination", blocked=True)
+        if page_info.get("hasNextPage") is True:
+            fail("completed-delivery lookup has too many associated pull requests", blocked=True)
+        values = associated.get("nodes")
+        if not isinstance(values, list):
+            fail("GitHub GraphQL returned invalid associated pull-request data", blocked=True)
+        if not values:
+            return None
+        matches = [
+            value
+            for value in values
+            if isinstance(value, dict)
+            and str(value.get("headRefName", "")) == branch
+            and str(value.get("headRefOid", "")) == delivery_sha
+            and str((value.get("headRepository") or {}).get("nameWithOwner", "")) == REPOSITORY
+            and str(value.get("baseRefName", "")) == "main"
+        ]
+        if len(matches) > 1:
+            fail(f"multiple pull requests match {branch} at delivery SHA {delivery_sha}", blocked=True)
+        if not matches:
+            fail(
+                f"associated pull requests do not match {branch} at delivery SHA {delivery_sha} into main",
+                blocked=True,
+            )
+
+        current = self.current_pr(int(matches[0]["number"]))
+        self.validate_pr_target(current, branch, delivery_sha)
+        if current.state == "MERGED" or current.merged:
+            if not current.merge_sha:
+                fail(f"merged pull request #{current.number} has no merge SHA", blocked=True)
+            return current
+        if current.state != "OPEN":
+            fail(f"pull request #{current.number} was closed without merging", blocked=True)
+        return None
+
     def check_runs(self, delivery_sha: str) -> dict[str, dict[str, Any]]:
         value = self.api(f"repos/{REPOSITORY}/commits/{delivery_sha}/check-runs?per_page=100")
         runs = value.get("check_runs") if isinstance(value, dict) else None
@@ -284,16 +393,14 @@ class Delivery:
             fail("GitHub returned invalid check-run data", blocked=True)
         return {str(run.get("name")): run for run in runs if isinstance(run, dict)}
 
-    def wait_for_checks(self, pr: PullRequest, delivery_sha: str) -> None:
+    def wait_for_checks(self, pr: PullRequest, branch: str, delivery_sha: str) -> None:
         started = self.monotonic()
         while True:
             current = self.current_pr(pr.number)
-            if current.state == "MERGED" or current.merged:
-                return
-            if current.state != "OPEN":
+            merged = current.state == "MERGED" or current.merged
+            if not merged and current.state != "OPEN":
                 fail(f"pull request #{pr.number} is unexpectedly {current.state.lower()}", blocked=True)
-            if current.head_sha != delivery_sha:
-                fail(f"pull request #{pr.number} no longer points at delivery SHA {delivery_sha}", blocked=True)
+            self.validate_pr_target(current, branch, delivery_sha)
             checks = self.check_runs(delivery_sha)
             missing = [name for name in REQUIRED_CHECKS if name not in checks]
             elapsed = self.monotonic() - started
@@ -325,15 +432,16 @@ class Delivery:
                 )
             return
 
-    def wait_for_merge(self, pr: PullRequest, delivery_sha: str) -> PullRequest:
+    def wait_for_merge(self, pr: PullRequest, branch: str, delivery_sha: str) -> PullRequest:
         started = self.monotonic()
         while True:
             current = self.current_pr(pr.number)
+            self.validate_pr_target(current, branch, delivery_sha)
             if current.state == "MERGED" or current.merged:
                 if not current.merge_sha:
                     fail(f"merged pull request #{pr.number} has no merge SHA", blocked=True)
                 return current
-            if current.state != "OPEN" or current.head_sha != delivery_sha:
+            if current.state != "OPEN":
                 fail(f"pull request #{pr.number} cannot be auto-merged safely", blocked=True)
             if self.monotonic() - started >= self.timeout_seconds:
                 fail(f"timed out waiting for squash auto-merge of PR #{pr.number}", blocked=True)
@@ -347,28 +455,63 @@ class Delivery:
                 fail(f"remote feature branch {branch} was not deleted after merge", blocked=True)
             self.sleep(self.poll_seconds)
 
-    def execute(self) -> None:
-        branch, base, delivery_sha = self.preflight()
-        migration = self.migration_detected(base, delivery_sha)
-        self.push(branch, delivery_sha)
-        pr = self.find_or_create_pr(branch, delivery_sha, migration)
-        pr = self.wait_for_pr_head(pr, branch, delivery_sha)
-        self.enable_auto_merge(pr, delivery_sha)
-        self.wait_for_checks(pr, delivery_sha)
-        merged = self.wait_for_merge(pr, delivery_sha)
+    def complete_delivery(
+        self,
+        pr: PullRequest,
+        branch: str,
+        delivery_sha: str,
+        migration: bool,
+    ) -> None:
+        if not pr.merge_sha:
+            fail(f"merged pull request #{pr.number} has no merge SHA", blocked=True)
         self.git("fetch", "origin", "main")
-        self.git("merge-base", "--is-ancestor", str(merged.merge_sha), "origin/main")
+        self.git("merge-base", "--is-ancestor", pr.merge_sha, "origin/main")
         self.confirm_deleted_branch(branch)
         print("DELIVERY_COMPLETE")
         print(f"PR: #{pr.number}")
         print(f"Feature SHA: {delivery_sha}")
-        print(f"Main SHA: {merged.merge_sha}")
+        print(f"Main SHA: {pr.merge_sha}")
         for name in REQUIRED_CHECKS:
             print(f"{name}: passed")
         print(f"Migration: {'yes' if migration else 'no'}")
         if migration:
             print("Database migration detected.")
             print("After make feature-finish, run: make dev-upgrade")
+
+    def execute(self) -> None:
+        preflight = self.preflight()
+        migration = self.migration_detected(preflight.base_sha, preflight.delivery_sha)
+        main_is_ancestor = self.is_ancestor("origin/main", preflight.delivery_sha)
+
+        completed = self.completed_pr_for_delivery(preflight.branch, preflight.delivery_sha)
+        if completed:
+            self.wait_for_checks(completed, preflight.branch, preflight.delivery_sha)
+            self.complete_delivery(
+                completed,
+                preflight.branch,
+                preflight.delivery_sha,
+                migration,
+            )
+            return
+        if not main_is_ancestor:
+            fail(
+                "branch does not contain origin/main and no exact merged delivery could be proven; "
+                "rebase or merge deliberately before delivery",
+                blocked=True,
+            )
+
+        self.push(preflight.branch, preflight.delivery_sha)
+        pr = self.find_or_create_pr(preflight.branch, preflight.delivery_sha, migration)
+        pr = self.wait_for_pr_head(pr, preflight.branch, preflight.delivery_sha)
+        self.enable_auto_merge(pr, preflight.delivery_sha)
+        self.wait_for_checks(pr, preflight.branch, preflight.delivery_sha)
+        merged = self.wait_for_merge(pr, preflight.branch, preflight.delivery_sha)
+        self.complete_delivery(
+            merged,
+            preflight.branch,
+            preflight.delivery_sha,
+            migration,
+        )
 
 
 def main() -> None:

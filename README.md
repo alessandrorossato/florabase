@@ -9,19 +9,21 @@ owner, but no stable public release or supported-version policy has been publish
 
 ## What works today
 
-- Botanical identities and incomplete-friendly, operator-authored botanical profiles
-- Supplier, collection Location, and geographic provenance directories
+- Botanical identities, incomplete-friendly operator-authored profiles, structured native ranges,
+  and explicit links to external GBIF references
+- Supplier, scoped hierarchical collection Location, GeographicPlace, and ProvenanceSite directories
 - Seed lots with source, partial dates, quantity, storage, lifecycle, and optional producer lineage
 - Sowings with partial dates, quantities, cultivation details, and simple germination totals
 - Individually tracked Plants and quantity-aware PlantGroups
-- Atomic extraction of a Plant from a PlantGroup
-- Explicit lineage through `SeedLot → Sowing → Plant / PlantGroup`, group extraction, and
-  collection-produced seed lots
+- Plant and PlantGroup Events/history, including the collection-wide Events view
+- Explicit lineage through `SeedLot → Sowing → Plant / PlantGroup`, PlantGroup extraction, and
+  collection-produced seed lots, with receipt-proven reversal for supported authoritative operations
+- A collection provenance map for coordinate-bearing ProvenanceSites
 - Local owner authentication with server-side sessions and CSRF protection
 
-Plant events, attachments and photos, advanced search, dashboards, import/export, and PWA
-installability are planned, not implemented. See the [product roadmap](docs/product-roadmap.md) and
-the detailed [feature backlog](docs/features.json).
+Attachments and photos, richer germination observations, advanced search and analytics,
+import/export, contextual help, and PWA installability are planned, not implemented. See the
+[product roadmap](docs/product-roadmap.md) and the detailed [feature backlog](docs/features.json).
 
 ## Screenshots
 

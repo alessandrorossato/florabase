@@ -176,13 +176,45 @@ def pr(
             "number": number,
             "node_id": "PR_node",
             "state": state,
-            "head": {"ref": head, "sha": sha},
+            "head": {
+                "ref": head,
+                "sha": sha,
+                "repo": {"full_name": "alessandrorossato/florabase"},
+            },
             "base": {"ref": base},
             "merge_commit_sha": merge,
             "merged": merged,
             "html_url": "https://example.invalid/pr/7",
         }
     )
+
+
+def associated_pr(
+    number: int = 7,
+    sha: str = "feature-sha",
+    head: str = "ci/ci-002",
+    base: str = "main",
+    repository: str = "alessandrorossato/florabase",
+) -> dict[str, object]:
+    return {
+        "number": number,
+        "headRefName": head,
+        "headRefOid": sha,
+        "baseRefName": base,
+        "headRepository": {"nameWithOwner": repository},
+    }
+
+
+def completed_delivery_lookup(nodes: list[dict[str, object]] | None) -> dict[str, object]:
+    return {
+        "data": {
+            "repository": {
+                "object": None
+                if nodes is None
+                else {"associatedPullRequests": {"nodes": nodes, "pageInfo": {"hasNextPage": False}}}
+            }
+        }
+    }
 
 
 class DeliveryTests(unittest.TestCase):
@@ -231,7 +263,12 @@ class DeliveryTests(unittest.TestCase):
         with patch("subprocess.run") as fingerprint:
             fingerprint.return_value = subprocess.CompletedProcess([], 0)
             self.assertEqual(
-                feature_deliver.Delivery(commands).preflight(), ("ci/ci-002", "base-sha", "feature-sha")
+                feature_deliver.Delivery(commands).preflight(),
+                feature_deliver.Preflight(
+                    branch="ci/ci-002",
+                    base_sha="base-sha",
+                    delivery_sha="feature-sha",
+                ),
             )
 
     def test_missing_gh_and_divergent_remote_branch_stop_before_push(self) -> None:
@@ -266,7 +303,7 @@ class DeliveryTests(unittest.TestCase):
 
     def test_current_sha_checks_ignore_stale_results_and_handle_startup_delay(self) -> None:
         delivery = self.delivery()
-        pull = feature_deliver.PullRequest(7, "PR_node", "OPEN", "feature-sha", None, "")
+        pull = feature_deliver.Delivery.pr_from(json.loads(pr()))
         calls: list[str] = []
         delivery.current_pr = lambda _: pull  # type: ignore[method-assign]
         responses = [
@@ -277,29 +314,99 @@ class DeliveryTests(unittest.TestCase):
             },
         ]
         delivery.check_runs = lambda sha: (calls.append(sha) or responses.pop(0))  # type: ignore[method-assign]
-        delivery.wait_for_checks(pull, "feature-sha")
+        delivery.wait_for_checks(pull, "ci/ci-002", "feature-sha")
         self.assertEqual(calls, ["feature-sha", "feature-sha"])
+
+    def test_merged_pr_still_requires_successful_current_sha_checks(self) -> None:
+        delivery = self.delivery()
+        merged = feature_deliver.Delivery.pr_from(
+            json.loads(pr(state="closed", merge="main-sha", merged=True))
+        )
+        calls: list[str] = []
+        delivery.current_pr = lambda _: merged  # type: ignore[method-assign]
+        delivery.check_runs = lambda sha: (  # type: ignore[method-assign]
+            calls.append(sha)
+            or {
+                name: {"status": "completed", "conclusion": "success"}
+                for name in feature_deliver.REQUIRED_CHECKS
+            }
+        )
+        delivery.wait_for_checks(merged, "ci/ci-002", "feature-sha")
+        self.assertEqual(calls, ["feature-sha"])
+
+    def test_check_and_merge_polls_revalidate_branch_repository_and_base(self) -> None:
+        for method in ("checks", "merge"):
+            for malformed in (
+                json.loads(pr(head="ci/unexpected")),
+                json.loads(pr(base="release")),
+                {
+                    **json.loads(pr()),
+                    "head": {
+                        **json.loads(pr())["head"],
+                        "repo": {"full_name": "someone-else/florabase"},
+                    },
+                },
+            ):
+                with self.subTest(method=method, malformed=malformed):
+                    delivery = self.delivery()
+                    pull = feature_deliver.Delivery.pr_from(json.loads(pr()))
+                    delivery.current_pr = lambda _, malformed=malformed: feature_deliver.Delivery.pr_from(  # type: ignore[method-assign]
+                        malformed
+                    )
+                    if method == "checks":
+                        delivery.check_runs = lambda _: {  # type: ignore[method-assign]
+                            name: {"status": "completed", "conclusion": "success"}
+                            for name in feature_deliver.REQUIRED_CHECKS
+                        }
+                    with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(
+                        feature_deliver.DeliveryError
+                    ):
+                        if method == "checks":
+                            delivery.wait_for_checks(pull, "ci/ci-002", "feature-sha")
+                        else:
+                            delivery.wait_for_merge(pull, "ci/ci-002", "feature-sha")
+
+    def test_merged_recovery_blocks_missing_or_failed_required_checks(self) -> None:
+        for checks in (
+            {},
+            {
+                name: {"status": "completed", "conclusion": "failure"}
+                for name in feature_deliver.REQUIRED_CHECKS
+            },
+        ):
+            with self.subTest(checks=checks):
+                delivery = self.delivery()
+                delivery.startup_timeout_seconds = 0
+                merged = feature_deliver.Delivery.pr_from(
+                    json.loads(pr(state="closed", merge="main-sha", merged=True))
+                )
+                delivery.current_pr = lambda _: merged  # type: ignore[method-assign]
+                delivery.check_runs = lambda _, checks=checks: checks  # type: ignore[method-assign]
+                with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(
+                    feature_deliver.DeliveryError
+                ):
+                    delivery.wait_for_checks(merged, "ci/ci-002", "feature-sha")
 
     def test_missing_checks_eventually_time_out_safely(self) -> None:
         delivery = self.delivery()
         delivery.startup_timeout_seconds = 0
-        pull = feature_deliver.PullRequest(7, "PR_node", "OPEN", "feature-sha", None, "")
+        pull = feature_deliver.Delivery.pr_from(json.loads(pr()))
         delivery.current_pr = lambda _: pull  # type: ignore[method-assign]
         delivery.check_runs = lambda _: {}  # type: ignore[method-assign]
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(feature_deliver.DeliveryError):
-            delivery.wait_for_checks(pull, "feature-sha")
+            delivery.wait_for_checks(pull, "ci/ci-002", "feature-sha")
 
     def test_failed_cancelled_and_timed_out_checks_block_delivery(self) -> None:
         for conclusion in ("failure", "cancelled", "timed_out"):
             delivery = self.delivery()
-            pull = feature_deliver.PullRequest(7, "PR_node", "OPEN", "feature-sha", None, "")
+            pull = feature_deliver.Delivery.pr_from(json.loads(pr()))
             delivery.current_pr = lambda _: pull  # type: ignore[method-assign]
             delivery.check_runs = lambda _: {  # type: ignore[method-assign]
                 name: {"status": "completed", "conclusion": conclusion, "details_url": "url"}
                 for name in feature_deliver.REQUIRED_CHECKS
             }
             with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(feature_deliver.DeliveryError):
-                delivery.wait_for_checks(pull, "feature-sha")
+                delivery.wait_for_checks(pull, "ci/ci-002", "feature-sha")
 
     def test_new_pr_creation_existing_reuse_and_normal_push(self) -> None:
         delivery = self.delivery()
@@ -321,6 +428,62 @@ class DeliveryTests(unittest.TestCase):
         )
         feature_deliver.Delivery(commands).push("ci/ci-002", "feature-sha")
         self.assertNotIn("--force", " ".join(part for call in commands.calls for part in call))
+
+    def test_normal_delivery_still_follows_push_pr_checks_and_merge_sequence(self) -> None:
+        delivery = self.delivery()
+        open_pr = feature_deliver.Delivery.pr_from(json.loads(pr()))
+        merged_pr = feature_deliver.Delivery.pr_from(
+            json.loads(pr(state="closed", merge="main-sha", merged=True))
+        )
+        calls: list[str] = []
+        delivery.preflight = lambda: feature_deliver.Preflight("ci/ci-002", "base-sha", "feature-sha")  # type: ignore[method-assign]
+        delivery.migration_detected = lambda *_: False  # type: ignore[method-assign]
+        delivery.is_ancestor = lambda *_: True  # type: ignore[method-assign]
+        delivery.completed_pr_for_delivery = lambda *_: None  # type: ignore[method-assign]
+        delivery.push = lambda *_: calls.append("push")  # type: ignore[method-assign]
+        delivery.find_or_create_pr = lambda *_: calls.append("pr") or open_pr  # type: ignore[method-assign]
+        delivery.wait_for_pr_head = lambda *_: calls.append("head") or open_pr  # type: ignore[method-assign]
+        delivery.enable_auto_merge = lambda *_: calls.append("auto-merge")  # type: ignore[method-assign]
+        delivery.wait_for_checks = lambda *_: calls.append("checks")  # type: ignore[method-assign]
+        delivery.wait_for_merge = lambda *_: calls.append("merge") or merged_pr  # type: ignore[method-assign]
+        delivery.complete_delivery = lambda *_: calls.append("complete")  # type: ignore[method-assign]
+        delivery.execute()
+        self.assertEqual(calls, ["push", "pr", "head", "auto-merge", "checks", "merge", "complete"])
+
+    def test_local_only_sha_continues_from_recovery_to_normal_push(self) -> None:
+        delivery = self.delivery()
+        open_pr = feature_deliver.Delivery.pr_from(json.loads(pr()))
+        merged_pr = feature_deliver.Delivery.pr_from(
+            json.loads(pr(state="closed", merge="main-sha", merged=True))
+        )
+        calls: list[str] = []
+        queries: list[dict[str, str]] = []
+        delivery.preflight = lambda: feature_deliver.Preflight("ci/ci-002", "base-sha", "feature-sha")  # type: ignore[method-assign]
+        delivery.migration_detected = lambda *_: False  # type: ignore[method-assign]
+        delivery.is_ancestor = lambda *_: True  # type: ignore[method-assign]
+        delivery.graphql = lambda _, fields: queries.append(fields) or completed_delivery_lookup(None)  # type: ignore[method-assign]
+        delivery.push = lambda *_: calls.append("push")  # type: ignore[method-assign]
+        delivery.find_or_create_pr = lambda *_: calls.append("pr") or open_pr  # type: ignore[method-assign]
+        delivery.wait_for_pr_head = lambda *_: open_pr  # type: ignore[method-assign]
+        delivery.enable_auto_merge = lambda *_: None  # type: ignore[method-assign]
+        delivery.wait_for_checks = lambda *_: None  # type: ignore[method-assign]
+        delivery.wait_for_merge = lambda *_: merged_pr  # type: ignore[method-assign]
+        delivery.complete_delivery = lambda *_: calls.append("complete")  # type: ignore[method-assign]
+        delivery.execute()
+        self.assertEqual(queries, [{"owner": "alessandrorossato", "name": "florabase", "expression": "feature-sha"}])
+        self.assertEqual(calls, ["push", "pr", "complete"])
+
+    def test_completed_delivery_lookup_failure_does_not_become_a_normal_push(self) -> None:
+        delivery = self.delivery()
+        calls: list[str] = []
+        delivery.preflight = lambda: feature_deliver.Preflight("ci/ci-002", "base-sha", "feature-sha")  # type: ignore[method-assign]
+        delivery.migration_detected = lambda *_: False  # type: ignore[method-assign]
+        delivery.is_ancestor = lambda *_: True  # type: ignore[method-assign]
+        delivery.graphql = lambda *_: (_ for _ in ()).throw(feature_deliver.DeliveryError("GitHub unavailable"))  # type: ignore[method-assign]
+        delivery.push = lambda *_: calls.append("push")  # type: ignore[method-assign]
+        with self.assertRaises(feature_deliver.DeliveryError):
+            delivery.execute()
+        self.assertEqual(calls, [])
 
     def test_lowercase_rest_open_state_is_accepted_for_created_and_reused_prs(self) -> None:
         delivery = self.delivery()
@@ -404,7 +567,7 @@ class DeliveryTests(unittest.TestCase):
         ready = delivery.wait_for_pr_head(stale, "ci/ci-002", "new-sha")
         self.assertEqual(check_calls, [])
         delivery.current_pr = lambda _: ready  # type: ignore[method-assign]
-        delivery.wait_for_checks(ready, "new-sha")
+        delivery.wait_for_checks(ready, "ci/ci-002", "new-sha")
         self.assertEqual(check_calls, ["new-sha"])
 
     def test_closed_merged_and_mismatched_prs_are_ignored_when_matching_open_pr_exists(self) -> None:
@@ -447,9 +610,11 @@ class DeliveryTests(unittest.TestCase):
         self.assertTrue(delivery.migration_detected("base", "feature"))
         commands.responses[("git", "diff", "--name-only", "base...no-migration", "--", "backend/alembic/versions")] = "docs/readme.md"
         self.assertFalse(delivery.migration_detected("base", "no-migration"))
-        merged = feature_deliver.PullRequest(7, "node", "MERGED", "feature", "main-sha", "")
+        merged = feature_deliver.Delivery.pr_from(
+            json.loads(pr(state="closed", merge="main-sha", merged=True))
+        )
         delivery.current_pr = lambda _: merged  # type: ignore[method-assign]
-        self.assertEqual(delivery.wait_for_merge(merged, "feature").merge_sha, "main-sha")
+        self.assertEqual(delivery.wait_for_merge(merged, "ci/ci-002", "feature-sha").merge_sha, "main-sha")
 
     def test_open_pr_continues_until_closed_merged(self) -> None:
         delivery = self.delivery()
@@ -463,7 +628,7 @@ class DeliveryTests(unittest.TestCase):
         )
         delivery.current_pr = lambda _: next(snapshots)  # type: ignore[method-assign]
         result = delivery.wait_for_merge(
-            feature_deliver.Delivery.pr_from(json.loads(pr(state="open"))), "feature-sha"
+            feature_deliver.Delivery.pr_from(json.loads(pr(state="open"))), "ci/ci-002", "feature-sha"
         )
         self.assertEqual(result.merge_sha, "squash-sha")
 
@@ -474,7 +639,7 @@ class DeliveryTests(unittest.TestCase):
         with contextlib.redirect_stderr(io.StringIO()) as error, self.assertRaises(
             feature_deliver.DeliveryError
         ):
-            delivery.wait_for_merge(closed, "feature-sha")
+            delivery.wait_for_merge(closed, "ci/ci-002", "feature-sha")
         self.assertIn("DELIVERY_BLOCKED", error.getvalue())
 
     def test_auto_merge_between_check_and_merge_polls_returns_resulting_main_sha(self) -> None:
@@ -489,8 +654,8 @@ class DeliveryTests(unittest.TestCase):
             name: {"status": "completed", "conclusion": "success"}
             for name in feature_deliver.REQUIRED_CHECKS
         }
-        delivery.wait_for_checks(open_pr, "feature-sha")
-        result = delivery.wait_for_merge(open_pr, "feature-sha")
+        delivery.wait_for_checks(open_pr, "ci/ci-002", "feature-sha")
+        result = delivery.wait_for_merge(open_pr, "ci/ci-002", "feature-sha")
         self.assertEqual(result.merge_sha, "main-sha")
 
     def test_closed_merged_rest_response_is_parsed_as_completed_delivery(self) -> None:
@@ -500,6 +665,99 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(parsed.state, "CLOSED")
         self.assertTrue(parsed.merged)
         self.assertEqual(parsed.merge_sha, "main-sha")
+
+    def test_completed_delivery_requires_exact_merged_pr_identity(self) -> None:
+        for candidate in (
+            associated_pr(sha="other-sha"),
+            associated_pr(head="ci/unexpected"),
+            associated_pr(base="release"),
+            associated_pr(repository="someone-else/florabase"),
+        ):
+            with self.subTest(candidate=candidate):
+                delivery = self.delivery()
+                delivery.graphql = lambda _, fields, candidate=candidate: completed_delivery_lookup([candidate])  # type: ignore[method-assign]
+                with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(
+                    feature_deliver.DeliveryError
+                ):
+                    delivery.completed_pr_for_delivery("ci/ci-002", "feature-sha")
+
+        delivery = self.delivery()
+        delivery.graphql = lambda *_: completed_delivery_lookup([associated_pr()])  # type: ignore[method-assign]
+        delivery.current_pr = lambda _: feature_deliver.Delivery.pr_from(  # type: ignore[method-assign]
+            json.loads(pr(state="closed", merged=False))
+        )
+        with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(feature_deliver.DeliveryError):
+            delivery.completed_pr_for_delivery("ci/ci-002", "feature-sha")
+
+    def test_rerun_after_exact_squash_merge_and_branch_deletion_completes(self) -> None:
+        merged = pr(state="closed", merge="main-sha", merged=True)
+        checks = json.dumps(
+            {
+                "check_runs": [
+                    {"name": name, "status": "completed", "conclusion": "success"}
+                    for name in feature_deliver.REQUIRED_CHECKS
+                ]
+            }
+        )
+        commands = FailingCommands(
+            {
+                ("git", "--version"): "git",
+                ("gh", "--version"): "gh",
+                ("git", "branch", "--show-current"): "ci/ci-002",
+                ("git", "status", "--porcelain"): "",
+                ("git", "rev-parse", "--verify", "HEAD^{commit}"): "feature-sha",
+                ("git", "remote", "get-url", "origin"): "https://github.com/alessandrorossato/florabase.git",
+                ("gh", "auth", "status"): "",
+                ("git", "fetch", "origin", "main"): "",
+                ("git", "show-ref", "--verify", "--quiet", "refs/remotes/origin/main"): "",
+                ("git", "merge-base", "origin/main", "HEAD"): "base-sha",
+                ("gh", "api", "repos/alessandrorossato/florabase"): "{}",
+                ("git", "ls-remote", "--heads", "origin", "refs/heads/ci/ci-002"): "",
+                ("git", "rev-parse", "HEAD"): "feature-sha",
+                (
+                    "git",
+                    "diff",
+                    "--name-only",
+                    "base-sha...feature-sha",
+                    "--",
+                    "backend/alembic/versions",
+                ): "",
+                ("gh", "api", "repos/alessandrorossato/florabase/pulls/7"): [merged, merged],
+                (
+                    "gh",
+                    "api",
+                    "repos/alessandrorossato/florabase/commits/feature-sha/check-runs?per_page=100",
+                ): checks,
+                ("git", "merge-base", "--is-ancestor", "main-sha", "origin/main"): "",
+            },
+            ("git", "merge-base", "--is-ancestor", "origin/main", "feature-sha"),
+        )
+        delivery = feature_deliver.Delivery(commands, sleep=lambda _: None)
+        delivery.graphql = lambda *_: completed_delivery_lookup([associated_pr()])  # type: ignore[method-assign]
+        with contextlib.redirect_stdout(io.StringIO()) as output:
+            delivery.execute()
+        self.assertIn("DELIVERY_COMPLETE", output.getvalue())
+        self.assertIn("Feature SHA: feature-sha", output.getvalue())
+        self.assertIn("Main SHA: main-sha", output.getvalue())
+        self.assertNotIn(
+            ("git", "push", "--set-upstream", "origin", "ci/ci-002"),
+            commands.calls,
+        )
+
+    def test_completed_delivery_requires_merge_sha_on_origin_main(self) -> None:
+        commands = FailingCommands(
+            {},
+            ("git", "merge-base", "--is-ancestor", "main-sha", "origin/main"),
+        )
+        delivery = feature_deliver.Delivery(commands, sleep=lambda _: None)
+        merged = feature_deliver.Delivery.pr_from(
+            json.loads(pr(state="closed", merge="main-sha", merged=True))
+        )
+        with contextlib.redirect_stdout(io.StringIO()) as output, contextlib.redirect_stderr(io.StringIO()), self.assertRaises(
+            feature_deliver.DeliveryError
+        ):
+            delivery.complete_delivery(merged, "ci/ci-002", "feature-sha", False)
+        self.assertNotIn("DELIVERY_COMPLETE", output.getvalue())
 
     def test_remote_branch_deletion_is_confirmed(self) -> None:
         commands = FakeCommands(
