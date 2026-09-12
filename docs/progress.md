@@ -19,6 +19,24 @@ implementation detail.
   PROPAGATION-002 file passed five consecutive runs (70 test executions) with normal timeouts. The
   complete 134-test frontend suite, Prettier, ESLint, strict TypeScript, the production Vite build,
   generated API drift, and diff whitespace checks pass.
+## 2026-09-10 — contextual reference-picker race fixed
+
+- Diagnosed the intermittent SeedLot contextual-creator failures as a stale delayed blur callback in
+  the shared reference picker. Moving from the initially focused identity picker to the lot label
+  scheduled a menu close; quickly returning to the picker reopened it, but the old callback could
+  then close it again before the contextual-create action. CI's failed DOM captured that exact
+  closed-combobox state.
+- Replaced the input timer with focus-within handling at the picker boundary. The menu now closes
+  synchronously only when focus leaves the complete picker, so pointer actions remain available and
+  keyboard focus can move into its controls without an unowned timer. Added fake-timer regressions
+  that deterministically reproduce blur and immediate refocus and protect internal focus movement.
+- The stale-callback regression failed against the original implementation and all four focused
+  picker regressions pass with the fix. A fresh container passed three consecutive complete SeedLot
+  test-file runs (42 executions), including both affected contextual workflows on every run. The
+  exact final code passes frontend Prettier, ESLint, strict TypeScript, the production Vite build,
+  generated API drift, all 75 feature-graph entries, and diff whitespace checks.
+- The unrelated `PROPAGATION-002` readiness-test timing assumption was subsequently corrected on
+  `main` in `2caef9f`; it no longer blocks final verification of this focused picker change.
 
 ## 2026-09-10 — repository consistency and delivery reliability implemented
 
