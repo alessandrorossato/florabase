@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
@@ -157,9 +157,12 @@ test("guided exact SeedLot usage previews and submits the authoritative partial 
   });
   window.location.hash = `/sowings?action=start&seedLot=${lotId}`;
   const user = userEvent.setup();
-  render(<App />);
+  await act(async () => {
+    render(<App />);
+    await Promise.resolve();
+  });
   expect(
-    await screen.findByRole("heading", { name: "Start sowing" }),
+    screen.getByRole("heading", { name: "Start sowing" }),
   ).toBeInTheDocument();
   await user.type(screen.getByLabelText("Amount"), "20");
   await user.click(
