@@ -4,6 +4,22 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-12 — PROPAGATION-002 frontend loading test stabilized
+
+- Diagnosed the first guided-sowing component test's deterministic failure as an invalid test-timing
+  assumption. Its in-memory session, CSRF, SeedLot, Location, and health mocks all resolved and the
+  production workflow had no missing request or state race, but the test delegated the complete
+  multi-effect React bootstrap to Testing Library's one-second polling deadline. On slower runs that
+  deadline expired while the correct `Loading guided sowing…` state was still rendered.
+- Kept the production UI and PROPAGATION-002 semantics unchanged. The affected test now explicitly
+  flushes the immediate mocked request/update lifecycle inside an asynchronous React `act` boundary,
+  then asserts the ready heading synchronously. No sleep, retry, timeout increase, weakened
+  assertion, suite serialization, mock bypass, or global test-setting change was introduced.
+- The exact affected test passed 10 consecutive fresh-process runs, and the complete 14-test
+  PROPAGATION-002 file passed five consecutive runs (70 test executions) with normal timeouts. The
+  complete 134-test frontend suite, Prettier, ESLint, strict TypeScript, the production Vite build,
+  generated API drift, and diff whitespace checks pass.
+
 ## 2026-09-10 — repository consistency and delivery reliability implemented
 
 - Reconciled the public current-state summary and architecture overview with the verified Events,
