@@ -1,4 +1,4 @@
-import { useId, useMemo, useState, type KeyboardEvent } from "react";
+import { useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
 
 export interface ReferenceChoice {
   id: string;
@@ -27,6 +27,7 @@ export function ReferencePicker({
 }) {
   const inputId = useId();
   const listId = useId();
+  const input = useRef<HTMLInputElement>(null);
   const selected = choices.find((choice) => choice.id === value);
   const [query, setQuery] = useState(selected?.label ?? "");
   const [open, setOpen] = useState(false);
@@ -63,10 +64,22 @@ export function ReferencePicker({
   }
 
   return (
-    <div className="field reference-picker">
+    <div
+      className="field reference-picker"
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+      onKeyDown={(event) => {
+        if (event.key !== "Escape" || event.target === input.current) return;
+        event.preventDefault();
+        input.current?.focus();
+        setOpen(false);
+      }}
+    >
       <label htmlFor={inputId}>{label}</label>
       <input
         id={inputId}
+        ref={input}
         role="combobox"
         aria-autocomplete="list"
         aria-controls={listId}
@@ -82,11 +95,6 @@ export function ReferencePicker({
         value={value && selected ? selected.label : query}
         onFocus={() => {
           setOpen(true);
-        }}
-        onBlur={() => {
-          window.setTimeout(() => {
-            setOpen(false);
-          }, 100);
         }}
         onChange={(event) => {
           setQuery(event.currentTarget.value);
