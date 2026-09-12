@@ -4,6 +4,33 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-12 — MAP-002 implemented
+
+- Proved the current production GBIF path before implementation with documented Catalogue of Life
+  XR fixture `Q2M4` and checklist `7ddf754f-d193-4cc9-b351-99906754a03b`. Exact occurrence search
+  returned 437,168 PRESENT records and 431,970 coordinate-bearing PRESENT records without flagged
+  geospatial issues; the same opaque ID, checklist, status, and quality filters returned a valid
+  256-pixel PNG from the Maps v2 ad-hoc hex-density route. Runtime uses only the confirmed stored
+  link ID and never performs scientific-name rematching or numeric-backbone translation.
+- Added authenticated normalized occurrence-summary and fixed-purpose raster tile endpoints. The
+  backend constructs only allowlisted GBIF requests with bounded time and response sizes, validates
+  zoom/coordinates and PNG content, forwards no browser headers or collection metadata, and exposes
+  no arbitrary proxy URL. Counts and tiles stay live; no occurrence, viewport, tile, native-range,
+  GeographicPlace, BotanicalProfile, or collection persistence and no migration were introduced.
+- Added an explicit-load BotanicalIdentity occurrence panel and lazy-loaded direct Leaflet layer.
+  Zoom-appropriate hexagons show record density with a qualitative GBIF-style legend and an exact
+  independently queried eligible total. The desktop/mobile textual companion covers taxon, source,
+  checklist, retrieval time, quality policy, privacy, uncertainty, sampling bias, non-native and
+  non-abundance semantics, dataset-specific licensing, attribution, empty and provider-error states.
+  MAP-001 collection provenance and GEOGRAPHY-002 operator-managed native ranges remain separate.
+- Canonical `make feature-verify` passed after independent review: the 75-entry feature graph and workflow
+  helper suites passed; Ruff, Prettier, ESLint, strict mypy (169 source files), and strict TypeScript
+  passed; 299 backend unit tests passed at 90.76% coverage, 143 frontend tests passed, and 305
+  PostgreSQL integration tests passed; generated API declarations had no drift; backend and frontend
+  production images built successfully (the lazy occurrence-map chunk is 0.90 kB / 0.54 kB gzip);
+  the migration cycle correctly reported that no Alembic revision was added, and the final whitespace
+  check passed.
+
 ## 2026-09-12 — PROPAGATION-002 frontend loading test stabilized
 
 - Diagnosed the first guided-sowing component test's deterministic failure as an invalid test-timing

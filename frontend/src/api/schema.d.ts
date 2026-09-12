@@ -179,6 +179,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/botanical-identities/{botanical_identity_id}/occurrence-map/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Occurrence Summary */
+        get: operations["getBotanicalOccurrenceMapSummary"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/botanical-identities/{botanical_identity_id}/occurrence-map/tiles/{z}/{x}/{y}.png": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Occurrence Tile */
+        get: operations["getBotanicalOccurrenceMapTile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/botanical-identities/{botanical_identity_id}/profile": {
         parameters: {
             query?: never;
@@ -1585,6 +1619,50 @@ export interface components {
              * @enum {string}
              */
             mode: "none";
+        };
+        /** OccurrenceMapSummary */
+        OccurrenceMapSummary: {
+            /** Attribution */
+            attribution: string;
+            /** Binning */
+            binning: string;
+            /** Checklist Key */
+            checklist_key: string;
+            /** Checklist Name */
+            checklist_name: string;
+            /** Eligible Mapped Records */
+            eligible_mapped_records: number;
+            /** External Taxon Id */
+            external_taxon_id: string;
+            /** Licensing Url */
+            licensing_url: string;
+            /** Provider */
+            provider: string;
+            /** Provider Url */
+            provider_url: string;
+            quality_policy: components["schemas"]["OccurrenceQualityPolicy"];
+            /**
+             * Retrieved At
+             * Format: date-time
+             */
+            retrieved_at: string;
+            /** Source */
+            source: string;
+            /** Taxon Provider Url */
+            taxon_provider_url: string;
+            /** Taxon Scientific Name */
+            taxon_scientific_name: string;
+            /** Total Matching Records */
+            total_matching_records: number;
+        };
+        /** OccurrenceQualityPolicy */
+        OccurrenceQualityPolicy: {
+            /** Has Coordinate */
+            has_coordinate: boolean;
+            /** Has Geospatial Issue */
+            has_geospatial_issue: boolean;
+            /** Occurrence Status */
+            occurrence_status: string;
         };
         /** OriginatingPlantGroupSummary */
         OriginatingPlantGroupSummary: {
@@ -3664,6 +3742,78 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["ExternalTaxonLinkResponse"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getBotanicalOccurrenceMapSummary: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OccurrenceMapSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getBotanicalOccurrenceMapTile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                botanical_identity_id: string;
+                z: number;
+                x: number;
+                y: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description GBIF occurrence density tile */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/png": unknown;
+                };
+            };
+            /** @description No eligible occurrences in this tile */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

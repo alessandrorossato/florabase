@@ -1626,6 +1626,114 @@
         "title": "NoSourceAdjustment",
         "type": "object"
       },
+      "OccurrenceMapSummary": {
+        "properties": {
+          "attribution": {
+            "title": "Attribution",
+            "type": "string"
+          },
+          "binning": {
+            "title": "Binning",
+            "type": "string"
+          },
+          "checklist_key": {
+            "title": "Checklist Key",
+            "type": "string"
+          },
+          "checklist_name": {
+            "title": "Checklist Name",
+            "type": "string"
+          },
+          "eligible_mapped_records": {
+            "minimum": 0.0,
+            "title": "Eligible Mapped Records",
+            "type": "integer"
+          },
+          "external_taxon_id": {
+            "title": "External Taxon Id",
+            "type": "string"
+          },
+          "licensing_url": {
+            "title": "Licensing Url",
+            "type": "string"
+          },
+          "provider": {
+            "title": "Provider",
+            "type": "string"
+          },
+          "provider_url": {
+            "title": "Provider Url",
+            "type": "string"
+          },
+          "quality_policy": {
+            "$ref": "#/components/schemas/OccurrenceQualityPolicy"
+          },
+          "retrieved_at": {
+            "format": "date-time",
+            "title": "Retrieved At",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "taxon_provider_url": {
+            "title": "Taxon Provider Url",
+            "type": "string"
+          },
+          "taxon_scientific_name": {
+            "title": "Taxon Scientific Name",
+            "type": "string"
+          },
+          "total_matching_records": {
+            "minimum": 0.0,
+            "title": "Total Matching Records",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "source",
+          "provider",
+          "external_taxon_id",
+          "taxon_scientific_name",
+          "taxon_provider_url",
+          "checklist_key",
+          "checklist_name",
+          "total_matching_records",
+          "eligible_mapped_records",
+          "retrieved_at",
+          "quality_policy",
+          "binning",
+          "attribution",
+          "provider_url",
+          "licensing_url"
+        ],
+        "title": "OccurrenceMapSummary",
+        "type": "object"
+      },
+      "OccurrenceQualityPolicy": {
+        "properties": {
+          "has_coordinate": {
+            "title": "Has Coordinate",
+            "type": "boolean"
+          },
+          "has_geospatial_issue": {
+            "title": "Has Geospatial Issue",
+            "type": "boolean"
+          },
+          "occurrence_status": {
+            "title": "Occurrence Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "occurrence_status",
+          "has_coordinate",
+          "has_geospatial_issue"
+        ],
+        "title": "OccurrenceQualityPolicy",
+        "type": "object"
+      },
       "OriginatingPlantGroupSummary": {
         "properties": {
           "botanical_identity": {
@@ -8110,6 +8218,122 @@
           }
         },
         "summary": "Refresh",
+        "tags": [
+          "external botanical data"
+        ]
+      }
+    },
+    "/api/v1/botanical-identities/{botanical_identity_id}/occurrence-map/summary": {
+      "get": {
+        "operationId": "getBotanicalOccurrenceMapSummary",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OccurrenceMapSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Occurrence Summary",
+        "tags": [
+          "external botanical data"
+        ]
+      }
+    },
+    "/api/v1/botanical-identities/{botanical_identity_id}/occurrence-map/tiles/{z}/{x}/{y}.png": {
+      "get": {
+        "operationId": "getBotanicalOccurrenceMapTile",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "z",
+            "required": true,
+            "schema": {
+              "maximum": 16,
+              "minimum": 0,
+              "title": "Z",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "x",
+            "required": true,
+            "schema": {
+              "minimum": 0,
+              "title": "X",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "y",
+            "required": true,
+            "schema": {
+              "minimum": 0,
+              "title": "Y",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/png": {}
+            },
+            "description": "GBIF occurrence density tile"
+          },
+          "204": {
+            "description": "No eligible occurrences in this tile"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Occurrence Tile",
         "tags": [
           "external botanical data"
         ]

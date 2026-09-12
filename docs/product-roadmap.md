@@ -116,10 +116,10 @@ precision-preserving recent acquisition summaries. Propagated or extracted desce
 inherit Supplier, retained historical records do not become active holdings, and financial totals
 wait for the separate `ORDER-001` transaction model.
 
-After the implemented collection, geography, supplier, provenance-map, external botanical-data, and
-structured native-range surfaces, the remaining V1 product sequence is `BOTANY-003` reviewable
-profile enrichment, `MAP-002` botanical distribution/occurrence mapping, and
-`ATTACHMENT-002/003` storage and photos. `UX-003` follows those
+After the implemented collection, geography, supplier, provenance-map, external botanical-data,
+structured native-range, and MAP-002 occurrence-density surfaces, the remaining V1 product sequence
+is `ATTACHMENT-002/003` storage and photos. `BOTANY-003` profile enrichment remains separately
+planned while the approved provider lacks a reviewed profile-content contract. `UX-003` follows those
 feature-specific surfaces as global stabilization and polish, then `UX-002` adds contextual help;
 neither blocks the botanical, geography, map, or photo increments.
 
@@ -127,9 +127,12 @@ neither blocks the botanical, geography, map, or photo increments.
 first fixed advisory provider, accessed only by the backend. Search results require explicit
 operator confirmation before a provider taxon is linked; no match automatically renames, reparents,
 merges, or enriches an identity. Provider responses are cached with truthful fetch/freshness
-metadata, and botanical-name queries are disclosed as external requests. Profile enrichment and
-occurrence mapping remain separately planned. Structured native ranges are separately
-operator-managed BotanicalProfile knowledge and are never refreshed from GBIF.
+metadata, and botanical-name queries are disclosed as external requests. MAP-002 builds only on a
+confirmed link: an explicit load sends the stored opaque Catalogue of Life XR taxon ID through the
+backend for PRESENT occurrence counts and quality-filtered hex-density tiles. The map is not a
+native-range surface, does not persist occurrences, and sends no collection metadata to GBIF.
+Profile enrichment remains separately planned. Structured native ranges are separately
+operator-managed BotanicalProfile knowledge and are never refreshed from GBIF occurrence evidence.
 
 The final V1 phase is release hardening rather than another product surface. It will exercise fresh
 installation, upgrades and the full Alembic chain, backup/restore, production Docker deployment,
@@ -219,7 +222,10 @@ separate `ProvenanceSite` concept with optional WGS84 coordinates and accuracy. 
 internal data for an authenticated collection-provenance map with one marker per coordinate-bearing
 site, filtered direct collection links, and an accessible companion list. It does not geocode,
 derive coordinates, map Locations or Suppliers, or show the independent GEOGRAPHY-002
-botanical native-distribution relationships and MAP-002 occurrence data.
+botanical native-distribution relationships or MAP-002 occurrence data. MAP-002 is instead a
+BotanicalIdentity-context view of GBIF occurrence-record density for the confirmed external taxon.
+Its browser loads provider data only through authenticated, fixed-purpose Florabase summary and tile
+boundaries, while the existing configurable basemap behavior remains separate.
 
 ## Longer-term capabilities
 

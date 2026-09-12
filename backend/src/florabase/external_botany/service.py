@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime, timedelta
 from hashlib import sha256
@@ -10,9 +11,15 @@ from sqlalchemy.engine import CursorResult
 from sqlalchemy.orm import Session
 
 from florabase.external_botany.model import ExternalProviderCache, ExternalTaxonLink
-from florabase.external_botany.provider import GbifBotanicalProvider, ProviderError
+from florabase.external_botany.provider import (
+    GBIF_COL_XR_CHECKLIST_KEY,
+    GbifBotanicalProvider,
+    ProviderError,
+)
 from florabase.external_botany.schemas import (
     ExternalTaxonLinkResponse,
+    OccurrenceMapSummary,
+    OccurrenceQualityPolicy,
     TaxonCandidate,
     TaxonSearchResponse,
 )
@@ -220,3 +227,33 @@ def unlink(database: Session, identity_id: UUID) -> bool:
 def link_response(link: ExternalTaxonLink, ttl_seconds: int) -> ExternalTaxonLinkResponse:
     stale = link.last_refreshed_at < utc_now() - timedelta(seconds=ttl_seconds)
     return ExternalTaxonLinkResponse.from_model(link, stale=stale)
+
+
+async def occurrence_map_summary(
+    provider: GbifBotanicalProvider, link: ExternalTaxonLink
+) -> OccurrenceMapSummary:
+    total, eligible = await asyncio.gather(
+        provider.occurrence_count(link.external_id, eligible=False),
+        provider.occurrence_count(link.external_id, eligible=True),
+    )
+    return OccurrenceMapSummary(
+        source="GBIF occurrence records",
+        provider=provider.provider_id,
+        external_taxon_id=link.external_id,
+        taxon_scientific_name=link.scientific_name,
+        taxon_provider_url=f"https://www.gbif.org/species/{link.external_id}",
+        checklist_key=GBIF_COL_XR_CHECKLIST_KEY,
+        checklist_name="Catalogue of Life eXtended Release",
+        total_matching_records=total,
+        eligible_mapped_records=eligible,
+        retrieved_at=utc_now(),
+        quality_policy=OccurrenceQualityPolicy(
+            occurrence_status="PRESENT",
+            has_coordinate=True,
+            has_geospatial_issue=False,
+        ),
+        binning="Zoom-appropriate hexagonal occurrence-record density",
+        attribution="GBIF.org and the contributing data publishers",
+        provider_url="https://www.gbif.org",
+        licensing_url="https://www.gbif.org/terms",
+    )

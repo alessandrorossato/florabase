@@ -13,6 +13,7 @@ from florabase.external_botany.service import (
     confirm_link,
     get_link,
     link_response,
+    occurrence_map_summary,
     refresh_link,
     search_taxa,
     unlink,
@@ -184,3 +185,25 @@ def test_unlink_and_link_response_report_database_and_freshness_state() -> None:
     assert response.stale is True
     assert response.provider_display_name == "GBIF"
     assert response.provider_url == "https://www.gbif.org/species/BSJCX"
+
+
+def test_occurrence_summary_uses_confirmed_link_id_and_normalizes_metadata() -> None:
+    provider = MagicMock()
+    provider.provider_id = "gbif"
+
+    async def count(external_id: str, *, eligible: bool) -> int:
+        assert external_id == "BSJCX"
+        return 8 if eligible else 11
+
+    provider.occurrence_count = AsyncMock(side_effect=count)
+    response = asyncio.run(occurrence_map_summary(provider, link()))
+
+    assert response.external_taxon_id == "BSJCX"
+    assert response.total_matching_records == 11
+    assert response.eligible_mapped_records == 8
+    assert response.quality_policy.occurrence_status == "PRESENT"
+    assert response.quality_policy.has_coordinate is True
+    assert response.quality_policy.has_geospatial_issue is False
+    assert response.checklist_name == "Catalogue of Life eXtended Release"
+    assert response.retrieved_at.tzinfo is not None
+    assert provider.occurrence_count.await_count == 2

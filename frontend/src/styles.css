@@ -1969,6 +1969,72 @@ button:disabled {
   min-width: 0;
 }
 
+.occurrence-map-panel {
+  min-width: 0;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #cfdbd2;
+  border-radius: 0.85rem;
+  background: #f7faf7;
+}
+
+.occurrence-map-panel h4,
+.occurrence-map-panel h5,
+.occurrence-map-panel p {
+  margin-top: 0;
+}
+
+.occurrence-summary {
+  display: grid;
+  min-width: 0;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.occurrence-map-layout {
+  min-width: 0;
+}
+
+.occurrence-density-map {
+  width: 100%;
+  min-height: 28rem;
+  background: #edf3ec;
+}
+
+.occurrence-density-legend {
+  display: grid;
+  grid-template-columns: auto minmax(5rem, 1fr) auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 0.8rem 0;
+  color: #486056;
+  font-size: 0.78rem;
+}
+
+.occurrence-density-scale {
+  height: 0.8rem;
+  border: 1px solid #8e5b78;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #5e0063,
+    #a42e61,
+    #d26b63,
+    #eeab79,
+    #ffebaa
+  );
+}
+
+.occurrence-cautions {
+  padding: 1rem;
+  border-left: 0.3rem solid #bf8d31;
+  background: #fff8e8;
+}
+
+.occurrence-cautions p:last-child {
+  margin-bottom: 0;
+}
+
 .screen-heading,
 .map-site-detail__header {
   display: flex;
@@ -2205,6 +2271,14 @@ button:disabled {
 
   .provenance-map {
     min-height: 21rem;
+  }
+
+  .occurrence-density-map {
+    min-height: 20rem;
+  }
+
+  .occurrence-density-legend {
+    grid-template-columns: 1fr;
   }
 
   .map-record-list li {

@@ -43,9 +43,38 @@ refresh retains cached link metadata, records the failed attempt, and identifies
 than presenting it as newly fetched. Unlinking does not delete shared cache entries.
 
 Only the searched botanical name or selected opaque taxon ID is sent to GBIF. Florabase sends no
-account, note, Supplier, Location, ProvenanceSite, SeedLot, Plant, or other collection data. This
-foundation does not enrich BotanicalProfile, import native ranges, request occurrences, or alter the
-MAP-001 collection-provenance map; those remain separate planned increments.
+account, note, Supplier, Location, ProvenanceSite, SeedLot, Plant, or other collection data during
+link search and refresh. This foundation does not enrich BotanicalProfile, import native ranges, or
+alter the MAP-001 collection-provenance map.
+
+### External occurrence evidence
+
+The MAP-002 occurrence view is live, source-scoped evidence for the exact current GBIF taxon link.
+The backend supplies the stored opaque Catalogue of Life XR identifier directly to GBIF occurrence
+search and Maps APIs with the fixed Catalogue of Life XR checklist key. It never rematches the
+BotanicalIdentity scientific name, translates to the obsolete numeric GBIF Backbone, substitutes an
+accepted taxon, or broadens the link. GBIF's own taxon-filter interpretation determines inclusion of
+records classified beneath the selected usage.
+
+The normalized summary reports all matching PRESENT occurrence records and the eligible mapped
+subset. The subset requires usable coordinates and excludes records GBIF flags as having a
+geospatial issue. Both live counts are retrieved independently and can change between requests;
+the eligible count is the map's current reference. A deliberate operator action retrieves the summary, then a fixed-purpose,
+authenticated Florabase endpoint proxies zoom-appropriate hex-binned raster tiles from GBIF. The
+browser never receives an arbitrary provider URL and never sends the linked taxon directly to GBIF;
+the server sends only the opaque taxon ID, fixed checklist and quality policy, and requested tile
+coordinates. No Florabase user identity, collection record, provenance, Supplier, Location, note,
+or physical browser location is sent. The separately configurable basemap retains MAP-001's direct
+tile-request privacy boundary.
+
+Occurrence density is record density, not plant abundance, and the raster does not expose exact
+per-bin totals. Occurrences may be generalized, obscured, uncertain, erroneous, historical,
+cultivated, or introduced and never establish native range. The view does not write occurrence facts
+to BotanicalIdentity, BotanicalProfile, GEOGRAPHY-002 ranges, GeographicPlace, ProvenanceSite, or
+collection records. Nothing is stored in PostgreSQL; provider and browser HTTP caching may apply.
+GBIF and contributing publishers are attributed, and underlying records retain their
+dataset-specific licences and attribution requirements rather than receiving a Florabase-wide
+licence.
 
 ### BotanicalProfile
 
@@ -156,7 +185,7 @@ do not acquire a duplicate direct site for map convenience, and Florabase never 
 from a GeographicPlace name or centroid.
 
 This map describes origins recorded for the operator's collection. It is not the independently
-managed GEOGRAPHY-002 botanical native-range dataset or future MAP-002 occurrence map.
+managed GEOGRAPHY-002 botanical native-range dataset or MAP-002 external occurrence-density view.
 Location remains the current physical storage/cultivation place, and Supplier remains who supplied
 the material. The map performs no geocoding, reverse geocoding, browser geolocation, or external
 botanical lookup.

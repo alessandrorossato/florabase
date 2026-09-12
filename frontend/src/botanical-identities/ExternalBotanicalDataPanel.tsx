@@ -1,6 +1,7 @@
 import { useEffect, useState, type SyntheticEvent } from "react";
 
 import { ApiError } from "../auth/api";
+import { OccurrenceMapPanel } from "../occurrence-map/OccurrenceMapPanel";
 import {
   confirmExternalTaxonLink,
   getExternalTaxonLink,
@@ -316,6 +317,13 @@ export function ExternalBotanicalDataPanel({
             </div>
           )}
         </div>
+      )}
+      {!loadingLink && (
+        <OccurrenceMapPanel
+          key={`${identityId}:${link?.external_id ?? "unlinked"}`}
+          identityId={identityId}
+          link={link}
+        />
       )}
     </section>
   );

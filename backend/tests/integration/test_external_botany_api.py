@@ -15,7 +15,7 @@ from florabase.core.config import CookieMode, Environment, Settings, get_setting
 from florabase.db.session import get_database_session
 from florabase.external_botany.api import get_provider
 from florabase.external_botany.model import ExternalProviderCache, ExternalTaxonLink
-from florabase.external_botany.provider import GbifBotanicalProvider, ProviderError
+from florabase.external_botany.provider import GbifBotanicalProvider, OccurrenceTile, ProviderError
 from florabase.external_botany.service import _taxon_key, confirm_link
 from florabase.main import app
 
@@ -44,6 +44,8 @@ class StubGbifProvider:
         self.search_calls = 0
         self.taxon_calls = 0
         self.fail_taxon = False
+        self.occurrence_count_calls: list[tuple[str, bool]] = []
+        self.occurrence_tile_calls: list[tuple[str, int, int, int]] = []
 
     async def search_payload(self, query: str) -> dict[str, object]:
         self.search_calls += 1
@@ -55,6 +57,14 @@ class StubGbifProvider:
             raise ProviderError("fixture outage")
         external_id = "B2" if scientific_name.endswith("B2") else "A1"
         return self._payload(external_id, scientific_name)
+
+    async def occurrence_count(self, external_id: str, *, eligible: bool) -> int:
+        self.occurrence_count_calls.append((external_id, eligible))
+        return 7 if eligible else 9
+
+    async def occurrence_tile(self, external_id: str, z: int, x: int, y: int) -> OccurrenceTile:
+        self.occurrence_tile_calls.append((external_id, z, x, y))
+        return OccurrenceTile(content=b"png", media_type="image/png")
 
     def normalize_search(self, payload: dict[str, object]) -> list[Any]:
         from florabase.external_botany.provider import GbifBotanicalProvider
@@ -181,6 +191,25 @@ def test_authenticated_explicit_link_cache_refresh_replace_and_unlink(
             assert linked.json()["provider"] == "gbif"
             assert linked.json()["provider_url"] == "https://www.gbif.org/species/A1"
 
+            occurrence_summary = await client.get(f"{base}/occurrence-map/summary")
+            assert occurrence_summary.status_code == 200
+            assert occurrence_summary.json()["external_taxon_id"] == "A1"
+            assert occurrence_summary.json()["total_matching_records"] == 9
+            assert occurrence_summary.json()["eligible_mapped_records"] == 7
+            assert set(provider.occurrence_count_calls) == {("A1", False), ("A1", True)}
+
+            invalid_tile = await client.get(f"{base}/occurrence-map/tiles/2/4/0.png")
+            assert invalid_tile.status_code == 422
+            assert provider.occurrence_tile_calls == []
+            tile = await client.get(
+                f"{base}/occurrence-map/tiles/2/1/3.png",
+                params={"url": "http://127.0.0.1/private", "supplier": "not-forwarded"},
+            )
+            assert tile.status_code == 200
+            assert tile.content == b"png"
+            assert tile.headers["cache-control"] == "private, max-age=3600"
+            assert provider.occurrence_tile_calls == [("A1", 2, 1, 3)]
+
             replaced = await client.put(
                 f"{base}/external-taxon-link",
                 json={"external_id": "B2", "scientific_name": "Provider name B2"},
@@ -205,11 +234,24 @@ def test_authenticated_explicit_link_cache_refresh_replace_and_unlink(
             removed = await client.delete(f"{base}/external-taxon-link", headers=mutation_headers)
             assert removed.status_code == 204
             assert (await client.get(f"{base}/external-taxon-link")).json() is None
+            count_calls = len(provider.occurrence_count_calls)
+            assert (await client.get(f"{base}/occurrence-map/summary")).status_code == 409
+            assert len(provider.occurrence_count_calls) == count_calls
 
         async with httpx.AsyncClient(transport=transport, base_url=ORIGIN) as anonymous:
             assert (
                 await anonymous.get(
                     "/api/v1/botanical-identities/01900000-0000-7000-8000-000000000001/external-taxon-link"
+                )
+            ).status_code == 401
+            assert (
+                await anonymous.get(
+                    "/api/v1/botanical-identities/01900000-0000-7000-8000-000000000001/occurrence-map/summary"
+                )
+            ).status_code == 401
+            assert (
+                await anonymous.get(
+                    "/api/v1/botanical-identities/01900000-0000-7000-8000-000000000001/occurrence-map/tiles/0/0/0.png"
                 )
             ).status_code == 401
 

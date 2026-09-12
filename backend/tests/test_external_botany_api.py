@@ -11,18 +11,25 @@ from florabase.external_botany.api import (
     _provider_http_error,
     _require_identity,
     confirm,
+    occurrence_summary,
+    occurrence_tile,
     read_link,
     refresh,
     remove_link,
     search,
 )
 from florabase.external_botany.provider import (
+    OccurrenceTile,
     ProviderError,
     ProviderNotFoundError,
     ProviderRateLimitedError,
     ProviderResponseError,
 )
-from florabase.external_botany.schemas import ExternalTaxonLinkCreate, TaxonSearchResponse
+from florabase.external_botany.schemas import (
+    ExternalTaxonLinkCreate,
+    OccurrenceMapSummary,
+    TaxonSearchResponse,
+)
 
 
 def settings() -> Settings:
@@ -200,3 +207,97 @@ def test_read_confirm_refresh_and_remove_link_outcomes() -> None:
     ):
         removed = remove_link(identity_id, actor(), database)
     assert removed.status_code == 204
+
+
+def occurrence_response() -> OccurrenceMapSummary:
+    return OccurrenceMapSummary(
+        source="GBIF occurrence records",
+        provider="gbif",
+        external_taxon_id="Q2M4",
+        taxon_scientific_name="Calopteryx splendens",
+        taxon_provider_url="https://www.gbif.org/species/Q2M4",
+        checklist_key="7ddf754f-d193-4cc9-b351-99906754a03b",
+        checklist_name="Catalogue of Life eXtended Release",
+        total_matching_records=20,
+        eligible_mapped_records=17,
+        retrieved_at="2026-09-12T10:00:00Z",
+        quality_policy={
+            "occurrence_status": "PRESENT",
+            "has_coordinate": True,
+            "has_geospatial_issue": False,
+        },
+        binning="Zoom-appropriate hexagonal occurrence-record density",
+        attribution="GBIF.org and the contributing data publishers",
+        provider_url="https://www.gbif.org",
+        licensing_url="https://www.gbif.org/terms",
+    )
+
+
+def test_occurrence_summary_requires_confirmed_link_without_provider_query() -> None:
+    identity_id = uuid7()
+    database = MagicMock()
+    provider = MagicMock()
+    with (
+        patch("florabase.external_botany.api._require_identity"),
+        patch("florabase.external_botany.api.get_link", return_value=None),
+        pytest.raises(HTTPException) as missing,
+    ):
+        asyncio.run(occurrence_summary(identity_id, actor(), database, provider))
+    assert missing.value.status_code == 409
+    provider.occurrence_count.assert_not_called()
+
+
+def test_occurrence_summary_uses_link_and_translates_provider_failure() -> None:
+    identity_id = uuid7()
+    database = MagicMock()
+    provider = MagicMock()
+    linked = MagicMock(external_id="Q2M4")
+    expected = occurrence_response()
+    with (
+        patch("florabase.external_botany.api._require_occurrence_link", return_value=linked),
+        patch(
+            "florabase.external_botany.api.occurrence_map_summary",
+            AsyncMock(return_value=expected),
+        ) as summary,
+    ):
+        assert asyncio.run(occurrence_summary(identity_id, actor(), database, provider)) is expected
+    summary.assert_awaited_once_with(provider, linked)
+
+    with (
+        patch("florabase.external_botany.api._require_occurrence_link", return_value=linked),
+        patch(
+            "florabase.external_botany.api.occurrence_map_summary",
+            AsyncMock(side_effect=ProviderResponseError()),
+        ),
+        pytest.raises(HTTPException) as malformed,
+    ):
+        asyncio.run(occurrence_summary(identity_id, actor(), database, provider))
+    assert malformed.value.status_code == 502
+
+
+def test_occurrence_tile_validates_coordinates_and_proxies_png() -> None:
+    identity_id = uuid7()
+    database = MagicMock()
+    provider = MagicMock()
+    linked = MagicMock(external_id="Q2M4")
+
+    with pytest.raises(HTTPException) as invalid:
+        asyncio.run(occurrence_tile(identity_id, 3, 8, 0, actor(), database, provider))
+    assert invalid.value.status_code == 422
+    provider.occurrence_tile.assert_not_called()
+
+    provider.occurrence_tile = AsyncMock(
+        return_value=OccurrenceTile(content=b"png", media_type="image/png")
+    )
+    with patch("florabase.external_botany.api._require_occurrence_link", return_value=linked):
+        response = asyncio.run(occurrence_tile(identity_id, 3, 4, 2, actor(), database, provider))
+    assert response.status_code == 200
+    assert response.body == b"png"
+    assert response.media_type == "image/png"
+    assert response.headers["cache-control"] == "private, max-age=3600"
+    provider.occurrence_tile.assert_awaited_once_with("Q2M4", 3, 4, 2)
+
+    provider.occurrence_tile = AsyncMock(return_value=None)
+    with patch("florabase.external_botany.api._require_occurrence_link", return_value=linked):
+        empty = asyncio.run(occurrence_tile(identity_id, 0, 0, 0, actor(), database, provider))
+    assert empty.status_code == 204
