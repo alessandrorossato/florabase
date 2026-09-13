@@ -20,7 +20,8 @@ ENV PATH="/opt/venv/bin:$PATH" \
     PYTHONUNBUFFERED=1
 
 RUN groupadd --system --gid 10001 florabase \
-    && useradd --system --uid 10001 --gid florabase --home-dir /app florabase
+    && useradd --system --uid 10001 --gid florabase --home-dir /app florabase \
+    && install --directory --owner=10001 --group=10001 --mode=0700 /var/lib/florabase/attachments
 
 WORKDIR /app
 COPY --from=builder /opt/venv /opt/venv

@@ -19,9 +19,10 @@ owner, but no stable public release or supported-version policy has been publish
 - Explicit lineage through `SeedLot → Sowing → Plant / PlantGroup`, PlantGroup extraction, and
   collection-produced seed lots, with receipt-proven reversal for supported authoritative operations
 - A collection provenance map for coordinate-bearing ProvenanceSites
+- Guarded local JPEG/PNG/WebP attachment storage with authenticated retrieval and coordinated backup
 - Local owner authentication with server-side sessions and CSRF protection
 
-Attachments and photos, richer germination observations, advanced search and analytics,
+Collection-photo relationships and galleries, richer germination observations, advanced search and analytics,
 import/export, contextual help, and PWA installability are planned, not implemented. See the
 [product roadmap](docs/product-roadmap.md) and the detailed [feature backlog](docs/features.json).
 
@@ -84,10 +85,10 @@ code generation, and Git practices.
 
 ## Backup and restore
 
-`make backup` creates a custom-format PostgreSQL dump. `make restore` deliberately replaces the
-configured database and requires explicit confirmation. Read [backup-restore.md](docs/backup-restore.md)
-before restoring. No attachment storage exists yet, so current backups cover application-managed
-data in PostgreSQL only; deployment configuration and secrets need a separate protected backup.
+`make backup` stops backend writes while creating a paired custom-format PostgreSQL dump and local
+attachment-volume archive. `make restore` deliberately replaces both and requires explicit
+confirmation. Read [backup-restore.md](docs/backup-restore.md) before restoring; deployment
+configuration and secrets still need a separate protected backup.
 
 ## Project information
 

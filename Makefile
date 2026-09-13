@@ -85,12 +85,13 @@ migration: ## Create a migration: make migration MESSAGE="describe change"
 	@test -n "$(MESSAGE)" || { echo 'MESSAGE is required'; exit 2; }
 	$(DEV_COMPOSE) run --rm backend alembic revision --autogenerate -m "$(MESSAGE)"
 
-backup: ## Create a timestamped custom-format PostgreSQL dump
+backup: ## Create coordinated PostgreSQL and attachment-volume backup artifacts
 	BACKUP_DIR="$(BACKUP_DIR)" ./scripts/backup.sh
 
-restore: ## Restore dump: make restore FILE=backups/file.dump CONFIRM_REPLACE=yes CONFIRM_DATABASE=name
+restore: ## Restore database and attachments; see docs/backup-restore.md
 	@test -n "$(FILE)" || { echo 'FILE is required'; exit 2; }
-	FILE="$(FILE)" CONFIRM_REPLACE="$(CONFIRM_REPLACE)" CONFIRM_DATABASE="$(CONFIRM_DATABASE)" ./scripts/restore.sh
+	@test -n "$(ATTACHMENTS_FILE)" || { echo 'ATTACHMENTS_FILE is required'; exit 2; }
+	FILE="$(FILE)" ATTACHMENTS_FILE="$(ATTACHMENTS_FILE)" CONFIRM_REPLACE="$(CONFIRM_REPLACE)" CONFIRM_DATABASE="$(CONFIRM_DATABASE)" ./scripts/restore.sh
 
 health: ## Verify frontend, liveness, and database readiness through the proxy
 	./scripts/health.sh

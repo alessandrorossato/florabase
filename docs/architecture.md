@@ -38,8 +38,12 @@ Development explicitly uses `http://localhost:5173` and a loopback-only cookie m
 
 ## Persistence and migrations
 
-The `postgres_data` named volume is the only durable application data store today. No uploads or
-attachment volume exists. Container layers hold no durable state.
+PostgreSQL uses `postgres_data`; guarded local attachments use the separate `attachment_data` named
+volume mounted only by the backend at `/var/lib/florabase/attachments`. The image prepares that
+mount point for the existing non-root UID/GID 10001 runtime account. Server-generated storage keys
+remain beneath one centrally configured trusted root, and neither uploaded filenames nor URL values
+select filesystem paths. Nginx does not mount or expose the volume. Container layers hold no durable
+state. See [ADR 0006](decisions/0006-local-attachment-storage.md).
 
 Alembic is the only schema-change path, and migrations run explicitly rather than at application
 startup. Application-generated UUIDv7 identifiers and UTC timestamps follow
@@ -60,8 +64,9 @@ operation receipts. Direct foreign keys express the supported workflow lineage: 
 to Plant/PlantGroup, PlantGroup extraction to Plant, and Plant/PlantGroup production of a
 collection-produced SeedLot. Events record Plant and PlantGroup history without making the system
 event-sourced; operation receipts support the deliberately bounded reintegration and propagation
-reversals. The implementation does not use a generic graph, polymorphic collection item, generic
-event framework, or attachment subsystem.
+reversals. Attachment metadata and guarded local binary storage are implemented without collection
+photo relationships. The implementation does not use a generic graph, polymorphic collection item,
+generic event framework, or generic media subsystem.
 
 See [domain-model.md](domain-model.md) for semantics and current limitations.
 
