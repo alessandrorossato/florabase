@@ -6,6 +6,7 @@ import pytest
 from florabase.core.config import CookieMode, Environment, Settings
 from florabase.external_botany.provider import (
     GBIF_COL_XR_CHECKLIST_KEY,
+    MAX_OCCURRENCE_TILE_BYTES,
     GbifBotanicalProvider,
     ProviderError,
     ProviderNotFoundError,
@@ -146,3 +147,119 @@ def test_gbif_rejects_malformed_shapes_and_normalizes_no_match() -> None:
         provider.normalize_search({"usage": [], "alternatives": []})
     with pytest.raises(ProviderResponseError):
         provider.normalize_search({**response_payload(), "classification": {}})
+
+
+def test_occurrence_counts_use_exact_opaque_col_xr_taxon_and_quality_policy() -> None:
+    requests: list[httpx.Request] = []
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        assert request.url.path == "/v1/occurrence/search"
+        assert request.url.params["taxon_key"] == "Q2M4"
+        assert request.url.params["checklistKey"] == GBIF_COL_XR_CHECKLIST_KEY
+        assert request.url.params["occurrenceStatus"] == "PRESENT"
+        assert request.url.params["limit"] == "0"
+        assert "scientificName" not in request.url.params
+        return httpx.Response(200, json={"count": 17})
+
+    provider = GbifBotanicalProvider(settings(), httpx.MockTransport(handler))
+    assert asyncio.run(provider.occurrence_count("Q2M4", eligible=False)) == 17
+    assert asyncio.run(provider.occurrence_count("Q2M4", eligible=True)) == 17
+    assert "hasCoordinate" not in requests[0].url.params
+    assert "hasGeospatialIssue" not in requests[0].url.params
+    assert requests[1].url.params["hasCoordinate"] == "true"
+    assert requests[1].url.params["hasGeospatialIssue"] == "false"
+
+
+@pytest.mark.parametrize("count", [None, -1, True, "17", 17.5])
+def test_occurrence_count_rejects_malformed_provider_values(count: object) -> None:
+    async def handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"count": count})
+
+    provider = GbifBotanicalProvider(settings(), httpx.MockTransport(handler))
+    with pytest.raises(ProviderResponseError):
+        asyncio.run(provider.occurrence_count("Q2M4", eligible=True))
+
+
+def test_occurrence_tile_is_fixed_hex_png_query_without_forwarded_metadata() -> None:
+    async def handler(request: httpx.Request) -> httpx.Response:
+        assert request.url.host == "api.gbif.org"
+        assert request.url.path == "/v2/map/occurrence/adhoc/3/4/2@Hx.png"
+        assert dict(request.url.params) == {
+            "srs": "EPSG:3857",
+            "bin": "hex",
+            "hexPerTile": "51",
+            "mode": "GEO_BOUNDS",
+            "style": "purpleYellow-noborder.poly",
+            "taxonKey": "Q2M4",
+            "checklistKey": GBIF_COL_XR_CHECKLIST_KEY,
+            "occurrenceStatus": "PRESENT",
+            "hasCoordinate": "true",
+            "hasGeospatialIssue": "false",
+        }
+        assert set(request.headers).isdisjoint(
+            {"cookie", "x-csrf-token", "x-florabase-record", "authorization"}
+        )
+        return httpx.Response(
+            200,
+            content=b"\x89PNG\r\n\x1a\nfixture",
+            headers={"Content-Type": "image/png"},
+        )
+
+    provider = GbifBotanicalProvider(settings(), httpx.MockTransport(handler))
+    tile = asyncio.run(provider.occurrence_tile("Q2M4", 3, 4, 2))
+    assert tile is not None
+    assert tile.content == b"\x89PNG\r\n\x1a\nfixture"
+    assert tile.media_type == "image/png"
+
+
+def test_occurrence_tile_handles_empty_and_rejects_non_png_or_oversize() -> None:
+    async def empty_handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(204)
+
+    provider = GbifBotanicalProvider(settings(), httpx.MockTransport(empty_handler))
+    assert asyncio.run(provider.occurrence_tile("Q2M4", 0, 0, 0)) is None
+
+    async def non_png_handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"detail": "not an image"})
+
+    provider = GbifBotanicalProvider(settings(), httpx.MockTransport(non_png_handler))
+    with pytest.raises(ProviderResponseError):
+        asyncio.run(provider.occurrence_tile("Q2M4", 0, 0, 0))
+
+    async def malformed_png_handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, content=b"not-png", headers={"Content-Type": "image/png"})
+
+    provider = GbifBotanicalProvider(settings(), httpx.MockTransport(malformed_png_handler))
+    with pytest.raises(ProviderResponseError):
+        asyncio.run(provider.occurrence_tile("Q2M4", 0, 0, 0))
+
+    async def oversized_handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(
+            200,
+            content=b"x",
+            headers={
+                "Content-Type": "image/png",
+                "Content-Length": str(MAX_OCCURRENCE_TILE_BYTES + 1),
+            },
+        )
+
+    provider = GbifBotanicalProvider(settings(), httpx.MockTransport(oversized_handler))
+    with pytest.raises(ProviderResponseError):
+        asyncio.run(provider.occurrence_tile("Q2M4", 0, 0, 0))
+
+
+def test_occurrence_tile_translates_timeout_and_upstream_failure() -> None:
+    async def timeout_handler(request: httpx.Request) -> httpx.Response:
+        raise httpx.ReadTimeout("slow", request=request)
+
+    provider = GbifBotanicalProvider(settings(), httpx.MockTransport(timeout_handler))
+    with pytest.raises(ProviderError):
+        asyncio.run(provider.occurrence_tile("Q2M4", 0, 0, 0))
+
+    async def failure_handler(_: httpx.Request) -> httpx.Response:
+        return httpx.Response(503)
+
+    provider = GbifBotanicalProvider(settings(), httpx.MockTransport(failure_handler))
+    with pytest.raises(ProviderError):
+        asyncio.run(provider.occurrence_tile("Q2M4", 0, 0, 0))

@@ -83,3 +83,27 @@ class ExternalTaxonLinkResponse(BaseModel):
             stale=stale,
         )
         return cls.model_validate(values)
+
+
+class OccurrenceQualityPolicy(BaseModel):
+    occurrence_status: str
+    has_coordinate: bool
+    has_geospatial_issue: bool
+
+
+class OccurrenceMapSummary(BaseModel):
+    source: str
+    provider: str
+    external_taxon_id: str
+    taxon_scientific_name: str
+    taxon_provider_url: str
+    checklist_key: str
+    checklist_name: str
+    total_matching_records: int = Field(ge=0)
+    eligible_mapped_records: int = Field(ge=0)
+    retrieved_at: datetime
+    quality_policy: OccurrenceQualityPolicy
+    binning: str
+    attribution: str
+    provider_url: str
+    licensing_url: str

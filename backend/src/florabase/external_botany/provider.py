@@ -1,5 +1,6 @@
 import json
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
 import httpx
@@ -11,6 +12,13 @@ GBIF_PROVIDER_ID = "gbif"
 GBIF_COL_XR_CHECKLIST_KEY = "7ddf754f-d193-4cc9-b351-99906754a03b"
 GBIF_API_BASE_URL = "https://api.gbif.org"
 MAX_PROVIDER_RESPONSE_BYTES = 1_000_000
+MAX_OCCURRENCE_TILE_BYTES = 2_000_000
+
+
+@dataclass(frozen=True)
+class OccurrenceTile:
+    content: bytes
+    media_type: str
 
 
 class ProviderError(Exception):
@@ -30,7 +38,7 @@ class ProviderResponseError(ProviderError):
 
 
 class GbifBotanicalProvider:
-    """Narrow GBIF adapter using the documented v2 match service with CoL XR.
+    """Narrow GBIF taxon and occurrence adapter with fixed CoL XR semantics.
 
     See https://techdocs.gbif.org/en/data-processing/taxonomy-interpretation:
     checklistKey selects Catalogue of Life eXtended Release, while an omitted key
@@ -59,6 +67,38 @@ class GbifBotanicalProvider:
             "/v2/species/match",
             {"scientificName": scientific_name, "checklistKey": GBIF_COL_XR_CHECKLIST_KEY},
         )
+
+    async def occurrence_count(self, external_id: str, *, eligible: bool) -> int:
+        params = {
+            "taxon_key": external_id,
+            "checklistKey": GBIF_COL_XR_CHECKLIST_KEY,
+            "occurrenceStatus": "PRESENT",
+            "limit": "0",
+        }
+        if eligible:
+            params.update(hasCoordinate="true", hasGeospatialIssue="false")
+        payload = await self._get("/v1/occurrence/search", params)
+        count = payload.get("count")
+        if not isinstance(count, int) or isinstance(count, bool) or count < 0:
+            raise ProviderResponseError("GBIF occurrence count was malformed")
+        return count
+
+    async def occurrence_tile(
+        self, external_id: str, z: int, x: int, y: int
+    ) -> OccurrenceTile | None:
+        params = {
+            "srs": "EPSG:3857",
+            "bin": "hex",
+            "hexPerTile": "51",
+            "mode": "GEO_BOUNDS",
+            "style": "purpleYellow-noborder.poly",
+            "taxonKey": external_id,
+            "checklistKey": GBIF_COL_XR_CHECKLIST_KEY,
+            "occurrenceStatus": "PRESENT",
+            "hasCoordinate": "true",
+            "hasGeospatialIssue": "false",
+        }
+        return await self._get_tile(f"/v2/map/occurrence/adhoc/{z}/{x}/{y}@Hx.png", params)
 
     async def _get(self, path: str, params: Mapping[str, str]) -> dict[str, object]:
         headers = {"Accept": "application/json", "User-Agent": "Florabase/0.1 botanical-reference"}
@@ -105,6 +145,57 @@ class GbifBotanicalProvider:
         if not isinstance(payload, dict):
             raise ProviderResponseError("GBIF returned an unexpected response")
         return payload
+
+    async def _get_tile(self, path: str, params: Mapping[str, str]) -> OccurrenceTile | None:
+        headers = {"Accept": "image/png", "User-Agent": "Florabase/0.1 occurrence-map"}
+        try:
+            async with (
+                httpx.AsyncClient(
+                    base_url=GBIF_API_BASE_URL,
+                    timeout=self._timeout,
+                    transport=self._transport,
+                    follow_redirects=False,
+                ) as client,
+                client.stream("GET", path, params=params, headers=headers) as response,
+            ):
+                if response.status_code == 204:
+                    return None
+                if response.status_code == 429:
+                    raise ProviderRateLimitedError("GBIF rate limit reached")
+                if response.status_code >= 500:
+                    raise ProviderError("GBIF is temporarily unavailable")
+                if response.status_code >= 400:
+                    raise ProviderResponseError("GBIF rejected the occurrence tile request")
+                media_type = response.headers.get("Content-Type", "").split(";", 1)[0].strip()
+                if media_type != "image/png":
+                    raise ProviderResponseError("GBIF occurrence tile was not a PNG image")
+                content_length = response.headers.get("Content-Length")
+                if content_length is not None:
+                    try:
+                        parsed_content_length = int(content_length)
+                        if (
+                            parsed_content_length < 0
+                            or parsed_content_length > MAX_OCCURRENCE_TILE_BYTES
+                        ):
+                            raise ProviderResponseError(
+                                "GBIF occurrence tile exceeded the safe size limit"
+                            )
+                    except ValueError as error:
+                        raise ProviderResponseError(
+                            "GBIF returned an invalid tile content length"
+                        ) from error
+                content = bytearray()
+                async for chunk in response.aiter_bytes():
+                    content.extend(chunk)
+                    if len(content) > MAX_OCCURRENCE_TILE_BYTES:
+                        raise ProviderResponseError(
+                            "GBIF occurrence tile exceeded the safe size limit"
+                        )
+        except (httpx.TimeoutException, httpx.NetworkError) as error:
+            raise ProviderError("GBIF is temporarily unavailable") from error
+        if not content.startswith(b"\x89PNG\r\n\x1a\n"):
+            raise ProviderResponseError("GBIF occurrence tile contained malformed PNG data")
+        return OccurrenceTile(content=bytes(content), media_type=media_type)
 
     def normalize_search(self, payload: Mapping[str, object]) -> list[TaxonCandidate]:
         candidates: list[TaxonCandidate] = []

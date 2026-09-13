@@ -838,7 +838,7 @@
       ],
       "dependencies": ["BOTANY-002", "UX-001"],
       "priority": "P2",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "SUPPLIER-002",
