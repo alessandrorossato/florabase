@@ -12,11 +12,51 @@ fail() {
   exit 1
 }
 
+assert_attachment_configuration() {
+  local compose="${repository_root}/compose.yaml"
+  local development="${repository_root}/compose.dev.yaml"
+  local integration="${repository_root}/compose.integration.yaml"
+  local nginx="${repository_root}/frontend/nginx.conf"
+  local dockerfile="${repository_root}/backend/Dockerfile"
+  local backup="${repository_root}/scripts/backup.sh"
+  local restore="${repository_root}/scripts/restore.sh"
+  local makefile="${repository_root}/Makefile"
+
+  [[ "$(grep -Fc 'attachment_data:/var/lib/florabase/attachments' "${compose}")" -eq 1 ]] ||
+    fail "production attachment volume must be mounted exactly once"
+  grep -Fq 'attachment_data:' "${compose}" || fail "production attachment volume is not declared"
+  grep -Fq 'FLORABASE_ATTACHMENT_STORAGE_ROOT: /tmp/florabase-attachments' "${development}" ||
+    fail "development attachment storage override is missing"
+  grep -Fq 'FLORABASE_ATTACHMENT_STORAGE_ROOT: /tmp/florabase-attachments' "${integration}" ||
+    fail "integration attachment storage override is missing"
+  grep -Fq 'client_max_body_size 32m;' "${nginx}" || fail "proxy upload ceiling is missing"
+  grep -Fq -- '--owner=10001 --group=10001 --mode=0700' "${dockerfile}" ||
+    fail "attachment directory is not created for the runtime user"
+  grep -Fq 'USER florabase' "${dockerfile}" || fail "backend runtime is not non-root"
+
+  grep -Fq 'docker compose stop backend' "${backup}" || fail "backup does not quiesce writes"
+  grep -Fq 'attachment_artifacts.py verify' "${backup}" || fail "backup does not verify content"
+  grep -Fq 'attachment_artifacts.py archive' "${backup}" || fail "backup does not archive content"
+  grep -Fq '.attachments.tar' "${backup}" || fail "backup does not create paired artifacts"
+  grep -Fq 'ATTACHMENTS_FILE' "${restore}" || fail "restore does not require attachment content"
+  grep -Fq 'attachment_artifacts.py restore' "${restore}" || fail "restore does not restore content"
+  grep -Fq 'attachment_artifacts.py verify' "${restore}" || fail "restore does not verify content"
+  grep -Fq 'ATTACHMENTS_FILE' "${makefile}" || fail "Make restore does not pass the content artifact"
+}
+
 expect_failure() {
   if "$@" >/dev/null 2>&1; then
     fail "expected failure: $*"
   fi
 }
+
+assert_attachment_configuration
+
+database_backup="${temporary_root}/florabase-20260913T120000Z.dump"
+mismatched_attachment_backup="${temporary_root}/florabase-20260913T120001Z.attachments.tar"
+touch "${database_backup}" "${mismatched_attachment_backup}"
+expect_failure env FILE="${database_backup}" ATTACHMENTS_FILE="${mismatched_attachment_backup}" \
+  CONFIRM_REPLACE=yes "${repository_root}/scripts/restore.sh"
 
 new_fixture() {
   local name="$1"

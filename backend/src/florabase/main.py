@@ -6,13 +6,16 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from florabase import __version__
 from florabase.api.router import api_router
+from florabase.attachments.storage import AttachmentStorage
 from florabase.core.config import get_settings
 from florabase.core.logging import configure_logging
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    configure_logging(get_settings())
+    settings = get_settings()
+    configure_logging(settings)
+    AttachmentStorage.from_settings(settings)
     yield
 
 

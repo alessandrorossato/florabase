@@ -13,6 +13,7 @@ services:
       FLORABASE_CANONICAL_ORIGIN: http://localhost:5173
       FLORABASE_COOKIE_MODE: loopback-development
       FLORABASE_LOG_FORMAT: text
+      FLORABASE_ATTACHMENT_STORAGE_ROOT: /tmp/florabase-attachments
       COVERAGE_FILE: /tmp/florabase-coverage
       MYPY_CACHE_DIR: /tmp/florabase-mypy
       PYTEST_ADDOPTS: -o cache_dir=/tmp/florabase-pytest
@@ -26,6 +27,8 @@ services:
       - ./backend/pyproject.toml:/app/pyproject.toml:ro
       - ./backend/requirements.lock:/app/requirements.lock
       - ./backend/requirements-dev.lock:/app/requirements-dev.lock
+    tmpfs:
+      - /tmp/florabase-attachments:uid=${LOCAL_UID:-1000},gid=${LOCAL_GID:-1000},mode=0700
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
 

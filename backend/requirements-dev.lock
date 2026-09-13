@@ -69,6 +69,8 @@ packaging==26.3
     #   wheel
 pathspec==1.1.1
     # via mypy
+pillow==12.3.0
+    # via florabase-backend (backend/pyproject.toml)
 pip-tools==7.6.1
     # via florabase-backend (backend/pyproject.toml)
 pluggy==1.6.0
@@ -105,6 +107,8 @@ pytest-cov==7.1.0
     # via florabase-backend (backend/pyproject.toml)
 python-dotenv==1.2.3
     # via pydantic-settings
+python-multipart==0.0.32
+    # via florabase-backend (backend/pyproject.toml)
 ruff==0.16.5
     # via florabase-backend (backend/pyproject.toml)
 sqlalchemy==2.0.52

@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 
 from florabase.api.health import router as health_router
+from florabase.attachments.api import router as attachments_router
 from florabase.auth.api import router as auth_router
 from florabase.botanical_identities.api import router as botanical_identities_router
 from florabase.botanical_profiles.api import router as botanical_profiles_router
@@ -19,6 +20,7 @@ from florabase.suppliers.api import router as suppliers_router
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(health_router)
 api_router.include_router(auth_router)
+api_router.include_router(attachments_router)
 api_router.include_router(botanical_identities_router)
 api_router.include_router(botanical_profiles_router)
 api_router.include_router(external_botany_router)

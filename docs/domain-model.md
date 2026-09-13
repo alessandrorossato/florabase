@@ -496,6 +496,35 @@ names, create placeholder ancestors, or use a generic genealogy graph. Maternal/
 pollen donors, controlled crosses, multiple producers, reverse extraction/merge, and visual lineage
 navigation are deferred.
 
+## Attachment storage contract
+
+An `Attachment` is one Florabase-managed local still-image binary plus the narrow metadata required
+to store and recover it safely. It has an application-generated UUIDv7 ID, a separate unique
+server-generated storage key, a normalized display filename, validated `image/jpeg`, `image/png`, or
+`image/webp` media type, a positive byte size of at most exactly 25 MiB (26,214,400 bytes), a
+SHA-256 digest, an `active` or `pending_delete` state, and a timezone-aware UTC creation timestamp.
+The binary is in the backend-only durable attachment volume, never PostgreSQL. The filename is not a
+path, and the API exposes neither the storage key nor a filesystem location.
+
+JPEG, PNG, and WebP content must pass signature, declared-type, and image-decoder validation. SVG,
+GIF, HEIC/HEIF, AVIF, documents, audio, video, empty files, malformed files, and animated images are
+outside the first contract. The backend streams bounded chunks to generated temporary files beneath
+the trusted root, hashes and validates them, atomically renames within that filesystem, then commits
+metadata. Ordinary failures clean temporary or newly placed files; a crash after rename and before
+metadata commit can leave an inaccessible orphan for operator reconciliation.
+
+Only active attachments are retrievable through owner-protected opaque-ID routes. Retrieval resolves
+the persisted server key beneath the configured root, rejects missing, mismatched, traversal, and
+symlink-escape states, and returns validated content type, safe inline disposition, `nosniff`, and
+private, no-store cache handling.
+Deletion commits `pending_delete` before unlinking, immediately blocks retrieval, and removes the row
+only after content is absent. Failed unlink retains the pending row for a deterministic DELETE retry;
+an unexpectedly missing active file is reported before a later pending retry completes cleanup.
+
+This storage foundation contains no BotanicalIdentity, SeedLot, Sowing, Plant, PlantGroup, or Event
+relationship and no caption, attribution, external URL, gallery, or cover-image concept.
+`ATTACHMENT-003` owns those optional photo/reference workflows; no record requires an image.
+
 ## Ownership and mutation boundary
 
 The current installation supports one enabled owner. Domain and reference records are
@@ -505,8 +534,8 @@ product workflows preserve historical rows rather than hard-deleting them.
 
 ## Deferred capabilities
 
-Event attachments, richer structured Event payloads, attachment/photo
-storage, richer germination observations, Orders, other propagation material, advanced search,
+Event/photo relationships, richer structured Event payloads, external image references and gallery
+presentation, richer germination observations, Orders, other propagation material, advanced search,
 analytical dashboards, contextual form help, import/export, PWA installability, enrichment, taxonomy
 reconciliation, deeper Supplier analytics, reminders, weather, and multi-user ownership remain
 planned. `docs/features.json` is the detailed source for dependencies and acceptance criteria.

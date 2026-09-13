@@ -111,8 +111,11 @@ volume and need a separate protected backup.
 7. Run `make up`, `make health`, inspect logs, and verify login through HTTPS.
 
 Never use `docker compose down --volumes` or `docker compose down -v` as an upgrade step; either can
-delete the database volume. A code rollback may not be compatible with a migrated database. Plan a
-reviewed downgrade or restore, and use PostgreSQL's supported `pg_upgrade` or dump/restore procedure
-for major PostgreSQL version changes.
+delete the database and attachment volumes. The dedicated attachment volume is initialized from the
+backend image with UID/GID 10001 ownership and mode 0700. An operator replacing it with a host bind
+mount must provide that runtime account compatible ownership and permissions; do not use 0777. A
+code rollback may not be compatible with a migrated database. Plan a reviewed downgrade or restore,
+and use PostgreSQL's supported `pg_upgrade` or dump/restore procedure for major PostgreSQL version
+changes.
 
 See [backup and restore](backup-restore.md) and the [security architecture](security.md).

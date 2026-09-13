@@ -1,6 +1,6 @@
 # Backup and restore
 
-## Database backup
+## Coordinated database and attachment backup
 
 With the stack running:
 
@@ -8,7 +8,19 @@ With the stack running:
 make backup
 ```
 
-This streams `pg_dump --format=custom` from the PostgreSQL container into a new UTC-timestamped file under ignored `backups/`. It refuses to overwrite the timestamp target and checks that output is non-empty. Protect dumps as sensitive data and copy them off-host according to the desired recovery point objective.
+The command stops the backend to quiesce application writes, verifies every managed attachment's
+stored size and SHA-256 against PostgreSQL metadata, then creates two same-timestamp artifacts under
+ignored `backups/`:
+
+- `florabase-<timestamp>.dump` — a validated custom-format PostgreSQL dump;
+- `florabase-<timestamp>.attachments.tar` — the validated contents of the backend-only attachment
+  volume.
+
+The backend restarts after successful backup or ordinary backup failure. The command refuses to
+overwrite either artifact and removes an incomplete pair. Protect both as sensitive data and copy
+both off-host according to the desired recovery point objective. The pair is application-consistent
+because writes are stopped, but it is not an atomic PostgreSQL/filesystem snapshot; direct writes to
+the database or Docker volume are unsupported and outside this guarantee.
 
 Validate a dump without restoring it:
 
@@ -16,16 +28,41 @@ Validate a dump without restoring it:
 docker compose exec -T db pg_restore --list < backups/example.dump >/dev/null
 ```
 
-## Destructive restore
-
-Restore replaces the configured database, stops the backend, validates the archive listing, recreates the database, restores without source ownership/privileges, and restarts the backend:
+Validate the paired attachment archive without extracting it:
 
 ```bash
-make restore FILE=backups/example.dump CONFIRM_REPLACE=yes CONFIRM_DATABASE=florabase
+docker compose run --rm --no-deps -T backend \
+  python scripts/attachment_artifacts.py validate-archive \
+  < backups/example.attachments.tar
+```
+
+The validator accepts only the server-owned `objects/<shard>/<opaque-key>` layout and rejects
+absolute paths, traversal, links, devices, duplicate members, and unrelated files.
+
+## Destructive restore
+
+Restore replaces the configured database and attachment content. It validates both artifacts before
+stopping the backend, checks the exact database confirmation, recreates and restores PostgreSQL
+without source ownership/privileges, safely stages and swaps the attachment object tree, verifies
+active stored sizes and SHA-256 digests, and only then restarts the backend:
+
+```bash
+make restore \
+  FILE=backups/example.dump \
+  ATTACHMENTS_FILE=backups/example.attachments.tar \
+  CONFIRM_REPLACE=yes \
+  CONFIRM_DATABASE=florabase
 make health
 ```
 
 `CONFIRM_DATABASE` must exactly match `POSTGRES_DB` inside the running database container; the restore script checks it before stopping the backend or dropping anything. Confirm the target `.env` and preserve a pre-restore backup first. Test restore procedures against an isolated disposable stack before relying on them in production. A failed restore may leave the backend stopped; inspect logs and database state before retrying.
+
+Never mix artifacts from different timestamps: restore rejects names that do not match the
+`florabase-<timestamp>.dump` and `florabase-<timestamp>.attachments.tar` pair. An attachment row in
+`pending_delete` may validly have a file or may already have no file; it remains inaccessible and the
+next authenticated DELETE finishes its deterministic cleanup. Active metadata with missing,
+size-mismatched, or digest-mismatched content fails verification and keeps the backend stopped after
+restore.
 
 ## Isolated restore drill
 
@@ -72,15 +109,16 @@ Compare the isolated and source query output. The Alembic revision and infrastru
 
 ## Complete recovery set
 
-No attachment or upload storage exists today, so all application-managed collection and account data
-is in PostgreSQL. A database dump still does not include deployment configuration, reverse-proxy
-configuration, TLS material, or secrets. Coordinate and protect:
+From `ATTACHMENT-002` onward a PostgreSQL dump alone is not a complete Florabase backup. Coordinate
+and protect:
 
-- the PostgreSQL custom-format dump;
+- the matching PostgreSQL custom-format dump and attachment-volume tar archive;
 - deployment configuration and secrets stored in an appropriate secrets backup;
 - the exact application image/source version and migration revision.
 
-If attachment storage is implemented later, its documented durable volume and a database-consistent
-copy will also be required; current backup behavior must not be assumed to cover future files.
+The attachment archive intentionally excludes transient upload/restore files. A crash in the narrow
+window after permanent-file rename but before metadata commit can leave an unreferenced object; the
+archive retains such objects rather than silently deleting data. Automated orphan reconciliation is
+not part of ATTACHMENT-002.
 
 Encryption, retention, off-site copies, restore drills, and access control are operator responsibilities.

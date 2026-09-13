@@ -99,6 +99,7 @@ def test_schema_uses_native_types_named_constraints_and_only_one_botanical_table
     assert tables == {
         "alembic_version",
         "app_metadata",
+        "attachments",
         "auth_sessions",
         "botanical_identities",
         "botanical_profiles",

@@ -4,6 +4,31 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-13 — ATTACHMENT-002 verified
+
+- Added a narrow Attachment aggregate and Alembic revision `20260913_0023`: application-generated
+  UUIDv7 metadata identifies active or retryable `pending_delete` still-image content while a
+  separate opaque UUIDv7-derived key selects a backend-owned local path. No collection-record,
+  Event, external-image, gallery, caption, attribution, or cover-image relationship was introduced.
+- Added owner/CSRF-protected streaming upload and deletion plus owner-protected metadata/content
+  retrieval. Uploads are limited to exactly 25 MiB and fully decode as one still JPEG, PNG, or WebP;
+  normalized filenames remain display-only, SHA-256 and size are stored, permanent placement uses
+  an atomic same-filesystem rename, storage keys resolve beneath one trusted root, and responses do
+  not expose paths. Two-phase pending deletion makes unlink and metadata failures retryable.
+- Added the backend-only `attachment_data` volume, non-root UID/GID 10001 ownership, 0700 directory
+  permissions, isolated development/integration tmpfs roots, and a 32 MiB API proxy ceiling for
+  multipart overhead. Backup and restore now quiesce writes, require a same-timestamp PostgreSQL
+  dump/attachment tar pair, reject unsafe archive members, and verify stored sizes and SHA-256.
+- Independent review confirmed the streaming size, full-decode, opaque-path, deletion-state, volume,
+  migration, and archive boundaries. It tightened metadata/content retrieval to the owner session
+  with `private, no-store` responses, rejects restore artifact filename/timestamp mismatches before
+  Docker operations, adds exact-limit-minus-one and decompression-warning regression coverage, and
+  removes redundant builder-stage filesystem setup.
+- The final canonical `make feature-verify` covers the feature graph, workflow helpers, formatting,
+  linting, strict typing, backend/frontend tests, API drift, disposable PostgreSQL integration,
+  production image builds, the `0022 → 0023 → 0022 → 0023` migration cycle, whitespace, and a
+  working-tree verification receipt. ATTACHMENT-002 is verified; ATTACHMENT-003 remains planned.
+
 ## 2026-09-12 — MAP-002 implemented
 
 - Proved the current production GBIF path before implementation with documented Catalogue of Life
@@ -737,21 +762,23 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260909_0022` on the GEOGRAPHY-002 implementation branch.
+- Alembic head: `20260913_0023` on the ATTACHMENT-002 implementation branch.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
   protected Plant/PlantGroup Event journal and timeline UI; atomic extraction history; retained
   transferred Plant/PlantGroup history; scope-aware hierarchical collection Locations; direct,
   connected-record Supplier summaries; and exact structured BotanicalProfile native ranges over the
-  shared GeographicPlace hierarchy.
-- `PROPAGATION-001` through `PROPAGATION-003`, `SUPPLIER-002`, `LOCATION-002`, `GEOGRAPHY-003`, and
-  `MAP-001` and `BOTANY-002` are verified; `GEOGRAPHY-002` is implemented pending independent
-  review. The next increment remains decided by the machine-readable dependency graph;
-  licensing/version policy and release readiness remain explicit later operator/product decisions.
+  shared GeographicPlace hierarchy; and guarded local still-image attachment storage with
+  authenticated retrieval and coordinated database/content backup.
+- `PROPAGATION-001` through `PROPAGATION-003`, `SUPPLIER-002`, `LOCATION-002`, `GEOGRAPHY-003`,
+  `MAP-001`, `BOTANY-002`, and `ATTACHMENT-002` are verified; `GEOGRAPHY-002` is implemented
+  pending independent review. The next increment remains decided by the machine-readable dependency
+  graph; licensing/version policy and release readiness remain explicit later operator/product decisions.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.
   Other unblocked P2 product items are listed by the machine-readable dependency graph rather than
   prioritized here.
-- Deliberately absent: Event attachments/photos, advanced search, import/export, PWA behavior,
-  offline/synchronization behavior, generic graphs, and multi-user collaboration.
+- Deliberately absent: attachment relationships, external image references, photo galleries and
+  cover images; advanced search, import/export, PWA behavior, offline/synchronization behavior,
+  generic graphs, and multi-user collaboration.

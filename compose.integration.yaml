@@ -26,6 +26,7 @@ services:
       FLORABASE_DATABASE_URL: postgresql+psycopg://florabase_integration:disposable-integration-password@db:5432/florabase_integration
       FLORABASE_DATABASE_DISPOSABLE: "true"
       FLORABASE_CANONICAL_ORIGIN: http://testserver
+      FLORABASE_ATTACHMENT_STORAGE_ROOT: /tmp/florabase-attachments
       COVERAGE_FILE: /tmp/florabase-integration-coverage
       PYTEST_ADDOPTS: -o cache_dir=/tmp/florabase-integration-pytest
     depends_on:
@@ -40,6 +41,8 @@ services:
         pytest --no-cov -m integration
     networks: [integration]
     init: true
+    tmpfs:
+      - /tmp/florabase-attachments:mode=0700
 
 networks:
   integration:

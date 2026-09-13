@@ -69,18 +69,20 @@ BotanicalProfile knowledge. EVENT-002 adds the shared protected Plant and PlantG
 API-ordered vertical desktop timeline that becomes wrapping cards on mobile, lightweight All,
 Observations, Cultivation, and Status filters, and accessible create/edit/delete flows. Transfer is
 classified as Status and extraction as Cultivation. Creation
-effects and historical edit/delete non-rollback behavior are explicit. Further structured payloads beyond
-movement destination, transfer recipient, and the extraction-result Plant relation remain deferred;
-attachments also remain deferred.
+effects and historical edit/delete non-rollback behavior are explicit. Further structured payloads
+beyond movement destination, transfer recipient, and the extraction-result Plant relation remain
+deferred; guarded local Attachment storage is implemented, while Event/photo relationships remain
+deferred to `ATTACHMENT-003`.
 
-Guarded attachment storage and collection photos (`ATTACHMENT-002` and `ATTACHMENT-003`) are part of
-the intended V1 scope after the botanical and map increments. Plant and Event are the essential
-targets; the existing planned contract also covers justified SeedLot, Sowing, and PlantGroup
-relationships without making any record depend on an image.
+Guarded attachment storage (`ATTACHMENT-002`) now provides the local durable binary foundation.
+Collection photos (`ATTACHMENT-003`) remain planned V1 scope. Plant and Event are the essential
+targets; the planned relationship contract also covers justified SeedLot, Sowing, and PlantGroup
+relationships without making any record depend on an image. It may add a distinct optional
+BotanicalIdentity reference/cover image from a local upload or reviewed attributed external source.
 
 ## Later collection enhancements
 
-Planned P2 work deepens existing workflows: guarded attachment storage and photos, dated germination
+Planned P2 work deepens existing workflows: collection photos, dated germination
 observations, Orders, richer events, tuber and cutting lots, labels/QR lookup, advanced search,
 analytical dashboards, contextual form help, guided import/export, visual lineage, and reviewable
 profile enrichment.
@@ -117,8 +119,8 @@ inherit Supplier, retained historical records do not become active holdings, and
 wait for the separate `ORDER-001` transaction model.
 
 After the implemented collection, geography, supplier, provenance-map, external botanical-data,
-structured native-range, and MAP-002 occurrence-density surfaces, the remaining V1 product sequence
-is `ATTACHMENT-002/003` storage and photos. `BOTANY-003` profile enrichment remains separately
+structured native-range, MAP-002 occurrence-density, and ATTACHMENT-002 guarded-storage foundations,
+the remaining V1 product sequence starts with `ATTACHMENT-003` photos. `BOTANY-003` profile enrichment remains separately
 planned while the approved provider lacks a reviewed profile-content contract. `UX-003` follows those
 feature-specific surfaces as global stabilization and polish, then `UX-002` adds contextual help;
 neither blocks the botanical, geography, map, or photo increments.

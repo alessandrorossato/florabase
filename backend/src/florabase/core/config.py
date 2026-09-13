@@ -1,5 +1,6 @@
 from enum import StrEnum
 from functools import lru_cache
+from pathlib import Path
 from typing import Self
 from urllib.parse import urlsplit
 
@@ -49,9 +50,20 @@ class Settings(BaseSettings):
     botanical_cache_ttl_seconds: int = Field(default=86_400, ge=300, le=2_592_000)
     botanical_provider_connect_timeout_seconds: float = Field(default=3.0, ge=0.1, le=30)
     botanical_provider_read_timeout_seconds: float = Field(default=8.0, ge=0.1, le=60)
+    attachment_storage_root: Path = Path("/var/lib/florabase/attachments")
+    attachment_max_bytes: int = Field(default=25 * 1024 * 1024, ge=1, le=25 * 1024 * 1024)
 
     @model_validator(mode="after")
     def validate_secure_production_settings(self) -> Self:
+        if not self.attachment_storage_root.is_absolute():
+            raise ValueError("Attachment storage root must be an absolute path")
+        normalized_root = Path(*self.attachment_storage_root.parts)
+        if normalized_root == Path(normalized_root.anchor):
+            raise ValueError("Attachment storage root must not be a filesystem root")
+        if ".." in self.attachment_storage_root.parts:
+            raise ValueError("Attachment storage root must not contain parent traversal")
+        self.attachment_storage_root = normalized_root
+
         if self.session_absolute_seconds <= self.session_idle_seconds:
             raise ValueError("Absolute session lifetime must exceed idle session lifetime")
 

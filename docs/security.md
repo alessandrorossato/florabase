@@ -9,7 +9,11 @@
 - PostgreSQL and the backend are internal-only in the production-oriented Compose file.
 - API input must use Pydantic validation and database invariants must use constraints where appropriate.
 - Uncaught backend errors stay visible in container logs; clients must not receive production stack traces or secret details.
-- Future upload endpoints must constrain size, media type, decoded content, filenames, and path resolution; files must live on persistent storage outside container layers.
+- Attachment uploads accept only decoder-validated still JPEG, PNG, and WebP content, stream to a
+  25 MiB application limit, treat bounded filenames only as display metadata, and resolve
+  server-owned keys beneath a backend-only persistent trusted root. The production proxy permits
+  32 MiB requests for multipart overhead; SVG and other active or unsupported content is rejected.
+  Metadata and content retrieval require the owner session and use private, no-store responses.
 - Backups contain sensitive collection and account data. Encrypt and restrict them, and test
   restoration.
 

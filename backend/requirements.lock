@@ -46,6 +46,8 @@ mako==1.4.1
     # via alembic
 markupsafe==3.0.3
     # via mako
+pillow==12.3.0
+    # via florabase-backend (backend/pyproject.toml)
 psycopg==3.3.4
     # via florabase-backend (backend/pyproject.toml)
 psycopg-binary==3.3.4
@@ -64,6 +66,8 @@ pydantic-settings==2.15.0
     # via florabase-backend (backend/pyproject.toml)
 python-dotenv==1.2.3
     # via pydantic-settings
+python-multipart==0.0.32
+    # via florabase-backend (backend/pyproject.toml)
 sqlalchemy==2.0.52
     # via
     #   alembic

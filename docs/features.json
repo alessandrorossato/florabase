@@ -510,7 +510,7 @@
       ],
       "dependencies": ["ATTACHMENT-001", "SECURITY-002", "TESTING-001"],
       "priority": "P2",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "ATTACHMENT-003",
