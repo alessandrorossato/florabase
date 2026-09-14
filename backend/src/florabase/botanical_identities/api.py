@@ -17,6 +17,7 @@ from florabase.botanical_identities.schemas import (
 )
 from florabase.botanical_identities.service import (
     BotanicalIdentityConflictError,
+    BotanicalIdentityCoverReferencedError,
     BotanicalIdentityReferencedError,
     create_botanical_identity,
     delete_botanical_identity,
@@ -195,6 +196,16 @@ def delete(
         )
     try:
         delete_botanical_identity(database, botanical_identity)
+    except BotanicalIdentityCoverReferencedError as error:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "code": "botanical_identity_has_cover",
+                "message": (
+                    "Remove this botanical identity's cover image before deleting the identity."
+                ),
+            },
+        ) from error
     except BotanicalIdentityReferencedError as error:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

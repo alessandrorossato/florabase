@@ -22,6 +22,7 @@ import {
 } from "../components/CollectionUI";
 import { EventJournal } from "../events/EventJournal";
 import { LineagePanel } from "../lineage/LineagePanel";
+import { PhotosSection } from "../photos/PhotosSection";
 import {
   listGeographicPlaces,
   type GeographicPlaceResponse,
@@ -323,7 +324,7 @@ function Detail({
   const hasDirectOrigin = !value.originating_sowing_id;
   const originatingGroup =
     record.kind === "plant" ? record.value.originating_plant_group : null;
-  const allowedTabs = ["overview", "events", "lineage"];
+  const allowedTabs = ["overview", "events", "photos", "lineage"];
   const [tab, setTab] = useState(
     initialTab && allowedTabs.includes(initialTab) ? initialTab : "overview",
   );
@@ -361,6 +362,7 @@ function Detail({
         tabs={[
           { id: "overview", label: "Overview" },
           { id: "events", label: "Events" },
+          { id: "photos", label: "Photos" },
           { id: "lineage", label: "Lineage" },
         ]}
         selected={tab}
@@ -573,6 +575,19 @@ function Detail({
           <LineagePanel
             kind={record.kind === "plant" ? "plants" : "plant-groups"}
             id={value.id}
+          />
+        </div>
+      )}
+      {tab === "photos" && (
+        <div
+          className="detail-tab-panel"
+          role="tabpanel"
+          aria-labelledby="tab-photos"
+        >
+          <PhotosSection
+            target={record.kind === "plant" ? "plant" : "plant_group"}
+            targetId={value.id}
+            targetLabel={value.label ?? value.botanical_identity.display_label}
           />
         </div>
       )}

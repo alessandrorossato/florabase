@@ -14,6 +14,14 @@
   server-owned keys beneath a backend-only persistent trusted root. The production proxy permits
   32 MiB requests for multipart overhead; SVG and other active or unsupported content is rejected.
   Metadata and content retrieval require the owner session and use private, no-store responses.
+- External collection images persist only validated HTTPS image/source URLs and attribution. The
+  backend never fetches them; the UI shows the remote host and privacy disclosure before an explicit
+  load, sets `referrerPolicy="no-referrer"` on the image element, and never auto-retries failures.
+- An external BotanicalIdentity cover additionally requires an explicit privacy acknowledgement
+  before it can become current. That saved opt-in permits automatic display on the identity detail
+  page; the browser still sends no referrer, the URL carries no Florabase record or session data,
+  failures are not retried automatically, and the backend never downloads, proxies, or validates by
+  contacting the remote host.
 - Backups contain sensitive collection and account data. Encrypt and restrict them, and test
   restoration.
 

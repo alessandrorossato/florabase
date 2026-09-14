@@ -178,6 +178,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/botanical-identities/{botanical_identity_id}/cover-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Botanical Identity Cover Image */
+        get: operations["getBotanicalIdentityCoverImage"];
+        put?: never;
+        post?: never;
+        /** Delete Botanical Identity Cover Image */
+        delete: operations["deleteBotanicalIdentityCoverImage"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/botanical-identities/{botanical_identity_id}/cover-image/external": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Set External Botanical Identity Cover Image */
+        put: operations["setExternalBotanicalIdentityCoverImage"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/botanical-identities/{botanical_identity_id}/cover-image/local": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Set Local Botanical Identity Cover Image */
+        post: operations["setLocalBotanicalIdentityCoverImage"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/botanical-identities/{botanical_identity_id}/external-taxa/search": {
         parameters: {
             query?: never;
@@ -313,6 +365,93 @@ export interface paths {
         post?: never;
         /** Remove Native Range */
         delete: operations["removeBotanicalNativeRange"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collection-photos/external/{reference_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete External Image Reference */
+        delete: operations["deleteExternalImageReference"];
+        options?: never;
+        head?: never;
+        /** Update External Image Reference */
+        patch: operations["updateExternalImageReference"];
+        trace?: never;
+    };
+    "/api/v1/collection-photos/local/{photo_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Collection Photo */
+        delete: operations["deleteCollectionPhoto"];
+        options?: never;
+        head?: never;
+        /** Update Collection Photo */
+        patch: operations["updateCollectionPhoto"];
+        trace?: never;
+    };
+    "/api/v1/collection-records/{target_type}/{target_id}/photos": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Collection Photos */
+        get: operations["listCollectionPhotos"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collection-records/{target_type}/{target_id}/photos/external": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create External Image Reference */
+        post: operations["createExternalImageReference"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collection-records/{target_type}/{target_id}/photos/local": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Collection Photo */
+        post: operations["uploadCollectionPhoto"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -1198,6 +1337,26 @@ export interface components {
              */
             file: string;
         };
+        /** Body_setLocalBotanicalIdentityCoverImage */
+        Body_setLocalBotanicalIdentityCoverImage: {
+            /**
+             * File
+             * @description JPEG, PNG, or WebP identity cover
+             */
+            file: string;
+        };
+        /** Body_uploadCollectionPhoto */
+        Body_uploadCollectionPhoto: {
+            /** Attribution */
+            attribution?: string | null;
+            /** Caption */
+            caption?: string | null;
+            /**
+             * File
+             * @description JPEG, PNG, or WebP collection photo
+             */
+            file: string;
+        };
         /** BotanicalIdentityCollectionResponse */
         BotanicalIdentityCollectionResponse: {
             /** Events */
@@ -1425,6 +1584,110 @@ export interface components {
             /** Resulting Plant Id */
             resulting_plant_id?: string | null;
         };
+        /** ExternalCoverResponse */
+        ExternalCoverResponse: {
+            /** Attribution */
+            attribution: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Image Url */
+            image_url: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "external";
+            /** Licence Label */
+            licence_label: string | null;
+            /** Licence Url */
+            licence_url: string | null;
+            /** Source Url */
+            source_url: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ExternalCoverWrite */
+        ExternalCoverWrite: {
+            /** Attribution */
+            attribution: string;
+            /** Image Url */
+            image_url: string;
+            /** Licence Label */
+            licence_label?: string | null;
+            /** Licence Url */
+            licence_url?: string | null;
+            /**
+             * Privacy Acknowledged
+             * @constant
+             */
+            privacy_acknowledged: true;
+            /** Source Url */
+            source_url: string;
+        };
+        /** ExternalImageCreate */
+        ExternalImageCreate: {
+            /** Attribution */
+            attribution: string;
+            /** Caption */
+            caption?: string | null;
+            /** Image Url */
+            image_url: string;
+            /** Source Url */
+            source_url: string;
+        };
+        /** ExternalImageResponse */
+        ExternalImageResponse: {
+            /** Attribution */
+            attribution: string;
+            /** Caption */
+            caption: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Image Url */
+            image_url: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "external";
+            /** Source Url */
+            source_url: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** ExternalImageUpdate */
+        ExternalImageUpdate: {
+            /** Attribution */
+            attribution: string;
+            /** Caption */
+            caption?: string | null;
+            /** Image Url */
+            image_url: string;
+            /** Source Url */
+            source_url: string;
+        };
         /** ExternalTaxonLinkCreate */
         ExternalTaxonLinkCreate: {
             /** External Id */
@@ -1602,6 +1865,95 @@ export interface components {
             ancestors: (components["schemas"]["SeedLotLineageNode"] | components["schemas"]["SowingLineageNode"] | components["schemas"]["PlantLineageNode"] | components["schemas"]["PlantGroupLineageNode"])[];
             /** Subject */
             subject: components["schemas"]["SeedLotLineageNode"] | components["schemas"]["SowingLineageNode"] | components["schemas"]["PlantLineageNode"] | components["schemas"]["PlantGroupLineageNode"];
+        };
+        /** LocalCoverResponse */
+        LocalCoverResponse: {
+            /**
+             * Attachment Id
+             * Format: uuid
+             */
+            attachment_id: string;
+            /** Content Url */
+            content_url: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deletion Pending */
+            deletion_pending: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "local";
+            /**
+             * Media Type
+             * @enum {string}
+             */
+            media_type: "image/jpeg" | "image/png" | "image/webp";
+            /** Original Filename */
+            original_filename: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** LocalPhotoResponse */
+        LocalPhotoResponse: {
+            /**
+             * Attachment Id
+             * Format: uuid
+             */
+            attachment_id: string;
+            /** Attribution */
+            attribution: string | null;
+            /** Caption */
+            caption: string | null;
+            /** Content Url */
+            content_url: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deletion Pending */
+            deletion_pending: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "local";
+            /**
+             * Media Type
+             * @enum {string}
+             */
+            media_type: "image/jpeg" | "image/png" | "image/webp";
+            /** Original Filename */
+            original_filename: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** LocalPhotoUpdate */
+        LocalPhotoUpdate: {
+            /** Attribution */
+            attribution?: string | null;
+            /** Caption */
+            caption?: string | null;
         };
         /** LocationCreate */
         LocationCreate: {
@@ -3808,6 +4160,142 @@ export interface operations {
             };
         };
     };
+    getBotanicalIdentityCoverImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": (components["schemas"]["LocalCoverResponse"] | components["schemas"]["ExternalCoverResponse"]) | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteBotanicalIdentityCoverImage: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    setExternalBotanicalIdentityCoverImage: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExternalCoverWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExternalCoverResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    setLocalBotanicalIdentityCoverImage: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_setLocalBotanicalIdentityCoverImage"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocalCoverResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     searchExternalTaxa: {
         parameters: {
             query: {
@@ -4248,6 +4736,250 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteExternalImageReference: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                reference_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateExternalImageReference: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                reference_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExternalImageUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExternalImageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteCollectionPhoto: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                photo_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateCollectionPhoto: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                photo_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LocalPhotoUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocalPhotoResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listCollectionPhotos: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event";
+                target_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": (components["schemas"]["LocalPhotoResponse"] | components["schemas"]["ExternalImageResponse"])[];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createExternalImageReference: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event";
+                target_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExternalImageCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExternalImageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    uploadCollectionPhoto: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event";
+                target_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_uploadCollectionPhoto"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LocalPhotoResponse"];
+                };
             };
             /** @description Validation Error */
             422: {

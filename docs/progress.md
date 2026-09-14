@@ -4,6 +4,43 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-14 — ATTACHMENT-003 implemented
+
+- Added revision `20260913_0024` with separate `LocalCollectionPhoto`, `ExternalImageReference`, and
+  `BotanicalIdentityCoverImage` tables. Collection photos retain exactly one explicit target among
+  SeedLot, Sowing, Plant, PlantGroup, and Event. The separate cover row has one unique
+  BotanicalIdentity, exactly one local/external source mode, unique local Attachment ownership, and
+  HTTPS/attribution constraints. A transaction-locked database guard prevents one Attachment from
+  being a collection photo and identity cover simultaneously; populated photo or cover metadata
+  blocks downgrade.
+- Added authenticated target-scoped listing and owner/CSRF-protected upload, create, metadata-edit,
+  and remove APIs. Local upload reuses ATTACHMENT-002 validation/storage and coordinates Attachment
+  plus relationship persistence with cleanup on relation failure. Local removal preserves
+  `active → pending_delete → unlink → relationship/Attachment deletion`, leaving failed or missing
+  content as a hidden retry-only relationship. Direct Attachment deletion and Event hard deletion
+  are blocked while a photo owns or references them; historical targets still accept photos.
+- Added a reusable responsive Photos section to SeedLot, Sowing, Plant, and PlantGroup details and a
+  focused Event-history dialog. Galleries distinguish uploaded content from external references,
+  order by creation time then ID, cover empty/loading/broken/mutation states, and use caption-based
+  or record-context alt text. External images show attribution and source host without loading,
+  require an explicit privacy-disclosed browser action, send no referrer, and are never fetched by
+  the backend.
+- Added a conservative current cover to BotanicalIdentity details with local upload or attributed
+  external HTTPS metadata, explicit external-host privacy acknowledgement, automatic no-referrer
+  rendering after opt-in, and accessible replace/remove flows. Local replacement/removal composes
+  with ATTACHMENT-002 pending-delete retries; external changes are metadata-only. Cover ownership
+  blocks direct Attachment deletion, and an identity with a cover receives a meaningful deletion
+  conflict. No automatic discovery, provider search, cover history, album or reordering, EXIF
+  inspection, thumbnail, derivative, background media worker, list-card rendering, or
+  BotanicalIdentity gallery was introduced; compact imagery remains for `UX-003` with a justified
+  thumbnail strategy.
+- Verification: focused affected backend tests (`35 passed`) and focused photo/cover component tests
+  (`7 passed`); the backend suite (`354 passed`, 90.21% coverage), frontend suite (`150 passed`),
+  and disposable PostgreSQL integration suite (`323 passed`) pass. The canonical
+  `make feature-verify` gate covers those suites plus feature/workflow checks, API drift, production
+  builds, the `0023 ↔ 0024` migration cycle with populated-data guard, whitespace, and the
+  working-tree receipt.
+
 ## 2026-09-13 — ATTACHMENT-002 verified
 
 - Added a narrow Attachment aggregate and Alembic revision `20260913_0023`: application-generated
@@ -762,7 +799,7 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260913_0023` on the ATTACHMENT-002 implementation branch.
+- Alembic head: `20260913_0024` on the ATTACHMENT-003 implementation branch.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
@@ -773,12 +810,14 @@ implementation detail.
   authenticated retrieval and coordinated database/content backup.
 - `PROPAGATION-001` through `PROPAGATION-003`, `SUPPLIER-002`, `LOCATION-002`, `GEOGRAPHY-003`,
   `MAP-001`, `BOTANY-002`, and `ATTACHMENT-002` are verified; `GEOGRAPHY-002` is implemented
-  pending independent review. The next increment remains decided by the machine-readable dependency
-  graph; licensing/version policy and release readiness remain explicit later operator/product decisions.
+  pending independent review, and `ATTACHMENT-003` is implemented pending independent review. The
+  next increment remains decided by the machine-readable dependency graph; licensing/version policy
+  and release readiness remain explicit later operator/product decisions.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.
   Other unblocked P2 product items are listed by the machine-readable dependency graph rather than
   prioritized here.
-- Deliberately absent: attachment relationships, external image references, photo galleries and
-  cover images; advanced search, import/export, PWA behavior, offline/synchronization behavior,
+- Deliberately absent: thumbnails/derivatives, collection-photo primary designations, identity-cover
+  history or galleries, compact directory/dashboard cover rendering, automatic/provider image
+  discovery, advanced search, import/export, PWA behavior, offline/synchronization behavior,
   generic graphs, and multi-user collaboration.

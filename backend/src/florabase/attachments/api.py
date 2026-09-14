@@ -52,6 +52,8 @@ def _http_error(error: AttachmentStorageError | AttachmentOperationError) -> HTT
         "attachment_content_mismatch": status.HTTP_409_CONFLICT,
         "unsafe_storage_key": status.HTTP_409_CONFLICT,
         "unsafe_storage_path": status.HTTP_409_CONFLICT,
+        "attachment_owned_by_photo": status.HTTP_409_CONFLICT,
+        "attachment_owned_by_identity_cover": status.HTTP_409_CONFLICT,
     }.get(error.code, status.HTTP_503_SERVICE_UNAVAILABLE)
     if error.code in {
         "invalid_filename",

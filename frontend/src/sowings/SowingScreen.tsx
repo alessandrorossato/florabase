@@ -22,6 +22,7 @@ import {
   type LocationResponse,
 } from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
+import { PhotosSection } from "../photos/PhotosSection";
 import { listSeedLots, type SeedLotResponse } from "../seed-lots/api";
 import { PropagationPath } from "../propagation/PropagationPath";
 import {
@@ -228,7 +229,9 @@ function Detail({
     };
   }, [sowing.id]);
   const [tab, setTab] = useState(
-    initialTab === "lineage" ? "lineage" : "overview",
+    initialTab && ["overview", "photos", "lineage"].includes(initialTab)
+      ? initialTab
+      : "overview",
   );
   const hasCultivation = Boolean(
     sowing.substrate ??
@@ -303,6 +306,7 @@ function Detail({
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
+          { id: "photos", label: "Photos" },
           { id: "lineage", label: "Propagation" },
         ]}
         selected={tab}
@@ -537,6 +541,21 @@ function Detail({
               ]}
             />
           )}
+        </div>
+      )}
+      {tab === "photos" && (
+        <div
+          className="detail-tab-panel"
+          role="tabpanel"
+          aria-labelledby="tab-photos"
+        >
+          <PhotosSection
+            target="sowing"
+            targetId={sowing.id}
+            targetLabel={
+              sowing.label ?? sowing.seed_lot.botanical_identity_display_label
+            }
+          />
         </div>
       )}
     </article>

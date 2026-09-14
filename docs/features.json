@@ -515,15 +515,16 @@
     {
       "id": "ATTACHMENT-003",
       "category": "attachment",
-      "description": "Relate photos to collection records and history",
+      "description": "Relate photos to collection records and add an optional BotanicalIdentity cover",
       "acceptance_criteria": [
         "Locally managed photos and external image references use distinct semantics and explicit supported relationships to SeedLot, Sowing, Plant, PlantGroup, or justified collection events",
         "The UI distinguishes uploaded content from source URLs and exposes captions, attribution, broken-link or loading failures, and privacy-safe external-media behavior without implying unsupported generic attachment targets",
-        "Inactive collection records retain their photo history, records remain usable without images, and a future optional primary or cover designation supports compact inventory views without prescribing persistence mechanics early"
+        "Inactive collection records retain their photo history and remain usable without images, while each BotanicalIdentity may independently have one optional local or operator-approved external representative cover without becoming a collection-photo target",
+        "Identity covers support safe replacement and removal but no version history, automatic discovery, provider search, albums or reordering, EXIF inspection, thumbnails, derivatives, background media workers, compact directory rendering, or BotanicalIdentity gallery"
       ],
       "dependencies": ["ATTACHMENT-002", "EVENT-002", "SEED-004"],
       "priority": "P2",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "GERMINATION-001",

@@ -25,7 +25,12 @@ def attachment(state: AttachmentState = AttachmentState.ACTIVE) -> Attachment:
 
 def database_for(item: Attachment) -> MagicMock:
     database = MagicMock()
-    database.scalar.return_value = item
+    database.scalar.side_effect = lambda statement: (
+        None
+        if "local_collection_photos" in str(statement)
+        or "botanical_identity_cover_images" in str(statement)
+        else item
+    )
     return database
 
 
@@ -103,5 +108,6 @@ def test_delete_database_failures_are_truthful() -> None:
 
 def test_delete_missing_metadata_returns_false() -> None:
     database = MagicMock()
+    database.scalar.side_effect = None
     database.scalar.return_value = None
     assert delete_attachment(database, MagicMock(), uuid7()) is False

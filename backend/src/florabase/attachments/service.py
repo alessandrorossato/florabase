@@ -69,6 +69,20 @@ def delete_attachment(database: Session, storage: AttachmentStorage, attachment_
     if attachment is None:
         return False
 
+    from florabase.collection_photos.service import attachment_image_owner
+
+    image_owner = attachment_image_owner(database, attachment_id)
+    if image_owner == "collection_photo":
+        raise AttachmentOperationError(
+            "attachment_owned_by_photo",
+            "This attachment is owned by a collection photo; remove the photo instead",
+        )
+    if image_owner == "botanical_identity_cover":
+        raise AttachmentOperationError(
+            "attachment_owned_by_identity_cover",
+            "This attachment is owned by a botanical identity cover; remove the cover instead",
+        )
+
     storage_key = attachment.storage_key
     was_active = attachment.state == AttachmentState.ACTIVE
     if was_active:

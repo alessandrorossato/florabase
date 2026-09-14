@@ -521,9 +521,65 @@ Deletion commits `pending_delete` before unlinking, immediately blocks retrieval
 only after content is absent. Failed unlink retains the pending row for a deterministic DELETE retry;
 an unexpectedly missing active file is reported before a later pending retry completes cleanup.
 
-This storage foundation contains no BotanicalIdentity, SeedLot, Sowing, Plant, PlantGroup, or Event
-relationship and no caption, attribution, external URL, gallery, or cover-image concept.
-`ATTACHMENT-003` owns those optional photo/reference workflows; no record requires an image.
+This storage foundation itself contains no collection-record relationship. `ATTACHMENT-003` builds
+explicit optional collection-photo and BotanicalIdentity-cover ownership layers on it while no
+record requires an image.
+
+### Collection photos and external image references
+
+A local collection photo is a one-to-one owner of exactly one active `Attachment`, with optional
+caption and attribution. An external image reference stores no binary: it contains separate
+absolute HTTPS image and source-page URLs, required attribution, and an optional caption. Florabase
+never fetches an external image on the backend, and the browser loads one only after the operator
+chooses to disclose normal network information to its host; the image request sends no referrer.
+
+Both forms have an application-generated UUIDv7 ID, timezone-aware UTC creation/update timestamps,
+and exactly one nullable foreign key to a `SeedLot`, `Sowing`, `Plant`, `PlantGroup`, or `Event`.
+Database constraints enforce the one-target invariant, and each local `Attachment` can belong to at
+most one photo. A transaction-locked database ownership check also prevents a locally managed
+Attachment from simultaneously becoming a BotanicalIdentity cover. These are concrete supported
+relationships rather than a generic polymorphic target. Changing caption, attribution, or external
+URLs never retargets a row.
+
+Lists combine both forms in ascending creation time and ID order. Inactive collection records retain
+their photo history. Only Event currently has an ordinary hard-delete route, which refuses deletion
+while photo rows remain; the other four targets continue to have no hard-delete API.
+
+Local removal first commits the Attachment as `pending_delete`, which hides it from ordinary display,
+then unlinks the binary and finally deletes both relationship and Attachment metadata. Unlink,
+missing-file, or final metadata failures leave an explicit retry-only state. External removal deletes
+Florabase metadata only and never contacts the remote host. Collection-photo galleries have no
+primary/cover selection and remain independent from BotanicalIdentity reference imagery.
+
+### BotanicalIdentity cover images
+
+A `BotanicalIdentityCoverImage` is the optional current representative image for exactly one
+BotanicalIdentity. It is reference presentation for a taxon or cultivar, not evidence about a
+SeedLot, Sowing, Plant, PlantGroup, or Event and not part of collection-photo history. A unique
+identity foreign key enforces at most one cover per identity. The source-mode constraint requires
+exactly one of:
+
+- a locally managed cover that uniquely owns one ATTACHMENT-002 `Attachment`; or
+- external metadata containing separate absolute HTTPS image and source-page URLs, required
+  attribution, and optional licence label and HTTPS licence URL.
+
+The local-upload API creates a new Attachment through the existing validated JPEG/PNG/WebP, 25 MiB
+storage path; it never accepts an arbitrary existing Attachment ID. The external API stores only
+validated metadata, requires an explicit privacy acknowledgement, never infers a licence, and never
+makes a backend request to any supplied URL. Once saved, the browser may render the current external
+cover on that identity's detail page with no referrer because saving it records the operator's
+informed opt-in to normal network disclosure to the image host.
+
+Replacement updates this one current presentation image and creates no version history. Replacing
+or removing a local cover uses `active → pending_delete → unlink → relationship/Attachment cleanup`;
+failed or unexpectedly missing content remains represented by a retry-only cover relation until
+cleanup succeeds. Replacing or removing an external cover changes metadata only. Direct Attachment
+deletion and BotanicalIdentity hard deletion are explicitly blocked while the active cover remains.
+
+This increment has no automatic discovery, provider-backed search, cover album or reordering, EXIF
+inspection, generated thumbnail, derivative, background media worker, or compact
+directory/dashboard rendering. `UX-003` may consider compact identity imagery only together with an
+efficient thumbnail strategy; shrinking many original files in CSS is not such a strategy.
 
 ## Ownership and mutation boundary
 
@@ -534,8 +590,8 @@ product workflows preserve historical rows rather than hard-deleting them.
 
 ## Deferred capabilities
 
-Event/photo relationships, richer structured Event payloads, external image references and gallery
-presentation, richer germination observations, Orders, other propagation material, advanced search,
+Richer structured Event payloads, richer germination observations, Orders, other propagation
+material, advanced search,
 analytical dashboards, contextual form help, import/export, PWA installability, enrichment, taxonomy
 reconciliation, deeper Supplier analytics, reminders, weather, and multi-user ownership remain
 planned. `docs/features.json` is the detailed source for dependencies and acceptance criteria.

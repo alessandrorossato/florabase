@@ -12,6 +12,7 @@ import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { locationsForScope, type LocationResponse } from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
+import { PhotosSection } from "../photos/PhotosSection";
 import type { PartialDate } from "../seed-lots/api";
 import {
   createEvent,
@@ -196,6 +197,7 @@ export function EventJournal({
   const [filter, setFilter] = useState<EventFilter>("all");
   const [editor, setEditor] = useState<EventResponse | "create" | null>(null);
   const [deleting, setDeleting] = useState<EventResponse | null>(null);
+  const [photoEvent, setPhotoEvent] = useState<EventResponse | null>(null);
   const [form, setForm] = useState<EventFormState>(blankForm);
   const [mutation, setMutation] = useState<MutationState>({ status: "idle" });
   const [notice, setNotice] = useState<JournalNotice | null>(null);
@@ -369,7 +371,9 @@ export function EventJournal({
       setMutation({
         status: "error",
         message:
-          "Florabase could not delete this Event. Check the connection and try again.",
+          error instanceof ApiError && error.status === 409
+            ? "This Event cannot be deleted while it has photo references or belongs to an authoritative operation. Remove its photos or use the operation's undo flow first."
+            : "Florabase could not delete this Event. Check the connection and try again.",
       });
     }
   }
@@ -467,6 +471,15 @@ export function EventJournal({
                         className="event-actions"
                         aria-label={`${eventKindLabels[item.kind]} actions`}
                       >
+                        <button
+                          type="button"
+                          className="button--secondary"
+                          onClick={() => {
+                            setPhotoEvent(item);
+                          }}
+                        >
+                          Photos
+                        </button>
                         {!["extraction", "reintegration"].includes(
                           item.kind,
                         ) && (
@@ -553,6 +566,31 @@ export function EventJournal({
             </ol>
           )}
         </>
+      )}
+      {photoEvent && (
+        <EventDialog
+          title={`${eventKindLabels[photoEvent.kind]} photos`}
+          onClose={() => {
+            setPhotoEvent(null);
+          }}
+        >
+          <PhotosSection
+            target="event"
+            targetId={photoEvent.id}
+            targetLabel={`${eventKindLabels[photoEvent.kind]} for ${targetLabel}`}
+          />
+          <div className="actions">
+            <button
+              className="button--secondary"
+              type="button"
+              onClick={() => {
+                setPhotoEvent(null);
+              }}
+            >
+              Close
+            </button>
+          </div>
+        </EventDialog>
       )}
       {editor && (
         <EventDialog

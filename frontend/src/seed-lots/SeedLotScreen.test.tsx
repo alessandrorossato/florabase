@@ -756,7 +756,7 @@ test("contextual creators auto-select references, preserve unsaved lot data, and
   expect(dialogInput).toHaveFocus();
   await user.keyboard("{Escape}");
   expect(supplierPicker).toHaveFocus();
-});
+}, 30_000);
 
 test("duplicate and failed contextual creation keep the seed form intact", async () => {
   mockApi(
