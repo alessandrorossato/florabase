@@ -71,19 +71,23 @@ Observations, Cultivation, and Status filters, and accessible create/edit/delete
 classified as Status and extraction as Cultivation. Creation
 effects and historical edit/delete non-rollback behavior are explicit. Further structured payloads
 beyond movement destination, transfer recipient, and the extraction-result Plant relation remain
-deferred; guarded local Attachment storage is implemented, while Event/photo relationships remain
-deferred to `ATTACHMENT-003`.
+deferred. Guarded local Attachment storage and explicit Event photo relationships are implemented.
 
 Guarded attachment storage (`ATTACHMENT-002`) now provides the local durable binary foundation.
-Collection photos (`ATTACHMENT-003`) remain planned V1 scope. Plant and Event are the essential
-targets; the planned relationship contract also covers justified SeedLot, Sowing, and PlantGroup
-relationships without making any record depend on an image. It may add a distinct optional
-BotanicalIdentity reference/cover image from a local upload or reviewed attributed external source.
+Collection photos (`ATTACHMENT-003`) add distinct local-upload and attributed external-reference
+semantics for SeedLot, Sowing, Plant, PlantGroup, and Event without making any record depend on an
+image. Galleries are available on each collection detail and contextually for Events. External
+collection images require explicit browser loading and are never fetched by the backend. A separate
+optional BotanicalIdentity representative cover may be locally managed or an explicitly configured
+external HTTPS image; saving an external cover is informed opt-in to future browser requests on that
+identity's detail page. Automatic discovery, provider-backed search, cover history, albums or
+reordering, EXIF inspection, thumbnails, derivatives, background media workers, and
+BotanicalIdentity galleries remain outside this increment.
 
 ## Later collection enhancements
 
-Planned P2 work deepens existing workflows: collection photos, dated germination
-observations, Orders, richer events, tuber and cutting lots, labels/QR lookup, advanced search,
+Planned P2 work deepens existing workflows with dated germination observations, Orders, richer
+events, tuber and cutting lots, labels/QR lookup, advanced search,
 analytical dashboards, contextual form help, guided import/export, visual lineage, and reviewable
 profile enrichment.
 
@@ -104,6 +108,9 @@ workflow narrative over explicit records, not a new persisted super-entity and n
 infer missing lineage. `UX-003` will revisit Seeds, Sowings, Plants, Events, and their detail pages
 after the guided transitions exist, improving page purpose, consistent actions, cross-linking, and
 mobile/desktop navigation without changing what the verified `UX-001` increment delivered.
+Compact BotanicalIdentity directory/dashboard cover imagery is also deferred to `UX-003`, where it
+must be paired with an efficient thumbnail strategy instead of loading many original-size files and
+shrinking them only with CSS.
 
 `PLANT-005` implements transferred/ceded outcomes for Plants and entire PlantGroups. A locked focused
 operation atomically records the transfer Event and lifecycle, with optional free-text recipient,
@@ -119,8 +126,8 @@ inherit Supplier, retained historical records do not become active holdings, and
 wait for the separate `ORDER-001` transaction model.
 
 After the implemented collection, geography, supplier, provenance-map, external botanical-data,
-structured native-range, MAP-002 occurrence-density, and ATTACHMENT-002 guarded-storage foundations,
-the remaining V1 product sequence starts with `ATTACHMENT-003` photos. `BOTANY-003` profile enrichment remains separately
+structured native-range, MAP-002 occurrence-density, and ATTACHMENT-003 photo foundations, the
+remaining V1 product sequence continues beyond photos. `BOTANY-003` profile enrichment remains separately
 planned while the approved provider lacks a reviewed profile-content contract. `UX-003` follows those
 feature-specific surfaces as global stabilization and polish, then `UX-002` adds contextual help;
 neither blocks the botanical, geography, map, or photo increments.

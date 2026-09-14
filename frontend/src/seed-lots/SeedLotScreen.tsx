@@ -17,6 +17,7 @@ import {
   DetailTabs,
 } from "../components/CollectionUI";
 import { LineagePanel } from "../lineage/LineagePanel";
+import { PhotosSection } from "../photos/PhotosSection";
 import { listSowings, type SowingResponse } from "../sowings/api";
 import {
   listProvenanceSites,
@@ -320,7 +321,8 @@ function Detail({
   initialTab?: string;
 }) {
   const [tab, setTab] = useState(
-    initialTab && ["overview", "sowings", "lineage"].includes(initialTab)
+    initialTab &&
+      ["overview", "sowings", "photos", "lineage"].includes(initialTab)
       ? initialTab
       : "overview",
   );
@@ -376,6 +378,7 @@ function Detail({
         tabs={[
           { id: "overview", label: "Overview" },
           { id: "sowings", label: "Sowings" },
+          { id: "photos", label: "Photos" },
           { id: "lineage", label: "Lineage" },
         ]}
         selected={tab}
@@ -482,6 +485,19 @@ function Detail({
           aria-labelledby="tab-lineage"
         >
           <LineagePanel kind="seed-lots" id={lot.id} />
+        </div>
+      )}
+      {tab === "photos" && (
+        <div
+          className="detail-tab-panel"
+          role="tabpanel"
+          aria-labelledby="tab-photos"
+        >
+          <PhotosSection
+            target="seed_lot"
+            targetId={lot.id}
+            targetLabel={lot.label ?? lot.botanical_identity.display_label}
+          />
         </div>
       )}
     </section>

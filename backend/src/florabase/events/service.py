@@ -254,6 +254,14 @@ def delete_event(database: Session, event: Event) -> None:
             "operation_event_requires_undo",
             "An Event owned by an authoritative operation cannot be deleted as an ordinary Event",
         )
+    from florabase.collection_photos.service import target_photo_count
+
+    photo_count = target_photo_count(database, "event", event.id)
+    if photo_count:
+        raise EventDomainConflictError(
+            "event_has_photos",
+            f"Remove the Event's {photo_count} photo reference(s) before deleting it",
+        )
     database.delete(event)
     database.flush()
 

@@ -22,6 +22,10 @@ class BotanicalIdentityReferencedError(Exception):
     pass
 
 
+class BotanicalIdentityCoverReferencedError(Exception):
+    pass
+
+
 def find_duplicate(
     database: Session, scientific_name: str, cultivar_name: str | None
 ) -> BotanicalIdentity | None:
@@ -90,6 +94,15 @@ def update_botanical_identity(
 
 def delete_botanical_identity(database: Session, botanical_identity: BotanicalIdentity) -> None:
     identity_id = botanical_identity.id
+    from florabase.collection_photos.model import BotanicalIdentityCoverImage
+
+    cover_count = database.scalar(
+        select(func.count())
+        .select_from(BotanicalIdentityCoverImage)
+        .where(BotanicalIdentityCoverImage.botanical_identity_id == identity_id)
+    )
+    if cover_count:
+        raise BotanicalIdentityCoverReferencedError
     references = (
         database.scalar(
             select(func.count())

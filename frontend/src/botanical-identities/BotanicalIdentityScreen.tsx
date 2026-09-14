@@ -21,6 +21,7 @@ import {
 } from "../components/CollectionUI";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import { EventFeed } from "../events/EventFeed";
+import { BotanicalIdentityCover } from "../photos/BotanicalIdentityCover";
 import { ExternalBotanicalDataPanel } from "./ExternalBotanicalDataPanel";
 import {
   conflictExistingId,
@@ -129,7 +130,7 @@ function IdentityDetails({
     } catch (error: unknown) {
       setMutationError(
         error instanceof ApiError && error.status === 409
-          ? "This botanical identity is used by collection records and cannot be deleted."
+          ? "This botanical identity has collection records or a cover image. Remove those references before deleting it."
           : "Florabase could not delete this botanical identity.",
       );
       setConfirmDelete(false);
@@ -182,6 +183,11 @@ function IdentityDetails({
             </button>
           </details>
         }
+      />
+      <BotanicalIdentityCover
+        csrfToken={csrfToken}
+        identityId={identity.id}
+        identityLabel={identity.display_label}
       />
       {mutationError && (
         <div className="notice notice--error" role="alert">

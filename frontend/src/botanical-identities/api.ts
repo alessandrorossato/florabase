@@ -9,6 +9,11 @@ export type BotanicalIdentityUpdate =
   components["schemas"]["BotanicalIdentityUpdate"];
 export type ExternalTaxonLinkResponse =
   components["schemas"]["ExternalTaxonLinkResponse"];
+export type ExternalCoverWrite = components["schemas"]["ExternalCoverWrite"];
+export type LocalCoverResponse = components["schemas"]["LocalCoverResponse"];
+export type ExternalCoverResponse =
+  components["schemas"]["ExternalCoverResponse"];
+export type BotanicalIdentityCover = LocalCoverResponse | ExternalCoverResponse;
 export type TaxonSearchResponse = components["schemas"]["TaxonSearchResponse"];
 type HTTPValidationError = components["schemas"]["HTTPValidationError"];
 
@@ -112,6 +117,61 @@ export function deleteBotanicalIdentity(
     method: "DELETE",
     headers: { "X-CSRF-Token": csrfToken },
   });
+}
+
+export function getBotanicalIdentityCover(
+  id: string,
+  signal?: AbortSignal,
+): Promise<BotanicalIdentityCover | null> {
+  return requestJson(
+    `/api/v1/botanical-identities/${encodeURIComponent(id)}/cover-image`,
+    { signal },
+  );
+}
+
+export function setLocalBotanicalIdentityCover(
+  id: string,
+  file: File,
+  csrfToken: string,
+): Promise<LocalCoverResponse> {
+  const body = new FormData();
+  body.set("file", file);
+  return requestJson(
+    `/api/v1/botanical-identities/${encodeURIComponent(id)}/cover-image/local`,
+    {
+      method: "POST",
+      headers: { "X-CSRF-Token": csrfToken },
+      body,
+    },
+  );
+}
+
+export function setExternalBotanicalIdentityCover(
+  id: string,
+  payload: ExternalCoverWrite,
+  csrfToken: string,
+): Promise<ExternalCoverResponse> {
+  return requestJson(
+    `/api/v1/botanical-identities/${encodeURIComponent(id)}/cover-image/external`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": csrfToken,
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function deleteBotanicalIdentityCover(
+  id: string,
+  csrfToken: string,
+): Promise<undefined> {
+  return requestJson(
+    `/api/v1/botanical-identities/${encodeURIComponent(id)}/cover-image`,
+    { method: "DELETE", headers: { "X-CSRF-Token": csrfToken } },
+  );
 }
 
 export function getExternalTaxonLink(

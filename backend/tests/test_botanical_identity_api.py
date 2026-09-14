@@ -12,6 +12,7 @@ from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityCreate, BotanicalIdentityUpdate
 from florabase.botanical_identities.service import (
     BotanicalIdentityConflictError,
+    BotanicalIdentityCoverReferencedError,
     BotanicalIdentityReferencedError,
 )
 from florabase.collection_views.schemas import BotanicalIdentityCollectionResponse
@@ -102,6 +103,18 @@ def test_botanical_identity_api_translates_failures(monkeypatch: pytest.MonkeyPa
     with pytest.raises(HTTPException) as referenced:
         api.delete(item.id, actor, database)
     assert referenced.value.status_code == 409
+
+    monkeypatch.setattr(
+        api,
+        "delete_botanical_identity",
+        lambda _database, _item: (_ for _ in ()).throw(BotanicalIdentityCoverReferencedError()),
+    )
+    with pytest.raises(HTTPException) as cover_referenced:
+        api.delete(item.id, actor, database)
+    assert cover_referenced.value.status_code == 409
+    assert cast(dict[str, object], cover_referenced.value.detail)["code"] == (
+        "botanical_identity_has_cover"
+    )
 
     with pytest.raises(HTTPException) as forbidden:
         api.create(payload, Response(), cast(Any, SimpleNamespace(owner=False)), database)
