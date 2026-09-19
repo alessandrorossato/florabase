@@ -782,7 +782,7 @@
       ],
       "dependencies": ["PROPAGATION-002", "UX-001"],
       "priority": "P2",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "LOCATION-002",

@@ -325,7 +325,7 @@ test("selection shows complete details without internal identifiers and opens co
   await user.click(selectedRow);
   expect(selectedRow).toHaveAttribute("aria-pressed", "true");
   const detail = screen
-    .getByRole("heading", { name: "Clitoria ternatea" })
+    .getByRole("heading", { name: "Blue packet" })
     .closest("section");
   expect(detail).toHaveTextContent("Purchased");
   expect(detail).toHaveTextContent("Rare Seed House");

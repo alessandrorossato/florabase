@@ -228,6 +228,21 @@
             ],
             "title": "Common Name"
           },
+          "compact_cover_kind": {
+            "anyOf": [
+              {
+                "enum": [
+                  "local",
+                  "external"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compact Cover Kind"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -8969,6 +8984,61 @@
           }
         },
         "summary": "Set Local Botanical Identity Cover Image",
+        "tags": [
+          "collection photos"
+        ]
+      }
+    },
+    "/api/v1/botanical-identities/{botanical_identity_id}/cover-image/thumbnail": {
+      "get": {
+        "operationId": "getBotanicalIdentityCoverThumbnail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "botanical_identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Botanical Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-none-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-None-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/webp": {}
+            },
+            "description": "Bounded local BotanicalIdentity cover thumbnail"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Botanical Identity Cover Thumbnail",
         "tags": [
           "collection photos"
         ]

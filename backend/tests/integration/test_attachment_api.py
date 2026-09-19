@@ -58,9 +58,10 @@ async def call(
     body: dict[str, Any] | None = None,
     file: tuple[str, bytes, str] | None = None,
     mutation_headers: bool = False,
+    request_headers: dict[str, str] | None = None,
 ) -> httpx.Response:
     cookies: dict[str, str] = {}
-    headers: dict[str, str] = {}
+    headers: dict[str, str] = dict(request_headers or {})
     if browser is not None:
         raw_cookie, csrf = browser
         name, value = raw_cookie.split("=", 1)
@@ -697,6 +698,36 @@ def test_identity_cover_replaces_every_source_mode_and_owns_local_binary(
     first = first_local.json()
     assert first["kind"] == "local"
     assert first["content_url"].endswith(f"/{first['attachment_id']}/content")
+    thumbnail_endpoint = f"{endpoint}/thumbnail"
+    assert request("GET", thumbnail_endpoint).status_code == 401
+    thumbnail = request("GET", thumbnail_endpoint, browser=browser)
+    assert thumbnail.status_code == 200
+    assert thumbnail.headers["content-type"] == "image/webp"
+    assert thumbnail.headers["cache-control"].startswith("private,")
+    assert thumbnail.headers["x-content-type-options"] == "nosniff"
+    with Image.open(io.BytesIO(thumbnail.content)) as image:
+        assert image.size == (4, 3)
+    cached = request(
+        "GET",
+        thumbnail_endpoint,
+        browser=browser,
+        request_headers={"If-None-Match": thumbnail.headers["etag"]},
+    )
+    assert cached.status_code == 304
+    assert cached.content == b""
+    assert (
+        request(
+            "GET",
+            f"/api/v1/attachments/{first['attachment_id']}/thumbnail",
+            browser=browser,
+        ).status_code
+        == 404
+    )
+    directory = request("GET", "/api/v1/botanical-identities", browser=browser).json()
+    assert (
+        next(item for item in directory if item["id"] == str(identity_id))["compact_cover_kind"]
+        == "local"
+    )
     protected = request(
         "DELETE",
         f"/api/v1/attachments/{first['attachment_id']}",
@@ -736,6 +767,11 @@ def test_identity_cover_replaces_every_source_mode_and_owns_local_binary(
     ).json()
     assert external["id"] == first["id"]
     assert external["kind"] == "external"
+    directory = request("GET", "/api/v1/botanical-identities", browser=browser).json()
+    assert (
+        next(item for item in directory if item["id"] == str(identity_id))["compact_cover_kind"]
+        == "external"
+    )
     with Session(bind=database_connection) as database:
         assert database.get(Attachment, second["attachment_id"]) is None
         cover = database.get(BotanicalIdentityCoverImage, external["id"])
@@ -791,6 +827,11 @@ def test_local_identity_cover_unlink_failure_and_missing_file_remain_retryable(
     assert pending["kind"] == "local"
     assert pending["deletion_pending"] is True
     assert pending["content_url"] is None
+    directory = request("GET", "/api/v1/botanical-identities", browser=browser).json()
+    assert (
+        next(item for item in directory if item["id"] == str(identity_id))["compact_cover_kind"]
+        is None
+    )
 
     monkeypatch.setattr(storage, "delete_file", original_delete)
     assert request("DELETE", endpoint, browser=browser, mutation_headers=True).status_code == 204

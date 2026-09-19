@@ -22,7 +22,7 @@ from florabase.botanical_identities.service import (
     create_botanical_identity,
     delete_botanical_identity,
     get_botanical_identity,
-    list_botanical_identities,
+    list_botanical_identity_directory,
     update_botanical_identity,
 )
 from florabase.collection_views.schemas import BotanicalIdentityCollectionResponse
@@ -53,8 +53,10 @@ def list_all(
     database: Annotated[Session, Depends(get_database_session)],
 ) -> list[BotanicalIdentityResponse]:
     return [
-        BotanicalIdentityResponse.from_model(botanical_identity)
-        for botanical_identity in list_botanical_identities(database)
+        BotanicalIdentityResponse.from_model(
+            botanical_identity, compact_cover_kind=compact_cover_kind
+        )
+        for botanical_identity, compact_cover_kind in list_botanical_identity_directory(database)
     ]
 
 

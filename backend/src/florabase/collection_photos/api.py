@@ -1,7 +1,17 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Response, UploadFile, status
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    Header,
+    HTTPException,
+    Response,
+    UploadFile,
+    status,
+)
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
@@ -38,7 +48,9 @@ from florabase.collection_photos.service import (
     get_external_image,
     get_local_photo,
     list_photos,
+    local_identity_cover_attachment,
     read_identity_cover,
+    render_identity_cover_thumbnail,
     set_external_identity_cover,
     set_local_identity_cover,
     update_external_image,
@@ -88,6 +100,53 @@ def get_botanical_identity_cover_image(
 ) -> LocalCoverResponse | ExternalCoverResponse | None:
     try:
         return read_identity_cover(database, botanical_identity_id)
+    except CollectionPhotoError as error:
+        raise _error(error) from error
+
+
+@router.get(
+    "/botanical-identities/{botanical_identity_id}/cover-image/thumbnail",
+    response_class=Response,
+    responses={
+        200: {
+            "content": {"image/webp": {}},
+            "description": "Bounded local BotanicalIdentity cover thumbnail",
+        }
+    },
+    operation_id="getBotanicalIdentityCoverThumbnail",
+)
+def get_botanical_identity_cover_thumbnail(
+    botanical_identity_id: UUID,
+    _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    database: Annotated[Session, Depends(get_database_session)],
+    storage: Annotated[AttachmentStorage, Depends(get_attachment_storage)],
+    if_none_match: Annotated[str | None, Header()] = None,
+) -> Response:
+    try:
+        attachment = local_identity_cover_attachment(database, botanical_identity_id)
+        if attachment is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "code": "botanical_identity_cover_thumbnail_not_available",
+                    "message": "A local cover thumbnail is not available",
+                },
+            )
+        etag = f'"cover-{attachment.sha256}-320-webp-v1"'
+        headers = {
+            "Cache-Control": "private, max-age=86400, must-revalidate",
+            "ETag": etag,
+            "Vary": "Cookie",
+            "X-Content-Type-Options": "nosniff",
+        }
+        validators = {validator.strip() for validator in (if_none_match or "").split(",")}
+        if "*" in validators or etag in validators or f"W/{etag}" in validators:
+            return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers=headers)
+        path = storage.active_path(attachment.storage_key, attachment.byte_size)
+        content = render_identity_cover_thumbnail(path)
+        return Response(content=content, media_type="image/webp", headers=headers)
+    except AttachmentStorageError as error:
+        raise attachment_http_error(error) from error
     except CollectionPhotoError as error:
         raise _error(error) from error
 

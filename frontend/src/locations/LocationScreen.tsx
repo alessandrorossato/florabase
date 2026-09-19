@@ -258,12 +258,14 @@ function LocationTree({
   );
 }
 
-export function LocationScreen() {
+export function LocationScreen({ initialId }: { initialId?: string } = {}) {
   const auth = useAuth();
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
   });
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initialId ?? null,
+  );
   const [createNameValue, setCreateNameValue] = useState("");
   const [createParentId, setCreateParentId] = useState("");
   const [save, setSave] = useState<SaveState>({ status: "idle" });
@@ -488,6 +490,7 @@ export function LocationScreen() {
                 selectedId={selectedId}
                 onSelect={(id) => {
                   setSelectedId(id);
+                  window.history.pushState(null, "", `#/locations/${id}`);
                   setEditing(false);
                   setSave({ status: "idle" });
                 }}

@@ -28,6 +28,7 @@ export function DetailHeader({
   title,
   secondary,
   status,
+  primaryActions,
   onEdit,
   editLabel = "Edit",
   overflow,
@@ -36,6 +37,7 @@ export function DetailHeader({
   title: string;
   secondary?: ReactNode;
   status?: ReactNode;
+  primaryActions?: ReactNode;
   onEdit?: () => void;
   editLabel?: string;
   overflow?: ReactNode;
@@ -48,10 +50,15 @@ export function DetailHeader({
         {secondary && <div className="detail-secondary">{secondary}</div>}
         {status && <div className="detail-status">{status}</div>}
       </div>
-      {(onEdit ?? overflow) && (
+      {(primaryActions ?? onEdit ?? overflow) && (
         <div className="actions detail-actions">
+          {primaryActions}
           {onEdit && (
-            <button type="button" onClick={onEdit}>
+            <button
+              className={primaryActions ? "button--secondary" : undefined}
+              type="button"
+              onClick={onEdit}
+            >
               {editLabel}
             </button>
           )}
@@ -76,6 +83,7 @@ export function DetailTabs<TabId extends string>({
       {tabs.map((tab) => (
         <button
           aria-selected={selected === tab.id}
+          aria-controls={`panel-${tab.id}`}
           className="detail-tab"
           id={`tab-${tab.id}`}
           key={tab.id}

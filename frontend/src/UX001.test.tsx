@@ -117,6 +117,11 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
     name: "Mobile primary navigation",
   });
   expect(mobile.querySelectorAll("a, button")).toHaveLength(5);
+  expect(
+    within(mobile)
+      .getAllByRole("link")
+      .map((item) => item.textContent),
+  ).toEqual(["Home", "Seeds", "Sowings", "Plants"]);
   const plantGroupCard = screen.getByText("Plant groups").closest("article");
   if (!plantGroupCard) throw new Error("Plant groups summary card is missing");
   expect(within(plantGroupCard).getByRole("link")).toHaveAttribute(
@@ -127,6 +132,11 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
   expect(
     screen.getByRole("navigation", { name: "More navigation" }),
   ).toBeInTheDocument();
+  expect(
+    within(
+      screen.getByRole("navigation", { name: "More navigation" }),
+    ).getByRole("button", { name: "Events" }),
+  ).toBeInTheDocument();
   await user.click(within(mobile).getByRole("link", { name: "Home" }));
   expect(
     screen.queryByRole("navigation", { name: "More navigation" }),
@@ -136,6 +146,7 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
   expect(
     await screen.findByRole("heading", { name: "Events" }),
   ).toBeInTheDocument();
+  expect(screen.getByText(/Events are journal history/i)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Courtyard maple" })).toHaveAttribute(
     "href",
     `#/plants/${event.target.id}?tab=events`,
@@ -231,6 +242,11 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
     "aria-selected",
     "true",
   );
+  expect(screen.getByRole("tab", { name: "Overview" })).toHaveAttribute(
+    "aria-controls",
+    "panel-overview",
+  );
+  expect(screen.getByRole("tabpanel")).toHaveAttribute("id", "panel-overview");
   expect(
     screen.getByText(/does not create or imply lineage/i),
   ).toBeInTheDocument();
@@ -240,6 +256,10 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
   expect(
     screen.getByLabelText("More botanical identity actions"),
   ).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Add seed lot" })).toHaveAttribute(
+    "href",
+    `#/seeds?action=create&identity=${identity.id}`,
+  );
 
   await user.click(screen.getByRole("tab", { name: "Seeds" }));
   expect(window.location.hash).toBe(`#/identities/${identity.id}?tab=seeds`);
@@ -293,6 +313,53 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
   );
 });
 
+test("Botanical identity directory uses only bounded local thumbnails in compact cards", async () => {
+  window.history.replaceState(null, "", "#/identities");
+  const localCoverIdentity = {
+    ...identity,
+    compact_cover_kind: "local" as const,
+  };
+  const externalCoverIdentity = {
+    ...identity,
+    id: "01900000-0000-7000-8000-000000000098",
+    scientific_name: "Acer rubrum",
+    display_label: "Acer rubrum",
+    common_name: "Red maple",
+    compact_cover_kind: "external" as const,
+  };
+  const noCoverIdentity = {
+    ...identity,
+    id: "01900000-0000-7000-8000-000000000097",
+    scientific_name: "Acer saccharum",
+    display_label: "Acer saccharum",
+    common_name: "Sugar maple",
+    compact_cover_kind: null,
+  };
+  const fetch = vi.fn((path: string) => {
+    if (path === "/api/v1/botanical-identities")
+      return json([localCoverIdentity, externalCoverIdentity, noCoverIdentity]);
+    throw new Error(`Unexpected request: ${path}`);
+  });
+  mockAuthenticated(fetch);
+  render(<App />);
+
+  const directory = await screen.findByRole("region", {
+    name: "Identity directory",
+  });
+  await within(directory).findByText("External cover on detail page");
+  const images = Array.from(directory.querySelectorAll("img"));
+  expect(images).toHaveLength(1);
+  expect(images[0]).toHaveAttribute(
+    "src",
+    `/api/v1/botanical-identities/${identity.id}/cover-image/thumbnail`,
+  );
+  expect(directory).toHaveTextContent("External cover on detail page");
+  expect(directory.querySelector('img[src^="https://"]')).toBeNull();
+  expect(fetch.mock.calls.some(([path]) => path.startsWith("https://"))).toBe(
+    false,
+  );
+});
+
 test("A Botanical identity tab deep link restores the selected collection view", async () => {
   window.history.replaceState(
     null,
@@ -325,6 +392,43 @@ test("A Botanical identity tab deep link restores the selected collection view",
       "No Events belong to Plants or Plant groups with this identity.",
     ),
   ).toBeInTheDocument();
+});
+
+test("Botanical reference deep links defer collection and cover work", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    `#/identities/${identity.id}?tab=reference`,
+  );
+  const requested: string[] = [];
+  mockAuthenticated((path) => {
+    requested.push(path);
+    if (path === "/api/v1/botanical-identities") return json([identity]);
+    if (path === `/api/v1/botanical-identities/${identity.id}/profile`)
+      return json({ detail: { code: "botanical_profile_not_found" } }, 404);
+    if (
+      path === `/api/v1/botanical-identities/${identity.id}/external-taxon-link`
+    )
+      return json({ detail: { code: "external_taxon_link_not_found" } }, 404);
+    throw new Error(`Unexpected request: ${path}`);
+  });
+  render(<App />);
+
+  expect(await screen.findByRole("tab", { name: "Reference" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  expect(
+    screen.getByRole("heading", {
+      name: "Profile, native range, and occurrence evidence",
+    }),
+  ).toBeInTheDocument();
+  expect(requested).not.toContain(
+    `/api/v1/botanical-identities/${identity.id}/cover-image`,
+  );
+  expect(requested).not.toContain(
+    `/api/v1/botanical-identities/${identity.id}/collection`,
+  );
 });
 
 test("Botanical identity empty states require a SeedLot before Sowing and preserve direct Plant entry", async () => {

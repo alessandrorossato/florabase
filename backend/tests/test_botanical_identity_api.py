@@ -32,8 +32,12 @@ def test_botanical_identity_api_success_paths(monkeypatch: pytest.MonkeyPatch) -
     payload = BotanicalIdentityCreate(scientific_name=item.scientific_name)
     update = BotanicalIdentityUpdate(scientific_name="Acer japonicum")
 
-    monkeypatch.setattr(api, "list_botanical_identities", lambda _database: [item])
-    assert api.list_all(actor, database)[0].id == item.id
+    monkeypatch.setattr(
+        api, "list_botanical_identity_directory", lambda _database: [(item, "local")]
+    )
+    listed = api.list_all(actor, database)[0]
+    assert listed.id == item.id
+    assert listed.compact_cover_kind == "local"
 
     monkeypatch.setattr(api, "create_botanical_identity", lambda _database, _payload: item)
     response = Response()

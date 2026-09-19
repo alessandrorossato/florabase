@@ -243,7 +243,7 @@ test("compact summaries, search fields, lifecycle views, selection, detail, and 
   mockApi(sowingHandler([sowing(), completed]));
   const user = await openSowings();
   await screen.findByRole("button", {
-    name: /Clitoria ternatea.*Tray A.*12 germinated \/ 20 sown/s,
+    name: /Tray A.*Clitoria ternatea.*12 germinated \/ 20 sown/s,
   });
   expect(screen.queryByText("GA3 test")).not.toBeInTheDocument();
 
@@ -260,7 +260,7 @@ test("compact summaries, search fields, lifecycle views, selection, detail, and 
   }
   await user.clear(search);
   const selectedRow = screen.getByRole("button", {
-    name: /Clitoria ternatea.*Tray A.*12 germinated \/ 20 sown/s,
+    name: /Tray A.*Clitoria ternatea.*12 germinated \/ 20 sown/s,
   });
   await user.click(selectedRow);
   expect(

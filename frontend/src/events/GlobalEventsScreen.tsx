@@ -50,6 +50,12 @@ export function GlobalEventsScreen() {
           across Plants and Plant groups.
         </p>
       </div>
+      <p className="notice event-semantics-note">
+        Events are journal history. Editing or deleting an ordinary Event does
+        not recompute a Plant or Plant group’s current lifecycle, location, or
+        lineage; authoritative operation undo remains a separate contextual
+        action.
+      </p>
       {state.status === "loading" && <p role="status">Loading Events…</p>}
       {state.status === "error" && (
         <div className="notice notice--error" role="alert">

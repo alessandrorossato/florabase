@@ -111,9 +111,9 @@ const desktopGroups: {
   {
     label: "Collection",
     items: [
-      { id: "plants", label: "Plants" },
       { id: "seeds", label: "Seeds" },
       { id: "sowings", label: "Sowings" },
+      { id: "plants", label: "Plants" },
       { id: "events", label: "Events" },
       { id: "map", label: "Provenance map" },
     ],
@@ -278,7 +278,10 @@ function ApplicationShell() {
         ) : route.section === "suppliers" ? (
           <SupplierScreen initialId={route.recordId} initialTab={route.tab} />
         ) : route.section === "locations" ? (
-          <LocationScreen />
+          <LocationScreen
+            key={route.recordId ?? "directory"}
+            initialId={route.recordId}
+          />
         ) : (
           <GeographyScreen initialSiteId={route.recordId} />
         )}
@@ -325,9 +328,9 @@ function ApplicationShell() {
       <nav aria-label="Mobile primary navigation" className="mobile-navigation">
         {[
           { id: "dashboard", label: "Home" },
-          { id: "plants", label: "Plants" },
           { id: "seeds", label: "Seeds" },
-          { id: "events", label: "Events" },
+          { id: "sowings", label: "Sowings" },
+          { id: "plants", label: "Plants" },
         ].map((item) => (
           <a
             key={item.id}
@@ -344,6 +347,11 @@ function ApplicationShell() {
           type="button"
           aria-expanded={moreOpen}
           aria-controls="mobile-more-menu"
+          aria-current={
+            !["dashboard", "seeds", "sowings", "plants"].includes(route.section)
+              ? "page"
+              : undefined
+          }
           onClick={() => {
             setMoreOpen((value) => !value);
           }}
@@ -360,7 +368,7 @@ function ApplicationShell() {
           {desktopGroups
             .slice(1)
             .flatMap(({ items }) => items)
-            .filter(({ id }) => !["plants", "seeds", "events"].includes(id))
+            .filter(({ id }) => !["plants", "seeds", "sowings"].includes(id))
             .map((item) => (
               <button
                 key={item.id}

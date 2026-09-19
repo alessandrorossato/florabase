@@ -54,6 +54,14 @@ export function EventFeed({
                 {name}
               </a>
               <span className="record-state">{type}</span>
+              <p>
+                <a
+                  className="event-identity"
+                  href={`#/identities/${event.target.botanical_identity.id}?tab=events`}
+                >
+                  {event.target.botanical_identity.display_label}
+                </a>
+              </p>
               {event.destination_location && (
                 <p>Moved to {event.destination_location.display_path}</p>
               )}

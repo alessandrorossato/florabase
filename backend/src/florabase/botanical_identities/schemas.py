@@ -1,6 +1,6 @@
 import unicodedata
 from datetime import datetime
-from typing import TYPE_CHECKING, Self
+from typing import TYPE_CHECKING, Literal, Self
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -95,9 +95,15 @@ class BotanicalIdentityResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     display_label: str
+    compact_cover_kind: Literal["local", "external"] | None = None
 
     @classmethod
-    def from_model(cls, botanical_identity: BotanicalIdentity) -> Self:
+    def from_model(
+        cls,
+        botanical_identity: BotanicalIdentity,
+        *,
+        compact_cover_kind: Literal["local", "external"] | None = None,
+    ) -> Self:
         display_label = botanical_identity.scientific_name
         if botanical_identity.cultivar_name is not None:
             display_label = (
@@ -113,5 +119,6 @@ class BotanicalIdentityResponse(BaseModel):
                 "created_at": botanical_identity.created_at,
                 "updated_at": botanical_identity.updated_at,
                 "display_label": display_label,
+                "compact_cover_kind": compact_cover_kind,
             }
         )

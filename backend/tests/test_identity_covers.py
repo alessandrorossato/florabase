@@ -1,4 +1,5 @@
 import asyncio
+import io
 from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
@@ -6,6 +7,7 @@ from uuid import uuid7
 
 import pytest
 from fastapi import UploadFile
+from PIL import Image
 from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -18,7 +20,9 @@ from florabase.collection_photos.service import (
     attachment_image_owner,
     cover_response,
     delete_identity_cover,
+    local_identity_cover_attachment,
     read_identity_cover,
+    render_identity_cover_thumbnail,
     set_external_identity_cover,
     set_local_identity_cover,
 )
@@ -244,6 +248,34 @@ def test_cover_lookup_distinguishes_absence_from_a_missing_identity() -> None:
     database.scalar.return_value = None
     with pytest.raises(CollectionPhotoError, match="Botanical identity not found"):
         read_identity_cover(database, uuid7())
+
+
+def test_local_cover_thumbnail_is_bounded_and_never_upscaled(tmp_path: Path) -> None:
+    large_path = tmp_path / "large.png"
+    Image.new("RGB", (800, 400), (30, 120, 40)).save(large_path, format="PNG")
+    rendered = render_identity_cover_thumbnail(large_path)
+    with Image.open(io.BytesIO(rendered)) as thumbnail:
+        assert thumbnail.format == "WEBP"
+        assert thumbnail.size == (320, 160)
+
+    small_path = tmp_path / "small.png"
+    Image.new("RGBA", (40, 30), (30, 120, 40, 120)).save(small_path, format="PNG")
+    rendered_small = render_identity_cover_thumbnail(small_path)
+    with Image.open(io.BytesIO(rendered_small)) as thumbnail:
+        assert thumbnail.size == (40, 30)
+
+
+def test_local_thumbnail_source_rejects_external_and_pending_covers() -> None:
+    database = MagicMock()
+    database.scalar.return_value = object()
+    external = cover(mode="external")
+    database.execute.return_value.one_or_none.return_value = (external, None)
+    assert local_identity_cover_attachment(database, external.botanical_identity_id) is None
+
+    pending = attachment(state=AttachmentState.PENDING_DELETE)
+    local = cover(mode="local", owned_attachment=pending)
+    database.execute.return_value.one_or_none.return_value = (local, pending)
+    assert local_identity_cover_attachment(database, local.botanical_identity_id) is None
 
 
 def test_new_local_and_external_covers_create_one_current_row(tmp_path: Path) -> None:
