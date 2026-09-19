@@ -4,6 +4,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
   type RefObject,
   type SyntheticEvent,
 } from "react";
@@ -307,6 +308,7 @@ function Detail({
   headingRef,
   onEventTargetRefresh,
   onEdit,
+  primaryActions,
   initialTab,
 }: {
   record: PlantRecord;
@@ -315,6 +317,7 @@ function Detail({
   headingRef: RefObject<HTMLHeadingElement | null>;
   onEventTargetRefresh: () => Promise<void>;
   onEdit: () => void;
+  primaryActions?: ReactNode;
   initialTab?: string;
 }) {
   const value = record.value;
@@ -352,9 +355,14 @@ function Detail({
             >
               {lifecycleLabel(record)}
             </span>
-            {value.location && <span>{value.location.display_path}</span>}
+            {value.location && (
+              <a href={`#/locations/${value.location.id}`}>
+                {value.location.display_path}
+              </a>
+            )}
           </>
         }
+        primaryActions={primaryActions}
         editLabel={`Edit ${record.kind === "plant" ? "Plant" : "Plant group"}`}
         onEdit={onEdit}
       />
@@ -376,16 +384,25 @@ function Detail({
         }}
       />
       {tab === "overview" && (
-        <div className="detail-tab-panel overview-grid">
+        <div
+          id="panel-overview"
+          className="detail-tab-panel overview-grid"
+          role="tabpanel"
+          aria-labelledby="tab-overview"
+        >
           <section aria-labelledby="plant-record-title">
-            <p className="eyebrow">
-              {record.kind === "plant" ? "Plant" : "Plant group"}
-            </p>
             <h3 id="plant-record-title" tabIndex={-1} ref={headingRef}>
-              {value.botanical_identity.display_label}
+              Record summary
             </h3>
-            {value.label && <p className="seed-label">{value.label}</p>}
             <dl>
+              <div>
+                <dt>Botanical identity</dt>
+                <dd>
+                  <a href={`#/identities/${value.botanical_identity.id}`}>
+                    {value.botanical_identity.display_label}
+                  </a>
+                </dd>
+              </div>
               <div>
                 <dt>Lifecycle</dt>
                 <dd>{lifecycleLabel(record)}</dd>
@@ -396,7 +413,15 @@ function Detail({
               </div>
               <div>
                 <dt>Current location</dt>
-                <dd>{value.location?.display_path ?? "Not recorded"}</dd>
+                <dd>
+                  {value.location ? (
+                    <a href={`#/locations/${value.location.id}`}>
+                      {value.location.display_path}
+                    </a>
+                  ) : (
+                    "Not recorded"
+                  )}
+                </dd>
               </div>
             </dl>
           </section>
@@ -526,10 +551,12 @@ function Detail({
                   <div>
                     <dt>ProvenanceSite</dt>
                     <dd>
-                      {value.provenance_site.geographic_place_path
-                        ? `${value.provenance_site.geographic_place_path} → `
-                        : ""}
-                      {value.provenance_site.name}
+                      <a href={`#/geography/${value.provenance_site.id}`}>
+                        {value.provenance_site.geographic_place_path
+                          ? `${value.provenance_site.geographic_place_path} → `
+                          : ""}
+                        {value.provenance_site.name}
+                      </a>
                     </dd>
                   </div>
                 )}
@@ -552,6 +579,7 @@ function Detail({
       )}
       {tab === "events" && (
         <div
+          id="panel-events"
           className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-events"
@@ -568,6 +596,7 @@ function Detail({
       )}
       {tab === "lineage" && (
         <div
+          id="panel-lineage"
           className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-lineage"
@@ -580,6 +609,7 @@ function Detail({
       )}
       {tab === "photos" && (
         <div
+          id="panel-photos"
           className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-photos"
@@ -1450,9 +1480,12 @@ export function PlantScreen({
                     >
                       <span className="seed-primary">
                         <strong>
-                          {value.botanical_identity.display_label}
+                          {value.label ??
+                            (record.kind === "plant"
+                              ? "Unlabelled Plant"
+                              : "Unlabelled Plant group")}
                         </strong>
-                        {value.label && <small>{value.label}</small>}
+                        <small>{value.botanical_identity.display_label}</small>
                       </span>
                       <span className="record-type-badge">
                         {record.kind === "plant" ? "Plant" : "Group"}
@@ -2068,6 +2101,57 @@ export function PlantScreen({
             </div>
           ) : selected ? (
             <div className="selected-seed selected-plant">
+              <Detail
+                key={`${recordKey(selected)}:${selected.value.updated_at}`}
+                record={selected}
+                sowings={references.sowings}
+                locations={references.locations}
+                headingRef={detailHeading}
+                onEventTargetRefresh={async () => {
+                  try {
+                    await refreshEventTarget(selected.kind, selected.value.id);
+                  } finally {
+                    setReversalRevision((value) => value + 1);
+                  }
+                }}
+                onEdit={() => {
+                  startEdit(selected);
+                }}
+                primaryActions={
+                  <>
+                    {selected.kind === "group" &&
+                      selected.value.lifecycle === "active" && (
+                        <button
+                          type="button"
+                          onClick={(event) => {
+                            extractionTrigger.current = event.currentTarget;
+                            startExtraction(selected.value);
+                          }}
+                        >
+                          Extract plant
+                        </button>
+                      )}
+                    {selected.value.lifecycle === "active" && (
+                      <button
+                        type="button"
+                        className={
+                          selected.kind === "group"
+                            ? "button--secondary"
+                            : undefined
+                        }
+                        onClick={() => {
+                          startTransfer(selected);
+                        }}
+                      >
+                        {selected.kind === "plant"
+                          ? "Transfer / Cedi"
+                          : "Transfer group / Cedi gruppo"}
+                      </button>
+                    )}
+                  </>
+                }
+                initialTab={initialTab}
+              />
               {selected.value.originating_sowing_id && (
                 <CreationReversal
                   key={`reversal:${recordKey(selected)}:${selected.value.updated_at}:${String(reversalRevision)}`}
@@ -2109,55 +2193,12 @@ export function PlantScreen({
                   }}
                 />
               )}
-              <Detail
-                key={`${recordKey(selected)}:${selected.value.updated_at}`}
-                record={selected}
-                sowings={references.sowings}
-                locations={references.locations}
-                headingRef={detailHeading}
-                onEventTargetRefresh={async () => {
-                  try {
-                    await refreshEventTarget(selected.kind, selected.value.id);
-                  } finally {
-                    setReversalRevision((value) => value + 1);
-                  }
-                }}
-                onEdit={() => {
-                  startEdit(selected);
-                }}
-                initialTab={initialTab}
-              />
-              <div className="actions">
-                {selected.value.lifecycle === "active" && (
-                  <button
-                    type="button"
-                    className="button--secondary"
-                    onClick={() => {
-                      startTransfer(selected);
-                    }}
-                  >
-                    {selected.kind === "plant"
-                      ? "Transfer / Cedi"
-                      : "Transfer group / Cedi gruppo"}
-                  </button>
+              {selected.kind === "group" &&
+                selected.value.lifecycle !== "active" && (
+                  <p className="field-help">
+                    Plants can only be extracted from an active group.
+                  </p>
                 )}
-                {selected.kind === "group" &&
-                  (selected.value.lifecycle === "active" ? (
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        extractionTrigger.current = event.currentTarget;
-                        startExtraction(selected.value);
-                      }}
-                    >
-                      Extract plant
-                    </button>
-                  ) : (
-                    <p className="field-help">
-                      Plants can only be extracted from an active group.
-                    </p>
-                  ))}
-              </div>
               {selected.kind === "plant" &&
                 selected.value.originating_plant_group && (
                   <section

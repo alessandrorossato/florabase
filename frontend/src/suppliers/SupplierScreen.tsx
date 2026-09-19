@@ -193,6 +193,7 @@ function SupplierHub({
       />
       {tab === "overview" && (
         <div
+          id="panel-overview"
           className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-overview"
@@ -320,6 +321,7 @@ function SupplierHub({
       )}
       {tab === "material" && (
         <div
+          id="panel-material"
           className="detail-tab-panel supplier-material"
           role="tabpanel"
           aria-labelledby="tab-material"

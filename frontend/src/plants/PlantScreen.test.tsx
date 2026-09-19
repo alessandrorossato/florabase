@@ -366,14 +366,14 @@ test("unified rows, search, lifecycle and type filters, detail, and Back remain 
   const lifecycle = screen.getByRole("group", { name: "Lifecycle" });
   const recordType = screen.getByRole("group", { name: "Record type" });
   const plantRow = await screen.findByRole("button", {
-    name: /Persea americana.*Avocado #1.*Plant.*Greenhouse → Bench 4.*Purchased · Rossi Nursery/s,
+    name: /Avocado #1.*Persea americana.*Plant.*Greenhouse → Bench 4.*Purchased · Rossi Nursery/s,
   });
   expect(within(plantRow).getByText("Plant")).toBeInTheDocument();
   expect(screen.queryByText("Seedlings 2026")).not.toBeInTheDocument();
 
   await user.click(within(lifecycle).getByRole("button", { name: "History" }));
   const groupRow = screen.getByRole("button", {
-    name: /Cyphomandra betacea.*Seedlings 2026.*Group.*From sowing · Tray A.*0 plants/s,
+    name: /Seedlings 2026.*Cyphomandra betacea.*Group.*From sowing · Tray A.*0 plants/s,
   });
   expect(within(groupRow).getByText("Group")).toBeInTheDocument();
   await user.click(within(lifecycle).getByRole("button", { name: "All" }));
@@ -402,7 +402,7 @@ test("unified rows, search, lifecycle and type filters, detail, and Back remain 
   const selectedRow = screen.getByRole("button", { name: /Avocado #1/ });
   await user.click(selectedRow);
   expect(
-    await screen.findByRole("heading", { name: "Persea americana" }),
+    await screen.findByRole("heading", { name: "Avocado #1" }),
   ).toBeInTheDocument();
   expect(screen.getByText("Grafted specimen.")).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "← Back to Plants" }));
@@ -1337,7 +1337,12 @@ test("explicit Plant transfer records recipient and keeps the historical detail 
   );
   const user = await openPlants();
   await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
-  await user.click(screen.getByRole("button", { name: "Transfer / Cedi" }));
+  const transfer = screen.getByRole("button", { name: "Transfer / Cedi" });
+  expect(transfer).not.toHaveClass("button--secondary");
+  expect(screen.getByRole("button", { name: "Edit Plant" })).toHaveClass(
+    "button--secondary",
+  );
+  await user.click(transfer);
   expect(
     screen.getByText(/remain fully available in history/),
   ).toBeInTheDocument();

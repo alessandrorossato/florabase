@@ -230,6 +230,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/botanical-identities/{botanical_identity_id}/cover-image/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Botanical Identity Cover Thumbnail */
+        get: operations["getBotanicalIdentityCoverThumbnail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/botanical-identities/{botanical_identity_id}/external-taxa/search": {
         parameters: {
             query?: never;
@@ -1384,6 +1401,8 @@ export interface components {
         BotanicalIdentityResponse: {
             /** Common Name */
             common_name: string | null;
+            /** Compact Cover Kind */
+            compact_cover_kind?: ("local" | "external") | null;
             /**
              * Created At
              * Format: date-time
@@ -4283,6 +4302,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LocalCoverResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getBotanicalIdentityCoverThumbnail: {
+        parameters: {
+            query?: never;
+            header?: {
+                "if-none-match"?: string | null;
+            };
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded local BotanicalIdentity cover thumbnail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/webp": unknown;
                 };
             };
             /** @description Validation Error */

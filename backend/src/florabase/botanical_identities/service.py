@@ -1,6 +1,7 @@
+from typing import Literal, cast
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -139,3 +140,40 @@ def list_botanical_identities(database: Session) -> list[BotanicalIdentity]:
         BotanicalIdentity.id,
     )
     return list(database.scalars(statement))
+
+
+def list_botanical_identity_directory(
+    database: Session,
+) -> list[tuple[BotanicalIdentity, Literal["local", "external"] | None]]:
+    from florabase.attachments.model import Attachment, AttachmentState
+    from florabase.collection_photos.model import BotanicalIdentityCoverImage
+
+    compact_cover_kind = case(
+        (BotanicalIdentityCoverImage.source_mode == "external", "external"),
+        (
+            (BotanicalIdentityCoverImage.source_mode == "local")
+            & (Attachment.state == AttachmentState.ACTIVE),
+            "local",
+        ),
+        else_=None,
+    )
+    statement = (
+        select(BotanicalIdentity, compact_cover_kind)
+        .outerjoin(
+            BotanicalIdentityCoverImage,
+            BotanicalIdentityCoverImage.botanical_identity_id == BotanicalIdentity.id,
+        )
+        .outerjoin(Attachment, Attachment.id == BotanicalIdentityCoverImage.attachment_id)
+        .order_by(
+            func.lower(BotanicalIdentity.scientific_name),
+            func.lower(BotanicalIdentity.cultivar_name).nulls_first(),
+            BotanicalIdentity.id,
+        )
+    )
+    return [
+        (
+            identity,
+            cast(Literal["local", "external"] | None, cover_kind),
+        )
+        for identity, cover_kind in database.execute(statement).all()
+    ]

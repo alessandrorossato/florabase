@@ -353,27 +353,34 @@ function Detail({
             >
               {lifecycleLabels[lot.lifecycle]}
             </span>
-            {lot.location && <span>{lot.location.display_path}</span>}
+            {lot.location && (
+              <a href={`#/locations/${lot.location.id}`}>
+                {lot.location.display_path}
+              </a>
+            )}
           </>
+        }
+        primaryActions={
+          lot.lifecycle === "active" ? (
+            <a
+              className="button-link"
+              href={`#/sowings?action=start&seedLot=${lot.id}`}
+            >
+              Start sowing
+            </a>
+          ) : undefined
         }
         editLabel="Edit seed lot"
         onEdit={onEdit}
       />
-      <div className="actions contextual-actions">
-        {lot.lifecycle === "active" ? (
-          <a
-            className="button-link"
-            href={`#/sowings?action=start&seedLot=${lot.id}`}
-          >
-            Start sowing
-          </a>
-        ) : (
+      {lot.lifecycle !== "active" && (
+        <div className="contextual-actions">
           <p className="field-help">
             This historical SeedLot remains available for review. Source
             adjustment requires an active lot.
           </p>
-        )}
-      </div>
+        </div>
+      )}
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
@@ -392,11 +399,22 @@ function Detail({
         }}
       />
       {tab === "overview" && (
-        <div className="detail-tab-panel overview-grid">
-          <p className="eyebrow">Selected seed lot</p>
-          <h3 id="seed-detail-title">{lot.botanical_identity.display_label}</h3>
-          {lot.label && <p className="seed-label">{lot.label}</p>}
+        <div
+          id="panel-overview"
+          className="detail-tab-panel overview-grid"
+          role="tabpanel"
+          aria-labelledby="tab-overview"
+        >
+          <h3 id="seed-detail-title">Seed lot facts</h3>
           <dl>
+            <div>
+              <dt>Botanical identity</dt>
+              <dd>
+                <a href={`#/identities/${lot.botanical_identity.id}`}>
+                  {lot.botanical_identity.display_label}
+                </a>
+              </dd>
+            </div>
             <div>
               <dt>Lifecycle</dt>
               <dd>{lifecycleLabels[lot.lifecycle]}</dd>
@@ -426,7 +444,15 @@ function Detail({
             </div>
             <div>
               <dt>Storage</dt>
-              <dd>{lot.location?.display_path ?? "Not recorded"}</dd>
+              <dd>
+                {lot.location ? (
+                  <a href={`#/locations/${lot.location.id}`}>
+                    {lot.location.display_path}
+                  </a>
+                ) : (
+                  "Not recorded"
+                )}
+              </dd>
             </div>
             <div>
               <dt>Material provenance</dt>
@@ -435,9 +461,16 @@ function Detail({
             <div>
               <dt>ProvenanceSite</dt>
               <dd>
-                {lot.provenance_site
-                  ? `${lot.provenance_site.geographic_place_path ? `${lot.provenance_site.geographic_place_path} → ` : ""}${lot.provenance_site.name}`
-                  : "Not recorded"}
+                {lot.provenance_site ? (
+                  <a href={`#/geography/${lot.provenance_site.id}`}>
+                    {lot.provenance_site.geographic_place_path
+                      ? `${lot.provenance_site.geographic_place_path} → `
+                      : ""}
+                    {lot.provenance_site.name}
+                  </a>
+                ) : (
+                  "Not recorded"
+                )}
               </dd>
             </div>
             <div>
@@ -461,6 +494,7 @@ function Detail({
       )}
       {tab === "sowings" && (
         <div
+          id="panel-sowings"
           className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-sowings"
@@ -480,6 +514,7 @@ function Detail({
       )}
       {tab === "lineage" && (
         <div
+          id="panel-lineage"
           className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-lineage"
@@ -489,6 +524,7 @@ function Detail({
       )}
       {tab === "photos" && (
         <div
+          id="panel-photos"
           className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-photos"
@@ -993,8 +1029,8 @@ export function SeedLotScreen({
                     }}
                   >
                     <span className="seed-primary">
-                      <strong>{lot.botanical_identity.display_label}</strong>
-                      {lot.label && <small>{lot.label}</small>}
+                      <strong>{lot.label ?? "Unlabelled seed lot"}</strong>
+                      <small>{lot.botanical_identity.display_label}</small>
                     </span>
                     <span>{quantityLabel(lot)}</span>
                     <span>

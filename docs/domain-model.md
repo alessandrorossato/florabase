@@ -406,12 +406,16 @@ counts, not the analytical/statistical definitions planned for `DASHBOARD-001`; 
 and PlantGroups are excluded from the active counts while remaining in historical lists and identity
 aggregation.
 
-Desktop navigation groups Dashboard, the Plants/Seeds/Sowings/Events collection workflows,
+Desktop navigation groups Dashboard, the Seeds/Sowings/Plants/Events collection workflows in
+lifecycle order,
 Botanical identities, and Location/Supplier/GeographicPlace reference data in a persistent sidebar.
-Mobile exposes Home, Plants, Seeds, Events, and More in a fixed bottom navigation; More reaches the
-same secondary destinations.
+Mobile exposes Home, Seeds, Sowings, Plants, and More in a fixed bottom navigation; More leads with
+Events and reaches the same secondary identity, map, and reference destinations.
 
-BotanicalIdentity is a collection hub with Overview, Seeds, Sowings, Plants, and Events tabs. Its
+BotanicalIdentity is a botanical/reference and collection hub with Overview, Reference, Seeds,
+Sowings, Plants, and Events tabs. The Reference tab contains operator-authored profile/native-range
+knowledge and advisory external occurrence evidence and avoids eagerly loading hidden collection
+content. Its
 Plants tab intentionally combines Plant and PlantGroup cards while labeling their distinct types.
 The overview separates active and transferred Plant and PlantGroup counts rather than treating
 transferred material as currently held.
@@ -448,11 +452,13 @@ Ordinary direct Plant/PlantGroup creation, retroactive entry, and all correction
 Later corrections do not replay previous source effects or lifecycle choices. Rich dated germination
 observations remain deferred to `GERMINATION-001`.
 
-The intended product narrative is `BotanicalIdentity → SeedLot → Sowing → Plant / PlantGroup →
+The product navigation follows `BotanicalIdentity → SeedLot → Sowing → Plant / PlantGroup →
 Events / terminal state`. It is an interaction and comprehension direction over the explicit model,
 not a new relationship, automatic state machine, or claim that every record has complete ancestry.
-Later navigation work should make that lifecycle easier to follow across desktop and mobile without
-conflating BotanicalIdentity aggregation with recorded lineage.
+Natural next-step actions appear in the record header ahead of correction, transfer, reversal, or
+destructive controls. Record lists lead with the record's own label and show BotanicalIdentity as
+supporting context. Direct links follow stored identity, source, Location, Supplier, provenance, and
+Event relationships without conflating BotanicalIdentity aggregation with recorded lineage.
 
 Location presentation scopes the one shared Location hierarchy by its Seeds, Sowings, or Plants
 usage without splitting Location into separate domain entities. Supplier detail summarizes only
@@ -576,10 +582,14 @@ failed or unexpectedly missing content remains represented by a retry-only cover
 cleanup succeeds. Replacing or removing an external cover changes metadata only. Direct Attachment
 deletion and BotanicalIdentity hard deletion are explicitly blocked while the active cover remains.
 
-This increment has no automatic discovery, provider-backed search, cover album or reordering, EXIF
-inspection, generated thumbnail, derivative, background media worker, or compact
-directory/dashboard rendering. `UX-003` may consider compact identity imagery only together with an
-efficient thumbnail strategy; shrinking many original files in CSS is not such a strategy.
+There is no automatic discovery, provider-backed search, cover album or reordering, EXIF inspection,
+persisted derivative, background media worker, or generic resize API. Compact identity directory
+rows render a locally managed cover only through a fixed-purpose authenticated endpoint that safely
+decodes the validated source and returns a WebP thumbnail with a maximum 320-pixel edge without
+upscaling. The response exposes no storage path and uses private HTTP caching plus an ETag derived
+from the attachment digest and transform version. External covers never load in compact views or
+pass through the backend; they use a neutral indicator while the operator-approved original remains
+available on the identity detail. Identities without a cover use a local fallback.
 
 ## Ownership and mutation boundary
 

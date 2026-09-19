@@ -150,7 +150,7 @@ export function BotanicalIdentityCover({
       <div className="identity-cover__heading">
         <div>
           <p className="eyebrow">Representative image</p>
-          <h2 id="identity-cover-title">Identity cover</h2>
+          <h3 id="identity-cover-title">Identity cover</h3>
         </div>
         {state.status === "ready" && (
           <div className="actions">

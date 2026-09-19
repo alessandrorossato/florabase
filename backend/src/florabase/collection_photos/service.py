@@ -1,10 +1,14 @@
+import warnings
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from io import BytesIO
+from pathlib import Path
 from typing import Literal, cast
 from uuid import UUID, uuid7
 
 from fastapi import UploadFile
+from PIL import Image, ImageOps, UnidentifiedImageError
 from sqlalchemy import Select, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
@@ -39,6 +43,7 @@ TARGET_MODELS = {
     "plant_group": (PlantGroup, "plant_group_id"),
     "event": (Event, "event_id"),
 }
+IDENTITY_COVER_THUMBNAIL_MAX_EDGE = 320
 
 
 @dataclass
@@ -349,6 +354,52 @@ def read_identity_cover(
     require_botanical_identity(database, botanical_identity_id)
     row = get_identity_cover(database, botanical_identity_id)
     return None if row is None else cover_response(*row)
+
+
+def local_identity_cover_attachment(
+    database: Session, botanical_identity_id: UUID
+) -> Attachment | None:
+    require_botanical_identity(database, botanical_identity_id)
+    row = get_identity_cover(database, botanical_identity_id)
+    if row is None or row[0].source_mode != "local":
+        return None
+    cover, attachment = row
+    if attachment is None or cover.attachment_id is None:
+        raise CollectionPhotoError(
+            "cover_attachment_missing", "The local cover attachment metadata is missing"
+        )
+    if attachment.state != AttachmentState.ACTIVE:
+        return None
+    return attachment
+
+
+def render_identity_cover_thumbnail(path: Path) -> bytes:
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            with Image.open(path) as source:
+                source.load()
+                oriented = ImageOps.exif_transpose(source)
+                mode = "RGBA" if "A" in oriented.getbands() else "RGB"
+                thumbnail = oriented.convert(mode)
+                thumbnail.thumbnail(
+                    (
+                        IDENTITY_COVER_THUMBNAIL_MAX_EDGE,
+                        IDENTITY_COVER_THUMBNAIL_MAX_EDGE,
+                    ),
+                    Image.Resampling.LANCZOS,
+                )
+                output = BytesIO()
+                thumbnail.save(output, format="WEBP", quality=82, method=4)
+                return output.getvalue()
+    except (Image.DecompressionBombError, Image.DecompressionBombWarning) as error:
+        raise AttachmentStorageError(
+            "unsafe_image_dimensions", "Image dimensions exceed the safe decoding limit"
+        ) from error
+    except (UnidentifiedImageError, OSError, SyntaxError, ValueError) as error:
+        raise AttachmentStorageError(
+            "invalid_image", "Attachment content is malformed or truncated"
+        ) from error
 
 
 def _new_attachment(stored: StoredUpload) -> Attachment:

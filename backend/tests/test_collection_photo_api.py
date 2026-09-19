@@ -239,3 +239,41 @@ def test_identity_cover_routes_are_narrow_and_normalized(
     with pytest.raises(HTTPException) as missing:
         api.delete_botanical_identity_cover_image(identity_id, actor, database, storage)
     assert missing.value.status_code == 404
+
+
+def test_local_identity_cover_thumbnail_has_private_validator_and_no_resize_api(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    identity_id = uuid7()
+    actor = MagicMock(owner=True)
+    database = MagicMock()
+    storage = MagicMock()
+    attachment = MagicMock(
+        sha256="a" * 64,
+        storage_key="objects/aa/" + "a" * 32,
+        byte_size=1024,
+    )
+    storage.active_path.return_value = MagicMock()
+    monkeypatch.setattr(api, "local_identity_cover_attachment", lambda *_args: attachment)
+    render = MagicMock(return_value=b"webp-thumbnail")
+    monkeypatch.setattr(api, "render_identity_cover_thumbnail", render)
+
+    response = api.get_botanical_identity_cover_thumbnail(
+        identity_id, actor, database, storage, None
+    )
+    assert response.status_code == 200
+    assert response.media_type == "image/webp"
+    assert response.headers["cache-control"].startswith("private,")
+    etag = response.headers["etag"]
+    assert attachment.sha256 in etag
+    render.assert_called_once()
+
+    render.reset_mock()
+    cached = api.get_botanical_identity_cover_thumbnail(identity_id, actor, database, storage, etag)
+    assert cached.status_code == 304
+    render.assert_not_called()
+
+    monkeypatch.setattr(api, "local_identity_cover_attachment", lambda *_args: None)
+    with pytest.raises(HTTPException) as unavailable:
+        api.get_botanical_identity_cover_thumbnail(identity_id, actor, database, storage, None)
+    assert unavailable.value.status_code == 404

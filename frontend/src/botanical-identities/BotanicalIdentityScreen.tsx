@@ -61,7 +61,14 @@ function IdentityDetails({
   onSaved: (identity: BotanicalIdentityResponse) => Promise<void>;
   onDeleted: () => Promise<void>;
 }) {
-  const tabs = ["overview", "seeds", "sowings", "plants", "events"] as const;
+  const tabs = [
+    "overview",
+    "reference",
+    "seeds",
+    "sowings",
+    "plants",
+    "events",
+  ] as const;
   type IdentityTab = (typeof tabs)[number];
   const [tab, setTab] = useState<IdentityTab>(
     initialTab && tabs.includes(initialTab as (typeof tabs)[number])
@@ -69,10 +76,12 @@ function IdentityDetails({
       : "overview",
   );
   const [collection, setCollection] = useState<
+    | { status: "idle" }
     | { status: "loading" }
     | { status: "ready"; value: BotanicalIdentityCollectionResponse }
     | { status: "error" }
-  >({ status: "loading" });
+  >({ status: "idle" });
+  const loadedCollectionIdentity = useRef<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -84,9 +93,13 @@ function IdentityDetails({
   });
 
   useEffect(() => {
+    if (tab === "reference" || loadedCollectionIdentity.current === identity.id)
+      return;
     const controller = new AbortController();
+    setCollection({ status: "loading" });
     void getIdentityCollection(identity.id, controller.signal)
       .then((value) => {
+        loadedCollectionIdentity.current = identity.id;
         setCollection({ status: "ready", value });
       })
       .catch(() => {
@@ -95,7 +108,7 @@ function IdentityDetails({
     return () => {
       controller.abort();
     };
-  }, [identity.id]);
+  }, [identity.id, tab]);
 
   async function saveEdit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -159,6 +172,14 @@ function IdentityDetails({
         eyebrow="Botanical identity"
         title={identity.display_label}
         secondary={identity.common_name}
+        primaryActions={
+          <a
+            className="button-link"
+            href={`#/seeds?action=create&identity=${identity.id}`}
+          >
+            Add seed lot
+          </a>
+        }
         editLabel="Edit botanical identity"
         onEdit={() => {
           setEditForm({
@@ -183,11 +204,6 @@ function IdentityDetails({
             </button>
           </details>
         }
-      />
-      <BotanicalIdentityCover
-        csrfToken={csrfToken}
-        identityId={identity.id}
-        identityLabel={identity.display_label}
       />
       {mutationError && (
         <div className="notice notice--error" role="alert">
@@ -305,20 +321,26 @@ function IdentityDetails({
           selectTab(next);
         }}
       />
-      {collection.status === "loading" && (
+      {tab !== "reference" && collection.status === "loading" && (
         <p role="status">Loading collection context…</p>
       )}
-      {collection.status === "error" && (
+      {tab !== "reference" && collection.status === "error" && (
         <div className="notice notice--error">
           Florabase could not load this identity’s collection context.
         </div>
       )}
       {tab === "overview" && (
         <div
+          id="panel-overview"
           className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
+          <BotanicalIdentityCover
+            csrfToken={csrfToken}
+            identityId={identity.id}
+            identityLabel={identity.display_label}
+          />
           {counts && (
             <div className="summary-grid identity-summary-grid">
               <CollectionCard
@@ -470,13 +492,6 @@ function IdentityDetails({
               )}
             </dl>
           </article>
-          <BotanicalProfilePanel identityId={identity.id} key={identity.id} />
-          <ExternalBotanicalDataPanel
-            key={`external-${identity.id}`}
-            csrfToken={csrfToken}
-            identityId={identity.id}
-            scientificName={identity.scientific_name}
-          />
           {counts && counts.events.length > 0 && (
             <section>
               <h3>Recent Events</h3>
@@ -489,8 +504,35 @@ function IdentityDetails({
           </p>
         </div>
       )}
+      {tab === "reference" && (
+        <div
+          id="panel-reference"
+          className="detail-tab-panel identity-reference-stack"
+          role="tabpanel"
+          aria-labelledby="tab-reference"
+        >
+          <div className="section-heading">
+            <div>
+              <p className="eyebrow">Botanical reference</p>
+              <h3>Profile, native range, and occurrence evidence</h3>
+              <p className="field-help">
+                Operator-authored botanical knowledge and advisory external
+                evidence stay separate from collection lineage and provenance.
+              </p>
+            </div>
+          </div>
+          <BotanicalProfilePanel identityId={identity.id} key={identity.id} />
+          <ExternalBotanicalDataPanel
+            key={`external-${identity.id}`}
+            csrfToken={csrfToken}
+            identityId={identity.id}
+            scientificName={identity.scientific_name}
+          />
+        </div>
+      )}
       {counts && tab === "seeds" && (
         <div
+          id="panel-seeds"
           className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-seeds"
@@ -538,6 +580,7 @@ function IdentityDetails({
       )}
       {counts && tab === "sowings" && (
         <div
+          id="panel-sowings"
           className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-sowings"
@@ -623,6 +666,7 @@ function IdentityDetails({
       )}
       {counts && tab === "plants" && (
         <div
+          id="panel-plants"
           className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-plants"
@@ -727,6 +771,7 @@ function IdentityDetails({
       )}
       {counts && tab === "events" && (
         <div
+          id="panel-events"
           className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-events"
@@ -784,11 +829,7 @@ export function BotanicalIdentityScreen({
           throw new Error("Invalid identity directory response");
         const identities = value as BotanicalIdentityResponse[];
         setDirectory({ status: "ready", identities });
-        setSelected((current) =>
-          current === null
-            ? (identities.find(({ id }) => id === initialId) ?? null)
-            : (identities.find(({ id }) => id === current.id) ?? current),
-        );
+        setSelected(identities.find(({ id }) => id === initialId) ?? null);
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
@@ -1044,10 +1085,28 @@ export function BotanicalIdentityScreen({
                         );
                       }}
                     >
-                      <span>{identity.display_label}</span>
-                      {identity.common_name && (
-                        <small>{identity.common_name}</small>
-                      )}
+                      <span
+                        className={`identity-list-cover identity-list-cover--${identity.compact_cover_kind ?? "none"}`}
+                      >
+                        {identity.compact_cover_kind === "local" ? (
+                          <img
+                            alt=""
+                            loading="lazy"
+                            src={`/api/v1/botanical-identities/${identity.id}/cover-image/thumbnail`}
+                          />
+                        ) : (
+                          <span aria-hidden="true">♧</span>
+                        )}
+                      </span>
+                      <span className="identity-list-copy">
+                        <strong>{identity.display_label}</strong>
+                        {identity.common_name && (
+                          <small>{identity.common_name}</small>
+                        )}
+                        {identity.compact_cover_kind === "external" && (
+                          <small>External cover on detail page</small>
+                        )}
+                      </span>
                     </button>
                   </li>
                 ))}
@@ -1190,6 +1249,7 @@ export function BotanicalIdentityScreen({
         <div className="identity-panel" aria-live="polite">
           {selected ? (
             <IdentityDetails
+              key={selected.id}
               identity={selected}
               csrfToken={csrfToken}
               initialTab={initialTab}

@@ -4,6 +4,41 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-14 — UX-003 implemented
+
+- Audited the complete collection workflow after maps, photos, transfer, propagation, and reversal
+  work. Standardized desktop navigation in `Seeds → Sowings → Plants → Events` lifecycle order and
+  kept the five-item mobile bar focused on Home, Seeds, Sowings, Plants, and an accessible More menu
+  that leads with Events and preserves the secondary identity, map, and reference destinations.
+- Made major collection lists lead with each record's own label and use BotanicalIdentity as
+  supporting context. Detail headers now surface the natural next operation—add a SeedLot, start a
+  Sowing, create a Plant/PlantGroup, extract, or transfer—before correction controls, while rare
+  reversal and destructive actions remain separated. Stored BotanicalIdentity, source SeedLot or
+  Sowing, original PlantGroup, Location, Supplier, provenance, and Event relationships gained direct
+  navigation without inferring lineage from shared identity.
+- Restructured BotanicalIdentity into Overview, Reference, Seeds, Sowings, Plants, and Events. Cover
+  and collection summaries remain in Overview; profile, structured native range, and advisory
+  external occurrence evidence share a distinct Reference surface. Hidden reference/collection
+  panels no longer cause unnecessary eager requests, occurrence maps remain explicit-load, and
+  external covers are not requested by compact directory views.
+- Added a fixed-purpose authenticated local-cover thumbnail endpoint. It decodes the validated local
+  cover under Pillow's bounds, applies orientation, preserves aspect ratio, never upscales, and emits
+  WebP with a maximum 320-pixel edge. Private caching uses an ETag derived from attachment SHA-256
+  and the transform version; conditional requests can return 304 before decoding. The endpoint does
+  not expose storage paths, persist derivatives, proxy external images, or provide generic resize
+  controls. Directory rows use this endpoint for local covers, a neutral external-cover indicator,
+  and a clean no-cover fallback.
+- Completed consistent tab-to-panel ARIA relationships, semantic panels, record-first headings,
+  linked status/context fields, wrapping action groups, and deep-linkable Location selection.
+  Collection-wide Events explicitly remain journal history whose ordinary edits/deletes do not
+  recompute current state.
+- Focused verification covers thumbnail dimensions, format, authentication, ownership behavior,
+  private validators and 304 handling, external/missing cover behavior, absence of a generic resize
+  route, navigation/action hierarchy, lifecycle cross-links, mobile structure, tab semantics, lazy
+  reference loading, and existing Plant/Sowing flows. Canonical verification evidence is recorded by
+  `make feature-verify`; UX-003 remains `implemented` pending independent review and final browser
+  UAT.
+
 ## 2026-09-14 — ATTACHMENT-003 implemented
 
 - Added revision `20260913_0024` with separate `LocalCollectionPhoto`, `ExternalImageReference`, and
@@ -799,7 +834,7 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260913_0024` on the ATTACHMENT-003 implementation branch.
+- Alembic head: `20260913_0024`; UX-003 adds no migration.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
@@ -809,15 +844,15 @@ implementation detail.
   shared GeographicPlace hierarchy; and guarded local still-image attachment storage with
   authenticated retrieval and coordinated database/content backup.
 - `PROPAGATION-001` through `PROPAGATION-003`, `SUPPLIER-002`, `LOCATION-002`, `GEOGRAPHY-003`,
-  `MAP-001`, `BOTANY-002`, and `ATTACHMENT-002` are verified; `GEOGRAPHY-002` is implemented
-  pending independent review, and `ATTACHMENT-003` is implemented pending independent review. The
+  `MAP-001`, `BOTANY-002`, and `ATTACHMENT-002` are verified; `GEOGRAPHY-002`, `ATTACHMENT-003`, and
+  `UX-003` are implemented pending independent review. The
   next increment remains decided by the machine-readable dependency graph; licensing/version policy
   and release readiness remain explicit later operator/product decisions.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.
   Other unblocked P2 product items are listed by the machine-readable dependency graph rather than
   prioritized here.
-- Deliberately absent: thumbnails/derivatives, collection-photo primary designations, identity-cover
-  history or galleries, compact directory/dashboard cover rendering, automatic/provider image
-  discovery, advanced search, import/export, PWA behavior, offline/synchronization behavior,
-  generic graphs, and multi-user collaboration.
+- Deliberately absent: generic thumbnails/derivatives beyond the fixed local identity-cover compact
+  response, collection-photo primary designations, identity-cover history or galleries, automatic or
+  provider image discovery, dashboard cover rendering, advanced search, import/export, PWA behavior,
+  offline/synchronization behavior, generic graphs, and multi-user collaboration.

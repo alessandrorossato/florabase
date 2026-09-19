@@ -102,15 +102,22 @@ and responsive states. Botanical identity aggregation is explicitly not lineage.
 still represents later analytical/statistical work; `UX-002` still represents layered contextual
 help within forms.
 
-The longer product/UX direction is an understandable collection lifecycle:
+The product/UX direction is an understandable collection lifecycle:
 `BotanicalIdentity → SeedLot → Sowing → Plant / PlantGroup → Events / terminal state`. This is a
 workflow narrative over explicit records, not a new persisted super-entity and not permission to
-infer missing lineage. `UX-003` will revisit Seeds, Sowings, Plants, Events, and their detail pages
-after the guided transitions exist, improving page purpose, consistent actions, cross-linking, and
-mobile/desktop navigation without changing what the verified `UX-001` increment delivered.
-Compact BotanicalIdentity directory/dashboard cover imagery is also deferred to `UX-003`, where it
-must be paired with an efficient thumbnail strategy instead of loading many original-size files and
-shrinking them only with CSS.
+infer missing lineage. `UX-003` now refines Seeds, Sowings, Plants, Events, and their detail pages
+with lifecycle-ordered navigation, record-first labels, consistent headers and action priority,
+accessible tab relationships, and direct links to stored identity, source, Location, Supplier, and
+provenance context. Rare reversals and destructive actions remain separated from natural next-step
+workflows. BotanicalIdentity reference data has its own lazy Reference tab, distinct from collection
+aggregation and explicit lineage.
+
+Compact BotanicalIdentity directory imagery follows a bounded rule: local covers use an
+authenticated server-generated WebP thumbnail with a maximum 320-pixel edge, no upscaling, private
+caching, and an attachment-digest validator. External covers use a neutral compact indicator and do
+not trigger directory-wide third-party requests; their operator-approved original remains available
+on the identity detail. Missing covers use a clean fallback. No generic transformation API,
+persisted derivative, background worker, or automatic image discovery is introduced.
 
 `PLANT-005` implements transferred/ceded outcomes for Plants and entire PlantGroups. A locked focused
 operation atomically records the transfer Event and lifecycle, with optional free-text recipient,
@@ -128,9 +135,10 @@ wait for the separate `ORDER-001` transaction model.
 After the implemented collection, geography, supplier, provenance-map, external botanical-data,
 structured native-range, MAP-002 occurrence-density, and ATTACHMENT-003 photo foundations, the
 remaining V1 product sequence continues beyond photos. `BOTANY-003` profile enrichment remains separately
-planned while the approved provider lacks a reviewed profile-content contract. `UX-003` follows those
-feature-specific surfaces as global stabilization and polish, then `UX-002` adds contextual help;
-neither blocks the botanical, geography, map, or photo increments.
+planned while the approved provider lacks a reviewed profile-content contract. `UX-003` is
+implemented as global stabilization and polish over those feature-specific surfaces; `UX-002`
+remains the separate planned contextual-help increment. Neither changes the botanical, geography,
+map, or photo domain contracts.
 
 `BOTANY-002` keeps Florabase BotanicalIdentity and BotanicalProfile data authoritative. GBIF is the
 first fixed advisory provider, accessed only by the backend. Search results require explicit

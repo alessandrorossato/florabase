@@ -136,6 +136,14 @@ function createIdentityThenProfile(
       return profileHandler(init);
     if (
       path ===
+      `/api/v1/botanical-identities/${botanicalIdentity.id}/external-taxon-link`
+    )
+      return jsonResponse(
+        { detail: { code: "external_taxon_link_not_found" } },
+        404,
+      );
+    if (
+      path ===
       `/api/v1/botanical-identities/${botanicalIdentity.id}/profile/native-ranges`
     )
       return jsonResponse([]);
@@ -158,6 +166,7 @@ async function createSelectedIdentity() {
   await screen.findByRole("heading", {
     name: "Acer palmatum ‘Bloodgood’",
   });
+  await user.click(screen.getByRole("tab", { name: "Reference" }));
   return user;
 }
 
@@ -622,6 +631,13 @@ test("directory records are keyboard-selectable and reuse the existing profile p
         { detail: { code: "botanical_profile_not_found" } },
         404,
       );
+    if (
+      path === `/api/v1/botanical-identities/${annona.id}/external-taxon-link`
+    )
+      return jsonResponse(
+        { detail: { code: "external_taxon_link_not_found" } },
+        404,
+      );
     throw new Error(`unexpected request: ${path}`);
   });
   const user = userEvent.setup();
@@ -637,6 +653,7 @@ test("directory records are keyboard-selectable and reuse the existing profile p
   expect(
     screen.getByRole("heading", { name: "Annona cherimola" }),
   ).toBeInTheDocument();
+  await user.click(screen.getByRole("tab", { name: "Reference" }));
   expect(
     await screen.findByRole("heading", { name: "No profile yet" }),
   ).toBeInTheDocument();
@@ -1774,6 +1791,101 @@ test("location hierarchy renders paths and supports keyboard selection", async (
   expect(
     Array.from(rootParent.querySelectorAll("option"), (option) => option.value),
   ).toEqual([""]);
+});
+
+test("Location detail deep links stay synchronized with hash navigation", async () => {
+  window.history.replaceState(null, "", `#/locations/${drawerLocation.id}`);
+  authenticatedThen((path) => {
+    if (path === "/api/v1/locations")
+      return jsonResponse([houseLocation, cabinetLocation, drawerLocation]);
+    throw new Error(`unexpected request: ${path}`);
+  });
+  render(<App />);
+
+  expect(
+    await screen.findByRole("heading", { name: "Drawer A" }),
+  ).toBeInTheDocument();
+
+  window.history.pushState(null, "", `#/locations/${houseLocation.id}`);
+  window.dispatchEvent(new HashChangeEvent("hashchange"));
+  expect(
+    await screen.findByRole("heading", { name: "House" }),
+  ).toBeInTheDocument();
+
+  window.history.pushState(null, "", "#/locations/missing-location");
+  window.dispatchEvent(new HashChangeEvent("hashchange"));
+  expect(
+    await screen.findByRole("heading", { name: "Select a location" }),
+  ).toBeInTheDocument();
+});
+
+test("Botanical identity detail deep links stay synchronized with hash navigation", async () => {
+  const secondIdentity = {
+    ...botanicalIdentity,
+    id: "01900000-0000-7000-8000-000000000098",
+    scientific_name: "Acer rubrum",
+    display_label: "Acer rubrum",
+  };
+  window.history.replaceState(null, "", `#/identities/${botanicalIdentity.id}`);
+  authenticatedDirectoryThen((path) => {
+    if (path === "/api/v1/botanical-identities")
+      return jsonResponse([botanicalIdentity, secondIdentity]);
+    if (
+      path === `/api/v1/botanical-identities/${botanicalIdentity.id}/collection`
+    )
+      return jsonResponse({
+        identity: botanicalIdentity,
+        seed_lots: [],
+        sowings: [],
+        plants: [],
+        plant_groups: [],
+        events: [],
+      });
+    if (path === `/api/v1/botanical-identities/${secondIdentity.id}/collection`)
+      return jsonResponse({
+        identity: secondIdentity,
+        seed_lots: [],
+        sowings: [],
+        plants: [],
+        plant_groups: [],
+        events: [],
+      });
+    if (path === `/api/v1/botanical-identities/${secondIdentity.id}/profile`)
+      return jsonResponse(
+        { detail: { code: "botanical_profile_not_found" } },
+        404,
+      );
+    if (
+      path ===
+      `/api/v1/botanical-identities/${secondIdentity.id}/external-taxon-link`
+    )
+      return jsonResponse(
+        { detail: { code: "external_taxon_link_not_found" } },
+        404,
+      );
+    throw new Error(`unexpected request: ${path}`);
+  });
+  render(<App />);
+
+  expect(
+    await screen.findByRole("heading", {
+      name: botanicalIdentity.display_label,
+    }),
+  ).toBeInTheDocument();
+
+  window.history.pushState(
+    null,
+    "",
+    `#/identities/${secondIdentity.id}?tab=reference`,
+  );
+  window.dispatchEvent(new HashChangeEvent("hashchange"));
+  expect(
+    await screen.findByRole("heading", { name: secondIdentity.display_label }),
+  ).toBeInTheDocument();
+  expect(screen.getByRole("tab", { name: "Reference" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
 });
 
 test("location creation supports roots and the selected create-child shortcut", async () => {

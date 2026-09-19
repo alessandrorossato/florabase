@@ -281,28 +281,34 @@ function Detail({
             >
               {lifecycleLabels[sowing.lifecycle]}
             </span>
-            {sowing.location && <span>{sowing.location.display_path}</span>}
+            {sowing.location && (
+              <a href={`#/locations/${sowing.location.id}`}>
+                {sowing.location.display_path}
+              </a>
+            )}
           </>
+        }
+        primaryActions={
+          sowing.lifecycle !== "reversed" ? (
+            <>
+              <a
+                className="button-link"
+                href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=plant`}
+              >
+                Create Plant
+              </a>
+              <a
+                className="button-link button--secondary"
+                href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=group`}
+              >
+                Create Plant group
+              </a>
+            </>
+          ) : undefined
         }
         editLabel="Edit Sowing"
         onEdit={onEdit}
       />
-      {sowing.lifecycle !== "reversed" && (
-        <div className="actions contextual-actions">
-          <a
-            className="button-link"
-            href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=plant`}
-          >
-            Create Plant
-          </a>
-          <a
-            className="button-link button--secondary"
-            href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=group`}
-          >
-            Create PlantGroup
-          </a>
-        </div>
-      )}
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
@@ -320,7 +326,12 @@ function Detail({
         }}
       />
       {tab === "overview" && (
-        <div className="detail-tab-panel overview-grid">
+        <div
+          id="panel-overview"
+          className="detail-tab-panel overview-grid"
+          role="tabpanel"
+          aria-labelledby="tab-overview"
+        >
           <section aria-labelledby="sowing-origin-title">
             <p className="eyebrow">Source</p>
             <h3 id="sowing-origin-title" tabIndex={-1} ref={headingRef}>
@@ -439,7 +450,15 @@ function Detail({
               </div>
               <div>
                 <dt>Current location</dt>
-                <dd>{sowing.location?.display_path ?? "Not recorded"}</dd>
+                <dd>
+                  {sowing.location ? (
+                    <a href={`#/locations/${sowing.location.id}`}>
+                      {sowing.location.display_path}
+                    </a>
+                  ) : (
+                    "Not recorded"
+                  )}
+                </dd>
               </div>
             </dl>
           </section>
@@ -490,6 +509,7 @@ function Detail({
       )}
       {tab === "lineage" && (
         <div
+          id="panel-lineage"
           className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-lineage"
@@ -545,6 +565,7 @@ function Detail({
       )}
       {tab === "photos" && (
         <div
+          id="panel-photos"
           className="detail-tab-panel"
           role="tabpanel"
           aria-labelledby="tab-photos"
@@ -971,10 +992,10 @@ export function SowingScreen({
                     }}
                   >
                     <span className="seed-primary">
-                      <strong>
+                      <strong>{sowing.label ?? "Unlabelled sowing"}</strong>
+                      <small>
                         {sowing.seed_lot.botanical_identity_display_label}
-                      </strong>
-                      {sowing.label && <small>{sowing.label}</small>}
+                      </small>
                     </span>
                     <span>{dateLabel(sowing.sowing_date)}</span>
                     <span>{quantityLabel(sowing)}</span>
