@@ -1,4 +1,14 @@
-import { useId, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import {
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from "react";
+
+import { FieldHelp } from "../components/ContextualHelp";
+import { describedBy } from "../components/aria";
 
 export interface ReferenceChoice {
   id: string;
@@ -15,6 +25,7 @@ export function ReferencePicker({
   required = false,
   disabled = false,
   createLabel = "Create new",
+  help,
 }: {
   label: string;
   choices: ReferenceChoice[];
@@ -24,9 +35,12 @@ export function ReferencePicker({
   required?: boolean;
   disabled?: boolean;
   createLabel?: string;
+  help?: ReactNode;
 }) {
   const inputId = useId();
   const listId = useId();
+  const helpId = useId();
+  const retiredId = useId();
   const input = useRef<HTMLInputElement>(null);
   const selected = choices.find((choice) => choice.id === value);
   const [query, setQuery] = useState(selected?.label ?? "");
@@ -83,6 +97,12 @@ export function ReferencePicker({
         role="combobox"
         aria-autocomplete="list"
         aria-controls={listId}
+        aria-describedby={describedBy(
+          help !== undefined && help !== null && help !== false
+            ? helpId
+            : undefined,
+          selected?.retired && retiredId,
+        )}
         aria-expanded={open}
         aria-activedescendant={
           open && matches[activeIndex]
@@ -148,7 +168,10 @@ export function ReferencePicker({
           )}
         </div>
       )}
-      {selected?.retired && <small>Current selection is retired.</small>}
+      {help && <FieldHelp id={helpId}>{help}</FieldHelp>}
+      {selected?.retired && (
+        <small id={retiredId}>Current selection is retired.</small>
+      )}
     </div>
   );
 }

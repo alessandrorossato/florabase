@@ -510,6 +510,11 @@ test("minimal group creation keeps quantity unknown", async () => {
     screen.getByRole("button", { name: /Plant group.*Multiple/s }),
   );
   await chooseReference(user, "Botanical identity", "Persea americana");
+  expect(
+    screen.getByRole("group", { name: /Quantity/ }),
+  ).toHaveAccessibleDescription(
+    /Exact only for a known count.*Unknown rather than guessing/i,
+  );
   expect(screen.getByLabelText("Kind")).toHaveValue("unknown");
   await user.click(screen.getByRole("button", { name: "Record Plant group" }));
   expect(payloads[0]).toMatchObject({
@@ -1624,6 +1629,9 @@ test("Event creation validates movement, explains side effects and authoritative
   await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
   await user.click(screen.getByRole("tab", { name: "Events" }));
   await user.click(await screen.findByRole("button", { name: "Add event" }));
+  expect(screen.getByLabelText("Event kind")).toHaveAccessibleDescription(
+    /Most Events are journal history/i,
+  );
   await user.type(screen.getByLabelText("Notes (optional)"), "New leaf.");
   await user.click(
     within(screen.getByRole("dialog")).getByRole("button", {

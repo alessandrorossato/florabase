@@ -343,6 +343,53 @@ test("selection shows complete details without internal identifiers and opens co
   expect(screen.getByLabelText("Lifecycle")).toHaveValue("active");
 });
 
+test("layered help explains ambiguous SeedLot fields without adding chrome to Notes", async () => {
+  mockApi(directoryHandler([]));
+  const user = await openSeeds();
+  await user.click(
+    await screen.findByRole("button", { name: "+ New seed lot" }),
+  );
+
+  expect(
+    screen.getByRole("combobox", { name: "Botanical identity" }),
+  ).toHaveAccessibleDescription(/does not establish lineage/i);
+  expect(
+    screen.getByRole("group", { name: /Quantity/ }),
+  ).toHaveAccessibleDescription(
+    /leave the quantity empty rather than guessing/i,
+  );
+  expect(
+    screen.getByRole("combobox", { name: "Supplier (optional)" }),
+  ).toHaveAccessibleDescription(/does not establish its biological origin/i);
+  expect(
+    screen.getByRole("combobox", { name: "Storage location (optional)" }),
+  ).toHaveAccessibleDescription(/currently kept.*not where it originated/i);
+
+  const lotHelp = screen.getByRole("button", {
+    name: "More information about SeedLots",
+  });
+  await user.click(lotHelp);
+  expect(
+    screen.getByRole("region", { name: "More information about SeedLots" }),
+  ).toHaveTextContent(/one physical packet or bag/i);
+
+  await user.click(screen.getByRole("button", { name: "More details" }));
+  expect(
+    screen.getByRole("combobox", { name: "Material provenance (optional)" }),
+  ).toHaveAccessibleDescription(
+    /not its Supplier or current storage location/i,
+  );
+  const acquisitionDate = screen.getByRole("group", {
+    name: "Acquisition date",
+  });
+  expect(
+    within(acquisitionDate).getByLabelText("Precision"),
+  ).toHaveAccessibleDescription(/do not invent a missing month or day/i);
+  expect(screen.getByLabelText("Notes (optional)")).not.toHaveAttribute(
+    "aria-describedby",
+  );
+});
+
 test("minimal fast entry submits only known user information and uses authoritative refresh", async () => {
   let submitted: unknown;
   const created = lot({

@@ -51,6 +51,25 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+test("offers deep contextual help without starting a reversal", async () => {
+  const fetch = vi.fn(() => Promise.resolve(json(eligibility)));
+  vi.stubGlobal("fetch", fetch);
+  show();
+  const user = userEvent.setup();
+
+  await user.click(
+    await screen.findByRole("button", {
+      name: "Understand creation reversal",
+    }),
+  );
+  const dialog = screen.getByRole("dialog", {
+    name: "How creation reversal works",
+  });
+  expect(dialog).toHaveTextContent(/source lifecycle and quantity snapshot/i);
+  expect(dialog).toHaveTextContent(/not deleted/i);
+  expect(fetch).toHaveBeenCalledTimes(1);
+});
+
 test.each(["sowing", "plant", "plant_group"] as const)(
   "SAFE %s reversal returns authoritative state with CSRF",
   async (kind) => {

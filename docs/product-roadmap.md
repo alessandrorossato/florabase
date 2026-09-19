@@ -88,8 +88,7 @@ BotanicalIdentity galleries remain outside this increment.
 
 Planned P2 work deepens existing workflows with dated germination observations, Orders, richer
 events, tuber and cutting lots, labels/QR lookup, advanced search,
-analytical dashboards, contextual form help, guided import/export, visual lineage, and reviewable
-profile enrichment.
+analytical dashboards, guided import/export, visual lineage, and reviewable profile enrichment.
 
 PWA work means installability and a safe application shell, not offline-first mutation,
 synchronization, push, or a native mobile app. Those behaviors require separate contracts.
@@ -99,8 +98,8 @@ sidebar, five-destination mobile bottom navigation, an authoritative current-col
 a global Event timeline, and a BotanicalIdentity hub that aggregates Seeds, Sowings, Plants,
 PlantGroups, and Events. Major record details share breadcrumbs, visible Edit actions, tabs, cards,
 and responsive states. Botanical identity aggregation is explicitly not lineage. `DASHBOARD-001`
-still represents later analytical/statistical work; `UX-002` still represents layered contextual
-help within forms.
+still represents later analytical/statistical work. `UX-002` adds layered contextual help within
+forms without changing those domain or navigation contracts.
 
 The product/UX direction is an understandable collection lifecycle:
 `BotanicalIdentity → SeedLot → Sowing → Plant / PlantGroup → Events / terminal state`. This is a
@@ -136,9 +135,10 @@ After the implemented collection, geography, supplier, provenance-map, external 
 structured native-range, MAP-002 occurrence-density, and ATTACHMENT-003 photo foundations, the
 remaining V1 product sequence continues beyond photos. `BOTANY-003` profile enrichment remains separately
 planned while the approved provider lacks a reviewed profile-content contract. `UX-003` is
-implemented as global stabilization and polish over those feature-specific surfaces; `UX-002`
-remains the separate planned contextual-help increment. Neither changes the botanical, geography,
-map, or photo domain contracts.
+implemented as global stabilization and polish over those feature-specific surfaces. `UX-002` is
+implemented as static local form guidance: concise described field help, accessible expandable
+examples, and focused deep help for complex corrective operations. It adds no onboarding state,
+backend help service, or change to the botanical, geography, map, or photo domain contracts.
 
 `BOTANY-002` keeps Florabase BotanicalIdentity and BotanicalProfile data authoritative. GBIF is the
 first fixed advisory provider, accessed only by the backend. Search results require explicit

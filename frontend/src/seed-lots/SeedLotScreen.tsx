@@ -16,6 +16,7 @@ import {
   DetailHeader,
   DetailTabs,
 } from "../components/CollectionUI";
+import { FieldHelp, InfoDisclosure } from "../components/ContextualHelp";
 import { LineagePanel } from "../lineage/LineagePanel";
 import { PhotosSection } from "../photos/PhotosSection";
 import { listSowings, type SowingResponse } from "../sowings/api";
@@ -1097,6 +1098,7 @@ export function SeedLotScreen({
               </div>
               <ReferencePicker
                 label="Botanical identity"
+                help="A shared botanical identity keeps the botanical name consistent across records; it does not establish lineage."
                 required
                 disabled={pending}
                 choices={references.identities.map((item) => ({
@@ -1115,6 +1117,15 @@ export function SeedLotScreen({
                 }}
                 createLabel="Create identity"
               />
+              {!selected && (
+                <InfoDisclosure label="More information about SeedLots">
+                  <p>
+                    A SeedLot is one physical packet or bag. Record a separate
+                    SeedLot for another packet even when it contains the same
+                    taxon and has the same descriptive details.
+                  </p>
+                </InfoDisclosure>
+              )}
               <div className="seed-primary-fields">
                 <div className="field">
                   <label htmlFor="lot-label">
@@ -1133,7 +1144,10 @@ export function SeedLotScreen({
                     }}
                   />
                 </div>
-                <fieldset className="quantity-field">
+                <fieldset
+                  aria-describedby="seed-quantity-help"
+                  className="quantity-field"
+                >
                   <legend>
                     Quantity <span className="optional">(optional)</span>
                   </legend>
@@ -1184,7 +1198,11 @@ export function SeedLotScreen({
                       Approximately
                     </label>
                   </div>
-                  <small>Leave empty when quantity is unknown.</small>
+                  <FieldHelp id="seed-quantity-help">
+                    Enter a value only when known, mark estimates as
+                    approximate, and leave the quantity empty rather than
+                    guessing.
+                  </FieldHelp>
                 </fieldset>
                 <div className="field">
                   <label htmlFor="source-kind">Source</label>
@@ -1231,6 +1249,7 @@ export function SeedLotScreen({
                 )}
                 <ReferencePicker
                   label="Supplier (optional)"
+                  help="Who or what supplied this material; a Supplier does not establish its biological origin."
                   disabled={pending}
                   choices={references.suppliers.map((item) => ({
                     id: item.id,
@@ -1248,6 +1267,7 @@ export function SeedLotScreen({
                 />
                 <ReferencePicker
                   label="Storage location (optional)"
+                  help="Where this SeedLot is currently kept in your collection, not where it originated."
                   disabled={pending}
                   choices={locationsForScope(
                     references.locations,
@@ -1281,6 +1301,7 @@ export function SeedLotScreen({
                 <div className="advanced-fields">
                   <ReferencePicker
                     label="Material provenance (optional)"
+                    help="Where the biological material originated, not its Supplier or current storage location."
                     disabled={pending}
                     choices={references.places.map((item) => ({
                       id: item.id,
@@ -1330,6 +1351,7 @@ export function SeedLotScreen({
                     <PartialDateField
                       id="harvest"
                       label="Harvest date"
+                      showHelp={false}
                       value={form.harvestDate}
                       onChange={(value) => {
                         setForm((current) => ({
@@ -1342,6 +1364,7 @@ export function SeedLotScreen({
                     <PartialDateField
                       id="viability"
                       label="Expected viability until"
+                      showHelp={false}
                       value={form.expectedViabilityUntil}
                       onChange={(value) => {
                         setForm((current) => ({

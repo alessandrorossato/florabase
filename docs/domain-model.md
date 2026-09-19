@@ -601,11 +601,9 @@ product workflows preserve historical rows rather than hard-deleting them.
 ## Deferred capabilities
 
 Richer structured Event payloads, richer germination observations, Orders, other propagation
-material, advanced search,
-analytical dashboards, contextual form help, import/export, PWA installability, enrichment, taxonomy
-reconciliation, deeper Supplier analytics, reminders, weather, and multi-user ownership remain
-planned. `docs/features.json` is the detailed source for dependencies and acceptance criteria.
-
+material, advanced search, analytical dashboards, import/export, PWA installability, enrichment,
+taxonomy reconciliation, deeper Supplier analytics, reminders, weather, and multi-user ownership
+remain planned. `docs/features.json` is the detailed source for dependencies and acceptance criteria.
 
 ### Propagation reversal
 

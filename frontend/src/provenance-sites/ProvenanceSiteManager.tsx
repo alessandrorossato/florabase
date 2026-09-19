@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
 import { ApiError } from "../auth/api";
+import { FieldHelp } from "../components/ContextualHelp";
 import type { GeographicPlaceResponse } from "../geographic-places/api";
 import {
   createProvenanceSite,
@@ -179,6 +180,7 @@ export function ProvenanceSiteManager({
           <div className="field">
             <label htmlFor="site-name">ProvenanceSite name</label>
             <input
+              aria-describedby="provenance-site-name-help"
               id="site-name"
               ref={nameInput}
               required
@@ -188,6 +190,10 @@ export function ProvenanceSiteManager({
                 setForm({ ...form, name: event.currentTarget.value });
               }}
             />
+            <FieldHelp id="provenance-site-name-help">
+              A precise place where biological material originated or was
+              collected, not its current collection Location.
+            </FieldHelp>
           </div>
           <div className="field">
             <label htmlFor="site-place">Geographic place (optional)</label>

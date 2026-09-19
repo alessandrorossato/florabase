@@ -4,6 +4,32 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-19 — UX-002 implemented
+
+- Audited current create/edit forms and guided propagation, Event, transfer, extraction,
+  reintegration, reversal, reference-selection, profile, provenance, and cover-image workflows after
+  UX-003. Kept self-explanatory names, labels, contact fields, Notes, and ordinary actions free of
+  extra help chrome while targeting domain boundaries that can change an operator's answer.
+- Added one local layered-help system: concise inline text uses `aria-describedby`; expandable
+  examples use named keyboard/touch buttons and semantic regions with Escape focus restoration; and
+  focused modal help traps focus, closes with Escape, and returns focus for genuinely complex
+  creation reversal semantics. The layout remains inline and full-width on narrow screens rather
+  than using hover bubbles.
+- Covered exact/approximate/unknown quantity, count-versus-weight, partial-date precision, current
+  collection Location versus biological provenance, Supplier versus origin, shared botanical
+  identity versus lineage, one-packet-per-SeedLot identity, Plant versus PlantGroup tracking, Event
+  journal versus state-changing creation behavior, native range versus material provenance,
+  external-image credit/licence metadata, and reversible-operation consequences.
+- Added focused interaction and integration coverage for help/error description composition,
+  keyboard activation, screen-reader names and regions, Escape/focus behavior, deliberate absence
+  of help on Notes, existing form submission, and the affected SeedLot, Sowing, Plant/Event, and
+  reversal workflows. Frontend type checking and linting pass; 60 focused tests pass. Canonical
+  `make feature-verify` passes all 357 backend tests at 90.09% coverage, 159 frontend tests, and 323
+  disposable PostgreSQL integration tests, plus feature/workflow checks, formatting, linting, strict
+  typing, generated API drift, production builds, and whitespace checks. It detects no added Alembic
+  revision. No API, generated contract, backend, persistence, or telemetry changed; UX-002 remains
+  `implemented` pending independent review and release UAT.
+
 ## 2026-09-14 — UX-003 implemented
 
 - Audited the complete collection workflow after maps, photos, transfer, propagation, and reversal

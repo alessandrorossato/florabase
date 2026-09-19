@@ -21,6 +21,7 @@ import {
   DetailHeader,
   DetailTabs,
 } from "../components/CollectionUI";
+import { FieldHelp } from "../components/ContextualHelp";
 import { EventJournal } from "../events/EventJournal";
 import { LineagePanel } from "../lineage/LineagePanel";
 import { PhotosSection } from "../photos/PhotosSection";
@@ -1626,6 +1627,7 @@ export function PlantScreen({
                 <ReferencePicker
                   key={`${selectedKey ?? "new"}-${formKind}-identity`}
                   label="Botanical identity"
+                  help="A shared botanical identity keeps the botanical name consistent across records; it does not establish lineage."
                   required
                   disabled={pending}
                   value={form.botanicalIdentityId}
@@ -1651,7 +1653,10 @@ export function PlantScreen({
                   />
                 </div>
                 {formKind === "group" && (
-                  <fieldset className="quantity-field">
+                  <fieldset
+                    aria-describedby="plant-group-quantity-help"
+                    className="quantity-field"
+                  >
                     <legend>
                       Quantity <span className="optional">(optional)</span>
                     </legend>
@@ -1696,6 +1701,10 @@ export function PlantScreen({
                         />
                       </div>
                     )}
+                    <FieldHelp id="plant-group-quantity-help">
+                      Choose Exact only for a known count, Approximate for an
+                      estimate, or Unknown rather than guessing.
+                    </FieldHelp>
                   </fieldset>
                 )}
                 {extractionSource && (
@@ -1850,6 +1859,7 @@ export function PlantScreen({
                                 <span className="optional">(optional)</span>
                               </label>
                               <select
+                                aria-describedby="plant-supplier-help"
                                 id="plant-supplier"
                                 value={form.supplierId}
                                 disabled={pending}
@@ -1875,10 +1885,11 @@ export function PlantScreen({
                                   </option>
                                 ))}
                               </select>
-                              <small>
-                                Selecting a Supplier does not change the
-                                direct-origin kind.
-                              </small>
+                              <FieldHelp id="plant-supplier-help">
+                                Who or what supplied this record; a Supplier
+                                does not establish biological origin or change
+                                the direct-origin kind.
+                              </FieldHelp>
                             </div>
                             <div className="field">
                               <label htmlFor="plant-provenance">
@@ -1886,6 +1897,7 @@ export function PlantScreen({
                                 <span className="optional">(optional)</span>
                               </label>
                               <select
+                                aria-describedby="plant-provenance-help"
                                 id="plant-provenance"
                                 value={form.provenanceId}
                                 disabled={pending}
@@ -1911,10 +1923,10 @@ export function PlantScreen({
                                   </option>
                                 ))}
                               </select>
-                              <small>
+                              <FieldHelp id="plant-provenance-help">
                                 Where the biological material originated or was
-                                collected, when known.
-                              </small>
+                                collected, not its Supplier or current Location.
+                              </FieldHelp>
                             </div>
                             <div className="field">
                               <label htmlFor="plant-provenance-site">
@@ -1969,6 +1981,7 @@ export function PlantScreen({
                         <span className="optional">(optional)</span>
                       </label>
                       <select
+                        aria-describedby="plant-location-help"
                         id="plant-location"
                         value={form.locationId}
                         disabled={pending}
@@ -1993,9 +2006,9 @@ export function PlantScreen({
                           ),
                         )}
                       </select>
-                      <small>
+                      <FieldHelp id="plant-location-help">
                         The record's current physical collection position.
-                      </small>
+                      </FieldHelp>
                     </div>
                     {!extractionSource && (
                       <div className="field">

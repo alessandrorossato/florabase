@@ -10,6 +10,7 @@ import {
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
+import { FieldHelp } from "../components/ContextualHelp";
 import { locationsForScope, type LocationResponse } from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
 import { PhotosSection } from "../photos/PhotosSection";
@@ -607,6 +608,7 @@ export function EventJournal({
             <div className="field">
               <label htmlFor={`event-kind-${targetId}`}>Event kind</label>
               <select
+                aria-describedby={`event-kind-help-${targetId}`}
                 id={`event-kind-${targetId}`}
                 value={form.kind}
                 disabled={pending}
@@ -633,6 +635,11 @@ export function EventJournal({
                     </option>
                   ))}
               </select>
+              <FieldHelp id={`event-kind-help-${targetId}`}>
+                Most Events are journal history. Movement and lifecycle Events
+                also apply the specific current-state change shown below when
+                created.
+              </FieldHelp>
             </div>
             <PartialDateField
               id={`event-date-${targetId}`}
