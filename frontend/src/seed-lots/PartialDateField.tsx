@@ -1,4 +1,5 @@
 import type { PartialDate } from "./api";
+import { FieldHelp } from "../components/ContextualHelp";
 
 export function PartialDateField({
   id,
@@ -6,14 +7,17 @@ export function PartialDateField({
   value,
   onChange,
   disabled,
+  showHelp = true,
 }: {
   id: string;
   label: string;
   value: PartialDate | null;
   onChange: (value: PartialDate | null) => void;
   disabled: boolean;
+  showHelp?: boolean;
 }) {
   const precision = value?.precision ?? "";
+  const helpId = `${id}-precision-help`;
   function update(part: Partial<PartialDate>) {
     const nextPrecision = (part.precision ?? precision) as
       "year" | "month" | "day";
@@ -32,6 +36,7 @@ export function PartialDateField({
       <div className="field">
         <label htmlFor={`${id}-precision`}>Precision</label>
         <select
+          aria-describedby={showHelp ? helpId : undefined}
           id={`${id}-precision`}
           disabled={disabled}
           value={precision}
@@ -46,6 +51,12 @@ export function PartialDateField({
           <option value="month">Year and month</option>
           <option value="day">Complete date</option>
         </select>
+        {showHelp && (
+          <FieldHelp id={helpId}>
+            Choose only the precision you know; do not invent a missing month or
+            day.
+          </FieldHelp>
+        )}
       </div>
       {value && (
         <div className="partial-date-parts">

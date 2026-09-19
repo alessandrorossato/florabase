@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { Breadcrumbs } from "../components/CollectionUI";
+import { FieldHelp } from "../components/ContextualHelp";
 import {
   listBotanicalIdentities,
   type BotanicalIdentityResponse,
@@ -292,6 +293,7 @@ export function SowingDescendantWizard({
           <div className="field">
             <label htmlFor="descendant-identity">Botanical identity</label>
             <select
+              aria-describedby="descendant-identity-help"
               id="descendant-identity"
               value={identityId}
               onChange={(event) => {
@@ -304,10 +306,10 @@ export function SowingDescendantWizard({
                 </option>
               ))}
             </select>
-            <small>
+            <FieldHelp id="descendant-identity-help">
               The source identity is preselected, but a valid changed identity
-              may be chosen.
-            </small>
+              may be chosen. Sharing an identity does not establish lineage.
+            </FieldHelp>
           </div>
           <div className="field">
             <label htmlFor="descendant-label">
@@ -333,6 +335,7 @@ export function SowingDescendantWizard({
               Current location <span className="optional">(optional)</span>
             </label>
             <select
+              aria-describedby="descendant-location-help"
               id="descendant-location"
               value={locationId}
               onChange={(event) => {
@@ -350,9 +353,16 @@ export function SowingDescendantWizard({
                 </option>
               ))}
             </select>
+            <FieldHelp id="descendant-location-help">
+              Where this record is currently kept in your collection, not where
+              its biological material originated.
+            </FieldHelp>
           </div>
           {kind === "group" && (
-            <fieldset className="quantity-field">
+            <fieldset
+              aria-describedby="descendant-quantity-help"
+              className="quantity-field"
+            >
               <legend>Plant group quantity</legend>
               <div className="field">
                 <label htmlFor="descendant-quantity-kind">Precision</label>
@@ -381,11 +391,11 @@ export function SowingDescendantWizard({
                   />
                 </div>
               )}
-              <small>
+              <FieldHelp id="descendant-quantity-help">
                 Exact groups contribute their quantity to exact tracked
-                descendants. Approximate and unknown groups remain explicitly
-                uncertain.
-              </small>
+                descendants. Choose Approximate for an estimate, or Unknown
+                rather than guessing.
+              </FieldHelp>
             </fieldset>
           )}
           <div className="field field--full">

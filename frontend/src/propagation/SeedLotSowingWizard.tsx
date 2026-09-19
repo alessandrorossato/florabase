@@ -9,6 +9,7 @@ import {
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { Breadcrumbs } from "../components/CollectionUI";
+import { FieldHelp } from "../components/ContextualHelp";
 import {
   listLocations,
   locationsForScope,
@@ -364,7 +365,10 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
                   update("sowingDate", value);
                 }}
               />
-              <fieldset className="quantity-field">
+              <fieldset
+                aria-describedby="guided-sowing-quantity-help"
+                className="quantity-field"
+              >
                 <legend>Quantity sown</legend>
                 <div className="field">
                   <label htmlFor="guided-quantity-kind">Kind</label>
@@ -429,12 +433,18 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
                     </label>
                   </>
                 )}
+                <FieldHelp id="guided-sowing-quantity-help">
+                  Keep count and weight as distinct measurements. Mark an
+                  estimate as approximate, or choose Unknown rather than
+                  guessing.
+                </FieldHelp>
               </fieldset>
               <div className="field">
                 <label htmlFor="guided-location">
                   Current location <span className="optional">(optional)</span>
                 </label>
                 <select
+                  aria-describedby="guided-sowing-location-help"
                   id="guided-location"
                   value={form.locationId}
                   onChange={(event) => {
@@ -452,6 +462,10 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
                     </option>
                   ))}
                 </select>
+                <FieldHelp id="guided-sowing-location-help">
+                  Where this Sowing is currently kept in your collection, not
+                  where its biological material originated.
+                </FieldHelp>
               </div>
               {(
                 [

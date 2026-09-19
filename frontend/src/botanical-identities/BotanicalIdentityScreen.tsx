@@ -19,6 +19,7 @@ import {
   DetailHeader,
   DetailTabs,
 } from "../components/CollectionUI";
+import { FieldHelp } from "../components/ContextualHelp";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import { EventFeed } from "../events/EventFeed";
 import { BotanicalIdentityCover } from "../photos/BotanicalIdentityCover";
@@ -219,6 +220,7 @@ function IdentityDetails({
           <div className="field">
             <label htmlFor="edit-scientific-name">Scientific name</label>
             <input
+              aria-describedby="edit-identity-help"
               id="edit-scientific-name"
               required
               maxLength={255}
@@ -231,6 +233,10 @@ function IdentityDetails({
                 }));
               }}
             />
+            <FieldHelp id="edit-identity-help">
+              This stable collection-local identity can be shared by records
+              without implying that those records share a lineage.
+            </FieldHelp>
           </div>
           <div className="field">
             <label htmlFor="edit-cultivar-name">Cultivar</label>
@@ -1130,12 +1136,17 @@ export function BotanicalIdentityScreen({
                 <div className="field">
                   <label htmlFor="scientific-name">Scientific name</label>
                   <input
+                    aria-describedby="new-identity-help"
                     id="scientific-name"
                     name="scientific_name"
                     required
                     maxLength={255}
                     disabled={pending}
                   />
+                  <FieldHelp id="new-identity-help">
+                    This stable collection-local identity can be shared by
+                    records without implying that those records share a lineage.
+                  </FieldHelp>
                 </div>
                 <div className="field">
                   <label htmlFor="cultivar-name">Cultivar</label>

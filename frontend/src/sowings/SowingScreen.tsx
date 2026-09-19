@@ -16,6 +16,7 @@ import {
   DetailHeader,
   DetailTabs,
 } from "../components/CollectionUI";
+import { FieldHelp } from "../components/ContextualHelp";
 import {
   listLocations,
   locationsForScope,
@@ -1062,6 +1063,7 @@ export function SowingScreen({
               <div className="field">
                 <label htmlFor="sowing-seed-lot">SeedLot</label>
                 <select
+                  aria-describedby="sowing-seed-lot-help"
                   id="sowing-seed-lot"
                   required
                   value={form.seedLotId}
@@ -1090,9 +1092,10 @@ export function SowingScreen({
                     </optgroup>
                   )}
                 </select>
-                <small>
-                  Historical SeedLots remain available for historical entry.
-                </small>
+                <FieldHelp id="sowing-seed-lot-help">
+                  A Sowing uses material from exactly one SeedLot. Historical
+                  lots remain available for historical entry.
+                </FieldHelp>
               </div>
               <div className="sowing-fast-fields">
                 <div className="field">
@@ -1117,7 +1120,10 @@ export function SowingScreen({
                     setForm((current) => ({ ...current, sowingDate: value }));
                   }}
                 />
-                <fieldset className="quantity-field">
+                <fieldset
+                  aria-describedby="sowing-quantity-help"
+                  className="quantity-field"
+                >
                   <legend>
                     Quantity sown <span className="optional">(optional)</span>
                   </legend>
@@ -1197,6 +1203,11 @@ export function SowingScreen({
                       </label>
                     </div>
                   )}
+                  <FieldHelp id="sowing-quantity-help">
+                    Keep count and weight as distinct measurements. Mark an
+                    estimate as approximate, or leave the quantity unknown
+                    rather than guessing.
+                  </FieldHelp>
                 </fieldset>
               </div>
               <button
@@ -1242,6 +1253,7 @@ export function SowingScreen({
                       <span className="optional">(optional)</span>
                     </label>
                     <select
+                      aria-describedby="sowing-location-help"
                       id="sowing-location"
                       value={form.locationId}
                       disabled={pending}
@@ -1266,6 +1278,10 @@ export function SowingScreen({
                         ),
                       )}
                     </select>
+                    <FieldHelp id="sowing-location-help">
+                      Where this Sowing is currently kept in your collection,
+                      not where its biological material originated.
+                    </FieldHelp>
                   </div>
                   <div className="field">
                     <label htmlFor="sowing-substrate">

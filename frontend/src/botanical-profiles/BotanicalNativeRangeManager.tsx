@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
+import { FieldHelp } from "../components/ContextualHelp";
 import {
   listGeographicPlaces,
   type GeographicPlaceResponse,
@@ -228,6 +229,7 @@ export function BotanicalNativeRangeManager({
                 Geographic place
               </label>
               <select
+                aria-describedby={`native-range-help-${identityId}`}
                 id={`native-range-place-${identityId}`}
                 ref={selectorRef}
                 disabled={pending || availablePlaces.length === 0}
@@ -255,11 +257,12 @@ export function BotanicalNativeRangeManager({
               {pending ? "Saving native range…" : "Add native range"}
             </button>
           </div>
-          <p className="field-help">
-            Each selection records only that exact area. Parents and children
-            are not added automatically. Manage named areas in{" "}
+          <FieldHelp id={`native-range-help-${identityId}`}>
+            Native range is reference knowledge about where the taxon is native,
+            not where collection material came from. Each selection records only
+            that exact area; manage named areas in{" "}
             <a href="#/geography">Geography</a>.
-          </p>
+          </FieldHelp>
         </>
       )}
       {(mutation.status === "success" || mutation.status === "error") && (

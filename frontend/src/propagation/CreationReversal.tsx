@@ -3,6 +3,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import type { components } from "../api/schema";
 import { ApiError, requestJson } from "../auth/api";
 import { useAuth } from "../auth/context";
+import { ContextHelpDialog } from "../components/ContextualHelp";
 
 type Eligibility = components["schemas"]["PropagationReversalEligibility"];
 export type CreationReversalResponse =
@@ -138,6 +139,22 @@ export function CreationReversal({
             remain in history as Reversed and will no longer be active. Notes
             and lineage are retained.
           </p>
+          <ContextHelpDialog
+            buttonLabel="Understand creation reversal"
+            title="How creation reversal works"
+          >
+            <p>
+              Undo restores the source lifecycle and quantity snapshot recorded
+              immediately before this creation. It does not reconstruct values
+              from later Events.
+            </p>
+            <p>
+              The created result is not deleted: it remains readable as Reversed
+              with its identity, lineage, notes, and Event history. Later
+              structural work can block reversal, while retained observations
+              may require explicit confirmation.
+            </p>
+          </ContextHelpDialog>
           {error && <p role="alert">{error}</p>}
           {!eligibility && !error && (
             <p role="status">Checking reversal eligibility…</p>

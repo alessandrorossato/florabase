@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
 import { ApiError } from "../auth/api";
+import { InfoDisclosure } from "../components/ContextualHelp";
 import {
   deleteBotanicalIdentityCover,
   getBotanicalIdentityCover,
@@ -399,6 +400,14 @@ export function BotanicalIdentityCover({
                     type="url"
                   />
                 </div>
+                <InfoDisclosure label="More information about image credit and licence">
+                  <p>
+                    Use the image URL for the image itself and the source/page
+                    URL for the page where you found it. Copy the creator or
+                    source credit into Attribution, and record the licence label
+                    and link when the source provides them.
+                  </p>
+                </InfoDisclosure>
                 <label className="checkbox-field privacy-confirmation">
                   <input name="privacy_acknowledged" required type="checkbox" />
                   <span>
