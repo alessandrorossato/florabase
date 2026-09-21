@@ -9,16 +9,16 @@ description = "Florabase REST API"
 license = "AGPL-3.0-or-later"
 requires-python = ">=3.12,<3.15"
 dependencies = [
-  "alembic==1.19.1",
+  "alembic==1.20.0",
   "fastapi==0.141.1",
   "httpx==0.28.1",
   "pillow==12.3.0",
-  "psycopg[binary]==3.3.4",
+  "psycopg[binary]==3.3.5",
   "pwdlib[argon2]==0.3.1",
   "pydantic-settings==2.15.0",
   "python-multipart==0.0.32",
-  "sqlalchemy==2.0.52",
-  "uvicorn==0.52.4",
+  "sqlalchemy==2.0.54",
+  "uvicorn==0.53.0",
 ]
 
 [project.optional-dependencies]
@@ -27,7 +27,7 @@ dev = [
   "pip-tools==7.6.1",
   "pytest==9.1.1",
   "pytest-cov==7.1.0",
-  "ruff==0.16.5",
+  "ruff==0.16.8",
 ]
 
 [tool.setuptools.packages.find]
