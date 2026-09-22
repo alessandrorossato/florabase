@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
 import { ApiError } from "../auth/api";
+import { FormActions, FormSection } from "../components/ReferenceUI";
 import { InfoDisclosure } from "../components/ContextualHelp";
 import {
   deleteBotanicalIdentityCover,
@@ -16,12 +17,15 @@ type CoverState =
   | { status: "error" }
   | { status: "ready"; cover: Cover | null };
 
-function sourceHost(url: string): string {
+function displayAttribution(value: string): string {
   try {
-    return new URL(url).hostname;
+    const url = new URL(value);
+    if (url.protocol === "https:" || url.protocol === "http:")
+      return url.hostname.replace(/^www\./, "");
   } catch {
-    return "external source";
+    // Attribution is ordinary text rather than a URL.
   }
+  return value;
 }
 
 function saveError(error: unknown): string {
@@ -36,7 +40,9 @@ export function BotanicalIdentityCover({
   identityId,
   identityLabel,
   csrfToken,
+  integrated = false,
 }: {
+  integrated?: boolean;
   identityId: string;
   identityLabel: string;
   csrfToken: string;
@@ -147,38 +153,51 @@ export function BotanicalIdentityCover({
   }
 
   return (
-    <section className="identity-cover" aria-labelledby="identity-cover-title">
+    <section
+      className={
+        integrated ? "identity-cover identity-cover--hero" : "identity-cover"
+      }
+      aria-label="Representative image"
+    >
       <div className="identity-cover__heading">
-        <div>
-          <p className="eyebrow">Representative image</p>
-          <h3 id="identity-cover-title">Identity cover</h3>
-        </div>
+        {!integrated && (
+          <div>
+            <p className="eyebrow">Representative image</p>
+            <h3>Identity cover</h3>
+          </div>
+        )}
         {state.status === "ready" && (
-          <div className="actions">
-            <button
-              className="button--secondary"
-              type="button"
-              onClick={() => {
-                setError(null);
-                setEditor(cover?.kind ?? "local");
-              }}
-            >
-              {cover ? "Change cover" : "Set cover image"}
-            </button>
-            {cover && (
+          <details
+            className="cover-actions"
+            open={integrated ? undefined : true}
+          >
+            <summary>{cover ? "Manage cover" : "Add cover"}</summary>
+            <div className="actions">
               <button
-                className="button--danger"
+                className="button--secondary"
                 type="button"
                 onClick={() => {
-                  setConfirmRemove(true);
+                  setError(null);
+                  setEditor(cover?.kind ?? "local");
                 }}
               >
-                {cover.kind === "local" && cover.deletion_pending
-                  ? "Retry removal"
-                  : "Remove cover"}
+                {cover ? "Change cover" : "Set cover image"}
               </button>
-            )}
-          </div>
+              {cover && (
+                <button
+                  className="button--danger"
+                  type="button"
+                  onClick={() => {
+                    setConfirmRemove(true);
+                  }}
+                >
+                  {cover.kind === "local" && cover.deletion_pending
+                    ? "Retry removal"
+                    : "Remove cover"}
+                </button>
+              )}
+            </div>
+          </details>
         )}
       </div>
 
@@ -210,7 +229,16 @@ export function BotanicalIdentityCover({
       )}
       {state.status === "ready" && !cover && (
         <div className="identity-cover__placeholder">
-          <p>No representative cover image is set.</p>
+          <svg viewBox="0 0 120 120" fill="none" aria-hidden="true">
+            <path
+              d="M40 102C57 80 61 49 78 18M58 70C30 74 25 54 26 43C45 42 62 53 58 70ZM67 48C89 53 100 37 102 24C83 23 71 32 67 48Z"
+              stroke="currentColor"
+              strokeWidth="2"
+            />
+          </svg>
+          <p className={integrated ? "sr-only" : undefined}>
+            No representative cover image is set.
+          </p>
           <small>
             Collection photos remain attached to their specific collection
             records.
@@ -250,29 +278,30 @@ export function BotanicalIdentityCover({
             )}
           </div>
           <div className="identity-cover__metadata">
-            <strong>
-              {cover.kind === "local"
-                ? "Locally managed cover"
-                : "External cover"}
-            </strong>
+            {cover.kind === "local" && <strong>Locally managed cover</strong>}
             {cover.kind === "external" && (
               <>
-                <p>{cover.attribution}</p>
+                <p>
+                  <strong>Photo:</strong>{" "}
+                  {displayAttribution(cover.attribution)}
+                </p>
                 <a
                   href={cover.source_url}
                   rel="noopener noreferrer"
                   target="_blank"
                 >
-                  Source: {sourceHost(cover.source_url)}
+                  Source
                 </a>
-                {cover.licence_label && <p>Licence: {cover.licence_label}</p>}
-                {cover.licence_url && (
+                {cover.licence_label && !cover.licence_url && (
+                  <p>Licence: {cover.licence_label}</p>
+                )}
+                {cover.licence_label && cover.licence_url && (
                   <a
                     href={cover.licence_url}
                     rel="noopener noreferrer"
                     target="_blank"
                   >
-                    Licence details
+                    Licence: {cover.licence_label}
                   </a>
                 )}
               </>
@@ -312,122 +341,127 @@ export function BotanicalIdentityCover({
             </button>
           </div>
           <form onSubmit={(event) => void submit(event)}>
-            {editor === "local" ? (
-              <div className="field">
-                <label htmlFor="identity-cover-file">Image file</label>
-                <input
-                  accept="image/jpeg,image/png,image/webp"
-                  id="identity-cover-file"
-                  ref={fileInput}
-                  required
-                  type="file"
-                />
-                <small>JPEG, PNG, or WebP; maximum 25 MiB.</small>
-              </div>
-            ) : (
-              <>
+            <FormSection
+              title={editor === "local" ? "Upload image" : "Source and credit"}
+            >
+              {editor === "local" ? (
                 <div className="field">
-                  <label htmlFor="identity-cover-image-url">Image URL</label>
+                  <label htmlFor="identity-cover-file">Image file</label>
                   <input
-                    defaultValue={
-                      cover?.kind === "external" ? cover.image_url : ""
-                    }
-                    id="identity-cover-image-url"
-                    maxLength={2048}
-                    name="image_url"
+                    accept="image/jpeg,image/png,image/webp"
+                    id="identity-cover-file"
+                    ref={fileInput}
                     required
-                    type="url"
+                    type="file"
                   />
+                  <small>JPEG, PNG, or WebP; maximum 25 MiB.</small>
                 </div>
-                <div className="field">
-                  <label htmlFor="identity-cover-source-url">
-                    Source/page URL
+              ) : (
+                <>
+                  <div className="field">
+                    <label htmlFor="identity-cover-image-url">Image URL</label>
+                    <input
+                      defaultValue={
+                        cover?.kind === "external" ? cover.image_url : ""
+                      }
+                      id="identity-cover-image-url"
+                      maxLength={2048}
+                      name="image_url"
+                      required
+                      type="url"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="identity-cover-source-url">
+                      Source/page URL
+                    </label>
+                    <input
+                      defaultValue={
+                        cover?.kind === "external" ? cover.source_url : ""
+                      }
+                      id="identity-cover-source-url"
+                      maxLength={2048}
+                      name="source_url"
+                      required
+                      type="url"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="identity-cover-attribution">
+                      Attribution
+                    </label>
+                    <textarea
+                      defaultValue={
+                        cover?.kind === "external" ? cover.attribution : ""
+                      }
+                      id="identity-cover-attribution"
+                      maxLength={2000}
+                      name="attribution"
+                      required
+                      rows={2}
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="identity-cover-licence-label">
+                      Licence label (optional)
+                    </label>
+                    <input
+                      defaultValue={
+                        cover?.kind === "external"
+                          ? (cover.licence_label ?? "")
+                          : ""
+                      }
+                      id="identity-cover-licence-label"
+                      maxLength={2000}
+                      name="licence_label"
+                    />
+                  </div>
+                  <div className="field">
+                    <label htmlFor="identity-cover-licence-url">
+                      Licence URL (optional)
+                    </label>
+                    <input
+                      defaultValue={
+                        cover?.kind === "external"
+                          ? (cover.licence_url ?? "")
+                          : ""
+                      }
+                      id="identity-cover-licence-url"
+                      maxLength={2048}
+                      name="licence_url"
+                      type="url"
+                    />
+                  </div>
+                  <InfoDisclosure label="More information about image credit and licence">
+                    <p>
+                      Use the image URL for the image itself and the source/page
+                      URL for the page where you found it. Copy the creator or
+                      source credit into Attribution, and record the licence
+                      label and link when the source provides them.
+                    </p>
+                  </InfoDisclosure>
+                  <label className="checkbox-field privacy-confirmation">
+                    <input
+                      name="privacy_acknowledged"
+                      required
+                      type="checkbox"
+                    />
+                    <span>
+                      Using an external image as this identity’s cover will
+                      cause your browser to contact that image host when the
+                      cover is displayed. The host can see normal network
+                      information such as your IP address.
+                    </span>
                   </label>
-                  <input
-                    defaultValue={
-                      cover?.kind === "external" ? cover.source_url : ""
-                    }
-                    id="identity-cover-source-url"
-                    maxLength={2048}
-                    name="source_url"
-                    required
-                    type="url"
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="identity-cover-attribution">
-                    Attribution
-                  </label>
-                  <textarea
-                    defaultValue={
-                      cover?.kind === "external" ? cover.attribution : ""
-                    }
-                    id="identity-cover-attribution"
-                    maxLength={2000}
-                    name="attribution"
-                    required
-                    rows={2}
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="identity-cover-licence-label">
-                    Licence label (optional)
-                  </label>
-                  <input
-                    defaultValue={
-                      cover?.kind === "external"
-                        ? (cover.licence_label ?? "")
-                        : ""
-                    }
-                    id="identity-cover-licence-label"
-                    maxLength={2000}
-                    name="licence_label"
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="identity-cover-licence-url">
-                    Licence URL (optional)
-                  </label>
-                  <input
-                    defaultValue={
-                      cover?.kind === "external"
-                        ? (cover.licence_url ?? "")
-                        : ""
-                    }
-                    id="identity-cover-licence-url"
-                    maxLength={2048}
-                    name="licence_url"
-                    type="url"
-                  />
-                </div>
-                <InfoDisclosure label="More information about image credit and licence">
-                  <p>
-                    Use the image URL for the image itself and the source/page
-                    URL for the page where you found it. Copy the creator or
-                    source credit into Attribution, and record the licence label
-                    and link when the source provides them.
-                  </p>
-                </InfoDisclosure>
-                <label className="checkbox-field privacy-confirmation">
-                  <input name="privacy_acknowledged" required type="checkbox" />
-                  <span>
-                    Using an external image as this identity’s cover will cause
-                    your browser to contact that image host when the cover is
-                    displayed. The host can see normal network information such
-                    as your IP address.
-                  </span>
-                </label>
-              </>
-            )}
+                </>
+              )}
+            </FormSection>
             {error && (
               <p className="notice notice--error" role="alert">
                 {error}
               </p>
             )}
-            <div className="actions">
-              <button disabled={pending} type="submit">
-                {pending ? "Saving…" : "Save cover"}
-              </button>
+            <FormActions>
               <button
                 className="button--secondary"
                 disabled={pending}
@@ -438,7 +472,10 @@ export function BotanicalIdentityCover({
               >
                 Cancel
               </button>
-            </div>
+              <button disabled={pending} type="submit">
+                {pending ? "Saving…" : "Save cover"}
+              </button>
+            </FormActions>
           </form>
         </PhotoDialog>
       )}

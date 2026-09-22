@@ -785,6 +785,19 @@
       "status": "implemented"
     },
     {
+      "id": "UX-004",
+      "category": "frontend",
+      "description": "Establish the refreshed visual system and BotanicalIdentity reference layout",
+      "acceptance_criteria": [
+        "A restrained reusable visual and layout vocabulary improves hierarchy, spacing, action priority, responsive behavior and form organization without changing domain semantics or introducing a third-party UI framework",
+        "BotanicalIdentity separates directory, compact preview and dedicated detail experiences, integrates representative imagery into cards and the detail header, and preserves existing workflows with accessible desktop and mobile navigation",
+        "The reference preserves lazy and privacy boundaries, establishes reusable detail and form patterns, and leaves remaining application surfaces for subsequent scoped increments after operator acceptance"
+      ],
+      "dependencies": ["UX-003", "UX-002", "ATTACHMENT-003"],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "LOCATION-002",
       "category": "location",
       "description": "Add a scope-aware hierarchical Location browsing experience",

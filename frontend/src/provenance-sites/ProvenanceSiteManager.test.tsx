@@ -88,9 +88,9 @@ test("creates, edits, and deletes a path-aware ProvenanceSite", async () => {
 
   const user = userEvent.setup();
   render(<ProvenanceSiteManager places={[world]} csrfToken="csrf" />);
-  await screen.findByText("No ProvenanceSites recorded.");
+  await screen.findByText("No provenance sites recorded.");
   await user.type(
-    screen.getByLabelText("ProvenanceSite name"),
+    screen.getByLabelText("Provenance site name"),
     "Monte Pellegrino",
   );
   await user.selectOptions(
@@ -113,7 +113,9 @@ test("creates, edits, and deletes a path-aware ProvenanceSite", async () => {
     screen.getByLabelText("Notes (optional)"),
     "Historical label",
   );
-  await user.click(screen.getByRole("button", { name: "Save ProvenanceSite" }));
+  await user.click(
+    screen.getByRole("button", { name: "Save provenance site" }),
+  );
   expect(
     await screen.findByText("Monte Pellegrino was saved."),
   ).toBeInTheDocument();
@@ -128,24 +130,26 @@ test("creates, edits, and deletes a path-aware ProvenanceSite", async () => {
   });
   expect(new Headers(post?.init?.headers).get("X-CSRF-Token")).toBe("csrf");
 
-  await user.clear(screen.getByLabelText("ProvenanceSite name"));
+  await user.clear(screen.getByLabelText("Provenance site name"));
   await user.type(
-    screen.getByLabelText("ProvenanceSite name"),
+    screen.getByLabelText("Provenance site name"),
     "Monte Pellegrino ridge",
   );
-  await user.click(screen.getByRole("button", { name: "Save ProvenanceSite" }));
+  await user.click(
+    screen.getByRole("button", { name: "Save provenance site" }),
+  );
   expect(
     await screen.findByText("Monte Pellegrino ridge was saved."),
   ).toBeInTheDocument();
   await user.click(
-    screen.getByRole("button", { name: "Delete ProvenanceSite" }),
+    screen.getByRole("button", { name: "Delete provenance site" }),
   );
   expect(
-    await screen.findByText("The ProvenanceSite was deleted."),
+    await screen.findByText("The provenance site was deleted."),
   ).toBeInTheDocument();
   await waitFor(() => {
     expect(
-      screen.getByText("No ProvenanceSites recorded."),
+      screen.getByText("No provenance sites recorded."),
     ).toBeInTheDocument();
   });
 });
@@ -162,13 +166,15 @@ test("shows an actionable coordinate-pair validation error", async () => {
   });
   const user = userEvent.setup();
   render(<ProvenanceSiteManager places={[world]} csrfToken="csrf" />);
-  await screen.findByText("No ProvenanceSites recorded.");
+  await screen.findByText("No provenance sites recorded.");
   await user.type(
-    screen.getByLabelText("ProvenanceSite name"),
+    screen.getByLabelText("Provenance site name"),
     "Half coordinate",
   );
   await user.type(screen.getByLabelText("Latitude (WGS84 decimal)"), "38");
-  await user.click(screen.getByRole("button", { name: "Save ProvenanceSite" }));
+  await user.click(
+    screen.getByRole("button", { name: "Save provenance site" }),
+  );
   expect(await screen.findByRole("status")).toHaveTextContent(
     "Latitude and longitude must be entered together",
   );

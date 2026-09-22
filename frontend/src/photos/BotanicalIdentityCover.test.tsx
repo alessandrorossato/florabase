@@ -110,9 +110,13 @@ test("requires explicit privacy approval then automatically renders an external 
   expect(image).toHaveAttribute("referrerpolicy", "no-referrer");
   expect(image).toHaveAttribute("loading", "lazy");
   expect(screen.getByText("Ada Example")).toBeVisible();
+  expect(screen.getByRole("link", { name: "Source" })).toHaveAttribute(
+    "rel",
+    "noopener noreferrer",
+  );
   expect(
-    screen.getByRole("link", { name: "Source: example.test" }),
-  ).toHaveAttribute("rel", "noopener noreferrer");
+    screen.getByRole("link", { name: "Licence: CC BY 4.0" }),
+  ).toHaveAttribute("href", external.licence_url);
   const rawBody = fetch.mock.calls[1]?.[1]?.body;
   if (typeof rawBody !== "string")
     throw new Error("External cover request body was not JSON");
@@ -168,6 +172,27 @@ test("renders local content lazily, reports breakage, uploads a replacement, and
   expect(upload?.method).toBe("POST");
   expect(upload?.body).toBeInstanceOf(FormData);
   expect(new Headers(upload?.headers).get("Content-Type")).toBeNull();
+});
+
+test("compacts URL-like attribution instead of exposing a raw URL", async () => {
+  vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+    json({
+      ...external,
+      attribution: "https://photos.example.test/archive/very-long-credit",
+    }),
+  );
+  renderCover();
+  await screen.findByRole("img", {
+    name: "Representative image for Passiflora edulis",
+  });
+  expect(screen.getByText("photos.example.test")).toBeVisible();
+  expect(
+    screen.queryByText("https://photos.example.test/archive/very-long-credit"),
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Source" })).toHaveAttribute(
+    "href",
+    external.source_url,
+  );
 });
 
 test("keeps pending local cleanup truthful and provides deterministic removal retry", async () => {

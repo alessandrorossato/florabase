@@ -9,7 +9,11 @@ from fastapi import HTTPException, Response
 
 from florabase.botanical_identities import api
 from florabase.botanical_identities.model import BotanicalIdentity
-from florabase.botanical_identities.schemas import BotanicalIdentityCreate, BotanicalIdentityUpdate
+from florabase.botanical_identities.schemas import (
+    BotanicalIdentityCreate,
+    BotanicalIdentityUpdate,
+    IdentityCollectionCounts,
+)
 from florabase.botanical_identities.service import (
     BotanicalIdentityConflictError,
     BotanicalIdentityCoverReferencedError,
@@ -33,11 +37,24 @@ def test_botanical_identity_api_success_paths(monkeypatch: pytest.MonkeyPatch) -
     update = BotanicalIdentityUpdate(scientific_name="Acer japonicum")
 
     monkeypatch.setattr(
-        api, "list_botanical_identity_directory", lambda _database: [(item, "local")]
+        api,
+        "list_botanical_identity_directory",
+        lambda _database: [
+            (
+                item,
+                "local",
+                None,
+                IdentityCollectionCounts(seed_lots=1, sowings=2, plants=3, plant_groups=4),
+            )
+        ],
     )
     listed = api.list_all(actor, database)[0]
     assert listed.id == item.id
     assert listed.compact_cover_kind == "local"
+    assert listed.compact_external_cover_url is None
+    assert listed.collection_counts == IdentityCollectionCounts(
+        seed_lots=1, sowings=2, plants=3, plant_groups=4
+    )
 
     monkeypatch.setattr(api, "create_botanical_identity", lambda _database, _payload: item)
     response = Response()

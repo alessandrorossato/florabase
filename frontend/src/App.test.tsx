@@ -64,7 +64,8 @@ function authenticatedThen(
     init: RequestInit | undefined,
   ) => Response | Promise<Response>,
 ) {
-  return mockFetch((path, init) => {
+  let created: typeof botanicalIdentity | null = null;
+  return mockFetch(async (path, init) => {
     if (path.endsWith("/auth/session")) return jsonResponse(session);
     if (path.endsWith("/auth/csrf"))
       return jsonResponse({ csrf_token: "botanical-csrf" });
@@ -76,8 +77,15 @@ function authenticatedThen(
       path === "/api/v1/botanical-identities" &&
       (init?.method === undefined || init.method === "GET")
     )
-      return jsonResponse([]);
-    return handler(path, init);
+      return jsonResponse(created ? [created] : []);
+    const response = await handler(path, init);
+    if (
+      path === "/api/v1/botanical-identities" &&
+      init?.method === "POST" &&
+      response.status === 201
+    )
+      created = (await response.clone().json()) as typeof botanicalIdentity;
+    return response;
   });
 }
 
@@ -166,7 +174,8 @@ async function createSelectedIdentity() {
   await screen.findByRole("heading", {
     name: "Acer palmatum ‘Bloodgood’",
   });
-  await user.click(screen.getByRole("tab", { name: "Reference" }));
+  await user.click(await screen.findByRole("link", { name: "Open details" }));
+  await user.click(await screen.findByRole("tab", { name: "Reference" }));
   return user;
 }
 
@@ -570,12 +579,13 @@ test("authenticated owners see the labelled create form and truthful empty state
     name: "+ New botanical identity",
   });
   expect(newIdentity).toHaveAttribute("aria-expanded", "false");
+  expect(newIdentity).toHaveAttribute("aria-haspopup", "dialog");
   expect(screen.queryByLabelText("Scientific name")).not.toBeInTheDocument();
   await user.click(newIdentity);
   expect(newIdentity).toHaveAttribute("aria-expanded", "true");
   expect(screen.getByLabelText("Scientific name")).toHaveFocus();
   expect(
-    screen.getByLabelText("Scientific name").closest(".creation-panel"),
+    screen.getByLabelText("Scientific name").closest(".identity-create-dialog"),
   ).not.toBeNull();
   expect(screen.getByLabelText("Scientific name")).toBeRequired();
   expect(screen.getByLabelText("Scientific name")).toHaveAttribute(
@@ -586,7 +596,7 @@ test("authenticated owners see the labelled create form and truthful empty state
     /without quotation marks/i,
   );
   expect(screen.getByLabelText("Common name")).toBeInTheDocument();
-  expect(newIdentity.closest(".directory-heading")).not.toBeNull();
+  expect(newIdentity.closest("header")).not.toBeNull();
   await user.click(screen.getByRole("button", { name: "Cancel" }));
   expect(newIdentity).toHaveAttribute("aria-expanded", "false");
   expect(newIdentity).toHaveFocus();
@@ -611,7 +621,7 @@ test("directory loading is explicit before the collection request resolves", asy
   expect(
     await screen.findByText("Loading botanical identities…"),
   ).toBeInTheDocument();
-  expect(screen.getByLabelText("Filter botanical identities")).toBeDisabled();
+  expect(screen.getByLabelText("Search botanical identities")).toBeDisabled();
 });
 
 test("directory records are keyboard-selectable and reuse the existing profile panel", async () => {
@@ -653,9 +663,10 @@ test("directory records are keyboard-selectable and reuse the existing profile p
   expect(
     screen.getByRole("heading", { name: "Annona cherimola" }),
   ).toBeInTheDocument();
-  await user.click(screen.getByRole("tab", { name: "Reference" }));
+  await user.click(await screen.findByRole("link", { name: "Open details" }));
+  await user.click(await screen.findByRole("tab", { name: "Reference" }));
   expect(
-    await screen.findByRole("heading", { name: "No profile yet" }),
+    await screen.findByText("No botanical profile yet."),
   ).toBeInTheDocument();
 });
 
@@ -675,7 +686,7 @@ test("client-side filter matches loaded common names and distinguishes zero matc
   });
   const user = userEvent.setup();
   render(<App />);
-  const filter = await screen.findByLabelText("Filter botanical identities");
+  const filter = await screen.findByLabelText("Search botanical identities");
   await waitFor(() => {
     expect(filter).toBeEnabled();
   });
@@ -773,7 +784,7 @@ test("keyboard creation sends generated-contract fields with CSRF and renders th
       name: "Acer palmatum ‘Bloodgood’",
     }),
   ).toBeInTheDocument();
-  expect(screen.getAllByText("Japanese maple")).toHaveLength(3);
+  expect(screen.getAllByText("Japanese maple")).toHaveLength(2);
   expect(screen.queryByText(botanicalIdentity.id)).not.toBeInTheDocument();
   expect(
     screen.getByRole("button", { name: /Acer palmatum.*Japanese maple/i }),
@@ -1016,16 +1027,11 @@ test("no-profile state explains reference knowledge and exposes accessible optio
   await createSelectedIdentity();
 
   expect(
-    await screen.findByRole("heading", { name: "No profile yet" }),
+    await screen.findByText("No botanical profile yet."),
   ).toBeInTheDocument();
-  expect(
-    screen.getByText(
-      /general reference knowledge for this botanical identity/i,
-    ),
-  ).toBeInTheDocument();
-  expect(
-    screen.getByText(/separate from observations about particular plants/i),
-  ).toBeInTheDocument();
+  expect(screen.queryByLabelText("Description")).not.toBeInTheDocument();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Add profile" }));
   for (const label of [
     "Description",
     "Origin & distribution",
@@ -1049,6 +1055,9 @@ test("partial profile display and editor preserve multiline plain text", async (
   expect(
     await screen.findByLabelText("Saved botanical profile"),
   ).toHaveTextContent(/small deciduous tree.*known for autumn colour/i);
+  expect(screen.queryByLabelText("Description")).not.toBeInTheDocument();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Edit profile" }));
   expect(screen.getByLabelText("Description")).toHaveValue(
     botanicalProfile.description,
   );
@@ -1078,6 +1087,7 @@ test("profile creation uses PUT with CSRF and announces a multiline save", async
     );
   });
   const user = await createSelectedIdentity();
+  await user.click(await screen.findByRole("button", { name: "Add profile" }));
   const description = await screen.findByLabelText("Description");
 
   await user.type(
@@ -1123,10 +1133,12 @@ test("clearing one section updates the profile and clearing the final section re
   });
   const user = await createSelectedIdentity();
 
+  await user.click(await screen.findByRole("button", { name: "Edit profile" }));
   const description = await screen.findByLabelText("Description");
   await user.clear(description);
   await user.click(screen.getByRole("button", { name: "Save profile" }));
   expect(await screen.findByRole("status")).toHaveTextContent(/profile saved/i);
+  await user.click(screen.getByRole("button", { name: "Edit profile" }));
   expect(screen.getByLabelText("Uses")).toHaveValue("Ornamental");
 
   await user.clear(screen.getByLabelText("Uses"));
@@ -1134,9 +1146,7 @@ test("clearing one section updates the profile and clearing the final section re
   expect(await screen.findByRole("status")).toHaveTextContent(
     /profile cleared/i,
   );
-  expect(
-    screen.getByRole("heading", { name: "No profile yet" }),
-  ).toBeInTheDocument();
+  expect(screen.getByText("No botanical profile yet.")).toBeInTheDocument();
 });
 
 test("profile validation and network failures are announced without duplicate saves", async () => {
@@ -1154,6 +1164,7 @@ test("profile validation and network failures are announced without duplicate sa
   });
   const user = await createSelectedIdentity();
 
+  await user.click(await screen.findByRole("button", { name: "Add profile" }));
   await user.click(await screen.findByRole("button", { name: "Save profile" }));
   const validation = await screen.findByRole("alert");
   expect(validation).toHaveTextContent(
@@ -1182,6 +1193,7 @@ test("profile session expiry returns to the shared login boundary", async () => 
   });
   const user = await createSelectedIdentity();
 
+  await user.click(await screen.findByRole("button", { name: "Add profile" }));
   await user.type(
     await screen.findByLabelText("Description"),
     "Reference text",
@@ -1279,10 +1291,12 @@ test("structured native ranges distinguish paths and support add and remove with
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await createSelectedIdentity();
+  await user.click(screen.getByRole("tab", { name: "Native range" }));
 
   expect(
     await screen.findByText("No structured native range recorded."),
   ).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Manage native range" }));
   const selector = screen.getByLabelText("Geographic place");
   expect(
     screen.getByRole("option", {
@@ -1294,9 +1308,9 @@ test("structured native ranges distinguish paths and support add and remove with
   ).toBeInTheDocument();
 
   await user.selectOptions(selector, georgiaUs.id);
-  await user.click(screen.getByRole("button", { name: "Add native range" }));
+  await user.click(screen.getByRole("button", { name: "Add place" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(/already/i);
-  await user.click(screen.getByRole("button", { name: "Add native range" }));
+  await user.click(screen.getByRole("button", { name: "Add place" }));
   const remove = await screen.findByRole("button", {
     name: "Remove Georgia from native range",
   });
@@ -1343,6 +1357,7 @@ test("native-range loading failure is explicit and retryable", async () => {
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await createSelectedIdentity();
+  await user.click(screen.getByRole("tab", { name: "Native range" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     /could not load this native range/i,
   );
@@ -1824,6 +1839,7 @@ test("Botanical identity detail deep links stay synchronized with hash navigatio
     ...botanicalIdentity,
     id: "01900000-0000-7000-8000-000000000098",
     scientific_name: "Acer rubrum",
+    cultivar_name: null,
     display_label: "Acer rubrum",
   };
   window.history.replaceState(null, "", `#/identities/${botanicalIdentity.id}`);

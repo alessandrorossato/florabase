@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
+import { FormActions, FormSection } from "../components/ReferenceUI";
 import { BotanicalNativeRangeManager } from "./BotanicalNativeRangeManager";
 import {
   getBotanicalProfile,
@@ -61,13 +62,21 @@ function isProfileNotFound(error: ApiError): boolean {
   );
 }
 
-export function BotanicalProfilePanel({ identityId }: { identityId: string }) {
+export function BotanicalProfilePanel({
+  identityId,
+  includeNativeRange = true,
+}: {
+  identityId: string;
+  includeNativeRange?: boolean;
+}) {
   const auth = useAuth();
   const [loadState, setLoadState] = useState<LoadState>({ status: "loading" });
   const [saveState, setSaveState] = useState<SaveState>({ status: "idle" });
   const [values, setValues] = useState<ProfileValues>(emptyValues);
+  const [editing, setEditing] = useState(false);
   const [loadAttempt, setLoadAttempt] = useState(0);
   const feedbackRef = useRef<HTMLDivElement>(null);
+  const editTriggerRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -128,6 +137,10 @@ export function BotanicalProfilePanel({ identityId }: { identityId: string }) {
         setLoadState({ status: "ready", profile });
         setSaveState({ status: "saved", message: "Botanical profile saved." });
       }
+      setEditing(false);
+      requestAnimationFrame(() => {
+        editTriggerRef.current?.focus();
+      });
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401) {
         auth.sessionExpired();
@@ -158,14 +171,8 @@ export function BotanicalProfilePanel({ identityId }: { identityId: string }) {
       aria-labelledby="botanical-profile-title"
       className="profile-panel"
     >
-      <div className="profile-heading">
-        <p className="eyebrow">Reference knowledge</p>
+      <div className="profile-heading section-heading">
         <h3 id="botanical-profile-title">Botanical profile</h3>
-        <p>General reference knowledge for this botanical identity.</p>
-        <p>
-          This is separate from observations about particular plants, seeds, or
-          collection events.
-        </p>
       </div>
 
       {loadState.status === "loading" && (
@@ -192,79 +199,125 @@ export function BotanicalProfilePanel({ identityId }: { identityId: string }) {
         <>
           {loadState.profile === null ? (
             <div className="profile-empty">
-              <h4>No profile yet</h4>
-              <p>
-                Add any useful section when reference knowledge is available.
-              </p>
+              <p>No botanical profile yet.</p>
+              {!editing && (
+                <button
+                  type="button"
+                  ref={editTriggerRef}
+                  onClick={() => {
+                    setEditing(true);
+                  }}
+                >
+                  Add profile
+                </button>
+              )}
             </div>
           ) : (
-            <div
-              className="profile-content"
-              aria-label="Saved botanical profile"
-            >
-              {sections.map(({ field, label }) => {
-                const content = loadState.profile?.[field];
-                return content ? (
-                  <section key={field}>
-                    <h4>{label}</h4>
-                    <p>{content}</p>
-                  </section>
-                ) : null;
-              })}
-            </div>
+            <>
+              <div
+                className="profile-content"
+                aria-label="Saved botanical profile"
+              >
+                {sections.map(({ field, label }) => {
+                  const content = loadState.profile?.[field];
+                  return content ? (
+                    <section key={field}>
+                      <h4>{label}</h4>
+                      <p>{content}</p>
+                    </section>
+                  ) : null;
+                })}
+              </div>
+              {!editing && (
+                <button
+                  className="button--secondary"
+                  type="button"
+                  ref={editTriggerRef}
+                  onClick={() => {
+                    setEditing(true);
+                  }}
+                >
+                  Edit profile
+                </button>
+              )}
+            </>
           )}
 
-          <form
-            aria-busy={saveState.status === "saving"}
-            className="profile-form"
-            onSubmit={(event) => {
-              void save(event);
-            }}
-          >
-            <h4>{loadState.profile ? "Edit profile" : "Add profile"}</h4>
-            <p>
-              Text sections are optional. A profile is retained while it has
-              text or structured native-range knowledge.
-            </p>
-            {sections.map(({ field, label }) => (
-              <div className="field" key={field}>
-                <label htmlFor={`profile-${field}`}>{label}</label>
-                <textarea
-                  id={`profile-${field}`}
-                  name={field}
-                  maxLength={20000}
-                  rows={field === "description" ? 6 : 4}
-                  value={values[field]}
+          {editing && (
+            <form
+              aria-busy={saveState.status === "saving"}
+              className="profile-form"
+              onSubmit={(event) => {
+                void save(event);
+              }}
+            >
+              <h4>{loadState.profile ? "Edit profile" : "Add profile"}</h4>
+              <FormSection title="Reference notes">
+                {sections.map(({ field, label }) => (
+                  <div
+                    className={
+                      field === "description" ? "field field--full" : "field"
+                    }
+                    key={field}
+                  >
+                    <label htmlFor={`profile-${field}`}>{label}</label>
+                    <textarea
+                      id={`profile-${field}`}
+                      name={field}
+                      maxLength={20000}
+                      rows={field === "description" ? 6 : 4}
+                      value={values[field]}
+                      disabled={saveState.status === "saving"}
+                      aria-describedby={
+                        field === "cultivation"
+                          ? "profile-cultivation-hint"
+                          : undefined
+                      }
+                      onChange={(event) => {
+                        setValues((current) => ({
+                          ...current,
+                          [field]: event.target.value,
+                        }));
+                        if (saveState.status !== "idle")
+                          setSaveState({ status: "idle" });
+                      }}
+                    />
+                    {field === "cultivation" && (
+                      <small id="profile-cultivation-hint">
+                        General cultivation guidance, not measurements or
+                        outcomes from your own plants.
+                      </small>
+                    )}
+                  </div>
+                ))}
+              </FormSection>
+              <FormActions>
+                <button
+                  className="button--secondary"
+                  type="button"
                   disabled={saveState.status === "saving"}
-                  aria-describedby={
-                    field === "cultivation"
-                      ? "profile-cultivation-hint"
-                      : undefined
-                  }
-                  onChange={(event) => {
-                    setValues((current) => ({
-                      ...current,
-                      [field]: event.target.value,
-                    }));
-                    if (saveState.status !== "idle")
-                      setSaveState({ status: "idle" });
+                  onClick={() => {
+                    setValues(valuesFromProfile(loadState.profile));
+                    setSaveState({ status: "idle" });
+                    setEditing(false);
+                    requestAnimationFrame(() => {
+                      editTriggerRef.current?.focus();
+                    });
                   }}
-                />
-                {field === "cultivation" && (
-                  <small id="profile-cultivation-hint">
-                    General cultivation guidance, not measurements or outcomes
-                    from your own plants.
-                  </small>
-                )}
-              </div>
-            ))}
-            <button type="submit" disabled={saveState.status === "saving"}>
-              {saveState.status === "saving"
-                ? "Saving profile…"
-                : "Save profile"}
-            </button>
-          </form>
-          <BotanicalNativeRangeManager identityId={identityId} />
+                >
+                  Cancel
+                </button>
+                <button type="submit" disabled={saveState.status === "saving"}>
+                  {saveState.status === "saving"
+                    ? "Saving profile…"
+                    : "Save profile"}
+                </button>
+              </FormActions>
+            </form>
+          )}
+          {includeNativeRange && (
+            <BotanicalNativeRangeManager identityId={identityId} />
+          )}
           {saveState.status === "saved" && (
             <p className="notice notice--success" role="status">
               {saveState.message}

@@ -158,7 +158,7 @@ export function ProvenanceMapScreen() {
             Where your recorded material originated
           </h2>
           <p>
-            Markers are precise ProvenanceSites linked directly to collection
+            Markers are precise provenance sites linked directly to collection
             records—not current Locations, Supplier addresses, or botanical
             native ranges.
           </p>
@@ -188,7 +188,7 @@ export function ProvenanceMapScreen() {
       {state.status === "ready" &&
         state.dataset.total_provenance_sites === 0 && (
           <div className="empty-state">
-            <h3>No ProvenanceSites recorded</h3>
+            <h3>No provenance sites recorded</h3>
             <p>
               Add a precise origin through Geography or while recording an
               acquisition. Coordinates are optional until the site is ready to
@@ -203,7 +203,7 @@ export function ProvenanceMapScreen() {
           <div className="empty-state">
             <h3>No provenance sites have coordinates</h3>
             <p>
-              Only ProvenanceSites with stored latitude and longitude can be
+              Only provenance sites with stored latitude and longitude can be
               mapped.
             </p>
             <a href="#/geography">Add coordinates in Geography</a>

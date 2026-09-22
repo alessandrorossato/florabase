@@ -217,6 +217,16 @@
       },
       "BotanicalIdentityResponse": {
         "properties": {
+          "collection_counts": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/IdentityCollectionCounts"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "common_name": {
             "anyOf": [
               {
@@ -242,6 +252,17 @@
               }
             ],
             "title": "Compact Cover Kind"
+          },
+          "compact_external_cover_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Compact External Cover Url"
           },
           "created_at": {
             "format": "date-time",
@@ -1698,6 +1719,39 @@
           "status"
         ],
         "title": "HealthResponse",
+        "type": "object"
+      },
+      "IdentityCollectionCounts": {
+        "description": "Active collection records, never quantities or inferred lineage.",
+        "properties": {
+          "plant_groups": {
+            "minimum": 0.0,
+            "title": "Plant Groups",
+            "type": "integer"
+          },
+          "plants": {
+            "minimum": 0.0,
+            "title": "Plants",
+            "type": "integer"
+          },
+          "seed_lots": {
+            "minimum": 0.0,
+            "title": "Seed Lots",
+            "type": "integer"
+          },
+          "sowings": {
+            "minimum": 0.0,
+            "title": "Sowings",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "seed_lots",
+          "sowings",
+          "plants",
+          "plant_groups"
+        ],
+        "title": "IdentityCollectionCounts",
         "type": "object"
       },
       "LineageResponse": {

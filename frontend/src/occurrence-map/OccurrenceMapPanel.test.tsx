@@ -106,10 +106,13 @@ test("loads exact summary and exposes accessible evidence, privacy, quality, and
   render(<OccurrenceMapPanel identityId={identityId} link={link} />);
 
   expect(
-    screen.getByText(/does not send this taxon directly to GBIF/i),
+    screen.getByText("GBIF occurrence data · not native-range data"),
   ).toBeVisible();
+  await user.click(
+    screen.getByRole("button", { name: "Occurrence evidence and privacy" }),
+  );
   expect(
-    screen.getByText(/Collection records, provenance, Suppliers/i),
+    screen.getByText(/Collection records, notes, account identity/i),
   ).toBeVisible();
   await user.click(
     screen.getByRole("button", { name: "Load GBIF occurrence map" }),

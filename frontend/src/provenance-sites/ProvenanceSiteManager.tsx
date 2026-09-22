@@ -69,7 +69,7 @@ export function ProvenanceSiteManager({
       })
       .catch(() => {
         if (!controller.signal.aborted) {
-          setMessage("Florabase could not load ProvenanceSites.");
+          setMessage("Florabase could not load provenance sites.");
         }
       });
     return () => {
@@ -114,7 +114,7 @@ export function ProvenanceSiteManager({
       setMessage(
         error instanceof ApiError && error.status === 422
           ? "Check the coordinate pair and accuracy. Latitude and longitude must be entered together."
-          : "Florabase could not save this ProvenanceSite.",
+          : "Florabase could not save this provenance site.",
       );
     } finally {
       setPending(false);
@@ -126,7 +126,7 @@ export function ProvenanceSiteManager({
       className="identity-directory"
       aria-labelledby="provenance-sites-title"
     >
-      <h3 id="provenance-sites-title">Precise ProvenanceSites</h3>
+      <h3 id="provenance-sites-title">Precise provenance sites</h3>
       <p>
         Record an exact origin site separately from its named geographic area.
         Coordinates are optional; no geocoding or map request is performed.
@@ -142,10 +142,10 @@ export function ProvenanceSiteManager({
               nameInput.current?.focus();
             }}
           >
-            + New ProvenanceSite
+            + New provenance site
           </button>
           {sites.length === 0 ? (
-            <p>No ProvenanceSites recorded.</p>
+            <p>No provenance sites recorded.</p>
           ) : (
             <ul className="identity-list">
               {sites.map((site) => (
@@ -175,10 +175,10 @@ export function ProvenanceSiteManager({
           aria-busy={pending}
         >
           <h4>
-            {selectedId ? "Edit ProvenanceSite" : "Create ProvenanceSite"}
+            {selectedId ? "Edit provenance site" : "Create provenance site"}
           </h4>
           <div className="field">
-            <label htmlFor="site-name">ProvenanceSite name</label>
+            <label htmlFor="site-name">Provenance site name</label>
             <input
               aria-describedby="provenance-site-name-help"
               id="site-name"
@@ -277,7 +277,7 @@ export function ProvenanceSiteManager({
           </div>
           <div className="actions">
             <button disabled={pending}>
-              {pending ? "Saving…" : "Save ProvenanceSite"}
+              {pending ? "Saving…" : "Save provenance site"}
             </button>
             {selectedId && (
               <button
@@ -291,11 +291,11 @@ export function ProvenanceSiteManager({
                       await refresh();
                       setSelectedId(null);
                       setForm(blank);
-                      setMessage("The ProvenanceSite was deleted.");
+                      setMessage("The provenance site was deleted.");
                     })
                     .catch(() => {
                       setMessage(
-                        "This ProvenanceSite is used by collection records and cannot be deleted.",
+                        "This provenance site is used by collection records and cannot be deleted.",
                       );
                     })
                     .finally(() => {
@@ -303,7 +303,7 @@ export function ProvenanceSiteManager({
                     });
                 }}
               >
-                Delete ProvenanceSite
+                Delete provenance site
               </button>
             )}
           </div>

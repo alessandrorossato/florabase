@@ -460,7 +460,7 @@ function Detail({
               <dd>{lot.material_provenance?.display_path ?? "Not recorded"}</dd>
             </div>
             <div>
-              <dt>ProvenanceSite</dt>
+              <dt>Provenance site</dt>
               <dd>
                 {lot.provenance_site ? (
                   <a href={`#/geography/${lot.provenance_site.id}`}>
@@ -1321,7 +1321,7 @@ export function SeedLotScreen({
                     createLabel="Create local place"
                   />
                   <ReferencePicker
-                    label="Precise ProvenanceSite (optional)"
+                    label="Precise provenance site (optional)"
                     disabled={pending}
                     choices={references.sites.map((site) => ({
                       id: site.id,

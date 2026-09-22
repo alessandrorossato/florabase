@@ -593,7 +593,7 @@ export function GeographyScreen({ initialSiteId }: { initialSiteId?: string }) {
               </p>
               <p>
                 Direct collection references: {selected.direct_usage_count} ·
-                ProvenanceSites: {selected.provenance_site_count} · Botanical
+                Provenance sites: {selected.provenance_site_count} · Botanical
                 native ranges: {selected.native_range_count}
               </p>
               {selected.retired_at && (

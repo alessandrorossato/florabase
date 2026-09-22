@@ -5,13 +5,18 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 
 from florabase.botanical_identities.model import BotanicalIdentity
-from florabase.botanical_identities.schemas import BotanicalIdentityCreate, BotanicalIdentityUpdate
+from florabase.botanical_identities.schemas import (
+    BotanicalIdentityCreate,
+    BotanicalIdentityUpdate,
+    IdentityCollectionCounts,
+)
 from florabase.botanical_identities.service import (
     BotanicalIdentityConflictError,
     BotanicalIdentityCoverReferencedError,
     BotanicalIdentityReferencedError,
     create_botanical_identity,
     delete_botanical_identity,
+    list_botanical_identity_directory,
     update_botanical_identity,
 )
 
@@ -95,3 +100,27 @@ def test_delete_allows_unused_identity_and_rejects_collection_references() -> No
     with pytest.raises(BotanicalIdentityCoverReferencedError):
         delete_botanical_identity(database, identity)
     database.delete.assert_not_called()
+
+
+def test_directory_uses_one_aggregate_query_and_maps_cover_and_collection_counts() -> None:
+    identity = BotanicalIdentity(id=uuid7(), scientific_name="Acer palmatum")
+    database = MagicMock()
+    database.execute.return_value.all.return_value = [
+        (identity, "external", "https://example.test/maple.jpg", 2, 3, 4, 5)
+    ]
+
+    result = list_botanical_identity_directory(database)
+
+    assert result == [
+        (
+            identity,
+            "external",
+            "https://example.test/maple.jpg",
+            IdentityCollectionCounts(seed_lots=2, sowings=3, plants=4, plant_groups=5),
+        )
+    ]
+    database.execute.assert_called_once()
+    sql = str(database.execute.call_args.args[0])
+    assert "count(" in sql.lower()
+    assert "sowings" in sql.lower()
+    assert "plant_groups" in sql.lower()

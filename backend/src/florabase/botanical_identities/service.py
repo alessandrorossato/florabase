@@ -6,9 +6,14 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from florabase.botanical_identities.model import BotanicalIdentity
-from florabase.botanical_identities.schemas import BotanicalIdentityCreate, BotanicalIdentityUpdate
+from florabase.botanical_identities.schemas import (
+    BotanicalIdentityCreate,
+    BotanicalIdentityUpdate,
+    IdentityCollectionCounts,
+)
 from florabase.plants.model import Plant, PlantGroup
 from florabase.seed_lots.model import SeedLot
+from florabase.sowings.model import Sowing
 
 UNIQUE_IDENTITY_CONSTRAINT = "uq_botanical_identities_name_cultivar_ci"
 
@@ -144,7 +149,14 @@ def list_botanical_identities(database: Session) -> list[BotanicalIdentity]:
 
 def list_botanical_identity_directory(
     database: Session,
-) -> list[tuple[BotanicalIdentity, Literal["local", "external"] | None]]:
+) -> list[
+    tuple[
+        BotanicalIdentity,
+        Literal["local", "external"] | None,
+        str | None,
+        IdentityCollectionCounts,
+    ]
+]:
     from florabase.attachments.model import Attachment, AttachmentState
     from florabase.collection_photos.model import BotanicalIdentityCoverImage
 
@@ -157,8 +169,30 @@ def list_botanical_identity_directory(
         ),
         else_=None,
     )
+    # Aggregate before joining: one directory query with no row multiplication or N+1 loads.
+    counts = [
+        select(model.botanical_identity_id.label("identity_id"), func.count().label("total"))
+        .where(model.lifecycle == "active")
+        .group_by(model.botanical_identity_id)
+        .subquery()
+        for model in (SeedLot, Plant, PlantGroup)
+    ]
+    sowings = (
+        select(SeedLot.botanical_identity_id.label("identity_id"), func.count().label("total"))
+        .select_from(Sowing)
+        .join(SeedLot, Sowing.seed_lot_id == SeedLot.id)
+        .where(Sowing.lifecycle == "active")
+        .group_by(SeedLot.botanical_identity_id)
+        .subquery()
+    )
+    counts.insert(1, sowings)
     statement = (
-        select(BotanicalIdentity, compact_cover_kind)
+        select(
+            BotanicalIdentity,
+            compact_cover_kind,
+            BotanicalIdentityCoverImage.image_url,
+            *[func.coalesce(c.c.total, 0) for c in counts],
+        )
         .outerjoin(
             BotanicalIdentityCoverImage,
             BotanicalIdentityCoverImage.botanical_identity_id == BotanicalIdentity.id,
@@ -170,10 +204,17 @@ def list_botanical_identity_directory(
             BotanicalIdentity.id,
         )
     )
+    for count in counts:
+        statement = statement.outerjoin(count, count.c.identity_id == BotanicalIdentity.id)
+    rows = database.execute(statement).all()
     return [
         (
             identity,
             cast(Literal["local", "external"] | None, cover_kind),
+            external_cover_url,
+            IdentityCollectionCounts(
+                seed_lots=seeds, sowings=sown, plants=plants, plant_groups=groups
+            ),
         )
-        for identity, cover_kind in database.execute(statement).all()
+        for identity, cover_kind, external_cover_url, seeds, sown, plants, groups in rows
     ]
