@@ -1,6 +1,7 @@
 import { lazy, Suspense, useState } from "react";
 
 import type { ExternalTaxonLinkResponse } from "../botanical-identities/api";
+import { InfoDisclosure } from "../components/ContextualHelp";
 import { getOccurrenceMapSummary, type OccurrenceMapSummary } from "./api";
 
 const OccurrenceDensityMap = lazy(async () => {
@@ -53,12 +54,9 @@ export function OccurrenceMapPanel({
     >
       <div className="section-heading">
         <div>
-          <p className="eyebrow">External evidence</p>
-          <h4 id={`occurrence-map-title-${identityId}`}>GBIF occurrence map</h4>
+          <h4 id={`occurrence-map-title-${identityId}`}>Occurrence evidence</h4>
+          <p>GBIF occurrence data · not native-range data</p>
         </div>
-        <span className="status-chip">
-          Occurrence density · not native range
-        </span>
       </div>
 
       {!link ? (
@@ -70,18 +68,13 @@ export function OccurrenceMapPanel({
         </div>
       ) : (
         <>
-          <p>
-            This view asks Florabase’s server to contact GBIF for the exact
-            linked taxon <i>{link.scientific_name}</i> (ID{" "}
-            <code>{link.external_id}</code>) and requested map tiles. Your
-            browser does not send this taxon directly to GBIF.
-          </p>
-          <p className="field-help">
-            Collection records, provenance, Suppliers, Locations, notes, user
-            identity, and your physical location are not sent. The separately
-            configured basemap provider still receives ordinary visible-area
-            tile requests under the collection-map privacy model.
-          </p>
+          <InfoDisclosure label="Occurrence evidence and privacy">
+            Florabase asks GBIF for the exact linked taxon. Occurrence records
+            are evidence of observations, not native-range data. Collection
+            records, notes, account identity, and physical location are not
+            sent; visible-area basemap tile requests follow the collection-map
+            privacy model.
+          </InfoDisclosure>
           {state.status === "idle" && (
             <button type="button" onClick={() => void load()}>
               Load GBIF occurrence map

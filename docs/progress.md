@@ -4,6 +4,86 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-22 — UX-004 operator-accepted reference ready for delivery
+
+- Tightened the BotanicalIdentity directory into catalog rows with a polished search control and
+  small collection context. The directory itself is the bounded scrolling region beside a compact,
+  non-sticky Quick Preview; the page heading remains in a stable catalog frame. The navigation sits
+  within a continuous full-height green column. Creation now uses a focused modal with trapped
+  keyboard focus, Escape, validation retention and trigger restoration instead of expanding the page.
+- Limited the rich cover-and-summary row to Overview and contained its representative image at the
+  requested compact scale. Collection, Reference and Events use a shorter work header containing the
+  identity context and the same Add/Edit/More hierarchy, so task content starts sooner at desktop,
+  compact desktop and mobile widths.
+- Simplified Overview to record dates and recent activity without repeating summary counts or names.
+  Collection now distinguishes its segmented inner navigation from the main tabs and separates next
+  actions from records, especially a source-seed-lot sowing launcher followed by a separate Recorded
+  sowings section. Human-facing Seed lot, Sowing, Plant and Plant group wording replaces backend-style
+  labels on the touched reference surfaces.
+- Made Reference read-first and split it into Profile, Native range, Botanical source and Occurrences
+  modules, with only the chosen module mounted. Profile fields render as a dossier until Add/Edit;
+  Save and Cancel return to read mode. Native-range controls appear only after Manage, provider
+  change/unlink actions live in anchored, Escape-closing More menus, and occurrence evidence remains
+  an explicit load with its semantics and privacy detail behind accessible disclosures. Raw cover
+  URLs and routine successful backend status no longer appear in the botanical UI. Trigger focus is
+  restored across profile and native-range mode changes.
+- Corrected the visible GBIF taxon action to `/taxon/{opaqueId}` without changing provider APIs,
+  tightened cover credit to Photo / Source / Licence, and recorded possible occurrence caching plus
+  post-0.1.0 operator-triggered botanical retrieval as contract-dependent future work only.
+- Added the nullable stored external cover URL to the existing single-query directory projection.
+  Configured external covers now render immediately in cards and Quick Preview without selection or
+  per-record requests, using lazy loading, asynchronous decoding and no-referrer browser requests.
+  Visible cards can contact their configured external hosts; Florabase still does not proxy, cache,
+  discover or choose an external image. Local cards retain the authenticated thumbnail route and all
+  broken or missing images retain the botanical fallback.
+- Browser inspection used a temporary local representative-data fixture, removed afterward. It
+  covered the 21-record bounded directory, creation dialog and focus restoration, local/external/
+  no-cover states, long names, Quick Preview, Overview density, compact work headers, Collection
+  subsections, all four Reference modules, native-range form, exact GBIF link and provider menu at
+  1440px, 1024px and 390×844. The mobile image stays within 256px, fixed navigation leaves enough
+  scroll clearance for provider actions, the continuous shell holds, and no horizontal overflow or
+  browser console warning/error appeared.
+- The independent review aligned the roadmap and reference guide with accepted operator behavior,
+  narrowed mobile scroll spacing to BotanicalIdentity detail, and corrected the remaining user-facing
+  Plant group and transfer terminology. No persistence, migration, dependency, unrelated screen redesign,
+  occurrence cache, or botanical enrichment was added. UX-004 remains `implemented`; minor aesthetic
+  refinements are deferred to later increments.
+- Final `make feature-verify` passed on the reviewed tree: 358 backend unit tests at 90.18% coverage,
+  171 frontend tests, 324 disposable PostgreSQL integration tests, workflow/feature helpers, format,
+  lint, typing, generated API drift, production build, migration-cycle check (no Alembic revisions),
+  whitespace validation and a recorded verification receipt. No unresolved technical or product
+  contract issues remain; minor visual refinements stay deferred to later scoped increments.
+
+## 2026-09-19 — UX-004 implemented; operator visual review required
+
+- Audited global styling and the BotanicalIdentity directory/detail mixture. Added a restrained
+  paper/green/sage vocabulary, spacing and radius tokens, editorial names, integrated image cards,
+  a small shared PageHeader/QuickPreview/StatStrip/FormSection/FormActions set, and limited shell
+  polish. Other entity screens and maps keep their structure; visible Transfer, GBIF taxon and
+  Provenance site terminology is corrected without domain changes.
+- Separated searchable directory, compact desktop preview and dedicated hash-routed detail. Preview
+  uses only list metadata. Below 68rem cards open details directly; existing deep links select the
+  new Overview / Collection / Reference / Events navigation and Seeds / Sowings / Plants subviews.
+  Cover management is secondary within the hero. Existing profile/native-range/provider, cover,
+  collection creation, history, guarded delete and contextual-help behaviors remain available.
+- Added active record counts to the existing directory response through one grouped SQL query;
+  independent aggregates prevent multiplication and per-record fetches. Generated OpenAPI and
+  TypeScript declarations are updated. Directory/preview retain bounded local thumbnails and
+  external-cover placeholders; Reference and occurrence-map lazy boundaries remain intact. No
+  migration, domain model, framework, telemetry or remote visual dependency was added.
+- Focused verification covers directory image privacy, selection versus keyboard focus, compact
+  preview requests, detail routes and back/forward, legacy subsections, lazy Reference, mobile
+  navigation, form grouping/help/validation, cover and guarded edit/delete behavior. Added a
+  PostgreSQL regression for exact active counts, empty identities and a single directory query.
+  Final canonical gate: `make feature-verify`; its working-tree receipt records successful checks.
+- Browser layout checks used the actual application components with temporary mocked data at
+  1440px, 1024px and 390×844, including mobile detail/Reference forms and a long unbroken scientific
+  name. No horizontal overflow was observed. Temporary fixture files were removed; the real app
+  remains behind owner login. These checks do not replace operator review of actual collection data.
+- At that milestone, the next checkpoint was `OPERATOR_VISUAL_REVIEW` on desktop and mobile. The
+  operator accepted the direction on 2026-09-22; remaining entity redesign and release hardening stay
+  deferred to their own increments. UX-004 remains `implemented`.
+
 ## 2026-09-19 — UX-002 implemented
 
 - Audited current create/edit forms and guided propagation, Event, transfer, extraction,
@@ -169,6 +249,7 @@ implementation detail.
   PROPAGATION-002 file passed five consecutive runs (70 test executions) with normal timeouts. The
   complete 134-test frontend suite, Prettier, ESLint, strict TypeScript, the production Vite build,
   generated API drift, and diff whitespace checks pass.
+
 ## 2026-09-10 — contextual reference-picker race fixed
 
 - Diagnosed the intermittent SeedLot contextual-creator failures as a stale delayed blur callback in

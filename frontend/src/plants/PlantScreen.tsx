@@ -550,7 +550,7 @@ function Detail({
                 )}
                 {value.provenance_site && (
                   <div>
-                    <dt>ProvenanceSite</dt>
+                    <dt>Provenance site</dt>
                     <dd>
                       <a href={`#/geography/${value.provenance_site.id}`}>
                         {value.provenance_site.geographic_place_path
@@ -1930,7 +1930,7 @@ export function PlantScreen({
                             </div>
                             <div className="field">
                               <label htmlFor="plant-provenance-site">
-                                Precise ProvenanceSite{" "}
+                                Precise provenance site{" "}
                                 <span className="optional">(optional)</span>
                               </label>
                               <select
@@ -2157,8 +2157,8 @@ export function PlantScreen({
                         }}
                       >
                         {selected.kind === "plant"
-                          ? "Transfer / Cedi"
-                          : "Transfer group / Cedi gruppo"}
+                          ? "Transfer"
+                          : "Transfer group"}
                       </button>
                     )}
                   </>
@@ -2444,9 +2444,7 @@ export function PlantScreen({
             }}
           >
             <h3 id="transfer-title">
-              {transferTarget.kind === "plant"
-                ? "Transfer / Cedi"
-                : "Transfer group / Cedi gruppo"}
+              {transferTarget.kind === "plant" ? "Transfer" : "Transfer group"}
             </h3>
             <p>
               {transferTarget.kind === "plant"

@@ -480,3 +480,68 @@ def test_create_requires_authentication_origin_csrf_and_owner(
     )
     assert status_code == 403
     assert body["detail"] == "Request forbidden"
+
+
+def test_directory_counts_active_records_without_join_multiplication(
+    authenticated_browser: tuple[str, str], database_connection: Connection
+) -> None:
+    from sqlalchemy import event
+
+    from florabase.plants.model import Plant, PlantGroup
+    from florabase.seed_lots.model import SeedLot
+    from florabase.sowings.model import Sowing
+
+    _, _, first = create_identity(authenticated_browser, {"scientific_name": "Counted identity"})
+    _, _, second = create_identity(authenticated_browser, {"scientific_name": "Empty identity"})
+    identity_id = UUID(first["id"])
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        lots = [SeedLot(botanical_identity_id=identity_id) for _ in range(2)]
+        lots.append(SeedLot(botanical_identity_id=identity_id, lifecycle="discarded"))
+        database.add_all(lots)
+        database.flush()
+        database.add_all(
+            [
+                Sowing(seed_lot_id=lots[0].id),
+                Sowing(seed_lot_id=lots[1].id),
+                Sowing(seed_lot_id=lots[0].id, lifecycle="completed"),
+                Plant(botanical_identity_id=identity_id, direct_origin_kind="unknown"),
+                Plant(
+                    botanical_identity_id=identity_id,
+                    direct_origin_kind="unknown",
+                    lifecycle="dead",
+                ),
+                PlantGroup(botanical_identity_id=identity_id, direct_origin_kind="unknown"),
+            ]
+        )
+        database.commit()
+
+    statements: list[str] = []
+
+    def capture(*args: Any) -> None:
+        statements.append(str(args[2]))
+
+    event.listen(database_connection, "before_cursor_execute", capture)
+    try:
+        code, _, body = request(
+            "GET", "/api/v1/botanical-identities", headers={"cookie": authenticated_browser[0]}
+        )
+    finally:
+        event.remove(database_connection, "before_cursor_execute", capture)
+    assert code == 200
+    by_id = {item["id"]: item for item in body}
+    assert by_id[first["id"]]["collection_counts"] == {
+        "seed_lots": 2,
+        "sowings": 2,
+        "plants": 1,
+        "plant_groups": 1,
+    }
+    assert by_id[second["id"]]["collection_counts"] == {
+        "seed_lots": 0,
+        "sowings": 0,
+        "plants": 0,
+        "plant_groups": 0,
+    }
+    assert by_id[first["id"]]["compact_external_cover_url"] is None
+    assert by_id[second["id"]]["compact_external_cover_url"] is None
+    directory_queries = [sql for sql in statements if "botanical_identities.scientific_name" in sql]
+    assert len(directory_queries) == 1

@@ -54,9 +54,17 @@ def list_all(
 ) -> list[BotanicalIdentityResponse]:
     return [
         BotanicalIdentityResponse.from_model(
-            botanical_identity, compact_cover_kind=compact_cover_kind
+            botanical_identity,
+            compact_cover_kind=compact_cover_kind,
+            compact_external_cover_url=compact_external_cover_url,
+            collection_counts=counts,
         )
-        for botanical_identity, compact_cover_kind in list_botanical_identity_directory(database)
+        for (
+            botanical_identity,
+            compact_cover_kind,
+            compact_external_cover_url,
+            counts,
+        ) in list_botanical_identity_directory(database)
     ]
 
 

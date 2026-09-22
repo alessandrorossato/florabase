@@ -1342,7 +1342,7 @@ test("explicit Plant transfer records recipient and keeps the historical detail 
   );
   const user = await openPlants();
   await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
-  const transfer = screen.getByRole("button", { name: "Transfer / Cedi" });
+  const transfer = screen.getByRole("button", { name: "Transfer" });
   expect(transfer).not.toHaveClass("button--secondary");
   expect(screen.getByRole("button", { name: "Edit Plant" })).toHaveClass(
     "button--secondary",
@@ -1370,7 +1370,7 @@ test("explicit Plant transfer records recipient and keeps the historical detail 
   ).toBeInTheDocument();
   expect(screen.getAllByText("Transferred").length).toBeGreaterThan(0);
   expect(
-    screen.queryByRole("button", { name: "Transfer / Cedi" }),
+    screen.queryByRole("button", { name: "Transfer" }),
   ).not.toBeInTheDocument();
   await user.click(screen.getByRole("tab", { name: "Events" }));
   expect(
@@ -1422,9 +1422,7 @@ test("whole-group transfer has no quantity control and extraction Events link th
     await screen.findByRole("button", { name: /Seedlings 2026/ }),
   );
   expect(screen.getByText(/extract it as a Plant first/)).toBeInTheDocument();
-  await user.click(
-    screen.getByRole("button", { name: "Transfer group / Cedi gruppo" }),
-  );
+  await user.click(screen.getByRole("button", { name: "Transfer group" }));
   const dialog = screen.getByRole("dialog");
   expect(within(dialog).getByText(/entire Plant group/)).toBeInTheDocument();
   expect(

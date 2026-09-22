@@ -73,13 +73,15 @@ export function DetailTabs<TabId extends string>({
   tabs,
   selected,
   onSelect,
+  label = "Record sections",
 }: {
+  label?: string;
   tabs: TabItem<TabId>[];
   selected: TabId;
   onSelect: (id: TabId) => void;
 }) {
   return (
-    <div aria-label="Record sections" className="detail-tabs" role="tablist">
+    <div aria-label={label} className="detail-tabs" role="tablist">
       {tabs.map((tab) => (
         <button
           aria-selected={selected === tab.id}

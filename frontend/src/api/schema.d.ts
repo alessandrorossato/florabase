@@ -1399,10 +1399,13 @@ export interface components {
         };
         /** BotanicalIdentityResponse */
         BotanicalIdentityResponse: {
+            collection_counts?: components["schemas"]["IdentityCollectionCounts"] | null;
             /** Common Name */
             common_name: string | null;
             /** Compact Cover Kind */
             compact_cover_kind?: ("local" | "external") | null;
+            /** Compact External Cover Url */
+            compact_external_cover_url?: string | null;
             /**
              * Created At
              * Format: date-time
@@ -1877,6 +1880,20 @@ export interface components {
         HealthResponse: {
             /** Status */
             status: string;
+        };
+        /**
+         * IdentityCollectionCounts
+         * @description Active collection records, never quantities or inferred lineage.
+         */
+        IdentityCollectionCounts: {
+            /** Plant Groups */
+            plant_groups: number;
+            /** Plants */
+            plants: number;
+            /** Seed Lots */
+            seed_lots: number;
+            /** Sowings */
+            sowings: number;
         };
         /** LineageResponse */
         LineageResponse: {

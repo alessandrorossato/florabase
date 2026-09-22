@@ -113,9 +113,9 @@ aggregation and explicit lineage.
 
 Compact BotanicalIdentity directory imagery follows a bounded rule: local covers use an
 authenticated server-generated WebP thumbnail with a maximum 320-pixel edge, no upscaling, private
-caching, and an attachment-digest validator. External covers use a neutral compact indicator and do
-not trigger directory-wide third-party requests; their operator-approved original remains available
-on the identity detail. Missing covers use a clean fallback. No generic transformation API,
+caching, and an attachment-digest validator. External covers use stored, explicitly configured URLs and render directly in visible browser
+cards with lazy loading and a no-referrer policy. Browsers contact the configured host; Florabase
+does not proxy, cache, discover, or choose external covers. Missing covers use a clean fallback. No generic transformation API,
 persisted derivative, background worker, or automatic image discovery is introduced.
 
 `PLANT-005` implements transferred/ceded outcomes for Plants and entire PlantGroups. A locked focused
@@ -150,6 +150,16 @@ backend for PRESENT occurrence counts and quality-filtered hex-density tiles. Th
 native-range surface, does not persist occurrences, and sends no collection metadata to GBIF.
 Profile enrichment remains separately planned. Structured native ranges are separately
 operator-managed BotanicalProfile knowledge and are never refreshed from GBIF occurrence evidence.
+
+`UX-004` establishes the refreshed visual vocabulary with BotanicalIdentity as the reference:
+separate directory, compact preview, dedicated detail, integrated covers, and Overview / Collection /
+Reference / Events navigation. Its status is `implemented`, and the operator has accepted the reference direction after desktop
+and mobile review. Supplier, Location, Geography, SeedLot, Sowing, Plant/PlantGroup, Event timeline,
+Dashboard and map redesigns remain deferred to later scoped increments. No later UX increment is
+defined yet. See [the reference guide](ux-004-reference.md) for patterns and review.
+Possible later work is recorded without implementation: occurrence-map cache or persistence needs a
+freshness, invalidation, licensing and privacy contract, and a post-0.1.0 **Retrieve botanical data**
+action needs an approved provider-content and provenance contract before it can enrich a profile.
 
 The final V1 phase is release hardening rather than another product surface. It will exercise fresh
 installation, upgrades and the full Alembic chain, backup/restore, production Docker deployment,

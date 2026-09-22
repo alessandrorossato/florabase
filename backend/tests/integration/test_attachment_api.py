@@ -724,10 +724,9 @@ def test_identity_cover_replaces_every_source_mode_and_owns_local_binary(
         == 404
     )
     directory = request("GET", "/api/v1/botanical-identities", browser=browser).json()
-    assert (
-        next(item for item in directory if item["id"] == str(identity_id))["compact_cover_kind"]
-        == "local"
-    )
+    local_directory_item = next(item for item in directory if item["id"] == str(identity_id))
+    assert local_directory_item["compact_cover_kind"] == "local"
+    assert local_directory_item["compact_external_cover_url"] is None
     protected = request(
         "DELETE",
         f"/api/v1/attachments/{first['attachment_id']}",
@@ -768,10 +767,9 @@ def test_identity_cover_replaces_every_source_mode_and_owns_local_binary(
     assert external["id"] == first["id"]
     assert external["kind"] == "external"
     directory = request("GET", "/api/v1/botanical-identities", browser=browser).json()
-    assert (
-        next(item for item in directory if item["id"] == str(identity_id))["compact_cover_kind"]
-        == "external"
-    )
+    external_directory_item = next(item for item in directory if item["id"] == str(identity_id))
+    assert external_directory_item["compact_cover_kind"] == "external"
+    assert external_directory_item["compact_external_cover_url"] == external_payload["image_url"]
     with Session(bind=database_connection) as database:
         assert database.get(Attachment, second["attachment_id"]) is None
         cover = database.get(BotanicalIdentityCoverImage, external["id"])

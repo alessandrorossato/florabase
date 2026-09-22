@@ -85,6 +85,15 @@ class BotanicalIdentityUpdate(BotanicalIdentityCreate):
     pass
 
 
+class IdentityCollectionCounts(BaseModel):
+    """Active collection records, never quantities or inferred lineage."""
+
+    seed_lots: int = Field(ge=0)
+    sowings: int = Field(ge=0)
+    plants: int = Field(ge=0)
+    plant_groups: int = Field(ge=0)
+
+
 class BotanicalIdentityResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -96,6 +105,9 @@ class BotanicalIdentityResponse(BaseModel):
     updated_at: datetime
     display_label: str
     compact_cover_kind: Literal["local", "external"] | None = None
+    compact_external_cover_url: str | None = None
+
+    collection_counts: IdentityCollectionCounts | None = None
 
     @classmethod
     def from_model(
@@ -103,6 +115,8 @@ class BotanicalIdentityResponse(BaseModel):
         botanical_identity: BotanicalIdentity,
         *,
         compact_cover_kind: Literal["local", "external"] | None = None,
+        compact_external_cover_url: str | None = None,
+        collection_counts: IdentityCollectionCounts | None = None,
     ) -> Self:
         display_label = botanical_identity.scientific_name
         if botanical_identity.cultivar_name is not None:
@@ -120,5 +134,7 @@ class BotanicalIdentityResponse(BaseModel):
                 "updated_at": botanical_identity.updated_at,
                 "display_label": display_label,
                 "compact_cover_kind": compact_cover_kind,
+                "compact_external_cover_url": compact_external_cover_url,
+                "collection_counts": collection_counts,
             }
         )

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { FieldHelp } from "../components/ContextualHelp";
+import { FieldHelp, InfoDisclosure } from "../components/ContextualHelp";
 import {
   listGeographicPlaces,
   type GeographicPlaceResponse,
@@ -34,11 +34,14 @@ export function BotanicalNativeRangeManager({
   const [load, setLoad] = useState<LoadState>({ status: "loading" });
   const [mutation, setMutation] = useState<MutationState>({ status: "idle" });
   const [selectedPlaceId, setSelectedPlaceId] = useState("");
+  const [managing, setManaging] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const [focusPlaceId, setFocusPlaceId] = useState<string | null>(null);
   const selectorRef = useRef<HTMLSelectElement>(null);
   const feedbackRef = useRef<HTMLParagraphElement>(null);
   const addedButtonRef = useRef<HTMLButtonElement>(null);
+  const manageTriggerRef = useRef<HTMLButtonElement>(null);
+  const doneButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -169,10 +172,6 @@ export function BotanicalNativeRangeManager({
     <section className="native-range" aria-labelledby="native-range-title">
       <div>
         <h4 id="native-range-title">Native range</h4>
-        <p>
-          Named areas where this taxon is considered botanically native. These
-          are reference knowledge, not collection origins or current locations.
-        </p>
       </div>
       {load.status === "loading" && <p>Loading native range…</p>}
       {load.status === "error" && (
@@ -203,66 +202,107 @@ export function BotanicalNativeRangeManager({
                     <strong>{range.geographic_place_name}</strong>
                     <small>{range.geographic_place_path}</small>
                   </div>
-                  <button
-                    type="button"
-                    className="button--secondary"
-                    disabled={pending}
-                    ref={
-                      focusPlaceId === range.geographic_place_id
-                        ? addedButtonRef
-                        : undefined
-                    }
-                    aria-label={`Remove ${range.geographic_place_name} from native range`}
-                    onClick={() => {
-                      void removeRange(range);
-                    }}
-                  >
-                    Remove
-                  </button>
+                  {managing && (
+                    <button
+                      type="button"
+                      className="button--secondary"
+                      disabled={pending}
+                      ref={
+                        focusPlaceId === range.geographic_place_id
+                          ? addedButtonRef
+                          : undefined
+                      }
+                      aria-label={`Remove ${range.geographic_place_name} from native range`}
+                      onClick={() => {
+                        void removeRange(range);
+                      }}
+                    >
+                      Remove
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>
           )}
-          <div className="native-range-add">
-            <div className="field">
-              <label htmlFor={`native-range-place-${identityId}`}>
-                Geographic place
-              </label>
-              <select
-                aria-describedby={`native-range-help-${identityId}`}
-                id={`native-range-place-${identityId}`}
-                ref={selectorRef}
-                disabled={pending || availablePlaces.length === 0}
-                value={selectedPlaceId}
-                onChange={(event) => {
-                  setSelectedPlaceId(event.currentTarget.value);
-                  setMutation({ status: "idle" });
-                }}
-              >
-                <option value="">Choose an exact named area</option>
-                {availablePlaces.map((place) => (
-                  <option value={place.id} key={place.id}>
-                    {place.name} — {place.display_path}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {!managing ? (
             <button
+              className="button--secondary"
               type="button"
-              disabled={pending || !selectedPlaceId}
+              ref={manageTriggerRef}
               onClick={() => {
-                void addRange();
+                setManaging(true);
+                requestAnimationFrame(() => {
+                  if (availablePlaces.length > 0) selectorRef.current?.focus();
+                  else doneButtonRef.current?.focus();
+                });
               }}
             >
-              {pending ? "Saving native range…" : "Add native range"}
+              Manage native range
             </button>
-          </div>
-          <FieldHelp id={`native-range-help-${identityId}`}>
-            Native range is reference knowledge about where the taxon is native,
-            not where collection material came from. Each selection records only
-            that exact area; manage named areas in{" "}
-            <a href="#/geography">Geography</a>.
-          </FieldHelp>
+          ) : (
+            <>
+              <div className="native-range-add">
+                <div className="field">
+                  <label htmlFor={`native-range-place-${identityId}`}>
+                    Geographic place
+                  </label>
+                  <select
+                    aria-describedby={`native-range-help-${identityId}`}
+                    id={`native-range-place-${identityId}`}
+                    ref={selectorRef}
+                    disabled={pending || availablePlaces.length === 0}
+                    value={selectedPlaceId}
+                    onChange={(event) => {
+                      setSelectedPlaceId(event.currentTarget.value);
+                      setMutation({ status: "idle" });
+                    }}
+                  >
+                    <option value="">Choose an exact named area</option>
+                    {availablePlaces.map((place) => (
+                      <option value={place.id} key={place.id}>
+                        {place.name} — {place.display_path}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="actions">
+                  <button
+                    className="button--secondary"
+                    type="button"
+                    ref={doneButtonRef}
+                    disabled={pending}
+                    onClick={() => {
+                      setSelectedPlaceId("");
+                      setMutation({ status: "idle" });
+                      setManaging(false);
+                      requestAnimationFrame(() =>
+                        manageTriggerRef.current?.focus(),
+                      );
+                    }}
+                  >
+                    Done
+                  </button>
+                  <button
+                    type="button"
+                    disabled={pending || !selectedPlaceId}
+                    onClick={() => {
+                      void addRange();
+                    }}
+                  >
+                    {pending ? "Saving…" : "Add place"}
+                  </button>
+                </div>
+              </div>
+              <FieldHelp id={`native-range-help-${identityId}`}>
+                Select an exact named area. Manage available places in{" "}
+                <a href="#/geography">Geography</a>.
+              </FieldHelp>
+            </>
+          )}
+          <InfoDisclosure label="About native range">
+            Native range describes where the taxon is considered native. It is
+            separate from collection origin and current location.
+          </InfoDisclosure>
         </>
       )}
       {(mutation.status === "success" || mutation.status === "error") && (

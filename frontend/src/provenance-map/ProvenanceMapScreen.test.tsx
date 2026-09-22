@@ -255,7 +255,9 @@ test("distinguishes no-site and no-coordinate empty states", async () => {
     dataset({ total_provenance_sites: 0, coordinate_less_sites: 0, sites: [] }),
   );
   expect(
-    await screen.findByRole("heading", { name: "No ProvenanceSites recorded" }),
+    await screen.findByRole("heading", {
+      name: "No provenance sites recorded",
+    }),
   ).toBeInTheDocument();
   view.unmount();
   vi.restoreAllMocks();
@@ -306,6 +308,8 @@ test("announces loading and recovers from a map request failure", async () => {
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: "Retry" }));
   expect(
-    await screen.findByRole("heading", { name: "No ProvenanceSites recorded" }),
+    await screen.findByRole("heading", {
+      name: "No provenance sites recorded",
+    }),
   ).toBeInTheDocument();
 });

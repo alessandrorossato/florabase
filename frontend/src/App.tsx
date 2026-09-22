@@ -144,8 +144,10 @@ function ApplicationShell() {
       setRoute(currentRoute());
     };
     window.addEventListener("hashchange", update);
+    window.addEventListener("popstate", update);
     return () => {
       window.removeEventListener("hashchange", update);
+      window.removeEventListener("popstate", update);
     };
   }, []);
 
@@ -185,29 +187,33 @@ function ApplicationShell() {
   return (
     <div className="application-shell">
       <aside className="desktop-sidebar">
-        <a className="brand" href="#/dashboard">
-          Florabase
-        </a>
-        <nav aria-label="Primary navigation">
-          {desktopGroups.map((group) => (
-            <section key={group.label} aria-label={group.label}>
-              <p>{group.label}</p>
-              {group.items.map((item) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className="navigation-link"
-                  aria-current={route.section === item.id ? "page" : undefined}
-                  onClick={() => {
-                    navigate(item.id);
-                  }}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </section>
-          ))}
-        </nav>
+        <div className="desktop-sidebar__content">
+          <a className="brand" href="#/dashboard">
+            Florabase
+          </a>
+          <nav aria-label="Primary navigation">
+            {desktopGroups.map((group) => (
+              <section key={group.label} aria-label={group.label}>
+                <p>{group.label}</p>
+                {group.items.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className="navigation-link"
+                    aria-current={
+                      route.section === item.id ? "page" : undefined
+                    }
+                    onClick={() => {
+                      navigate(item.id);
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </section>
+            ))}
+          </nav>
+        </div>
       </aside>
       <section aria-labelledby="page-title" className="app-content">
         <div className="session-bar app-header">
@@ -309,21 +315,11 @@ function ApplicationShell() {
             </div>
           </div>
         )}
-        <div
-          aria-live="polite"
-          className={`status status--compact status--${health.status}`}
-        >
-          {health.status === "loading" && <p>Checking backend connection…</p>}
-          {health.status === "ready" && (
-            <p>
-              <span aria-hidden="true">●</span> Backend status:{" "}
-              {health.response.status}
-            </p>
-          )}
-          {health.status === "error" && (
-            <p>Backend status is currently unavailable.</p>
-          )}
-        </div>
+        {health.status === "error" && (
+          <div aria-live="polite" className="notice notice--warning">
+            <p>Florabase cannot currently reach its application service.</p>
+          </div>
+        )}
       </section>
       <nav aria-label="Mobile primary navigation" className="mobile-navigation">
         {[

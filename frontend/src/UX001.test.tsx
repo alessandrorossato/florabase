@@ -248,8 +248,11 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
   );
   expect(screen.getByRole("tabpanel")).toHaveAttribute("id", "panel-overview");
   expect(
-    screen.getByText(/does not create or imply lineage/i),
+    screen.getByRole("heading", { name: "Record details" }),
   ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("heading", { name: "Collection snapshot" }),
+  ).not.toBeInTheDocument();
   expect(
     screen.getByRole("button", { name: "Edit botanical identity" }),
   ).toBeInTheDocument();
@@ -261,30 +264,41 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
     `#/seeds?action=create&identity=${identity.id}`,
   );
 
+  await user.click(screen.getByRole("tab", { name: "Collection" }));
   await user.click(screen.getByRole("tab", { name: "Seeds" }));
   expect(window.location.hash).toBe(`#/identities/${identity.id}?tab=seeds`);
   expect(
     screen.getByRole("link", { name: /Bloodgood seed lot/ }),
   ).toHaveAttribute("href", "#/seeds/seed-1");
-  expect(screen.getByRole("link", { name: "Add SeedLot" })).toHaveAttribute(
-    "href",
-    `#/seeds?action=create&identity=${identity.id}`,
-  );
+  expect(
+    within(screen.getByRole("tabpanel", { name: "Seeds" })).getByRole("link", {
+      name: "Add seed lot",
+    }),
+  ).toHaveAttribute("href", `#/seeds?action=create&identity=${identity.id}`);
 
   await user.keyboard("{ArrowRight}");
   expect(screen.getByRole("tab", { name: "Sowings" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
-  expect(screen.getByRole("link", { name: /Autumn tray/ })).toHaveAttribute(
-    "href",
-    "#/sowings/sowing-1",
-  );
+  const sowingWorkflow = screen.getByRole("region", {
+    name: "Start a sowing",
+  });
   expect(
-    screen.getByRole("link", { name: "Start from this SeedLot" }),
+    within(sowingWorkflow).getByRole("link", { name: "Start sowing" }),
   ).toHaveAttribute("href", "#/sowings?action=start&seedLot=seed-1");
+  const recordedSowings = screen
+    .getByRole("heading", { name: "Recorded sowings" })
+    .closest("section");
+  expect(recordedSowings).not.toBeNull();
+  if (!recordedSowings) throw new Error("Recorded sowings section is missing");
+  expect(
+    within(recordedSowings).getByRole("link", {
+      name: /Autumn tray/,
+    }),
+  ).toHaveAttribute("href", "#/sowings/sowing-1");
 
-  await user.click(screen.getByRole("tab", { name: "Plants" }));
+  await user.click(screen.getByRole("tab", { name: "Plants / Plant groups" }));
   expect(screen.getByRole("link", { name: /Courtyard maple/ })).toHaveAttribute(
     "href",
     "#/plants/plant-1",
@@ -295,12 +309,12 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
   );
   expect(screen.getByText("Plant group")).toBeInTheDocument();
   expect(
-    screen.getByRole("link", { name: "Direct / acquired Plant" }),
+    screen.getByRole("link", { name: "Direct / acquired plant" }),
   ).toHaveAttribute(
     "href",
     `#/plants?action=create&identity=${identity.id}&kind=plant`,
   );
-  expect(screen.getByRole("link", { name: "Create Plant" })).toHaveAttribute(
+  expect(screen.getByRole("link", { name: "Create plant" })).toHaveAttribute(
     "href",
     "#/plants?action=from-sowing&sowing=sowing-1&kind=plant",
   );
@@ -313,7 +327,7 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
   );
 });
 
-test("Botanical identity directory uses only bounded local thumbnails in compact cards", async () => {
+test("Botanical identity directory uses bounded local thumbnails and configured external covers", async () => {
   window.history.replaceState(null, "", "#/identities");
   const localCoverIdentity = {
     ...identity,
@@ -326,6 +340,7 @@ test("Botanical identity directory uses only bounded local thumbnails in compact
     display_label: "Acer rubrum",
     common_name: "Red maple",
     compact_cover_kind: "external" as const,
+    compact_external_cover_url: "https://images.example.test/acer-rubrum.jpg",
   };
   const noCoverIdentity = {
     ...identity,
@@ -346,15 +361,19 @@ test("Botanical identity directory uses only bounded local thumbnails in compact
   const directory = await screen.findByRole("region", {
     name: "Identity directory",
   });
-  await within(directory).findByText("External cover on detail page");
+  await within(directory).findByRole("button", { name: /Acer rubrum/ });
   const images = Array.from(directory.querySelectorAll("img"));
-  expect(images).toHaveLength(1);
+  expect(images).toHaveLength(2);
   expect(images[0]).toHaveAttribute(
     "src",
     `/api/v1/botanical-identities/${identity.id}/cover-image/thumbnail`,
   );
-  expect(directory).toHaveTextContent("External cover on detail page");
-  expect(directory.querySelector('img[src^="https://"]')).toBeNull();
+  expect(images[1]).toHaveAttribute(
+    "src",
+    externalCoverIdentity.compact_external_cover_url,
+  );
+  expect(images[1]).toHaveAttribute("loading", "lazy");
+  expect(images[1]).toHaveAttribute("referrerpolicy", "no-referrer");
   expect(fetch.mock.calls.some(([path]) => path.startsWith("https://"))).toBe(
     false,
   );
@@ -389,12 +408,12 @@ test("A Botanical identity tab deep link restores the selected collection view",
   );
   expect(
     await screen.findByText(
-      "No Events belong to Plants or Plant groups with this identity.",
+      "No events belong to plants or plant groups with this identity.",
     ),
   ).toBeInTheDocument();
 });
 
-test("Botanical reference deep links defer collection and cover work", async () => {
+test("Botanical reference deep links use compact context and defer collection work", async () => {
   window.history.replaceState(
     null,
     "",
@@ -420,12 +439,14 @@ test("Botanical reference deep links defer collection and cover work", async () 
   );
   expect(
     screen.getByRole("heading", {
-      name: "Profile, native range, and occurrence evidence",
+      name: "Reference",
     }),
   ).toBeInTheDocument();
   expect(requested).not.toContain(
     `/api/v1/botanical-identities/${identity.id}/cover-image`,
   );
+  expect(document.querySelector(".identity-work-header")).toBeInTheDocument();
+  expect(document.querySelector(".identity-summary")).not.toBeInTheDocument();
   expect(requested).not.toContain(
     `/api/v1/botanical-identities/${identity.id}/collection`,
   );
@@ -456,21 +477,23 @@ test("Botanical identity empty states require a SeedLot before Sowing and preser
   render(<App />);
 
   expect(
-    await screen.findByText(/cannot exist without its source SeedLot/),
+    await screen.findByText(
+      /Record an active seed lot before starting a sowing/,
+    ),
   ).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "Create SeedLot" })).toHaveAttribute(
+  expect(screen.getByRole("link", { name: "Create seed lot" })).toHaveAttribute(
     "href",
     `#/seeds?action=create&identity=${identity.id}`,
   );
-  await user.click(screen.getByRole("tab", { name: "Plants" }));
+  await user.click(screen.getByRole("tab", { name: "Plants / Plant groups" }));
   expect(
-    screen.getByRole("heading", { name: "From a Sowing" }),
+    screen.getByRole("heading", { name: "From a sowing" }),
   ).toBeInTheDocument();
   expect(
-    screen.getByText(/No source Sowings are recorded yet/),
+    screen.getByText(/No source sowings are recorded yet/),
   ).toBeInTheDocument();
   expect(
-    screen.getByRole("link", { name: "Direct / acquired Plant" }),
+    screen.getByRole("link", { name: "Direct / acquired plant" }),
   ).toHaveAttribute(
     "href",
     `#/plants?action=create&identity=${identity.id}&kind=plant`,
@@ -534,7 +557,7 @@ test("Botanical identity edit and guarded deletion stay explicit", async () => {
     "Japanese laceleaf maple",
   );
   await user.click(screen.getByRole("button", { name: "Save changes" }));
-  expect(await screen.findAllByText("Japanese laceleaf maple")).toHaveLength(3);
+  expect(await screen.findAllByText("Japanese laceleaf maple")).toHaveLength(1);
 
   await user.click(screen.getByLabelText("More botanical identity actions"));
   await user.click(screen.getByRole("button", { name: "Delete" }));

@@ -96,22 +96,33 @@ test("search exposes ambiguity and requires explicit confirmation before linking
       csrfToken="csrf"
     />,
   );
-  await screen.findByText(/must explicitly confirm a link/i);
+  await user.click(
+    await screen.findByRole("button", {
+      name: "About GBIF search and linking",
+    }),
+  );
+  expect(screen.getByText(/until you explicitly confirm it/i)).toBeVisible();
   await user.click(screen.getByRole("button", { name: "Search GBIF" }));
   expect(await screen.findByText(/Racosperma acuminatum/)).toBeInTheDocument();
   expect(screen.getByText(/FUZZY match/)).toBeInTheDocument();
   expect(
     fetch.mock.calls.some(([url]) => requestPath(url).includes("search")),
   ).toBe(true);
-  expect(screen.queryByText("Confirmed GBIF link")).not.toBeInTheDocument();
+  expect(
+    screen.queryByText("Catalogue of Life XR via GBIF"),
+  ).not.toBeInTheDocument();
   await user.click(
     screen.getAllByRole("button", { name: "Confirm GBIF link" })[0],
   );
-  expect(await screen.findByText("Confirmed GBIF link")).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "View on GBIF" })).toHaveAttribute(
-    "href",
-    linked.provider_url,
-  );
+  expect(
+    await screen.findByText("Catalogue of Life XR via GBIF"),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByText(linked.scientific_name).closest("h4")?.textContent,
+  ).toBe(linked.scientific_name);
+  expect(
+    screen.getByRole("link", { name: "View taxon on GBIF" }),
+  ).toHaveAttribute("href", "https://www.gbif.org/taxon/BSJCX");
 });
 
 test("linked stale state refreshes, changes, and unlinks without editing identity", async () => {
@@ -146,8 +157,16 @@ test("linked stale state refreshes, changes, and unlinks without editing identit
   await waitFor(() => {
     expect(screen.queryByText(/retained cached data/i)).not.toBeInTheDocument();
   });
+  await user.click(screen.getByText("More", { selector: "summary" }));
+  const more = screen.getByText("More", { selector: "summary" });
+  await user.keyboard("{Escape}");
+  expect(more).toHaveFocus();
+  expect(more.closest("details")).not.toHaveAttribute("open");
+  await user.click(more);
   await user.click(screen.getByRole("button", { name: "Change link" }));
+  expect(more).toHaveFocus();
   expect(screen.getByLabelText("Scientific-name search")).toBeInTheDocument();
+  await user.click(more);
   await user.click(screen.getByRole("button", { name: "Unlink" }));
   expect(
     await screen.findByRole("button", { name: "Search GBIF" }),

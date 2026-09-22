@@ -1,6 +1,8 @@
 import { useEffect, useState, type SyntheticEvent } from "react";
 
 import { ApiError } from "../auth/api";
+import { InfoDisclosure } from "../components/ContextualHelp";
+import { OverflowMenu } from "../components/ReferenceUI";
 import { OccurrenceMapPanel } from "../occurrence-map/OccurrenceMapPanel";
 import {
   confirmExternalTaxonLink,
@@ -29,14 +31,26 @@ function dateTime(value: string): string {
   }).format(new Date(value));
 }
 
+function gbifTaxonUrl(externalId: string): string {
+  return `https://www.gbif.org/taxon/${encodeURIComponent(externalId)}`;
+}
+
+function taxonDisplayName(link: ExternalTaxonLinkResponse): string {
+  if (!link.authorship || link.scientific_name.endsWith(link.authorship))
+    return link.scientific_name;
+  return `${link.scientific_name} ${link.authorship}`;
+}
+
 export function ExternalBotanicalDataPanel({
   identityId,
   scientificName,
   csrfToken,
+  view = "all",
 }: {
   identityId: string;
   scientificName: string;
   csrfToken: string;
+  view?: "all" | "source" | "occurrences";
 }) {
   const [link, setLink] = useState<ExternalTaxonLinkResponse | null>(null);
   const [loadingLink, setLoadingLink] = useState(true);
@@ -127,34 +141,26 @@ export function ExternalBotanicalDataPanel({
   const showSearch = !link || changing;
   return (
     <section
-      className="external-botany"
-      aria-labelledby="external-botany-title"
+      className={`external-botany external-botany--${view}`}
+      aria-labelledby={`external-botany-title-${view}`}
     >
       <div className="section-heading">
-        <div>
-          <p className="eyebrow">Advisory reference</p>
-          <h3 id="external-botany-title">External botanical data</h3>
-        </div>
-        <span className="status-chip">GBIF · Catalogue of Life XR</span>
+        <h3 id={`external-botany-title-${view}`}>
+          {view === "occurrences" ? "Occurrences" : "External botanical source"}
+        </h3>
       </div>
-      <p className="field-help">
-        Searching sends only this botanical-name query to GBIF. A match never
-        changes Florabase’s identity or profile data; you must explicitly
-        confirm a link.
-      </p>
       {loadingLink && <p role="status">Loading external reference…</p>}
       {error && (
         <div className="notice notice--error" role="alert">
           {error}
         </div>
       )}
-      {!loadingLink && link && (
+      {view !== "occurrences" && !loadingLink && link && (
         <article className="external-link-card">
           <div>
-            <p className="eyebrow">Confirmed GBIF link</p>
+            <p className="eyebrow">Catalogue of Life XR via GBIF</p>
             <h4>
-              <i>{link.scientific_name}</i>
-              {link.authorship ? ` ${link.authorship}` : ""}
+              <i>{taxonDisplayName(link)}</i>
             </h4>
             <p>
               {[link.rank, link.taxonomic_status, link.family, link.kingdom]
@@ -184,42 +190,53 @@ export function ExternalBotanicalDataPanel({
           <div className="actions">
             <a
               className="button-link button--secondary"
-              href={link.provider_url}
+              href={gbifTaxonUrl(link.external_id)}
               target="_blank"
               rel="noreferrer"
             >
-              View on GBIF
+              View taxon on GBIF
             </a>
             <button
+              className="button--secondary"
               disabled={busyId !== null}
               type="button"
               onClick={() => void refresh()}
             >
               {busyId === "refresh" ? "Refreshing…" : "Refresh"}
             </button>
-            <button
-              className="button--secondary"
-              disabled={busyId !== null}
-              type="button"
-              onClick={() => {
-                setChanging((value) => !value);
-              }}
-            >
-              {changing ? "Cancel change" : "Change link"}
-            </button>
-            <button
-              className="button--danger"
-              disabled={busyId !== null}
-              type="button"
-              onClick={() => void remove()}
-            >
-              {busyId === "unlink" ? "Unlinking…" : "Unlink"}
-            </button>
+            <OverflowMenu>
+              <>
+                <button
+                  className="button--secondary"
+                  disabled={busyId !== null}
+                  type="button"
+                  onClick={() => {
+                    setChanging((value) => !value);
+                  }}
+                >
+                  {changing ? "Cancel change" : "Change link"}
+                </button>
+                <button
+                  className="button--danger"
+                  disabled={busyId !== null}
+                  type="button"
+                  onClick={() => {
+                    void remove();
+                  }}
+                >
+                  {busyId === "unlink" ? "Unlinking…" : "Unlink"}
+                </button>
+              </>
+            </OverflowMenu>
           </div>
         </article>
       )}
-      {!loadingLink && showSearch && (
+      {view !== "occurrences" && !loadingLink && showSearch && (
         <div className="external-search">
+          <InfoDisclosure label="About GBIF search and linking">
+            Searching sends this botanical name to GBIF. A match never changes
+            Florabase identity or profile data until you explicitly confirm it.
+          </InfoDisclosure>
           <form onSubmit={(event) => void runSearch(event)}>
             <div className="field">
               <label htmlFor={`external-query-${identityId}`}>
@@ -318,7 +335,7 @@ export function ExternalBotanicalDataPanel({
           )}
         </div>
       )}
-      {!loadingLink && (
+      {view !== "source" && !loadingLink && (
         <OccurrenceMapPanel
           key={`${identityId}:${link?.external_id ?? "unlinked"}`}
           identityId={identityId}
