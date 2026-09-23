@@ -282,14 +282,21 @@ function ApplicationShell() {
             initialTab={route.tab}
           />
         ) : route.section === "suppliers" ? (
-          <SupplierScreen initialId={route.recordId} initialTab={route.tab} />
+          <SupplierScreen
+            key={route.recordId ?? "directory"}
+            initialId={route.recordId}
+            initialTab={route.tab}
+          />
         ) : route.section === "locations" ? (
           <LocationScreen
             key={route.recordId ?? "directory"}
             initialId={route.recordId}
           />
         ) : (
-          <GeographyScreen initialSiteId={route.recordId} />
+          <GeographyScreen
+            key={route.recordId ?? "directory"}
+            initialSiteId={route.recordId}
+          />
         )}
         {state.status === "logout-failed" && (
           <div className="notice notice--error" role="alert">

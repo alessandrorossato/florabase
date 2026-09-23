@@ -3426,3 +3426,534 @@ button:disabled {
     justify-self: start;
   }
 }
+
+/* UX-005 reference and provenance workspaces */
+.reference-page,
+.reference-detail-layout,
+.provenance-sites-workspace {
+  min-width: 0;
+}
+.reference-detail {
+  display: grid;
+  gap: var(--space-6);
+  min-width: 0;
+}
+.reference-detail .detail-header h3,
+.geography-place-inspector .detail-header h3,
+.provenance-sites-workspace h3 {
+  font-family: var(--font-editorial);
+  font-weight: 400;
+}
+.reference-detail .overview-grid {
+  gap: var(--space-8);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--space-6);
+}
+.reference-detail .fact-card,
+.reference-detail .collection-card {
+  border-inline: 0;
+  border-top: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.reference-detail .supplier-material > section + section {
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-border);
+}
+.reference-page .identity-list-item,
+.provenance-sites-workspace .identity-list-item,
+.geography-place-inspector .identity-list-item {
+  border-radius: var(--radius-small);
+}
+.reference-page .identity-list-item span:first-child,
+.provenance-sites-workspace .identity-list-item span:first-child {
+  font-family: var(--font-editorial);
+  font-size: 1.1rem;
+}
+.reference-page .identity-directory,
+.provenance-sites-workspace .identity-directory {
+  min-width: 0;
+}
+.location-tree--nested {
+  border-color: var(--color-border);
+}
+.location-tree .identity-list-item {
+  padding-block: var(--space-2);
+}
+.task-dialog {
+  width: min(calc(100% - 2rem), 38rem);
+  max-height: min(44rem, calc(100dvh - 2rem));
+  overflow: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  padding: var(--space-6);
+  box-shadow: 0 1.5rem 4rem rgb(20 58 43 / 25%);
+}
+.task-dialog::backdrop {
+  background: rgb(15 34 25 / 60%);
+}
+.task-dialog form,
+.task-dialog .identity-form {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.task-dialog h3,
+.task-dialog h4 {
+  margin: 0;
+  font: 400 1.65rem/1.2 var(--font-editorial);
+}
+.task-dialog .actions {
+  justify-content: flex-end;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+.geography-search {
+  max-width: 34rem;
+  margin-block: var(--space-4);
+}
+.geography-view-nav,
+.geography-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-block: var(--space-3);
+}
+.geography-view-nav button,
+.geography-subnav button {
+  color: var(--color-leaf);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+}
+.geography-view-nav button[aria-pressed="true"],
+.geography-subnav button[aria-pressed="true"] {
+  border-color: var(--color-accent);
+  font-weight: 700;
+}
+.geography-place-inspector {
+  display: grid;
+  gap: var(--space-4);
+}
+.geography-place-inspector .detail-header,
+.geography-place-inspector .detail-actions {
+  display: grid;
+  gap: var(--space-2);
+}
+.provenance-sites-workspace .section-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  align-items: start;
+  margin-block: var(--space-6);
+}
+.provenance-sites-workspace .section-heading h3 {
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  margin: 0;
+}
+.provenance-sites-workspace .quick-preview {
+  align-content: start;
+}
+.provenance-sites-workspace:has(> .geography-map-layout) {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(17rem, 0.9fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+.provenance-sites-workspace:has(> .geography-map-layout) > .section-heading,
+.provenance-sites-workspace:has(> .geography-map-layout) > .notice,
+.provenance-sites-workspace:has(> .geography-map-layout) > .empty-state {
+  grid-column: 1 / -1;
+}
+.geography-map-layout,
+.geography-map-companion {
+  min-width: 0;
+}
+.geography-map-companion {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+}
+.map-layout {
+  grid-template-columns: minmax(0, 1.8fr) minmax(17rem, 0.9fr);
+  gap: var(--space-4);
+}
+.map-canvas-card,
+.map-companion,
+.map-site-detail {
+  border: 0;
+  border-radius: var(--radius-small);
+  background: transparent;
+}
+.map-side-rail {
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
+  min-width: 0;
+}
+.map-companion {
+  max-height: 24rem;
+  padding: 0;
+}
+.map-site-detail,
+.map-selection-prompt {
+  grid-column: auto;
+  padding: var(--space-4);
+  background: var(--color-sage);
+}
+.provenance-map {
+  min-height: 35rem;
+  border-radius: var(--radius-small);
+}
+.map-record-list li {
+  background: transparent;
+  border-inline: 0;
+  border-top: 0;
+  border-radius: 0;
+}
+@media (max-width: 68rem) {
+  .provenance-sites-workspace:has(> .geography-map-layout),
+  .map-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .provenance-sites-workspace .quick-preview {
+    display: grid;
+  }
+  .map-companion {
+    max-height: none;
+  }
+  .map-side-rail {
+    grid-row: auto;
+  }
+}
+@media (max-width: 40rem) {
+  .task-dialog {
+    padding: var(--space-4);
+  }
+  .task-dialog .actions {
+    flex-wrap: wrap;
+  }
+  .provenance-sites-workspace .section-heading {
+    flex-direction: column;
+  }
+  .provenance-map {
+    min-height: 20rem;
+  }
+}
+.reference-page .identity-list,
+.provenance-sites-workspace .identity-list,
+.workspace:has(.geography-view-nav) .identity-list {
+  grid-template-columns: minmax(0, 1fr);
+}
+.reference-page .identity-list-item,
+.location-tree .identity-list-item,
+.provenance-sites-workspace .identity-list-item,
+.workspace:has(.geography-view-nav) .identity-list-item {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: center;
+  gap: var(--space-1);
+  padding: var(--space-3);
+}
+.reference-page .identity-list-item > span,
+.location-tree .identity-list-item > span,
+.provenance-sites-workspace .identity-list-item > span,
+.workspace:has(.geography-view-nav) .identity-list-item > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 68rem) {
+  .workspace:has(.geography-view-nav) .quick-preview {
+    display: grid;
+  }
+}
+.reference-detail .overview-grid > section {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+}
+.reference-detail .overview-grid h4 {
+  font: 400 1.35rem/1.3 var(--font-editorial);
+}
+.text-link {
+  width: fit-content;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-leaf);
+  font: inherit;
+  text-align: left;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+.text-link:hover {
+  background: transparent;
+}
+@media (max-width: 64rem) {
+  .map-screen .screen-heading {
+    flex-direction: column;
+  }
+  .map-screen .screen-heading > .button-link {
+    align-self: flex-start;
+  }
+}
+
+/* UX-005 operator UAT: one directory and detail language */
+.site-directory-column {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.directory-search {
+  width: min(100%, 36rem);
+  margin-block: var(--space-4);
+}
+.identity-card,
+.identity-list-item {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  background: var(--color-surface);
+  color: var(--color-ink);
+  transition:
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+.identity-card:not([aria-pressed="true"]):hover,
+.identity-list-item:not([aria-pressed="true"]):hover {
+  background: var(--color-sage);
+  border-color: var(--color-accent);
+}
+.identity-card[aria-pressed="true"],
+.identity-list-item[aria-pressed="true"] {
+  background: #d5e9da;
+  border-color: var(--color-accent);
+  box-shadow:
+    inset 4px 0 var(--color-accent),
+    0 0 0 1px var(--color-accent);
+}
+.identity-card[aria-pressed="true"] .identity-card-copy strong,
+.identity-list-item[aria-pressed="true"] > span:first-child {
+  font-weight: 650;
+}
+.identity-list-item:focus-visible,
+.location-tree-toggle:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.location-scope-filter {
+  max-width: 16rem;
+  margin-block: var(--space-3) var(--space-4);
+}
+.location-scope-filter label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--color-muted);
+}
+.location-scope-filter select {
+  border-color: var(--color-border);
+  border-radius: var(--radius-small);
+  background: var(--color-surface);
+}
+.location-tree-toggle {
+  border-radius: var(--radius-small);
+  background: var(--color-sage);
+}
+.reference-detail,
+.geography-place-inspector,
+.record-inspector {
+  width: 100%;
+  max-width: 70rem;
+  min-width: 0;
+}
+.reference-detail {
+  gap: var(--space-4);
+}
+.reference-detail .detail-header,
+.geography-place-inspector .detail-header {
+  align-items: end;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+.reference-detail .detail-header h3,
+.geography-place-inspector .detail-header h3 {
+  font: 400 clamp(2rem, 3vw, 2.7rem)/1.13 var(--font-editorial);
+  margin-block: var(--space-1);
+  overflow-wrap: anywhere;
+}
+.record-path {
+  color: var(--color-muted);
+  overflow-wrap: anywhere;
+}
+.record-badges,
+.record-scope-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+.reference-detail .detail-actions,
+.geography-place-inspector .detail-actions {
+  width: auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.reference-detail .detail-actions > :not(.overflow-menu),
+.geography-place-inspector .detail-actions > :not(.overflow-menu) {
+  flex: 0 0 auto;
+  width: auto;
+}
+.reference-detail > .stat-strip,
+.geography-place-inspector > .stat-strip {
+  margin: 0;
+  padding-block: var(--space-3) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+.record-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(17rem, 0.9fr);
+  gap: var(--space-8);
+  align-items: start;
+}
+.record-section {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.record-section h4,
+.record-inspector h3 {
+  font: 400 1.5rem/1.2 var(--font-editorial);
+  margin: 0 0 var(--space-4);
+}
+.record-section h5 {
+  font-size: 0.9rem;
+  margin: var(--space-6) 0 var(--space-2);
+}
+.record-facts {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+.record-facts > div {
+  display: grid;
+  grid-template-columns: minmax(6rem, 0.35fr) minmax(0, 1fr);
+  gap: var(--space-3);
+  padding-block: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.record-facts dt {
+  color: var(--color-muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+.record-facts dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.record-link-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.record-link-list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-block: var(--space-3);
+  border-bottom: 1px solid var(--color-border);
+}
+.record-list-meta,
+.record-empty {
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+.record-inspector {
+  display: grid;
+  gap: var(--space-3);
+}
+.record-inspector .record-facts > div {
+  grid-template-columns: minmax(6rem, 0.38fr) minmax(0, 1fr);
+}
+.record-inspector .actions {
+  display: flex;
+  flex-wrap: wrap;
+}
+.supplier-overview {
+  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
+  padding-top: var(--space-4);
+}
+.supplier-record-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+}
+.supplier-record-list .collection-card {
+  padding: var(--space-4) 0;
+  border: 0;
+  border-bottom: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.supplier-record-list .collection-card h3 {
+  font: 400 1.2rem/1.25 var(--font-editorial);
+}
+.supplier-record-list .collection-card p {
+  margin-top: var(--space-2);
+}
+.supplier-material .record-section + .record-section {
+  margin-top: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+.overflow-menu .overflow-menu__panel,
+.overflow-menu--text .overflow-menu__panel {
+  right: 0;
+  left: auto;
+  width: max-content;
+  min-width: 11rem;
+  max-width: min(22rem, calc(100vw - 2rem));
+}
+.overflow-menu .overflow-menu__panel button {
+  white-space: normal;
+  text-align: left;
+}
+@media (max-width: 68rem) {
+  .record-detail-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+  .reference-detail .detail-header,
+  .geography-place-inspector .detail-header {
+    align-items: start;
+  }
+}
+@media (max-width: 40rem) {
+  .record-facts > div,
+  .record-inspector .record-facts > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+  .reference-detail .detail-actions,
+  .geography-place-inspector .detail-actions {
+    justify-content: flex-start;
+  }
+  .reference-detail .overflow-menu__panel,
+  .geography-place-inspector .overflow-menu__panel {
+    position: absolute;
+    margin-top: 0;
+  }
+}

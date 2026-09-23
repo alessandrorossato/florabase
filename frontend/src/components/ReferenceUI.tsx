@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
 /** Small layout vocabulary, proven by the BotanicalIdentity reference. */
 export function PageHeader({
@@ -21,6 +21,43 @@ export function PageHeader({
       </div>
       {actions}
     </header>
+  );
+}
+
+export function DirectorySearch({
+  id,
+  label,
+  placeholder,
+  value,
+  onChange,
+  disabled = false,
+  className = "",
+}: {
+  id: string;
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  className?: string;
+}) {
+  return (
+    <div className={`field directory-search ${className}`.trim()}>
+      <label htmlFor={id}>{label}</label>
+      <div className="search-control">
+        <span aria-hidden="true">⌕</span>
+        <input
+          id={id}
+          type="search"
+          placeholder={placeholder}
+          value={value}
+          disabled={disabled}
+          onChange={(event) => {
+            onChange(event.currentTarget.value);
+          }}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -82,10 +119,42 @@ export function OverflowMenu({
 }) {
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const triggerRef = useRef<HTMLElement>(null);
-  const close = () => {
-    detailsRef.current?.removeAttribute("open");
-    triggerRef.current?.focus();
+  const close = (restoreFocus = false) => {
+    const details = detailsRef.current;
+    if (!details?.open) return;
+    details.open = false;
+    if (restoreFocus) triggerRef.current?.focus();
   };
+
+  useEffect(() => {
+    const details = detailsRef.current;
+    if (!details) return;
+    const dismissOutside = (event: Event) => {
+      if (
+        details.open &&
+        event.target instanceof Node &&
+        !details.contains(event.target)
+      ) {
+        details.open = false;
+      }
+    };
+    const closePeers = () => {
+      if (!details.open) return;
+      for (const peer of document.querySelectorAll<HTMLDetailsElement>(
+        "details.overflow-menu[open]",
+      )) {
+        if (peer !== details) peer.open = false;
+      }
+    };
+    document.addEventListener("pointerdown", dismissOutside);
+    document.addEventListener("focusin", dismissOutside);
+    details.addEventListener("toggle", closePeers);
+    return () => {
+      document.removeEventListener("pointerdown", dismissOutside);
+      document.removeEventListener("focusin", dismissOutside);
+      details.removeEventListener("toggle", closePeers);
+    };
+  }, []);
 
   return (
     <details
@@ -95,7 +164,7 @@ export function OverflowMenu({
         if (event.key !== "Escape" || !detailsRef.current?.open) return;
         event.preventDefault();
         event.stopPropagation();
-        close();
+        close(true);
       }}
     >
       <summary ref={triggerRef} aria-label={ariaLabel}>
@@ -105,7 +174,7 @@ export function OverflowMenu({
         className="overflow-menu__panel"
         onClick={(event) => {
           if (event.target instanceof Element && event.target.closest("button"))
-            close();
+            close(true);
         }}
       >
         {children}

@@ -278,43 +278,45 @@ export function ProvenanceMapScreen() {
                   visible area, never Florabase record names or metadata.
                 </p>
               </div>
-              <aside
-                className="map-companion"
-                aria-label="Mapped provenance sites"
-              >
-                <h3>{visibleSites.length} mapped provenance sites</h3>
-                <p>Select a site to inspect its filtered collection records.</p>
-                <ul className="map-site-list">
-                  {visibleSites.map((site) => (
-                    <li key={site.id}>
-                      <button
-                        type="button"
-                        aria-pressed={site.id === selected?.id}
-                        onClick={() => {
-                          setSelectedId(site.id);
-                        }}
-                      >
-                        <strong>{site.name}</strong>
-                        <span>
-                          {site.geographic_place_path ??
-                            "No named geographic place"}
-                        </span>
-                        <small>
-                          {coordinates(site)} · {site.usage.total} linked
-                        </small>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </aside>
-              {selected ? (
-                <SiteDetails site={selected} />
-              ) : (
-                <p className="map-selection-prompt">
-                  Select a marker or a site in the companion list to inspect
-                  linked records.
-                </p>
-              )}
+              <div className="map-side-rail">
+                <aside
+                  className="map-companion"
+                  aria-label="Mapped provenance sites"
+                >
+                  <h3>{visibleSites.length} mapped provenance sites</h3>
+                  <p>Select a site to inspect directly linked records.</p>
+                  <ul className="map-site-list">
+                    {visibleSites.map((site) => (
+                      <li key={site.id}>
+                        <button
+                          type="button"
+                          aria-pressed={site.id === selected?.id}
+                          onClick={() => {
+                            setSelectedId(site.id);
+                          }}
+                        >
+                          <strong>{site.name}</strong>
+                          <span>
+                            {site.geographic_place_path ??
+                              "No named geographic place"}
+                          </span>
+                          <small>
+                            {coordinates(site)} · {site.usage.total} linked
+                          </small>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </aside>
+                {selected ? (
+                  <SiteDetails site={selected} />
+                ) : (
+                  <p className="map-selection-prompt">
+                    Select a marker or a site in the companion list to inspect
+                    linked records.
+                  </p>
+                )}
+              </div>
             </div>
           )}
         </>

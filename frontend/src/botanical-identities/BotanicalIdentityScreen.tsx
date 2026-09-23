@@ -23,6 +23,7 @@ import {
   PageHeader,
   FormSection,
   FormActions,
+  DirectorySearch,
   OverflowMenu,
   QuickPreview,
 } from "../components/ReferenceUI";
@@ -1201,27 +1202,17 @@ export function BotanicalIdentityScreen({
             className="identity-directory"
           >
             <h3 id="identity-directory-title">Identity directory</h3>
-            <div className="field directory-search">
-              <label htmlFor="identity-filter">
-                Search botanical identities
-              </label>
-              <div className="search-control">
-                <span aria-hidden="true">⌕</span>
-                <input
-                  id="identity-filter"
-                  type="search"
-                  placeholder="Search names and cultivars"
-                  value={filter}
-                  onChange={(event) => {
-                    setFilter(event.currentTarget.value);
-                  }}
-                  disabled={
-                    directory.status !== "ready" ||
-                    directory.identities.length === 0
-                  }
-                />
-              </div>
-            </div>
+            <DirectorySearch
+              id="identity-filter"
+              label="Search botanical identities"
+              placeholder="Search names and cultivars"
+              value={filter}
+              onChange={setFilter}
+              disabled={
+                directory.status !== "ready" ||
+                directory.identities.length === 0
+              }
+            />
             {directory.status === "loading" && (
               <p aria-live="polite" className="notice">
                 Loading botanical identities…

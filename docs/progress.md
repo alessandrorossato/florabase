@@ -4,6 +4,27 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-23 — UX-005 independent review
+
+- The operator accepted the general design direction and deferred minor visual refinements. Independent review confirmed the UX-005-only frontend/documentation scope, preserved explicit provenance and hierarchy semantics, lazy maps, and no backend, generated API, schema, migration, or dependency changes. UX-005 remains `implemented`; no UX-006 record was added.
+- Corrected two data/error edge cases in the site and place inspectors: zero accuracy now displays, local places with a null type are not labeled canonical, and non-conflict delete failures no longer claim a relationship conflict. Pending site/place saves now disable their form controls. Shared dialog and menu focus-return regressions were strengthened.
+
+## 2026-09-23 — UX-005 operator UAT corrections ready for visual review
+
+- Fixed the shared dialog flash-close defect: React StrictMode effect replay closed the native dialog during cleanup, and its queued `close` event dismissed the newly reopened state. TaskDialog now handles intentional native cancellation without treating programmatic cleanup as user dismissal. The shared OverflowMenu now dismisses on outside pointer/focus, Escape, action selection and opening a peer, with listener cleanup and focus return. Focused StrictMode and menu regressions cover repeated open/close, focus trapping and outside interaction.
+- Location filtering auto-reveals matching descendants and ancestors while preserving manual collapse/reopen for the current filter; a changed filter recomputes the initial expansion, and clearing it restores the unfiltered tree. Location, Supplier, Geographic Place and Provenance Site details now use compact read-first headers, structured relationships, usage figures and record lists; rare actions remain in More. A shared directory search and selected-row treatment bring Supplier, Location and Geography closer to BotanicalIdentity, whose selected card is now visibly distinct from focus and hover.
+- Browser UAT with representative data inspected Supplier, Location, Geography, Provenance sites and BotanicalIdentity across 1440px, 1024px and 390×844: dialogs remained open until dismissed, menu outside-click worked, filtered branches stayed manually collapsed, linked material remained readable, mobile action rows aligned, and no horizontal overflow was found. The temporary browser fixture was removed. Focused verification: 63 tests across four Vitest files, followed by 53 App tests on the final handler edit; `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, `pnpm build`, and `git diff --check` passed. Vite retained its chunk-size advisory. The operator has accepted the general design direction; minor visual refinements are deferred. The independent review and canonical verification follow this UAT milestone.
+
+## 2026-09-23 — UX-005 implemented for operator visual review
+
+- Audited UX-004's merged BotanicalIdentity patterns and the existing Supplier, Location, Geography, Provenance-site and collection-map workflows. The old surfaces mixed selection with full editing, showed permanent forms and repeated bordered panels, while the map competed with its list. Kept their recorded relationships, hierarchy, route meanings and loading/error behavior.
+- Separated Supplier directory, compact list-backed Quick Preview and hash-routed detail. Detail reads contact, notes, recent acquisitions and directly linked material before editing; create and edit use a shared accessible dialog, and retirement stays in More.
+- Recast Location as a hierarchy browser with search over names and paths, explicit usage-scope filtering, ancestor context, compact preview and dedicated read-first detail. Multiple roots, arbitrary depth, child creation, lifecycle and guarded edits/deletion keep the existing backend semantics.
+- Organized Geography into Browse (Places and Provenance sites) and Map. The place browser distinguishes immutable canonical nodes from editable local nodes. Site browse keeps coordinate-less records visible; map mode lazily loads Leaflet for stored coordinate pairs only, with synchronized marker, list and site inspector. Place and site forms open on explicit create/edit intent.
+- Made the separate collection provenance map the main surface with a companion site list and selected direct-record inspector. Its filters, direct-only record associations, markers, attribution and backend contract remain unchanged. Shared UX-004 PageHeader, QuickPreview, DetailHeader, StatStrip, Breadcrumbs and OverflowMenu vocabulary was reused; the small TaskDialog primitive supplies modal focus, Escape, Cancel and focus return.
+- Reviewed representative data in the browser at 1440px, 1024px and 390×844 across directory, detail, hierarchy, browse/map, selected records and dialogs. Corrected row density, mobile tree alignment, page chrome and map layout; checked that no horizontal overflow remained. The temporary fixture was removed. The operator's final visual acceptance remains outstanding.
+- Added UX-005 as `implemented` in `features.json`, updated the roadmap's scoped handoff, and corrected stale `docs/progress.md` current-state statuses against the feature registry. No backend, API, schema or migration change was made. Focused verification: `pnpm exec vitest run --configLoader runner src/App.test.tsx src/provenance-sites/ProvenanceSiteManager.test.tsx src/provenance-map/ProvenanceMapScreen.test.tsx` (60 passed); `pnpm lint`, `pnpm typecheck`, `pnpm format:check`, `pnpm build`, `git diff --check`, and feature-registry JSON validation passed. The production build retained Vite's chunk-size advisory; the map remains a separate lazy chunk. `make feature-verify` is reserved for independent final review after operator acceptance.
+
 ## 2026-09-22 — UX-004 operator-accepted reference ready for delivery
 
 - Tightened the BotanicalIdentity directory into catalog rows with a polished search control and
@@ -941,7 +962,7 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260913_0024`; UX-003 adds no migration.
+- Alembic head: `20260913_0024`; UX-005 adds no migration.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
@@ -950,11 +971,11 @@ implementation detail.
   connected-record Supplier summaries; and exact structured BotanicalProfile native ranges over the
   shared GeographicPlace hierarchy; and guarded local still-image attachment storage with
   authenticated retrieval and coordinated database/content backup.
-- `PROPAGATION-001` through `PROPAGATION-003`, `SUPPLIER-002`, `LOCATION-002`, `GEOGRAPHY-003`,
-  `MAP-001`, `BOTANY-002`, and `ATTACHMENT-002` are verified; `GEOGRAPHY-002`, `ATTACHMENT-003`, and
-  `UX-003` are implemented pending independent review. The
-  next increment remains decided by the machine-readable dependency graph; licensing/version policy
-  and release readiness remain explicit later operator/product decisions.
+- `PROPAGATION-001` through `PROPAGATION-003`, `SUPPLIER-002`, `BOTANY-002`, and
+  `ATTACHMENT-002` are verified. `LOCATION-002`, `GEOGRAPHY-003`, `MAP-001`, `GEOGRAPHY-002`,
+  `ATTACHMENT-003`, `UX-002`, `UX-003`, and `UX-004` are implemented pending their respective
+  independent review. `UX-005` remains implemented and has completed its independent review.
+  Licensing/version policy and release readiness remain explicit later operator/product decisions.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.
   Other unblocked P2 product items are listed by the machine-readable dependency graph rather than

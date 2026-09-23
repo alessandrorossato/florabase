@@ -1,5 +1,6 @@
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { StrictMode } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { App } from "./App";
@@ -180,6 +181,10 @@ async function createSelectedIdentity() {
 }
 
 beforeEach(() => {
+  Object.defineProperty(window, "innerWidth", {
+    configurable: true,
+    value: 1440,
+  });
   window.history.replaceState(null, "", "#/identities");
 });
 
@@ -1381,14 +1386,14 @@ test("primary navigation switches accessibly to the empty supplier directory", a
     await screen.findByRole("heading", { name: "Suppliers" }),
   ).toBeInTheDocument();
   expect(screen.getByText("No suppliers yet.")).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "+ New supplier" }));
+  await user.click(screen.getByRole("button", { name: "New supplier" }));
   expect(
     screen.getByLabelText("Name", { selector: "#new-supplier-name" }),
   ).toHaveFocus();
   expect(
     screen
       .getByLabelText("Name", { selector: "#new-supplier-name" })
-      .closest(".creation-panel"),
+      .closest(".task-dialog"),
   ).not.toBeNull();
   expect(screen.getByLabelText("Name")).toBeRequired();
   expect(screen.getByLabelText("Kind").tagName).toBe("SELECT");
@@ -1401,9 +1406,11 @@ test("primary navigation switches accessibly to the empty supplier directory", a
     "Other",
   ])
     expect(screen.getByRole("option", { name: kind })).toBeInTheDocument();
-  const newSupplier = screen.getByRole("button", { name: "+ New supplier" });
+  const newSupplier = screen.getByRole("button", { name: "New supplier" });
   await user.click(screen.getByRole("button", { name: "Cancel" }));
-  expect(newSupplier).toHaveAttribute("aria-expanded", "false");
+  expect(
+    screen.queryByRole("dialog", { name: "Create supplier" }),
+  ).not.toBeInTheDocument();
   expect(newSupplier).toHaveFocus();
   await user.click(
     screen.getByRole("button", { name: "Botanical identities" }),
@@ -1452,9 +1459,11 @@ test("keyboard supplier creation needs only name and kind and sends CSRF", async
   });
   const user = await openSuppliers();
   const newSupplier = await screen.findByRole("button", {
-    name: "+ New supplier",
+    name: "New supplier",
   });
-  expect(newSupplier).toHaveAttribute("aria-expanded", "false");
+  expect(
+    screen.queryByRole("dialog", { name: "Create supplier" }),
+  ).not.toBeInTheDocument();
   expect(
     screen.queryByLabelText("Name", { selector: "#new-supplier-name" }),
   ).not.toBeInTheDocument();
@@ -1473,7 +1482,9 @@ test("keyboard supplier creation needs only name and kind and sends CSRF", async
   expect(new Headers(create?.init?.headers).get("X-CSRF-Token")).toBe(
     "botanical-csrf",
   );
-  expect(newSupplier).toHaveAttribute("aria-expanded", "false");
+  expect(
+    screen.queryByRole("dialog", { name: "Create supplier" }),
+  ).not.toBeInTheDocument();
   expect(newSupplier).toHaveFocus();
 });
 
@@ -1529,7 +1540,11 @@ test("supplier filtering, keyboard selection, optional details, editing, and lif
   await user.keyboard("{Enter}");
   expect(record).toHaveAttribute("aria-pressed", "true");
   expect(
-    screen.getByRole("link", { name: "Visit supplier website" }),
+    screen.queryByRole("link", { name: "Visit supplier website" }),
+  ).not.toBeInTheDocument();
+  await user.click(screen.getByRole("link", { name: "Open details" }));
+  expect(
+    await screen.findByRole("link", { name: "Visit supplier website" }),
   ).toHaveAttribute("href", supplier.website);
   expect(screen.getByRole("link", { name: supplier.email })).toHaveAttribute(
     "href",
@@ -1648,7 +1663,9 @@ test("supplier hub links direct material, identity context, counts, dates, and h
   expect(
     await screen.findByRole("heading", { name: supplier.name }),
   ).toBeInTheDocument();
-  expect(screen.getByLabelText("Direct supplier usage")).toHaveTextContent("4");
+  expect(screen.getByLabelText("Direct supplier records")).toHaveTextContent(
+    "4",
+  );
   expect(
     screen.getByRole("heading", { name: "Recent acquisitions" }),
   ).toBeInTheDocument();
@@ -1660,7 +1677,7 @@ test("supplier hub links direct material, identity context, counts, dates, and h
 
   await user.click(screen.getByRole("tab", { name: "Linked material (4)" }));
   expect(
-    screen.getByRole("heading", { name: "SeedLots (2)" }),
+    screen.getByRole("heading", { name: "Seed lots (2)" }),
   ).toBeInTheDocument();
   expect(
     screen.getByRole("heading", { name: "Plants (2)" }),
@@ -1706,16 +1723,15 @@ test("supplier validation, forbidden saves, and session expiry are explicit", as
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await openSuppliers();
-  await user.click(
-    await screen.findByRole("button", { name: "+ New supplier" }),
-  );
+  await user.click(await screen.findByRole("button", { name: "New supplier" }));
   await user.type(await screen.findByLabelText("Name"), "Source");
   await user.click(screen.getByRole("button", { name: "Create supplier" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(/check website/i);
   expect(screen.getByLabelText("Name")).toHaveValue("Source");
-  expect(
-    screen.getByRole("button", { name: "+ New supplier" }),
-  ).toHaveAttribute("aria-expanded", "true");
+  expect(screen.getByRole("button", { name: "New supplier" })).toHaveAttribute(
+    "aria-haspopup",
+    "dialog",
+  );
   status = 403;
   await user.click(screen.getByRole("button", { name: "Create supplier" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -1743,7 +1759,7 @@ test("primary navigation opens an empty accessible location directory", async ()
     await screen.findByRole("heading", { name: "Locations" }),
   ).toBeInTheDocument();
   expect(screen.getByText("No locations yet.")).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "+ New location" }));
+  await user.click(screen.getByRole("button", { name: "New location" }));
   expect(
     screen.getByLabelText("Name", { selector: "#new-location-name" }),
   ).toHaveFocus();
@@ -1752,9 +1768,11 @@ test("primary navigation opens an empty accessible location directory", async ()
   expect(
     screen.getByRole("option", { name: "No parent (root location)" }),
   ).toBeInTheDocument();
-  const newLocation = screen.getByRole("button", { name: "+ New location" });
+  const newLocation = screen.getByRole("button", { name: "New location" });
   await user.click(screen.getByRole("button", { name: "Cancel" }));
-  expect(newLocation).toHaveAttribute("aria-expanded", "false");
+  expect(
+    screen.queryByRole("dialog", { name: "New location" }),
+  ).not.toBeInTheDocument();
   expect(newLocation).toHaveFocus();
 });
 
@@ -1771,15 +1789,22 @@ test("location hierarchy renders paths and supports keyboard selection", async (
   await user.click(await screen.findByRole("button", { name: "Expand House" }));
   await user.click(screen.getByRole("button", { name: "Expand Seed cabinet" }));
   const drawer = await screen.findByRole("button", {
-    name: /Drawer A.*House → Seed cabinet → Drawer A/i,
+    name: /^Drawer A/i,
   });
   drawer.focus();
   await user.keyboard("{Enter}");
   expect(drawer).toHaveAttribute("aria-pressed", "true");
-  expect(screen.getByRole("heading", { name: "Drawer A" })).toBeInTheDocument();
-  expect(screen.getAllByText("House → Seed cabinet → Drawer A")).toHaveLength(
-    2,
+  expect(screen.getByRole("link", { name: "Open details" })).toHaveAttribute(
+    "href",
+    `#/locations/${drawerLocation.id}`,
   );
+  await user.click(screen.getByRole("link", { name: "Open details" }));
+  expect(
+    await screen.findByRole("heading", { name: "Drawer A" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getAllByText("House → Seed cabinet → Drawer A")[0],
+  ).toBeInTheDocument();
   expect(
     screen
       .getAllByRole("link", { name: "Plants" })
@@ -1798,14 +1823,73 @@ test("location hierarchy renders paths and supports keyboard selection", async (
   expect(parent).not.toContainElement(
     screen.queryByRole("option", { name: /Drawer A/ }),
   );
-  await user.click(screen.getByRole("button", { name: /^House.*House$/i }));
-  await user.click(screen.getByRole("button", { name: "Edit location" }));
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  await user.click(screen.getByRole("link", { name: "Locations" }));
+  await user.click(await screen.findByRole("button", { name: /^House/i }));
+  await user.click(screen.getByRole("link", { name: "Open details" }));
+  await user.click(
+    await screen.findByRole("button", { name: "Edit location" }),
+  );
   const rootParent = screen.getByLabelText("Parent location", {
     selector: "#edit-location-parent",
   });
   expect(
     Array.from(rootParent.querySelectorAll("option"), (option) => option.value),
   ).toEqual([""]);
+});
+
+test("location search keeps ancestors and scope filtering uses explicit scopes", async () => {
+  authenticatedThen((path) => {
+    if (path === "/api/v1/locations")
+      return jsonResponse([
+        houseLocation,
+        { ...cabinetLocation, usage_scopes: ["plants"] },
+        { ...drawerLocation, usage_scopes: ["seed_lots"] },
+      ]);
+    throw new Error(`unexpected request: ${path}`);
+  });
+  const user = await openLocations();
+  await screen.findByRole("button", { name: /^House/i });
+  await user.type(
+    screen.getByRole("searchbox", { name: "Search locations" }),
+    "Drawer A",
+  );
+  expect(screen.getByRole("button", { name: /^House/i })).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: /^Seed cabinet/i }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: /^Drawer A/i }),
+  ).toBeInTheDocument();
+  await user.click(
+    screen.getByRole("button", { name: "Collapse Seed cabinet" }),
+  );
+  expect(
+    screen.queryByRole("button", { name: /^Drawer A/i }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "Expand Seed cabinet" }),
+  ).toHaveAttribute("aria-expanded", "false");
+  await user.click(screen.getByRole("button", { name: "Expand Seed cabinet" }));
+  expect(
+    screen.getByRole("button", { name: /^Drawer A/i }),
+  ).toBeInTheDocument();
+  await user.clear(screen.getByRole("searchbox", { name: "Search locations" }));
+  await user.selectOptions(screen.getByLabelText("Usage scope"), "plants");
+  expect(
+    screen.getByRole("button", { name: /^Seed cabinet/i }),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: /^Drawer A/i }),
+  ).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Collapse House" }));
+  expect(
+    screen.queryByRole("button", { name: /^Seed cabinet/i }),
+  ).not.toBeInTheDocument();
+  await user.selectOptions(screen.getByLabelText("Usage scope"), "seed_lots");
+  expect(
+    screen.getByRole("button", { name: /^Drawer A/i }),
+  ).toBeInTheDocument();
 });
 
 test("Location detail deep links stay synchronized with hash navigation", async () => {
@@ -1930,17 +2014,16 @@ test("location creation supports roots and the selected create-child shortcut", 
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await openLocations();
-  await user.click(
-    await screen.findByRole("button", { name: "+ New location" }),
-  );
+  await user.click(await screen.findByRole("button", { name: "New location" }));
   await user.type(await screen.findByLabelText("Name"), "House{Enter}");
   expect(
     await screen.findByRole("heading", { name: "House" }),
   ).toBeInTheDocument();
-  expect(
-    screen.getByRole("button", { name: "+ New location" }),
-  ).toHaveAttribute("aria-expanded", "false");
-  await user.click(screen.getByRole("button", { name: "Create child here" }));
+  expect(screen.getByRole("button", { name: "New location" })).toHaveAttribute(
+    "aria-haspopup",
+    "dialog",
+  );
+  await user.click(screen.getByRole("button", { name: "Create child" }));
   expect(
     screen.getByLabelText("Parent location", {
       selector: "#new-location-parent",
@@ -2043,9 +2126,12 @@ test("location rename reparent retire and reactivate use hierarchy-aware control
   const user = await openLocations();
   await user.click(await screen.findByRole("button", { name: "Expand House" }));
   await user.click(
-    await screen.findByRole("button", { name: /Seed cabinet.*House/i }),
+    await screen.findByRole("button", { name: /^Seed cabinet/i }),
   );
-  await user.click(screen.getByRole("button", { name: "Edit location" }));
+  await user.click(screen.getByRole("link", { name: "Open details" }));
+  await user.click(
+    await screen.findByRole("button", { name: "Edit location" }),
+  );
   const name = screen.getByLabelText("Name", {
     selector: "#edit-location-name",
   });
@@ -2121,21 +2207,23 @@ test("location deletion confirms safe leaves and explains blocked parents", asyn
   });
   vi.spyOn(window, "confirm").mockReturnValue(true);
   const user = await openLocations();
-  await user.click(
-    await screen.findByRole("button", { name: /^House.*House$/i }),
-  );
-  await user.click(screen.getByLabelText("More location actions"));
+  await user.click(await screen.findByRole("button", { name: /^House/i }));
+  await user.click(screen.getByRole("link", { name: "Open details" }));
+  await user.click(await screen.findByLabelText("More location actions"));
   await user.click(screen.getByRole("button", { name: "Delete location" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     /move or delete child locations/i,
   );
 
-  await user.click(screen.getByRole("button", { name: /^Garden.*Garden$/i }));
-  await user.click(screen.getByLabelText("More location actions"));
+  await user.click(screen.getByRole("link", { name: "Locations" }));
+  await user.click(await screen.findByRole("button", { name: /^Garden/i }));
+  await user.click(screen.getByRole("link", { name: "Open details" }));
+  await user.click(await screen.findByLabelText("More location actions"));
   await user.click(screen.getByRole("button", { name: "Delete location" }));
   expect(await screen.findByText(/Garden was deleted/)).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Locations" }));
   expect(
-    screen.queryByRole("button", { name: /^Garden.*Garden$/i }),
+    screen.queryByRole("button", { name: /^Garden/i }),
   ).not.toBeInTheDocument();
 });
 
@@ -2174,18 +2262,17 @@ test("location loading failures hierarchy conflicts authorization and expiry are
   );
   status = 409;
   await user.click(screen.getByRole("button", { name: "Retry directory" }));
-  await user.click(
-    await screen.findByRole("button", { name: "+ New location" }),
-  );
+  await user.click(await screen.findByRole("button", { name: "New location" }));
   await user.type(await screen.findByLabelText("Name"), "Shelf");
   await user.click(screen.getByRole("button", { name: "Create location" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     /hierarchy cycle/i,
   );
   expect(screen.getByLabelText("Name")).toHaveValue("Shelf");
-  expect(
-    screen.getByRole("button", { name: "+ New location" }),
-  ).toHaveAttribute("aria-expanded", "true");
+  expect(screen.getByRole("button", { name: "New location" })).toHaveAttribute(
+    "aria-haspopup",
+    "dialog",
+  );
   status = 403;
   await user.click(screen.getByRole("button", { name: "Create location" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -2218,21 +2305,21 @@ test("Geography navigation loads, filters, and selects broad and country canonic
   expect(
     await screen.findByRole("heading", { name: "Geography" }),
   ).toBeInTheDocument();
-  await user.click(
-    screen.getByRole("button", { name: "+ New geographic place" }),
-  );
+  await user.click(screen.getByRole("button", { name: "New local place" }));
   expect(
     screen.getByLabelText("Name", {
       selector: "#new-geographic-place-name",
     }),
   ).toHaveFocus();
   const newPlace = screen.getByRole("button", {
-    name: "+ New geographic place",
+    name: "New local place",
   });
   await user.click(screen.getByRole("button", { name: "Cancel" }));
-  expect(newPlace).toHaveAttribute("aria-expanded", "false");
+  expect(
+    screen.queryByRole("dialog", { name: "New local place" }),
+  ).not.toBeInTheDocument();
   expect(newPlace).toHaveFocus();
-  const filter = screen.getByLabelText("Filter geography");
+  const filter = screen.getByLabelText("Search geography");
   await user.type(filter, "Brazil");
   const brazil = screen.getByRole("button", {
     name: /Brazil.*World.*South America.*Brazil/i,
@@ -2244,7 +2331,9 @@ test("Geography navigation loads, filters, and selects broad and country canonic
     1,
   );
   expect(screen.getByText(/Canonical CLDR place/)).toBeInTheDocument();
-  expect(screen.getByText(/Botanical native ranges: 0/)).toBeInTheDocument();
+  expect(screen.getByLabelText("Direct place relationships")).toHaveTextContent(
+    "Native ranges",
+  );
   expect(
     screen.queryByRole("heading", { name: "Edit local place" }),
   ).not.toBeInTheDocument();
@@ -2257,7 +2346,7 @@ test("Geography navigation loads, filters, and selects broad and country canonic
     screen.getByRole("heading", { name: "South America" }),
   ).toBeInTheDocument();
   expect(
-    screen.getByText(/A region is as valid as a country/i),
+    screen.getByRole("heading", { name: "South America" }),
   ).toBeInTheDocument();
 });
 
@@ -2330,11 +2419,9 @@ test("local geography creation supports Thailand to Chiang Mai to Doi Suthep and
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await openGeography();
-  await user.type(await screen.findByLabelText("Filter geography"), "Thailand");
+  await user.type(await screen.findByLabelText("Search geography"), "Thailand");
   await user.click(screen.getByRole("button", { name: /Thailand.*World/i }));
-  await user.click(
-    screen.getByRole("button", { name: "Create local child here" }),
-  );
+  await user.click(screen.getByRole("button", { name: "Create local child" }));
   await user.type(
     screen.getByLabelText("Name", {
       selector: "#new-geographic-place-name",
@@ -2345,11 +2432,9 @@ test("local geography creation supports Thailand to Chiang Mai to Doi Suthep and
     await screen.findByRole("heading", { name: "Chiang Mai" }),
   ).toBeInTheDocument();
   expect(
-    screen.getByRole("button", { name: "+ New geographic place" }),
-  ).toHaveAttribute("aria-expanded", "false");
-  await user.click(
-    screen.getByRole("button", { name: "Create local child here" }),
-  );
+    screen.getByRole("button", { name: "New local place" }),
+  ).toHaveAttribute("aria-haspopup", "dialog");
+  await user.click(screen.getByRole("button", { name: "Create local child" }));
   await user.type(
     screen.getByLabelText("Name", {
       selector: "#new-geographic-place-name",
@@ -2360,7 +2445,7 @@ test("local geography creation supports Thailand to Chiang Mai to Doi Suthep and
     await screen.findByText(/Thailand → Chiang Mai → Doi Suthep was created/i),
   ).toBeInTheDocument();
 
-  await user.clear(screen.getByLabelText("Filter geography"));
+  await user.clear(screen.getByLabelText("Search geography"));
   await user.click(screen.getByRole("button", { name: /Chiang Mai.*Local/i }));
   await user.click(
     screen.getByRole("button", { name: "Edit geographic place" }),
@@ -2445,7 +2530,7 @@ test("geography loading, failure, validation, authorization, and session expiry 
   status = 422;
   await user.click(screen.getByRole("button", { name: "Retry directory" }));
   await user.click(
-    await screen.findByRole("button", { name: "+ New geographic place" }),
+    await screen.findByRole("button", { name: "New local place" }),
   );
   await user.selectOptions(
     await screen.findByLabelText("Parent geographic place"),
@@ -2456,8 +2541,8 @@ test("geography loading, failure, validation, authorization, and session expiry 
     /cannot be blank/i,
   );
   expect(
-    screen.getByRole("button", { name: "+ New geographic place" }),
-  ).toHaveAttribute("aria-expanded", "true");
+    screen.getByRole("button", { name: "New local place" }),
+  ).toHaveAttribute("aria-haspopup", "dialog");
   expect(screen.getByLabelText("Name")).toHaveValue(" ");
   status = 403;
   await user.type(screen.getByLabelText("Name"), "Local{Enter}");
@@ -2470,4 +2555,113 @@ test("geography loading, failure, validation, authorization, and session expiry 
     await screen.findByRole("button", { name: "Sign in" }),
   ).toBeInTheDocument();
   expect(screen.getByRole("alert")).toHaveTextContent(/session expired/i);
+});
+
+test("UX-005 create and edit dialogs remain open under the production StrictMode root", async () => {
+  const localPlace = {
+    ...worldPlace,
+    id: "local-garden-place",
+    name: "Garden hill",
+    parent_id: worldPlace.id,
+    display_path: "World → Garden hill",
+    place_kind: "custom" as const,
+    place_type: "locality" as const,
+    source_name: null,
+    source_version: null,
+    source_code_type: null,
+    source_code: null,
+  };
+  authenticatedThen((path) => {
+    if (path === "/api/v1/locations") return jsonResponse([houseLocation]);
+    if (path === "/api/v1/suppliers") return jsonResponse([supplier]);
+    if (path === `/api/v1/suppliers/${supplier.id}`)
+      return jsonResponse(supplierDetail);
+    if (path === "/api/v1/geographic-places")
+      return jsonResponse([worldPlace, localPlace]);
+    throw new Error(`unexpected request: ${path}`);
+  });
+  const user = userEvent.setup();
+  render(
+    <StrictMode>
+      <App />
+    </StrictMode>,
+  );
+
+  await user.click(await screen.findByRole("button", { name: "Locations" }));
+  const newLocation = screen.getByRole("button", { name: "New location" });
+  await user.click(newLocation);
+  await user.keyboard("{Tab}");
+  expect(
+    screen.getByRole("dialog", { name: "New location" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByLabelText("Name", { selector: "#new-location-name" }),
+  ).toBeInTheDocument();
+  await user.keyboard("{Escape}");
+  expect(
+    screen.queryByRole("dialog", { name: "New location" }),
+  ).not.toBeInTheDocument();
+  expect(newLocation).toHaveFocus();
+  await user.click(await screen.findByRole("button", { name: /^House/i }));
+  await user.click(screen.getByRole("link", { name: "Open details" }));
+  const editLocation = await screen.findByRole("button", {
+    name: "Edit location",
+  });
+  await user.click(editLocation);
+  await user.keyboard("{Tab}");
+  expect(
+    screen.getByRole("dialog", { name: "Edit location" }),
+  ).toBeInTheDocument();
+  await user.keyboard("{Escape}");
+  expect(editLocation).toHaveFocus();
+
+  await user.click(screen.getByRole("button", { name: "Suppliers" }));
+  const newSupplier = await screen.findByRole("button", {
+    name: "New supplier",
+  });
+  await user.click(newSupplier);
+  await user.keyboard("{Tab}");
+  expect(
+    screen.getByRole("dialog", { name: "Create supplier" }),
+  ).toBeInTheDocument();
+  await user.keyboard("{Escape}");
+  expect(newSupplier).toHaveFocus();
+  await user.click(
+    await screen.findByRole("button", { name: /^Rare Palm Seeds/i }),
+  );
+  await user.click(screen.getByRole("link", { name: "Open details" }));
+  const editSupplier = await screen.findByRole("button", {
+    name: "Edit supplier",
+  });
+  await user.click(editSupplier);
+  await user.keyboard("{Tab}");
+  expect(
+    screen.getByRole("dialog", { name: "Edit supplier" }),
+  ).toBeInTheDocument();
+  await user.keyboard("{Escape}");
+  expect(editSupplier).toHaveFocus();
+
+  await user.click(screen.getByRole("button", { name: "Geography" }));
+  const newPlace = await screen.findByRole("button", {
+    name: "New local place",
+  });
+  await user.click(newPlace);
+  await user.keyboard("{Tab}");
+  expect(
+    screen.getByRole("dialog", { name: "New local place" }),
+  ).toBeInTheDocument();
+  await user.keyboard("{Escape}");
+  expect(newPlace).toHaveFocus();
+  await user.type(screen.getByLabelText("Search geography"), "Garden hill");
+  await user.click(screen.getByRole("button", { name: /Garden hill.*World/i }));
+  const editPlace = screen.getByRole("button", {
+    name: "Edit geographic place",
+  });
+  await user.click(editPlace);
+  await user.keyboard("{Tab}");
+  expect(
+    screen.getByRole("dialog", { name: "Edit local place" }),
+  ).toBeInTheDocument();
+  await user.keyboard("{Escape}");
+  expect(editPlace).toHaveFocus();
 });
