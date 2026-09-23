@@ -3,12 +3,21 @@ import {
   useMemo,
   useRef,
   useState,
+  type RefObject,
   type SyntheticEvent,
 } from "react";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
+import { TaskDialog } from "../components/TaskDialog";
+import {
+  OverflowMenu,
+  DirectorySearch,
+  PageHeader,
+  QuickPreview,
+  StatStrip,
+} from "../components/ReferenceUI";
 import {
   Breadcrumbs,
   CollectionCard,
@@ -93,6 +102,8 @@ function SupplierHub({
   supplier,
   editing,
   pending,
+  save,
+  feedback,
   csrfToken,
   onEdit,
   onSubmitUpdate,
@@ -103,6 +114,8 @@ function SupplierHub({
   supplier: SupplierDetailResponse;
   editing: boolean;
   pending: boolean;
+  save: SaveState;
+  feedback: RefObject<HTMLDivElement | null>;
   csrfToken: string;
   onEdit: () => void;
   onSubmitUpdate: (event: SyntheticEvent<HTMLFormElement, SubmitEvent>) => void;
@@ -123,7 +136,7 @@ function SupplierHub({
   return (
     <article
       aria-label="Supplier detail"
-      className="identity-result supplier-hub"
+      className="reference-detail supplier-hub"
     >
       <Breadcrumbs
         items={[
@@ -134,6 +147,7 @@ function SupplierHub({
       <DetailHeader
         eyebrow="Supplier"
         title={supplier.name}
+        secondary={kindLabels[supplier.kind]}
         status={
           <span
             className={`lifecycle-badge lifecycle-badge--${supplier.retired_at ? "retired" : "active"}`}
@@ -144,8 +158,7 @@ function SupplierHub({
         editLabel="Edit supplier"
         onEdit={onEdit}
         overflow={
-          <details className="overflow-menu">
-            <summary aria-label="More supplier actions">…</summary>
+          <OverflowMenu ariaLabel="More supplier actions">
             <button
               className="button--secondary"
               type="button"
@@ -167,7 +180,7 @@ function SupplierHub({
             >
               {supplier.retired_at ? "Reactivate supplier" : "Retire supplier"}
             </button>
-          </details>
+          </OverflowMenu>
         }
       />
       {supplier.retired_at && (
@@ -176,6 +189,15 @@ function SupplierHub({
           available.
         </p>
       )}
+      <StatStrip
+        label="Direct supplier records"
+        items={[
+          { label: "Direct records", value: counts.direct_records_total },
+          { label: "Seed lots", value: counts.seed_lots_total },
+          { label: "Plants", value: counts.plants_total },
+          { label: "Plant groups", value: counts.plant_groups_total },
+        ]}
+      />
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
@@ -198,41 +220,21 @@ function SupplierHub({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <div
-            className="summary-grid supplier-counts"
-            aria-label="Direct supplier usage"
-          >
-            <section className="fact-card">
-              <p className="card-type">Direct records</p>
-              <h4>{counts.direct_records_total}</h4>
-              <p>{counts.direct_records_active} current</p>
-            </section>
-            <section className="fact-card">
-              <p className="card-type">SeedLots</p>
-              <h4>{counts.seed_lots_total}</h4>
-              <p>{counts.seed_lots_active} active</p>
-            </section>
-            <section className="fact-card">
-              <p className="card-type">Plants</p>
-              <h4>{counts.plants_total + counts.plant_groups_total}</h4>
-              <p>
-                {counts.plants_total} individual · {counts.plant_groups_total}{" "}
-                groups
-              </p>
-            </section>
-          </div>
-          <div className="overview-grid">
-            <section aria-labelledby="supplier-about-title">
+          <div className="record-detail-grid supplier-overview">
+            <section
+              className="record-section"
+              aria-labelledby="supplier-about-title"
+            >
               <h4 id="supplier-about-title">About this supplier</h4>
-              <dl>
+              <dl className="record-facts">
                 <div>
                   <dt>Kind</dt>
                   <dd>{kindLabels[supplier.kind]}</dd>
                 </div>
-                <div>
-                  <dt>Website</dt>
-                  <dd>
-                    {supplier.website ? (
+                {supplier.website && (
+                  <div>
+                    <dt>Website</dt>
+                    <dd>
                       <a
                         href={supplier.website}
                         target="_blank"
@@ -240,34 +242,41 @@ function SupplierHub({
                       >
                         Visit supplier website
                       </a>
-                    ) : (
-                      "Not recorded"
-                    )}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Email</dt>
-                  <dd>
-                    {supplier.email ? (
+                    </dd>
+                  </div>
+                )}
+                {supplier.email && (
+                  <div>
+                    <dt>Email</dt>
+                    <dd>
                       <a href={`mailto:${supplier.email}`}>{supplier.email}</a>
-                    ) : (
-                      "Not recorded"
-                    )}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Phone</dt>
-                  <dd>{supplier.phone ?? "Not recorded"}</dd>
-                </div>
-                <div>
-                  <dt>Notes</dt>
-                  <dd className="preserve-lines">
-                    {supplier.notes ?? "Not recorded"}
-                  </dd>
-                </div>
+                    </dd>
+                  </div>
+                )}
+                {supplier.phone && (
+                  <div>
+                    <dt>Phone</dt>
+                    <dd>{supplier.phone}</dd>
+                  </div>
+                )}
+                {supplier.notes && (
+                  <div>
+                    <dt>Notes</dt>
+                    <dd className="preserve-lines">{supplier.notes}</dd>
+                  </div>
+                )}
               </dl>
+              {!supplier.website &&
+                !supplier.email &&
+                !supplier.phone &&
+                !supplier.notes && (
+                  <p className="record-empty">No contact details recorded.</p>
+                )}
             </section>
-            <section aria-labelledby="recent-acquisitions-title">
+            <section
+              className="record-section"
+              aria-labelledby="recent-acquisitions-title"
+            >
               <h4 id="recent-acquisitions-title">Recent acquisitions</h4>
               {supplier.recent_acquisitions.length === 0 ? (
                 <div className="empty-state compact-empty-state">
@@ -277,7 +286,7 @@ function SupplierHub({
                   </p>
                 </div>
               ) : (
-                <div className="card-grid">
+                <div className="supplier-record-list">
                   {supplier.recent_acquisitions.map((record) => {
                     const route =
                       record.record_type === "seed_lot"
@@ -302,7 +311,10 @@ function SupplierHub({
                           <a
                             href={`#/identities/${record.botanical_identity.id}`}
                           >
-                            {record.botanical_identity.display_label}
+                            {recordTitle(record) ===
+                            record.botanical_identity.display_label
+                              ? "View botanical identity"
+                              : record.botanical_identity.display_label}
                           </a>
                         </p>
                         <p>
@@ -326,16 +338,19 @@ function SupplierHub({
           role="tabpanel"
           aria-labelledby="tab-material"
         >
-          <section aria-labelledby="supplier-seed-lots-title">
+          <section
+            className="record-section"
+            aria-labelledby="supplier-seed-lots-title"
+          >
             <h4 id="supplier-seed-lots-title">
-              SeedLots ({supplier.seed_lots.length})
+              Seed lots ({supplier.seed_lots.length})
             </h4>
             {supplier.seed_lots.length === 0 ? (
               <p className="empty-state compact-empty-state">
-                No SeedLots directly reference this supplier.
+                No Seed lots directly reference this supplier.
               </p>
             ) : (
-              <div className="card-grid">
+              <div className="supplier-record-list">
                 {supplier.seed_lots.map((record) => (
                   <CollectionCard
                     key={record.id}
@@ -345,7 +360,10 @@ function SupplierHub({
                   >
                     <p>
                       <a href={`#/identities/${record.botanical_identity.id}`}>
-                        {record.botanical_identity.display_label}
+                        {recordTitle(record) ===
+                        record.botanical_identity.display_label
+                          ? "View botanical identity"
+                          : record.botanical_identity.display_label}
                       </a>
                     </p>
                     <p>
@@ -357,7 +375,10 @@ function SupplierHub({
               </div>
             )}
           </section>
-          <section aria-labelledby="supplier-plants-title">
+          <section
+            className="record-section"
+            aria-labelledby="supplier-plants-title"
+          >
             <h4 id="supplier-plants-title">
               Plants ({supplier.plants.length + supplier.plant_groups.length})
             </h4>
@@ -367,7 +388,7 @@ function SupplierHub({
                 supplier.
               </p>
             ) : (
-              <div className="card-grid">
+              <div className="supplier-record-list">
                 {[
                   ...supplier.plants.map((record) => ({
                     ...record,
@@ -388,7 +409,10 @@ function SupplierHub({
                   >
                     <p>
                       <a href={`#/identities/${record.botanical_identity.id}`}>
-                        {record.botanical_identity.display_label}
+                        {recordTitle(record) ===
+                        record.botanical_identity.display_label
+                          ? "View botanical identity"
+                          : record.botanical_identity.display_label}
                       </a>
                     </p>
                     <p>
@@ -403,26 +427,53 @@ function SupplierHub({
         </div>
       )}
       {editing && (
-        <form
-          key={`${supplier.id}-${supplier.updated_at}`}
-          onSubmit={onSubmitUpdate}
-        >
-          <h4>Edit supplier</h4>
-          <SupplierFields supplier={supplier} disabled={pending} />
-          <div className="actions">
-            <button type="submit" disabled={pending}>
-              Save supplier
-            </button>
-            <button
-              className="button--secondary"
-              type="button"
-              disabled={pending}
-              onClick={onCancelEdit}
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+        <TaskDialog title="Edit supplier" onClose={onCancelEdit}>
+          <form
+            key={`${supplier.id}-${supplier.updated_at}`}
+            onSubmit={onSubmitUpdate}
+          >
+            <h4>Edit supplier</h4>
+            <SupplierFields supplier={supplier} disabled={pending} />
+            {save.status === "validation" && (
+              <div
+                className="notice notice--error"
+                role="alert"
+                ref={feedback}
+                tabIndex={-1}
+              >
+                <h4>Check the supplier</h4>
+                <ul>
+                  {save.messages.map((message) => (
+                    <li key={message}>{message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {save.status === "error" && (
+              <div
+                className="notice notice--error"
+                role="alert"
+                ref={feedback}
+                tabIndex={-1}
+              >
+                {save.message}
+              </div>
+            )}
+            <div className="actions form-actions">
+              <button
+                className="button--secondary"
+                type="button"
+                disabled={pending}
+                onClick={onCancelEdit}
+              >
+                Cancel
+              </button>
+              <button type="submit" disabled={pending}>
+                Save supplier
+              </button>
+            </div>
+          </form>
+        </TaskDialog>
       )}
     </article>
   );
@@ -566,7 +617,7 @@ export function SupplierScreen({
   const [filter, setFilter] = useState("");
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [attempt, setAttempt] = useState(0);
-  const [editing, setEditing] = useState(false);
+  const [editing, setEditing] = useState(initialTab === "edit");
   const createForm = useRef<HTMLFormElement>(null);
   const feedback = useRef<HTMLDivElement>(null);
   const {
@@ -575,7 +626,6 @@ export function SupplierScreen({
     panelRef: creationPanelRef,
     open: openCreation,
     close: closeCreation,
-    focusFirst: focusCreation,
   } = useCreationDisclosure();
   const pending = save.status === "saving";
 
@@ -597,9 +647,9 @@ export function SupplierScreen({
   }, [auth, attempt]);
 
   useEffect(() => {
-    if (!selectedId) return;
+    if (!initialId) return;
     const controller = new AbortController();
-    void getSupplier(selectedId, controller.signal)
+    void getSupplier(initialId, controller.signal)
       .then((supplier) => {
         setDetail({ status: "ready", supplier });
       })
@@ -612,7 +662,7 @@ export function SupplierScreen({
     return () => {
       controller.abort();
     };
-  }, [auth, detailRefresh, selectedId]);
+  }, [auth, detailRefresh, initialId]);
 
   useEffect(() => {
     if (save.status === "validation" || save.status === "error")
@@ -652,8 +702,10 @@ export function SupplierScreen({
       const refreshed = await listSuppliers();
       setDirectory({ status: "ready", suppliers: refreshed });
       setSelectedId(supplier.id);
-      setDetail({ status: "loading" });
-      setDetailRefresh((value) => value + 1);
+      if (initialId) {
+        setDetail({ status: "loading" });
+        setDetailRefresh((value) => value + 1);
+      }
       setEditing(false);
       setSave({ status: "success", message: success(supplier) });
     } catch (error: unknown) {
@@ -688,7 +740,7 @@ export function SupplierScreen({
       (supplier) => {
         createForm.current?.reset();
         setFilter("");
-        closeCreation();
+        closeCreation({ returnFocus: false });
         return `${supplier.name} was created and selected.`;
       },
     );
@@ -704,56 +756,118 @@ export function SupplierScreen({
     );
   }
 
-  return (
-    <section aria-labelledby="suppliers-title" className="workspace">
-      <div className="workspace-intro directory-heading">
-        <div>
-          <p className="eyebrow">Collection reference</p>
-          <h2 id="suppliers-title">Suppliers</h2>
-          <p>
-            Maintain who supplied collection material, separately from its
-            geographic provenance and current Location.
+  if (initialId)
+    return (
+      <section
+        aria-label="Supplier details"
+        className="workspace reference-page"
+      >
+        {detail.status === "loading" && <p role="status">Loading supplier…</p>}
+        {detail.status === "error" && (
+          <div className="notice notice--error" role="alert">
+            <p>Florabase could not load this supplier.</p>
+            <button
+              type="button"
+              onClick={() => {
+                setDetailRefresh((value) => value + 1);
+              }}
+            >
+              Retry supplier
+            </button>
+          </div>
+        )}
+        {detail.status === "ready" && (
+          <SupplierHub
+            key={detail.supplier.id}
+            supplier={detail.supplier}
+            editing={editing}
+            pending={pending}
+            save={save}
+            feedback={feedback}
+            csrfToken={csrfToken}
+            initialTab={initialTab}
+            onEdit={() => {
+              setEditing(true);
+            }}
+            onSubmitUpdate={submitUpdate}
+            onCancelEdit={() => {
+              setEditing(false);
+            }}
+            onLifecycle={(action, success) => void apply(action, success)}
+          />
+        )}
+        {!editing && save.status === "validation" && (
+          <div
+            className="notice notice--error"
+            role="alert"
+            ref={feedback}
+            tabIndex={-1}
+          >
+            <h3>Check the supplier</h3>
+            <ul>
+              {save.messages.map((message) => (
+                <li key={message}>{message}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {!editing && save.status === "error" && (
+          <p
+            className="notice notice--error"
+            role="alert"
+            ref={feedback}
+            tabIndex={-1}
+          >
+            {save.message}
           </p>
-        </div>
-        <button
-          type="button"
-          ref={creationTriggerRef}
-          aria-expanded={creationExpanded}
-          aria-controls="new-supplier-panel"
-          onClick={() => {
-            if (creationExpanded) {
-              focusCreation();
-              return;
-            }
-            createForm.current?.reset();
-            setSave({ status: "idle" });
-            openCreation();
-          }}
-        >
-          + New supplier
-        </button>
-      </div>
-      <div className="directory-detail-grid">
+        )}
+        {save.status === "success" && (
+          <p className="notice notice--success" role="status">
+            {save.message}
+          </p>
+        )}
+      </section>
+    );
+
+  return (
+    <section
+      aria-labelledby="suppliers-title"
+      className="workspace reference-page"
+    >
+      <PageHeader
+        title="Suppliers"
+        titleId="suppliers-title"
+        description="People and organizations that directly supplied collection material."
+        actions={
+          <button
+            type="button"
+            ref={creationTriggerRef}
+            aria-haspopup="dialog"
+            onClick={() => {
+              createForm.current?.reset();
+              setSave({ status: "idle" });
+              openCreation();
+            }}
+          >
+            New supplier
+          </button>
+        }
+      />
+      <div className="reference-split">
         <div className="directory-column">
           <section
             aria-labelledby="supplier-directory-title"
             className="identity-directory"
           >
             <h3 id="supplier-directory-title">Supplier directory</h3>
-            <div className="field">
-              <label htmlFor="supplier-filter">Filter suppliers</label>
-              <input
-                id="supplier-filter"
-                type="search"
-                value={filter}
-                disabled={
-                  directory.status !== "ready" || suppliers.length === 0
-                }
-                onChange={(event) => {
-                  setFilter(event.currentTarget.value);
-                }}
-              />
-            </div>
+            <DirectorySearch
+              id="supplier-filter"
+              label="Filter suppliers"
+              placeholder="Search supplier names"
+              value={filter}
+              onChange={setFilter}
+              disabled={directory.status !== "ready" || suppliers.length === 0}
+            />
             {directory.status === "loading" && (
               <p aria-live="polite" className="notice">
                 Loading suppliers…
@@ -795,13 +909,8 @@ export function SupplierScreen({
                       aria-pressed={selectedId === supplier.id}
                       onClick={() => {
                         setSelectedId(supplier.id);
-                        setDetail({ status: "loading" });
-                        setDetailRefresh((value) => value + 1);
-                        window.history.replaceState(
-                          null,
-                          "",
-                          `#/suppliers/${supplier.id}`,
-                        );
+                        if (window.innerWidth <= 1088)
+                          window.location.hash = `#/suppliers/${supplier.id}`;
                         setEditing(false);
                         setSave({ status: "idle" });
                       }}
@@ -826,84 +935,117 @@ export function SupplierScreen({
             )}
           </section>
           {creationExpanded && (
-            <div
-              id="new-supplier-panel"
-              className="creation-panel"
-              ref={creationPanelRef}
+            <TaskDialog
+              title="Create supplier"
+              onClose={() => {
+                closeCreation({ returnFocus: false });
+              }}
             >
-              <form
-                className="identity-form"
-                ref={createForm}
-                aria-busy={pending}
-                onSubmit={submitCreate}
-              >
-                <h3>Create a supplier</h3>
-                <SupplierFields disabled={pending} />
-                <div className="actions">
-                  <button type="submit" disabled={pending}>
-                    {pending ? "Saving supplier…" : "Create supplier"}
-                  </button>
-                  <button
-                    type="button"
-                    className="button--secondary"
-                    disabled={pending}
-                    onClick={() => {
-                      createForm.current?.reset();
-                      setSave({ status: "idle" });
-                      closeCreation();
-                    }}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
+              <div ref={creationPanelRef}>
+                <form
+                  className="identity-form"
+                  ref={createForm}
+                  aria-busy={pending}
+                  onSubmit={submitCreate}
+                >
+                  <h3>Create a supplier</h3>
+                  <SupplierFields disabled={pending} />
+                  {save.status === "validation" && (
+                    <div
+                      className="notice notice--error"
+                      role="alert"
+                      ref={feedback}
+                      tabIndex={-1}
+                    >
+                      <h3>Check the supplier</h3>
+                      <ul>
+                        {save.messages.map((message) => (
+                          <li key={message}>{message}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  {save.status === "error" && (
+                    <div
+                      className="notice notice--error"
+                      role="alert"
+                      ref={feedback}
+                      tabIndex={-1}
+                    >
+                      {save.message}
+                    </div>
+                  )}
+                  <div className="actions form-actions">
+                    <button
+                      type="button"
+                      className="button--secondary"
+                      disabled={pending}
+                      onClick={() => {
+                        createForm.current?.reset();
+                        setSave({ status: "idle" });
+                        closeCreation({ returnFocus: false });
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={pending}>
+                      {pending ? "Saving supplier…" : "Create supplier"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </TaskDialog>
           )}
         </div>
-        <div className="identity-panel" aria-live="polite">
-          {selectedId && detail.status === "loading" ? (
-            <p className="notice" aria-live="polite">
-              Loading supplier hub…
-            </p>
-          ) : selectedId && detail.status === "error" ? (
-            <div className="notice notice--error" role="alert">
-              <p>Florabase could not load this supplier’s linked material.</p>
-              <button
-                type="button"
-                onClick={() => {
-                  setDetail({ status: "loading" });
-                  setDetailRefresh((value) => value + 1);
-                }}
-              >
-                Retry supplier
-              </button>
-            </div>
-          ) : detail.status === "ready" ? (
-            <SupplierHub
-              key={detail.supplier.id}
-              supplier={detail.supplier}
-              editing={editing}
-              pending={pending}
-              csrfToken={csrfToken}
-              initialTab={initialTab}
-              onEdit={() => {
-                setEditing(true);
-              }}
-              onSubmitUpdate={submitUpdate}
-              onCancelEdit={() => {
-                setEditing(false);
-              }}
-              onLifecycle={(action, success) => {
-                void apply(action, success);
-              }}
-            />
+        <QuickPreview>
+          {selected ? (
+            <>
+              <h3>{selected.name}</h3>
+              <p>
+                {kindLabels[selected.kind]} ·{" "}
+                {selected.retired_at ? "Retired" : "Active"}
+              </p>
+              <StatStrip
+                label="Direct supplier records"
+                items={[
+                  {
+                    label: "Seed lots",
+                    value: selected.usage_counts.seed_lots_total,
+                  },
+                  {
+                    label: "Plants",
+                    value: selected.usage_counts.plants_total,
+                  },
+                  {
+                    label: "Plant groups",
+                    value: selected.usage_counts.plant_groups_total,
+                  },
+                ]}
+              />
+              <p>
+                {selected.website || selected.email
+                  ? "Contact information available"
+                  : "No contact information recorded"}
+              </p>
+              <div className="actions quick-preview-actions">
+                <a className="button-link" href={`#/suppliers/${selected.id}`}>
+                  Open details
+                </a>
+                <a
+                  className="button-link button--secondary"
+                  href={`#/suppliers/${selected.id}?tab=edit`}
+                >
+                  Edit
+                </a>
+              </div>
+            </>
           ) : (
-            <div className="empty-state">
+            <div className="preview-empty">
               <h3>Select a supplier</h3>
-              <p>Choose a record from the directory to view or maintain it.</p>
+              <p>Choose one from the directory.</p>
             </div>
           )}
-        </div>
+        </QuickPreview>
       </div>
       <div aria-live="polite">
         {save.status === "saving" && (
@@ -912,7 +1054,7 @@ export function SupplierScreen({
         {save.status === "success" && (
           <p className="notice notice--success">{save.message}</p>
         )}
-        {save.status === "validation" && (
+        {!creationExpanded && save.status === "validation" && (
           <div
             className="notice notice--error"
             role="alert"
@@ -927,7 +1069,7 @@ export function SupplierScreen({
             </ul>
           </div>
         )}
-        {save.status === "error" && (
+        {!creationExpanded && save.status === "error" && (
           <div
             className="notice notice--error"
             role="alert"

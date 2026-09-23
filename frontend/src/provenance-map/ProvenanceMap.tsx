@@ -11,7 +11,15 @@ import {
 } from "leaflet";
 import { useEffect, useRef } from "react";
 
-import type { ProvenanceMapSite } from "./api";
+export interface MapPoint {
+  id: string;
+  name: string;
+  geographic_place_path: string | null;
+  latitude: string;
+  longitude: string;
+  coordinate_accuracy_m?: string | null;
+  usage?: { total?: number };
+}
 import { mapRuntimeConfig } from "./config";
 
 const markerIcon = divIcon({
@@ -22,11 +30,11 @@ const markerIcon = divIcon({
   popupAnchor: [0, -12],
 });
 
-function position(site: ProvenanceMapSite): [number, number] {
+function position(site: MapPoint): [number, number] {
   return [Number(site.latitude), Number(site.longitude)];
 }
 
-function popupContent(site: ProvenanceMapSite): HTMLElement {
+function popupContent(site: MapPoint): HTMLElement {
   const container = document.createElement("div");
 
   const title = document.createElement("strong");
@@ -39,9 +47,9 @@ function popupContent(site: ProvenanceMapSite): HTMLElement {
     ),
     document.createElement("br"),
     document.createTextNode(
-      `${String(site.usage.total)} linked ${
-        site.usage.total === 1 ? "record" : "records"
-      }`,
+      site.usage?.total != null
+        ? `${String(site.usage.total)} linked ${site.usage.total === 1 ? "record" : "records"}`
+        : "Stored provenance site",
     ),
   );
 
@@ -52,10 +60,12 @@ export function ProvenanceMap({
   sites,
   selectedId,
   onSelect,
+  label = "Interactive collection provenance map",
 }: {
-  sites: ProvenanceMapSite[];
+  sites: MapPoint[];
   selectedId: string | null;
   onSelect: (id: string) => void;
+  label?: string;
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<LeafletMap | null>(null);
@@ -164,7 +174,7 @@ export function ProvenanceMap({
   return (
     <div
       ref={containerRef}
-      aria-label="Interactive collection provenance map"
+      aria-label={label}
       className="provenance-map"
       role="region"
     />

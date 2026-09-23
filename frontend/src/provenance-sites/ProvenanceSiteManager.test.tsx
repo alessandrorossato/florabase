@@ -5,6 +5,31 @@ import { afterEach, expect, test, vi } from "vitest";
 import type { GeographicPlaceResponse } from "../geographic-places/api";
 import { ProvenanceSiteManager } from "./ProvenanceSiteManager";
 import type { ProvenanceSiteResponse } from "./api";
+import type { MapPoint } from "../provenance-map/ProvenanceMap";
+
+vi.mock("../provenance-map/ProvenanceMap", () => ({
+  ProvenanceMap: ({
+    sites,
+    onSelect,
+  }: {
+    sites: MapPoint[];
+    onSelect: (id: string) => void;
+  }) => (
+    <div aria-label="Geography map of stored provenance sites">
+      {sites.map((site) => (
+        <button
+          key={site.id}
+          type="button"
+          onClick={() => {
+            onSelect(site.id);
+          }}
+        >
+          Map marker {site.name}
+        </button>
+      ))}
+    </div>
+  ),
+}));
 
 const world: GeographicPlaceResponse = {
   id: "01900000-0000-7000-8000-000000000001",
@@ -89,6 +114,7 @@ test("creates, edits, and deletes a path-aware ProvenanceSite", async () => {
   const user = userEvent.setup();
   render(<ProvenanceSiteManager places={[world]} csrfToken="csrf" />);
   await screen.findByText("No provenance sites recorded.");
+  await user.click(screen.getByRole("button", { name: "New provenance site" }));
   await user.type(
     screen.getByLabelText("Provenance site name"),
     "Monte Pellegrino",
@@ -130,6 +156,7 @@ test("creates, edits, and deletes a path-aware ProvenanceSite", async () => {
   });
   expect(new Headers(post?.init?.headers).get("X-CSRF-Token")).toBe("csrf");
 
+  await user.click(screen.getByRole("button", { name: "Edit" }));
   await user.clear(screen.getByLabelText("Provenance site name"));
   await user.type(
     screen.getByLabelText("Provenance site name"),
@@ -141,6 +168,8 @@ test("creates, edits, and deletes a path-aware ProvenanceSite", async () => {
   expect(
     await screen.findByText("Monte Pellegrino ridge was saved."),
   ).toBeInTheDocument();
+  vi.spyOn(window, "confirm").mockReturnValue(true);
+  await user.click(screen.getByLabelText("More provenance site actions"));
   await user.click(
     screen.getByRole("button", { name: "Delete provenance site" }),
   );
@@ -167,6 +196,7 @@ test("shows an actionable coordinate-pair validation error", async () => {
   const user = userEvent.setup();
   render(<ProvenanceSiteManager places={[world]} csrfToken="csrf" />);
   await screen.findByText("No provenance sites recorded.");
+  await user.click(screen.getByRole("button", { name: "New provenance site" }));
   await user.type(
     screen.getByLabelText("Provenance site name"),
     "Half coordinate",
@@ -178,4 +208,103 @@ test("shows an actionable coordinate-pair validation error", async () => {
   expect(await screen.findByRole("status")).toHaveTextContent(
     "Latitude and longitude must be entered together",
   );
+});
+
+test("Browse retains coordinate-less sites while map mode lists stored coordinate pairs only", async () => {
+  const coordinateSite: ProvenanceSiteResponse = {
+    id: "mapped-site",
+    name: "Ridge collection",
+    geographic_place_id: world.id,
+    geographic_place_path: "World",
+    latitude: "38.1",
+    longitude: "13.3",
+    coordinate_accuracy_m: null,
+    notes: null,
+    usage: { seed_lots: 1, plants: 0, plant_groups: 0 },
+    created_at: "2026-09-08T00:00:00Z",
+    updated_at: "2026-09-08T00:00:00Z",
+  };
+  const withoutCoordinates = {
+    ...coordinateSite,
+    id: "unmapped-site",
+    name: "Historical valley",
+    latitude: null,
+    longitude: null,
+  };
+  const requests: string[] = [];
+  vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    requests.push(requestPath(input));
+    return Promise.resolve(response([coordinateSite, withoutCoordinates]));
+  });
+  const { rerender } = render(
+    <ProvenanceSiteManager places={[world]} csrfToken="csrf" mode="browse" />,
+  );
+  expect(
+    await screen.findByRole("button", { name: /Historical valley/ }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: /Ridge collection/ }),
+  ).toBeInTheDocument();
+  rerender(
+    <ProvenanceSiteManager places={[world]} csrfToken="csrf" mode="map" />,
+  );
+  expect(
+    screen.queryByRole("button", { name: /Historical valley/ }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: /Ridge collection/ }),
+  ).toBeInTheDocument();
+  const user = userEvent.setup();
+  await user.click(
+    await screen.findByRole("button", { name: "Map marker Ridge collection" }),
+  );
+  expect(screen.getByText("38.1, 13.3")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Edit" }));
+  expect(
+    screen.getByRole("dialog", { name: "Edit provenance site" }),
+  ).toBeInTheDocument();
+  expect(screen.getByLabelText("Provenance site name")).toHaveValue(
+    "Ridge collection",
+  );
+  expect(requests).toEqual(["/api/v1/provenance-sites"]);
+});
+
+test("shows zero accuracy and distinguishes delete conflicts from other failures", async () => {
+  const site: ProvenanceSiteResponse = {
+    id: "site-with-zero-accuracy",
+    name: "Survey point",
+    geographic_place_id: world.id,
+    geographic_place_path: "World",
+    latitude: "0",
+    longitude: "0",
+    coordinate_accuracy_m: "0",
+    notes: null,
+    usage: { seed_lots: 0, plants: 0, plant_groups: 0 },
+    created_at: "2026-09-08T00:00:00Z",
+    updated_at: "2026-09-08T00:00:00Z",
+  };
+  vi.spyOn(globalThis, "fetch").mockImplementation((input, init) => {
+    const path = requestPath(input);
+    if (
+      path === `/api/v1/provenance-sites/${site.id}` &&
+      init?.method === "DELETE"
+    )
+      return Promise.resolve(response({ detail: "Unavailable" }, 500));
+    return Promise.resolve(response([site]));
+  });
+  vi.spyOn(window, "confirm").mockReturnValue(true);
+  const user = userEvent.setup();
+  render(<ProvenanceSiteManager places={[world]} csrfToken="csrf" />);
+  await user.click(await screen.findByRole("button", { name: /Survey point/ }));
+  expect(screen.getByText("± 0 m")).toBeInTheDocument();
+  await user.click(screen.getByLabelText("More provenance site actions"));
+  await user.click(
+    screen.getByRole("button", { name: "Delete provenance site" }),
+  );
+  expect(
+    await screen.findByText("Florabase could not delete this provenance site."),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByText(/used by collection records/),
+  ).not.toBeInTheDocument();
 });

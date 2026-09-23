@@ -798,6 +798,25 @@
       "status": "implemented"
     },
     {
+      "id": "UX-005",
+      "category": "frontend",
+      "description": "Propagate the refreshed visual system to reference, location and provenance workspaces",
+      "acceptance_criteria": [
+        "Supplier, Location and Geography separate browse, compact inspection and read-first detail or management flows while reusing the UX-004 visual, form and action vocabulary without changing domain semantics",
+        "Geography provides accessible stored-data search and a coordinate-bearing Provenance-site map without geocoding or inferred coordinates, while the separate collection provenance map becomes a map-first collection-record workspace with its existing semantics intact",
+        "Desktop and mobile layouts preserve hierarchy, map and list parity, accessible controls, lazy map loading and operator workflows while replacing permanent forms and unnecessary card chrome with explicit create and edit interactions"
+      ],
+      "dependencies": [
+        "UX-004",
+        "SUPPLIER-002",
+        "LOCATION-002",
+        "GEOGRAPHY-003",
+        "MAP-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "LOCATION-002",
       "category": "location",
       "description": "Add a scope-aware hierarchical Location browsing experience",
