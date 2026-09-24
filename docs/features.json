@@ -559,6 +559,20 @@
       "status": "implemented"
     },
     {
+      "id": "ATTACHMENT-004",
+      "category": "attachment",
+      "description": "Add an explicit primary photo for selected collection records",
+      "acceptance_criteria": [
+        "SeedLot, Plant and PlantGroup may each optionally designate one existing associated collection photo as the primary representative photo; Sowing is outside this scope",
+        "Primary selection is explicit operator intent; Florabase never automatically chooses the first, newest or only photo",
+        "Changing or removing the designation preserves photo history; deleting or removing the primary photo clears or safely resolves the designation without dangling references",
+        "Directories and details may use a bounded representation of the explicitly selected primary photo without loading full-size originals or changing BotanicalIdentity cover semantics"
+      ],
+      "dependencies": ["ATTACHMENT-003", "UX-006"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
       "id": "GERMINATION-001",
       "category": "sowing",
       "description": "Add dated germination observations and derived statistics",
@@ -949,7 +963,7 @@
       ],
       "dependencies": ["SEED-004", "PLANT-003"],
       "priority": "P2",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "LINEAGE-003",
