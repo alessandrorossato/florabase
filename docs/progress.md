@@ -4,6 +4,33 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-24 — approved 0.1.0 release boundary and resource phase recorded for review
+
+- Added planned P0 `PERF-001` with dependencies on UX-006 and MAP-002. It requires a reproducible
+  production-like resource baseline over idle and representative collection workflows, focused
+  optimization of demonstrated backend, database, frontend, media, map, Docker, and long-running
+  hotspots, then repeat measurement and documented modest self-hosting expectations. UX-006 supplies
+  the redesigned collection and provenance-map path; MAP-002 directly supplies the occurrence-map
+  path outside UX-006's dependency closure. No resource target is invented before measurement.
+- Added planned P0 `RELEASE-001` with focused dependencies on UX-006, ATTACHMENT-002, CI-002, and
+  PERF-001. Its acceptance contract covers production installation and upgrade, complete
+  database-plus-media recovery, end-to-end collection UAT, security and failure review,
+  responsive/accessibility review, final release-candidate resource sanity against PERF-001 results,
+  accurate operator documentation, version policy, and first changelog entry. No optional product
+  candidate became a dependency of either required increment; `BOTANY-003` remains planned and is
+  explicitly post-0.1.0 under the current provider-content constraint.
+- Replaced stale roadmap release sequencing with required, optional, and post-release boundaries.
+  Corrected current-state UX review prose and the README/deployment claims that collection photos,
+  contextual help, and attachment storage were absent or that a database-only backup was sufficient.
+  No application behavior, schema, API, or release tooling changed. The operator still needs to
+  select any optional pre-release work and, during `RELEASE-001`, settle supported upgrade/version
+  expectations, licensing, and the first changelog entry.
+- Focused checks: `python3 -m json.tool docs/features.json`, `python3 scripts/check-features.py`
+  (80 valid features), priority/category and required-dependency assertions, changed-document
+  internal-link checks, Prettier on changed Markdown/JSON, and `git diff --check` passed. The
+  canonical application gate is reserved for independent review of this documentation-only graph
+  change.
+
 ## 2026-09-24 — UX-006 independently reviewed and ready for delivery
 
 - Audited the merged UX-004/UX-005 directory, preview, detail, task, help and responsive patterns against SeedLot, Sowing, Plant/PlantGroup, propagation, Events, Photos, Lineage and Dashboard. The operational directories mixed selection with nearly full detail, large editors competed with browsing, and repeated borders and permanent explanations obscured the record and next action.
@@ -981,9 +1008,11 @@ implementation detail.
   authenticated retrieval and coordinated database/content backup.
 - `PROPAGATION-001` through `PROPAGATION-003`, `SUPPLIER-002`, `BOTANY-002`, and
   `ATTACHMENT-002` are verified. `LOCATION-002`, `GEOGRAPHY-003`, `MAP-001`, `GEOGRAPHY-002`,
-  `ATTACHMENT-003`, `UX-002`, `UX-003`, and `UX-004` are implemented pending their respective
-  independent review. `UX-005` remains implemented and has completed its independent review. `UX-006` remains implemented; the operator has accepted the general design direction, and independent final verification has passed.
-  Licensing/version policy and release readiness remain explicit later operator/product decisions.
+  `ATTACHMENT-003`, and `UX-002` through `UX-006` are implemented in the graph; UX-004, UX-005, and
+  UX-006 have landed on `main`, but their graph status has not been promoted to `verified`.
+  `PERF-001` is planned for the frozen 0.1.0 scope before `RELEASE-001` hardening and acceptance.
+  Optional product candidates are not dependencies of either required increment. Licensing,
+  version/upgrade policy, and release readiness remain to be resolved in `RELEASE-001`.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.
   Other unblocked P2 product items are listed by the machine-readable dependency graph rather than
