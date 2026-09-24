@@ -28,21 +28,131 @@ typed, partial-date Plant/PlantGroup history with creation-time movement and lif
 Inactive records retain history.
 
 This is substantial pre-release functionality, not a declaration of a stable first release. The
-roadmap's **V1 scope** means the first complete intended product scope; after those features and
-release hardening, the expected first distributable pre-1.0 release is `0.1.0`. A future `1.0.0`
-remains a stability milestone after real-world use and compatibility expectations mature.
+first distributable pre-1.0 release is planned as `0.1.0`; a future `1.0.0` remains a stability
+milestone after real-world use and compatibility expectations mature. The older **V1 scope** names a
+broader product direction, not the `0.1.0` release boundary.
 
-## First usable release direction
+## Florabase 0.1.0 release boundary
 
-UAT of the verified collection core exposed a more immediate P1 product sequence before release
-readiness:
+Florabase is ready for `0.1.0` when it can hold and operate a real personal botanical collection
+without the operator reasonably fearing data loss, an unusable core workflow, or an undocumented
+deployment or upgrade path. Advanced botanical enrichment, automatic taxonomy reconciliation, every
+propagation material type, advanced analytics, multi-user collaboration, generic integrations, and
+full offline synchronization are outside that criterion.
 
-1. `PROPAGATION-001`: define and expose explicit quantity accounting and lifecycle transitions
-   across SeedLot, Sowing, and Plant/PlantGroup creation (verified);
-2. `PROPAGATION-002`: present those operations as guided contextual transitions and cross-links
-   (verified);
-3. decide the operator-approved licensing and release/version policy;
-4. complete release readiness as a separate release increment.
+### Required before 0.1.0: PERF-001 and RELEASE-001
+
+[`PERF-001`](features.json) is the planned P0 resource-efficiency increment after the operator
+freezes product scope. It will **measure → identify demonstrated hotspots → optimize → re-measure**
+representative production-like workflows, including startup and idle use; Dashboard; collection and
+reference directories/details; Events, Photos, and lineage; provenance and explicitly loaded
+occurrence maps; and a create/edit path. The baseline will inspect CPU, memory, startup, transfer and
+chunk cost, requests, queries, response timing, media and map loading, and production image/process
+footprint. It will investigate the current Vite chunk-size advisory against actual initial-load
+cost, not change the warning threshold to hide it. It will also inspect repeated navigation and
+idle use for resource growth. Changes must address measured problems without weakening product
+semantics, security, privacy, reproducible builds, or operability. The same workload will be
+re-measured and practical expectations for modest self-hosted hardware documented; no arbitrary
+CPU, RAM, or hardware guarantee is set at planning time. This prevents avoidable resource problems
+from first surfacing in an operator's deployment.
+
+[`RELEASE-001`](features.json) is the planned P0 release-hardening increment. It is the release
+acceptance gate after `PERF-001`, not a claim that hardening or release acceptance has already passed.
+Its contract covers:
+
+- Clean installation and upgrade of an existing installation through the production Compose topology
+  and full Alembic chain; health/readiness, owner bootstrap, login/logout/session behavior,
+  production-safe configuration, and browser use after upgrade.
+- Complete recovery of PostgreSQL data **and** local attachment binaries, including their metadata
+  correspondence, into an isolated fresh environment with usable collection records. A PostgreSQL
+  dump alone is not a complete backup once attachments exist.
+- Real end-to-end UAT: BotanicalIdentity and optional cover/profile/reference → SeedLot with Supplier,
+  provenance, and Location → Sowing → Plant/PlantGroup → Events and Photos → transfer/extraction →
+  supported reversal or reintegration → maps and history navigation.
+- Security sanity for owner bootstrap, session restoration and expiry/invalidation where practical,
+  CSRF, exact Origin, attachment/binary authorization, production cookies/origin, and existing
+  insecure-configuration startup rejection. This extends verification, not the auth architecture.
+- Browser review at desktop, intermediate, and about 390×844 mobile sizes; keyboard and focus,
+  dialogs, menus, forms, maps with accessible companion lists, and key error/empty/loading states.
+  This is a practical review, not a claim of formal WCAG certification.
+- Representative API, provider, occurrence-map, external-image, missing-binary, validation/conflict,
+  empty-data, and implemented stale-source failures. Final performance/resource sanity checks that
+  the release candidate remains within documented `PERF-001` expectations, has no material
+  regression, and shows no obvious runaway CPU, memory, or request behavior. The primary measurement
+  and optimization work belongs to `PERF-001`.
+- Accurate clean-system installation, environment, origin, storage, backup/restore, upgrade, and map
+  instructions; coherent `0.1.0` version surfaces, pre-1.0 upgrade expectations, and a first
+  changelog entry. Current-state prose must match the feature graph and merged code. Final UAT defects
+  and small blocking polish should be fixed without starting another redesign.
+
+This planning increment defines the contracts only. Resource measurement and optimization belong to
+`PERF-001`; release tooling, drills, documentation rewrite, and hardening belong to `RELEASE-001`.
+
+### Optional before 0.1.0: operator-selected product candidates
+
+These planned features can add practical value, but none blocks `PERF-001`, `RELEASE-001`, or
+`0.1.0`. The operator selects any subset before scope freeze; selection does not change their
+existing graph statuses or make them release dependencies. `PERF-001` measures whichever product
+scope the operator freezes for `0.1.0`.
+
+| Candidate         | Pre-release value and boundary                                                                                                                                                                                 |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IMPORT-001`      | Guided documented CSV import with validation, dry-run preview, unresolved-reference handling and no silent guesses; simple human-readable CSV export. Separate from backup/restore and full-fidelity transfer. |
+| `SEARCH-001`      | Filter implemented structured collection fields while keeping reference knowledge distinct from collection records; no speculative search engine or natural-language search.                                   |
+| `LABEL-001`       | Printable physical labels and QR lookup using stable, non-secret record references and normal authorization; QR codes carry no session credentials.                                                            |
+| `GERMINATION-001` | Optional dated observations alongside existing simple totals; derive percentages, timing or T50 only from sufficient data.                                                                                     |
+| `PWA-001`         | Installable shell, manifest/icons, safe service-worker caching and update behavior; no offline mutations, synchronization, push or native integrations.                                                        |
+| `LINEAGE-003`     | Visual navigation of recorded explicit relationships, with no inferred ancestry or generic genealogy graph.                                                                                                    |
+| `ORDER-001`       | Purchase transaction tracking, with Order distinct from Supplier and SeedLot.                                                                                                                                  |
+| `DASHBOARD-001`   | Defined analytical statistics after richer data, including `GERMINATION-001`; distinct from the existing UX dashboard summary.                                                                                 |
+
+An optional explicit primary photo for selected collection-record types is a **product decision
+point**, not an approved feature record. If later selected, the operator should choose and remove it
+explicitly; the first photo must not silently win, and historical photo links must stay intact.
+
+### Post-0.1.0 by default
+
+- `BOTANY-003` remains `planned`, but does **not** block `0.1.0`. The confirmed exact provider path
+  has not supplied eligible descriptive content under the accepted narrow contract. Source licensing
+  and field-level capability must be adequate before retrieval resumes. Florabase must not use name
+  rematching, arbitrary scraping, unsupported numeric crosswalks, or unreviewed source mixing to
+  force enrichment. Resume only with a reviewed source, content, and provenance contract.
+- `ENRICHMENT-001`/`ENRICHMENT-002` follow a reviewed retrieve → proposed values → source and
+  provenance → operator review → selective apply path; manual BotanicalProfile data is never silently
+  overwritten. Occurrence-map caching is a later optimization requiring bounded freshness, source
+  and retrieval time, stale-state truthfulness, attribution, and licensing review.
+- `EVENT-003` waits for real use to justify deeper structure. `TUBER-001` and `CUTTING-001` remain
+  dedicated material workflows; cutting lineage records a parent Plant where known. Other bulbs,
+  rhizomes, graft material, scions, and divisions need concrete workflows rather than a generic base.
+- `TAXONOMY-001`/`TAXONOMY-002` require careful reconciliation, synonyms, and name history that
+  preserve stable references. `WEATHER-001`, `REMINDER-001`, and `ANALYSIS-001` wait for concrete
+  comparison, reminder, and sufficient-data use cases; reminders do not make a generic task manager.
+- `TRANSFER-001` is full-fidelity collection transfer, distinct from simple CSV exchange and
+  backup/restore. `INTEGRATION-001` waits for proven repeated automation workflows, and
+  `SECURITY-003` for a real multi-user requirement.
+- Full offline mutation and synchronization is a larger contract than `PWA-001` installability.
+  Advanced media processing such as general derivatives, EXIF workflows, albums, photo ordering and
+  version history also remains later work.
+
+### Sequence to release
+
+1. **Foundation complete:** UX-004, UX-005, and UX-006 have landed; their graph status remains
+   `implemented` where recorded.
+2. **Optional product selection:** the operator chooses any candidates above. Each selected
+   increment gets its own implementation, relevant operator UAT, independent review, canonical
+   verification, and delivery.
+3. **Scope freeze:** after the operator declares pre-release product work complete, admit only
+   release defects and agreed blocking polish.
+4. **Resource baseline and optimization:** implement `PERF-001` with measurement, focused changes,
+   and repeat measurement on the frozen product scope.
+5. **Release hardening:** implement `RELEASE-001` against its full acceptance contract, including
+   final resource sanity.
+6. **Exploratory UAT:** use representative real workflows and data; correct concrete release defects.
+7. **Release candidate validation:** repeat fresh install, upgrade, complete restore, production
+   deployment, browser/mobile/accessibility, security, documentation, and version/changelog review.
+8. **Tag/release `0.1.0`:** only after the exact release tree passes canonical repository gates.
+
+## Delivered collection foundation
 
 `PROPAGATION-001` now implements the domain/backend contract without a migration: explicit focused
 operations distinguish no adjustment, partial use, and use-all; lock mutable sources; preserve
@@ -84,11 +194,10 @@ identity's detail page. Automatic discovery, provider-backed search, cover histo
 reordering, EXIF inspection, thumbnails, derivatives, background media workers, and
 BotanicalIdentity galleries remain outside this increment.
 
-## Later collection enhancements
+## Collection capability and design context
 
-Planned P2 work deepens existing workflows with dated germination observations, Orders, richer
-events, tuber and cutting lots, labels/QR lookup, advanced search,
-analytical dashboards, guided import/export, visual lineage, and reviewable profile enrichment.
+The release groups above set the timing for planned work. The following detail records current
+capabilities and design boundaries that those future increments must preserve.
 
 PWA work means installability and a safe application shell, not offline-first mutation,
 synchronization, push, or a native mobile app. Those behaviors require separate contracts.
@@ -132,9 +241,9 @@ inherit Supplier, retained historical records do not become active holdings, and
 wait for the separate `ORDER-001` transaction model.
 
 After the implemented collection, geography, supplier, provenance-map, external botanical-data,
-structured native-range, MAP-002 occurrence-density, and ATTACHMENT-003 photo foundations, the
-remaining V1 product sequence continues beyond photos. `BOTANY-003` profile enrichment remains separately
-planned while the approved provider lacks a reviewed profile-content contract. `UX-003` is
+structured native-range, MAP-002 occurrence-density, and ATTACHMENT-003 photo foundations,
+`BOTANY-003` profile enrichment remains separately planned while the approved provider lacks a
+reviewed profile-content contract. `UX-003` is
 implemented as global stabilization and polish over those feature-specific surfaces. `UX-002` is
 implemented as static local form guidance: concise described field help, accessible expandable
 examples, and focused deep help for complex corrective operations. It adds no onboarding state,
@@ -164,12 +273,7 @@ for the established patterns and review.
 Possible later work is recorded without implementation: occurrence-map cache or persistence needs a
 freshness, invalidation, licensing and privacy contract, and a post-0.1.0 **Retrieve botanical data**
 action needs an approved provider-content and provenance contract before it can enrich a profile.
-
-The final V1 phase is release hardening rather than another product surface. It will exercise fresh
-installation, upgrades and the full Alembic chain, backup/restore, production Docker deployment,
-owner bootstrap and production settings, health/readiness, desktop/mobile browser QA, security and
-documentation review, performance sanity, and `0.1.0` release/versioning. No feature ID is assigned
-until that increment receives an explicit contract.
+The approved release-hardening contract is now `RELEASE-001` above.
 
 ### Reversible authoritative operations
 
@@ -267,8 +371,8 @@ terms, availability, attribution, and quality review before selection.
 
 ## Deliberate boundaries
 
-Florabase does not currently provide Event attachments, analytical dashboards, advanced collection
-search, offline writes, import/export, a generic
+Florabase does not currently provide analytical dashboards, advanced collection search, offline
+writes, import/export, a generic
 propagation-material hierarchy, a generic graph engine, or multi-user ownership. Future work should
 extend concrete workflows without weakening unknown-data, history, authorization, or provenance
 semantics.

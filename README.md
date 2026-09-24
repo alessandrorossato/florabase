@@ -20,10 +20,11 @@ owner, but no stable public release or supported-version policy has been publish
   collection-produced seed lots, with receipt-proven reversal for supported authoritative operations
 - A collection provenance map for coordinate-bearing ProvenanceSites
 - Guarded local JPEG/PNG/WebP attachment storage with authenticated retrieval and coordinated backup
+- Collection-photo galleries and optional BotanicalIdentity covers; layered contextual form help
 - Local owner authentication with server-side sessions and CSRF protection
 
-Collection-photo relationships and galleries, richer germination observations, advanced search and analytics,
-import/export, contextual help, and PWA installability are planned, not implemented. See the
+Richer germination observations, advanced search and analytics, import/export, and PWA installability
+are planned, not implemented. See the
 [product roadmap](docs/product-roadmap.md) and the detailed [feature backlog](docs/features.json).
 
 ## Screenshots

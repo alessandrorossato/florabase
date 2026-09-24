@@ -94,15 +94,16 @@ not infer its security origin or user identity from forwarded headers.
 
 ## Persistence
 
-The `postgres_data` named volume is the only application-managed durable data store today. It
-survives `docker compose down` and container replacement. Attachment/upload storage is not
-implemented. Deployment configuration, TLS material, and secrets live outside the application data
-volume and need a separate protected backup.
+The `postgres_data` and backend attachment named volumes hold application-managed durable data. They
+survive `docker compose down` and container replacement. A complete application backup includes the
+paired PostgreSQL dump and attachment archive described in [backup and restore](backup-restore.md).
+Deployment configuration, TLS material, and secrets need a separate protected backup.
 
 ## Safe upgrade
 
 1. Read the incoming changes and migration notes.
-2. While the existing installation is healthy, run `make backup` and copy the dump off-host.
+2. While the existing installation is healthy, run `make backup` and copy both the database dump and
+   matching attachment archive off-host.
 3. Update the checked-out branch with the operator's reviewed Git workflow, for example
    `git pull --ff-only` on a release branch.
 4. Run `make build`.

@@ -74,6 +74,38 @@
       "status": "verified"
     },
     {
+      "id": "RELEASE-001",
+      "category": "operations",
+      "description": "Harden and validate the first distributable Florabase 0.1.0 release",
+      "acceptance_criteria": [
+        "A clean installation and an upgrade from a supported pre-release installation complete through production Compose and the full Alembic upgrade chain; health and readiness, owner bootstrap, login, logout, session restoration, and browser use after upgrade are verified under production-safe configuration",
+        "A complete supported backup pairs PostgreSQL data with local attachment storage; an isolated restore proves collection records, relationships, media binaries, and application use without modifying valuable operator data or presenting a database-only dump as complete recovery",
+        "Representative end-to-end collection UAT follows BotanicalIdentity through optional profile or cover, acquisition and provenance, SeedLot, Sowing, Plant or PlantGroup, Events, Photos, transfer or extraction, supported reversal or reintegration, maps, and history navigation",
+        "Security and failure review covers session expiry or invalidation where practical, CSRF, exact Origin checks, attachment and binary authorization, production cookie and origin settings, existing insecure-configuration startup rejection, API and provider failures, external-image failure, missing media, validation conflicts, empty data, and implemented stale-source states",
+        "Desktop, intermediate-width, and approximately 390 by 844 mobile review covers keyboard use, visible focus, dialogs, menus, forms, maps with companion lists, and important error, empty, and loading states without claiming formal accessibility certification; final release-candidate resource sanity checks documented PERF-001 expectations, material regressions, and obvious runaway CPU, memory, or request behavior rather than repeating the primary optimization project",
+        "Installation, persistence, backup, restore, upgrade, configuration, and map documentation matches the release tree; application version 0.1.0, pre-1.0 version and upgrade expectations, coherent exposed version surfaces, and the first changelog entry are recorded; stale current-state prose and concrete release defects are resolved before the exact release tree passes canonical verification"
+      ],
+      "dependencies": ["UX-006", "ATTACHMENT-002", "CI-002", "PERF-001"],
+      "priority": "P0",
+      "status": "planned"
+    },
+    {
+      "id": "PERF-001",
+      "category": "performance",
+      "description": "Measure and optimize Florabase resource efficiency for self-hosted deployment",
+      "acceptance_criteria": [
+        "A reproducible production-like baseline documents idle and representative operator workflows: startup and an idle authenticated session; Dashboard; BotanicalIdentity, SeedLot, Sowing, Plant or PlantGroup, Supplier, Location, and Geography directories and details; Events, Photos, lineage, provenance map, explicitly loaded occurrence map, and representative create or edit work. The workload measures process or container CPU and memory, startup stabilization, frontend initial transfer and lazy chunks, API and important database query counts, representative response time, media and map loading, and production image and process footprint where practical without relying only on synthetic microbenchmarks",
+        "Measured backend and PostgreSQL hotspots are reviewed for N+1 or redundant queries, unnecessary serialization or payload, repeated expensive queries, connection and memory behavior, and representative query plans; indexes or tuning are added only when workload evidence and appropriate EXPLAIN or ANALYZE support them, without speculative denormalization, materialized views, or generic tuning",
+        "Measured frontend, media, and map hotspots are reviewed for production bundle and chunk cost, the existing Vite chunk-size advisory, useful code splitting and lazy loading, unnecessary renders or duplicate API requests, oversized original images where bounded thumbnails fit, lazy local and external Photos behavior, hidden map instances, and map or provider traffic on unrelated navigation; the advisory threshold is not raised merely to hide a warning",
+        "Repeated navigation and extended idle use are checked for event-listener, map-instance, timer, request, retained-data, client-cache, session, and database-connection growth; CPU, memory, and requests stabilize without unnecessary polling or render loops, and only demonstrated leaks or resource hotspots are changed without altering domain semantics, security, or privacy or adding broad caching infrastructure",
+        "The production Compose stack is assessed for modest self-hosted hardware using measured CPU, memory, network, database, image-size, startup, package, process, and duplicate-work costs; footprint changes preserve reproducible builds, security updates, and needed operability, with no arbitrary hardware guarantee set before measurement",
+        "After focused optimization, the same representative workload is re-measured against the baseline; material improvements, remaining costs, practical small-installation resource expectations, and any meaningful regressions across measured dimensions are documented, with evidence-based regression budgets added only where justified"
+      ],
+      "dependencies": ["UX-006", "MAP-002"],
+      "priority": "P0",
+      "status": "planned"
+    },
+    {
       "id": "SECURITY-001",
       "category": "security",
       "description": "Decide the initial authentication and session architecture",
