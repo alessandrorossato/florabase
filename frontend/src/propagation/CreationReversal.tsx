@@ -121,7 +121,7 @@ export function CreationReversal({
 
   return (
     <section className="notice creation-reversal" aria-labelledby={titleId}>
-      <h4 id={titleId}>Undo {labels[kind]} creation</h4>
+      <h4 id={titleId}>Creation operation · {labels[kind]}</h4>
       {lifecycle === "reversed" || completed ? (
         <p role="status" tabIndex={-1} ref={feedback}>
           Creation reversed. The source snapshot was restored. This record
@@ -131,14 +131,34 @@ export function CreationReversal({
         </p>
       ) : (
         <>
-          <p>
-            {kind === "sowing"
-              ? "The SeedLot quantity and lifecycle"
-              : "The Sowing lifecycle"}{" "}
-            will return to the original recorded state. This {labels[kind]} will
-            remain in history as Reversed and will no longer be active. Notes
-            and lineage are retained.
-          </p>
+          <dl className="operation-facts">
+            <div>
+              <dt>What will be restored</dt>
+              <dd>
+                {kind === "sowing"
+                  ? "The source SeedLot quantity and lifecycle snapshot"
+                  : "The source Sowing lifecycle snapshot"}
+              </dd>
+            </div>
+            <div>
+              <dt>Historical result</dt>
+              <dd>
+                This {labels[kind]} remains as Reversed with notes and lineage.
+              </dd>
+            </div>
+            <div>
+              <dt>Dependency state</dt>
+              <dd>
+                {eligibility
+                  ? eligibility.status === "safe"
+                    ? "Safe to reverse"
+                    : eligibility.status === "confirmation_required"
+                      ? "Retained observations need confirmation"
+                      : "Blocked by later work"
+                  : "Checking eligibility"}
+              </dd>
+            </div>
+          </dl>
           <ContextHelpDialog
             buttonLabel="Understand creation reversal"
             title="How creation reversal works"

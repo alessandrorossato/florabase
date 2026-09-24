@@ -168,7 +168,22 @@ function sowingHandler(sowings: unknown[], custom?: Handler): Handler {
   };
 }
 
+function setViewportMatches(matches: boolean) {
+  vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+    matches,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }));
+}
+
 async function openSowings() {
+  // Existing interaction cases exercise the list-to-detail mobile path.
+  setViewportMatches(true);
   const user = userEvent.setup();
   render(<App />);
   await user.click(await screen.findByRole("button", { name: "Sowings" }));
@@ -642,4 +657,46 @@ test("validation, forbidden, and expired-session API failures remain explicit", 
     await screen.findByRole("button", { name: "Sign in" }),
   ).toBeInTheDocument();
   expect(screen.getByText(/session expired/)).toBeInTheDocument();
+});
+
+test("desktop Sowing selection stays compact until Open details", async () => {
+  mockApi(sowingHandler([sowing()]));
+  const user = await openSowings();
+  setViewportMatches(false);
+  await user.click(
+    await screen.findByRole("button", { name: /Tray A.*Clitoria ternatea/ }),
+  );
+  const preview = await screen.findByRole("complementary", {
+    name: "Quick preview",
+  });
+  expect(
+    within(preview).getByRole("heading", { name: "Tray A" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("tab", { name: "Propagation" }),
+  ).not.toBeInTheDocument();
+  await user.click(
+    within(preview).getByRole("button", { name: "Open details" }),
+  );
+  expect(screen.getByRole("tab", { name: "Propagation" })).toBeInTheDocument();
+});
+
+test("reselecting a previewed record after narrowing the viewport opens its detail", async () => {
+  mockApi(sowingHandler([sowing()]));
+  const user = await openSowings();
+  setViewportMatches(false);
+  await user.click(
+    await screen.findByRole("button", { name: /Tray A.*Clitoria ternatea/ }),
+  );
+  expect(
+    await screen.findByRole("complementary", { name: "Quick preview" }),
+  ).toBeInTheDocument();
+  setViewportMatches(true);
+  await user.click(
+    screen.getByRole("button", { name: /Tray A.*Clitoria ternatea/ }),
+  );
+  expect(
+    await screen.findByRole("tab", { name: "Propagation" }),
+  ).toBeInTheDocument();
+  expect(screen.queryByText(/Loading .* detail/)).not.toBeInTheDocument();
 });

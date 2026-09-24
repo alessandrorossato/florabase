@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 
 import type { components } from "../api/schema";
 import { requestJson } from "../auth/api";
+import { InfoDisclosure } from "../components/ContextualHelp";
 
 type LineageResponse = components["schemas"]["LineageResponse"];
 type Kind = "seed-lots" | "sowings" | "plants" | "plant-groups";
@@ -11,6 +12,12 @@ const labels: Record<string, string> = {
   sowing: "Sowing",
   plant: "Plant",
   plant_group: "Plant group",
+};
+const fallbackLabels: Record<string, string> = {
+  seed_lot: "Unlabelled seed lot",
+  sowing: "Unlabelled sowing",
+  plant: "Unlabelled plant",
+  plant_group: "Unlabelled plant group",
 };
 
 function href(kind: string, id: string) {
@@ -24,6 +31,7 @@ function href(kind: string, id: string) {
 }
 
 export function LineagePanel({ kind, id }: { kind: Kind; id: string }) {
+  const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "ready"; value: LineageResponse }
@@ -44,14 +52,23 @@ export function LineagePanel({ kind, id }: { kind: Kind; id: string }) {
     return () => {
       controller.abort();
     };
-  }, [id, kind]);
+  }, [id, kind, attempt]);
 
   if (state.status === "loading")
     return <p role="status">Loading recorded lineage…</p>;
   if (state.status === "error")
     return (
       <div className="notice notice--error" role="alert">
-        Florabase could not load recorded lineage.
+        <p>Florabase could not load recorded lineage.</p>
+        <button
+          type="button"
+          onClick={() => {
+            setState({ status: "loading" });
+            setAttempt((value) => value + 1);
+          }}
+        >
+          Retry lineage
+        </button>
       </div>
     );
   if (state.value.ancestors.length === 0)
@@ -62,19 +79,18 @@ export function LineagePanel({ kind, id }: { kind: Kind; id: string }) {
     );
   return (
     <div>
-      <p className="field-help">
-        Only explicit collection provenance is shown. A shared Botanical
-        identity does not imply lineage.
-      </p>
-      <ol className="lineage-list">
+      <InfoDisclosure label="How this path is recorded">
+        <p>
+          Only explicit collection relationships are shown. A shared Botanical
+          identity does not imply lineage.
+        </p>
+      </InfoDisclosure>
+      <ol className="lineage-list" aria-label="Recorded upstream path">
         {state.value.ancestors.map((node) => (
           <li key={`${node.kind}:${node.id}`}>
             <span className="record-state">{labels[node.kind]}</span>{" "}
             <a href={href(node.kind, node.id)}>
-              {node.label ??
-                ("botanical_identity" in node
-                  ? node.botanical_identity.display_label
-                  : `Unlabelled ${labels[node.kind]}`)}
+              {node.label ?? fallbackLabels[node.kind]}
             </a>
           </li>
         ))}

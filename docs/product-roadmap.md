@@ -157,8 +157,10 @@ Reference / Events navigation. Its status is `implemented`, and the operator has
 and mobile review. `UX-005` carries that vocabulary into Supplier, Location and Geography
 management, adds a stored-coordinate Provenance-site map, and presents the separate collection
 provenance map as a map-first record workspace. It retains explicit provenance and hierarchy
-semantics. SeedLot, Sowing, Plant/PlantGroup, Event timeline and Dashboard redesigns remain separate
-later increments. See [the reference guide](ux-004-reference.md) for patterns and review.
+semantics. `UX-006` carries the same vocabulary into SeedLot, Sowing, Plant/PlantGroup, guided
+propagation, collection Events, Photos, Lineage and Dashboard. The operator has accepted its general
+design direction, and independent final verification has passed. See [the reference guide](ux-004-reference.md)
+for the established patterns and review.
 Possible later work is recorded without implementation: occurrence-map cache or persistence needs a
 freshness, invalidation, licensing and privacy contract, and a post-0.1.0 **Retrieve botanical data**
 action needs an approved provider-content and provenance contract before it can enrich a profile.

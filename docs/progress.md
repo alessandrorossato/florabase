@@ -4,6 +4,14 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-24 — UX-006 independently reviewed and ready for delivery
+
+- Audited the merged UX-004/UX-005 directory, preview, detail, task, help and responsive patterns against SeedLot, Sowing, Plant/PlantGroup, propagation, Events, Photos, Lineage and Dashboard. The operational directories mixed selection with nearly full detail, large editors competed with browsing, and repeated borders and permanent explanations obscured the record and next action.
+- Seed lots, Sowings and Plants/Groups now share polished search, compact record-first rows, lifecycle/type filters, selected and focus states, a compact Quick Preview and dedicated read-first detail. Large create/edit forms open as explicit tasks with grouped core and optional fields; desktop and mobile use the same record routes, including Back/Forward and direct links. Existing quantity certainty, partial dates, source, provenance, lifecycle and explicit lineage rules remain intact.
+- Dashboard now shows linked collection holdings, recent recorded Events and valid quick actions. Global Events uses a chronological activity view with compact category filters and contextual non-replay guidance. Propagation and Plant operation surfaces clarify next actions, source/result/quantity effects, receipt-dependent reversal and reintegration, while Photos and Lineage use the shared restrained presentation and retain their existing privacy and relationship boundaries.
+- Browser inspection with existing representative records covered populated Dashboard, SeedLot/Sowing/Plant/Group browsing and detail, Events, Photos, Lineage, creation and extraction at 1440px, 1024px and 390×844. Review corrected extraction Cancel focus restoration, type-specific unlabelled-record fallbacks, a repeat-selection loading defect, narrow Plant-detail overflow, raw origin ID and compact desktop header wrap. No operator records were changed. The operator has accepted the general design direction; minor polish in historical and receipt-edge presentation is deferred to final cross-app UAT.
+- Added UX-006 as `implemented` in the feature graph and aligned the roadmap. No backend, API, generated declaration, schema, migration, dependency or persistence change was made. Focused verification passed: 78 tests across six Vitest files, with all 23 Plant cases rerun after the final focus and label corrections; `pnpm format:check`, `pnpm lint`, `pnpm typecheck`, `pnpm build`, `python3 scripts/check-features.py` (78 valid features), and `git diff --check`. `make feature-verify` passed: 358 backend tests, 182 frontend tests, integration suite, generated API drift, type/lint/format checks, production builds, migration cycle, whitespace checks and verification receipt. Vite retained its chunk-size advisory. UX-006 remains `implemented` pending delivery workflow.
+
 ## 2026-09-23 — UX-005 independent review
 
 - The operator accepted the general design direction and deferred minor visual refinements. Independent review confirmed the UX-005-only frontend/documentation scope, preserved explicit provenance and hierarchy semantics, lazy maps, and no backend, generated API, schema, migration, or dependency changes. UX-005 remains `implemented`; no UX-006 record was added.
@@ -962,7 +970,7 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260913_0024`; UX-005 adds no migration.
+- Alembic head: `20260913_0024`; UX-006 adds no migration.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
@@ -974,7 +982,7 @@ implementation detail.
 - `PROPAGATION-001` through `PROPAGATION-003`, `SUPPLIER-002`, `BOTANY-002`, and
   `ATTACHMENT-002` are verified. `LOCATION-002`, `GEOGRAPHY-003`, `MAP-001`, `GEOGRAPHY-002`,
   `ATTACHMENT-003`, `UX-002`, `UX-003`, and `UX-004` are implemented pending their respective
-  independent review. `UX-005` remains implemented and has completed its independent review.
+  independent review. `UX-005` remains implemented and has completed its independent review. `UX-006` remains implemented; the operator has accepted the general design direction, and independent final verification has passed.
   Licensing/version policy and release readiness remain explicit later operator/product decisions.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
   `main` checks.

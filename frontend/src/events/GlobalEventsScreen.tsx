@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
+import { InfoDisclosure } from "../components/ContextualHelp";
 import { listGlobalEvents, type EventResponse } from "../collection/api";
 import { EventFeed, EventFilters } from "./EventFeed";
 import { filteredEvents, type EventFilter } from "./eventData";
@@ -42,20 +43,23 @@ export function GlobalEventsScreen() {
 
   return (
     <section aria-labelledby="global-events-title" className="workspace">
-      <div className="workspace-intro">
-        <p className="eyebrow">Collection history</p>
-        <h2 id="global-events-title">Events</h2>
+      <header className="page-header">
+        <div>
+          <p className="eyebrow">Collection history</p>
+          <h2 id="global-events-title">Events</h2>
+          <p>
+            Observations, cultivation work and status changes across the
+            collection.
+          </p>
+        </div>
+      </header>
+      <InfoDisclosure label="How Event corrections affect current state">
         <p>
-          Chronological observations, cultivation work, and status changes
-          across Plants and Plant groups.
+          Editing or deleting an ordinary Event does not recompute a Plant or
+          Plant group’s current lifecycle, Location or lineage. Authoritative
+          operation reversal is a separate contextual action.
         </p>
-      </div>
-      <p className="notice event-semantics-note">
-        Events are journal history. Editing or deleting an ordinary Event does
-        not recompute a Plant or Plant group’s current lifecycle, location, or
-        lineage; authoritative operation undo remains a separate contextual
-        action.
-      </p>
+      </InfoDisclosure>
       {state.status === "loading" && <p role="status">Loading Events…</p>}
       {state.status === "error" && (
         <div className="notice notice--error" role="alert">
