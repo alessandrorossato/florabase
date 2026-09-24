@@ -16,6 +16,8 @@ import {
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
+import { DirectorySearch, RecordPreview } from "../components/ReferenceUI";
+import { setRecordRoute } from "../components/recordNavigation";
 import {
   Breadcrumbs,
   DetailHeader,
@@ -261,7 +263,7 @@ function quantityLabel(record: PlantRecord): string | null {
   if (record.kind === "plant") return null;
   const quantity = record.value.quantity;
   if (!quantity) return "Quantity unknown";
-  return `${quantity.is_approximate ? "~" : ""}${String(quantity.value)} plants`;
+  return `${quantity.is_approximate ? "~" : ""}${String(quantity.value)} ${quantity.value === 1 ? "plant" : "plants"}`;
 }
 
 function extractionQuantityExplanation(group: PlantGroupResponse): string {
@@ -281,7 +283,7 @@ function originSummary(record: PlantRecord): string {
   const originatingGroup =
     record.kind === "plant" ? record.value.originating_plant_group : null;
   if (originatingGroup)
-    return `Extracted from group · ${originatingGroup.label ?? originatingGroup.botanical_identity.display_label}`;
+    return `Extracted from group · ${originatingGroup.label ?? "Unlabelled plant group"}`;
   if (value.originating_sowing)
     return `From sowing${value.originating_sowing.label ? ` · ${value.originating_sowing.label}` : ""}`;
   const kind = value.direct_origin_kind ?? "unknown";
@@ -338,12 +340,23 @@ function Detail({
       <Breadcrumbs
         items={[
           { label: "Plants", href: "#/plants" },
-          { label: value.label ?? value.botanical_identity.display_label },
+          {
+            label:
+              value.label ??
+              (record.kind === "plant"
+                ? "Unlabelled plant"
+                : "Unlabelled plant group"),
+          },
         ]}
       />
       <DetailHeader
         eyebrow={record.kind === "plant" ? "Plant" : "Plant group"}
-        title={value.label ?? value.botanical_identity.display_label}
+        title={
+          value.label ??
+          (record.kind === "plant"
+            ? "Unlabelled plant"
+            : "Unlabelled plant group")
+        }
         secondary={
           <a href={`#/identities/${value.botanical_identity.id}`}>
             {value.botanical_identity.display_label}
@@ -445,8 +458,7 @@ function Detail({
                   <dt>Extracted from group</dt>
                   <dd>
                     <a href={`#/plant-groups/${originatingGroup.id}`}>
-                      {originatingGroup.label ??
-                        originatingGroup.botanical_identity.display_label}
+                      {originatingGroup.label ?? "Unlabelled plant group"}
                     </a>
                   </dd>
                 </div>
@@ -483,7 +495,10 @@ function Detail({
                             ? "This Plant"
                             : "This Plant group",
                         label:
-                          value.label ?? value.botanical_identity.display_label,
+                          value.label ??
+                          (record.kind === "plant"
+                            ? "Unlabelled plant"
+                            : "Unlabelled plant group"),
                         href: `#/${route}/${value.id}`,
                         state: value.lifecycle,
                       },
@@ -513,8 +528,11 @@ function Detail({
                   <div>
                     <dt>Seed lot</dt>
                     <dd>
-                      {sowing?.seed_lot.label ??
-                        value.originating_sowing.seed_lot_id}
+                      <a
+                        href={`#/seeds/${value.originating_sowing.seed_lot_id}`}
+                      >
+                        {sowing?.seed_lot.label ?? "Unlabelled seed lot"}
+                      </a>
                     </dd>
                   </div>
                 </dl>
@@ -589,7 +607,12 @@ function Detail({
             key={`${record.kind}:${value.id}`}
             targetKind={record.kind}
             targetId={value.id}
-            targetLabel={value.label ?? value.botanical_identity.display_label}
+            targetLabel={
+              value.label ??
+              (record.kind === "plant"
+                ? "Unlabelled plant"
+                : "Unlabelled plant group")
+            }
             locations={locations}
             onTargetRefresh={onEventTargetRefresh}
           />
@@ -618,7 +641,12 @@ function Detail({
           <PhotosSection
             target={record.kind === "plant" ? "plant" : "plant_group"}
             targetId={value.id}
-            targetLabel={value.label ?? value.botanical_identity.display_label}
+            targetLabel={
+              value.label ??
+              (record.kind === "plant"
+                ? "Unlabelled plant"
+                : "Unlabelled plant group")
+            }
           />
         </div>
       )}
@@ -705,6 +733,15 @@ export function PlantScreen({
   } = useCreationDisclosure();
 
   useEffect(() => {
+    if (!routedKey && lastRoutedKey.current) {
+      lastRoutedKey.current = null;
+      const timeout = window.setTimeout(() => {
+        setMobileDetail(false);
+      }, 0);
+      return () => {
+        window.clearTimeout(timeout);
+      };
+    }
     if (!routedKey || routedKey === lastRoutedKey.current) return;
     lastRoutedKey.current = routedKey;
     if (routedKey === selectedKey) return;
@@ -838,6 +875,7 @@ export function PlantScreen({
 
   useEffect(() => {
     if (
+      !mobileDetail ||
       detail.status !== "ready" ||
       detail.record.kind !== "plant" ||
       !detail.record.value.originating_plant_group_id
@@ -860,7 +898,7 @@ export function PlantScreen({
     return () => {
       controller.abort();
     };
-  }, [auth, detail]);
+  }, [auth, detail, mobileDetail]);
 
   useEffect(() => {
     if (save.status === "error") feedback.current?.focus();
@@ -980,6 +1018,7 @@ export function PlantScreen({
     setForm(formFrom(record));
     setMoreDetails(true);
     setEditing(true);
+    setMobileDetail(true);
     setSave({ status: "idle" });
   }
 
@@ -988,17 +1027,31 @@ export function PlantScreen({
     if (creationExpanded) closeCreation({ returnFocus: false });
     const key = recordKey(record);
     selectedTrigger.current = trigger;
-    setDetail({ status: "loading", key });
+    if (key !== selectedKey) {
+      setDetail({ status: "loading", key });
+    } else if (detail.status === "error") {
+      setDetail({ status: "loading", key });
+      setDetailAttempt((value) => value + 1);
+    }
     setSelectedKey(key);
-    setMobileDetail(true);
+    const isMobile = window.matchMedia("(max-width: 48rem)").matches;
+    setMobileDetail(isMobile);
+    if (isMobile)
+      setRecordRoute(
+        `#/${record.kind === "plant" ? "plants" : "plant-groups"}/${record.value.id}`,
+      );
     setEditing(false);
     setCreationKind(null);
     setSave({ status: "idle" });
   }
 
   function returnToList() {
+    if (creationExpanded) closeCreation({ returnFocus: false });
+    setSelectedKey(null);
+    setDetail({ status: "idle" });
     setMobileDetail(false);
     setEditing(false);
+    setRecordRoute("#/plants", true);
     window.setTimeout(() => selectedTrigger.current?.focus(), 0);
   }
 
@@ -1011,6 +1064,7 @@ export function PlantScreen({
     });
     setMoreDetails(true);
     setEditing(true);
+    setMobileDetail(true);
     setSave({ status: "idle" });
   }
 
@@ -1400,7 +1454,7 @@ export function PlantScreen({
         </div>
       )}
       <div
-        className={`plant-master-detail${mobileDetail ? " is-detail-view" : ""}`}
+        className={`plant-master-detail operational-layout${mobileDetail || editing ? " is-detail-view" : ""}`}
       >
         <section
           className="seed-master plant-master"
@@ -1408,17 +1462,13 @@ export function PlantScreen({
         >
           <h3 id="plant-list-title">Plants collection</h3>
           <div className="seed-controls">
-            <div className="field">
-              <label htmlFor="plant-search">Search Plants</label>
-              <input
-                id="plant-search"
-                type="search"
-                value={search}
-                onChange={(event) => {
-                  setSearch(event.currentTarget.value);
-                }}
-              />
-            </div>
+            <DirectorySearch
+              id="plant-search"
+              label="Search Plants"
+              placeholder="Search records, identity or location"
+              value={search}
+              onChange={setSearch}
+            />
             <fieldset className="lifecycle-filter">
               <legend>Lifecycle</legend>
               {(["active", "history", "all"] as const).map((item) => (
@@ -1585,7 +1635,7 @@ export function PlantScreen({
                   <div>
                     <p className="eyebrow">
                       {extractionSource
-                        ? "PlantGroup extraction"
+                        ? "Plant group extraction"
                         : selected
                           ? "Correct record"
                           : "Fast entry"}
@@ -1708,11 +1758,23 @@ export function PlantScreen({
                   </fieldset>
                 )}
                 {extractionSource && (
-                  <div className="notice" role="status">
+                  <div className="notice quantity-effect" role="status">
                     <p>
-                      Origin: {extractionSource.label ?? "this Plant group"}.
+                      <strong>Source group:</strong>{" "}
+                      {extractionSource.label ?? "Unlabelled Plant group"} ·{" "}
+                      {quantityLabel({
+                        kind: "group",
+                        value: extractionSource,
+                      })}{" "}
+                      · {groupLifecycleLabels[extractionSource.lifecycle]}
                     </p>
-                    <p>{extractionQuantityExplanation(extractionSource)}</p>
+                    <p>
+                      <strong>Result:</strong> One individual Plant.
+                    </p>
+                    <p>
+                      <strong>Quantity effect:</strong>{" "}
+                      {extractionQuantityExplanation(extractionSource)}
+                    </p>
                   </div>
                 )}
                 {!extractionSource && (
@@ -1733,6 +1795,9 @@ export function PlantScreen({
                     id="plant-advanced-fields"
                     className="advanced-fields plant-advanced-fields"
                   >
+                    <h4 className="form-group-heading field--full">
+                      Origin and collection context
+                    </h4>
                     {!extractionSource && !extractedEdit ? (
                       <>
                         <fieldset className="origin-mode-field field--full">
@@ -1962,8 +2027,8 @@ export function PlantScreen({
                       <div className="field--full notice">
                         <strong>Origin is read-only.</strong>{" "}
                         {extractionSource
-                          ? `This Plant will be extracted from ${extractionSource.label ?? extractionSource.botanical_identity.display_label}.`
-                          : `This Plant was extracted from ${selected?.kind === "plant" ? (selected.value.originating_plant_group?.label ?? selected.value.originating_plant_group?.botanical_identity.display_label ?? "its Plant group") : "its Plant group"}.`}
+                          ? `This Plant will be extracted from ${extractionSource.label ?? "Unlabelled plant group"}.`
+                          : `This Plant was extracted from ${selected?.kind === "plant" ? (selected.value.originating_plant_group?.label ?? "Unlabelled plant group") : "its Plant group"}.`}
                       </div>
                     )}
                     <PartialDateField
@@ -2113,31 +2178,224 @@ export function PlantScreen({
               </button>
             </div>
           ) : selected ? (
-            <div className="selected-seed selected-plant">
-              <Detail
-                key={`${recordKey(selected)}:${selected.value.updated_at}`}
-                record={selected}
-                sowings={references.sowings}
-                locations={references.locations}
-                headingRef={detailHeading}
-                onEventTargetRefresh={async () => {
-                  try {
-                    await refreshEventTarget(selected.kind, selected.value.id);
-                  } finally {
-                    setReversalRevision((value) => value + 1);
+            mobileDetail ? (
+              <div className="selected-seed selected-plant">
+                <Detail
+                  key={`${recordKey(selected)}:${selected.value.updated_at}`}
+                  record={selected}
+                  sowings={references.sowings}
+                  locations={references.locations}
+                  headingRef={detailHeading}
+                  onEventTargetRefresh={async () => {
+                    try {
+                      await refreshEventTarget(
+                        selected.kind,
+                        selected.value.id,
+                      );
+                    } finally {
+                      setReversalRevision((value) => value + 1);
+                    }
+                  }}
+                  onEdit={() => {
+                    startEdit(selected);
+                  }}
+                  primaryActions={
+                    <>
+                      {selected.kind === "group" &&
+                        selected.value.lifecycle === "active" && (
+                          <button
+                            ref={extractionTrigger}
+                            type="button"
+                            onClick={() => {
+                              startExtraction(selected.value);
+                            }}
+                          >
+                            Extract plant
+                          </button>
+                        )}
+                      {selected.value.lifecycle === "active" && (
+                        <button
+                          type="button"
+                          className={
+                            selected.kind === "group"
+                              ? "button--secondary"
+                              : undefined
+                          }
+                          onClick={() => {
+                            startTransfer(selected);
+                          }}
+                        >
+                          {selected.kind === "plant"
+                            ? "Transfer"
+                            : "Transfer group"}
+                        </button>
+                      )}
+                    </>
                   }
-                }}
-                onEdit={() => {
-                  startEdit(selected);
-                }}
-                primaryActions={
+                  initialTab={initialTab}
+                />
+                {selected.value.originating_sowing_id && (
+                  <CreationReversal
+                    key={`reversal:${recordKey(selected)}:${selected.value.updated_at}:${String(reversalRevision)}`}
+                    kind={selected.kind === "plant" ? "plant" : "plant_group"}
+                    id={selected.value.id}
+                    lifecycle={selected.value.lifecycle}
+                    revision={`${selected.value.updated_at}:${String(reversalRevision)}`}
+                    onReversed={(result) => {
+                      if ("seed_lot" in result) return;
+                      const authoritative: PlantRecord =
+                        "plant" in result
+                          ? { kind: "plant", value: result.plant }
+                          : { kind: "group", value: result.plant_group };
+                      setDetail({ status: "ready", record: authoritative });
+                      setCollection((current) =>
+                        current.status === "ready"
+                          ? {
+                              ...current,
+                              records: current.records.map((record) =>
+                                recordKey(record) === recordKey(authoritative)
+                                  ? authoritative
+                                  : record,
+                              ),
+                            }
+                          : current,
+                      );
+                      setReferences((current) =>
+                        current
+                          ? {
+                              ...current,
+                              sowings: current.sowings.map((sowing) =>
+                                sowing.id === result.sowing.id
+                                  ? result.sowing
+                                  : sowing,
+                              ),
+                            }
+                          : current,
+                      );
+                    }}
+                  />
+                )}
+                {selected.kind === "group" &&
+                  selected.value.lifecycle !== "active" && (
+                    <p className="field-help">
+                      Plants can only be extracted from an active group.
+                    </p>
+                  )}
+                {selected.kind === "plant" &&
+                  selected.value.originating_plant_group && (
+                    <section
+                      className="notice reintegration-panel"
+                      aria-labelledby="reintegration-action-title"
+                    >
+                      <h4 id="reintegration-action-title">
+                        Original Plant group
+                      </h4>
+                      <p>
+                        <a
+                          href={`#/plant-groups/${selected.value.originating_plant_group.id}`}
+                        >
+                          {selected.value.originating_plant_group.label ??
+                            "Unlabelled plant group"}
+                        </a>
+                      </p>
+                      {selected.value.lifecycle === "reintegrated" ? (
+                        <p>
+                          This Plant has been reintegrated and remains available
+                          as historical extraction evidence.
+                        </p>
+                      ) : reintegration.status === "loading" ? (
+                        <p role="status">Checking reintegration eligibility…</p>
+                      ) : reintegration.status === "error" ? (
+                        <p role="alert">
+                          Florabase could not check reintegration eligibility.
+                        </p>
+                      ) : reintegration.status === "ready" ? (
+                        <>
+                          {reintegration.eligibility.status === "blocked" && (
+                            <ul>
+                              {reintegration.eligibility.reasons.map(
+                                (reason) => (
+                                  <li key={reason.code}>{reason.message}</li>
+                                ),
+                              )}
+                            </ul>
+                          )}
+                          {reintegration.eligibility.status ===
+                            "confirmation_required" && (
+                            <p>
+                              {
+                                reintegration.eligibility.retained_observations
+                                  .length
+                              }{" "}
+                              observation(s) will remain on this historical
+                              Plant.
+                            </p>
+                          )}
+                          <button
+                            type="button"
+                            disabled={
+                              reintegration.eligibility.status === "blocked"
+                            }
+                            onClick={() => {
+                              setReintegrationMutation({ status: "idle" });
+                              setReintegrationOpen(true);
+                            }}
+                          >
+                            Reintegrate into group
+                          </button>
+                        </>
+                      ) : null}
+                    </section>
+                  )}
+                {selected.kind === "group" &&
+                  selected.value.lifecycle === "active" && (
+                    <p className="field-help">
+                      To transfer only one individual, extract it as a Plant
+                      first.
+                    </p>
+                  )}
+              </div>
+            ) : (
+              <RecordPreview
+                type={selected.kind === "plant" ? "Plant" : "Plant group"}
+                title={
+                  selected.value.label ??
+                  (selected.kind === "plant"
+                    ? "Unlabelled plant"
+                    : "Unlabelled plant group")
+                }
+                secondary={
+                  <a
+                    href={`#/identities/${selected.value.botanical_identity.id}`}
+                  >
+                    {selected.value.botanical_identity.display_label}
+                  </a>
+                }
+                facts={[
+                  { label: "Lifecycle", value: lifecycleLabel(selected) },
+                  {
+                    label: "Location",
+                    value: selected.value.location ? (
+                      <a href={`#/locations/${selected.value.location.id}`}>
+                        {selected.value.location.display_path}
+                      </a>
+                    ) : (
+                      "Not recorded"
+                    ),
+                  },
+                  { label: "Origin", value: originSummary(selected) },
+                  ...(selected.kind === "group"
+                    ? [{ label: "Quantity", value: quantityLabel(selected) }]
+                    : []),
+                ]}
+                actions={
                   <>
                     {selected.kind === "group" &&
                       selected.value.lifecycle === "active" && (
                         <button
+                          ref={extractionTrigger}
                           type="button"
-                          onClick={(event) => {
-                            extractionTrigger.current = event.currentTarget;
+                          onClick={() => {
                             startExtraction(selected.value);
                           }}
                         >
@@ -2156,134 +2414,34 @@ export function PlantScreen({
                           startTransfer(selected);
                         }}
                       >
-                        {selected.kind === "plant"
-                          ? "Transfer"
-                          : "Transfer group"}
+                        Transfer
                       </button>
                     )}
+                    <button
+                      type="button"
+                      className="button--secondary"
+                      onClick={() => {
+                        setMobileDetail(true);
+                        setRecordRoute(
+                          `#/${selected.kind === "plant" ? "plants" : "plant-groups"}/${selected.value.id}`,
+                        );
+                      }}
+                    >
+                      Open details
+                    </button>
+                    <button
+                      type="button"
+                      className="button--secondary"
+                      onClick={() => {
+                        startEdit(selected);
+                      }}
+                    >
+                      Edit
+                    </button>
                   </>
                 }
-                initialTab={initialTab}
               />
-              {selected.value.originating_sowing_id && (
-                <CreationReversal
-                  key={`reversal:${recordKey(selected)}:${selected.value.updated_at}:${String(reversalRevision)}`}
-                  kind={selected.kind === "plant" ? "plant" : "plant_group"}
-                  id={selected.value.id}
-                  lifecycle={selected.value.lifecycle}
-                  revision={`${selected.value.updated_at}:${String(reversalRevision)}`}
-                  onReversed={(result) => {
-                    if ("seed_lot" in result) return;
-                    const authoritative: PlantRecord =
-                      "plant" in result
-                        ? { kind: "plant", value: result.plant }
-                        : { kind: "group", value: result.plant_group };
-                    setDetail({ status: "ready", record: authoritative });
-                    setCollection((current) =>
-                      current.status === "ready"
-                        ? {
-                            ...current,
-                            records: current.records.map((record) =>
-                              recordKey(record) === recordKey(authoritative)
-                                ? authoritative
-                                : record,
-                            ),
-                          }
-                        : current,
-                    );
-                    setReferences((current) =>
-                      current
-                        ? {
-                            ...current,
-                            sowings: current.sowings.map((sowing) =>
-                              sowing.id === result.sowing.id
-                                ? result.sowing
-                                : sowing,
-                            ),
-                          }
-                        : current,
-                    );
-                  }}
-                />
-              )}
-              {selected.kind === "group" &&
-                selected.value.lifecycle !== "active" && (
-                  <p className="field-help">
-                    Plants can only be extracted from an active group.
-                  </p>
-                )}
-              {selected.kind === "plant" &&
-                selected.value.originating_plant_group && (
-                  <section
-                    className="notice reintegration-panel"
-                    aria-labelledby="reintegration-action-title"
-                  >
-                    <h4 id="reintegration-action-title">
-                      Original Plant group
-                    </h4>
-                    <p>
-                      <a
-                        href={`#/plant-groups/${selected.value.originating_plant_group.id}`}
-                      >
-                        {selected.value.originating_plant_group.label ??
-                          selected.value.originating_plant_group
-                            .botanical_identity.display_label}
-                      </a>
-                    </p>
-                    {selected.value.lifecycle === "reintegrated" ? (
-                      <p>
-                        This Plant has been reintegrated and remains available
-                        as historical extraction evidence.
-                      </p>
-                    ) : reintegration.status === "loading" ? (
-                      <p role="status">Checking reintegration eligibility…</p>
-                    ) : reintegration.status === "error" ? (
-                      <p role="alert">
-                        Florabase could not check reintegration eligibility.
-                      </p>
-                    ) : reintegration.status === "ready" ? (
-                      <>
-                        {reintegration.eligibility.status === "blocked" && (
-                          <ul>
-                            {reintegration.eligibility.reasons.map((reason) => (
-                              <li key={reason.code}>{reason.message}</li>
-                            ))}
-                          </ul>
-                        )}
-                        {reintegration.eligibility.status ===
-                          "confirmation_required" && (
-                          <p>
-                            {
-                              reintegration.eligibility.retained_observations
-                                .length
-                            }{" "}
-                            observation(s) will remain on this historical Plant.
-                          </p>
-                        )}
-                        <button
-                          type="button"
-                          disabled={
-                            reintegration.eligibility.status === "blocked"
-                          }
-                          onClick={() => {
-                            setReintegrationMutation({ status: "idle" });
-                            setReintegrationOpen(true);
-                          }}
-                        >
-                          Reintegrate into group
-                        </button>
-                      </>
-                    ) : null}
-                  </section>
-                )}
-              {selected.kind === "group" &&
-                selected.value.lifecycle === "active" && (
-                  <p className="field-help">
-                    To transfer only one individual, extract it as a Plant
-                    first.
-                  </p>
-                )}
-            </div>
+            )
           ) : (
             <div className="selected-seed seed-detail-empty">
               <h3>Select a Plant or group</h3>
@@ -2347,8 +2505,7 @@ export function PlantScreen({
                 Florabase will restore the recorded pre-extraction state of{" "}
                 <strong>
                   {selected.value.originating_plant_group.label ??
-                    selected.value.originating_plant_group.botanical_identity
-                      .display_label}
+                    "Unlabelled plant group"}
                 </strong>{" "}
                 and add one reintegration Event to that group.
               </p>

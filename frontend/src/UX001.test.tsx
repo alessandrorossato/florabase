@@ -101,9 +101,10 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
   expect(
     await screen.findByRole("heading", { name: "Dashboard" }),
   ).toBeInTheDocument();
-  expect(await screen.findByLabelText("Collection totals")).toHaveTextContent(
-    "Active12PlantsActive3Plant groupsActive8Seed lotsActive4SowingsBotany9Botanical identitiesHistory27Events",
-  );
+  const snapshot = await screen.findByRole("region", {
+    name: "Collection snapshot",
+  });
+  expect(snapshot).toHaveTextContent("Seed lots8Sowings4Plants12Plant groups3");
   expect(screen.getByText("Strong new growth.")).toBeInTheDocument();
 
   const desktop = screen.getByRole("navigation", {
@@ -122,12 +123,12 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
       .getAllByRole("link")
       .map((item) => item.textContent),
   ).toEqual(["Home", "Seeds", "Sowings", "Plants"]);
-  const plantGroupCard = screen.getByText("Plant groups").closest("article");
-  if (!plantGroupCard) throw new Error("Plant groups summary card is missing");
-  expect(within(plantGroupCard).getByRole("link")).toHaveAttribute(
-    "href",
-    "#/plants?type=group",
-  );
+  expect(
+    within(snapshot).getByRole("link", { name: /Plant groups.*3/ }),
+  ).toHaveAttribute("href", "#/plants?type=group");
+  expect(
+    screen.getByRole("navigation", { name: "Quick actions" }),
+  ).toHaveTextContent("Add seed lot");
   await user.click(within(mobile).getByRole("button", { name: "More" }));
   expect(
     screen.getByRole("navigation", { name: "More navigation" }),
@@ -146,7 +147,16 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
   expect(
     await screen.findByRole("heading", { name: "Events" }),
   ).toBeInTheDocument();
-  expect(screen.getByText(/Events are journal history/i)).toBeInTheDocument();
+  await user.click(
+    screen.getByRole("button", {
+      name: "How Event corrections affect current state",
+    }),
+  );
+  expect(
+    screen.getByText(
+      /Editing or deleting an ordinary Event does not recompute/i,
+    ),
+  ).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Courtyard maple" })).toHaveAttribute(
     "href",
     `#/plants/${event.target.id}?tab=events`,

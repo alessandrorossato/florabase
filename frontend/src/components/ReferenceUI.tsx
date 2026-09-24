@@ -108,6 +108,38 @@ export function QuickPreview({ children }: { children: ReactNode }) {
   );
 }
 
+/** Compact record inspection shared by the operational directories. */
+export function RecordPreview({
+  title,
+  type,
+  secondary,
+  facts,
+  actions,
+}: {
+  title: string;
+  type: string;
+  secondary?: ReactNode;
+  facts: { label: string; value: ReactNode }[];
+  actions: ReactNode;
+}) {
+  return (
+    <QuickPreview>
+      <p className="record-preview__type">{type}</p>
+      <h3>{title}</h3>
+      {secondary && <p>{secondary}</p>}
+      <dl className="record-preview__facts">
+        {facts.map(({ label, value }) => (
+          <div key={label}>
+            <dt>{label}</dt>
+            <dd>{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="actions record-preview__actions">{actions}</div>
+    </QuickPreview>
+  );
+}
+
 export function OverflowMenu({
   label = "More",
   ariaLabel,

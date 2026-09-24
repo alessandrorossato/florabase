@@ -1,4 +1,10 @@
-import { cleanup, render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
@@ -295,7 +301,22 @@ function plantHandler(
   };
 }
 
+function setViewportMatches(matches: boolean) {
+  vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+    matches,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }));
+}
+
 async function openPlants() {
+  // Existing interaction cases exercise the list-to-detail mobile path.
+  setViewportMatches(true);
   const user = userEvent.setup();
   render(<App />);
   await user.click(await screen.findByRole("button", { name: "Plants" }));
@@ -949,6 +970,11 @@ test("active group extraction is focused, updates exact quantity, opens the Plan
     await screen.findByRole("button", { name: "Extract plant" }),
   );
   expect(screen.getByRole("heading", { name: "Extract plant" })).toHaveFocus();
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  await waitFor(() => {
+    expect(screen.getByRole("button", { name: "Extract plant" })).toHaveFocus();
+  });
+  await user.click(screen.getByRole("button", { name: "Extract plant" }));
   expect(screen.getByText(/last exact member/)).toBeInTheDocument();
   expect(screen.queryByLabelText("Lifecycle")).not.toBeInTheDocument();
   expect(screen.queryByLabelText("Direct origin")).not.toBeInTheDocument();
@@ -1827,4 +1853,38 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
     "could not save or refresh this Event",
   );
   expect(screen.getByRole("dialog")).toBeInTheDocument();
+});
+
+test("desktop Plant selection previews record facts without mounting Events", async () => {
+  mockApi(plantHandler([plant()], [group()]));
+  const user = await openPlants();
+  setViewportMatches(false);
+  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  const preview = await screen.findByRole("complementary", {
+    name: "Quick preview",
+  });
+  expect(
+    within(preview).getByRole("heading", { name: "Avocado #1" }),
+  ).toBeInTheDocument();
+  expect(screen.queryByRole("tab", { name: "Events" })).not.toBeInTheDocument();
+  await user.click(
+    within(preview).getByRole("button", { name: "Open details" }),
+  );
+  expect(screen.getByRole("tab", { name: "Events" })).toBeInTheDocument();
+});
+
+test("reselecting a previewed record after narrowing the viewport opens its detail", async () => {
+  mockApi(plantHandler([plant()], [group()]));
+  const user = await openPlants();
+  setViewportMatches(false);
+  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  expect(
+    await screen.findByRole("complementary", { name: "Quick preview" }),
+  ).toBeInTheDocument();
+  setViewportMatches(true);
+  await user.click(screen.getByRole("button", { name: /Avocado #1/ }));
+  expect(
+    await screen.findByRole("tab", { name: "Events" }),
+  ).toBeInTheDocument();
+  expect(screen.queryByText(/Loading .* detail/)).not.toBeInTheDocument();
 });

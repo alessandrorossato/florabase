@@ -11,6 +11,8 @@ import {
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
+import { DirectorySearch, RecordPreview } from "../components/ReferenceUI";
+import { setRecordRoute } from "../components/recordNavigation";
 import {
   Breadcrumbs,
   DetailHeader,
@@ -256,14 +258,13 @@ function Detail({
         items={[
           { label: "Sowings", href: "#/sowings" },
           {
-            label:
-              sowing.label ?? sowing.seed_lot.botanical_identity_display_label,
+            label: sowing.label ?? "Unlabelled sowing",
           },
         ]}
       />
       <DetailHeader
         eyebrow="Sowing"
-        title={sowing.label ?? sowing.seed_lot.botanical_identity_display_label}
+        title={sowing.label ?? "Unlabelled sowing"}
         secondary={
           <>
             <a href={`#/identities/${sowing.seed_lot.botanical_identity_id}`}>
@@ -574,9 +575,7 @@ function Detail({
           <PhotosSection
             target="sowing"
             targetId={sowing.id}
-            targetLabel={
-              sowing.label ?? sowing.seed_lot.botanical_identity_display_label
-            }
+            targetLabel={sowing.label ?? "Unlabelled sowing"}
           />
         </div>
       )}
@@ -608,6 +607,21 @@ export function SowingScreen({
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState(false);
   const [mobileDetail, setMobileDetail] = useState(Boolean(initialId));
+  const lastRouteId = useRef(initialId);
+  useEffect(() => {
+    if (lastRouteId.current === initialId) return;
+    lastRouteId.current = initialId;
+    const timeout = window.setTimeout(() => {
+      if (initialId && initialId !== selectedId) {
+        setDetail({ status: "loading", id: initialId });
+        setSelectedId(initialId);
+      }
+      setMobileDetail(Boolean(initialId));
+    }, 0);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [initialId, selectedId]);
   const [form, setForm] = useState<FormState>(blankForm);
   const [moreDetails, setMoreDetails] = useState(false);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
@@ -754,22 +768,34 @@ export function SowingScreen({
     setForm(formFrom(sowing));
     setMoreDetails(true);
     setEditing(true);
+    setMobileDetail(true);
     setSave({ status: "idle" });
   }
 
   function selectSowing(id: string, trigger: HTMLButtonElement) {
     if (creationExpanded) closeCreation({ returnFocus: false });
     selectedTrigger.current = trigger;
-    setDetail({ status: "loading", id });
+    if (id !== selectedId) {
+      setDetail({ status: "loading", id });
+    } else if (detail.status === "error") {
+      setDetail({ status: "loading", id });
+      setDetailAttempt((value) => value + 1);
+    }
     setSelectedId(id);
-    setMobileDetail(true);
+    const isMobile = window.matchMedia("(max-width: 48rem)").matches;
+    setMobileDetail(isMobile);
+    if (isMobile) setRecordRoute(`#/sowings/${id}`);
     setEditing(false);
     setSave({ status: "idle" });
   }
 
   function returnToList() {
+    if (creationExpanded) closeCreation({ returnFocus: false });
+    setSelectedId(null);
+    setDetail({ status: "idle" });
     setMobileDetail(false);
     setEditing(false);
+    setRecordRoute("#/sowings", true);
     window.setTimeout(() => selectedTrigger.current?.focus(), 0);
   }
 
@@ -930,7 +956,7 @@ export function SowingScreen({
         </div>
       )}
       <div
-        className={`sowing-master-detail${mobileDetail ? " is-detail-view" : ""}`}
+        className={`sowing-master-detail operational-layout${mobileDetail || editing ? " is-detail-view" : ""}`}
       >
         <section
           className="seed-master sowing-master"
@@ -938,17 +964,13 @@ export function SowingScreen({
         >
           <h3 id="sowing-list-title">Sowing collection</h3>
           <div className="seed-controls">
-            <div className="field">
-              <label htmlFor="sowing-search">Search Sowings</label>
-              <input
-                id="sowing-search"
-                type="search"
-                value={search}
-                onChange={(event) => {
-                  setSearch(event.currentTarget.value);
-                }}
-              />
-            </div>
+            <DirectorySearch
+              id="sowing-search"
+              label="Search Sowings"
+              placeholder="Search sowings, seed lots or location"
+              value={search}
+              onChange={setSearch}
+            />
             <fieldset className="lifecycle-filter">
               <legend>Show Sowings</legend>
               {(["active", "completed", "all"] as const).map((item) => (
@@ -997,6 +1019,9 @@ export function SowingScreen({
                       <small>
                         {sowing.seed_lot.botanical_identity_display_label}
                       </small>
+                    </span>
+                    <span>
+                      From {sowing.seed_lot.label ?? "Unlabelled seed lot"}
                     </span>
                     <span>{dateLabel(sowing.sowing_date)}</span>
                     <span>{quantityLabel(sowing)}</span>
@@ -1097,6 +1122,7 @@ export function SowingScreen({
                   lots remain available for historical entry.
                 </FieldHelp>
               </div>
+              <h4 className="form-group-heading">Core sowing details</h4>
               <div className="sowing-fast-fields">
                 <div className="field">
                   <label htmlFor="sowing-label">
@@ -1226,6 +1252,9 @@ export function SowingScreen({
                   id="sowing-advanced-fields"
                   className="advanced-fields sowing-advanced-fields"
                 >
+                  <h4 className="form-group-heading field--full">
+                    Optional cultivation details
+                  </h4>
                   <div className="field">
                     <label htmlFor="germinated-count">
                       Germinated count{" "}
@@ -1504,52 +1533,121 @@ export function SowingScreen({
               </button>
             </div>
           ) : selected ? (
-            <div className="selected-seed selected-sowing">
-              <CreationReversal
-                key={`reversal:${selected.id}:${selected.updated_at}`}
-                kind="sowing"
-                id={selected.id}
-                lifecycle={selected.lifecycle}
-                revision={selected.updated_at}
-                onReversed={(result) => {
-                  if (!("seed_lot" in result)) return;
-                  setDetail({ status: "ready", sowing: result.sowing });
-                  setCollection((current) =>
-                    current.status === "ready"
-                      ? {
-                          ...current,
-                          sowings: current.sowings.map((value) =>
-                            value.id === result.sowing.id
-                              ? result.sowing
-                              : value,
-                          ),
-                        }
-                      : current,
-                  );
-                  setReferences((current) =>
-                    current
-                      ? {
-                          ...current,
-                          seedLots: current.seedLots.map((value) =>
-                            value.id === result.seed_lot.id
-                              ? result.seed_lot
-                              : value,
-                          ),
-                        }
-                      : current,
-                  );
-                }}
+            mobileDetail ? (
+              <div className="selected-seed selected-sowing">
+                <Detail
+                  key={selected.updated_at}
+                  sowing={selected}
+                  headingRef={detailHeading}
+                  initialTab={initialTab}
+                  onEdit={() => {
+                    startEdit(selected);
+                  }}
+                />
+                <CreationReversal
+                  key={`reversal:${selected.id}:${selected.updated_at}`}
+                  kind="sowing"
+                  id={selected.id}
+                  lifecycle={selected.lifecycle}
+                  revision={selected.updated_at}
+                  onReversed={(result) => {
+                    if (!("seed_lot" in result)) return;
+                    setDetail({ status: "ready", sowing: result.sowing });
+                    setCollection((current) =>
+                      current.status === "ready"
+                        ? {
+                            ...current,
+                            sowings: current.sowings.map((value) =>
+                              value.id === result.sowing.id
+                                ? result.sowing
+                                : value,
+                            ),
+                          }
+                        : current,
+                    );
+                    setReferences((current) =>
+                      current
+                        ? {
+                            ...current,
+                            seedLots: current.seedLots.map((value) =>
+                              value.id === result.seed_lot.id
+                                ? result.seed_lot
+                                : value,
+                            ),
+                          }
+                        : current,
+                    );
+                  }}
+                />
+              </div>
+            ) : (
+              <RecordPreview
+                type="Sowing"
+                title={selected.label ?? "Unlabelled sowing"}
+                secondary={
+                  <>
+                    <a
+                      href={`#/identities/${selected.seed_lot.botanical_identity_id}`}
+                    >
+                      {selected.seed_lot.botanical_identity_display_label}
+                    </a>{" "}
+                    · From{" "}
+                    <a href={`#/seeds/${selected.seed_lot.id}`}>
+                      {selected.seed_lot.label ?? "Unlabelled seed lot"}
+                    </a>
+                  </>
+                }
+                facts={[
+                  {
+                    label: "Lifecycle",
+                    value: lifecycleLabels[selected.lifecycle],
+                  },
+                  { label: "Sown", value: dateLabel(selected.sowing_date) },
+                  { label: "Result", value: quantityLabel(selected) },
+                  {
+                    label: "Location",
+                    value: selected.location ? (
+                      <a href={`#/locations/${selected.location.id}`}>
+                        {selected.location.display_path}
+                      </a>
+                    ) : (
+                      "Not recorded"
+                    ),
+                  },
+                ]}
+                actions={
+                  <>
+                    {selected.lifecycle !== "reversed" && (
+                      <a
+                        className="button-link"
+                        href={`#/plants?action=from-sowing&sowing=${selected.id}&kind=plant`}
+                      >
+                        Create Plant
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      className="button--secondary"
+                      onClick={() => {
+                        setMobileDetail(true);
+                        setRecordRoute(`#/sowings/${selected.id}`);
+                      }}
+                    >
+                      Open details
+                    </button>
+                    <button
+                      type="button"
+                      className="button--secondary"
+                      onClick={() => {
+                        startEdit(selected);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </>
+                }
               />
-              <Detail
-                key={selected.updated_at}
-                sowing={selected}
-                headingRef={detailHeading}
-                initialTab={initialTab}
-                onEdit={() => {
-                  startEdit(selected);
-                }}
-              />
-            </div>
+            )
           ) : (
             <div className="selected-seed seed-detail-empty">
               <h3>Select a Sowing</h3>

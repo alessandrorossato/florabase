@@ -817,6 +817,26 @@
       "status": "implemented"
     },
     {
+      "id": "UX-006",
+      "category": "frontend",
+      "description": "Propagate the refreshed visual system to collection workflows, Events and Dashboard",
+      "acceptance_criteria": [
+        "SeedLot, Sowing and Plant or PlantGroup surfaces use shared directory, compact inspection, read-first detail and explicit task patterns while preserving quantity, lifecycle, source, provenance and explicit-lineage semantics",
+        "Propagation, transfer, extraction, reintegration, reversal, Events, Photos and Lineage retain their authoritative domain boundaries while presenting clearer action hierarchy, history and responsive workflows",
+        "Dashboard and collection-wide Events use the refreshed visual vocabulary as compact collection-summary and chronological-history surfaces with accessible desktop and mobile behavior, without inventing reminders, care rules, primary record photos or new domain semantics"
+      ],
+      "dependencies": [
+        "UX-005",
+        "UX-003",
+        "PROPAGATION-003",
+        "PLANT-006",
+        "EVENT-002",
+        "ATTACHMENT-003"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "LOCATION-002",
       "category": "location",
       "description": "Add a scope-aware hierarchical Location browsing experience",

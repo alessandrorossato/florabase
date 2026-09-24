@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { CollectionCard } from "../components/CollectionUI";
+
 import { EventFeed } from "../events/EventFeed";
 import { getDashboard, type DashboardResponse } from "./api";
 
@@ -48,11 +48,16 @@ export function DashboardScreen() {
       aria-labelledby="dashboard-title"
       className="workspace workspace--dashboard"
     >
-      <div className="workspace-intro">
-        <p className="eyebrow">Collection overview</p>
-        <h2 id="dashboard-title">Dashboard</h2>
-        <p>A concise view of what is active now and what happened recently.</p>
-      </div>
+      <header className="page-header">
+        <div>
+          <p className="eyebrow">Collection overview</p>
+          <h2 id="dashboard-title">Dashboard</h2>
+          <p>What is in your collection, and what happened recently.</p>
+        </div>
+        <a className="button-link" href="#/seeds?action=create">
+          Add seed lot
+        </a>
+      </header>
       {state.status === "loading" && (
         <p role="status">Loading collection overview…</p>
       )}
@@ -71,50 +76,46 @@ export function DashboardScreen() {
       )}
       {state.status === "ready" && (
         <>
-          <div className="summary-grid" aria-label="Collection totals">
-            <CollectionCard
-              eyebrow="Active"
-              href="#/plants"
-              title={String(state.value.counts.active_plants)}
-            >
-              <p>Plants</p>
-            </CollectionCard>
-            <CollectionCard
-              eyebrow="Active"
-              href="#/plants?type=group"
-              title={String(state.value.counts.active_plant_groups)}
-            >
-              <p>Plant groups</p>
-            </CollectionCard>
-            <CollectionCard
-              eyebrow="Active"
-              href="#/seeds"
-              title={String(state.value.counts.active_seed_lots)}
-            >
-              <p>Seed lots</p>
-            </CollectionCard>
-            <CollectionCard
-              eyebrow="Active"
-              href="#/sowings"
-              title={String(state.value.counts.active_sowings)}
-            >
-              <p>Sowings</p>
-            </CollectionCard>
-            <CollectionCard
-              eyebrow="Botany"
-              href="#/identities"
-              title={String(state.value.counts.botanical_identities)}
-            >
-              <p>Botanical identities</p>
-            </CollectionCard>
-            <CollectionCard
-              eyebrow="History"
-              href="#/events"
-              title={String(state.value.counts.events)}
-            >
-              <p>Events</p>
-            </CollectionCard>
-          </div>
+          <section
+            aria-labelledby="collection-snapshot-title"
+            className="dashboard-snapshot"
+          >
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Current holdings</p>
+                <h3 id="collection-snapshot-title">Collection snapshot</h3>
+              </div>
+            </div>
+            <div className="dashboard-stat-strip">
+              {[
+                {
+                  label: "Seed lots",
+                  value: state.value.counts.active_seed_lots,
+                  href: "#/seeds",
+                },
+                {
+                  label: "Sowings",
+                  value: state.value.counts.active_sowings,
+                  href: "#/sowings",
+                },
+                {
+                  label: "Plants",
+                  value: state.value.counts.active_plants,
+                  href: "#/plants?type=plant",
+                },
+                {
+                  label: "Plant groups",
+                  value: state.value.counts.active_plant_groups,
+                  href: "#/plants?type=group",
+                },
+              ].map((item) => (
+                <a href={item.href} key={item.label}>
+                  <span>{item.label}</span>
+                  <strong>{item.value}</strong>
+                </a>
+              ))}
+            </div>
+          </section>
           <section
             aria-labelledby="recent-activity-title"
             className="dashboard-activity"
@@ -134,6 +135,12 @@ export function DashboardScreen() {
               </div>
             )}
           </section>
+          <nav aria-label="Quick actions" className="dashboard-quick-actions">
+            <h3>Quick actions</h3>
+            <a href="#/seeds?action=create">Add seed lot</a>
+            <a href="#/sowings">Browse Sowings</a>
+            <a href="#/plants">Browse Plants</a>
+          </nav>
         </>
       )}
     </section>

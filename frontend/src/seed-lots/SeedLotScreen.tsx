@@ -10,6 +10,8 @@ import {
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
+import { DirectorySearch, RecordPreview } from "../components/ReferenceUI";
+import { setRecordRoute } from "../components/recordNavigation";
 import {
   Breadcrumbs,
   CollectionCard,
@@ -336,12 +338,12 @@ function Detail({
             label: lot.botanical_identity.display_label,
             href: `#/identities/${lot.botanical_identity.id}?tab=seeds`,
           },
-          { label: lot.label ?? lot.botanical_identity.display_label },
+          { label: lot.label ?? "Unlabelled seed lot" },
         ]}
       />
       <DetailHeader
         eyebrow="Seed lot"
-        title={lot.label ?? lot.botanical_identity.display_label}
+        title={lot.label ?? "Unlabelled seed lot"}
         secondary={
           <a href={`#/identities/${lot.botanical_identity.id}`}>
             {lot.botanical_identity.display_label}
@@ -533,7 +535,7 @@ function Detail({
           <PhotosSection
             target="seed_lot"
             targetId={lot.id}
-            targetLabel={lot.label ?? lot.botanical_identity.display_label}
+            targetLabel={lot.label ?? "Unlabelled seed lot"}
           />
         </div>
       )}
@@ -564,6 +566,19 @@ export function SeedLotScreen({
     initialId ?? null,
   );
   const [editing, setEditing] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(Boolean(initialId));
+  const lastRouteId = useRef(initialId);
+  useEffect(() => {
+    if (lastRouteId.current === initialId) return;
+    lastRouteId.current = initialId;
+    const timeout = window.setTimeout(() => {
+      if (initialId) setSelectedId(initialId);
+      setDetailOpen(Boolean(initialId));
+    }, 0);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [initialId]);
   const [form, setForm] = useState<FormState>(blankForm);
   const [moreDetails, setMoreDetails] = useState(false);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
@@ -591,6 +606,7 @@ export function SeedLotScreen({
     contextualCreationStarted.current = true;
     setSelectedId(null);
     setEditing(true);
+    setDetailOpen(true);
     setForm({
       ...blankForm(),
       botanicalIdentityId: initialIdentityId ?? "",
@@ -699,6 +715,7 @@ export function SeedLotScreen({
   function startCreate() {
     setSelectedId(null);
     setEditing(true);
+    setDetailOpen(true);
     setForm(blankForm());
     setMoreDetails(false);
     setSave({ status: "idle" });
@@ -708,6 +725,7 @@ export function SeedLotScreen({
     if (creationExpanded) closeCreation({ returnFocus: false });
     setSelectedId(lot.id);
     setEditing(true);
+    setDetailOpen(true);
     setForm(formFrom(lot));
     setMoreDetails(true);
     setSave({ status: "idle" });
@@ -776,6 +794,7 @@ export function SeedLotScreen({
         : await createSeedLot(payload, csrfToken);
       await refreshLots(lot);
       setEditing(false);
+      setDetailOpen(true);
       if (wasCreating) closeCreation();
       setSave({
         status: "success",
@@ -783,7 +802,7 @@ export function SeedLotScreen({
           ? "Seed lot changes were saved."
           : "Seed lot was added to the collection.",
       });
-      if (wasCreating) window.location.hash = `/seeds/${lot.id}`;
+      if (wasCreating) setRecordRoute(`#/seeds/${lot.id}`);
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();
@@ -962,21 +981,19 @@ export function SeedLotScreen({
           + New seed lot
         </button>
       </div>
-      <div className="seed-master-detail">
+      <div
+        className={`seed-master-detail operational-layout${detailOpen || editing ? " is-detail-view" : ""}`}
+      >
         <section className="seed-master" aria-labelledby="seed-inventory-title">
           <h3 id="seed-inventory-title">Seed lot inventory</h3>
           <div className="seed-controls">
-            <div className="field">
-              <label htmlFor="seed-search">Search seed inventory</label>
-              <input
-                id="seed-search"
-                type="search"
-                value={search}
-                onChange={(event) => {
-                  setSearch(event.currentTarget.value);
-                }}
-              />
-            </div>
+            <DirectorySearch
+              id="seed-search"
+              label="Search seed inventory"
+              placeholder="Search lots, identity or location"
+              value={search}
+              onChange={setSearch}
+            />
             <fieldset className="lifecycle-filter">
               <legend>Show lots</legend>
               {(["active", "history", "all"] as const).map((item) => (
@@ -1025,6 +1042,10 @@ export function SeedLotScreen({
                       if (creationExpanded)
                         closeCreation({ returnFocus: false });
                       setSelectedId(lot.id);
+                      const isMobile =
+                        window.matchMedia("(max-width: 48rem)").matches;
+                      setDetailOpen(isMobile);
+                      if (isMobile) setRecordRoute(`#/seeds/${lot.id}`);
                       setEditing(false);
                       setSave({ status: "idle" });
                     }}
@@ -1063,6 +1084,18 @@ export function SeedLotScreen({
               {save.message}
             </div>
           )}
+          {detailOpen && !editing && (
+            <button
+              className="operational-back button--secondary"
+              type="button"
+              onClick={() => {
+                setDetailOpen(false);
+                setRecordRoute("#/seeds", true);
+              }}
+            >
+              ← Back to seed lots
+            </button>
+          )}
           {editing ? (
             <form
               className="seed-form"
@@ -1090,12 +1123,14 @@ export function SeedLotScreen({
                       setMoreDetails(false);
                       setSave({ status: "idle" });
                       closeCreation();
+                      setDetailOpen(false);
                     }
                   }}
                 >
                   Cancel
                 </button>
               </div>
+              <h4 className="form-group-heading">Identity</h4>
               <ReferencePicker
                 label="Botanical identity"
                 help="A shared botanical identity keeps the botanical name consistent across records; it does not establish lineage."
@@ -1144,6 +1179,7 @@ export function SeedLotScreen({
                     }}
                   />
                 </div>
+                <h4 className="form-group-heading field--full">Material</h4>
                 <fieldset
                   aria-describedby="seed-quantity-help"
                   className="quantity-field"
@@ -1204,6 +1240,9 @@ export function SeedLotScreen({
                     guessing.
                   </FieldHelp>
                 </fieldset>
+                <h4 className="form-group-heading field--full">
+                  Acquisition and source
+                </h4>
                 <div className="field">
                   <label htmlFor="source-kind">Source</label>
                   <select
@@ -1265,6 +1304,7 @@ export function SeedLotScreen({
                   }}
                   createLabel="Create supplier"
                 />
+                <h4 className="form-group-heading field--full">Storage</h4>
                 <ReferencePicker
                   label="Storage location (optional)"
                   help="Where this SeedLot is currently kept in your collection, not where it originated."
@@ -1299,6 +1339,9 @@ export function SeedLotScreen({
               </button>
               {moreDetails && (
                 <div className="advanced-fields">
+                  <h4 className="form-group-heading field--full">
+                    Origin and dates
+                  </h4>
                   <ReferencePicker
                     label="Material provenance (optional)"
                     help="Where the biological material originated, not its Supplier or current storage location."
@@ -1401,6 +1444,7 @@ export function SeedLotScreen({
                       lots remain editable.
                     </small>
                   </div>
+                  <h4 className="form-group-heading field--full">Notes</h4>
                   <div className="field">
                     <label htmlFor="seed-notes">
                       Notes <span className="optional">(optional)</span>
@@ -1444,15 +1488,85 @@ export function SeedLotScreen({
               </button>
             </form>
           ) : selected ? (
-            <div className="selected-seed">
-              <Detail
-                lot={selected}
-                initialTab={initialTab}
-                onEdit={() => {
-                  startEdit(selected);
-                }}
+            detailOpen ? (
+              <div className="selected-seed">
+                <Detail
+                  lot={selected}
+                  initialTab={initialTab}
+                  onEdit={() => {
+                    startEdit(selected);
+                  }}
+                />
+              </div>
+            ) : (
+              <RecordPreview
+                type="Seed lot"
+                title={selected.label ?? "Unlabelled seed lot"}
+                secondary={
+                  <a href={`#/identities/${selected.botanical_identity.id}`}>
+                    {selected.botanical_identity.display_label}
+                  </a>
+                }
+                facts={[
+                  {
+                    label: "Lifecycle",
+                    value: lifecycleLabels[selected.lifecycle],
+                  },
+                  { label: "Quantity", value: quantityLabel(selected) },
+                  {
+                    label: "Storage",
+                    value: selected.location ? (
+                      <a href={`#/locations/${selected.location.id}`}>
+                        {selected.location.display_path}
+                      </a>
+                    ) : (
+                      "Not recorded"
+                    ),
+                  },
+                  {
+                    label: "Supplier",
+                    value: selected.supplier ? (
+                      <a href={`#/suppliers/${selected.supplier.id}`}>
+                        {selected.supplier.name}
+                      </a>
+                    ) : (
+                      "Not recorded"
+                    ),
+                  },
+                ]}
+                actions={
+                  <>
+                    {selected.lifecycle === "active" && (
+                      <a
+                        className="button-link"
+                        href={`#/sowings?action=start&seedLot=${selected.id}`}
+                      >
+                        Start sowing
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      className="button--secondary"
+                      onClick={() => {
+                        setDetailOpen(true);
+                        setRecordRoute(`#/seeds/${selected.id}`);
+                      }}
+                    >
+                      Open details
+                    </button>
+                    <button
+                      type="button"
+                      className="button--secondary"
+                      onClick={() => {
+                        startEdit(selected);
+                      }}
+                    >
+                      Edit
+                    </button>
+                  </>
+                }
               />
-            </div>
+            )
           ) : (
             <div className="empty-state seed-detail-empty">
               <h3>Select a seed lot</h3>

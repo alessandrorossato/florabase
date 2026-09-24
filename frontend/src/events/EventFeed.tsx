@@ -41,7 +41,10 @@ export function EventFeed({
       {events.map((event) => {
         const type = event.target.type === "plant" ? "Plant" : "Plant group";
         const name =
-          event.target.label ?? event.target.botanical_identity.display_label;
+          event.target.label ??
+          (event.target.type === "plant"
+            ? "Unlabelled plant"
+            : "Unlabelled plant group");
         const href = `#/${event.target.type === "plant" ? "plants" : "plant-groups"}/${event.target.id}?tab=events`;
         return (
           <li key={event.id}>
@@ -70,8 +73,7 @@ export function EventFeed({
                 <p>
                   1 individual extracted →{" "}
                   <a href={`#/plants/${event.resulting_plant.id}`}>
-                    {event.resulting_plant.label ??
-                      event.resulting_plant.botanical_identity.display_label}
+                    {event.resulting_plant.label ?? "Unlabelled plant"}
                   </a>
                 </p>
               )}
@@ -79,8 +81,7 @@ export function EventFeed({
                 <p>
                   Plant returned to this group →{" "}
                   <a href={`#/plants/${event.resulting_plant.id}`}>
-                    {event.resulting_plant.label ??
-                      event.resulting_plant.botanical_identity.display_label}
+                    {event.resulting_plant.label ?? "Unlabelled plant"}
                   </a>
                 </p>
               )}
