@@ -4,6 +4,91 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-24 — IMPORT-001 independent final review
+
+- Independently reviewed the import contract, signed preview/apply flow, ordinary domain-service
+  writes, CSV safety, frontend states, and feature graph. Added database-independent coverage for
+  remaining format, reference-choice, export, and API token cases. No implementation defects were
+  found; IMPORT-001 remains `implemented` pending delivery.
+- `make feature-verify` passed: 393 backend unit tests at 90.41% coverage, all 337 PostgreSQL
+  integration tests, 185 frontend tests, generated API drift, production builds, migration checks
+  (no revision added), and the feature verification receipt. The final review reruns this gate on
+  the complete tree before the local commit.
+
+## 2026-09-24 — IMPORT-001 visual and information hierarchy correction
+
+- Made Import the dominant desktop task with a compact secondary Export panel, a four-step
+  Template → Upload → Preview → Import indicator, a grouped template/example/guide tool set, and
+  clearer record-type, file, and validation controls. The recommended import order remains visible
+  as supporting information. No CSV, API, domain, or preview/apply semantics changed.
+- Moved the field guide below the top Import/Export row. A semantic, scroll-contained table keeps
+  every field's meaning, requirement, accepted format, example, and notes scannable on wider
+  screens; compact separator rows show the same information on mobile. Preview now uses quieter
+  filters and row dividers, with Supplier changes compared in Field / Existing / CSV columns.
+- Browser fixture review at 1440px, 1024px, and 390x844 covered the initial workspace, Supplier
+  guide and update choice, long Seed lot guide, valid Seed lot preview, and invalid Supplier preview.
+  No whole-page horizontal overflow appeared. The fixture mocked API responses; prior PostgreSQL
+  integration checks covered actual backend behavior. Focused frontend component tests, Prettier,
+  ESLint, strict TypeScript, production build, and `git diff --check` passed. No backend checks or
+  `make feature-verify` ran in this presentation-only pass.
+
+## 2026-09-24 — IMPORT-001 operator-UAT corrections
+
+- Removed `record_ref` from all six normal import templates. Advanced CSVs may still supply an
+  existing UUID explicitly, and exports retain UUID relationships. Preview now shows exact existing
+  BotanicalIdentity, Supplier, and Location candidates with explicit Use existing, Update existing
+  (current Supplier only), or Create separate choices where the domain permits them. Ambiguous
+  relationship names and paths show actual candidate choices. A same-tuple BotanicalIdentity cannot
+  be created separately; SeedLot, Plant, and PlantGroup imports remain create-only.
+- Supplier Update existing shows a field-level diff and uses the ordinary update service. Blank CSV
+  cells retain existing values. Preview stays read-only; signed choices bind to the reviewed bytes,
+  session, candidate state, and confirmation time. Apply revalidates, locks Supplier updates, and
+  rolls the entire file back on a later failure or stale choice.
+- Added shared narrow enum/whitespace normalization with canonical values shown in Preview, clearer
+  invalid-value messages, six downloadable valid examples, and a responsive in-app field guide.
+  Template headers, examples, and field descriptions come from the same backend CSV contract.
+  Updated `docs/import-export.md`; no schema or migration changed. The pre-0.1.0 roadmap selection
+  remains unchanged.
+- Browser review against a disposable fixture using realistic CSV files covered a new and existing
+  identity, a new and existing Supplier, `Nursery` normalization, an invalid Supplier kind, a
+  Location, and a Seed lot with readable relationships. At 1440px, 1024px, and 390x844 there was no
+  whole-page horizontal overflow. The review corrected the cramped 1024px card layout and radio
+  controls that stretched away from their labels. The guide and choice controls remained readable
+  on mobile; the example link was visible for every selected type. The fixture mocked API responses;
+  the separate PostgreSQL integration tests exercised actual backend Preview and Apply behavior.
+- Focused checks: 17 backend unit tests, 13 PostgreSQL integration tests, 3 frontend component
+  tests, Ruff formatting/lint, mypy, Prettier/ESLint/TypeScript, generated API drift, production
+  frontend and backend image builds, feature graph, and `git diff --check` passed. The canonical
+  `make feature-verify` gate remains with the independent final reviewer.
+
+## 2026-09-24 — IMPORT-001 implemented for operator visual review
+
+- Added separate bounded CSV imports for BotanicalIdentity, Supplier, Location, SeedLot, direct-origin
+  Plant, and direct-origin PlantGroup. Exact headers, UTF-8/BOM handling, 2 MiB/2,000-row limits,
+  schema and reference validation, row-level outcomes, and in-file Location parent keys are
+  documented in `docs/import-export.md`. Preview only reads domain records. A 15-minute,
+  session-bound confirmation token binds apply to the exact reviewed bytes; apply revalidates and
+  commits one file atomically through existing create services. Existing collection records are not
+  merged or silently skipped.
+- Added authenticated, deterministic CSV export for these types with UUID relationships, readable
+  companion labels/paths, partial dates, quantity certainty, lifecycle, and spreadsheet formula
+  protection. Export is neither backup nor full-fidelity transfer. Sowing, sowing-origin descendants,
+  Events, operation receipts, photos, and direct lineage import remain outside this contract; no
+  historical operation receipts are fabricated. No schema or migration changed.
+- Added one Import / Export workspace with type selection, template downloads, format help, file
+  validation, filtered row-level preview, explicit confirmation, and result/retry states. A
+  disposable browser fixture showed the preview and unresolved/invalid rows at 1440px, 1024px, and
+  390×844 with no page horizontal overflow. This was UI layout review against a fixture; operator
+  UAT on real collection data and the independent canonical gate remain outstanding.
+- Recorded the operator's pre-0.1.0 selection of IMPORT-001, SEARCH-001, GERMINATION-001, LABEL-001,
+  and planned ATTACHMENT-004. PWA-001, LINEAGE-003, ORDER-001, and DASHBOARD-001 remain post-0.1.0
+  by default. IMPORT-001 is `implemented`, not `verified`; ATTACHMENT-004 is `planned` and not built.
+- Focused checks passed: 10 backend unit tests, 7 PostgreSQL integration tests, 2 frontend Vitest
+  flow, backend Ruff formatting/lint and mypy, frontend Prettier/lint/typecheck and production
+  build, generated API drift, feature graph (81 valid features), documentation formatting, and
+  `git diff --check`. The existing Vite chunk-size advisory remains. `make feature-verify` was
+  intentionally reserved for independent final review after operator UAT.
+
 ## 2026-09-24 — approved 0.1.0 release boundary and resource phase recorded for review
 
 - Added planned P0 `PERF-001` with dependencies on UX-006 and MAP-002. It requires a reproducible

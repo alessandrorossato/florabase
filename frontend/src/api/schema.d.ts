@@ -527,6 +527,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/exports/{kind}.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Export Records */
+        get: operations["exportCollectionCsv"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/geographic-places": {
         parameters: {
             query?: never;
@@ -609,6 +626,91 @@ export interface paths {
         get: operations["getHealth"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports/examples/{kind}.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Example */
+        get: operations["downloadCsvExample"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports/formats/{kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Import Format */
+        get: operations["getCsvImportFormat"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports/templates/{kind}.csv": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download Template */
+        get: operations["downloadCsvTemplate"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports/{kind}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply Import */
+        post: operations["applyCsvImport"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/imports/{kind}/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Import */
+        post: operations["previewCsvImport"];
         delete?: never;
         options?: never;
         head?: never;
@@ -1894,6 +1996,92 @@ export interface components {
             seed_lots: number;
             /** Sowings */
             sowings: number;
+        };
+        /** ImportDecisionOption */
+        ImportDecisionOption: {
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "use_existing" | "update_existing" | "create_separate" | "choose_reference";
+            /** Candidate Id */
+            candidate_id: string;
+            /** Changes */
+            changes: {
+                [key: string]: string;
+            }[];
+            /** Details */
+            details: string;
+            /** Key */
+            key: string;
+            /** Label */
+            label: string;
+            /** Token */
+            token: string;
+        };
+        /** ImportFieldGuide */
+        ImportFieldGuide: {
+            /** Accepted */
+            accepted: string;
+            /** Example */
+            example: string;
+            /** Field */
+            field: string;
+            /** Meaning */
+            meaning: string;
+            /** Notes */
+            notes: string;
+            /** Required */
+            required: boolean;
+        };
+        /** ImportFormatResponse */
+        ImportFormatResponse: {
+            /** Fields */
+            fields: components["schemas"]["ImportFieldGuide"][];
+        };
+        /** ImportPreviewResponse */
+        ImportPreviewResponse: {
+            /** Already Exists */
+            already_exists: number;
+            /** Confirmation Token */
+            confirmation_token: string;
+            /** Needs Attention */
+            needs_attention: number;
+            /** Ready */
+            ready: number;
+            /** Rows */
+            rows: components["schemas"]["ImportPreviewRow"][];
+        };
+        /** ImportPreviewRow */
+        ImportPreviewRow: {
+            /** Hard Blocker */
+            hard_blocker: boolean;
+            /** Messages */
+            messages: string[];
+            /** Normalized */
+            normalized: string[];
+            /** Options */
+            options: components["schemas"]["ImportDecisionOption"][];
+            /**
+             * Outcome
+             * @enum {string}
+             */
+            outcome: "ready" | "already_exists" | "needs_choice" | "invalid" | "unresolved_reference" | "ambiguous_reference" | "conflict";
+            /** Record */
+            record: string;
+            /** References */
+            references: string[];
+            /** Row Number */
+            row_number: number;
+        };
+        /** ImportResultResponse */
+        ImportResultResponse: {
+            /** Already Exists */
+            already_exists: number;
+            /** Created */
+            created: number;
+            /** Updated */
+            updated: number;
         };
         /** LineageResponse */
         LineageResponse: {
@@ -5200,6 +5388,35 @@ export interface operations {
             };
         };
     };
+    exportCollectionCsv: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "botanical-identities" | "suppliers" | "locations" | "seed-lots" | "plants" | "plant-groups";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     listGeographicPlaces: {
         parameters: {
             query?: never;
@@ -5436,6 +5653,177 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    downloadCsvExample: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "botanical-identities" | "suppliers" | "locations" | "seed-lots" | "plants" | "plant-groups";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getCsvImportFormat: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "botanical-identities" | "suppliers" | "locations" | "seed-lots" | "plants" | "plant-groups";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportFormatResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    downloadCsvTemplate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "botanical-identities" | "suppliers" | "locations" | "seed-lots" | "plants" | "plant-groups";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    applyCsvImport: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-Import-Confirmation"?: string | null;
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                kind: "botanical-identities" | "suppliers" | "locations" | "seed-lots" | "plants" | "plant-groups";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    /** Csv Base64 */
+                    csv_base64: string;
+                    /** Decisions */
+                    decisions: {
+                        [key: string]: {
+                            [key: string]: string;
+                        };
+                    };
+                };
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResultResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    previewCsvImport: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "botanical-identities" | "suppliers" | "locations" | "seed-lots" | "plants" | "plant-groups";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "text/csv": string;
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportPreviewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

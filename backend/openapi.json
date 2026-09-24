@@ -1754,6 +1754,243 @@
         "title": "IdentityCollectionCounts",
         "type": "object"
       },
+      "ImportDecisionOption": {
+        "properties": {
+          "action": {
+            "enum": [
+              "use_existing",
+              "update_existing",
+              "create_separate",
+              "choose_reference"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "candidate_id": {
+            "title": "Candidate Id",
+            "type": "string"
+          },
+          "changes": {
+            "items": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "type": "object"
+            },
+            "title": "Changes",
+            "type": "array"
+          },
+          "details": {
+            "title": "Details",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "token": {
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "action",
+          "candidate_id",
+          "label",
+          "details",
+          "changes",
+          "token"
+        ],
+        "title": "ImportDecisionOption",
+        "type": "object"
+      },
+      "ImportFieldGuide": {
+        "properties": {
+          "accepted": {
+            "title": "Accepted",
+            "type": "string"
+          },
+          "example": {
+            "title": "Example",
+            "type": "string"
+          },
+          "field": {
+            "title": "Field",
+            "type": "string"
+          },
+          "meaning": {
+            "title": "Meaning",
+            "type": "string"
+          },
+          "notes": {
+            "title": "Notes",
+            "type": "string"
+          },
+          "required": {
+            "title": "Required",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "field",
+          "meaning",
+          "required",
+          "accepted",
+          "example",
+          "notes"
+        ],
+        "title": "ImportFieldGuide",
+        "type": "object"
+      },
+      "ImportFormatResponse": {
+        "properties": {
+          "fields": {
+            "items": {
+              "$ref": "#/components/schemas/ImportFieldGuide"
+            },
+            "title": "Fields",
+            "type": "array"
+          }
+        },
+        "required": [
+          "fields"
+        ],
+        "title": "ImportFormatResponse",
+        "type": "object"
+      },
+      "ImportPreviewResponse": {
+        "properties": {
+          "already_exists": {
+            "title": "Already Exists",
+            "type": "integer"
+          },
+          "confirmation_token": {
+            "title": "Confirmation Token",
+            "type": "string"
+          },
+          "needs_attention": {
+            "title": "Needs Attention",
+            "type": "integer"
+          },
+          "ready": {
+            "title": "Ready",
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/ImportPreviewRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "rows",
+          "ready",
+          "already_exists",
+          "needs_attention",
+          "confirmation_token"
+        ],
+        "title": "ImportPreviewResponse",
+        "type": "object"
+      },
+      "ImportPreviewRow": {
+        "properties": {
+          "hard_blocker": {
+            "title": "Hard Blocker",
+            "type": "boolean"
+          },
+          "messages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "normalized": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Normalized",
+            "type": "array"
+          },
+          "options": {
+            "items": {
+              "$ref": "#/components/schemas/ImportDecisionOption"
+            },
+            "title": "Options",
+            "type": "array"
+          },
+          "outcome": {
+            "enum": [
+              "ready",
+              "already_exists",
+              "needs_choice",
+              "invalid",
+              "unresolved_reference",
+              "ambiguous_reference",
+              "conflict"
+            ],
+            "title": "Outcome",
+            "type": "string"
+          },
+          "record": {
+            "title": "Record",
+            "type": "string"
+          },
+          "references": {
+            "items": {
+              "type": "string"
+            },
+            "title": "References",
+            "type": "array"
+          },
+          "row_number": {
+            "title": "Row Number",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "row_number",
+          "record",
+          "outcome",
+          "messages",
+          "references",
+          "normalized",
+          "options",
+          "hard_blocker"
+        ],
+        "title": "ImportPreviewRow",
+        "type": "object"
+      },
+      "ImportResultResponse": {
+        "properties": {
+          "already_exists": {
+            "title": "Already Exists",
+            "type": "integer"
+          },
+          "created": {
+            "title": "Created",
+            "type": "integer"
+          },
+          "updated": {
+            "title": "Updated",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "created",
+          "already_exists",
+          "updated"
+        ],
+        "title": "ImportResultResponse",
+        "type": "object"
+      },
       "LineageResponse": {
         "properties": {
           "ancestors": {
@@ -10486,6 +10723,49 @@
         ]
       }
     },
+    "/api/v1/exports/{kind}.csv": {
+      "get": {
+        "operationId": "exportCollectionCsv",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "botanical-identities",
+                "suppliers",
+                "locations",
+                "seed-lots",
+                "plants",
+                "plant-groups"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Export Records",
+        "tags": [
+          "import-export"
+        ]
+      }
+    },
     "/api/v1/geographic-places": {
       "get": {
         "operationId": "listGeographicPlaces",
@@ -10864,6 +11144,316 @@
         "summary": "Health",
         "tags": [
           "system"
+        ]
+      }
+    },
+    "/api/v1/imports/examples/{kind}.csv": {
+      "get": {
+        "operationId": "downloadCsvExample",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "botanical-identities",
+                "suppliers",
+                "locations",
+                "seed-lots",
+                "plants",
+                "plant-groups"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download Example",
+        "tags": [
+          "import-export"
+        ]
+      }
+    },
+    "/api/v1/imports/formats/{kind}": {
+      "get": {
+        "operationId": "getCsvImportFormat",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "botanical-identities",
+                "suppliers",
+                "locations",
+                "seed-lots",
+                "plants",
+                "plant-groups"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportFormatResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Import Format",
+        "tags": [
+          "import-export"
+        ]
+      }
+    },
+    "/api/v1/imports/templates/{kind}.csv": {
+      "get": {
+        "operationId": "downloadCsvTemplate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "botanical-identities",
+                "suppliers",
+                "locations",
+                "seed-lots",
+                "plants",
+                "plant-groups"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download Template",
+        "tags": [
+          "import-export"
+        ]
+      }
+    },
+    "/api/v1/imports/{kind}/apply": {
+      "post": {
+        "operationId": "applyCsvImport",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "botanical-identities",
+                "suppliers",
+                "locations",
+                "seed-lots",
+                "plants",
+                "plant-groups"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-Import-Confirmation",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Import-Confirmation"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "properties": {
+                  "csv_base64": {
+                    "title": "Csv Base64",
+                    "type": "string"
+                  },
+                  "decisions": {
+                    "additionalProperties": {
+                      "additionalProperties": {
+                        "type": "string"
+                      },
+                      "type": "object"
+                    },
+                    "title": "Decisions",
+                    "type": "object"
+                  }
+                },
+                "required": [
+                  "csv_base64",
+                  "decisions"
+                ],
+                "title": "ImportApplyEnvelope",
+                "type": "object"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResultResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apply Import",
+        "tags": [
+          "import-export"
+        ]
+      }
+    },
+    "/api/v1/imports/{kind}/preview": {
+      "post": {
+        "operationId": "previewCsvImport",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "enum": [
+                "botanical-identities",
+                "suppliers",
+                "locations",
+                "seed-lots",
+                "plants",
+                "plant-groups"
+              ],
+              "title": "Kind",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "text/csv": {
+              "schema": {
+                "format": "binary",
+                "type": "string"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportPreviewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview Import",
+        "tags": [
+          "import-export"
         ]
       }
     },

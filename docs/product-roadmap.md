@@ -88,12 +88,18 @@ Its contract covers:
 This planning increment defines the contracts only. Resource measurement and optimization belong to
 `PERF-001`; release tooling, drills, documentation rewrite, and hardening belong to `RELEASE-001`.
 
-### Optional before 0.1.0: operator-selected product candidates
+### Selected before 0.1.0
 
-These planned features can add practical value, but none blocks `PERF-001`, `RELEASE-001`, or
-`0.1.0`. The operator selects any subset before scope freeze; selection does not change their
-existing graph statuses or make them release dependencies. `PERF-001` measures whichever product
-scope the operator freezes for `0.1.0`.
+The operator has selected `IMPORT-001`, `SEARCH-001`, `GERMINATION-001`, `LABEL-001`, and
+`ATTACHMENT-004` for implementation before scope freeze. `ATTACHMENT-004` covers one explicitly
+selected primary associated photo on a SeedLot, Plant, or PlantGroup; it does not include Sowing or
+change BotanicalIdentity cover behavior. Selection does not make any of these release dependencies.
+
+### Product candidates and boundaries
+
+The table records the selected work above alongside the remaining optional candidates. None blocks
+`PERF-001`, `RELEASE-001`, or `0.1.0`. `PERF-001` measures whichever product scope the operator
+freezes for `0.1.0`.
 
 | Candidate         | Pre-release value and boundary                                                                                                                                                                                 |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -106,9 +112,8 @@ scope the operator freezes for `0.1.0`.
 | `ORDER-001`       | Purchase transaction tracking, with Order distinct from Supplier and SeedLot.                                                                                                                                  |
 | `DASHBOARD-001`   | Defined analytical statistics after richer data, including `GERMINATION-001`; distinct from the existing UX dashboard summary.                                                                                 |
 
-An optional explicit primary photo for selected collection-record types is a **product decision
-point**, not an approved feature record. If later selected, the operator should choose and remove it
-explicitly; the first photo must not silently win, and historical photo links must stay intact.
+`PWA-001`, `LINEAGE-003`, `ORDER-001`, and `DASHBOARD-001` are post-0.1.0 by default unless the
+operator reprioritizes them. They are not release-readiness dependencies.
 
 ### Post-0.1.0 by default
 
@@ -138,9 +143,8 @@ explicitly; the first photo must not silently win, and historical photo links mu
 
 1. **Foundation complete:** UX-004, UX-005, and UX-006 have landed; their graph status remains
    `implemented` where recorded.
-2. **Optional product selection:** the operator chooses any candidates above. Each selected
-   increment gets its own implementation, relevant operator UAT, independent review, canonical
-   verification, and delivery.
+2. **Selected product work:** each of the five chosen increments receives its own implementation,
+   relevant operator UAT, independent review, canonical verification, and delivery.
 3. **Scope freeze:** after the operator declares pre-release product work complete, admit only
    release defects and agreed blocking polish.
 4. **Resource baseline and optimization:** implement `PERF-001` with measurement, focused changes,

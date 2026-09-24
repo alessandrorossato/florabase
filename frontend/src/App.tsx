@@ -8,6 +8,7 @@ import { BotanicalIdentityScreen } from "./botanical-identities/BotanicalIdentit
 import { DashboardScreen } from "./collection/DashboardScreen";
 import { GlobalEventsScreen } from "./events/GlobalEventsScreen";
 import { GeographyScreen } from "./geographic-places/GeographyScreen";
+import { ImportExportScreen } from "./import-export/ImportExportScreen";
 import { LocationScreen } from "./locations/LocationScreen";
 import { PlantScreen } from "./plants/PlantScreen";
 import { SeedLotSowingWizard } from "./propagation/SeedLotSowingWizard";
@@ -37,7 +38,8 @@ type Section =
   | "identities"
   | "suppliers"
   | "locations"
-  | "geography";
+  | "geography"
+  | "import-export";
 
 interface Route {
   section: Section;
@@ -92,6 +94,7 @@ function currentRoute(): Route {
     "suppliers",
     "locations",
     "geography",
+    "import-export",
   ];
   return {
     section: valid.includes(first as Section)
@@ -129,6 +132,10 @@ const desktopGroups: {
       { id: "suppliers", label: "Suppliers" },
       { id: "geography", label: "Geography" },
     ],
+  },
+  {
+    label: "Tools",
+    items: [{ id: "import-export", label: "Import / Export" }],
   },
 ];
 
@@ -287,6 +294,8 @@ function ApplicationShell() {
             initialId={route.recordId}
             initialTab={route.tab}
           />
+        ) : route.section === "import-export" ? (
+          <ImportExportScreen />
         ) : route.section === "locations" ? (
           <LocationScreen
             key={route.recordId ?? "directory"}
