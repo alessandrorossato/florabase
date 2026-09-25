@@ -52,6 +52,7 @@ interface Route {
   seedLotId?: string;
   sowingId?: string;
   creationKind?: "plant" | "group";
+  placeId?: string;
 }
 
 function currentRoute(): Route {
@@ -66,6 +67,7 @@ function currentRoute(): Route {
   const seedLotId = params.get("seedLot") ?? undefined;
   const sowingId = params.get("sowing") ?? undefined;
   const kind = params.get("kind");
+  const placeId = params.get("place") ?? undefined;
   const context = {
     action,
     identityId,
@@ -102,6 +104,7 @@ function currentRoute(): Route {
       : "dashboard",
     recordId: id,
     tab,
+    placeId,
     ...context,
   };
 }
@@ -303,8 +306,9 @@ function ApplicationShell() {
           />
         ) : (
           <GeographyScreen
-            key={route.recordId ?? "directory"}
+            key={route.recordId ?? route.placeId ?? "directory"}
             initialSiteId={route.recordId}
+            initialPlaceId={route.placeId}
           />
         )}
         {state.status === "logout-failed" && (

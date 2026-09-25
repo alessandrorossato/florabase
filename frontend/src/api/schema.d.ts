@@ -1154,6 +1154,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/search": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Search */
+        get: operations["searchCollection"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/seed-lots": {
         parameters: {
             query?: never;
@@ -3124,6 +3141,47 @@ export interface components {
             entity_type?: ("seed_lot" | "sowing" | "plant" | "plant_group") | null;
             /** Message */
             message: string;
+        };
+        /** SearchGroup */
+        SearchGroup: {
+            /** Items */
+            items: components["schemas"]["SearchHit"][];
+            kind: components["schemas"]["SearchKind"];
+            /** Total */
+            total: number;
+        };
+        /** SearchHit */
+        SearchHit: {
+            /** Context */
+            context: string;
+            /** Href */
+            href: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            kind: components["schemas"]["SearchKind"];
+            /** Title */
+            title: string;
+        };
+        /**
+         * SearchKind
+         * @enum {string}
+         */
+        SearchKind: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "botanical_identity" | "botanical_profile" | "supplier" | "location" | "geographic_place" | "provenance_site";
+        /** SearchResponse */
+        SearchResponse: {
+            /** Groups */
+            groups: components["schemas"]["SearchGroup"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Query */
+            query: string;
+            /** Total */
+            total: number;
         };
         /** SeedLotCreate */
         SeedLotCreate: {
@@ -6997,6 +7055,48 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    searchCollection: {
+        parameters: {
+            query?: {
+                q?: string;
+                kind?: components["schemas"]["SearchKind"][] | null;
+                identity_id?: string | null;
+                lifecycle?: string | null;
+                location_id?: string | null;
+                supplier_id?: string | null;
+                provenance_place_id?: string | null;
+                provenance_site_id?: string | null;
+                event_kind?: components["schemas"]["EventKind"] | null;
+                year?: number | null;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SearchResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
