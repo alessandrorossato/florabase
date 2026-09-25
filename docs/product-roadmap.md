@@ -375,8 +375,8 @@ terms, availability, attribution, and quality review before selection.
 
 ## Deliberate boundaries
 
-Florabase does not currently provide analytical dashboards, advanced collection search, offline
-writes, import/export, a generic
+Florabase does not currently provide analytical dashboards, offline
+writes, a generic
 propagation-material hierarchy, a generic graph engine, or multi-user ownership. Future work should
 extend concrete workflows without weakening unknown-data, history, authorization, or provenance
 semantics.

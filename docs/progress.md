@@ -4,6 +4,62 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-25 — SEARCH-001 independent QA correction
+
+- Corrected Event search context projection to select the BotanicalIdentity belonging to the
+  Event's actual Plant or PlantGroup target. Regression coverage confirms both targets, readable
+  context when optional labels are absent, unique Event hits, and existing result routes.
+- Extended Dashboard QA for actual browser Back/Forward transitions, structured-filter restoration
+  after remount, and out-of-order search responses. Search integration coverage also checks
+  authentication, record domains, explicit relationships, combined filters, deterministic ordering,
+  bounded pages, response privacy, and typed API validation.
+- Focused checks passed: 5 PostgreSQL search integration tests, 403 backend unit tests at 90.60%
+  coverage (including search API/service and Event tests), 189 frontend tests, 4 focused Dashboard
+  search tests, backend Ruff/mypy, frontend Prettier/ESLint/strict TypeScript/build, API drift,
+  feature graph, and `git diff --check`. Canonical verification follows on the final reviewed tree.
+
+## 2026-09-25 — SEARCH-001 operator visual correction
+
+- Styled the four existing Dashboard Quick-action links as compact secondary buttons. Their routes,
+  normal-state placement, keyboard semantics, and search prominence remain unchanged.
+- Tightened grouped search results into a consistent full-width row pattern. Type headings now keep
+  counts beside their labels, bounded groups state the loaded and total counts, and repeated title
+  context is suppressed. The total sits by the results heading; one lightweight Back to Dashboard
+  control also serves the empty state. Collection, Botany, and Reference remain separate.
+- Disposable browser fixture review covered normal Dashboard, one and many results, Event, Botany,
+  Reference, and empty states at 1440px, 1024px, and 390×844. Quick actions wrapped on mobile; no
+  whole-page horizontal overflow appeared. Event kind and target remain visible. Event dates are
+  absent from the existing search-result payload and were left unchanged in this presentation-only
+  pass.
+- Focused frontend Prettier, ESLint, strict TypeScript, 21 component tests, production build, and
+  `git diff --check` passed. No backend files changed; the canonical gate remains for later review.
+
+## 2026-09-25 — SEARCH-001 implemented for operator visual review
+
+- Made the authenticated Dashboard the global collection-search entry point without adding a
+  navigation destination. Search-active state replaces the snapshot, Quick actions, and activity
+  feed; clearing it restores them. Hash query parameters retain text and structured filters across
+  refresh and browser history. Normal Dashboard Quick actions now open Add seed lot, Add plant, Add
+  plant group, and Import / Export before recent activity. Sowing creation stays on its SeedLot's
+  authoritative propagation workflow.
+- Added a typed, server-side `/api/v1/search` contract for Collection records (SeedLot, Sowing,
+  Plant, PlantGroup, Event), Botany (BotanicalIdentity and separate BotanicalProfile reference
+  knowledge), and Reference (Supplier, Location, GeographicPlace, ProvenanceSite). Literal,
+  case-insensitive text matching uses persisted labels, notes, identities, and explicit current
+  relationships. Filters cover record kind, identity, applicable lifecycle or Event kind, current
+  Location and descendants, direct Supplier/place/site, and type-specific recorded year. Results
+  sort deterministically and page per kind with exact counts. No schema, index, or migration changed.
+- Documented exact search semantics in `docs/search.md`; generated OpenAPI and frontend types; set
+  SEARCH-001 to `implemented` pending operator visual review and independent final verification.
+  Earlier disposable browser fixture review covered the Dashboard, filters, grouped results, and
+  1440px, 1024px, and 390×844 layouts without whole-page horizontal overflow. The fixture was
+  presentation-only; focused PostgreSQL tests exercised the live query behavior.
+- Focused verification: 15 adjacent backend unit tests, 3 PostgreSQL search integration tests,
+  21 Dashboard search and adjacent UX component tests, backend Ruff/mypy, frontend
+  Prettier/ESLint/strict TypeScript, generated API drift, production builds, feature graph,
+  documentation formatting, and `git diff --check` passed.
+  `make feature-verify` remains reserved for the authorized later phase.
+
 ## 2026-09-24 — IMPORT-001 independent final review
 
 - Independently reviewed the import contract, signed preview/apply flow, ordinary domain-service
@@ -1082,7 +1138,7 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260913_0024`; UX-006 adds no migration.
+- Alembic head: `20260913_0024`; SEARCH-001 adds no migration.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
@@ -1093,8 +1149,9 @@ implementation detail.
   authenticated retrieval and coordinated database/content backup.
 - `PROPAGATION-001` through `PROPAGATION-003`, `SUPPLIER-002`, `BOTANY-002`, and
   `ATTACHMENT-002` are verified. `LOCATION-002`, `GEOGRAPHY-003`, `MAP-001`, `GEOGRAPHY-002`,
-  `ATTACHMENT-003`, and `UX-002` through `UX-006` are implemented in the graph; UX-004, UX-005, and
-  UX-006 have landed on `main`, but their graph status has not been promoted to `verified`.
+  `ATTACHMENT-003`, `IMPORT-001`, `SEARCH-001`, and `UX-002` through `UX-006` are implemented in the
+  graph; UX-004, UX-005, and UX-006 have landed on `main`, but their graph status has not been
+  promoted to `verified`.
   `PERF-001` is planned for the frozen 0.1.0 scope before `RELEASE-001` hardening and acceptance.
   Optional product candidates are not dependencies of either required increment. Licensing,
   version/upgrade policy, and release readiness remain to be resolved in `RELEASE-001`.
@@ -1104,5 +1161,5 @@ implementation detail.
   prioritized here.
 - Deliberately absent: generic thumbnails/derivatives beyond the fixed local identity-cover compact
   response, collection-photo primary designations, identity-cover history or galleries, automatic or
-  provider image discovery, dashboard cover rendering, advanced search, import/export, PWA behavior,
+  provider image discovery, dashboard cover rendering, PWA behavior,
   offline/synchronization behavior, generic graphs, and multi-user collaboration.

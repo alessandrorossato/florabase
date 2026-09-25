@@ -697,7 +697,7 @@
       ],
       "dependencies": ["PROFILE-002", "SEED-004", "PLANT-003", "EVENT-002"],
       "priority": "P2",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "DASHBOARD-001",

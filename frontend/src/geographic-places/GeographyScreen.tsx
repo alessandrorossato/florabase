@@ -178,13 +178,21 @@ function PlaceTree({
   );
 }
 
-export function GeographyScreen({ initialSiteId }: { initialSiteId?: string }) {
+export function GeographyScreen({
+  initialSiteId,
+  initialPlaceId,
+}: {
+  initialSiteId?: string;
+  initialPlaceId?: string;
+}) {
   const auth = useAuth();
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
   });
   const [attempt, setAttempt] = useState(0);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    initialPlaceId ?? null,
+  );
   const [filter, setFilter] = useState("");
   const [mode, setMode] = useState<"places" | "sites" | "map">(
     initialSiteId ? "sites" : "places",
@@ -213,6 +221,19 @@ export function GeographyScreen({ initialSiteId }: { initialSiteId?: string }) {
     void listGeographicPlaces(controller.signal)
       .then((places) => {
         setDirectory({ status: "ready", places });
+        if (
+          initialPlaceId &&
+          places.some((place) => place.id === initialPlaceId)
+        ) {
+          const byId = new Map(places.map((place) => [place.id, place]));
+          const ancestors = new Set<string>();
+          let parent = byId.get(initialPlaceId)?.parent_id;
+          while (parent) {
+            ancestors.add(parent);
+            parent = byId.get(parent)?.parent_id ?? null;
+          }
+          setExpanded(ancestors);
+        }
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
@@ -223,7 +244,7 @@ export function GeographyScreen({ initialSiteId }: { initialSiteId?: string }) {
     return () => {
       controller.abort();
     };
-  }, [auth, attempt]);
+  }, [auth, attempt, initialPlaceId]);
 
   useEffect(() => {
     if (save.status === "error") feedback.current?.focus();

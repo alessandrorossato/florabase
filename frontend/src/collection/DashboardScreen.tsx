@@ -5,6 +5,7 @@ import { useAuth } from "../auth/context";
 
 import { EventFeed } from "../events/EventFeed";
 import { getDashboard, type DashboardResponse } from "./api";
+import { useDashboardSearch } from "./DashboardSearch";
 
 type State =
   | { status: "loading" }
@@ -19,7 +20,7 @@ function isDashboardResponse(value: unknown): value is DashboardResponse {
   );
 }
 
-export function DashboardScreen() {
+function DashboardOverview() {
   const auth = useAuth();
   const [state, setState] = useState<State>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
@@ -44,20 +45,7 @@ export function DashboardScreen() {
   }, [attempt, auth]);
 
   return (
-    <section
-      aria-labelledby="dashboard-title"
-      className="workspace workspace--dashboard"
-    >
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">Collection overview</p>
-          <h2 id="dashboard-title">Dashboard</h2>
-          <p>What is in your collection, and what happened recently.</p>
-        </div>
-        <a className="button-link" href="#/seeds?action=create">
-          Add seed lot
-        </a>
-      </header>
+    <>
       {state.status === "loading" && (
         <p role="status">Loading collection overview…</p>
       )}
@@ -116,6 +104,30 @@ export function DashboardScreen() {
               ))}
             </div>
           </section>
+          <nav aria-label="Quick actions" className="dashboard-quick-actions">
+            <h3>Quick actions</h3>
+            <a
+              className="button-link button--secondary"
+              href="#/seeds?action=create"
+            >
+              Add seed lot
+            </a>
+            <a
+              className="button-link button--secondary"
+              href="#/plants?action=create&kind=plant"
+            >
+              Add plant
+            </a>
+            <a
+              className="button-link button--secondary"
+              href="#/plants?action=create&kind=group"
+            >
+              Add plant group
+            </a>
+            <a className="button-link button--secondary" href="#/import-export">
+              Import / Export
+            </a>
+          </nav>
           <section
             aria-labelledby="recent-activity-title"
             className="dashboard-activity"
@@ -135,14 +147,29 @@ export function DashboardScreen() {
               </div>
             )}
           </section>
-          <nav aria-label="Quick actions" className="dashboard-quick-actions">
-            <h3>Quick actions</h3>
-            <a href="#/seeds?action=create">Add seed lot</a>
-            <a href="#/sowings">Browse Sowings</a>
-            <a href="#/plants">Browse Plants</a>
-          </nav>
         </>
       )}
+    </>
+  );
+}
+
+export function DashboardScreen() {
+  const search = useDashboardSearch();
+  return (
+    <section
+      aria-labelledby="dashboard-title"
+      className="workspace workspace--dashboard"
+    >
+      <header className="page-header">
+        <div>
+          <p className="eyebrow">Collection overview</p>
+          <h2 id="dashboard-title">Dashboard</h2>
+          <p>What is in your collection, and what happened recently.</p>
+        </div>
+        {search.header}
+      </header>
+      {search.content}
+      {!search.active && <DashboardOverview />}
     </section>
   );
 }

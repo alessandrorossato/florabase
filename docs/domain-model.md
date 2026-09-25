@@ -406,6 +406,12 @@ counts, not the analytical/statistical definitions planned for `DASHBOARD-001`; 
 and PlantGroups are excluded from the active counts while remaining in historical lists and identity
 aggregation.
 
+The Dashboard also hosts authenticated global collection search. Typed, bounded server results
+separate Collection, Botany, and Reference records; stored relationship matches do not infer
+provenance or turn BotanicalProfile text into an observation. URL query parameters retain search
+and structured filter state. [Search and filter semantics](search.md) define exact applicability,
+location scope, partial-year behavior, and result paging. Local directory search remains available.
+
 Desktop navigation groups Dashboard, the Seeds/Sowings/Plants/Events collection workflows in
 lifecycle order,
 Botanical identities, and Location/Supplier/GeographicPlace reference data in a persistent sidebar.
@@ -601,7 +607,7 @@ product workflows preserve historical rows rather than hard-deleting them.
 ## Deferred capabilities
 
 Richer structured Event payloads, richer germination observations, Orders, other propagation
-material, advanced search, analytical dashboards, import/export, PWA installability, enrichment,
+material, analytical dashboards, PWA installability, enrichment,
 taxonomy reconciliation, deeper Supplier analytics, reminders, weather, and multi-user ownership
 remain planned. `docs/features.json` is the detailed source for dependencies and acceptance criteria.
 
