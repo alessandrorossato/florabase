@@ -1461,6 +1461,87 @@ button:disabled {
   margin: 0.2rem 0 0;
   overflow-wrap: anywhere;
 }
+.germination-section {
+  min-width: 0;
+}
+.germination-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.germination-heading h3,
+.germination-heading h4 {
+  margin: 0;
+}
+.germination-section .germination-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0 0 1rem;
+}
+.germination-metrics > div {
+  padding: 0.85rem;
+  background: #f3f7f1;
+  border-radius: 0.6rem;
+}
+.germination-metrics dd {
+  font-size: 1.15rem;
+  font-weight: 650;
+}
+.germination-history {
+  width: 100%;
+  border-collapse: collapse;
+}
+.germination-history th,
+.germination-history td {
+  padding: 0.65rem;
+  text-align: left;
+  border-bottom: 1px solid #dce6de;
+}
+.germination-history .germination-actions {
+  white-space: nowrap;
+}
+.germination-actions button + button {
+  margin-left: 0.4rem;
+}
+@media (max-width: 48rem) {
+  .germination-heading {
+    flex-wrap: wrap;
+  }
+  .germination-section .germination-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .germination-history thead {
+    display: none;
+  }
+  .germination-history tbody,
+  .germination-history tr,
+  .germination-history th,
+  .germination-history td {
+    display: block;
+  }
+  .germination-history tr {
+    padding: 0.65rem 0;
+    border-bottom: 1px solid #dce6de;
+  }
+  .germination-history th,
+  .germination-history td {
+    display: flex;
+    gap: 1rem;
+    justify-content: space-between;
+    padding: 0.2rem 0;
+    border: 0;
+    text-align: right;
+  }
+  .germination-history [data-label]::before {
+    content: attr(data-label);
+    color: #587064;
+    font-weight: 700;
+    text-align: left;
+  }
+}
 .sowing-fast-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

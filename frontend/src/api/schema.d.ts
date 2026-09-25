@@ -1345,6 +1345,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/sowings/{sowing_id}/germination": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Germination */
+        get: operations["getSowingGermination"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sowings/{sowing_id}/germination-observations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Germination Observation */
+        post: operations["createGerminationObservation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/sowings/{sowing_id}/germination-observations/{observation_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Edit Germination Observation */
+        put: operations["updateGerminationObservation"];
+        post?: never;
+        /** Remove Germination Observation */
+        delete: operations["deleteGerminationObservation"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/sowings/{sowing_id}/propagation-summary": {
         parameters: {
             query?: never;
@@ -1989,6 +2041,72 @@ export interface components {
              * @enum {string}
              */
             place_type: "city_town" | "locality" | "other_named_area";
+        };
+        /** GerminationObservationResponse */
+        GerminationObservationResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Newly Germinated Count */
+            newly_germinated_count: number;
+            /**
+             * Observed On
+             * Format: date
+             */
+            observed_on: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** GerminationObservationWrite */
+        GerminationObservationWrite: {
+            /** Newly Germinated Count */
+            newly_germinated_count: number;
+            /**
+             * Observed On
+             * Format: date
+             */
+            observed_on: string;
+        };
+        /** GerminationSeriesPoint */
+        GerminationSeriesPoint: {
+            /** Cumulative Germinated Count */
+            cumulative_germinated_count: number;
+            /** Days Since Sowing */
+            days_since_sowing: number | null;
+            /** Newly Germinated Count */
+            newly_germinated_count: number;
+            /**
+             * Observed On
+             * Format: date
+             */
+            observed_on: string;
+        };
+        /** GerminationSummary */
+        GerminationSummary: {
+            /** Cumulative Series */
+            cumulative_series: components["schemas"]["GerminationSeriesPoint"][];
+            /** Days To First Germination */
+            days_to_first_germination: number | null;
+            /** First Germination On */
+            first_germination_on: string | null;
+            /** Germination Percentage */
+            germination_percentage: string | null;
+            /** Last Observation On */
+            last_observation_on: string | null;
+            /** Observed Cumulative Count */
+            observed_cumulative_count: number;
+            /** T50 Days */
+            t50_days: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -3459,6 +3577,21 @@ export interface components {
             temperature_max_c?: number | string | null;
             /** Temperature Min C */
             temperature_min_c?: number | string | null;
+        };
+        /** SowingGerminationDetail */
+        SowingGerminationDetail: {
+            /** Observations */
+            observations: components["schemas"]["GerminationObservationResponse"][];
+            quantity: components["schemas"]["SowingQuantity-Output"] | null;
+            /** Simple Germinated Count */
+            simple_germinated_count: number | null;
+            sowing_date: components["schemas"]["PartialDate"] | null;
+            /**
+             * Sowing Id
+             * Format: uuid
+             */
+            sowing_id: string;
+            summary: components["schemas"]["GerminationSummary"];
         };
         /**
          * SowingLifecycle
@@ -7544,6 +7677,146 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SowingPlantGroupTransitionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getSowingGermination: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sowing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SowingGerminationDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createGerminationObservation: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                sowing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GerminationObservationWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SowingGerminationDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateGerminationObservation: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                sowing_id: string;
+                observation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GerminationObservationWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SowingGerminationDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteGerminationObservation: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                sowing_id: string;
+                observation_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SowingGerminationDetail"];
                 };
             };
             /** @description Validation Error */

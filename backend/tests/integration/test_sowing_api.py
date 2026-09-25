@@ -144,6 +144,296 @@ def test_minimal_full_detail_update_summaries_and_no_seed_lot_deduction(
         assert lot.quantity_value == Decimal("100")
 
 
+def test_germination_api_keeps_simple_total_independent(
+    authenticated_browser: tuple[str, str], references: dict[str, str]
+) -> None:
+    payload = {
+        "seed_lot_id": references["active"],
+        "sowing_date": {"precision": "day", "year": 2026, "month": 4, "day": 10},
+        "quantity": {"kind": "seed_count", "value": 20, "is_approximate": False},
+        "germinated_count": 12,
+    }
+    created = mutate(authenticated_browser, "POST", "/api/v1/sowings", payload)
+    assert created[0] == 201
+    sowing_id = created[2]["id"]
+    base = f"/api/v1/sowings/{sowing_id}/germination-observations"
+    first = mutate(
+        authenticated_browser,
+        "POST",
+        base,
+        {"observed_on": "2026-04-10", "newly_germinated_count": 0},
+    )
+    assert first[0] == 201
+    assert first[2]["summary"]["first_germination_on"] is None
+    second = mutate(
+        authenticated_browser,
+        "POST",
+        base,
+        {"observed_on": "2026-04-14", "newly_germinated_count": 10},
+    )
+    assert second[0] == 201
+    assert second[2]["simple_germinated_count"] == 12
+    assert second[2]["summary"]["observed_cumulative_count"] == 10
+    assert second[2]["summary"]["t50_days"] == "4"
+    observation_id = second[2]["observations"][1]["id"]
+    corrected = mutate(
+        authenticated_browser,
+        "PUT",
+        f"{base}/{observation_id}",
+        {"observed_on": "2026-04-14", "newly_germinated_count": 8},
+    )
+    assert corrected[0] == 200
+    assert corrected[2]["summary"]["t50_days"] is None
+    cookie, _ = authenticated_browser
+    assert (
+        request("GET", f"/api/v1/sowings/{sowing_id}/germination", headers={"cookie": cookie})[0]
+        == 200
+    )
+    deleted = mutate(authenticated_browser, "DELETE", f"{base}/{observation_id}", None)
+    assert deleted[0] == 200
+    assert deleted[2]["summary"]["observed_cumulative_count"] == 0
+    assert (
+        request("GET", f"/api/v1/sowings/{sowing_id}", headers={"cookie": cookie})[2][
+            "germinated_count"
+        ]
+        == 12
+    )
+
+
+def test_germination_api_requires_authentication_owner_csrf_and_exact_origin(
+    authenticated_browser: tuple[str, str], references: dict[str, str]
+) -> None:
+    sowing = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/sowings",
+        {"seed_lot_id": references["active"]},
+    )
+    assert sowing[0] == 201
+    url = f"/api/v1/sowings/{sowing[2]['id']}/germination"
+    collection = f"/api/v1/sowings/{sowing[2]['id']}/germination-observations"
+    payload = {"observed_on": "2026-04-10", "newly_germinated_count": 0}
+    cookie, csrf = authenticated_browser
+
+    assert request("GET", url)[0] == 401
+    assert request("POST", collection, body=payload)[0] == 401
+    assert request("GET", url, headers={"cookie": cookie})[0] == 200
+    assert (
+        request(
+            "POST",
+            collection,
+            body=payload,
+            headers={"cookie": cookie, "origin": ORIGIN},
+        )[0]
+        == 403
+    )
+    assert (
+        request(
+            "POST",
+            collection,
+            body=payload,
+            headers={"cookie": cookie, "origin": ORIGIN, "x-csrf-token": "wrong"},
+        )[0]
+        == 403
+    )
+    assert (
+        request(
+            "POST",
+            collection,
+            body=payload,
+            headers={"cookie": cookie, "origin": "https://attacker.example", "x-csrf-token": csrf},
+        )[0]
+        == 403
+    )
+
+    created = mutate(authenticated_browser, "POST", collection, payload)
+    assert created[0] == 201
+
+
+def test_germination_edits_and_sowing_corrections_preserve_observation_invariants(
+    authenticated_browser: tuple[str, str], references: dict[str, str]
+) -> None:
+    payload = {
+        "seed_lot_id": references["active"],
+        "sowing_date": {"precision": "day", "year": 2026, "month": 4, "day": 10},
+        "quantity": {"kind": "seed_count", "value": 10, "is_approximate": False},
+        "germinated_count": 4,
+    }
+    created = mutate(authenticated_browser, "POST", "/api/v1/sowings", payload)
+    assert created[0] == 201
+    sowing_id = created[2]["id"]
+    base = f"/api/v1/sowings/{sowing_id}/germination-observations"
+    detail_url = f"/api/v1/sowings/{sowing_id}/germination"
+
+    assert (
+        mutate(
+            authenticated_browser,
+            "POST",
+            base,
+            {"observed_on": "2026-04-09", "newly_germinated_count": 1},
+        )[0]
+        == 409
+    )
+    zero = mutate(
+        authenticated_browser,
+        "POST",
+        base,
+        {"observed_on": "2026-04-10", "newly_germinated_count": 0},
+    )
+    assert zero[0] == 201
+    zero_id = zero[2]["observations"][0]["id"]
+    assert zero[2]["summary"]["first_germination_on"] is None
+    assert zero[2]["summary"]["germination_percentage"] == "0"
+    assert zero[2]["summary"]["t50_days"] is None
+    assert (
+        mutate(
+            authenticated_browser,
+            "POST",
+            base,
+            {"observed_on": "2026-04-10", "newly_germinated_count": 0},
+        )[0]
+        == 409
+    )
+    exact_limit = mutate(
+        authenticated_browser,
+        "POST",
+        base,
+        {"observed_on": "2026-04-14", "newly_germinated_count": 0},
+    )
+    assert exact_limit[0] == 201
+    positive = mutate(
+        authenticated_browser,
+        "POST",
+        base,
+        {"observed_on": "2026-04-12", "newly_germinated_count": 7},
+    )
+    assert positive[0] == 201
+    positive_id = positive[2]["observations"][1]["id"]
+    assert [item["observed_on"] for item in positive[2]["observations"]] == [
+        "2026-04-10",
+        "2026-04-12",
+        "2026-04-14",
+    ]
+    assert [
+        point["cumulative_germinated_count"]
+        for point in positive[2]["summary"]["cumulative_series"]
+    ] == [0, 7, 7]
+    assert positive[2]["summary"]["first_germination_on"] == "2026-04-12"
+    assert positive[2]["summary"]["days_to_first_germination"] == 2
+    assert positive[2]["summary"]["observed_cumulative_count"] == 7
+    assert positive[2]["simple_germinated_count"] == 4
+
+    raised = mutate(
+        authenticated_browser,
+        "PUT",
+        f"{base}/{positive_id}",
+        {"observed_on": "2026-04-12", "newly_germinated_count": 10},
+    )
+    assert raised[0] == 200
+    assert raised[2]["summary"]["observed_cumulative_count"] == 10
+    assert raised[2]["summary"]["germination_percentage"] == "100"
+    assert raised[2]["summary"]["t50_days"] == "1"
+    assert (
+        mutate(
+            authenticated_browser,
+            "PUT",
+            f"{base}/{positive_id}",
+            {"observed_on": "2026-04-12", "newly_germinated_count": 11},
+        )[0]
+        == 409
+    )
+    assert (
+        mutate(
+            authenticated_browser,
+            "PUT",
+            f"{base}/{positive_id}",
+            {"observed_on": "2026-04-10", "newly_germinated_count": 10},
+        )[0]
+        == 409
+    )
+
+    last_zero = mutate(
+        authenticated_browser,
+        "POST",
+        base,
+        {"observed_on": "2026-04-16", "newly_germinated_count": 0},
+    )
+    assert last_zero[0] == 201
+    too_much = mutate(
+        authenticated_browser,
+        "POST",
+        base,
+        {"observed_on": "2026-04-17", "newly_germinated_count": 1},
+    )
+    assert too_much[0] == 409
+
+    assert (
+        mutate(
+            authenticated_browser,
+            "PUT",
+            f"/api/v1/sowings/{sowing_id}",
+            {**payload, "quantity": {"kind": "seed_count", "value": 9, "is_approximate": False}},
+        )[0]
+        == 409
+    )
+    valid_edit = mutate(
+        authenticated_browser,
+        "PUT",
+        f"/api/v1/sowings/{sowing_id}",
+        {**payload, "quantity": {"kind": "seed_count", "value": 10, "is_approximate": False}},
+    )
+    assert valid_edit[0] == 200
+
+    for quantity in (
+        {"kind": "seed_count", "value": 10, "is_approximate": True},
+        {"kind": "weight", "value": "2", "unit": "g", "is_approximate": False},
+        None,
+    ):
+        changed = mutate(
+            authenticated_browser,
+            "PUT",
+            f"/api/v1/sowings/{sowing_id}",
+            {**payload, "quantity": quantity},
+        )
+        assert changed[0] == 200
+        detail = request("GET", detail_url, headers={"cookie": authenticated_browser[0]})[2]
+        assert len(detail["observations"]) == 4
+        assert detail["summary"]["germination_percentage"] is None
+        assert detail["summary"]["t50_days"] is None
+
+    later_date = mutate(
+        authenticated_browser,
+        "PUT",
+        f"/api/v1/sowings/{sowing_id}",
+        {**payload, "sowing_date": {"precision": "day", "year": 2026, "month": 4, "day": 11}},
+    )
+    assert later_date[0] == 409
+    for sowing_date in (
+        {"precision": "month", "year": 2026, "month": 4},
+        None,
+    ):
+        changed = mutate(
+            authenticated_browser,
+            "PUT",
+            f"/api/v1/sowings/{sowing_id}",
+            {**payload, "quantity": payload["quantity"], "sowing_date": sowing_date},
+        )
+        assert changed[0] == 200
+        detail = request("GET", detail_url, headers={"cookie": authenticated_browser[0]})[2]
+        assert len(detail["observations"]) == 4
+        assert detail["summary"]["days_to_first_germination"] is None
+
+    removed_zero = mutate(authenticated_browser, "DELETE", f"{base}/{zero_id}", None)
+    assert removed_zero[0] == 200
+    assert removed_zero[2]["summary"]["first_germination_on"] == "2026-04-12"
+    assert removed_zero[2]["simple_germinated_count"] == 4
+    removed_positive = mutate(authenticated_browser, "DELETE", f"{base}/{positive_id}", None)
+    assert removed_positive[0] == 200
+    assert removed_positive[2]["summary"]["first_germination_on"] is None
+    assert removed_positive[2]["summary"]["observed_cumulative_count"] == 0
+    assert removed_positive[2]["summary"]["germination_percentage"] == "0"
+
+
 @pytest.mark.parametrize("lifecycle", ["active", "completed", "failed", "abandoned"])
 def test_all_lifecycle_states_are_retained(
     authenticated_browser: tuple[str, str],

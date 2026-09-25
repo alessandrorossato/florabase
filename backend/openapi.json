@@ -1695,6 +1695,189 @@
         "title": "GeographicPlaceUpdate",
         "type": "object"
       },
+      "GerminationObservationResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "newly_germinated_count": {
+            "minimum": 0.0,
+            "title": "Newly Germinated Count",
+            "type": "integer"
+          },
+          "observed_on": {
+            "format": "date",
+            "title": "Observed On",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "observed_on",
+          "newly_germinated_count",
+          "id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "GerminationObservationResponse",
+        "type": "object"
+      },
+      "GerminationObservationWrite": {
+        "additionalProperties": false,
+        "properties": {
+          "newly_germinated_count": {
+            "minimum": 0.0,
+            "title": "Newly Germinated Count",
+            "type": "integer"
+          },
+          "observed_on": {
+            "format": "date",
+            "title": "Observed On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "observed_on",
+          "newly_germinated_count"
+        ],
+        "title": "GerminationObservationWrite",
+        "type": "object"
+      },
+      "GerminationSeriesPoint": {
+        "properties": {
+          "cumulative_germinated_count": {
+            "title": "Cumulative Germinated Count",
+            "type": "integer"
+          },
+          "days_since_sowing": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days Since Sowing"
+          },
+          "newly_germinated_count": {
+            "title": "Newly Germinated Count",
+            "type": "integer"
+          },
+          "observed_on": {
+            "format": "date",
+            "title": "Observed On",
+            "type": "string"
+          }
+        },
+        "required": [
+          "observed_on",
+          "newly_germinated_count",
+          "cumulative_germinated_count",
+          "days_since_sowing"
+        ],
+        "title": "GerminationSeriesPoint",
+        "type": "object"
+      },
+      "GerminationSummary": {
+        "properties": {
+          "cumulative_series": {
+            "items": {
+              "$ref": "#/components/schemas/GerminationSeriesPoint"
+            },
+            "title": "Cumulative Series",
+            "type": "array"
+          },
+          "days_to_first_germination": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Days To First Germination"
+          },
+          "first_germination_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Germination On"
+          },
+          "germination_percentage": {
+            "anyOf": [
+              {
+                "description": "An exact decimal serialized as a JSON string.",
+                "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Germination Percentage"
+          },
+          "last_observation_on": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Observation On"
+          },
+          "observed_cumulative_count": {
+            "title": "Observed Cumulative Count",
+            "type": "integer"
+          },
+          "t50_days": {
+            "anyOf": [
+              {
+                "description": "An exact decimal serialized as a JSON string.",
+                "pattern": "^-?(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "T50 Days"
+          }
+        },
+        "required": [
+          "observed_cumulative_count",
+          "first_germination_on",
+          "days_to_first_germination",
+          "last_observation_on",
+          "germination_percentage",
+          "cumulative_series",
+          "t50_days"
+        ],
+        "title": "GerminationSummary",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -6737,6 +6920,66 @@
           }
         },
         "title": "SowingDetails",
+        "type": "object"
+      },
+      "SowingGerminationDetail": {
+        "properties": {
+          "observations": {
+            "items": {
+              "$ref": "#/components/schemas/GerminationObservationResponse"
+            },
+            "title": "Observations",
+            "type": "array"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SowingQuantity-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "simple_germinated_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Simple Germinated Count"
+          },
+          "sowing_date": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sowing_id": {
+            "format": "uuid",
+            "title": "Sowing Id",
+            "type": "string"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/GerminationSummary"
+          }
+        },
+        "required": [
+          "sowing_id",
+          "sowing_date",
+          "quantity",
+          "simple_germinated_count",
+          "observations",
+          "summary"
+        ],
+        "title": "SowingGerminationDetail",
         "type": "object"
       },
       "SowingLifecycle": {
@@ -14416,6 +14659,264 @@
           }
         },
         "summary": "Create Plant Group Transition",
+        "tags": [
+          "sowings"
+        ]
+      }
+    },
+    "/api/v1/sowings/{sowing_id}/germination": {
+      "get": {
+        "operationId": "getSowingGermination",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sowing_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sowing Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SowingGerminationDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Germination",
+        "tags": [
+          "sowings"
+        ]
+      }
+    },
+    "/api/v1/sowings/{sowing_id}/germination-observations": {
+      "post": {
+        "operationId": "createGerminationObservation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sowing_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sowing Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GerminationObservationWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SowingGerminationDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Germination Observation",
+        "tags": [
+          "sowings"
+        ]
+      }
+    },
+    "/api/v1/sowings/{sowing_id}/germination-observations/{observation_id}": {
+      "delete": {
+        "operationId": "deleteGerminationObservation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sowing_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sowing Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "observation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Observation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SowingGerminationDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Germination Observation",
+        "tags": [
+          "sowings"
+        ]
+      },
+      "put": {
+        "operationId": "updateGerminationObservation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sowing_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Sowing Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "observation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Observation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GerminationObservationWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SowingGerminationDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Edit Germination Observation",
         "tags": [
           "sowings"
         ]

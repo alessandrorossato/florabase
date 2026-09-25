@@ -109,6 +109,7 @@ def test_schema_uses_native_types_named_constraints_and_only_one_botanical_table
         "external_provider_cache",
         "external_image_references",
         "external_taxon_links",
+        "germination_observations",
         "geographic_places",
         "locations",
         "local_collection_photos",

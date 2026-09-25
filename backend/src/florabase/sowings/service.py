@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from datetime import date as calendar_date
 from decimal import Decimal
 from uuid import UUID
 
@@ -20,7 +21,7 @@ from florabase.locations.service import (
 )
 from florabase.seed_lots.model import SeedLot
 from florabase.seed_lots.schemas import PartialDate
-from florabase.sowings.model import Sowing
+from florabase.sowings.model import GerminationObservation, Sowing
 from florabase.sowings.schemas import (
     SowingCreate,
     SowingLocationSummary,
@@ -114,6 +115,33 @@ def update_sowing(database: Session, sowing: Sowing, payload: SowingUpdate) -> S
         raise SowingDomainConflictError(
             "reversed_origin_immutable", "Historical propagation origin cannot be changed"
         )
+    observations = list(
+        database.scalars(
+            select(GerminationObservation).where(GerminationObservation.sowing_id == sowing.id)
+        )
+    )
+    if observations:
+        date = payload.sowing_date
+        if date is not None and date.precision.value == "day":
+            assert date.month is not None
+            assert date.day is not None
+            sown_on = calendar_date(date.year, date.month, date.day)
+            if any(item.observed_on < sown_on for item in observations):
+                raise SowingDomainConflictError(
+                    "sowing_after_observation",
+                    "Exact Sowing date cannot be later than a recorded observation",
+                )
+        quantity = payload.quantity
+        if (
+            quantity is not None
+            and quantity.kind.value == "seed_count"
+            and not quantity.is_approximate
+            and sum(item.newly_germinated_count for item in observations) > quantity.value
+        ):
+            raise SowingDomainConflictError(
+                "observations_exceed_seeds",
+                "Observed germinations exceed the new exact seed count sown",
+            )
     _require_references(database, payload)
     for field, value in _write_values(payload).items():
         setattr(sowing, field, value)

@@ -17,7 +17,7 @@ from florabase.locations.model import Location
 from florabase.plants.model import Plant, PlantGroup
 from florabase.provenance_sites.model import ProvenanceSite
 from florabase.seed_lots.model import SeedLot
-from florabase.sowings.model import Sowing
+from florabase.sowings.model import GerminationObservation, Sowing
 from florabase.suppliers.model import Supplier
 
 config = context.config
@@ -42,6 +42,7 @@ assert GeographicPlace.__table__.metadata is target_metadata
 assert ProvenanceSite.__table__.metadata is target_metadata
 assert SeedLot.__table__.metadata is target_metadata
 assert Sowing.__table__.metadata is target_metadata
+assert GerminationObservation.__table__.metadata is target_metadata
 assert Plant.__table__.metadata is target_metadata
 assert PlantGroup.__table__.metadata is target_metadata
 assert Event.__table__.metadata is target_metadata
