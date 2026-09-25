@@ -166,7 +166,8 @@ past effects, and propagation does not automatically emit Events. `PROPAGATION-0
 natural next-step actions from BotanicalIdentity, SeedLot, and Sowing contexts, two-stage source
 usage confirmation, explicit Sowing outcomes, authoritative descendant summaries, and restrained
 clickable propagation paths. Direct creation and correction remain available, completed Sowings
-remain historical, and richer germination observations remain deferred.
+remain historical. GERMINATION-001 now adds independent dated observations in Sowing detail; it
+does not change propagation transitions or create Events.
 
 `CI-001` now supplies the repository-side pull-request verification and repeatable feature-branch
 workflow. The active `Protect main` ruleset requires its `quality`, `integration`, and `build` checks,

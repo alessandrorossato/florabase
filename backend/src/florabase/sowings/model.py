@@ -1,4 +1,4 @@
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from uuid import UUID, uuid7
@@ -6,6 +6,7 @@ from uuid import UUID, uuid7
 from sqlalchemy import (
     Boolean,
     CheckConstraint,
+    Date,
     DateTime,
     ForeignKey,
     Index,
@@ -14,6 +15,7 @@ from sqlalchemy import (
     SmallInteger,
     String,
     Text,
+    UniqueConstraint,
     Uuid,
 )
 from sqlalchemy.orm import Mapped, mapped_column
@@ -131,3 +133,24 @@ class Sowing(Base):
 
 
 Index("ix_sowings_lifecycle", Sowing.lifecycle)
+
+
+class GerminationObservation(Base):
+    __tablename__ = "germination_observations"
+    __table_args__ = (
+        CheckConstraint("newly_germinated_count >= 0", name="ck_germination_observations_count"),
+        UniqueConstraint(
+            "sowing_id", "observed_on", name="uq_germination_observations_sowing_date"
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid7)
+    sowing_id: Mapped[UUID] = mapped_column(
+        Uuid(), ForeignKey("sowings.id", ondelete="RESTRICT"), nullable=False
+    )
+    observed_on: Mapped[date] = mapped_column(Date(), nullable=False)
+    newly_germinated_count: Mapped[int] = mapped_column(Integer(), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )

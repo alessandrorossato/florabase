@@ -217,9 +217,25 @@ pretreatment, temperature bounds, environment, and notes. Lifecycle is active, c
 abandoned.
 
 Quantity may be an exact or approximate positive whole seed count or positive weight. Germinated
-count is a non-negative total and cannot exceed an exact seed-count denominator. Florabase does not
-derive percentages when a trustworthy denominator is absent. Dated germination observations are
-planned separately.
+count is a non-negative operator-maintained total and cannot exceed an exact seed-count denominator.
+It stays independent of optional dated observations: neither total updates the other. Each observation
+records an exact calendar date and non-negative count of **new** germinations, including zero for a
+check with no new germinations. One observation per Sowing per day may be corrected or removed.
+The chronological cumulative total is derived, never entered or persisted. When the Sowing has an
+exact seed count, this cumulative total cannot exceed that count; Sowing quantity edits preserve the
+same bound. Exact Sowing dates cannot follow existing observations. Partial or unknown Sowing dates
+retain observations without invented timing.
+
+The dated summary derives first germination from the earliest positive observation and reports days
+to first only with an exact Sowing date. Percentage is observed cumulative germination divided by
+the exact number of seeds sown, times 100; approximate, weight, and unknown quantities have no
+percentage. Florabase 0.1.0 defines T50 as elapsed days from exact sowing to reaching half of the
+**exact seeds sown**, including a fractional threshold for odd counts. Between points it linearly
+interpolates: previous day + (next day - previous day) × (half the seeds - previous cumulative) /
+(next cumulative - previous cumulative). The exact sowing day with cumulative zero is the initial
+point where useful. T50 is unavailable without dated observations, an exact Sowing date and count,
+or a reached 50% threshold. Decimal results are derived estimates, not measurement precision.
+Observations do not create Events, change lifecycle or descendants, or replay propagation.
 
 ### Explicit propagation transitions
 
@@ -455,8 +471,8 @@ through All. The Sowing propagation view and the SeedLot and Plant/PlantGroup Li
 visualize only stored lineage.
 
 Ordinary direct Plant/PlantGroup creation, retroactive entry, and all correction forms remain valid.
-Later corrections do not replay previous source effects or lifecycle choices. Rich dated germination
-observations remain deferred to `GERMINATION-001`.
+Later corrections do not replay previous source effects or lifecycle choices. Dated germination
+observations appear in the Sowing's Germination detail tab, separately from the simple total.
 
 The product navigation follows `BotanicalIdentity → SeedLot → Sowing → Plant / PlantGroup →
 Events / terminal state`. It is an interaction and comprehension direction over the explicit model,
@@ -606,7 +622,7 @@ product workflows preserve historical rows rather than hard-deleting them.
 
 ## Deferred capabilities
 
-Richer structured Event payloads, richer germination observations, Orders, other propagation
+Richer structured Event payloads, Orders, other propagation
 material, analytical dashboards, PWA installability, enrichment,
 taxonomy reconciliation, deeper Supplier analytics, reminders, weather, and multi-user ownership
 remain planned. `docs/features.json` is the detailed source for dependencies and acceptance criteria.

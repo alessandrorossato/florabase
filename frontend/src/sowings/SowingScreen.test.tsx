@@ -199,6 +199,123 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+test("germination tab keeps simple and dated totals distinct and supports correction", async () => {
+  const observationId = "01900000-0000-7000-8000-000000000501";
+  let observations: {
+    id: string;
+    observed_on: string;
+    newly_germinated_count: number;
+    created_at: string;
+    updated_at: string;
+  }[] = [];
+  const germination = () => ({
+    sowing_id: sowingId,
+    sowing_date: { precision: "day", year: 2026, month: 4, day: 10 },
+    quantity: {
+      kind: "seed_count",
+      value: "20",
+      unit: null,
+      is_approximate: false,
+    },
+    simple_germinated_count: 12,
+    observations,
+    summary: {
+      observed_cumulative_count: observations[0]?.newly_germinated_count ?? 0,
+      first_germination_on: observations[0]?.newly_germinated_count
+        ? observations[0].observed_on
+        : null,
+      days_to_first_germination: observations[0]?.newly_germinated_count
+        ? 4
+        : null,
+      last_observation_on: observations[0]?.observed_on ?? null,
+      germination_percentage: observations.length ? "40" : null,
+      cumulative_series: observations.map((item) => ({
+        observed_on: item.observed_on,
+        newly_germinated_count: item.newly_germinated_count,
+        cumulative_germinated_count: item.newly_germinated_count,
+        days_since_sowing: 4,
+      })),
+      t50_days: null,
+    },
+  });
+  mockApi(
+    sowingHandler([sowing()], (path, init) => {
+      if (path === `/api/v1/sowings/${sowingId}/germination`)
+        return json(germination());
+      if (
+        path === `/api/v1/sowings/${sowingId}/germination-observations` &&
+        init?.method === "POST"
+      ) {
+        const payload = body(init);
+        observations = [
+          {
+            id: observationId,
+            observed_on: String(payload.observed_on),
+            newly_germinated_count: Number(payload.newly_germinated_count),
+            created_at: "2026-04-14T10:00:00Z",
+            updated_at: "2026-04-14T10:00:00Z",
+          },
+        ];
+        return json(germination(), 201);
+      }
+      if (
+        path ===
+          `/api/v1/sowings/${sowingId}/germination-observations/${observationId}` &&
+        init?.method === "PUT"
+      ) {
+        observations = [
+          {
+            ...observations[0],
+            newly_germinated_count: Number(body(init).newly_germinated_count),
+          },
+        ];
+        return json(germination());
+      }
+      if (
+        path ===
+          `/api/v1/sowings/${sowingId}/germination-observations/${observationId}` &&
+        init?.method === "DELETE"
+      ) {
+        observations = [];
+        return json(germination());
+      }
+      return undefined;
+    }),
+  );
+  const user = await openSowings();
+  await user.click(
+    await screen.findByRole("button", { name: /Tray A.*Clitoria ternatea/s }),
+  );
+  await user.click(screen.getByRole("tab", { name: "Germination" }));
+  expect(
+    await screen.findByText(
+      "No dated observations yet. Basic Sowing use does not require them.",
+    ),
+  ).toBeInTheDocument();
+  expect(screen.getAllByText("Not enough data")).toHaveLength(2);
+  await user.click(screen.getByRole("button", { name: "Add observation" }));
+  await user.type(screen.getByLabelText("Date"), "2026-04-14");
+  await user.type(screen.getByLabelText("Newly germinated"), "8");
+  await user.click(screen.getByRole("button", { name: "Save observation" }));
+  expect(await screen.findByText("40%")).toBeInTheDocument();
+  expect(screen.getByText("12")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Edit" }));
+  await user.clear(screen.getByLabelText("Newly germinated"));
+  await user.type(screen.getByLabelText("Newly germinated"), "0");
+  await user.click(screen.getByRole("button", { name: "Save observation" }));
+  expect((await screen.findAllByText("0")).length).toBeGreaterThanOrEqual(2);
+  await user.click(screen.getByRole("button", { name: "Delete" }));
+  expect(
+    screen.getByText(/simple germinated total will not change/),
+  ).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Delete observation" }));
+  expect(
+    await screen.findByText(
+      "No dated observations yet. Basic Sowing use does not require them.",
+    ),
+  ).toBeInTheDocument();
+});
+
 test("navigation exposes loading, empty, and missing-SeedLot states", async () => {
   mockApi((path) => {
     if (path === "/api/v1/sowings")

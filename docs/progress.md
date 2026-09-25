@@ -4,6 +4,44 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-25 — GERMINATION-001 implemented for operator visual review
+
+- Added Alembic revision `20260925_0025` for exact-day, non-negative incremental germination
+  observations, with one row per Sowing/date and a restrictive Sowing foreign key. Observation
+  mutations and Sowing edits lock the Sowing row before validating the independent cumulative total
+  against an exact seed count. Exact date edits cannot move sowing after an observation. The existing
+  operator-maintained `germinated_count` remains independent; corrections do not change lifecycle,
+  Events, propagation, or descendants.
+- Added protected typed germination detail and observation CRUD APIs. The backend derives chronological
+  cumulative counts, first positive observation, elapsed days where the Sowing date is exact,
+  exact-seed percentage, and decimal T50 from half the exact seeds sown using linear interpolation.
+  Missing date/denominator/threshold inputs return absent values rather than fabricated metrics.
+  Generated OpenAPI and frontend declarations are updated.
+- Added a read-first Sowing Germination tab with concise separate totals, missing-data explanations,
+  focused add/edit/delete dialogs, and a chronological table that stacks on mobile. A disposable
+  browser fixture covered no observations, zero-only and populated history, full metrics,
+  approximate quantity, partial date, threshold not reached, edit, delete, and mobile rows at
+  1440px, 1024px, and 390×844. This was implementation-level fixture review, not operator UAT.
+- Focused checks: 14 backend unit tests; 3 PostgreSQL migration, service and API integration tests;
+  Python 3.14 Ruff and mypy; Sowing frontend component tests, Prettier, ESLint, TypeScript, and
+  production build; generated OpenAPI drift, feature graph, and diff whitespace checks. The
+  independent review, canonical `make feature-verify`, and commit remain for Luna.
+
+## 2026-09-25 — GERMINATION-001 independent QA complete
+
+- Added regression coverage for odd-count T50, baseline and multi-zero interpolation, exact inputs,
+  endpoint authentication/CSRF/Origin, chronological insertion order, zero and exact-bound counts,
+  CRUD corrections, and Sowing date/quantity edits. A two-session PostgreSQL test confirms one of
+  two concurrent writes that exceed the exact seed total is rejected. Updated stale repository
+  integration assertions for the new table and Alembic head.
+- Independent checks passed: 11 germination unit cases, the Sowing frontend suite (15 tests), and
+  the targeted PostgreSQL checks. The full frontend suite passed (190 tests across 21 files).
+  Canonical `make feature-verify` passed with 414 backend unit tests and 348 PostgreSQL integration
+  tests, including the migration upgrade/downgrade/re-upgrade cycle, generated API drift, frontend
+  checks, production builds, and workflow helpers.
+- GERMINATION-001 remains `implemented`; the exact verified tree is ready for the requested local
+  commit. No production-code correction was required.
+
 ## 2026-09-25 — SEARCH-001 independent QA correction
 
 - Corrected Event search context projection to select the BotanicalIdentity belonging to the

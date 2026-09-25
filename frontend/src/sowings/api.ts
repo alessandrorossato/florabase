@@ -9,6 +9,12 @@ export type SowingQuantityInput = components["schemas"]["SowingQuantity-Input"];
 export type PartialDate = components["schemas"]["PartialDate"];
 export type SowingPropagationSummary =
   components["schemas"]["SowingPropagationSummary"];
+export type SowingGerminationDetail =
+  components["schemas"]["SowingGerminationDetail"];
+export type GerminationObservationWrite =
+  components["schemas"]["GerminationObservationWrite"];
+export type GerminationObservationResponse =
+  components["schemas"]["GerminationObservationResponse"];
 export type SowingPlantTransitionCreate =
   components["schemas"]["SowingPlantTransitionCreate"];
 export type SowingPlantTransitionResponse =
@@ -59,6 +65,49 @@ export function getSowingPropagationSummary(
   return requestJson(
     `/api/v1/sowings/${encodeURIComponent(id)}/propagation-summary`,
     { signal },
+  );
+}
+
+export function getSowingGermination(
+  id: string,
+  signal?: AbortSignal,
+): Promise<SowingGerminationDetail> {
+  return requestJson(`/api/v1/sowings/${encodeURIComponent(id)}/germination`, {
+    signal,
+  });
+}
+
+export function saveGerminationObservation(
+  sowingId: string,
+  payload: GerminationObservationWrite,
+  csrfToken: string,
+  observationId?: string,
+): Promise<SowingGerminationDetail> {
+  const path = `/api/v1/sowings/${encodeURIComponent(sowingId)}/germination-observations`;
+  return requestJson(
+    observationId ? `${path}/${encodeURIComponent(observationId)}` : path,
+    {
+      method: observationId ? "PUT" : "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": csrfToken,
+      },
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function deleteGerminationObservation(
+  sowingId: string,
+  observationId: string,
+  csrfToken: string,
+): Promise<SowingGerminationDetail> {
+  return requestJson(
+    `/api/v1/sowings/${encodeURIComponent(sowingId)}/germination-observations/${encodeURIComponent(observationId)}`,
+    {
+      method: "DELETE",
+      headers: { "X-CSRF-Token": csrfToken },
+    },
   );
 }
 
@@ -149,4 +198,14 @@ export function sowingValidationMessages(error: ApiError): string[] {
       }),
     ),
   );
+}
+
+export function sowingConflictMessage(error: ApiError): string | null {
+  if (!isRecord(error.body) || !isRecord(error.body.detail)) return null;
+  const code = error.body.detail.code;
+  if (code === "observations_exceed_seeds")
+    return "The exact seed count cannot be lower than the cumulative dated germinations.";
+  if (code === "sowing_after_observation")
+    return "The exact Sowing date cannot be later than a dated germination observation.";
+  return null;
 }

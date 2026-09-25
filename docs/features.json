@@ -583,7 +583,7 @@
       ],
       "dependencies": ["SOWING-003"],
       "priority": "P2",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "PWA-001",

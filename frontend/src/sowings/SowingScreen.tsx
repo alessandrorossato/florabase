@@ -28,11 +28,13 @@ import { PartialDateField } from "../seed-lots/PartialDateField";
 import { PhotosSection } from "../photos/PhotosSection";
 import { listSeedLots, type SeedLotResponse } from "../seed-lots/api";
 import { PropagationPath } from "../propagation/PropagationPath";
+import { GerminationSection } from "./GerminationSection";
 import {
   createSowing,
   getSowing,
   getSowingPropagationSummary,
   listSowings,
+  sowingConflictMessage,
   sowingValidationMessages,
   updateSowing,
   type PartialDate,
@@ -232,7 +234,8 @@ function Detail({
     };
   }, [sowing.id]);
   const [tab, setTab] = useState(
-    initialTab && ["overview", "photos", "lineage"].includes(initialTab)
+    initialTab &&
+      ["overview", "germination", "photos", "lineage"].includes(initialTab)
       ? initialTab
       : "overview",
   );
@@ -314,6 +317,7 @@ function Detail({
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
+          { id: "germination", label: "Germination" },
           { id: "photos", label: "Photos" },
           { id: "lineage", label: "Propagation" },
         ]}
@@ -563,6 +567,16 @@ function Detail({
               ]}
             />
           )}
+        </div>
+      )}
+      {tab === "germination" && (
+        <div
+          id="panel-germination"
+          className="detail-tab-panel"
+          role="tabpanel"
+          aria-labelledby="tab-germination"
+        >
+          <GerminationSection sowingId={sowing.id} />
         </div>
       )}
       {tab === "photos" && (
@@ -895,6 +909,14 @@ export function SowingScreen({
         auth.sessionExpired();
       else if (error instanceof ApiError && error.status === 422)
         setSave({ status: "error", messages: sowingValidationMessages(error) });
+      else if (error instanceof ApiError && error.status === 409)
+        setSave({
+          status: "error",
+          messages: [
+            sowingConflictMessage(error) ??
+              "Florabase could not apply these Sowing changes. Refresh and try again.",
+          ],
+        });
       else if (error instanceof ApiError && error.status === 403)
         setSave({
           status: "error",

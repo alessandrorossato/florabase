@@ -33,6 +33,17 @@ from florabase.propagation.service import (
     create_plant_group_from_sowing,
     propagation_summary,
 )
+from florabase.sowings.germination_schemas import (
+    GerminationObservationWrite,
+    SowingGerminationDetail,
+)
+from florabase.sowings.germination_service import (
+    GerminationConflictError,
+    create_observation,
+    delete_observation,
+    germination_detail,
+    update_observation,
+)
 from florabase.sowings.schemas import SowingCreate, SowingResponse, SowingUpdate
 from florabase.sowings.service import (
     SowingDomainConflictError,
@@ -92,6 +103,23 @@ def _plant_domain_conflict(error: PlantDomainConflictError) -> HTTPException:
         status_code=status.HTTP_409_CONFLICT,
         detail={"code": error.code, "message": error.message},
     )
+
+
+def _germination_detail(database: Session, sowing_id: UUID) -> SowingGerminationDetail:
+    detail = germination_detail(database, sowing_id)
+    if detail is None:
+        raise _not_found()
+    return detail
+
+
+def _observation_not_found() -> HTTPException:
+    return HTTPException(
+        404, detail={"code": "observation_not_found", "message": "Observation not found"}
+    )
+
+
+def _germination_conflict(error: GerminationConflictError) -> HTTPException:
+    return HTTPException(409, detail={"code": error.code, "message": error.message})
 
 
 @router.get("", response_model=list[SowingResponse], operation_id="listSowings")
@@ -210,6 +238,81 @@ def read(
     database: Annotated[Session, Depends(get_database_session)],
 ) -> SowingResponse:
     return _response(database, sowing_id)
+
+
+@router.get(
+    "/{sowing_id}/germination",
+    response_model=SowingGerminationDetail,
+    operation_id="getSowingGermination",
+)
+def read_germination(
+    sowing_id: UUID,
+    _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> SowingGerminationDetail:
+    return _germination_detail(database, sowing_id)
+
+
+@router.post(
+    "/{sowing_id}/germination-observations",
+    response_model=SowingGerminationDetail,
+    status_code=status.HTTP_201_CREATED,
+    operation_id="createGerminationObservation",
+)
+def create_germination_observation(
+    sowing_id: UUID,
+    payload: GerminationObservationWrite,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> SowingGerminationDetail:
+    require_owner(actor)
+    try:
+        if create_observation(database, sowing_id, payload) is None:
+            raise _not_found()
+    except GerminationConflictError as error:
+        raise _germination_conflict(error) from error
+    return _germination_detail(database, sowing_id)
+
+
+@router.put(
+    "/{sowing_id}/germination-observations/{observation_id}",
+    response_model=SowingGerminationDetail,
+    operation_id="updateGerminationObservation",
+)
+def edit_germination_observation(
+    sowing_id: UUID,
+    observation_id: UUID,
+    payload: GerminationObservationWrite,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> SowingGerminationDetail:
+    require_owner(actor)
+    try:
+        if update_observation(database, sowing_id, observation_id, payload) is None:
+            raise _observation_not_found()
+    except GerminationConflictError as error:
+        raise _germination_conflict(error) from error
+    return _germination_detail(database, sowing_id)
+
+
+@router.delete(
+    "/{sowing_id}/germination-observations/{observation_id}",
+    response_model=SowingGerminationDetail,
+    operation_id="deleteGerminationObservation",
+)
+def remove_germination_observation(
+    sowing_id: UUID,
+    observation_id: UUID,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> SowingGerminationDetail:
+    require_owner(actor)
+    try:
+        if not delete_observation(database, sowing_id, observation_id):
+            raise _observation_not_found()
+    except GerminationConflictError as error:
+        raise _germination_conflict(error) from error
+    return _germination_detail(database, sowing_id)
 
 
 @router.get(
