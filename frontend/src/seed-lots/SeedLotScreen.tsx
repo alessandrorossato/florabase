@@ -21,6 +21,8 @@ import {
 import { FieldHelp, InfoDisclosure } from "../components/ContextualHelp";
 import { LineagePanel } from "../lineage/LineagePanel";
 import { PhotosSection } from "../photos/PhotosSection";
+import { PrimaryPhotoVisual } from "../photos/PrimaryPhotoVisual";
+import type { PrimaryPhoto } from "../photos/api";
 import { listSowings, type SowingResponse } from "../sowings/api";
 import {
   listProvenanceSites,
@@ -317,10 +319,12 @@ function RelatedSowings({ seedLotId }: { seedLotId: string }) {
 function Detail({
   lot,
   onEdit,
+  onPrimaryChanged,
   initialTab,
 }: {
   lot: SeedLotResponse;
   onEdit: () => void;
+  onPrimaryChanged?: (photo: PrimaryPhoto | null) => void;
   initialTab?: string;
 }) {
   const [tab, setTab] = useState(
@@ -376,6 +380,14 @@ function Detail({
         editLabel="Edit seed lot"
         onEdit={onEdit}
       />
+      {lot.primary_photo && (
+        <div className="collection-primary-detail">
+          <PrimaryPhotoVisual
+            photo={lot.primary_photo}
+            label={lot.label ?? "seed lot"}
+          />
+        </div>
+      )}
       {lot.lifecycle !== "active" && (
         <div className="contextual-actions">
           <p className="field-help">
@@ -533,9 +545,12 @@ function Detail({
           aria-labelledby="tab-photos"
         >
           <PhotosSection
+            key={lot.id}
             target="seed_lot"
             targetId={lot.id}
             targetLabel={lot.label ?? "Unlabelled seed lot"}
+            primaryPhoto={lot.primary_photo}
+            onPrimaryChanged={onPrimaryChanged}
           />
         </div>
       )}
@@ -1051,6 +1066,11 @@ export function SeedLotScreen({
                     }}
                   >
                     <span className="seed-primary">
+                      <PrimaryPhotoVisual
+                        photo={lot.primary_photo ?? null}
+                        label={lot.label ?? "seed lot"}
+                        compact
+                      />
                       <strong>{lot.label ?? "Unlabelled seed lot"}</strong>
                       <small>{lot.botanical_identity.display_label}</small>
                     </span>
@@ -1493,6 +1513,20 @@ export function SeedLotScreen({
                 <Detail
                   lot={selected}
                   initialTab={initialTab}
+                  onPrimaryChanged={(photo) => {
+                    setInventory((current) =>
+                      current.status === "ready"
+                        ? {
+                            status: "ready",
+                            lots: current.lots.map((lot) =>
+                              lot.id === selected.id
+                                ? { ...lot, primary_photo: photo }
+                                : lot,
+                            ),
+                          }
+                        : current,
+                    );
+                  }}
                   onEdit={() => {
                     startEdit(selected);
                   }}

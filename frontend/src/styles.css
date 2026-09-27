@@ -4544,6 +4544,50 @@ button:disabled {
 .photo-card .collection-photo-image {
   max-width: 100%;
 }
+.primary-photo-badge {
+  display: inline-block;
+  margin-inline-start: 0.5rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--color-soft, #e8f0e8);
+  color: var(--color-ink, #243924);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.primary-photo-thumb {
+  display: block;
+  width: min(100%, 20rem);
+  max-height: 13rem;
+  object-fit: contain;
+  border-radius: 0.5rem;
+  background: #eef2ee;
+}
+.primary-photo-thumb--compact {
+  width: 3.25rem;
+  height: 3.25rem;
+  max-height: none;
+  object-fit: cover;
+}
+.seed-primary:has(.primary-photo-thumb--compact) {
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  column-gap: 0.65rem;
+}
+.seed-primary > .primary-photo-thumb--compact {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+.seed-primary:has(.primary-photo-thumb--compact) > strong,
+.seed-primary:has(.primary-photo-thumb--compact) > small {
+  grid-column: 2;
+}
+.primary-photo-fallback {
+  display: inline-block;
+  color: var(--color-muted, #526052);
+  font-size: 0.8rem;
+}
+.collection-primary-detail {
+  margin-block: 0.75rem 1rem;
+}
 .creation-reversal {
   margin-block: var(--space-6);
   border: 0;

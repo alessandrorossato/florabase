@@ -1,11 +1,13 @@
 import asyncio
 from datetime import UTC, datetime
+from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid7
 
 import pytest
 from fastapi import HTTPException, Response, UploadFile
 
+from florabase.attachments.storage import AttachmentStorageError
 from florabase.collection_photos import api
 from florabase.collection_photos.model import ExternalImageReference
 from florabase.collection_photos.schemas import (
@@ -15,6 +17,8 @@ from florabase.collection_photos.schemas import (
     ExternalImageUpdate,
     LocalPhotoResponse,
     LocalPhotoUpdate,
+    PrimaryPhotoResponse,
+    PrimaryPhotoSelection,
 )
 from florabase.collection_photos.service import CollectionPhotoError
 
@@ -184,6 +188,107 @@ def test_route_errors_are_normalized(monkeypatch: pytest.MonkeyPatch) -> None:
     with pytest.raises(HTTPException) as forbidden:
         api.delete_collection_photo(target_id, MagicMock(owner=False), database, MagicMock())
     assert forbidden.value.status_code == 403
+
+
+def test_primary_photo_routes_normalize_selection_and_target_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    target_id, photo_id = uuid7(), uuid7()
+    actor = MagicMock(owner=True)
+    database, storage = MagicMock(), MagicMock()
+    primary = PrimaryPhotoResponse(kind="external", photo_id=photo_id, thumbnail_url=None)
+    monkeypatch.setattr(api, "read_primary", lambda *_args: primary)
+    assert api.get_collection_primary_photo("plant", target_id, actor, database) == primary
+
+    selection = PrimaryPhotoSelection(kind="external", photo_id=photo_id)
+    monkeypatch.setattr(api, "set_primary", lambda *_args: primary)
+    assert (
+        api.set_collection_primary_photo("plant", target_id, selection, actor, database, storage)
+        == primary
+    )
+    monkeypatch.setattr(api, "clear_primary", lambda *_args: None)
+    assert (
+        api.clear_collection_primary_photo("plant", target_id, actor, database).status_code == 204
+    )
+
+    def missing(*_args: object) -> None:
+        raise CollectionPhotoError("primary_photo_not_found", "missing photo")
+
+    monkeypatch.setattr(api, "set_primary", missing)
+    with pytest.raises(HTTPException) as not_found:
+        api.set_collection_primary_photo("plant", target_id, selection, actor, database, storage)
+    assert not_found.value.status_code == 404
+
+    monkeypatch.setattr(api, "clear_primary", missing)
+    with pytest.raises(HTTPException) as clear_error:
+        api.clear_collection_primary_photo("plant", target_id, actor, database)
+    assert clear_error.value.status_code == 404
+
+
+def test_local_photo_thumbnail_private_validator_and_failures(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    photo_id = uuid7()
+    actor, database, storage = MagicMock(), MagicMock(), MagicMock()
+    attachment = MagicMock(
+        state="active", sha256="b" * 64, storage_key="objects/bb/" + "b" * 32, byte_size=24
+    )
+    monkeypatch.setattr(api, "get_local_photo", lambda *_args: (MagicMock(), attachment))
+    storage.active_path.return_value = Path("/tmp/review-image")
+    render = MagicMock(return_value=b"webp")
+    monkeypatch.setattr(api, "render_identity_cover_thumbnail", render)
+
+    response = api.get_collection_photo_thumbnail(photo_id, actor, database, storage)
+    assert response.status_code == 200
+    assert response.media_type == "image/webp"
+    assert response.headers["Cache-Control"].startswith("private")
+    assert response.headers["Vary"] == "Cookie"
+    assert response.headers["X-Content-Type-Options"] == "nosniff"
+
+    etag = response.headers["ETag"]
+    cached = api.get_collection_photo_thumbnail(
+        photo_id, actor, database, storage, if_none_match=f"W/{etag}"
+    )
+    assert cached.status_code == 304
+    assert render.call_count == 1
+
+    monkeypatch.setattr(api, "get_local_photo", lambda *_args: None)
+    with pytest.raises(HTTPException) as missing:
+        api.get_collection_photo_thumbnail(photo_id, actor, database, storage)
+    assert missing.value.status_code == 404
+
+    monkeypatch.setattr(api, "get_local_photo", lambda *_args: (MagicMock(), attachment))
+    storage.active_path.side_effect = AttachmentStorageError("missing", "file unavailable")
+    with pytest.raises(HTTPException) as unavailable:
+        api.get_collection_photo_thumbnail(photo_id, actor, database, storage)
+    assert unavailable.value.status_code == 503
+
+
+def test_photo_upload_validation_and_storage_errors_are_normalized(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    target_id = uuid7()
+    actor, database, storage, response = MagicMock(owner=True), MagicMock(), MagicMock(), Response()
+    file = MagicMock(spec=UploadFile)
+    with pytest.raises(HTTPException) as invalid:
+        asyncio.run(
+            api.upload_collection_photo(
+                "plant", target_id, response, actor, database, storage, file, "x" * 2001
+            )
+        )
+    assert invalid.value.status_code == 422
+
+    async def fail(*_args: object) -> None:
+        raise AttachmentStorageError("invalid_image", "unsupported image")
+
+    monkeypatch.setattr(api, "upload_local_photo", fail)
+    with pytest.raises(HTTPException) as failed_upload:
+        asyncio.run(
+            api.upload_collection_photo(
+                "plant", target_id, response, actor, database, storage, file
+            )
+        )
+    assert failed_upload.value.status_code == 422
 
 
 def test_identity_cover_routes_are_narrow_and_normalized(

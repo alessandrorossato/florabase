@@ -4,6 +4,7 @@ import { requestJson } from "../auth/api";
 export type LocalPhoto = components["schemas"]["LocalPhotoResponse"];
 export type ExternalImage = components["schemas"]["ExternalImageResponse"];
 export type CollectionPhoto = LocalPhoto | ExternalImage;
+export type PrimaryPhoto = components["schemas"]["PrimaryPhotoResponse"];
 export type ExternalImageWrite = components["schemas"]["ExternalImageCreate"];
 export type LocalPhotoUpdate = components["schemas"]["LocalPhotoUpdate"];
 export type PhotoTarget =
@@ -11,6 +12,45 @@ export type PhotoTarget =
 
 function targetPath(target: PhotoTarget, id: string): string {
   return `/api/v1/collection-records/${target}/${encodeURIComponent(id)}/photos`;
+}
+
+export function getPrimaryPhoto(
+  target: "seed_lot" | "plant" | "plant_group",
+  id: string,
+): Promise<PrimaryPhoto | null> {
+  return requestJson(
+    `/api/v1/collection-records/${target}/${encodeURIComponent(id)}/primary-photo`,
+  );
+}
+
+export function setPrimaryPhoto(
+  target: "seed_lot" | "plant" | "plant_group",
+  id: string,
+  photo: Pick<PrimaryPhoto, "kind" | "photo_id">,
+  csrfToken: string,
+): Promise<PrimaryPhoto> {
+  return requestJson(
+    `/api/v1/collection-records/${target}/${encodeURIComponent(id)}/primary-photo`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": csrfToken,
+      },
+      body: JSON.stringify(photo),
+    },
+  );
+}
+
+export function clearPrimaryPhoto(
+  target: "seed_lot" | "plant" | "plant_group",
+  id: string,
+  csrfToken: string,
+): Promise<void> {
+  return requestJson(
+    `/api/v1/collection-records/${target}/${encodeURIComponent(id)}/primary-photo`,
+    { method: "DELETE", headers: { "X-CSRF-Token": csrfToken } },
+  );
 }
 
 export function listPhotos(

@@ -27,6 +27,8 @@ import { FieldHelp } from "../components/ContextualHelp";
 import { EventJournal } from "../events/EventJournal";
 import { LineagePanel } from "../lineage/LineagePanel";
 import { PhotosSection } from "../photos/PhotosSection";
+import { PrimaryPhotoVisual } from "../photos/PrimaryPhotoVisual";
+import type { PrimaryPhoto } from "../photos/api";
 import {
   listGeographicPlaces,
   type GeographicPlaceResponse,
@@ -311,6 +313,7 @@ function Detail({
   headingRef,
   onEventTargetRefresh,
   onEdit,
+  onPrimaryChanged,
   primaryActions,
   initialTab,
 }: {
@@ -320,6 +323,7 @@ function Detail({
   headingRef: RefObject<HTMLHeadingElement | null>;
   onEventTargetRefresh: () => Promise<void>;
   onEdit: () => void;
+  onPrimaryChanged?: (photo: PrimaryPhoto | null) => void;
   primaryActions?: ReactNode;
   initialTab?: string;
 }) {
@@ -380,6 +384,16 @@ function Detail({
         editLabel={`Edit ${record.kind === "plant" ? "Plant" : "Plant group"}`}
         onEdit={onEdit}
       />
+      {value.primary_photo && (
+        <div className="collection-primary-detail">
+          <PrimaryPhotoVisual
+            photo={value.primary_photo}
+            label={
+              value.label ?? (record.kind === "plant" ? "plant" : "plant group")
+            }
+          />
+        </div>
+      )}
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
@@ -639,6 +653,7 @@ function Detail({
           aria-labelledby="tab-photos"
         >
           <PhotosSection
+            key={`${record.kind}:${value.id}`}
             target={record.kind === "plant" ? "plant" : "plant_group"}
             targetId={value.id}
             targetLabel={
@@ -647,6 +662,8 @@ function Detail({
                 ? "Unlabelled plant"
                 : "Unlabelled plant group")
             }
+            primaryPhoto={value.primary_photo}
+            onPrimaryChanged={onPrimaryChanged}
           />
         </div>
       )}
@@ -1530,6 +1547,14 @@ export function PlantScreen({
                       }}
                     >
                       <span className="seed-primary">
+                        <PrimaryPhotoVisual
+                          photo={value.primary_photo ?? null}
+                          label={
+                            value.label ??
+                            (record.kind === "plant" ? "plant" : "plant group")
+                          }
+                          compact
+                        />
                         <strong>
                           {value.label ??
                             (record.kind === "plant"
@@ -2183,6 +2208,41 @@ export function PlantScreen({
                 <Detail
                   key={`${recordKey(selected)}:${selected.value.updated_at}`}
                   record={selected}
+                  onPrimaryChanged={(photo) => {
+                    setDetail((current) =>
+                      current.status === "ready" &&
+                      recordKey(current.record) === recordKey(selected)
+                        ? {
+                            status: "ready",
+                            record: {
+                              ...current.record,
+                              value: {
+                                ...current.record.value,
+                                primary_photo: photo,
+                              },
+                            } as PlantRecord,
+                          }
+                        : current,
+                    );
+                    setCollection((current) =>
+                      current.status === "ready"
+                        ? {
+                            status: "ready",
+                            records: current.records.map((record) =>
+                              recordKey(record) === recordKey(selected)
+                                ? ({
+                                    ...record,
+                                    value: {
+                                      ...record.value,
+                                      primary_photo: photo,
+                                    },
+                                  } as PlantRecord)
+                                : record,
+                            ),
+                          }
+                        : current,
+                    );
+                  }}
                   sowings={references.sowings}
                   locations={references.locations}
                   headingRef={detailHeading}

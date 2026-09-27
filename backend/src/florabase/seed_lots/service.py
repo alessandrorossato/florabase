@@ -9,6 +9,7 @@ from sqlalchemy.sql import Select
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
+from florabase.collection_photos.primary import primary_summaries
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.service import display_path as geographic_display_path
 from florabase.geographic_places.service import list_geographic_places
@@ -297,6 +298,9 @@ def _quantity(seed_lot: SeedLot) -> SeedQuantity | None:
 
 
 def responses(database: Session, projections: list[SeedLotProjection]) -> list[SeedLotResponse]:
+    primary_by_id = primary_summaries(
+        database, "seed_lot", [item.seed_lot.id for item in projections]
+    )
     places = (
         list_geographic_places(database)
         if any(item.material_provenance for item in projections)
@@ -316,6 +320,7 @@ def responses(database: Session, projections: list[SeedLotProjection]) -> list[S
         result.append(
             SeedLotResponse(
                 id=seed_lot.id,
+                primary_photo=primary_by_id.get(seed_lot.id),
                 botanical_identity_id=seed_lot.botanical_identity_id,
                 botanical_identity=BotanicalIdentitySummary(
                     id=botanical.id, display_label=botanical.display_label
