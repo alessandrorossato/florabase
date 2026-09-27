@@ -3561,6 +3561,8 @@ export interface components {
         SeedWeightUnit: "g" | "mg";
         /** SessionResponse */
         SessionResponse: {
+            /** Canonical Origin */
+            canonical_origin: string | null;
             /** Display Name */
             display_name: string | null;
             /** Login Name */

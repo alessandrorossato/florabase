@@ -45,6 +45,7 @@ const auth: AuthContextValue = {
       login_name: "owner",
       display_name: "Owner",
       owner: true,
+      canonical_origin: "http://localhost:5173",
     },
     csrfToken: "csrf",
   },

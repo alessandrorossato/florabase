@@ -19,6 +19,11 @@ responsibilities.
   OpenAPI, and structured logs.
 - The frontend owns accessible interactions and explicit loading, empty, success, and failure states.
   It uses relative API URLs and never connects to PostgreSQL.
+  LABEL-001's temporary browser composer derives SeedLot, Plant, and PlantGroup labels from existing
+  protected APIs, generates SVG QRs locally, and prints through CSS physical units. Lookup uses the
+  application's existing hash detail routes and configured canonical origin; no public endpoint,
+  new URL setting, persistence, worker, external image request, or PDF service is added. See
+  [labels.md](labels.md).
 - PostgreSQL is the source of truth for accounts, sessions, reference data, collection data,
   constraints, timestamps, and migration state.
 - The production frontend nginx serves built assets and proxies `/api/`; it is not the public TLS
@@ -33,6 +38,8 @@ ports. `compose.integration.yaml` owns an isolated tmpfs PostgreSQL test project
 
 Backend settings are centralized in `florabase.core.config`. Production requires an exact HTTPS
 canonical origin, secure cookies, and empty CORS configuration for the same-origin application.
+The authenticated session returns that configured canonical origin to UI features that need to
+construct stable public links; request Host and forwarded headers do not select it.
 Development explicitly uses `http://localhost:5173` and a loopback-only cookie mode. See
 [deployment.md](deployment.md).
 

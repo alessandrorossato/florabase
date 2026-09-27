@@ -365,6 +365,15 @@ exact member completes the group. Approximate and unknown quantities remain unch
 subtracting one would imply false precision. The same transaction creates an extraction Event on
 the source PlantGroup with a restrictive structured reference to the resulting Plant.
 
+### Physical lookup labels
+
+LABEL-001 derives temporary physical lookup labels from existing SeedLot, Plant, and PlantGroup
+responses. BotanicalIdentity display text and the record's optional label remain owned by their
+existing capabilities. The fixed A4 / 50 × 30 mm composer creates no domain entity, identifier,
+database copy, or print job. QR codes carry only stable existing record URLs and retain normal
+authorization. Sowing, Event, BotanicalIdentity, and reference records are not label targets. See
+[labels.md](labels.md).
+
 ### Event
 
 An Event is an explicitly recorded historical occurrence for exactly one Plant or PlantGroup. It

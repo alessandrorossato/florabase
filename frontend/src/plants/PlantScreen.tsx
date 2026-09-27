@@ -1,3 +1,4 @@
+import { labelComposerHref } from "../labels/labelData";
 import { CreationReversal } from "../propagation/CreationReversal";
 import {
   useEffect,
@@ -383,6 +384,17 @@ function Detail({
         primaryActions={primaryActions}
         editLabel={`Edit ${record.kind === "plant" ? "Plant" : "Plant group"}`}
         onEdit={onEdit}
+        overflow={
+          <a
+            className="button-link button--secondary"
+            href={labelComposerHref(
+              record.kind === "plant" ? "plant" : "plant-group",
+              value.id,
+            )}
+          >
+            Print label
+          </a>
+        }
       />
       {value.primary_photo && (
         <div className="collection-primary-detail">

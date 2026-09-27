@@ -12,6 +12,7 @@ const session = {
   login_name: "owner",
   display_name: "Florabase Owner",
   owner: true,
+  canonical_origin: "http://localhost:5173",
 };
 
 function jsonResponse(

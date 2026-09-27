@@ -341,6 +341,24 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
+test.each(["plant", "plant-group"] as const)(
+  "authenticated %s deep link opens existing detail with its label action",
+  async (kind) => {
+    const record = kind === "plant" ? plant() : group();
+    window.location.hash = `#/${kind === "plant" ? "plants" : "plant-groups"}/${record.id}`;
+    mockApi(plantHandler([plant()], [group()]));
+    render(<App />);
+    expect(
+      await screen.findByRole("link", { name: "Print label" }),
+    ).toHaveAttribute("href", `#/labels?kind=${kind}&record=${record.id}`);
+    expect(
+      screen.getByRole("button", {
+        name: kind === "plant" ? "Edit Plant" : "Edit Plant group",
+      }),
+    ).toBeVisible();
+  },
+);
+
 test("Plants navigation exposes loading, empty, missing-identity, and failure states", async () => {
   mockApi((path) => {
     if (path === "/api/v1/plants" || path === "/api/v1/plant-groups")

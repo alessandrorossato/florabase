@@ -23,6 +23,10 @@ def test_production_rejects_wildcard_cors() -> None:
         ({}, "Canonical public origin"),
         ({"canonical_origin": "http://florabase.example"}, "must use HTTPS"),
         (
+            {"canonical_origin": "https://user:secret@florabase.example"},
+            "scheme and authority",
+        ),
+        (
             {
                 "canonical_origin": "https://florabase.example",
                 "cookie_mode": CookieMode.LOOPBACK_DEVELOPMENT,

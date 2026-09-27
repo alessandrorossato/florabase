@@ -168,6 +168,32 @@ def references(database_connection: Connection) -> dict[str, str]:
         }
 
 
+@pytest.mark.parametrize("route", ["seed-lots", "plants", "plant-groups"])
+def test_label_record_lookup_uses_normal_authorization_and_existing_errors(
+    route: str,
+    authenticated_browser: tuple[str, str],
+    references: dict[str, str],
+) -> None:
+    payload = {"botanical_identity_id": references["identity"]}
+    if route != "seed-lots":
+        payload["direct_origin_kind"] = "unknown"
+    status, _, record = mutate(authenticated_browser, "POST", f"/api/v1/{route}", payload)
+    assert status == 201
+    path = f"/api/v1/{route}/{record['id']}"
+    cookie, _ = authenticated_browser
+    assert request("GET", path)[0] == 401
+    assert request("GET", path, headers={"cookie": "florabase_session=invalid"})[0] == 401
+    status, _, loaded = request("GET", path, headers={"cookie": cookie})
+    assert status == 200
+    assert loaded["id"] == record["id"]
+    assert (
+        loaded["botanical_identity"]["display_label"]
+        == record["botanical_identity"]["display_label"]
+    )
+    assert request("GET", f"/api/v1/{route}/{uuid7()}", headers={"cookie": cookie})[0] == 404
+    assert request("GET", f"/api/v1/{route}/invalid-uuid", headers={"cookie": cookie})[0] == 422
+
+
 def test_minimal_full_duplicate_historical_references_summaries_and_live_renames(
     authenticated_browser: tuple[str, str],
     references: dict[str, str],
