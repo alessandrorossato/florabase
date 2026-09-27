@@ -570,7 +570,7 @@
       ],
       "dependencies": ["ATTACHMENT-003", "UX-006"],
       "priority": "P2",
-      "status": "planned"
+      "status": "implemented"
     },
     {
       "id": "GERMINATION-001",

@@ -7,7 +7,11 @@ from florabase.attachments.model import Attachment
 from florabase.auth.model import AuthSession, LoginThrottle, User
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_profiles.model import BotanicalProfile, BotanicalProfileNativeRange
-from florabase.collection_photos.model import ExternalImageReference, LocalCollectionPhoto
+from florabase.collection_photos.model import (
+    CollectionPrimaryPhoto,
+    ExternalImageReference,
+    LocalCollectionPhoto,
+)
 from florabase.core.config import get_settings
 from florabase.db.base import Base
 from florabase.events.model import Event
@@ -32,6 +36,7 @@ assert BotanicalIdentity.__table__.metadata is target_metadata
 assert Attachment.__table__.metadata is target_metadata
 assert LocalCollectionPhoto.__table__.metadata is target_metadata
 assert ExternalImageReference.__table__.metadata is target_metadata
+assert CollectionPrimaryPhoto.__table__.metadata is target_metadata
 assert BotanicalProfile.__table__.metadata is target_metadata
 assert BotanicalProfileNativeRange.__table__.metadata is target_metadata
 assert ExternalTaxonLink.__table__.metadata is target_metadata

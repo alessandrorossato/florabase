@@ -116,6 +116,48 @@ class ExternalImageReference(CollectionPhotoTargetMixin, Base):
     )
 
 
+class CollectionPrimaryPhoto(Base):
+    __tablename__ = "collection_primary_photos"
+    __table_args__ = (
+        CheckConstraint(
+            "num_nonnulls(seed_lot_id, plant_id, plant_group_id) = 1",
+            name="ck_collection_primary_photos_exactly_one_target",
+        ),
+        CheckConstraint(
+            "num_nonnulls(local_collection_photo_id, external_image_reference_id) = 1",
+            name="ck_collection_primary_photos_exactly_one_source",
+        ),
+        UniqueConstraint("seed_lot_id", name="uq_collection_primary_photos_seed_lot_id"),
+        UniqueConstraint("plant_id", name="uq_collection_primary_photos_plant_id"),
+        UniqueConstraint("plant_group_id", name="uq_collection_primary_photos_plant_group_id"),
+        UniqueConstraint("local_collection_photo_id", name="uq_collection_primary_photos_local_id"),
+        UniqueConstraint(
+            "external_image_reference_id", name="uq_collection_primary_photos_external_id"
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid7)
+    seed_lot_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("seed_lots.id", ondelete="RESTRICT"), nullable=True
+    )
+    plant_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("plants.id", ondelete="RESTRICT"), nullable=True
+    )
+    plant_group_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("plant_groups.id", ondelete="RESTRICT"), nullable=True
+    )
+    local_collection_photo_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("local_collection_photos.id", ondelete="CASCADE"), nullable=True
+    )
+    external_image_reference_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("external_image_references.id", ondelete="CASCADE"), nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+
 class BotanicalIdentityCoverImage(Base):
     __tablename__ = "botanical_identity_cover_images"
     __table_args__ = (

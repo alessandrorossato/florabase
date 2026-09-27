@@ -6,6 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from florabase.collection_photos.schemas import PrimaryPhotoResponse
 from florabase.plants.model import DirectOriginKind, PlantGroupLifecycle, PlantLifecycle
 from florabase.provenance_sites.schemas import ProvenanceSiteSummary
 from florabase.seed_lots.model import PartialDatePrecision
@@ -219,6 +220,7 @@ class LocationSummary(BaseModel):
 
 class PlantCommonResponse(BaseModel):
     id: UUID
+    primary_photo: PrimaryPhotoResponse | None = None
     botanical_identity_id: UUID
     botanical_identity: BotanicalIdentitySummary
     originating_sowing_id: UUID | None

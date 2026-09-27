@@ -182,6 +182,17 @@ class ExternalImageResponse(BaseModel):
     updated_at: datetime
 
 
+class PrimaryPhotoSelection(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    kind: Literal["local", "external"]
+    photo_id: UUID
+
+
+class PrimaryPhotoResponse(PrimaryPhotoSelection):
+    thumbnail_url: str | None
+
+
 class LocalCoverResponse(BaseModel):
     kind: Literal["local"] = "local"
     id: UUID

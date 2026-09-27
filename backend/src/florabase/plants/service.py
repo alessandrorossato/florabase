@@ -10,6 +10,7 @@ from sqlalchemy.sql import Select
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
+from florabase.collection_photos.primary import primary_summaries
 from florabase.events.model import Event, EventKind
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.service import display_path as geographic_display_path
@@ -877,6 +878,7 @@ def _common_response_values(
 
 
 def plant_responses(database: Session, projections: list[PlantProjection]) -> list[PlantResponse]:
+    primary_by_id = primary_summaries(database, "plant", [item.plant.id for item in projections])
     places = (
         list_geographic_places(database)
         if any(item.material_provenance for item in projections)
@@ -891,6 +893,7 @@ def plant_responses(database: Session, projections: list[PlantProjection]) -> li
     )
     return [
         PlantResponse(
+            primary_photo=primary_by_id.get(item.plant.id),
             **_common_response_values(
                 item.plant,
                 item.botanical_identity,
@@ -939,6 +942,9 @@ def plant_responses(database: Session, projections: list[PlantProjection]) -> li
 def plant_group_responses(
     database: Session, projections: list[PlantGroupProjection]
 ) -> list[PlantGroupResponse]:
+    primary_by_id = primary_summaries(
+        database, "plant_group", [item.plant_group.id for item in projections]
+    )
     places = (
         list_geographic_places(database)
         if any(item.material_provenance for item in projections)
@@ -964,6 +970,7 @@ def plant_group_responses(
         )
         result.append(
             PlantGroupResponse(
+                primary_photo=primary_by_id.get(item.plant_group.id),
                 **_common_response_values(
                     item.plant_group,
                     item.botanical_identity,

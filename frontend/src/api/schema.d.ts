@@ -423,6 +423,23 @@ export interface paths {
         patch: operations["updateCollectionPhoto"];
         trace?: never;
     };
+    "/api/v1/collection-photos/local/{photo_id}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Collection Photo Thumbnail */
+        get: operations["getCollectionPhotoThumbnail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/collection-records/{target_type}/{target_id}/photos": {
         parameters: {
             query?: never;
@@ -469,6 +486,25 @@ export interface paths {
         /** Upload Collection Photo */
         post: operations["uploadCollectionPhoto"];
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/collection-records/{target_type}/{target_id}/primary-photo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Collection Primary Photo */
+        get: operations["getCollectionPrimaryPhoto"];
+        /** Set Collection Primary Photo */
+        put: operations["setCollectionPrimaryPhoto"];
+        post?: never;
+        /** Clear Collection Primary Photo */
+        delete: operations["clearCollectionPrimaryPhoto"];
         options?: never;
         head?: never;
         patch?: never;
@@ -2765,6 +2801,7 @@ export interface components {
             originating_sowing: components["schemas"]["OriginatingSowingSummary"] | null;
             /** Originating Sowing Id */
             originating_sowing_id: string | null;
+            primary_photo?: components["schemas"]["PrimaryPhotoResponse"] | null;
             provenance_site: components["schemas"]["ProvenanceSiteSummary"] | null;
             /** Provenance Site Id */
             provenance_site_id: string | null;
@@ -2904,6 +2941,7 @@ export interface components {
             originating_sowing: components["schemas"]["OriginatingSowingSummary"] | null;
             /** Originating Sowing Id */
             originating_sowing_id: string | null;
+            primary_photo?: components["schemas"]["PrimaryPhotoResponse"] | null;
             provenance_site: components["schemas"]["ProvenanceSiteSummary"] | null;
             /** Provenance Site Id */
             provenance_site_id: string | null;
@@ -2948,6 +2986,34 @@ export interface components {
             provenance_site_id?: string | null;
             /** Supplier Id */
             supplier_id?: string | null;
+        };
+        /** PrimaryPhotoResponse */
+        PrimaryPhotoResponse: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "local" | "external";
+            /**
+             * Photo Id
+             * Format: uuid
+             */
+            photo_id: string;
+            /** Thumbnail Url */
+            thumbnail_url: string | null;
+        };
+        /** PrimaryPhotoSelection */
+        PrimaryPhotoSelection: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "local" | "external";
+            /**
+             * Photo Id
+             * Format: uuid
+             */
+            photo_id: string;
         };
         /** ProducerPlantGroupSummary */
         ProducerPlantGroupSummary: {
@@ -3389,6 +3455,7 @@ export interface components {
             material_provenance_place_id: string | null;
             /** Notes */
             notes: string | null;
+            primary_photo?: components["schemas"]["PrimaryPhotoResponse"] | null;
             producer_plant: components["schemas"]["ProducerPlantSummary"] | null;
             producer_plant_group: components["schemas"]["ProducerPlantGroupSummary"] | null;
             /** Producer Plant Group Id */
@@ -5332,6 +5399,39 @@ export interface operations {
             };
         };
     };
+    getCollectionPhotoThumbnail: {
+        parameters: {
+            query?: never;
+            header?: {
+                "if-none-match"?: string | null;
+            };
+            path: {
+                photo_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Bounded local photo thumbnail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/webp": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     listCollectionPhotos: {
         parameters: {
             query?: never;
@@ -5428,6 +5528,108 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["LocalPhotoResponse"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getCollectionPrimaryPhoto: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                target_type: "seed_lot" | "plant" | "plant_group";
+                target_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrimaryPhotoResponse"] | null;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    setCollectionPrimaryPhoto: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                target_type: "seed_lot" | "plant" | "plant_group";
+                target_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PrimaryPhotoSelection"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PrimaryPhotoResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clearCollectionPrimaryPhoto: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                target_type: "seed_lot" | "plant" | "plant_group";
+                target_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {

@@ -3837,6 +3837,16 @@
             ],
             "title": "Originating Sowing Id"
           },
+          "primary_photo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrimaryPhotoResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "provenance_site": {
             "anyOf": [
               {
@@ -4392,6 +4402,16 @@
             ],
             "title": "Originating Sowing Id"
           },
+          "primary_photo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrimaryPhotoResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "provenance_site": {
             "anyOf": [
               {
@@ -4619,6 +4639,66 @@
           "botanical_identity_id"
         ],
         "title": "PlantUpdate",
+        "type": "object"
+      },
+      "PrimaryPhotoResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "local",
+              "external"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "photo_id": {
+            "format": "uuid",
+            "title": "Photo Id",
+            "type": "string"
+          },
+          "thumbnail_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Thumbnail Url"
+          }
+        },
+        "required": [
+          "kind",
+          "photo_id",
+          "thumbnail_url"
+        ],
+        "title": "PrimaryPhotoResponse",
+        "type": "object"
+      },
+      "PrimaryPhotoSelection": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "local",
+              "external"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "photo_id": {
+            "format": "uuid",
+            "title": "Photo Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "photo_id"
+        ],
+        "title": "PrimaryPhotoSelection",
         "type": "object"
       },
       "ProducerPlantGroupSummary": {
@@ -6059,6 +6139,16 @@
               }
             ],
             "title": "Notes"
+          },
+          "primary_photo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrimaryPhotoResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "producer_plant": {
             "anyOf": [
@@ -10624,6 +10714,61 @@
         ]
       }
     },
+    "/api/v1/collection-photos/local/{photo_id}/thumbnail": {
+      "get": {
+        "operationId": "getCollectionPhotoThumbnail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "photo_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Photo Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-none-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-None-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/webp": {}
+            },
+            "description": "Bounded local photo thumbnail"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Collection Photo Thumbnail",
+        "tags": [
+          "collection photos"
+        ]
+      }
+    },
     "/api/v1/collection-records/{target_type}/{target_id}/photos": {
       "get": {
         "operationId": "listCollectionPhotos",
@@ -10866,6 +11011,216 @@
           }
         },
         "summary": "Upload Collection Photo",
+        "tags": [
+          "collection photos"
+        ]
+      }
+    },
+    "/api/v1/collection-records/{target_type}/{target_id}/primary-photo": {
+      "delete": {
+        "operationId": "clearCollectionPrimaryPhoto",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "target_type",
+            "required": true,
+            "schema": {
+              "enum": [
+                "seed_lot",
+                "plant",
+                "plant_group"
+              ],
+              "title": "Target Type",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "target_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Target Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clear Collection Primary Photo",
+        "tags": [
+          "collection photos"
+        ]
+      },
+      "get": {
+        "operationId": "getCollectionPrimaryPhoto",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "target_type",
+            "required": true,
+            "schema": {
+              "enum": [
+                "seed_lot",
+                "plant",
+                "plant_group"
+              ],
+              "title": "Target Type",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "target_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Target Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PrimaryPhotoResponse"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "title": "Response Getcollectionprimaryphoto"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Collection Primary Photo",
+        "tags": [
+          "collection photos"
+        ]
+      },
+      "put": {
+        "operationId": "setCollectionPrimaryPhoto",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "target_type",
+            "required": true,
+            "schema": {
+              "enum": [
+                "seed_lot",
+                "plant",
+                "plant_group"
+              ],
+              "title": "Target Type",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "target_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Target Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrimaryPhotoSelection"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PrimaryPhotoResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set Collection Primary Photo",
         "tags": [
           "collection photos"
         ]

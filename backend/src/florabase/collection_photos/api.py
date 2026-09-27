@@ -25,6 +25,12 @@ from florabase.auth.dependencies import (
     require_owner,
 )
 from florabase.collection_photos.model import ExternalImageReference
+from florabase.collection_photos.primary import (
+    PrimaryTarget,
+    clear_primary,
+    read_primary,
+    set_primary,
+)
 from florabase.collection_photos.schemas import (
     BotanicalIdentityCoverResponse,
     CollectionPhotoResponse,
@@ -37,6 +43,8 @@ from florabase.collection_photos.schemas import (
     LocalPhotoResponse,
     LocalPhotoUpdate,
     PhotoMetadataWrite,
+    PrimaryPhotoResponse,
+    PrimaryPhotoSelection,
 )
 from florabase.collection_photos.service import (
     CollectionPhotoError,
@@ -70,6 +78,9 @@ def _error(error: CollectionPhotoError) -> HTTPException:
         "attachment_content_missing": status.HTTP_409_CONFLICT,
         "cover_attachment_missing": status.HTTP_409_CONFLICT,
         "cover_external_metadata_missing": status.HTTP_409_CONFLICT,
+        "primary_photo_not_found": status.HTTP_404_NOT_FOUND,
+        "primary_photo_wrong_target": status.HTTP_409_CONFLICT,
+        "primary_photo_unavailable": status.HTTP_409_CONFLICT,
     }.get(error.code, status.HTTP_503_SERVICE_UNAVAILABLE)
     return HTTPException(
         status_code=response_status,
@@ -86,6 +97,99 @@ def _missing(kind: str) -> HTTPException:
 
 def _external_response(reference: ExternalImageReference) -> ExternalImageResponse:
     return ExternalImageResponse.model_validate(reference, from_attributes=True)
+
+
+@router.get(
+    "/collection-records/{target_type}/{target_id}/primary-photo",
+    response_model=PrimaryPhotoResponse | None,
+    operation_id="getCollectionPrimaryPhoto",
+)
+def get_collection_primary_photo(
+    target_type: PrimaryTarget,
+    target_id: UUID,
+    _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> PrimaryPhotoResponse | None:
+    try:
+        return read_primary(database, target_type, target_id)
+    except CollectionPhotoError as error:
+        raise _error(error) from error
+
+
+@router.put(
+    "/collection-records/{target_type}/{target_id}/primary-photo",
+    response_model=PrimaryPhotoResponse,
+    operation_id="setCollectionPrimaryPhoto",
+)
+def set_collection_primary_photo(
+    target_type: PrimaryTarget,
+    target_id: UUID,
+    payload: PrimaryPhotoSelection,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session)],
+    storage: Annotated[AttachmentStorage, Depends(get_attachment_storage)],
+) -> PrimaryPhotoResponse:
+    require_owner(actor)
+    try:
+        return set_primary(database, storage, target_type, target_id, payload)
+    except CollectionPhotoError as error:
+        raise _error(error) from error
+
+
+@router.delete(
+    "/collection-records/{target_type}/{target_id}/primary-photo",
+    status_code=status.HTTP_204_NO_CONTENT,
+    operation_id="clearCollectionPrimaryPhoto",
+)
+def clear_collection_primary_photo(
+    target_type: PrimaryTarget,
+    target_id: UUID,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session)],
+) -> Response:
+    require_owner(actor)
+    try:
+        clear_primary(database, target_type, target_id)
+    except CollectionPhotoError as error:
+        raise _error(error) from error
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get(
+    "/collection-photos/local/{photo_id}/thumbnail",
+    response_class=Response,
+    responses={
+        200: {"content": {"image/webp": {}}, "description": "Bounded local photo thumbnail"}
+    },
+    operation_id="getCollectionPhotoThumbnail",
+)
+def get_collection_photo_thumbnail(
+    photo_id: UUID,
+    _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    database: Annotated[Session, Depends(get_database_session)],
+    storage: Annotated[AttachmentStorage, Depends(get_attachment_storage)],
+    if_none_match: Annotated[str | None, Header()] = None,
+) -> Response:
+    row = get_local_photo(database, photo_id)
+    if row is None or row[1].state != "active":
+        raise _missing("collection_photo_thumbnail")
+    attachment = row[1]
+    etag = f'"collection-photo-{attachment.sha256}-320-webp-v1"'
+    headers = {
+        "Cache-Control": "private, max-age=86400, must-revalidate",
+        "ETag": etag,
+        "Vary": "Cookie",
+        "X-Content-Type-Options": "nosniff",
+    }
+    try:
+        path = storage.active_path(attachment.storage_key, attachment.byte_size)
+        validators = {value.strip() for value in (if_none_match or "").split(",")}
+        if "*" in validators or etag in validators or f"W/{etag}" in validators:
+            return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers=headers)
+        content = render_identity_cover_thumbnail(path)
+        return Response(content=content, media_type="image/webp", headers=headers)
+    except AttachmentStorageError as error:
+        raise attachment_http_error(error) from error
 
 
 @router.get(

@@ -577,7 +577,26 @@ Local removal first commits the Attachment as `pending_delete`, which hides it f
 then unlinks the binary and finally deletes both relationship and Attachment metadata. Unlink,
 missing-file, or final metadata failures leave an explicit retry-only state. External removal deletes
 Florabase metadata only and never contacts the remote host. Collection-photo galleries have no
-primary/cover selection and remain independent from BotanicalIdentity reference imagery.
+cover selection and remain independent from BotanicalIdentity reference imagery.
+
+`ATTACHMENT-004` adds a separate `CollectionPrimaryPhoto` designation for SeedLot, Plant, and
+PlantGroup only. Exactly one supported target and one existing local or external collection-photo
+source are stored per row. Unique constraints limit each target and source to one designation. The
+service locks the target and selected photo, verifies its exact existing ownership, and rejects a
+local photo whose Attachment is not active or whose stored content fails the trusted resolver.
+Summary reads also reject cross-target inconsistencies. Existing records and newly uploaded photos have no
+primary until an owner explicitly selects one. Sowing, Event, and BotanicalIdentity have no
+collection-primary designation; BotanicalIdentity covers remain separate.
+
+Changing or removing a designation leaves the gallery photo and its chronological position intact.
+External removal clears the designation in the deletion transaction without contacting the host.
+Local removal clears it when `pending_delete` begins, so failed unlink/retry never presents the
+pending photo as primary. A database cascade on photo deletion is a final integrity guard. Inactive
+collection records retain a valid designation. Directory/detail responses include only a compact
+primary kind, photo ID, and fixed local thumbnail URL. That authenticated WebP thumbnail uses the
+trusted storage resolver, safe orientation and decode, a 320px maximum edge without upscaling,
+private ETag caching, and no persisted derivative. External primaries show a neutral indicator in
+compact views; only the Photos gallery offers the explicit `Load external image` disclosure.
 
 ### BotanicalIdentity cover images
 

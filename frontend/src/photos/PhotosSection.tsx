@@ -10,15 +10,19 @@ import {
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
+  clearPrimaryPhoto,
   createExternalImage,
+  getPrimaryPhoto,
   listPhotos,
   removePhoto,
+  setPrimaryPhoto,
   updateExternalImage,
   updateLocalPhoto,
   uploadPhoto,
   type CollectionPhoto,
   type ExternalImage,
   type PhotoTarget,
+  type PrimaryPhoto,
 } from "./api";
 
 type LoadState =
@@ -170,10 +174,14 @@ export function PhotosSection({
   target,
   targetId,
   targetLabel,
+  primaryPhoto = null,
+  onPrimaryChanged,
 }: {
   target: PhotoTarget;
   targetId: string;
   targetLabel: string;
+  primaryPhoto?: PrimaryPhoto | null;
+  onPrimaryChanged?: (photo: PrimaryPhoto | null) => void;
 }) {
   const auth = useAuth();
   const headingId = useId();
@@ -186,6 +194,13 @@ export function PhotosSection({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [brokenLocal, setBrokenLocal] = useState<Set<string>>(new Set());
+  const [primaryOverride, setPrimaryOverride] = useState<
+    PrimaryPhoto | null | undefined
+  >(undefined);
+  const currentPrimary =
+    primaryOverride === undefined ? primaryPhoto : primaryOverride;
+  const supportsPrimary =
+    target === "seed_lot" || target === "plant" || target === "plant_group";
 
   useEffect(() => {
     const controller = new AbortController();
@@ -212,10 +227,48 @@ export function PhotosSection({
     return null;
   const csrfToken = auth.state.csrfToken;
 
-  async function refresh(success: string) {
+  async function refresh(success: string, refreshPrimary = false) {
     const photos = await listPhotos(target, targetId);
     setState({ status: "ready", photos });
+    if (supportsPrimary && refreshPrimary) {
+      const primary = await getPrimaryPhoto(target, targetId);
+      setPrimaryOverride(primary);
+      onPrimaryChanged?.(primary);
+    }
     setNotice(success);
+  }
+
+  async function choosePrimary(photo: CollectionPhoto | null) {
+    if (!supportsPrimary || pending) return;
+    setPending(true);
+    setError(null);
+    try {
+      const next = photo
+        ? await setPrimaryPhoto(
+            target,
+            targetId,
+            { kind: photo.kind, photo_id: photo.id },
+            csrfToken,
+          )
+        : (await clearPrimaryPhoto(target, targetId, csrfToken), null);
+      setPrimaryOverride(next);
+      onPrimaryChanged?.(next);
+      setNotice(
+        photo
+          ? "Primary photo was changed."
+          : "Primary designation was removed. The photo remains in Photos.",
+      );
+    } catch (primaryError: unknown) {
+      if (primaryError instanceof ApiError && primaryError.status === 401) {
+        auth.sessionExpired();
+        return;
+      }
+      setError(
+        "Florabase could not change the primary photo. Refresh Photos and try again.",
+      );
+    } finally {
+      setPending(false);
+    }
   }
 
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
@@ -296,13 +349,28 @@ export function PhotosSection({
     if (!removing || pending) return;
     setPending(true);
     setError(null);
+    let removed = false;
     try {
       await removePhoto(removing.kind, removing.id, csrfToken);
+      removed = true;
+      if (
+        currentPrimary?.kind === removing.kind &&
+        currentPrimary.photo_id === removing.id
+      ) {
+        setPrimaryOverride(null);
+        onPrimaryChanged?.(null);
+      }
       setRemoving(null);
-      await refresh("Photo was removed.");
+      await refresh("Photo was removed.", true);
     } catch (removeError: unknown) {
       if (removeError instanceof ApiError && removeError.status === 401) {
         auth.sessionExpired();
+        return;
+      }
+      if (removed) {
+        setError(
+          "Photo was removed, but Photos could not be refreshed. Reload this record to see the latest state.",
+        );
         return;
       }
       setError(
@@ -310,6 +378,19 @@ export function PhotosSection({
           ? "Florabase could not finish deleting this uploaded photo. It is hidden while deletion is pending; retry removal."
           : "Florabase could not remove this external image reference. Try again.",
       );
+      if (supportsPrimary) {
+        try {
+          const primary = await getPrimaryPhoto(target, targetId);
+          setPrimaryOverride(primary);
+          onPrimaryChanged?.(primary);
+          setState({
+            status: "ready",
+            photos: await listPhotos(target, targetId),
+          });
+        } catch {
+          // The removal error remains visible; retry refreshes the authoritative state.
+        }
+      }
     } finally {
       setPending(false);
     }
@@ -389,6 +470,10 @@ export function PhotosSection({
               <article className="photo-card" key={`${photo.kind}:${photo.id}`}>
                 <p className="card-type">
                   {photo.kind === "local" ? "Uploaded photo" : "External image"}
+                  {currentPrimary?.kind === photo.kind &&
+                    currentPrimary.photo_id === photo.id && (
+                      <span className="primary-photo-badge">Primary</span>
+                    )}
                 </p>
                 {photo.kind === "local" ? (
                   photo.deletion_pending ? (
@@ -437,6 +522,32 @@ export function PhotosSection({
                   </p>
                 )}
                 <div className="actions">
+                  {supportsPrimary &&
+                    (currentPrimary?.kind === photo.kind &&
+                    currentPrimary.photo_id === photo.id ? (
+                      <button
+                        className="button--secondary"
+                        type="button"
+                        disabled={pending}
+                        aria-label={`Remove primary designation from ${photo.caption ?? `${photo.kind} photo`}`}
+                        onClick={() => void choosePrimary(null)}
+                      >
+                        Remove primary
+                      </button>
+                    ) : (
+                      (photo.kind === "external" ||
+                        !photo.deletion_pending) && (
+                        <button
+                          className="button--secondary"
+                          type="button"
+                          disabled={pending}
+                          aria-label={`Set ${photo.caption ?? `${photo.kind} photo`} as primary`}
+                          onClick={() => void choosePrimary(photo)}
+                        >
+                          Set as primary
+                        </button>
+                      )
+                    ))}
                   {(photo.kind === "external" || !photo.deletion_pending) && (
                     <button
                       className="button--secondary"

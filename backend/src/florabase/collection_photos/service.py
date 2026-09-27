@@ -206,6 +206,8 @@ def update_external_image(
 
 
 def delete_local_photo(database: Session, storage: AttachmentStorage, photo_id: UUID) -> bool:
+    from florabase.collection_photos.primary import clear_photo_primary
+
     row = database.execute(
         select(LocalCollectionPhoto, Attachment)
         .join(Attachment, Attachment.id == LocalCollectionPhoto.attachment_id)
@@ -217,6 +219,7 @@ def delete_local_photo(database: Session, storage: AttachmentStorage, photo_id: 
     photo, attachment = row
     was_active = attachment.state == AttachmentState.ACTIVE
     if was_active:
+        clear_photo_primary(database, "local", photo_id)
         attachment.state = AttachmentState.PENDING_DELETE
         try:
             database.commit()
@@ -235,6 +238,7 @@ def delete_local_photo(database: Session, storage: AttachmentStorage, photo_id: 
             "Photo content was already missing; deletion is pending a retry",
         )
     try:
+        clear_photo_primary(database, "local", photo_id)
         database.delete(photo)
         database.flush()
         database.delete(attachment)
@@ -249,6 +253,14 @@ def delete_local_photo(database: Session, storage: AttachmentStorage, photo_id: 
 
 
 def delete_external_image(database: Session, reference: ExternalImageReference) -> None:
+    from florabase.collection_photos.primary import clear_photo_primary
+
+    database.scalar(
+        select(ExternalImageReference)
+        .where(ExternalImageReference.id == reference.id)
+        .with_for_update()
+    )
+    clear_photo_primary(database, "external", reference.id)
     database.delete(reference)
     database.commit()
 

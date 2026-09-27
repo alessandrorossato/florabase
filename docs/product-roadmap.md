@@ -94,6 +94,9 @@ The operator has selected `IMPORT-001`, `SEARCH-001`, `GERMINATION-001`, `LABEL-
 `ATTACHMENT-004` for implementation before scope freeze. `ATTACHMENT-004` covers one explicitly
 selected primary associated photo on a SeedLot, Plant, or PlantGroup; it does not include Sowing or
 change BotanicalIdentity cover behavior. Selection does not make any of these release dependencies.
+The ATTACHMENT-004 implementation keeps the designation relational and explicit. Supported local
+photos use a fixed authenticated thumbnail in collection directories/details; external primaries
+remain a neutral compact indicator until the operator chooses to load the remote image in Photos.
 
 ### Product candidates and boundaries
 

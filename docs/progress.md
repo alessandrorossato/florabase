@@ -4,6 +4,57 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-26 — ATTACHMENT-004 implemented; operator visual review passed
+
+- Added Alembic revision `20260925_0026` and a separate UUIDv7 `CollectionPrimaryPhoto` table with
+  exactly one supported target/source and unique target/source constraints. No primary is inferred
+  on migration, upload, or deletion. Selection locks the concrete target, existing photo, and local
+  Attachment, validates exact ownership and active/presentable content, and changes designation only.
+  Supported targets are SeedLot, Plant, and PlantGroup; Sowing and Event Photos and BotanicalIdentity
+  reference covers remain separate.
+- Added protected typed primary read/set/clear operations and a fixed authenticated local-photo
+  WebP thumbnail using the existing safe decode/orientation mechanics, trusted storage resolver,
+  320px maximum edge, no upscale, private digest/version ETag, and no persisted derivative. Directory
+  response builders batch only compact primary summaries, without per-row metadata/gallery requests.
+  External primaries render a neutral indicator and retain the gallery's explicit remote-load choice.
+- Local deletion clears designation in the first pending-delete transaction, including failed-unlink
+  retry behavior. External deletion clears it in the same metadata transaction; defensive source FK
+  cascades guard final cleanup. Primary changes and metadata edits preserve gallery history/order.
+  Photos actions update the mounted detail and directory state coherently.
+- Browser review used an isolated disposable fixture for A–J: absent photos, one unselected photo,
+  selected local primary, change, clear, selected-local deletion, Plant, PlantGroup, external primary,
+  and excluded Sowing Photos. Reviewed representative directory/detail/gallery layouts at 1440px,
+  1024px, and 390×844, including mobile action reachability and no page overflow. External views had
+  no remote image element before explicit loading; a full Network-panel capture was not available.
+  Selected-local browser deletion used the protected API followed by a browser refresh; focused UI
+  tests cover authoritative designation refresh after photo removal. This is implementation fixture
+  review, not operator UAT.
+- Focused checks passed: 13 collection-photo backend unit tests; 19 PostgreSQL attachment/photo/API
+  and migration integration tests, including upgrade/downgrade/re-upgrade preserving all existing
+  Attachment, local/external photo, and BotanicalIdentity-cover metadata; 50 SeedLot/Plant unit and
+  88 directory/detail API integration tests; 39 existing SeedLot/Plant screen tests and 11
+  photo/primary frontend tests; Ruff formatting/lint and strict mypy; frontend
+  Prettier/ESLint/TypeScript; backend production image and frontend production build; generated
+  OpenAPI and frontend schema drift. Alembic emits its existing `path_separator` deprecation warning;
+  Vite retains its existing large-chunk warning. Feature graph and final diff checks complete the
+  handoff. See [implementation handoff](attachment-004-review.md) for exact commands and boundaries.
+- ATTACHMENT-004 is `implemented`, not `verified`. Independent QA, `make feature-verify`, and the
+  final local commit remain for Luna. No staging, commit, delivery, or production database migration
+  was performed.
+
+## 2026-09-27 — ATTACHMENT-004 independent QA
+
+- Fixed the designation deletion/replacement race by locking the designation row during replacement;
+  added a PostgreSQL concurrency regression test. Updated the integration assertions for migration
+  head `20260925_0026` and the new table.
+- Added focused unit coverage for selection and thumbnail route contracts. The canonical
+  `make feature-verify` passed: 422 backend unit tests, 197 frontend tests, 351 PostgreSQL tests,
+  production builds, generated API drift, and migration cycle `0025 → 0026 → 0025 → 0026`.
+- The independent QA browser tool could not access the local review app. The operator subsequently
+  completed the manual viewport and lifecycle review and reported a pass. Final review found the
+  coverage display inconsistency documented in `attachment-004-review.md`; no coverage policy was
+  changed.
+
 ## 2026-09-25 — GERMINATION-001 implemented for operator visual review
 
 - Added Alembic revision `20260925_0025` for exact-day, non-negative incremental germination

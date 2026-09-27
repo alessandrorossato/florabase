@@ -11,7 +11,7 @@ import { afterEach, expect, test, vi } from "vitest";
 
 import { AuthContext, type AuthContextValue } from "../auth/context";
 import { PhotosSection } from "./PhotosSection";
-import type { CollectionPhoto } from "./api";
+import type { CollectionPhoto, PrimaryPhoto } from "./api";
 
 const targetId = "01900000-0000-7000-8000-000000000701";
 const localId = "01900000-0000-7000-8000-000000000801";
@@ -68,13 +68,18 @@ function json(body: unknown, status = 200): Response {
   });
 }
 
-function renderSection() {
+function renderSection(
+  primaryPhoto: PrimaryPhoto | null = null,
+  onPrimaryChanged?: (photo: PrimaryPhoto | null) => void,
+) {
   return render(
     <AuthContext.Provider value={auth}>
       <PhotosSection
         target="plant"
         targetId={targetId}
         targetLabel="Avocado #1"
+        primaryPhoto={primaryPhoto}
+        onPrimaryChanged={onPrimaryChanged}
       />
     </AuthContext.Provider>,
   );
@@ -140,60 +145,88 @@ test("shows understandable local and external image failure states", async () =>
   ).toBeVisible();
 });
 
-test("edits external metadata and confirms metadata-only removal", async () => {
-  const fetch = vi
-    .spyOn(globalThis, "fetch")
-    .mockImplementation((_input, init) => {
-      if (init?.method === "PATCH") return Promise.resolve(json(photos[1]));
-      if (init?.method === "DELETE")
-        return Promise.resolve(new Response(null, { status: 204 }));
-      return Promise.resolve(json(photos));
+test.each([false, true])(
+  "primary photo deletion clears displayed designation even if refresh fails: %s",
+  async (refreshFails) => {
+    let deleted = false;
+    const onPrimaryChanged = vi.fn();
+    const fetch = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation((input, init) => {
+        if (init?.method === "PATCH") return Promise.resolve(json(photos[1]));
+        if (init?.method === "DELETE") {
+          deleted = true;
+          return Promise.resolve(new Response(null, { status: 204 }));
+        }
+        if (typeof input === "string" && input.endsWith("/primary-photo"))
+          return refreshFails
+            ? Promise.reject(new Error("Primary metadata request failed"))
+            : Promise.resolve(json(null));
+        return Promise.resolve(json(deleted ? [photos[0]] : photos));
+      });
+    const user = userEvent.setup();
+    renderSection(
+      { kind: "external", photo_id: externalId, thumbnail_url: null },
+      onPrimaryChanged,
+    );
+    await screen.findByText("External image");
+    const externalCard = screen
+      .getByText("External image")
+      .closest<HTMLElement>("article");
+    if (!externalCard) throw new Error("External image card was not rendered");
+    await user.click(
+      within(externalCard).getByRole("button", { name: "Edit details" }),
+    );
+    const dialog = screen.getByRole("dialog", { name: "Edit photo details" });
+    await user.clear(within(dialog).getByLabelText(/Caption/));
+    await user.type(
+      within(dialog).getByLabelText(/Caption/),
+      "Updated caption",
+    );
+    const form = dialog.querySelector("form");
+    if (!form) throw new Error("External image edit form was not rendered");
+    fireEvent.submit(form);
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        `/api/v1/collection-photos/external/${externalId}`,
+        expect.objectContaining({
+          method: "PATCH",
+          credentials: "same-origin",
+        }),
+      );
     });
-  const user = userEvent.setup();
-  renderSection();
-  await screen.findByText("External image");
-  const externalCard = screen
-    .getByText("External image")
-    .closest<HTMLElement>("article");
-  if (!externalCard) throw new Error("External image card was not rendered");
-  await user.click(
-    within(externalCard).getByRole("button", { name: "Edit details" }),
-  );
-  const dialog = screen.getByRole("dialog", { name: "Edit photo details" });
-  await user.clear(within(dialog).getByLabelText(/Caption/));
-  await user.type(within(dialog).getByLabelText(/Caption/), "Updated caption");
-  const form = dialog.querySelector("form");
-  if (!form) throw new Error("External image edit form was not rendered");
-  fireEvent.submit(form);
-  await waitFor(() => {
-    expect(fetch).toHaveBeenCalledWith(
-      `/api/v1/collection-photos/external/${externalId}`,
-      expect.objectContaining({
-        method: "PATCH",
-        credentials: "same-origin",
-      }),
-    );
-  });
 
-  const refreshedCard = screen
-    .getByText("External image")
-    .closest<HTMLElement>("article");
-  if (!refreshedCard) throw new Error("External image card was not refreshed");
-  await user.click(
-    within(refreshedCard).getByRole("button", { name: "Remove" }),
-  );
-  const removal = screen.getByRole("dialog", {
-    name: "Remove external image reference?",
-  });
-  expect(removal).toHaveTextContent(/metadata only and does not contact/i);
-  await user.click(within(removal).getByRole("button", { name: "Remove" }));
-  await waitFor(() => {
-    expect(fetch).toHaveBeenCalledWith(
-      `/api/v1/collection-photos/external/${externalId}`,
-      expect.objectContaining({ method: "DELETE" }),
+    const refreshedCard = screen
+      .getByText("External image")
+      .closest<HTMLElement>("article");
+    if (!refreshedCard)
+      throw new Error("External image card was not refreshed");
+    expect(within(refreshedCard).getByText("Primary")).toBeVisible();
+    await user.click(
+      within(refreshedCard).getByRole("button", { name: "Remove" }),
     );
-  });
-});
+    const removal = screen.getByRole("dialog", {
+      name: "Remove external image reference?",
+    });
+    expect(removal).toHaveTextContent(/metadata only and does not contact/i);
+    await user.click(within(removal).getByRole("button", { name: "Remove" }));
+    await waitFor(() => {
+      expect(fetch).toHaveBeenCalledWith(
+        `/api/v1/collection-photos/external/${externalId}`,
+        expect.objectContaining({ method: "DELETE" }),
+      );
+    });
+    await waitFor(() => {
+      expect(onPrimaryChanged).toHaveBeenCalledWith(null);
+    });
+    expect(screen.queryByText("Primary")).not.toBeInTheDocument();
+    expect(screen.queryByText("External image")).not.toBeInTheDocument();
+    if (refreshFails)
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "Photo was removed, but Photos could not be refreshed.",
+      );
+  },
+);
 
 test("supports zero-photo state and an accessible upload workflow", async () => {
   const fetch = vi
@@ -222,3 +255,87 @@ test("supports zero-photo state and an accessible upload workflow", async () => 
   expect(uploadCall?.[1]?.headers).toBeInstanceOf(Headers);
   expect((uploadCall?.[1]?.headers as Headers).get("Content-Type")).toBeNull();
 });
+
+test("primary selection is explicit and removing designation retains gallery photos", async () => {
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation((input, init) => {
+      const path =
+        typeof input === "string"
+          ? input
+          : input instanceof URL
+            ? input.href
+            : input.url;
+      if (path.endsWith("/primary-photo") && init?.method === "PUT") {
+        if (typeof init.body !== "string")
+          throw new Error("Primary selection must use a JSON request body");
+        const body = JSON.parse(init.body) as {
+          kind: string;
+          photo_id: string;
+        };
+        return Promise.resolve(
+          json({
+            ...body,
+            thumbnail_url:
+              body.kind === "local"
+                ? `/api/v1/collection-photos/local/${body.photo_id}/thumbnail`
+                : null,
+          }),
+        );
+      }
+      if (path.endsWith("/primary-photo") && init?.method === "DELETE")
+        return Promise.resolve(new Response(null, { status: 204 }));
+      return Promise.resolve(json(photos));
+    });
+  const user = userEvent.setup();
+  renderSection();
+  await screen.findByText("Uploaded photo");
+  expect(screen.queryByText("Primary")).not.toBeInTheDocument();
+  await user.click(
+    screen.getByRole("button", { name: "Set local photo as primary" }),
+  );
+  expect(await screen.findByText("Primary")).toBeVisible();
+  expect(fetch).toHaveBeenCalledWith(
+    `/api/v1/collection-records/plant/${targetId}/primary-photo`,
+    expect.objectContaining({ method: "PUT" }),
+  );
+  await user.click(
+    screen.getByRole("button", { name: "Set Flowering specimen as primary" }),
+  );
+  expect(screen.getByText("Primary").closest("article")).toHaveTextContent(
+    "External image",
+  );
+  expect(
+    screen.queryByRole("img", { name: "Flowering specimen" }),
+  ).not.toBeInTheDocument();
+  await user.click(
+    screen.getByRole("button", {
+      name: "Remove primary designation from Flowering specimen",
+    }),
+  );
+  expect(await screen.findByText(/designation was removed/i)).toBeVisible();
+  expect(screen.getAllByRole("article")).toHaveLength(2);
+  expect(
+    fetch.mock.calls.filter(([, init]) => init?.method === "DELETE"),
+  ).toHaveLength(1);
+});
+
+test.each(["sowing", "event"] as const)(
+  "%s Photos do not expose primary actions",
+  async (target) => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(json(photos));
+    render(
+      <AuthContext.Provider value={auth}>
+        <PhotosSection
+          target={target}
+          targetId={targetId}
+          targetLabel="Evidence"
+        />
+      </AuthContext.Provider>,
+    );
+    await screen.findByText("Uploaded photo");
+    expect(
+      screen.queryByRole("button", { name: /primary/i }),
+    ).not.toBeInTheDocument();
+  },
+);

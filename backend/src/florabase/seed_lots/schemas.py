@@ -14,6 +14,7 @@ from pydantic import (
     model_validator,
 )
 
+from florabase.collection_photos.schemas import PrimaryPhotoResponse
 from florabase.plants.model import PlantGroupLifecycle, PlantLifecycle
 from florabase.provenance_sites.schemas import ProvenanceSiteSummary
 from florabase.seed_lots.model import (
@@ -214,6 +215,7 @@ class ProducerPlantGroupSummary(BaseModel):
 
 class SeedLotResponse(BaseModel):
     id: UUID
+    primary_photo: PrimaryPhotoResponse | None = None
     botanical_identity_id: UUID
     botanical_identity: BotanicalIdentitySummary
     label: str | None
