@@ -4,6 +4,56 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-27 — LABEL-001 implemented for operator physical/visual review
+
+- Added a temporary authenticated Labels workspace and secondary Print label detail actions for
+  SeedLot, Plant, and PlantGroup. Reused the searchable ReferencePicker and existing protected record
+  APIs; add/remove, copy counts, empty/retry/error states, keyboard operation, and responsive preview
+  prepare one fresh A4 sheet of up to 36 labels. No persistence, migration, API change, numbering,
+  photo loading, public record page, or server PDF service was introduced.
+- Labels show the existing BotanicalIdentity display name, record type, optional existing record
+  label, Florabase, and locally generated SVG QR. QR payloads contain only existing detail routes
+  and validated UUIDs; login and authorization remain unchanged. Pinned the small
+  dependency-free MIT `qrcode-generator` 2.0.4 and distributed its license notice with frontend assets.
+- Fixed physical border-box cells are 50 × 30 mm, with a 22 mm QR and four-module quiet zone.
+  Named A4 print CSS gives 4 × 9 cells, a 200 × 270 mm grid, 5 mm horizontal/13.5 mm vertical margins,
+  no gutters, no scaling, no split labels, and only sheet output. Operator instructions require
+  100% / Actual size and no Fit to page.
+- Chromium fixture review covered empty/one/mixed/duplicate/long/cultivar/partial-name states at
+  1440 × 844, 1024 × 844, and 390 × 844 with no page overflow or external requests. Print media
+  measured all 36 cells at 188.96875 × 113.375 CSS px with no transform/zoom; ordinary print-to-PDF
+  produced one A4 page. An independent decoder recovered all distinct exact record URLs from SVG
+  rasterization and from 300 dpi crops of the actual printed PDF. Physical printer/system-dialog
+  validation remains with the operator.
+
+## 2026-09-27 — LABEL-001 independent final review
+
+- Review found that the QR origin was browser-derived. QR generation now uses the existing
+  `FLORABASE_CANONICAL_ORIGIN`, returned by the authenticated session API, so proxy/browser aliases
+  cannot change a durable printed URL. Development produces the configured `http://localhost:5173`
+  origin and production uses its configured HTTPS domain. Credential-bearing canonical origins are
+  rejected. The additive authenticated-session response field is reflected in generated OpenAPI and
+  frontend types; no endpoint, setting, migration, or public lookup behavior was added.
+- Added regression coverage for canonical development and production URLs, browser-origin
+  independence, invalid origins, and configured session output. The independent browser reached the
+  sign-in screen; authenticated UI and print media were not visually re-reviewed without credentials.
+  Operator reports functional UAT complete. Physical printer/system-dialog validation remains open.
+- `make feature-verify` passed on the final LABEL-001 review tree: feature graph, formatting, lint,
+  mypy, TypeScript, 423 backend unit tests, 228 frontend tests, API drift, 354 PostgreSQL integration
+  tests, production builds, migration cycle (no new revision), whitespace check, and verification
+  receipt. Backend coverage reported 89.77% against the nominal 90% threshold while the canonical
+  gate succeeded, consistent with the existing rounding behavior. LABEL-001 is now `verified` in
+  `features.json`; all changes remain unstaged and uncommitted. Physical printer/system-dialog checks
+  remain open.
+- Checks passed: 20 focused label cases; broad `make check` (422 backend unit and 220 frontend tests,
+  Ruff, strict mypy, Prettier, ESLint, TypeScript, generated API drift); 354 isolated PostgreSQL tests
+  including three new protected lookup/error cases; production frontend image; feature graph (81),
+  diff whitespace, and same-origin health/readiness. The unchanged 89.75% coverage summary/rounded
+  exit-status discrepancy documented for ATTACHMENT-004, Alembic warnings, and Vite chunk advisory
+  remain. See [implementation review](label-001-review.md) and [operator guide](labels.md).
+- LABEL-001 is `implemented`, not `verified`. All changes remain unstaged and uncommitted;
+  independent `make feature-verify`, final commit, and delivery were intentionally reserved.
+
 ## 2026-09-26 — ATTACHMENT-004 implemented; operator visual review passed
 
 - Added Alembic revision `20260925_0026` and a separate UUIDv7 `CollectionPrimaryPhoto` table with

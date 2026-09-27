@@ -6629,6 +6629,17 @@
       },
       "SessionResponse": {
         "properties": {
+          "canonical_origin": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Canonical Origin"
+          },
           "display_name": {
             "anyOf": [
               {
@@ -6657,7 +6668,8 @@
           "user_id",
           "login_name",
           "display_name",
-          "owner"
+          "owner",
+          "canonical_origin"
         ],
         "title": "SessionResponse",
         "type": "object"

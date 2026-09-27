@@ -98,6 +98,12 @@ The ATTACHMENT-004 implementation keeps the designation relational and explicit.
 photos use a fixed authenticated thumbnail in collection directories/details; external primaries
 remain a neutral compact indicator until the operator chooses to load the remote image in Photos.
 
+LABEL-001 implements the selected browser-print workflow: a temporary A4 composer for SeedLot,
+Plant, and PlantGroup, with fixed 50 × 30 mm labels in a 4 × 9 grid. Botanical identity, record type,
+optional existing label, and a local SVG QR identify the exact existing authenticated detail route.
+Printing requires 100% / Actual size; no photos, new numbering, persistent jobs, migration, public
+lookup, or server PDF subsystem is introduced. See [labels.md](labels.md).
+
 ### Product candidates and boundaries
 
 The table records the selected work above alongside the remaining optional candidates. None blocks

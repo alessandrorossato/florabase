@@ -680,11 +680,12 @@
       "acceptance_criteria": [
         "Labels identify supported collection records with stable, non-secret references",
         "QR lookup requires normal authorization and does not encode session credentials",
+        "QR URLs use the configured canonical origin and existing detail routes, independent of the browser Host",
         "Printable output is tested for the selected physical label workflow"
       ],
       "dependencies": ["SEED-004", "PLANT-003"],
       "priority": "P2",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "SEARCH-001",

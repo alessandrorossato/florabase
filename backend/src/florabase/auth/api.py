@@ -43,6 +43,7 @@ class SessionResponse(BaseModel):
     login_name: str
     display_name: str | None
     owner: bool
+    canonical_origin: str | None
 
 
 class LogoutResponse(BaseModel):
@@ -91,6 +92,7 @@ def login(
 def get_session(
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    settings: Annotated[Settings, Depends(get_settings)],
 ) -> SessionResponse:
     response.headers["Cache-Control"] = "no-store"
     return SessionResponse(
@@ -98,6 +100,7 @@ def get_session(
         login_name=actor.login_name,
         display_name=actor.display_name,
         owner=actor.owner,
+        canonical_origin=settings.canonical_origin,
     )
 
 

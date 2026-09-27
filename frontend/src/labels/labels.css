@@ -1,0 +1,167 @@
+.label-composer {
+  display: grid;
+  grid-template-columns: minmax(15rem, 21rem) minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+.label-controls,
+.label-preview {
+  min-width: 0;
+}
+.label-controls > label {
+  display: grid;
+  gap: 0.4rem;
+}
+.label-entries {
+  list-style: none;
+  padding: 0;
+}
+.label-entries li {
+  padding: 1rem 0;
+  border-bottom: 1px solid #cfdbd2;
+  overflow-wrap: anywhere;
+}
+.label-entries small {
+  display: block;
+}
+.label-entries a {
+  color: #1e6446;
+  font-weight: 600;
+}
+.label-entry-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: end;
+  margin-top: 0.5rem;
+}
+.label-entry-actions label {
+  display: grid;
+  gap: 0.25rem;
+}
+.label-entry-actions input {
+  width: 5rem;
+}
+.label-empty {
+  padding: 2rem;
+  background: #f4f7f4;
+  border: 1px dashed #cfdbd2;
+  border-radius: 0.75rem;
+}
+.label-page {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 50mm);
+  gap: 0.5rem;
+  align-content: start;
+}
+.physical-label {
+  box-sizing: border-box;
+  width: 50mm;
+  height: 30mm;
+  padding: 1.5mm;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 22mm;
+  gap: 1mm;
+  align-items: center;
+  overflow: hidden;
+  color: #000;
+  background: #fff;
+  outline: 1px solid #d4d4d4;
+  font-family: Arial, sans-serif;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+.physical-label__text {
+  min-width: 0;
+  height: 27mm;
+  display: flex;
+  flex-direction: column;
+}
+.physical-label__name {
+  font-size: 9pt;
+  line-height: 1.12;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+  flex-shrink: 0;
+  max-height: 14.3mm;
+}
+.physical-label__type {
+  font-size: 7pt;
+  line-height: 1.3;
+  margin-top: 1mm;
+}
+.physical-label__context {
+  font-size: 7pt;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  max-height: 5.7mm;
+}
+.physical-label__brand {
+  font-size: 5.5pt;
+  line-height: 1.1;
+  margin-top: auto;
+  padding-top: 0.5mm;
+}
+.physical-label__qr {
+  display: block;
+  width: 22mm;
+  height: 22mm;
+  flex-shrink: 0;
+}
+.label-print-root {
+  display: none;
+}
+@media (max-width: 1100px) {
+  .label-composer {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+@page florabase-labels {
+  size: A4 portrait;
+  margin: 13.5mm 5mm;
+}
+@media print {
+  html:has(.label-print-root),
+  body:has(> .label-print-root) {
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    min-height: 0;
+    background: #fff;
+  }
+  body:has(> .label-print-root) > :not(.label-print-root) {
+    display: none !important;
+  }
+  .label-print-root {
+    display: block;
+    color: #000;
+    page: florabase-labels;
+  }
+  .label-page {
+    width: 200mm;
+    height: 270mm;
+    display: grid;
+    grid-template-columns: repeat(4, 50mm);
+    grid-template-rows: repeat(9, 30mm);
+    gap: 0;
+    break-after: page;
+    page-break-after: always;
+  }
+  .label-page:last-child {
+    break-after: auto;
+    page-break-after: auto;
+  }
+  .physical-label {
+    outline: none;
+    margin: 0;
+    box-shadow: none;
+  }
+}

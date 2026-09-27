@@ -10,6 +10,7 @@ import { GlobalEventsScreen } from "./events/GlobalEventsScreen";
 import { GeographyScreen } from "./geographic-places/GeographyScreen";
 import { ImportExportScreen } from "./import-export/ImportExportScreen";
 import { LocationScreen } from "./locations/LocationScreen";
+import { LabelsScreen } from "./labels/LabelsScreen";
 import { PlantScreen } from "./plants/PlantScreen";
 import { SeedLotSowingWizard } from "./propagation/SeedLotSowingWizard";
 import { SowingDescendantWizard } from "./propagation/SowingDescendantWizard";
@@ -39,7 +40,8 @@ type Section =
   | "suppliers"
   | "locations"
   | "geography"
-  | "import-export";
+  | "import-export"
+  | "labels";
 
 interface Route {
   section: Section;
@@ -53,6 +55,8 @@ interface Route {
   sowingId?: string;
   creationKind?: "plant" | "group";
   placeId?: string;
+  labelKind?: string;
+  labelRecord?: string;
 }
 
 function currentRoute(): Route {
@@ -97,6 +101,7 @@ function currentRoute(): Route {
     "locations",
     "geography",
     "import-export",
+    "labels",
   ];
   return {
     section: valid.includes(first as Section)
@@ -105,6 +110,8 @@ function currentRoute(): Route {
     recordId: id,
     tab,
     placeId,
+    labelKind: params.get("kind") ?? undefined,
+    labelRecord: params.get("record") ?? undefined,
     ...context,
   };
 }
@@ -138,7 +145,10 @@ const desktopGroups: {
   },
   {
     label: "Tools",
-    items: [{ id: "import-export", label: "Import / Export" }],
+    items: [
+      { id: "import-export", label: "Import / Export" },
+      { id: "labels", label: "Labels" },
+    ],
   },
 ];
 
@@ -299,6 +309,13 @@ function ApplicationShell() {
           />
         ) : route.section === "import-export" ? (
           <ImportExportScreen />
+        ) : route.section === "labels" ? (
+          <LabelsScreen
+            key={`${route.labelKind ?? ""}:${route.labelRecord ?? ""}`}
+            initialKind={route.labelKind}
+            initialId={route.labelRecord}
+            canonicalOrigin={state.session.canonical_origin}
+          />
         ) : route.section === "locations" ? (
           <LocationScreen
             key={route.recordId ?? "directory"}

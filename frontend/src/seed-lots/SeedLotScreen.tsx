@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import { ApiError } from "../auth/api";
+import { labelComposerHref } from "../labels/labelData";
 import { useAuth } from "../auth/context";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import { DirectorySearch, RecordPreview } from "../components/ReferenceUI";
@@ -379,6 +380,14 @@ function Detail({
         }
         editLabel="Edit seed lot"
         onEdit={onEdit}
+        overflow={
+          <a
+            className="button-link button--secondary"
+            href={labelComposerHref("seed-lot", lot.id)}
+          >
+            Print label
+          </a>
+        }
       />
       {lot.primary_photo && (
         <div className="collection-primary-detail">

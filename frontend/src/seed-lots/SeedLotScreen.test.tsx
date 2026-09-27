@@ -358,6 +358,17 @@ test("selection shows complete details without internal identifiers and opens co
   expect(screen.getByLabelText("Lifecycle")).toHaveValue("active");
 });
 
+test("authenticated SeedLot deep link opens existing detail with its label action", async () => {
+  const record = lot();
+  window.location.hash = `#/seeds/${record.id}`;
+  mockApi(directoryHandler([record]));
+  render(<App />);
+  expect(
+    await screen.findByRole("link", { name: "Print label" }),
+  ).toHaveAttribute("href", `#/labels?kind=seed-lot&record=${record.id}`);
+  expect(screen.getByRole("button", { name: "Edit seed lot" })).toBeVisible();
+});
+
 test("layered help explains ambiguous SeedLot fields without adding chrome to Notes", async () => {
   mockApi(directoryHandler([]));
   const user = await openSeeds();

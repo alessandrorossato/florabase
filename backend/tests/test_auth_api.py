@@ -172,8 +172,9 @@ def test_session_response_logout_and_owner_boundary() -> None:
     database = MagicMock()
     current_actor = actor()
     response = Response()
-    session_body = get_session(response, current_actor)
+    session_body = get_session(response, current_actor, settings())
     assert session_body.login_name == "owner"
+    assert session_body.canonical_origin == "https://florabase.example"
     assert response.headers["cache-control"] == "no-store"
 
     csrf_response = Response()
