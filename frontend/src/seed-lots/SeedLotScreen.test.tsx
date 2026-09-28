@@ -249,7 +249,7 @@ test("Seeds navigation exposes the collection loading and global empty states", 
     "aria-current",
     "page",
   );
-  expect(screen.getByRole("status")).toHaveTextContent(
+  expect(await screen.findByRole("status")).toHaveTextContent(
     "Loading seed inventory",
   );
 

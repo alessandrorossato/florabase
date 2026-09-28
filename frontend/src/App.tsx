@@ -4,24 +4,107 @@ import type { components } from "./api/schema";
 import { AuthProvider } from "./auth/AuthProvider";
 import { useAuth } from "./auth/context";
 import { LoginForm } from "./auth/LoginForm";
-import { BotanicalIdentityScreen } from "./botanical-identities/BotanicalIdentityScreen";
-import { DashboardScreen } from "./collection/DashboardScreen";
-import { GlobalEventsScreen } from "./events/GlobalEventsScreen";
-import { GeographyScreen } from "./geographic-places/GeographyScreen";
-import { ImportExportScreen } from "./import-export/ImportExportScreen";
-import { LocationScreen } from "./locations/LocationScreen";
-import { LabelsScreen } from "./labels/LabelsScreen";
-import { PlantScreen } from "./plants/PlantScreen";
-import { SeedLotSowingWizard } from "./propagation/SeedLotSowingWizard";
-import { SowingDescendantWizard } from "./propagation/SowingDescendantWizard";
-import { SeedLotScreen } from "./seed-lots/SeedLotScreen";
-import { SowingScreen } from "./sowings/SowingScreen";
-import { SupplierScreen } from "./suppliers/SupplierScreen";
+import { WorkspaceBoundary } from "./components/WorkspaceBoundary";
+import { loadWorkspaceChunk } from "./components/workspaceChunk";
 
-const ProvenanceMapScreen = lazy(async () => {
-  const module = await import("./provenance-map/ProvenanceMapScreen");
-  return { default: module.ProvenanceMapScreen };
-});
+const BotanicalIdentityScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module =
+      await import("./botanical-identities/BotanicalIdentityScreen");
+    return { default: module.BotanicalIdentityScreen };
+  }),
+);
+
+const DashboardScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./collection/DashboardScreen");
+    return { default: module.DashboardScreen };
+  }),
+);
+
+const GlobalEventsScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./events/GlobalEventsScreen");
+    return { default: module.GlobalEventsScreen };
+  }),
+);
+
+const GeographyScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./geographic-places/GeographyScreen");
+    return { default: module.GeographyScreen };
+  }),
+);
+
+const ImportExportScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./import-export/ImportExportScreen");
+    return { default: module.ImportExportScreen };
+  }),
+);
+
+const LocationScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./locations/LocationScreen");
+    return { default: module.LocationScreen };
+  }),
+);
+
+const LabelsScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./labels/LabelsScreen");
+    return { default: module.LabelsScreen };
+  }),
+);
+
+const PlantScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./plants/PlantScreen");
+    return { default: module.PlantScreen };
+  }),
+);
+
+const SeedLotSowingWizard = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./propagation/SeedLotSowingWizard");
+    return { default: module.SeedLotSowingWizard };
+  }),
+);
+
+const SowingDescendantWizard = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./propagation/SowingDescendantWizard");
+    return { default: module.SowingDescendantWizard };
+  }),
+);
+
+const SeedLotScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./seed-lots/SeedLotScreen");
+    return { default: module.SeedLotScreen };
+  }),
+);
+
+const SowingScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./sowings/SowingScreen");
+    return { default: module.SowingScreen };
+  }),
+);
+
+const SupplierScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./suppliers/SupplierScreen");
+    return { default: module.SupplierScreen };
+  }),
+);
+
+const ProvenanceMapScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./provenance-map/ProvenanceMapScreen");
+    return { default: module.ProvenanceMapScreen };
+  }),
+);
 
 type HealthResponse = components["schemas"]["HealthResponse"];
 type HealthState =
@@ -255,79 +338,83 @@ function ApplicationShell() {
             </button>
           </div>
         </div>
-        {route.section === "sowings" &&
-        route.action === "start" &&
-        route.seedLotId ? (
-          <SeedLotSowingWizard seedLotId={route.seedLotId} />
-        ) : route.section === "plants" &&
-          route.action === "from-sowing" &&
-          route.sowingId &&
-          route.creationKind ? (
-          <SowingDescendantWizard
-            sowingId={route.sowingId}
-            kind={route.creationKind}
-          />
-        ) : route.section === "dashboard" ? (
-          <DashboardScreen />
-        ) : route.section === "seeds" ? (
-          <SeedLotScreen
-            initialId={route.recordId}
-            initialTab={route.tab}
-            initialIdentityId={route.identityId}
-            startCreating={route.action === "create"}
-          />
-        ) : route.section === "sowings" ? (
-          <SowingScreen initialId={route.recordId} initialTab={route.tab} />
-        ) : route.section === "plants" ? (
-          <PlantScreen
-            initialId={route.recordId}
-            initialKind={route.recordKind}
-            initialTypeFilter={route.recordTypeFilter}
-            initialTab={route.tab}
-            initialIdentityId={route.identityId}
-            startCreating={route.action === "create"}
-            initialCreationKind={route.creationKind}
-          />
-        ) : route.section === "events" ? (
-          <GlobalEventsScreen />
-        ) : route.section === "map" ? (
-          <Suspense
-            fallback={<p aria-live="polite">Loading provenance map…</p>}
-          >
-            <ProvenanceMapScreen />
+        <WorkspaceBoundary key={route.section}>
+          <Suspense fallback={<p aria-live="polite">Loading workspace…</p>}>
+            {route.section === "sowings" &&
+            route.action === "start" &&
+            route.seedLotId ? (
+              <SeedLotSowingWizard seedLotId={route.seedLotId} />
+            ) : route.section === "plants" &&
+              route.action === "from-sowing" &&
+              route.sowingId &&
+              route.creationKind ? (
+              <SowingDescendantWizard
+                sowingId={route.sowingId}
+                kind={route.creationKind}
+              />
+            ) : route.section === "dashboard" ? (
+              <DashboardScreen />
+            ) : route.section === "seeds" ? (
+              <SeedLotScreen
+                initialId={route.recordId}
+                initialTab={route.tab}
+                initialIdentityId={route.identityId}
+                startCreating={route.action === "create"}
+              />
+            ) : route.section === "sowings" ? (
+              <SowingScreen initialId={route.recordId} initialTab={route.tab} />
+            ) : route.section === "plants" ? (
+              <PlantScreen
+                initialId={route.recordId}
+                initialKind={route.recordKind}
+                initialTypeFilter={route.recordTypeFilter}
+                initialTab={route.tab}
+                initialIdentityId={route.identityId}
+                startCreating={route.action === "create"}
+                initialCreationKind={route.creationKind}
+              />
+            ) : route.section === "events" ? (
+              <GlobalEventsScreen />
+            ) : route.section === "map" ? (
+              <Suspense
+                fallback={<p aria-live="polite">Loading provenance map…</p>}
+              >
+                <ProvenanceMapScreen />
+              </Suspense>
+            ) : route.section === "identities" ? (
+              <BotanicalIdentityScreen
+                initialId={route.recordId}
+                initialTab={route.tab}
+              />
+            ) : route.section === "suppliers" ? (
+              <SupplierScreen
+                key={route.recordId ?? "directory"}
+                initialId={route.recordId}
+                initialTab={route.tab}
+              />
+            ) : route.section === "import-export" ? (
+              <ImportExportScreen />
+            ) : route.section === "labels" ? (
+              <LabelsScreen
+                key={`${route.labelKind ?? ""}:${route.labelRecord ?? ""}`}
+                initialKind={route.labelKind}
+                initialId={route.labelRecord}
+                canonicalOrigin={state.session.canonical_origin}
+              />
+            ) : route.section === "locations" ? (
+              <LocationScreen
+                key={route.recordId ?? "directory"}
+                initialId={route.recordId}
+              />
+            ) : (
+              <GeographyScreen
+                key={route.recordId ?? route.placeId ?? "directory"}
+                initialSiteId={route.recordId}
+                initialPlaceId={route.placeId}
+              />
+            )}
           </Suspense>
-        ) : route.section === "identities" ? (
-          <BotanicalIdentityScreen
-            initialId={route.recordId}
-            initialTab={route.tab}
-          />
-        ) : route.section === "suppliers" ? (
-          <SupplierScreen
-            key={route.recordId ?? "directory"}
-            initialId={route.recordId}
-            initialTab={route.tab}
-          />
-        ) : route.section === "import-export" ? (
-          <ImportExportScreen />
-        ) : route.section === "labels" ? (
-          <LabelsScreen
-            key={`${route.labelKind ?? ""}:${route.labelRecord ?? ""}`}
-            initialKind={route.labelKind}
-            initialId={route.labelRecord}
-            canonicalOrigin={state.session.canonical_origin}
-          />
-        ) : route.section === "locations" ? (
-          <LocationScreen
-            key={route.recordId ?? "directory"}
-            initialId={route.recordId}
-          />
-        ) : (
-          <GeographyScreen
-            key={route.recordId ?? route.placeId ?? "directory"}
-            initialSiteId={route.recordId}
-            initialPlaceId={route.placeId}
-          />
-        )}
+        </WorkspaceBoundary>
         {state.status === "logout-failed" && (
           <div className="notice notice--error" role="alert">
             <p>{state.message}</p>

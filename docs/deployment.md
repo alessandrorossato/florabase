@@ -12,6 +12,15 @@ where an operator-managed HTTPS reverse proxy can forward to the frontend port.
 network; only the nginx frontend proxy publishes `${APP_BIND_ADDRESS}:${APP_PORT}`. The frontend
 serves the React application and forwards `/api/` to FastAPI.
 
+## Resource expectations
+
+See the [PERF-001 measured environment and resource report](performance/PERF-001.md) for the
+representative personal-collection workload, production image sizes, runtime memory, known costs and
+reproduction commands. Its measurements describe one host and a disposable tmpfs database, not a
+minimum-hardware guarantee. Build/test memory differs from steady runtime use; run heavy verification
+and image builds serially on a constrained host. Allow for the OS, Docker, HTTPS proxy, persistent
+media/database growth and backups in addition to measured application containers.
+
 ## Configure the installation
 
 ```bash

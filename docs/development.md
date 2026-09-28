@@ -109,6 +109,15 @@ docker compose --project-name florabase-preview \
 The persistent preview database is not a test fixture. `make test-integration` remains a separate
 tmpfs-backed `florabase-integration` project, and feature verification never targets preview data.
 
+## Resource measurements
+
+The [PERF-001 protocol/report](performance/PERF-001.md) documents the guarded `florabase-perf`
+project, production runtime builds, deterministic disposable dataset, API/SQL/browser collectors,
+comparison evidence and serial reproduction commands. It reuses the production topology with tmpfs
+PostgreSQL/media and a single loopback frontend port; it never imports operator data or loads the
+normal `.env`. Benchmark independently of quality/build jobs, and retain baseline evidence before
+changing code. Normal CI has deterministic query/loading regressions, not CPU/RAM/latency thresholds.
+
 ## Checks
 
 Use the narrowest relevant command while working:

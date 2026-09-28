@@ -1,0 +1,24 @@
+# PERF-001 only: merge with compose.yaml using scripts/perf/compose.sh.
+services:
+  db:
+    environment:
+      POSTGRES_DB: florabase_perf
+      POSTGRES_USER: florabase_perf
+      POSTGRES_PASSWORD: disposable-perf-password
+    volumes: !reset []
+    tmpfs:
+      - /var/lib/postgresql
+    command: [postgres, -c, shared_preload_libraries=pg_stat_statements]
+  backend:
+    environment:
+      FLORABASE_ENVIRONMENT: development
+      FLORABASE_DATABASE_URL: postgresql+psycopg://florabase_perf:disposable-perf-password@db:5432/florabase_perf
+      FLORABASE_DATABASE_DISPOSABLE: "true"
+      FLORABASE_CANONICAL_ORIGIN: http://localhost:18080
+      FLORABASE_COOKIE_MODE: loopback-development
+    volumes: !reset []
+    tmpfs:
+      - /var/lib/florabase/attachments:uid=10001,gid=10001,mode=0700
+  frontend:
+    ports: !override
+      - "127.0.0.1:18080:8080"

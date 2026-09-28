@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import UUID
@@ -79,7 +80,9 @@ def _require(places: list[GeographicPlace], place_id: UUID) -> GeographicPlace:
         raise GeographicPlaceNotFoundError from exc
 
 
-def _ancestors(place: GeographicPlace, by_id: dict[UUID, GeographicPlace]) -> list[GeographicPlace]:
+def _ancestors(
+    place: GeographicPlace, by_id: Mapping[UUID, GeographicPlace]
+) -> list[GeographicPlace]:
     ancestors: list[GeographicPlace] = []
     seen = {place.id}
     parent_id = place.parent_id
@@ -95,8 +98,10 @@ def _ancestors(place: GeographicPlace, by_id: dict[UUID, GeographicPlace]) -> li
     return ancestors
 
 
-def display_path(place: GeographicPlace, places: list[GeographicPlace]) -> str:
-    by_id = {item.id: item for item in places}
+def display_path(
+    place: GeographicPlace, places: list[GeographicPlace] | Mapping[UUID, GeographicPlace]
+) -> str:
+    by_id = {item.id: item for item in places} if isinstance(places, list) else places
     return " → ".join(
         [ancestor.name for ancestor in reversed(_ancestors(place, by_id))] + [place.name]
     )

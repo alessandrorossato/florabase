@@ -18,7 +18,11 @@ responsibilities.
 - The backend owns validation, authentication and authorization, business rules, transactions,
   OpenAPI, and structured logs.
 - The frontend owns accessible interactions and explicit loading, empty, success, and failure states.
-  It uses relative API URLs and never connects to PostgreSQL.
+  It uses relative API URLs and never connects to PostgreSQL. Workspaces and propagation wizards
+  load on navigation through React lazy/Suspense; optional maps and Labels/QR remain lazy. Failed
+  workspace downloads retain the authenticated shell with a reload action. Public static assets
+  use nginx compression; authenticated API/media responses retain their existing behavior.
+  See [PERF-001 measurements](performance/PERF-001.md).
   LABEL-001's temporary browser composer derives SeedLot, Plant, and PlantGroup labels from existing
   protected APIs, generates SVG QRs locally, and prints through CSS physical units. Lookup uses the
   application's existing hash detail routes and configured canonical origin; no public endpoint,
