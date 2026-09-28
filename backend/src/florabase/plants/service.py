@@ -815,7 +815,7 @@ def _common_response_values(
     material_provenance: GeographicPlace | None,
     provenance_site: ProvenanceSite | None,
     location: Location | None,
-    places: list[GeographicPlace],
+    places: Mapping[UUID, GeographicPlace],
     locations: list[Location],
     site_by_id: Mapping[UUID, ProvenanceSiteResponse],
 ) -> dict[str, object]:
@@ -885,9 +885,19 @@ def plant_responses(database: Session, projections: list[PlantProjection]) -> li
         else []
     )
     locations = list_locations(database) if any(item.location for item in projections) else []
-    site_models = [item.provenance_site for item in projections if item.provenance_site]
+    place_by_id = {place.id: place for place in places}
+    site_models = list(
+        {
+            item.provenance_site.id: item.provenance_site
+            for item in projections
+            if item.provenance_site
+        }.values()
+    )
     site_by_id = (
-        {response.id: response for response in provenance_site_responses(database, site_models)}
+        {
+            response.id: response
+            for response in provenance_site_responses(database, site_models, places=places or None)
+        }
         if site_models
         else {}
     )
@@ -904,7 +914,7 @@ def plant_responses(database: Session, projections: list[PlantProjection]) -> li
                 item.material_provenance,
                 item.provenance_site,
                 item.location,
-                places,
+                place_by_id,
                 locations,
                 site_by_id,
             ),
@@ -951,9 +961,19 @@ def plant_group_responses(
         else []
     )
     locations = list_locations(database) if any(item.location for item in projections) else []
-    site_models = [item.provenance_site for item in projections if item.provenance_site]
+    place_by_id = {place.id: place for place in places}
+    site_models = list(
+        {
+            item.provenance_site.id: item.provenance_site
+            for item in projections
+            if item.provenance_site
+        }.values()
+    )
     site_by_id = (
-        {response.id: response for response in provenance_site_responses(database, site_models)}
+        {
+            response.id: response
+            for response in provenance_site_responses(database, site_models, places=places or None)
+        }
         if site_models
         else {}
     )
@@ -981,7 +1001,7 @@ def plant_group_responses(
                     item.material_provenance,
                     item.provenance_site,
                     item.location,
-                    places,
+                    place_by_id,
                     locations,
                     site_by_id,
                 ),

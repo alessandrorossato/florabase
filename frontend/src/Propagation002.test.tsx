@@ -162,7 +162,7 @@ test("guided exact SeedLot usage previews and submits the authoritative partial 
     await Promise.resolve();
   });
   expect(
-    screen.getByRole("heading", { name: "Start sowing" }),
+    await screen.findByRole("heading", { name: "Start sowing" }),
   ).toBeInTheDocument();
   await user.type(screen.getByLabelText("Amount"), "20");
   await user.click(

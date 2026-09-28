@@ -42,19 +42,14 @@ full offline synchronization are outside that criterion.
 
 ### Required before 0.1.0: PERF-001 and RELEASE-001
 
-[`PERF-001`](features.json) is the planned P0 resource-efficiency increment after the operator
-freezes product scope. It will **measure → identify demonstrated hotspots → optimize → re-measure**
-representative production-like workflows, including startup and idle use; Dashboard; collection and
-reference directories/details; Events, Photos, and lineage; provenance and explicitly loaded
-occurrence maps; and a create/edit path. The baseline will inspect CPU, memory, startup, transfer and
-chunk cost, requests, queries, response timing, media and map loading, and production image/process
-footprint. It will investigate the current Vite chunk-size advisory against actual initial-load
-cost, not change the warning threshold to hide it. It will also inspect repeated navigation and
-idle use for resource growth. Changes must address measured problems without weakening product
-semantics, security, privacy, reproducible builds, or operability. The same workload will be
-re-measured and practical expectations for modest self-hosted hardware documented; no arbitrary
-CPU, RAM, or hardware guarantee is set at planning time. This prevents avoidable resource problems
-from first surfacing in an operator's deployment.
+[`PERF-001`](features.json) is implemented for independent review on the frozen product scope.
+Its [measurement report](performance/PERF-001.md) preserves the production-like baseline, identical
+workload comparisons, bounded query regressions, resource observations and limitations. Demonstrated
+costs justified response-local geography reuse, native workspace lazy loading and public static
+compression. Domain, security, privacy, API and schema contracts are unchanged; no speculative index,
+generic cache or hardware guarantee was added. The Vite advisory threshold is unchanged. The canonical
+verification and release acceptance remain pending. `RELEASE-001` should repeat the report's resource
+sanity checks on its exact candidate, real target hardware/persistent storage and HTTPS.
 
 [`RELEASE-001`](features.json) is the planned P0 release-hardening increment. It is the release
 acceptance gate after `PERF-001`, not a claim that hardening or release acceptance has already passed.

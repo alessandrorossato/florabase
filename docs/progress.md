@@ -4,6 +4,63 @@ This log preserves meaningful verified milestones and current repository state. 
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
 
+## 2026-09-27 — PERF-001 implemented for independent review
+
+- Preserved the untouched `d5a9da5` baseline, frozen protocol and comparison evidence in
+  [PERF-001 report](performance/PERF-001.md), `baseline.json` and `after.json`. The guarded disposable
+  `florabase-perf` project reuses production runtime images/topology with tmpfs PostgreSQL/media,
+  loopback preview-style cookies and deterministic personal-collection data. Operator stacks/data
+  were preserved; measurements ran separately from checks/builds. Maps use explicit deterministic
+  browser responses; three separate live summary probes returned 200 with no eligible fixture data.
+- Measured hotspots justified response-local geography maps, distinct-site serialization and reused
+  loaded geography in SeedLot/Plant/PlantGroup responses, native lazy workspaces/wizards with loading
+  and download-failure recovery, and public-static nginx gzip. API/schema/security/privacy/domain
+  contracts and Vite advisory threshold remain unchanged; no index, migration, broad cache or pool
+  tuning was justified. Alembic remains `20260925_0026`.
+- Identical 28-read workloads retain seven repetitions, median/range, first-call timing, payload
+  sizes and SQL counts; first comparison, warmed repeat and final repeat are all retained. Initial
+  browser JS/CSS is 691,307→117,364 bytes (~83% less); initial requests 9→18; largest chunk 207,746
+  bytes with no large-chunk advisory. Total all-workspace JS grows ~1.6% raw/~13% independently gzipped.
+  Final SeedLot/Geography/Plant medians are 46.0/15.4/47.2ms versus 122.3/64.2/82.8ms baseline, but
+  unchanged controls also become faster, so not all timing improvement is attributed to the fixes.
+  SeedLot/Plant query counts drop 11→10; exact captured EXPLAIN plans did not justify new indexes.
+- Final browser run has no errors, six cycles of 53 requests, stable DOM/listeners, no Dashboard maps
+  or timers, and 122s idle with zero requests, unchanged session timestamps and five idle database
+  connections. Runtime container memory settles around 298MiB with this tmpfs fixture; the report
+  records health-check CPU, image/process/startup costs and no unsupported hardware guarantee.
+  Thumbnail/original transfers, local Photos laziness and external opt-in remain intact. Larger full
+  directories, provider/network latency and all-workspace chunk overhead remain documented costs.
+- Regression coverage adds hierarchy reuse/integrity tests, three PostgreSQL query-count tests at
+  1/20 records, workspace deferral/module reuse and failed-chunk recovery, and four benchmark safety
+  guards. Focused runs: 36 backend, 54 frontend and 3 PostgreSQL cases passed. Existing UI assertions
+  now await lazy-route readiness without weakening their assertions or timeouts.
+- Final serial `make check` exits 0: formatting, Ruff, zero-warning ESLint, strict mypy (215 files),
+  TypeScript, 425 backend unit tests, 230 frontend tests (25 files), and API drift check. **Coverage
+  caveat:** pytest reports 89.82% against the configured 90% and prints a failure message while the
+  command continues successfully. Independent review confirmed coverage.py defaults to 0-digit
+  precision, so `round(89.82, 0)` meets the configured whole-percent 90% gate; pytest-cov separately
+  prints a red unrounded warning without changing pytest's exit status. The message is misleading;
+  threshold and precision remain unchanged.
+  `make test-integration`: 357 passed/425 deselected/118 warnings in 132.97s. Production runtime build,
+  actual static gzip/protected-response integrity, helper safety/lint/format/syntax checks and feature
+  graph validation pass. Host Python 3.12 lacks existing `uuid7`; successful checks use Docker 3.14.7.
+  An interrupted high-memory-pressure run was replaced with complete serial runs, not counted as proof.
+- Independent final review found and corrected two narrow defects: a workspace error boundary that
+  could mask unrelated lazy-module failures, and duplicate `/healthz` Content-Type headers. Recovery
+  now recognizes only dynamic-import fetch/MIME `TypeError`s; a rebuilt Chromium run against the real
+  hidden Seeds chunk showed the SPA fallback, recovery UI and retained authenticated shell without a
+  document reload. Fresh production responses reproduced 10 SeedLot/Plant and 6 PlantGroup query
+  counts; gzip/Vary, identity fallback, no-store runtime config, uncompressed protected API and the
+  corrected plain-text health response all passed. The reviewed source/image identities and measured
+  response details are in `after.json` and this report.
+- Independent final `make feature-verify` passed all stages: quality, 425 backend unit tests, 232
+  frontend tests, 357 PostgreSQL integration tests, generated API drift, production build, feature
+  graph and migration checks. The 89.82% coverage line still prints pytest-cov's misleading warning,
+  but the configured zero-precision 90% gate passes and the canonical command exits 0. PERF-001 is
+  now `verified`; no staging, commit, push, delivery, merge, branch switch or finish was performed.
+  RELEASE-001 should repeat the documented sanity workload on the exact candidate, real target
+  hardware/persistent storage and HTTPS, alongside security/mobile/keyboard/installation/recovery.
+
 ## 2026-09-27 — LABEL-001 implemented for operator physical/visual review
 
 - Added a temporary authenticated Labels workspace and secondary Print label detail actions for
@@ -1277,7 +1334,7 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260913_0024`; SEARCH-001 adds no migration.
+- Alembic head: `20260925_0026`; PERF-001 adds no migration.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
@@ -1291,7 +1348,8 @@ implementation detail.
   `ATTACHMENT-003`, `IMPORT-001`, `SEARCH-001`, and `UX-002` through `UX-006` are implemented in the
   graph; UX-004, UX-005, and UX-006 have landed on `main`, but their graph status has not been
   promoted to `verified`.
-  `PERF-001` is planned for the frozen 0.1.0 scope before `RELEASE-001` hardening and acceptance.
+  `PERF-001` is implemented for independent review on the frozen 0.1.0 scope before `RELEASE-001`
+  hardening and acceptance; its measurement report records the remaining costs and review caveats.
   Optional product candidates are not dependencies of either required increment. Licensing,
   version/upgrade policy, and release readiness remain to be resolved in `RELEASE-001`.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected

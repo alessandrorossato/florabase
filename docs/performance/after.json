@@ -1,0 +1,3180 @@
+{
+  "environment": {
+    "startup": {
+      "database_health_s": 5.8,
+      "migration_s": 2.7,
+      "application_health_s": 11.5,
+      "fixture_s": 3.1
+    },
+    "manifest": {
+      "identity": "0198f000-0000-7000-8000-000500000000",
+      "seed": "0198f000-0000-7000-8000-000700000000",
+      "sowing": "0198f000-0000-7000-8000-000800000000",
+      "plant": "0198f000-0000-7000-8000-000a00000000",
+      "group": "0198f000-0000-7000-8000-000b00000000",
+      "supplier": "0198f000-0000-7000-8000-000200000000",
+      "location": "0198f000-0000-7000-8000-000300000000",
+      "site": "0198f000-0000-7000-8000-000400000000",
+      "place": "0198f000-0000-7000-8000-000100000000",
+      "attachment": "0198f000-0000-7000-8000-000d00000000",
+      "photo": "0198f000-0000-7000-8000-000e00000000"
+    },
+    "platform": "Linux-6.19.8-surface-3-x86_64-with-glibc2.39",
+    "cpu": "x86_64",
+    "host": "8 CPUs; 7903653888 bytes RAM",
+    "sha": "d5a9da53bea675e16aeba75a1f8e6cd272e6cd99",
+    "images": [
+      "[florabase-perf-backend:latest] 227180587",
+      "[florabase-perf-frontend:latest] 54620343",
+      "[postgres:18.6-alpine] 303729906"
+    ]
+  },
+  "description": "d5a9da5 plus unstaged PERF-001 runtime source; final production repeat after serial checks. All timings are host-specific. Prior comparison runs are preserved.",
+  "final_runtime_images": [
+    "sha256:e554e5810e59c9e2ed1466de2eb76ccc6f231d22e4d7ad5f55b6d3f72ebf1c5f 227180587",
+    "sha256:34392a138b57fc6d50b741ad2b83884af062ef50302238d31ba597f07de8298d 54620343",
+    "sha256:c293117fcecda7344b5480222e813b9f673d7abd69b1dd95eff239b768b04f59 303729906"
+  ],
+  "runtime_sources_sha256": {
+    "backend/src/florabase/geographic_places/api.py": "5498a19964e175f273beca6c1db4061aaf595b9f93ef18bf14644ba945add331",
+    "backend/src/florabase/geographic_places/service.py": "caddcdec5026ebbd0067004e9d83f0fffbcea58655f5dcb41346496691515e1f",
+    "backend/src/florabase/plants/service.py": "4987749c488c57d72c05a1f539c7719dc0964fa1709b6d62d812902620819df2",
+    "backend/src/florabase/provenance_sites/service.py": "8c7d0f694c4e492dfe5267e0f39e898f28cec2e9fa075aa07fefa51bc5c9685a",
+    "backend/src/florabase/seed_lots/service.py": "d5c9db7fffaf1da24c742df54c2a2edd5ff4ca96c0d918d74a207ff2d8291e5d",
+    "frontend/src/App.tsx": "3b862dd969b2ec46fb00efffacd9437e0df2ab94c0c082dc15b402b5b58b8510",
+    "frontend/src/components/WorkspaceBoundary.tsx": "78a5b11d7defd97273859bdbc047b5475ac057b48d60d2c0e7aee3804a8da168",
+    "frontend/nginx.conf": "0609913ec6e4297d10ca55032bdf84e46e8e97fe960648ee3b73fd20e8f25712",
+    "backend/Dockerfile": "43058f78c589ef8bed4c6afe744718d97f99200429f373cb71da6cf41edd398c",
+    "frontend/Dockerfile": "7a18983e4ec0b756506f1f867838d84f258f457d0bc20b3f8ccf9e85fd6abac5",
+    "frontend/vite.config.ts": "ef9b0e53905c14da91f8ffef9015885dad2caa0c47d08efb6ab32a4fa2462acb",
+    "frontend/pnpm-lock.yaml": "0080930f3cf1913c0678e478c39023d9c150ae0d69345be2aa61a9924de5348c",
+    "compose.yaml": "0e188faced04e9f22044e76a10cb1fbeb61d724ccfd70a0c0be1c36fc01df47f",
+    "compose.perf.yaml": "75a98fbbdf8b76ff528f6dedae0a66fc23817e109d2ec54b1318833d16aecb20",
+    "frontend/src/components/workspaceChunk.ts": "239c79b0f9b3ee26f6472d56829841a1e50d859640aab8607e120cc74c89dbe9"
+  },
+  "api_runs": {
+    "first_comparison": {
+      "reads": {
+        "/dashboard": {
+          "first_ms": 189.9,
+          "median_ms": 60.3,
+          "range_ms": [
+            48.8,
+            67.2
+          ],
+          "bytes": 3920,
+          "queries": [
+            10
+          ]
+        },
+        "/botanical-identities": {
+          "first_ms": 32.1,
+          "median_ms": 22.8,
+          "range_ms": [
+            18.0,
+            239.1
+          ],
+          "bytes": 29924,
+          "queries": [
+            3
+          ]
+        },
+        "/seed-lots": {
+          "first_ms": 129.7,
+          "median_ms": 90.7,
+          "range_ms": [
+            84.9,
+            98.9
+          ],
+          "bytes": 233095,
+          "queries": [
+            10
+          ]
+        },
+        "/sowings": {
+          "first_ms": 57.2,
+          "median_ms": 36.8,
+          "range_ms": [
+            29.1,
+            42.3
+          ],
+          "bytes": 106911,
+          "queries": [
+            4
+          ]
+        },
+        "/plants": {
+          "first_ms": 115.7,
+          "median_ms": 82.1,
+          "range_ms": [
+            67.4,
+            215.8
+          ],
+          "bytes": 193055,
+          "queries": [
+            10
+          ]
+        },
+        "/plant-groups": {
+          "first_ms": 75.8,
+          "median_ms": 52.8,
+          "range_ms": [
+            43.5,
+            69.0
+          ],
+          "bytes": 91187,
+          "queries": [
+            6
+          ]
+        },
+        "/suppliers": {
+          "first_ms": 24.0,
+          "median_ms": 14.0,
+          "range_ms": [
+            12.1,
+            15.5
+          ],
+          "bytes": 3385,
+          "queries": [
+            3
+          ]
+        },
+        "/locations": {
+          "first_ms": 20.1,
+          "median_ms": 20.6,
+          "range_ms": [
+            16.1,
+            22.1
+          ],
+          "bytes": 4876,
+          "queries": [
+            7
+          ]
+        },
+        "/geographic-places": {
+          "first_ms": 39.5,
+          "median_ms": 25.4,
+          "range_ms": [
+            23.3,
+            32.4
+          ],
+          "bytes": 145995,
+          "queries": [
+            8
+          ]
+        },
+        "/provenance-sites": {
+          "first_ms": 21.0,
+          "median_ms": 19.1,
+          "range_ms": [
+            16.8,
+            28.4
+          ],
+          "bytes": 3433,
+          "queries": [
+            7
+          ]
+        },
+        "/events": {
+          "first_ms": 158.9,
+          "median_ms": 142.2,
+          "range_ms": [
+            113.0,
+            271.6
+          ],
+          "bytes": 604487,
+          "queries": [
+            4
+          ]
+        },
+        "/provenance-sites/map": {
+          "first_ms": 47.9,
+          "median_ms": 40.6,
+          "range_ms": [
+            38.4,
+            45.4
+          ],
+          "bytes": 49880,
+          "queries": [
+            8
+          ]
+        },
+        "/search?q=Perfplant": {
+          "first_ms": 290.4,
+          "median_ms": 219.1,
+          "range_ms": [
+            188.6,
+            291.5
+          ],
+          "bytes": 22102,
+          "queries": [
+            26
+          ]
+        },
+        "/botanical-identities/{id}": {
+          "first_ms": 14.3,
+          "median_ms": 9.4,
+          "range_ms": [
+            8.8,
+            15.1
+          ],
+          "bytes": 322,
+          "queries": [
+            3
+          ]
+        },
+        "/seed-lots/{id}": {
+          "first_ms": 75.1,
+          "median_ms": 41.0,
+          "range_ms": [
+            36.5,
+            54.8
+          ],
+          "bytes": 1599,
+          "queries": [
+            10
+          ]
+        },
+        "/sowings/{id}": {
+          "first_ms": 15.4,
+          "median_ms": 11.0,
+          "range_ms": [
+            10.1,
+            11.1
+          ],
+          "bytes": 878,
+          "queries": [
+            4
+          ]
+        },
+        "/plants/{id}": {
+          "first_ms": 39.2,
+          "median_ms": 28.9,
+          "range_ms": [
+            22.5,
+            142.8
+          ],
+          "bytes": 1140,
+          "queries": [
+            5
+          ]
+        },
+        "/plant-groups/{id}": {
+          "first_ms": 29.6,
+          "median_ms": 20.7,
+          "range_ms": [
+            20.1,
+            32.7
+          ],
+          "bytes": 1121,
+          "queries": [
+            5
+          ]
+        },
+        "/suppliers/{id}": {
+          "first_ms": 26.2,
+          "median_ms": 18.4,
+          "range_ms": [
+            17.4,
+            25.2
+          ],
+          "bytes": 5940,
+          "queries": [
+            7
+          ]
+        },
+        "/locations/{id}": {
+          "first_ms": 14.8,
+          "median_ms": 14.8,
+          "range_ms": [
+            12.5,
+            15.7
+          ],
+          "bytes": 364,
+          "queries": [
+            8
+          ]
+        },
+        "/provenance-sites/{id}": {
+          "first_ms": 17.4,
+          "median_ms": 15.2,
+          "range_ms": [
+            14.8,
+            21.2
+          ],
+          "bytes": 428,
+          "queries": [
+            7
+          ]
+        },
+        "/botanical-identities/{id}/collection": {
+          "first_ms": 135.7,
+          "median_ms": 94.8,
+          "range_ms": [
+            85.3,
+            129.1
+          ],
+          "bytes": 16234,
+          "queries": [
+            21
+          ]
+        },
+        "/botanical-identities/{id}/profile": {
+          "first_ms": 10.4,
+          "median_ms": 7.3,
+          "range_ms": [
+            6.3,
+            9.6
+          ],
+          "bytes": 193,
+          "queries": [
+            3
+          ]
+        },
+        "/sowings/{id}/germination": {
+          "first_ms": 17.3,
+          "median_ms": 9.4,
+          "range_ms": [
+            8.5,
+            10.6
+          ],
+          "bytes": 1020,
+          "queries": [
+            4
+          ]
+        },
+        "/seed-lots/{id}/lineage": {
+          "first_ms": 27.9,
+          "median_ms": 24.1,
+          "range_ms": [
+            23.8,
+            40.9
+          ],
+          "bytes": 237,
+          "queries": [
+            5
+          ]
+        },
+        "/collection-records/seed_lot/{id}/photos": {
+          "first_ms": 15.9,
+          "median_ms": 10.8,
+          "range_ms": [
+            10.1,
+            11.5
+          ],
+          "bytes": 707,
+          "queries": [
+            5
+          ]
+        },
+        "/collection-photos/local/{id}/thumbnail": {
+          "first_ms": 106.6,
+          "median_ms": 33.2,
+          "range_ms": [
+            31.6,
+            42.1
+          ],
+          "bytes": 4720,
+          "queries": [
+            3
+          ]
+        },
+        "/attachments/{id}/content": {
+          "first_ms": 12.5,
+          "median_ms": 10.0,
+          "range_ms": [
+            9.3,
+            10.5
+          ],
+          "bytes": 360310,
+          "queries": [
+            3
+          ]
+        }
+      },
+      "create_edit_delete_ms": 48.8,
+      "resources": {
+        "at": 1790540065.3,
+        "containers": [
+          {
+            "BlockIO": "25.6MB / 4.1kB",
+            "CPUPerc": "0.14%",
+            "Container": "florabase-perf-backend-1",
+            "ID": "8d0b33efb79b",
+            "MemPerc": "1.84%",
+            "MemUsage": "138.9MiB / 7.361GiB",
+            "Name": "florabase-perf-backend-1",
+            "NetIO": "26.1MB / 19.6MB",
+            "PIDs": "3"
+          },
+          {
+            "BlockIO": "3.99MB / 4.1kB",
+            "CPUPerc": "0.00%",
+            "Container": "florabase-perf-frontend-1",
+            "ID": "197d10bde2f5",
+            "MemPerc": "0.11%",
+            "MemUsage": "8.027MiB / 7.361GiB",
+            "Name": "florabase-perf-frontend-1",
+            "NetIO": "17.5MB / 17.5MB",
+            "PIDs": "10"
+          },
+          {
+            "BlockIO": "22.9MB / 8.19kB",
+            "CPUPerc": "0.03%",
+            "Container": "florabase-perf-db-1",
+            "ID": "8134d5df1146",
+            "MemPerc": "1.56%",
+            "MemUsage": "117.8MiB / 7.361GiB",
+            "Name": "florabase-perf-db-1",
+            "NetIO": "2.6MB / 25.9MB",
+            "PIDs": "11"
+          }
+        ],
+        "connections": {
+          "total": 2,
+          "idle": 2
+        },
+        "load": "4.61 4.01 3.57 1/1878 164497"
+      }
+    },
+    "warmed_repeat": {
+      "reads": {
+        "/dashboard": {
+          "first_ms": 41.2,
+          "median_ms": 45.5,
+          "range_ms": [
+            43.1,
+            53.4
+          ],
+          "bytes": 3920,
+          "queries": [
+            10
+          ]
+        },
+        "/botanical-identities": {
+          "first_ms": 18.3,
+          "median_ms": 16.1,
+          "range_ms": [
+            15.0,
+            19.9
+          ],
+          "bytes": 29924,
+          "queries": [
+            3
+          ]
+        },
+        "/seed-lots": {
+          "first_ms": 71.7,
+          "median_ms": 66.3,
+          "range_ms": [
+            63.3,
+            202.0
+          ],
+          "bytes": 233095,
+          "queries": [
+            10
+          ]
+        },
+        "/sowings": {
+          "first_ms": 27.1,
+          "median_ms": 27.1,
+          "range_ms": [
+            25.6,
+            32.0
+          ],
+          "bytes": 106911,
+          "queries": [
+            4
+          ]
+        },
+        "/plants": {
+          "first_ms": 64.6,
+          "median_ms": 65.7,
+          "range_ms": [
+            64.6,
+            76.2
+          ],
+          "bytes": 193055,
+          "queries": [
+            10
+          ]
+        },
+        "/plant-groups": {
+          "first_ms": 43.1,
+          "median_ms": 39.0,
+          "range_ms": [
+            37.3,
+            43.6
+          ],
+          "bytes": 91187,
+          "queries": [
+            6
+          ]
+        },
+        "/suppliers": {
+          "first_ms": 9.8,
+          "median_ms": 10.6,
+          "range_ms": [
+            10.1,
+            12.2
+          ],
+          "bytes": 3385,
+          "queries": [
+            3
+          ]
+        },
+        "/locations": {
+          "first_ms": 12.6,
+          "median_ms": 12.4,
+          "range_ms": [
+            12.2,
+            13.1
+          ],
+          "bytes": 4876,
+          "queries": [
+            7
+          ]
+        },
+        "/geographic-places": {
+          "first_ms": 23.0,
+          "median_ms": 22.4,
+          "range_ms": [
+            21.5,
+            43.7
+          ],
+          "bytes": 145995,
+          "queries": [
+            8
+          ]
+        },
+        "/provenance-sites": {
+          "first_ms": 18.2,
+          "median_ms": 16.4,
+          "range_ms": [
+            15.1,
+            20.8
+          ],
+          "bytes": 3433,
+          "queries": [
+            7
+          ]
+        },
+        "/events": {
+          "first_ms": 102.5,
+          "median_ms": 118.8,
+          "range_ms": [
+            106.7,
+            158.7
+          ],
+          "bytes": 604487,
+          "queries": [
+            4
+          ]
+        },
+        "/provenance-sites/map": {
+          "first_ms": 33.1,
+          "median_ms": 30.1,
+          "range_ms": [
+            28.3,
+            57.5
+          ],
+          "bytes": 49880,
+          "queries": [
+            8
+          ]
+        },
+        "/search?q=Perfplant": {
+          "first_ms": 162.7,
+          "median_ms": 164.3,
+          "range_ms": [
+            155.9,
+            295.0
+          ],
+          "bytes": 22102,
+          "queries": [
+            26
+          ]
+        },
+        "/botanical-identities/{id}": {
+          "first_ms": 7.7,
+          "median_ms": 8.3,
+          "range_ms": [
+            7.0,
+            9.4
+          ],
+          "bytes": 322,
+          "queries": [
+            3
+          ]
+        },
+        "/seed-lots/{id}": {
+          "first_ms": 33.3,
+          "median_ms": 34.9,
+          "range_ms": [
+            31.0,
+            39.3
+          ],
+          "bytes": 1599,
+          "queries": [
+            10
+          ]
+        },
+        "/sowings/{id}": {
+          "first_ms": 10.4,
+          "median_ms": 10.9,
+          "range_ms": [
+            9.9,
+            14.5
+          ],
+          "bytes": 878,
+          "queries": [
+            4
+          ]
+        },
+        "/plants/{id}": {
+          "first_ms": 22.0,
+          "median_ms": 24.5,
+          "range_ms": [
+            22.4,
+            51.2
+          ],
+          "bytes": 1140,
+          "queries": [
+            5
+          ]
+        },
+        "/plant-groups/{id}": {
+          "first_ms": 21.3,
+          "median_ms": 20.2,
+          "range_ms": [
+            19.5,
+            39.6
+          ],
+          "bytes": 1121,
+          "queries": [
+            5
+          ]
+        },
+        "/suppliers/{id}": {
+          "first_ms": 17.8,
+          "median_ms": 18.2,
+          "range_ms": [
+            17.0,
+            19.0
+          ],
+          "bytes": 5940,
+          "queries": [
+            7
+          ]
+        },
+        "/locations/{id}": {
+          "first_ms": 13.6,
+          "median_ms": 13.6,
+          "range_ms": [
+            13.0,
+            14.4
+          ],
+          "bytes": 364,
+          "queries": [
+            8
+          ]
+        },
+        "/provenance-sites/{id}": {
+          "first_ms": 16.2,
+          "median_ms": 17.0,
+          "range_ms": [
+            13.8,
+            22.4
+          ],
+          "bytes": 428,
+          "queries": [
+            7
+          ]
+        },
+        "/botanical-identities/{id}/collection": {
+          "first_ms": 82.5,
+          "median_ms": 90.2,
+          "range_ms": [
+            87.2,
+            111.7
+          ],
+          "bytes": 16234,
+          "queries": [
+            21
+          ]
+        },
+        "/botanical-identities/{id}/profile": {
+          "first_ms": 8.1,
+          "median_ms": 7.7,
+          "range_ms": [
+            7.0,
+            9.3
+          ],
+          "bytes": 193,
+          "queries": [
+            3
+          ]
+        },
+        "/sowings/{id}/germination": {
+          "first_ms": 11.7,
+          "median_ms": 9.1,
+          "range_ms": [
+            8.4,
+            9.9
+          ],
+          "bytes": 1020,
+          "queries": [
+            4
+          ]
+        },
+        "/seed-lots/{id}/lineage": {
+          "first_ms": 38.4,
+          "median_ms": 24.7,
+          "range_ms": [
+            23.4,
+            30.4
+          ],
+          "bytes": 237,
+          "queries": [
+            5
+          ]
+        },
+        "/collection-records/seed_lot/{id}/photos": {
+          "first_ms": 10.7,
+          "median_ms": 10.1,
+          "range_ms": [
+            9.7,
+            11.5
+          ],
+          "bytes": 707,
+          "queries": [
+            5
+          ]
+        },
+        "/collection-photos/local/{id}/thumbnail": {
+          "first_ms": 33.2,
+          "median_ms": 32.1,
+          "range_ms": [
+            31.8,
+            43.0
+          ],
+          "bytes": 4720,
+          "queries": [
+            3
+          ]
+        },
+        "/attachments/{id}/content": {
+          "first_ms": 9.5,
+          "median_ms": 9.6,
+          "range_ms": [
+            9.5,
+            10.2
+          ],
+          "bytes": 360310,
+          "queries": [
+            3
+          ]
+        }
+      },
+      "create_edit_delete_ms": 35.2,
+      "resources": {
+        "at": 1790540399.3,
+        "containers": [
+          {
+            "BlockIO": "26MB / 4.1kB",
+            "CPUPerc": "0.17%",
+            "Container": "florabase-perf-backend-1",
+            "ID": "8d0b33efb79b",
+            "MemPerc": "2.17%",
+            "MemUsage": "163.5MiB / 7.361GiB",
+            "Name": "florabase-perf-backend-1",
+            "NetIO": "60.7MB / 48.9MB",
+            "PIDs": "3"
+          },
+          {
+            "BlockIO": "5.46MB / 4.1kB",
+            "CPUPerc": "0.00%",
+            "Container": "florabase-perf-frontend-1",
+            "ID": "197d10bde2f5",
+            "MemPerc": "0.11%",
+            "MemUsage": "8.398MiB / 7.361GiB",
+            "Name": "florabase-perf-frontend-1",
+            "NetIO": "44.2MB / 44.6MB",
+            "PIDs": "10"
+          },
+          {
+            "BlockIO": "22.9MB / 8.19kB",
+            "CPUPerc": "0.01%",
+            "Container": "florabase-perf-db-1",
+            "ID": "8134d5df1146",
+            "MemPerc": "1.73%",
+            "MemUsage": "130.2MiB / 7.361GiB",
+            "Name": "florabase-perf-db-1",
+            "NetIO": "5.7MB / 60MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "load": "3.03 2.92 3.17 3/1869 193141"
+      }
+    },
+    "final_tree_repeat": {
+      "reads": {
+        "/dashboard": {
+          "first_ms": 114.2,
+          "median_ms": 33.4,
+          "range_ms": [
+            31.5,
+            36.7
+          ],
+          "bytes": 3920,
+          "queries": [
+            10
+          ]
+        },
+        "/botanical-identities": {
+          "first_ms": 19.6,
+          "median_ms": 11.5,
+          "range_ms": [
+            10.9,
+            13.9
+          ],
+          "bytes": 29924,
+          "queries": [
+            3
+          ]
+        },
+        "/seed-lots": {
+          "first_ms": 109.3,
+          "median_ms": 46.0,
+          "range_ms": [
+            44.6,
+            48.5
+          ],
+          "bytes": 233095,
+          "queries": [
+            10
+          ]
+        },
+        "/sowings": {
+          "first_ms": 37.8,
+          "median_ms": 19.5,
+          "range_ms": [
+            18.4,
+            21.0
+          ],
+          "bytes": 106911,
+          "queries": [
+            4
+          ]
+        },
+        "/plants": {
+          "first_ms": 70.6,
+          "median_ms": 47.2,
+          "range_ms": [
+            44.8,
+            111.4
+          ],
+          "bytes": 193055,
+          "queries": [
+            10
+          ]
+        },
+        "/plant-groups": {
+          "first_ms": 44.8,
+          "median_ms": 28.2,
+          "range_ms": [
+            26.5,
+            30.1
+          ],
+          "bytes": 91187,
+          "queries": [
+            6
+          ]
+        },
+        "/suppliers": {
+          "first_ms": 12.3,
+          "median_ms": 7.7,
+          "range_ms": [
+            7.3,
+            10.0
+          ],
+          "bytes": 3385,
+          "queries": [
+            3
+          ]
+        },
+        "/locations": {
+          "first_ms": 12.8,
+          "median_ms": 8.7,
+          "range_ms": [
+            8.3,
+            10.5
+          ],
+          "bytes": 4876,
+          "queries": [
+            7
+          ]
+        },
+        "/geographic-places": {
+          "first_ms": 20.1,
+          "median_ms": 15.4,
+          "range_ms": [
+            14.7,
+            20.3
+          ],
+          "bytes": 145995,
+          "queries": [
+            8
+          ]
+        },
+        "/provenance-sites": {
+          "first_ms": 13.0,
+          "median_ms": 10.9,
+          "range_ms": [
+            10.6,
+            12.1
+          ],
+          "bytes": 3433,
+          "queries": [
+            7
+          ]
+        },
+        "/events": {
+          "first_ms": 95.6,
+          "median_ms": 75.9,
+          "range_ms": [
+            73.4,
+            149.4
+          ],
+          "bytes": 604487,
+          "queries": [
+            4
+          ]
+        },
+        "/provenance-sites/map": {
+          "first_ms": 25.8,
+          "median_ms": 21.9,
+          "range_ms": [
+            21.4,
+            24.4
+          ],
+          "bytes": 49880,
+          "queries": [
+            8
+          ]
+        },
+        "/search?q=Perfplant": {
+          "first_ms": 170.2,
+          "median_ms": 122.0,
+          "range_ms": [
+            114.6,
+            125.9
+          ],
+          "bytes": 22102,
+          "queries": [
+            26
+          ]
+        },
+        "/botanical-identities/{id}": {
+          "first_ms": 6.2,
+          "median_ms": 5.4,
+          "range_ms": [
+            5.1,
+            7.0
+          ],
+          "bytes": 322,
+          "queries": [
+            3
+          ]
+        },
+        "/seed-lots/{id}": {
+          "first_ms": 34.6,
+          "median_ms": 23.3,
+          "range_ms": [
+            21.8,
+            28.4
+          ],
+          "bytes": 1599,
+          "queries": [
+            10
+          ]
+        },
+        "/sowings/{id}": {
+          "first_ms": 10.1,
+          "median_ms": 7.5,
+          "range_ms": [
+            7.2,
+            7.7
+          ],
+          "bytes": 878,
+          "queries": [
+            4
+          ]
+        },
+        "/plants/{id}": {
+          "first_ms": 25.7,
+          "median_ms": 17.0,
+          "range_ms": [
+            16.3,
+            95.4
+          ],
+          "bytes": 1140,
+          "queries": [
+            5
+          ]
+        },
+        "/plant-groups/{id}": {
+          "first_ms": 21.2,
+          "median_ms": 15.1,
+          "range_ms": [
+            14.6,
+            20.9
+          ],
+          "bytes": 1121,
+          "queries": [
+            5
+          ]
+        },
+        "/suppliers/{id}": {
+          "first_ms": 19.5,
+          "median_ms": 12.7,
+          "range_ms": [
+            12.3,
+            31.6
+          ],
+          "bytes": 5940,
+          "queries": [
+            7
+          ]
+        },
+        "/locations/{id}": {
+          "first_ms": 10.2,
+          "median_ms": 9.6,
+          "range_ms": [
+            9.3,
+            10.5
+          ],
+          "bytes": 364,
+          "queries": [
+            8
+          ]
+        },
+        "/provenance-sites/{id}": {
+          "first_ms": 13.9,
+          "median_ms": 11.4,
+          "range_ms": [
+            11.1,
+            14.3
+          ],
+          "bytes": 428,
+          "queries": [
+            7
+          ]
+        },
+        "/botanical-identities/{id}/collection": {
+          "first_ms": 95.4,
+          "median_ms": 70.0,
+          "range_ms": [
+            64.7,
+            72.1
+          ],
+          "bytes": 16234,
+          "queries": [
+            21
+          ]
+        },
+        "/botanical-identities/{id}/profile": {
+          "first_ms": 9.4,
+          "median_ms": 5.2,
+          "range_ms": [
+            5.1,
+            5.7
+          ],
+          "bytes": 193,
+          "queries": [
+            3
+          ]
+        },
+        "/sowings/{id}/germination": {
+          "first_ms": 9.5,
+          "median_ms": 6.5,
+          "range_ms": [
+            6.3,
+            6.9
+          ],
+          "bytes": 1020,
+          "queries": [
+            4
+          ]
+        },
+        "/seed-lots/{id}/lineage": {
+          "first_ms": 20.2,
+          "median_ms": 18.1,
+          "range_ms": [
+            17.8,
+            25.2
+          ],
+          "bytes": 237,
+          "queries": [
+            5
+          ]
+        },
+        "/collection-records/seed_lot/{id}/photos": {
+          "first_ms": 13.3,
+          "median_ms": 7.3,
+          "range_ms": [
+            7.2,
+            7.9
+          ],
+          "bytes": 707,
+          "queries": [
+            5
+          ]
+        },
+        "/collection-photos/local/{id}/thumbnail": {
+          "first_ms": 75.1,
+          "median_ms": 27.6,
+          "range_ms": [
+            27.3,
+            29.2
+          ],
+          "bytes": 4720,
+          "queries": [
+            3
+          ]
+        },
+        "/attachments/{id}/content": {
+          "first_ms": 9.3,
+          "median_ms": 6.9,
+          "range_ms": [
+            6.7,
+            7.6
+          ],
+          "bytes": 360310,
+          "queries": [
+            3
+          ]
+        }
+      },
+      "create_edit_delete_ms": 31.5,
+      "resources": {
+        "at": 1790543194.6,
+        "containers": [
+          {
+            "BlockIO": "13.8MB / 4.1kB",
+            "CPUPerc": "0.14%",
+            "Container": "florabase-perf-backend-1",
+            "ID": "706b991f6334",
+            "MemPerc": "1.83%",
+            "MemUsage": "138.1MiB / 7.361GiB",
+            "Name": "florabase-perf-backend-1",
+            "NetIO": "26.1MB / 19.6MB",
+            "PIDs": "3"
+          },
+          {
+            "BlockIO": "7.25MB / 4.1kB",
+            "CPUPerc": "2.26%",
+            "Container": "florabase-perf-frontend-1",
+            "ID": "4d0d95b4843a",
+            "MemPerc": "0.21%",
+            "MemUsage": "15.68MiB / 7.361GiB",
+            "Name": "florabase-perf-frontend-1",
+            "NetIO": "17.5MB / 17.5MB",
+            "PIDs": "10"
+          },
+          {
+            "BlockIO": "23.5MB / 8.19kB",
+            "CPUPerc": "0.03%",
+            "Container": "florabase-perf-db-1",
+            "ID": "dc06072a924f",
+            "MemPerc": "1.77%",
+            "MemUsage": "133.7MiB / 7.361GiB",
+            "Name": "florabase-perf-db-1",
+            "NetIO": "2.61MB / 25.8MB",
+            "PIDs": "11"
+          }
+        ],
+        "connections": {
+          "total": 2,
+          "idle": 2
+        },
+        "sessions": {
+          "count": 1,
+          "last_seen_at": "2026-09-27T21:05:56.980671+00:00",
+          "idle_expires_at": "2026-09-28T21:05:56.980671+00:00"
+        },
+        "load": "2.09 4.53 24.58 2/1848 252908"
+      }
+    }
+  },
+  "all_28_read_sizes_equal_baseline": true,
+  "browser_first_comparison": {
+    "chromium": "151.0.7922.34",
+    "initial": {
+      "ms": 826,
+      "requests": [
+        {
+          "path": "/",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/index-BkbmVYcH.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/rolldown-runtime-BpQH8Ho1.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/index-BqK6L5Uv.css",
+          "method": "GET"
+        },
+        {
+          "path": "/runtime-config.js",
+          "method": "GET"
+        },
+        {
+          "path": "/api/v1/auth/session",
+          "method": "GET"
+        },
+        {
+          "path": "/api/v1/auth/csrf",
+          "method": "POST"
+        },
+        {
+          "path": "/assets/DashboardScreen-DPLhwSs3.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/api-BDhb3NrY.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/EventFeed-DYv4CroV.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/api-0j25yVHB.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/api-WhVR0nrP.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/api-CJJv8xvC.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/ReferencePicker-ZCLXmeIv.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/ContextualHelp-COi7fRq4.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/api-a2MFPldy.js",
+          "method": "GET"
+        },
+        {
+          "path": "/api/v1/health",
+          "method": "GET"
+        },
+        {
+          "path": "/api/v1/dashboard",
+          "method": "GET"
+        }
+      ],
+      "resources": [
+        {
+          "path": "/assets/index-BkbmVYcH.js",
+          "bytes": 75527,
+          "transfer": 75827,
+          "ms": 25
+        },
+        {
+          "path": "/assets/rolldown-runtime-BpQH8Ho1.js",
+          "bytes": 227,
+          "transfer": 527,
+          "ms": 24
+        },
+        {
+          "path": "/assets/index-BqK6L5Uv.css",
+          "bytes": 28679,
+          "transfer": 28979,
+          "ms": 23
+        },
+        {
+          "path": "/runtime-config.js",
+          "bytes": 244,
+          "transfer": 544,
+          "ms": 24
+        },
+        {
+          "path": "/api/v1/auth/session",
+          "bytes": 163,
+          "transfer": 463,
+          "ms": 13
+        },
+        {
+          "path": "/api/v1/auth/csrf",
+          "bytes": 60,
+          "transfer": 360,
+          "ms": 10
+        },
+        {
+          "path": "/assets/DashboardScreen-DPLhwSs3.js",
+          "bytes": 5443,
+          "transfer": 5743,
+          "ms": 11
+        },
+        {
+          "path": "/assets/api-BDhb3NrY.js",
+          "bytes": 862,
+          "transfer": 1162,
+          "ms": 35
+        },
+        {
+          "path": "/assets/EventFeed-DYv4CroV.js",
+          "bytes": 1274,
+          "transfer": 1574,
+          "ms": 35
+        },
+        {
+          "path": "/assets/api-0j25yVHB.js",
+          "bytes": 998,
+          "transfer": 1298,
+          "ms": 42
+        },
+        {
+          "path": "/assets/api-WhVR0nrP.js",
+          "bytes": 941,
+          "transfer": 1241,
+          "ms": 43
+        },
+        {
+          "path": "/assets/api-CJJv8xvC.js",
+          "bytes": 593,
+          "transfer": 893,
+          "ms": 43
+        },
+        {
+          "path": "/assets/ReferencePicker-ZCLXmeIv.js",
+          "bytes": 1157,
+          "transfer": 1457,
+          "ms": 46
+        },
+        {
+          "path": "/assets/ContextualHelp-COi7fRq4.js",
+          "bytes": 887,
+          "transfer": 1187,
+          "ms": 46
+        },
+        {
+          "path": "/assets/api-a2MFPldy.js",
+          "bytes": 650,
+          "transfer": 950,
+          "ms": 46
+        },
+        {
+          "path": "/api/v1/health",
+          "bytes": 15,
+          "transfer": 315,
+          "ms": 38
+        },
+        {
+          "path": "/api/v1/dashboard",
+          "bytes": 3920,
+          "transfer": 4220,
+          "ms": 61
+        }
+      ]
+    },
+    "cycles": [
+      {
+        "Documents": 1,
+        "JSEventListeners": 331,
+        "Nodes": 358,
+        "JSHeapUsedSize": 5012552,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 331,
+        "Nodes": 358,
+        "JSHeapUsedSize": 5333616,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 331,
+        "Nodes": 358,
+        "JSHeapUsedSize": 5546744,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 331,
+        "Nodes": 358,
+        "JSHeapUsedSize": 5598664,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 331,
+        "Nodes": 358,
+        "JSHeapUsedSize": 5729904,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 331,
+        "Nodes": 358,
+        "JSHeapUsedSize": 5755008,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 331,
+        "Nodes": 358,
+        "JSHeapUsedSize": 5789688,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      }
+    ],
+    "cycleRequests": [
+      53,
+      53,
+      53,
+      53,
+      53,
+      53
+    ],
+    "idleSeconds": 122,
+    "idleRequests": [],
+    "final": {
+      "Documents": 1,
+      "JSEventListeners": 331,
+      "Nodes": 358,
+      "JSHeapUsedSize": 5791912,
+      "timers": {
+        "intervals": 0,
+        "timeouts": 0
+      },
+      "maps": 0
+    },
+    "errors": []
+  },
+  "browser_final_repeat": {
+    "chromium": "151.0.7922.34",
+    "initial": {
+      "ms": 749,
+      "requests": [
+        {
+          "path": "/",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/index-BVzlC0e1.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/rolldown-runtime-BpQH8Ho1.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/index-BqK6L5Uv.css",
+          "method": "GET"
+        },
+        {
+          "path": "/runtime-config.js",
+          "method": "GET"
+        },
+        {
+          "path": "/api/v1/auth/session",
+          "method": "GET"
+        },
+        {
+          "path": "/api/v1/auth/csrf",
+          "method": "POST"
+        },
+        {
+          "path": "/assets/DashboardScreen-MiwA9o4B.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/api-C_UYbKuW.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/EventFeed-B3bzdKQh.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/api-4zEaC0Xa.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/api-DF72CAAF.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/api-Dwl5I2pN.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/ReferencePicker-B2DAwmCQ.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/ContextualHelp-nDAxnhhf.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/api-B5zkNx8p.js",
+          "method": "GET"
+        },
+        {
+          "path": "/api/v1/health",
+          "method": "GET"
+        },
+        {
+          "path": "/api/v1/dashboard",
+          "method": "GET"
+        }
+      ],
+      "resources": [
+        {
+          "path": "/assets/index-BVzlC0e1.js",
+          "bytes": 75662,
+          "transfer": 75962,
+          "ms": 21
+        },
+        {
+          "path": "/assets/rolldown-runtime-BpQH8Ho1.js",
+          "bytes": 227,
+          "transfer": 527,
+          "ms": 20
+        },
+        {
+          "path": "/assets/index-BqK6L5Uv.css",
+          "bytes": 28679,
+          "transfer": 28979,
+          "ms": 18
+        },
+        {
+          "path": "/runtime-config.js",
+          "bytes": 244,
+          "transfer": 544,
+          "ms": 20
+        },
+        {
+          "path": "/api/v1/auth/session",
+          "bytes": 163,
+          "transfer": 463,
+          "ms": 9
+        },
+        {
+          "path": "/api/v1/auth/csrf",
+          "bytes": 60,
+          "transfer": 360,
+          "ms": 10
+        },
+        {
+          "path": "/assets/DashboardScreen-MiwA9o4B.js",
+          "bytes": 5443,
+          "transfer": 5743,
+          "ms": 9
+        },
+        {
+          "path": "/assets/api-C_UYbKuW.js",
+          "bytes": 862,
+          "transfer": 1162,
+          "ms": 16
+        },
+        {
+          "path": "/assets/EventFeed-B3bzdKQh.js",
+          "bytes": 1273,
+          "transfer": 1573,
+          "ms": 20
+        },
+        {
+          "path": "/assets/api-4zEaC0Xa.js",
+          "bytes": 998,
+          "transfer": 1298,
+          "ms": 20
+        },
+        {
+          "path": "/assets/api-DF72CAAF.js",
+          "bytes": 940,
+          "transfer": 1240,
+          "ms": 20
+        },
+        {
+          "path": "/assets/api-Dwl5I2pN.js",
+          "bytes": 593,
+          "transfer": 893,
+          "ms": 20
+        },
+        {
+          "path": "/assets/ReferencePicker-B2DAwmCQ.js",
+          "bytes": 1152,
+          "transfer": 1452,
+          "ms": 20
+        },
+        {
+          "path": "/assets/ContextualHelp-nDAxnhhf.js",
+          "bytes": 885,
+          "transfer": 1185,
+          "ms": 26
+        },
+        {
+          "path": "/assets/api-B5zkNx8p.js",
+          "bytes": 650,
+          "transfer": 950,
+          "ms": 26
+        },
+        {
+          "path": "/api/v1/health",
+          "bytes": 15,
+          "transfer": 315,
+          "ms": 25
+        },
+        {
+          "path": "/api/v1/dashboard",
+          "bytes": 3920,
+          "transfer": 4220,
+          "ms": 40
+        }
+      ]
+    },
+    "cycles": [
+      {
+        "Documents": 1,
+        "JSEventListeners": 331,
+        "Nodes": 358,
+        "JSHeapUsedSize": 5034096,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 331,
+        "Nodes": 358,
+        "JSHeapUsedSize": 5372608,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 331,
+        "Nodes": 358,
+        "JSHeapUsedSize": 5581636,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 331,
+        "Nodes": 358,
+        "JSHeapUsedSize": 5632456,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 331,
+        "Nodes": 358,
+        "JSHeapUsedSize": 5763120,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 331,
+        "Nodes": 358,
+        "JSHeapUsedSize": 5787564,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 331,
+        "Nodes": 358,
+        "JSHeapUsedSize": 5819104,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      }
+    ],
+    "cycleRequests": [
+      53,
+      53,
+      53,
+      53,
+      53,
+      53
+    ],
+    "idleSeconds": 122,
+    "idleRequests": [],
+    "final": {
+      "Documents": 1,
+      "JSEventListeners": 331,
+      "Nodes": 358,
+      "JSHeapUsedSize": 5819104,
+      "timers": {
+        "intervals": 0,
+        "timeouts": 0
+      },
+      "maps": 0
+    },
+    "errors": [],
+    "workload": [
+      {
+        "name": "dashboard",
+        "ms": 508,
+        "requests": [],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "identities",
+        "ms": 919,
+        "requests": [
+          "/assets/BotanicalIdentityScreen-D1OnXRmQ.js",
+          "/assets/useCreationDisclosure-CX_KKSga.js",
+          "/assets/CollectionUI-2ZVLmlYd.js",
+          "/assets/PhotosSection-DvEWCsQr.js",
+          "/api/v1/botanical-identities",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/cover-image/thumbnail"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "identity",
+        "ms": 695,
+        "requests": [
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/cover-image",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/collection",
+          "/api/v1/botanical-identities",
+          "/api/v1/attachments/0198f000-0000-7000-8000-000d0000000b/content"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "reference",
+        "ms": 565,
+        "requests": [
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/profile"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "seeds",
+        "ms": 1119,
+        "requests": [
+          "/assets/SeedLotScreen-xlr-Mf60.js",
+          "/assets/labelData-CT9SzF_t.js",
+          "/assets/api-De7jpgOr.js",
+          "/assets/recordNavigation-PuACddmz.js",
+          "/assets/PartialDateField-DrPi3l-K.js",
+          "/assets/PrimaryPhotoVisual--nTJ7N5h.js",
+          "/assets/api-D48uI2AM.js",
+          "/api/v1/seed-lots",
+          "/api/v1/botanical-identities",
+          "/api/v1/suppliers",
+          "/api/v1/locations",
+          "/api/v1/geographic-places",
+          "/api/v1/provenance-sites",
+          "/api/v1/collection-photos/local/0198f000-0000-7000-8000-000e00000000/thumbnail",
+          "/api/v1/collection-photos/local/0198f000-0000-7000-8000-000e00000001/thumbnail",
+          "/api/v1/collection-photos/local/0198f000-0000-7000-8000-000e00000002/thumbnail",
+          "/api/v1/collection-photos/local/0198f000-0000-7000-8000-000e00000003/thumbnail"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "seed",
+        "ms": 509,
+        "requests": [],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "photos",
+        "ms": 1095,
+        "requests": [
+          "/api/v1/collection-records/seed_lot/0198f000-0000-7000-8000-000700000000/photos",
+          "/api/v1/attachments/0198f000-0000-7000-8000-000d00000000/content"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "lineage",
+        "ms": 1094,
+        "requests": [
+          "/api/v1/seed-lots/0198f000-0000-7000-8000-000700000000/lineage"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "sowings",
+        "ms": 915,
+        "requests": [
+          "/assets/SowingScreen-DAN3hm2F.js",
+          "/assets/CreationReversal-D-tyhSkO.js",
+          "/assets/PropagationPath-Oh3ZiyMS.js",
+          "/api/v1/sowings",
+          "/api/v1/seed-lots",
+          "/api/v1/locations"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "sowing",
+        "ms": 561,
+        "requests": [
+          "/api/v1/sowings/0198f000-0000-7000-8000-000800000000",
+          "/api/v1/sowings/0198f000-0000-7000-8000-000800000000/propagation-summary",
+          "/api/v1/sowings/0198f000-0000-7000-8000-000800000000/creation-reversal"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "germination",
+        "ms": 1078,
+        "requests": [
+          "/api/v1/sowings/0198f000-0000-7000-8000-000800000000/germination"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "plants",
+        "ms": 1069,
+        "requests": [
+          "/assets/PlantScreen-D7xwBhyw.js",
+          "/api/v1/plants",
+          "/api/v1/plant-groups",
+          "/api/v1/botanical-identities",
+          "/api/v1/sowings",
+          "/api/v1/suppliers",
+          "/api/v1/geographic-places",
+          "/api/v1/locations",
+          "/api/v1/provenance-sites",
+          "/api/v1/collection-photos/local/0198f000-0000-7000-8000-000e00000004/thumbnail",
+          "/api/v1/collection-photos/local/0198f000-0000-7000-8000-000e00000005/thumbnail",
+          "/api/v1/collection-photos/local/0198f000-0000-7000-8000-000e00000006/thumbnail",
+          "/api/v1/collection-photos/local/0198f000-0000-7000-8000-000e00000007/thumbnail"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "plant",
+        "ms": 562,
+        "requests": [
+          "/api/v1/plants/0198f000-0000-7000-8000-000a00000000",
+          "/api/v1/plants/0198f000-0000-7000-8000-000a00000000/creation-reversal"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "group",
+        "ms": 559,
+        "requests": [
+          "/api/v1/plant-groups/0198f000-0000-7000-8000-000b00000000",
+          "/api/v1/plant-groups/0198f000-0000-7000-8000-000b00000000/creation-reversal"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "suppliers",
+        "ms": 864,
+        "requests": [
+          "/assets/SupplierScreen-DuM2k8sN.js",
+          "/assets/TaskDialog-bjVjcLJ5.js",
+          "/api/v1/suppliers"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "supplier",
+        "ms": 562,
+        "requests": [
+          "/api/v1/suppliers",
+          "/api/v1/suppliers/0198f000-0000-7000-8000-000200000000"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "locations",
+        "ms": 865,
+        "requests": [
+          "/assets/LocationScreen-SAPKomWj.js",
+          "/api/v1/locations"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "location",
+        "ms": 557,
+        "requests": [
+          "/api/v1/locations"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "geography",
+        "ms": 862,
+        "requests": [
+          "/assets/GeographyScreen-BUabUcCr.js",
+          "/api/v1/geographic-places"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "site",
+        "ms": 562,
+        "requests": [
+          "/api/v1/geographic-places",
+          "/api/v1/provenance-sites"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "place",
+        "ms": 557,
+        "requests": [
+          "/api/v1/geographic-places"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "events",
+        "ms": 911,
+        "requests": [
+          "/assets/GlobalEventsScreen-DY6KZapJ.js",
+          "/api/v1/events"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "provenance",
+        "ms": 926,
+        "requests": [
+          "/assets/ProvenanceMapScreen-Ckrjo7i2.js",
+          "/assets/ProvenanceMap-CkxMSZ1s.js",
+          "/assets/config-DWeu2U4l.js",
+          "/api/v1/provenance-sites/map",
+          "/9/273/193.png",
+          "/9/273/192.png",
+          "/9/272/193.png",
+          "/9/274/193.png",
+          "/9/273/194.png",
+          "/9/272/192.png",
+          "/9/274/192.png",
+          "/9/272/194.png",
+          "/9/274/194.png"
+        ],
+        "external": 9,
+        "maps": 1
+      },
+      {
+        "name": "occurrence",
+        "ms": 1604,
+        "requests": [
+          "/api/v1/botanical-identities",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/cover-image/thumbnail",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/profile",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/external-taxon-link",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/occurrence-map/summary",
+          "/assets/OccurrenceDensityMap-BctQ2qD1.js",
+          "/2/1/1.png",
+          "/2/2/1.png",
+          "/2/1/0.png",
+          "/2/2/0.png",
+          "/2/1/2.png",
+          "/2/2/2.png",
+          "/2/0/1.png",
+          "/2/3/1.png",
+          "/2/0/0.png",
+          "/2/3/0.png",
+          "/2/0/2.png",
+          "/2/3/2.png",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/occurrence-map/tiles/2/1/1.png",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/occurrence-map/tiles/2/2/1.png",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/occurrence-map/tiles/2/1/0.png",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/occurrence-map/tiles/2/2/0.png",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/occurrence-map/tiles/2/1/2.png",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/occurrence-map/tiles/2/2/2.png",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/occurrence-map/tiles/2/0/1.png",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/occurrence-map/tiles/2/3/1.png",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/occurrence-map/tiles/2/0/0.png",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/occurrence-map/tiles/2/3/0.png",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/occurrence-map/tiles/2/0/2.png",
+          "/api/v1/botanical-identities/0198f000-0000-7000-8000-000500000000/occurrence-map/tiles/2/3/2.png"
+        ],
+        "external": 12,
+        "maps": 1
+      },
+      {
+        "name": "labels",
+        "ms": 867,
+        "requests": [
+          "/assets/LabelsScreen-CEoxaYmT.js",
+          "/assets/LabelsScreen-CYMhtfjG.css",
+          "/api/v1/seed-lots"
+        ],
+        "external": 0,
+        "maps": 0
+      },
+      {
+        "name": "dashboard",
+        "ms": 560,
+        "requests": [
+          "/api/v1/dashboard"
+        ],
+        "external": 0,
+        "maps": 0
+      }
+    ],
+    "idle_samples": [
+      {
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "10.88%",
+            "MemUsage": "159.7MiB / 7.361GiB",
+            "NetIO": "36.9MB / 30.8MB",
+            "PIDs": "8"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.01%",
+            "MemUsage": "10.18MiB / 7.361GiB",
+            "NetIO": "28MB / 28.8MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "0.01%",
+            "MemUsage": "133.9MiB / 7.361GiB",
+            "NetIO": "3.54MB / 36.5MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-09-27T21:07:27.048421+00:00",
+          "idle_expires_at": "2026-09-28T21:07:27.048421+00:00"
+        },
+        "load": "1.53 3.61 22.01 1/1927 256142",
+        "at_s": 0
+      },
+      {
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.13%",
+            "MemUsage": "159.7MiB / 7.361GiB",
+            "NetIO": "36.9MB / 30.8MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "9.816MiB / 7.361GiB",
+            "NetIO": "28MB / 28.8MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "2.93%",
+            "MemUsage": "134.3MiB / 7.361GiB",
+            "NetIO": "3.54MB / 36.5MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-09-27T21:07:27.048421+00:00",
+          "idle_expires_at": "2026-09-28T21:07:27.048421+00:00"
+        },
+        "load": "1.45 3.52 21.78 1/1928 256474",
+        "at_s": 10
+      },
+      {
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.14%",
+            "MemUsage": "159.3MiB / 7.361GiB",
+            "NetIO": "36.9MB / 30.8MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "9.605MiB / 7.361GiB",
+            "NetIO": "28MB / 28.8MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "133.4MiB / 7.361GiB",
+            "NetIO": "3.54MB / 36.5MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-09-27T21:07:27.048421+00:00",
+          "idle_expires_at": "2026-09-28T21:07:27.048421+00:00"
+        },
+        "load": "1.38 3.44 21.56 1/1932 256761",
+        "at_s": 20
+      },
+      {
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "2.13%",
+            "MemUsage": "159.6MiB / 7.361GiB",
+            "NetIO": "36.9MB / 30.8MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "9.621MiB / 7.361GiB",
+            "NetIO": "28MB / 28.8MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "2.86%",
+            "MemUsage": "134.1MiB / 7.361GiB",
+            "NetIO": "3.54MB / 36.5MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-09-27T21:07:27.048421+00:00",
+          "idle_expires_at": "2026-09-28T21:07:27.048421+00:00"
+        },
+        "load": "1.48 3.39 21.35 1/1933 257072",
+        "at_s": 30
+      },
+      {
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "30.11%",
+            "MemUsage": "159.5MiB / 7.361GiB",
+            "NetIO": "36.9MB / 30.8MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "9.645MiB / 7.361GiB",
+            "NetIO": "28MB / 28.8MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "3.28%",
+            "MemUsage": "134.3MiB / 7.361GiB",
+            "NetIO": "3.54MB / 36.5MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-09-27T21:07:27.048421+00:00",
+          "idle_expires_at": "2026-09-28T21:07:27.048421+00:00"
+        },
+        "load": "1.40 3.31 21.13 1/1927 257373",
+        "at_s": 40
+      },
+      {
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "31.28%",
+            "MemUsage": "159.9MiB / 7.361GiB",
+            "NetIO": "36.9MB / 30.8MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "9.547MiB / 7.361GiB",
+            "NetIO": "28MB / 28.8MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "2.80%",
+            "MemUsage": "129.5MiB / 7.361GiB",
+            "NetIO": "3.54MB / 36.5MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-09-27T21:07:27.048421+00:00",
+          "idle_expires_at": "2026-09-28T21:07:27.048421+00:00"
+        },
+        "load": "1.50 3.27 20.92 1/1922 257741",
+        "at_s": 50
+      },
+      {
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "30.12%",
+            "MemUsage": "160.1MiB / 7.361GiB",
+            "NetIO": "36.9MB / 30.8MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "9.484MiB / 7.361GiB",
+            "NetIO": "28MB / 28.8MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "0.45%",
+            "MemUsage": "128.8MiB / 7.361GiB",
+            "NetIO": "3.54MB / 36.5MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-09-27T21:07:27.048421+00:00",
+          "idle_expires_at": "2026-09-28T21:07:27.048421+00:00"
+        },
+        "load": "1.42 3.19 20.71 3/1921 258025",
+        "at_s": 60
+      },
+      {
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "3.99%",
+            "MemUsage": "164.8MiB / 7.361GiB",
+            "NetIO": "36.9MB / 30.8MB",
+            "PIDs": "4"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.01%",
+            "MemUsage": "9.73MiB / 7.361GiB",
+            "NetIO": "28MB / 28.8MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "128.7MiB / 7.361GiB",
+            "NetIO": "3.55MB / 36.5MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-09-27T21:07:27.048421+00:00",
+          "idle_expires_at": "2026-09-28T21:07:27.048421+00:00"
+        },
+        "load": "1.36 3.12 20.50 2/1922 258322",
+        "at_s": 70
+      },
+      {
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.12%",
+            "MemUsage": "159.1MiB / 7.361GiB",
+            "NetIO": "36.9MB / 30.8MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.01%",
+            "MemUsage": "9.711MiB / 7.361GiB",
+            "NetIO": "28MB / 28.8MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "2.82%",
+            "MemUsage": "129.4MiB / 7.361GiB",
+            "NetIO": "3.55MB / 36.5MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-09-27T21:07:27.048421+00:00",
+          "idle_expires_at": "2026-09-28T21:07:27.048421+00:00"
+        },
+        "load": "1.30 3.05 20.29 1/1926 258571",
+        "at_s": 80
+      },
+      {
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.14%",
+            "MemUsage": "159.1MiB / 7.361GiB",
+            "NetIO": "36.9MB / 30.8MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "10.07MiB / 7.361GiB",
+            "NetIO": "28MB / 28.8MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "2.88%",
+            "MemUsage": "129.5MiB / 7.361GiB",
+            "NetIO": "3.55MB / 36.5MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-09-27T21:07:27.048421+00:00",
+          "idle_expires_at": "2026-09-28T21:07:27.048421+00:00"
+        },
+        "load": "1.26 2.98 20.08 2/1929 258854",
+        "at_s": 90
+      },
+      {
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.12%",
+            "MemUsage": "159.1MiB / 7.361GiB",
+            "NetIO": "36.9MB / 30.8MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "9.988MiB / 7.361GiB",
+            "NetIO": "28MB / 28.8MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "0.51%",
+            "MemUsage": "129MiB / 7.361GiB",
+            "NetIO": "3.55MB / 36.5MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-09-27T21:07:27.048421+00:00",
+          "idle_expires_at": "2026-09-28T21:07:27.048421+00:00"
+        },
+        "load": "1.30 2.93 19.88 1/1965 259271",
+        "at_s": 100
+      },
+      {
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.12%",
+            "MemUsage": "159.2MiB / 7.361GiB",
+            "NetIO": "36.9MB / 30.8MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "10.32MiB / 7.361GiB",
+            "NetIO": "28MB / 28.8MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "2.88%",
+            "MemUsage": "129.9MiB / 7.361GiB",
+            "NetIO": "3.55MB / 36.5MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-09-27T21:07:27.048421+00:00",
+          "idle_expires_at": "2026-09-28T21:07:27.048421+00:00"
+        },
+        "load": "1.25 2.87 19.68 1/1958 259566",
+        "at_s": 110
+      },
+      {
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.12%",
+            "MemUsage": "159.6MiB / 7.361GiB",
+            "NetIO": "36.9MB / 30.8MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "9.551MiB / 7.361GiB",
+            "NetIO": "28MB / 28.8MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "0.50%",
+            "MemUsage": "129.1MiB / 7.361GiB",
+            "NetIO": "3.55MB / 36.5MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "sessions": {
+          "count": 3,
+          "last_seen_at": "2026-09-27T21:07:27.048421+00:00",
+          "idle_expires_at": "2026-09-28T21:07:27.048421+00:00"
+        },
+        "load": "1.29 2.82 19.48 1/1954 259846",
+        "at_s": 120
+      }
+    ]
+  },
+  "static_and_protected_integrity": {
+    "static_assets": {
+      "/assets/index-BVzlC0e1.js": {
+        "raw_bytes": 207746,
+        "gzip_bytes": 75662
+      },
+      "/assets/index-BqK6L5Uv.css": {
+        "raw_bytes": 100981,
+        "gzip_bytes": 28679
+      }
+    },
+    "authenticated_api_bytes": 604487,
+    "protected_api_compressed": false
+  },
+  "final_all_workspace_js": {
+    "chunks": 39,
+    "raw_bytes": 759387,
+    "independent_gzip_bytes": 222537,
+    "largest_chunk_bytes": 207746
+  },
+  "profile_comparison": {
+    "cycles": 7,
+    "baseline_calls": 4509486,
+    "baseline_s": 2.882,
+    "baseline_display_path_cumulative_s": 1.899,
+    "after_calls": 698696,
+    "after_s": 0.864
+  },
+  "unchanged_service_query_plans": {
+    "seeds": [
+      {
+        "sql_sha256": "e8d9e934a0d1a575afddd07b882b24f3f29345289a29af58e2dd29275f4e2b06",
+        "baseline": {
+          "execution_ms": 5.406,
+          "planning_ms": 10.715,
+          "nodes": [
+            {
+              "Node Type": "Sort",
+              "Actual Rows": 160.0,
+              "Plan Rows": 160,
+              "Sort Method": "quicksort",
+              "Sort Space Used": 113,
+              "Sort Space Type": "Memory",
+              "Shared Hit Blocks": 17,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "seed_lots",
+              "Actual Rows": 160.0,
+              "Plan Rows": 160,
+              "Shared Hit Blocks": 4,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "botanical_identities",
+              "Actual Rows": 80.0,
+              "Plan Rows": 80,
+              "Shared Hit Blocks": 1,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "suppliers",
+              "Actual Rows": 8.0,
+              "Plan Rows": 8,
+              "Shared Hit Blocks": 1,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Index Scan",
+              "Relation Name": "geographic_places",
+              "Actual Rows": 1.0,
+              "Plan Rows": 1,
+              "Shared Hit Blocks": 2,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "locations",
+              "Actual Rows": 12.0,
+              "Plan Rows": 12,
+              "Shared Hit Blocks": 1,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "plants",
+              "Actual Rows": 160.0,
+              "Plan Rows": 160,
+              "Shared Hit Blocks": 3,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "plant_groups",
+              "Actual Rows": 80.0,
+              "Plan Rows": 80,
+              "Shared Hit Blocks": 2,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "provenance_sites",
+              "Actual Rows": 8.0,
+              "Plan Rows": 8,
+              "Shared Hit Blocks": 1,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            }
+          ]
+        },
+        "after": {
+          "execution_ms": 2.934,
+          "planning_ms": 6.189,
+          "nodes": [
+            {
+              "Node Type": "Sort",
+              "Actual Rows": 160.0,
+              "Plan Rows": 160,
+              "Sort Method": "quicksort",
+              "Sort Space Used": 113,
+              "Sort Space Type": "Memory",
+              "Shared Hit Blocks": 17,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "seed_lots",
+              "Actual Rows": 160.0,
+              "Plan Rows": 160,
+              "Shared Hit Blocks": 4,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "botanical_identities",
+              "Actual Rows": 80.0,
+              "Plan Rows": 80,
+              "Shared Hit Blocks": 1,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "suppliers",
+              "Actual Rows": 8.0,
+              "Plan Rows": 8,
+              "Shared Hit Blocks": 1,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Index Scan",
+              "Relation Name": "geographic_places",
+              "Actual Rows": 1.0,
+              "Plan Rows": 1,
+              "Shared Hit Blocks": 2,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "locations",
+              "Actual Rows": 12.0,
+              "Plan Rows": 12,
+              "Shared Hit Blocks": 1,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "plants",
+              "Actual Rows": 160.0,
+              "Plan Rows": 160,
+              "Shared Hit Blocks": 3,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "plant_groups",
+              "Actual Rows": 80.0,
+              "Plan Rows": 80,
+              "Shared Hit Blocks": 2,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "provenance_sites",
+              "Actual Rows": 8.0,
+              "Plan Rows": 8,
+              "Shared Hit Blocks": 1,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            }
+          ]
+        }
+      }
+    ],
+    "recent_events": [
+      {
+        "sql_sha256": "0f75523639224f7c882fd4277a7cf1b176372ab9a95e5a103c3f89dcaa8ac7db",
+        "baseline": {
+          "execution_ms": 8.554,
+          "planning_ms": 25.144,
+          "nodes": [
+            {
+              "Node Type": "Limit",
+              "Actual Rows": 6.0,
+              "Plan Rows": 6,
+              "Shared Hit Blocks": 28,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Sort",
+              "Actual Rows": 6.0,
+              "Plan Rows": 960,
+              "Sort Method": "top-N heapsort",
+              "Sort Space Used": 31,
+              "Sort Space Type": "Memory",
+              "Shared Hit Blocks": 28,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "events",
+              "Actual Rows": 960.0,
+              "Plan Rows": 960,
+              "Shared Hit Blocks": 16,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "plants",
+              "Actual Rows": 160.0,
+              "Plan Rows": 160,
+              "Shared Hit Blocks": 3,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "botanical_identities",
+              "Actual Rows": 80.0,
+              "Plan Rows": 80,
+              "Shared Hit Blocks": 1,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "plant_groups",
+              "Actual Rows": 80.0,
+              "Plan Rows": 80,
+              "Shared Hit Blocks": 2,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "locations",
+              "Actual Rows": 12.0,
+              "Plan Rows": 12,
+              "Shared Hit Blocks": 1,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "operation_receipts",
+              "Actual Rows": 0.0,
+              "Plan Rows": 1,
+              "Shared Hit Blocks": 0,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            }
+          ]
+        },
+        "after": {
+          "execution_ms": 6.565,
+          "planning_ms": 15.009,
+          "nodes": [
+            {
+              "Node Type": "Limit",
+              "Actual Rows": 6.0,
+              "Plan Rows": 6,
+              "Shared Hit Blocks": 28,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Sort",
+              "Actual Rows": 6.0,
+              "Plan Rows": 960,
+              "Sort Method": "top-N heapsort",
+              "Sort Space Used": 31,
+              "Sort Space Type": "Memory",
+              "Shared Hit Blocks": 28,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "events",
+              "Actual Rows": 960.0,
+              "Plan Rows": 960,
+              "Shared Hit Blocks": 16,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "plants",
+              "Actual Rows": 160.0,
+              "Plan Rows": 160,
+              "Shared Hit Blocks": 3,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "botanical_identities",
+              "Actual Rows": 80.0,
+              "Plan Rows": 80,
+              "Shared Hit Blocks": 1,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "plant_groups",
+              "Actual Rows": 80.0,
+              "Plan Rows": 80,
+              "Shared Hit Blocks": 2,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "locations",
+              "Actual Rows": 12.0,
+              "Plan Rows": 12,
+              "Shared Hit Blocks": 1,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "operation_receipts",
+              "Actual Rows": 0.0,
+              "Plan Rows": 1,
+              "Shared Hit Blocks": 0,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            }
+          ]
+        }
+      }
+    ],
+    "geography": [
+      {
+        "sql_sha256": "c8d3a295458a95f37323fb763ac5b478eaf0918612db6bde29dd70d5db0004d2",
+        "baseline": {
+          "execution_ms": 0.764,
+          "planning_ms": 0.075,
+          "nodes": [
+            {
+              "Node Type": "Sort",
+              "Actual Rows": 288.0,
+              "Plan Rows": 288,
+              "Sort Method": "quicksort",
+              "Sort Space Used": 67,
+              "Sort Space Type": "Memory",
+              "Shared Hit Blocks": 6,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "geographic_places",
+              "Actual Rows": 288.0,
+              "Plan Rows": 288,
+              "Shared Hit Blocks": 6,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            }
+          ]
+        },
+        "after": {
+          "execution_ms": 0.518,
+          "planning_ms": 0.071,
+          "nodes": [
+            {
+              "Node Type": "Sort",
+              "Actual Rows": 288.0,
+              "Plan Rows": 288,
+              "Sort Method": "quicksort",
+              "Sort Space Used": 67,
+              "Sort Space Type": "Memory",
+              "Shared Hit Blocks": 6,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            },
+            {
+              "Node Type": "Seq Scan",
+              "Relation Name": "geographic_places",
+              "Actual Rows": 288.0,
+              "Plan Rows": 288,
+              "Shared Hit Blocks": 6,
+              "Shared Read Blocks": 0,
+              "Temp Read Blocks": 0,
+              "Temp Written Blocks": 0
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "supplemental_cgroup_idle_cpu": {
+    "first_comparison": {
+      "seconds": 20.185595582000133,
+      "average_core_percent": {
+        "florabase-perf-backend-1": 2.38,
+        "florabase-perf-frontend-1": 0.42,
+        "florabase-perf-db-1": 0.89
+      }
+    },
+    "final_repeat": {
+      "seconds": 20.000145529998917,
+      "average_core_percent": {
+        "florabase-perf-backend-1": 1.61,
+        "florabase-perf-frontend-1": 0.24,
+        "florabase-perf-db-1": 0.6
+      }
+    }
+  },
+  "live_provider": {
+    "fixture_token": "6SHN2",
+    "synthetic_link_not_taxon_verification": true,
+    "attempts": [
+      {
+        "status": 200,
+        "seconds": 0.41,
+        "total": 0,
+        "eligible": 0
+      },
+      {
+        "status": 200,
+        "seconds": 0.27,
+        "total": 0,
+        "eligible": 0
+      },
+      {
+        "status": 200,
+        "seconds": 0.42,
+        "total": 0,
+        "eligible": 0
+      }
+    ]
+  },
+  "raw_artifact_sha256": {
+    "/tmp/perf-after-api.json": "6606a68c3cd2d8638ab9830be1648b4a10fe23349ac0eaa68aa1526769587fd7",
+    "/tmp/perf-after-api-repeat.json": "a670c42220692a4317e610d776d1c157c62fa04cb4d02e7da99e7511bc3a78bc",
+    "/tmp/perf-after-browser.json": "c38cd851fe9cd7a0ce993745d0aea68cb0d4a9f1b78c7a7b5f529af5f0a237ed",
+    "/tmp/perf-after-profile.txt": "cd3eff3de6dfe102f6507e4ae1f382c26e1540134591fc8776f7c4bdee8a65c4",
+    "/tmp/perf-after-plans.json": "437d2c0d5f3158020ce7c9fb2f29fb5770cd22d75df1f1c83c89cd1061867824",
+    "/tmp/perf-final-environment.json": "ca7d6f83fce591eb8d8771432ae42de10218eca21023563288d178f0b55a7b14",
+    "/tmp/perf-final-api.json": "a89b1c23d5f1f9a711130b47c864123c6d039d9aa571a8cf5fdc9ba34d69fccd",
+    "/tmp/perf-final-transfer.json": "547483051cc09f09fd0c4e0759203bc831a9c2114d51b43a5ad15d57e2111715",
+    "/tmp/perf-final-browser.json": "3f9920a3fe597b3adca26290db4bb85d695f0d0d395c1e3f3693b77bdd3d4766",
+    "/tmp/perf-quality-complete.log": "e09f0227c86a8eddaaa39cfb940bbc51ef2b1ecdb09c545296963c58e80e0c42",
+    "/tmp/perf-integration-final.log": "433190782cbeecaec9d9a2bb2deb39fd75395c888dbaa9cad1784a898d3c750f",
+    "/tmp/perf-production-final.log": "82b0f6989dc8eeb750a34fc11446bcc7d948146bb65fe1e1159cc426bcfaf45d",
+    "/tmp/perf-final-cleanup.log": "d4b7ac07298c41883b20ec8c7969acebc86dda843475b962b8a235b203f45b26",
+    "/tmp/perf-final-idle-cpu.json": "c33dcc870d260bf87eeacb1f8355682ddeaaa59da62ce164f33c7c04910fb30a"
+  },
+  "cleanup": {
+    "project": "florabase-perf",
+    "containers_remaining": 0,
+    "operator_frontend_backend_database": "healthy",
+    "named_volumes_deleted": false
+  },
+  "final_initial_assets": {
+    "encoded_js_bytes": 88685,
+    "encoded_css_bytes": 28679,
+    "total_bytes": 117364,
+    "unchanged_runtime_configuration_bytes": 244
+  },
+  "review_revalidation": {
+    "date": "2026-09-28",
+    "production_frontend_image": "sha256:34392a138b57fc6d50b741ad2b83884af062ef50302238d31ba597f07de8298d 54620343",
+    "authenticated_reads": 28,
+    "fresh_query_counts": {
+      "seed_lots_160": 10,
+      "plants_160": 10,
+      "plant_groups_80": 6
+    },
+    "fresh_payload_bytes": {
+      "seed_lots_160": 233095,
+      "plants_160": 193055,
+      "plant_groups_80": 91187
+    },
+    "fresh_timing_medians_ms": {
+      "seed_lots_160": 59.3,
+      "plants_160": 63.7,
+      "plant_groups_80": 37.6
+    },
+    "static_transfer": {
+      "javascript": {
+        "raw_bytes": 208364,
+        "gzip_bytes": 75883,
+        "vary": "Accept-Encoding"
+      },
+      "css": {
+        "raw_bytes": 100981,
+        "gzip_bytes": 28679,
+        "vary": "Accept-Encoding"
+      },
+      "runtime_config": {
+        "bytes": 244,
+        "compressed": false,
+        "cache_control": "no-store"
+      },
+      "authenticated_events": {
+        "bytes": 604487,
+        "compressed": false,
+        "content_type": "application/json"
+      },
+      "health": {
+        "body": "ok\\n",
+        "content_type": "text/plain",
+        "compressed": false
+      }
+    },
+    "stale_seed_chunk": {
+      "status": 200,
+      "content_type": "text/html",
+      "body_bytes": 578,
+      "recovery_ui": true,
+      "authenticated_shell_retained": true,
+      "automatic_document_reload": false
+    },
+    "migration_head": "20260925_0026"
+  }
+}

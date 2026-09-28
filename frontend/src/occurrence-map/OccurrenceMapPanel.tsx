@@ -3,11 +3,14 @@ import { lazy, Suspense, useState } from "react";
 import type { ExternalTaxonLinkResponse } from "../botanical-identities/api";
 import { InfoDisclosure } from "../components/ContextualHelp";
 import { getOccurrenceMapSummary, type OccurrenceMapSummary } from "./api";
+import { loadWorkspaceChunk } from "../components/workspaceChunk";
 
-const OccurrenceDensityMap = lazy(async () => {
-  const module = await import("./OccurrenceDensityMap");
-  return { default: module.OccurrenceDensityMap };
-});
+const OccurrenceDensityMap = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./OccurrenceDensityMap");
+    return { default: module.OccurrenceDensityMap };
+  }),
+);
 
 type OccurrenceState =
   | { status: "idle" }

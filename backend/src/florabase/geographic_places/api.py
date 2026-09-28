@@ -73,10 +73,11 @@ def list_all(
 ) -> list[GeographicPlaceResponse]:
     places = list_geographic_places(database)
     direct, sites, native_ranges = geographic_place_usage(database)
+    by_id = {place.id: place for place in places}
     responses = [
         GeographicPlaceResponse.from_model(
             place,
-            display_path=display_path(place, places),
+            display_path=display_path(place, by_id),
             provenance_site_count=sites.get(place.id, 0),
             direct_usage_count=direct.get(place.id, 0),
             native_range_count=native_ranges.get(place.id, 0),

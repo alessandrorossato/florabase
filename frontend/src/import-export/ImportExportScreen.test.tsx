@@ -97,7 +97,7 @@ test("navigates, validates row issues, retries and explicitly confirms the revie
     await screen.findByRole("button", { name: "Import / Export" }),
   );
   expect(
-    screen.getByRole("heading", { name: "Import & export" }),
+    await screen.findByRole("heading", { name: "Import & export" }),
   ).toBeVisible();
   const steps = screen.getByRole("list", { name: "Import steps" });
   expect(within(steps).getByText("Template").closest("li")).toHaveAttribute(

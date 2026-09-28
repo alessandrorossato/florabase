@@ -307,9 +307,19 @@ def responses(database: Session, projections: list[SeedLotProjection]) -> list[S
         else []
     )
     locations = list_locations(database) if any(item.location for item in projections) else []
-    site_models = [item.provenance_site for item in projections if item.provenance_site]
+    place_by_id = {place.id: place for place in places}
+    site_models = list(
+        {
+            item.provenance_site.id: item.provenance_site
+            for item in projections
+            if item.provenance_site
+        }.values()
+    )
     site_by_id = (
-        {response.id: response for response in provenance_site_responses(database, site_models)}
+        {
+            response.id: response
+            for response in provenance_site_responses(database, site_models, places=places or None)
+        }
         if site_models
         else {}
     )
@@ -370,7 +380,7 @@ def responses(database: Session, projections: list[SeedLotProjection]) -> list[S
                 material_provenance=(
                     GeographicPlaceSummary(
                         id=item.material_provenance.id,
-                        display_path=geographic_display_path(item.material_provenance, places),
+                        display_path=geographic_display_path(item.material_provenance, place_by_id),
                     )
                     if item.material_provenance
                     else None

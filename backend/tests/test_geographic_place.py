@@ -319,3 +319,34 @@ def test_geographic_usage_and_safe_leaf_delete(monkeypatch: pytest.MonkeyPatch) 
     monkeypatch.setattr(geographic_service, "geographic_place_usage", lambda _: ({}, {}, {}))
     delete_geographic_place(database, custom.id)
     database.delete.assert_called_once_with(custom)
+
+
+def test_display_path_reuses_read_only_lookup_and_preserves_integrity_errors() -> None:
+    from types import MappingProxyType
+
+    root = place(name="World", parent_id=None)
+    child = place(name="Locality", parent_id=root.id)
+    lookup = MappingProxyType({root.id: root, child.id: child})
+    assert display_path(child, lookup) == display_path(child, [root, child]) == "World → Locality"
+    assert display_path(root, lookup) == "World"
+    with pytest.raises(RuntimeError, match="missing parent"):
+        display_path(child, MappingProxyType({child.id: child}))
+    root.parent_id = child.id
+    with pytest.raises(RuntimeError, match="cycle"):
+        display_path(child, lookup)
+
+
+def test_directory_reuses_one_hierarchy_lookup(monkeypatch: pytest.MonkeyPatch) -> None:
+    root = place(name="World")
+    child = place(name="Locality", parent_id=root.id)
+    database = MagicMock()
+    monkeypatch.setattr(api, "list_geographic_places", lambda _: [root, child])
+    monkeypatch.setattr(api, "geographic_place_usage", lambda _: ({}, {}, {}))
+    path = MagicMock(wraps=display_path)
+    monkeypatch.setattr(api, "display_path", path)
+    result = api.list_all(MagicMock(), database)
+    assert [item.display_path for item in result] == ["World", "World → Locality"]
+    assert path.call_count == 2
+    lookup = path.call_args_list[0].args[1]
+    assert isinstance(lookup, dict)
+    assert all(call.args[1] is lookup for call in path.call_args_list)

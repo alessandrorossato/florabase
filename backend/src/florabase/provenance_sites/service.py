@@ -100,10 +100,18 @@ def delete_provenance_site(database: Session, site: ProvenanceSite) -> None:
     database.flush()
 
 
-def responses(database: Session, sites: list[ProvenanceSite]) -> list[ProvenanceSiteResponse]:
-    places = (
-        list_geographic_places(database) if any(site.geographic_place_id for site in sites) else []
-    )
+def responses(
+    database: Session,
+    sites: list[ProvenanceSite],
+    *,
+    places: list[GeographicPlace] | None = None,
+) -> list[ProvenanceSiteResponse]:
+    if places is None:
+        places = (
+            list_geographic_places(database)
+            if any(site.geographic_place_id for site in sites)
+            else []
+        )
     by_id = {place.id: place for place in places}
     usage = site_usage(database)
     return [
@@ -119,7 +127,7 @@ def responses(database: Session, sites: list[ProvenanceSite]) -> list[Provenance
                 "created_at": site.created_at,
                 "updated_at": site.updated_at,
                 "geographic_place_path": (
-                    display_path(by_id[site.geographic_place_id], places)
+                    display_path(by_id[site.geographic_place_id], by_id)
                     if site.geographic_place_id is not None
                     else None
                 ),

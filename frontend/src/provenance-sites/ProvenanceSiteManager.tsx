@@ -10,6 +10,7 @@ import {
 
 import { ApiError } from "../auth/api";
 import { FieldHelp } from "../components/ContextualHelp";
+import { loadWorkspaceChunk } from "../components/workspaceChunk";
 import {
   OverflowMenu,
   QuickPreview,
@@ -25,10 +26,12 @@ import {
   type ProvenanceSiteResponse,
 } from "./api";
 
-const ProvenanceMap = lazy(async () => {
-  const module = await import("../provenance-map/ProvenanceMap");
-  return { default: module.ProvenanceMap };
-});
+const ProvenanceMap = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("../provenance-map/ProvenanceMap");
+    return { default: module.ProvenanceMap };
+  }),
+);
 
 interface SiteForm {
   name: string;

@@ -1,0 +1,1157 @@
+{
+  "environment": {
+    "startup": {
+      "database_health_s": 5.9,
+      "migration_s": 3.5,
+      "application_health_s": 12.1,
+      "fixture_s": 4.5
+    },
+    "manifest": {
+      "identity": "0198f000-0000-7000-8000-000500000000",
+      "seed": "0198f000-0000-7000-8000-000700000000",
+      "sowing": "0198f000-0000-7000-8000-000800000000",
+      "plant": "0198f000-0000-7000-8000-000a00000000",
+      "group": "0198f000-0000-7000-8000-000b00000000",
+      "supplier": "0198f000-0000-7000-8000-000200000000",
+      "location": "0198f000-0000-7000-8000-000300000000",
+      "site": "0198f000-0000-7000-8000-000400000000",
+      "place": "0198f000-0000-7000-8000-000100000000",
+      "attachment": "0198f000-0000-7000-8000-000d00000000",
+      "photo": "0198f000-0000-7000-8000-000e00000000"
+    },
+    "platform": "Linux-6.19.8-surface-3-x86_64-with-glibc2.39",
+    "cpu": "x86_64",
+    "host": "8 CPUs; 7903653888 bytes RAM",
+    "sha": "d5a9da53bea675e16aeba75a1f8e6cd272e6cd99",
+    "images": [
+      "[florabase-perf-backend:latest] 227178144",
+      "[florabase-perf-frontend:latest] 54607769",
+      "[postgres:18.6-alpine] 303729906"
+    ]
+  },
+  "api_reads": {
+    "/dashboard": {
+      "first_ms": 43.1,
+      "median_ms": 43.7,
+      "range_ms": [42.5, 57.2],
+      "bytes": 3920,
+      "queries": [10]
+    },
+    "/botanical-identities": {
+      "first_ms": 18.8,
+      "median_ms": 16.8,
+      "range_ms": [15.8, 40.7],
+      "bytes": 29924,
+      "queries": [3]
+    },
+    "/seed-lots": {
+      "first_ms": 114.1,
+      "median_ms": 122.3,
+      "range_ms": [117.1, 131.9],
+      "bytes": 233095,
+      "queries": [11]
+    },
+    "/sowings": {
+      "first_ms": 64.4,
+      "median_ms": 27.6,
+      "range_ms": [27.4, 37.0],
+      "bytes": 106911,
+      "queries": [4]
+    },
+    "/plants": {
+      "first_ms": 125.3,
+      "median_ms": 82.8,
+      "range_ms": [78.4, 218.4],
+      "bytes": 193055,
+      "queries": [11]
+    },
+    "/plant-groups": {
+      "first_ms": 39.3,
+      "median_ms": 38.3,
+      "range_ms": [37.7, 44.9],
+      "bytes": 91187,
+      "queries": [6]
+    },
+    "/suppliers": {
+      "first_ms": 10.3,
+      "median_ms": 10.7,
+      "range_ms": [10.2, 12.6],
+      "bytes": 3385,
+      "queries": [3]
+    },
+    "/locations": {
+      "first_ms": 17.1,
+      "median_ms": 13.5,
+      "range_ms": [13.0, 16.5],
+      "bytes": 4876,
+      "queries": [7]
+    },
+    "/geographic-places": {
+      "first_ms": 64.6,
+      "median_ms": 64.2,
+      "range_ms": [61.9, 69.6],
+      "bytes": 145995,
+      "queries": [8]
+    },
+    "/provenance-sites": {
+      "first_ms": 16.0,
+      "median_ms": 18.1,
+      "range_ms": [16.3, 25.9],
+      "bytes": 3433,
+      "queries": [7]
+    },
+    "/events": {
+      "first_ms": 120.0,
+      "median_ms": 108.9,
+      "range_ms": [104.3, 237.4],
+      "bytes": 604487,
+      "queries": [4]
+    },
+    "/provenance-sites/map": {
+      "first_ms": 30.5,
+      "median_ms": 30.0,
+      "range_ms": [29.4, 34.4],
+      "bytes": 49880,
+      "queries": [8]
+    },
+    "/search?q=Perfplant": {
+      "first_ms": 159.9,
+      "median_ms": 165.1,
+      "range_ms": [159.1, 173.0],
+      "bytes": 22102,
+      "queries": [26]
+    },
+    "/botanical-identities/{id}": {
+      "first_ms": 8.1,
+      "median_ms": 6.9,
+      "range_ms": [6.6, 7.7],
+      "bytes": 322,
+      "queries": [3]
+    },
+    "/seed-lots/{id}": {
+      "first_ms": 37.0,
+      "median_ms": 36.4,
+      "range_ms": [35.2, 48.2],
+      "bytes": 1599,
+      "queries": [11]
+    },
+    "/sowings/{id}": {
+      "first_ms": 13.2,
+      "median_ms": 11.4,
+      "range_ms": [10.6, 12.7],
+      "bytes": 878,
+      "queries": [4]
+    },
+    "/plants/{id}": {
+      "first_ms": 22.9,
+      "median_ms": 24.1,
+      "range_ms": [23.1, 42.7],
+      "bytes": 1140,
+      "queries": [5]
+    },
+    "/plant-groups/{id}": {
+      "first_ms": 20.6,
+      "median_ms": 22.0,
+      "range_ms": [20.5, 23.9],
+      "bytes": 1121,
+      "queries": [5]
+    },
+    "/suppliers/{id}": {
+      "first_ms": 17.7,
+      "median_ms": 18.6,
+      "range_ms": [18.1, 45.0],
+      "bytes": 5940,
+      "queries": [7]
+    },
+    "/locations/{id}": {
+      "first_ms": 13.4,
+      "median_ms": 18.2,
+      "range_ms": [14.3, 29.6],
+      "bytes": 364,
+      "queries": [8]
+    },
+    "/provenance-sites/{id}": {
+      "first_ms": 20.4,
+      "median_ms": 15.8,
+      "range_ms": [14.5, 19.8],
+      "bytes": 428,
+      "queries": [7]
+    },
+    "/botanical-identities/{id}/collection": {
+      "first_ms": 224.0,
+      "median_ms": 108.1,
+      "range_ms": [95.2, 122.1],
+      "bytes": 16234,
+      "queries": [22]
+    },
+    "/botanical-identities/{id}/profile": {
+      "first_ms": 8.2,
+      "median_ms": 9.0,
+      "range_ms": [7.6, 13.5],
+      "bytes": 193,
+      "queries": [3]
+    },
+    "/sowings/{id}/germination": {
+      "first_ms": 10.7,
+      "median_ms": 9.7,
+      "range_ms": [8.9, 10.2],
+      "bytes": 1020,
+      "queries": [4]
+    },
+    "/seed-lots/{id}/lineage": {
+      "first_ms": 26.0,
+      "median_ms": 28.8,
+      "range_ms": [23.5, 42.4],
+      "bytes": 237,
+      "queries": [5]
+    },
+    "/collection-records/seed_lot/{id}/photos": {
+      "first_ms": 10.9,
+      "median_ms": 10.4,
+      "range_ms": [9.9, 10.9],
+      "bytes": 707,
+      "queries": [5]
+    },
+    "/collection-photos/local/{id}/thumbnail": {
+      "first_ms": 32.0,
+      "median_ms": 32.5,
+      "range_ms": [30.9, 37.1],
+      "bytes": 4720,
+      "queries": [3]
+    },
+    "/attachments/{id}/content": {
+      "first_ms": 9.5,
+      "median_ms": 10.3,
+      "range_ms": [9.0, 10.8],
+      "bytes": 360310,
+      "queries": [3]
+    }
+  },
+  "create_edit_delete_ms": 42.6,
+  "browser": {
+    "chromium": "151.0.7922.34",
+    "initial": {
+      "ms": 775,
+      "requests": [
+        {
+          "path": "/",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/index-Dhzj4riu.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/rolldown-runtime-D9-fqq9M.js",
+          "method": "GET"
+        },
+        {
+          "path": "/assets/index-LaJPQBgq.css",
+          "method": "GET"
+        },
+        {
+          "path": "/runtime-config.js",
+          "method": "GET"
+        },
+        {
+          "path": "/api/v1/auth/session",
+          "method": "GET"
+        },
+        {
+          "path": "/api/v1/auth/csrf",
+          "method": "POST"
+        },
+        {
+          "path": "/api/v1/dashboard",
+          "method": "GET"
+        },
+        {
+          "path": "/api/v1/health",
+          "method": "GET"
+        }
+      ],
+      "resources": [
+        {
+          "path": "/assets/index-Dhzj4riu.js",
+          "bytes": 587752,
+          "transfer": 588052,
+          "ms": 26
+        },
+        {
+          "path": "/assets/rolldown-runtime-D9-fqq9M.js",
+          "bytes": 86,
+          "transfer": 386,
+          "ms": 23
+        },
+        {
+          "path": "/assets/index-LaJPQBgq.css",
+          "bytes": 103469,
+          "transfer": 103769,
+          "ms": 19
+        },
+        {
+          "path": "/runtime-config.js",
+          "bytes": 244,
+          "transfer": 544,
+          "ms": 21
+        },
+        {
+          "path": "/api/v1/auth/session",
+          "bytes": 163,
+          "transfer": 463,
+          "ms": 12
+        },
+        {
+          "path": "/api/v1/auth/csrf",
+          "bytes": 60,
+          "transfer": 360,
+          "ms": 10
+        },
+        {
+          "path": "/api/v1/dashboard",
+          "bytes": 3920,
+          "transfer": 4220,
+          "ms": 74
+        },
+        {
+          "path": "/api/v1/health",
+          "bytes": 15,
+          "transfer": 315,
+          "ms": 15
+        }
+      ]
+    },
+    "cycles": [
+      {
+        "Documents": 1,
+        "JSEventListeners": 329,
+        "Nodes": 326,
+        "JSHeapUsedSize": 4993916,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 329,
+        "Nodes": 326,
+        "JSHeapUsedSize": 5339752,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 329,
+        "Nodes": 326,
+        "JSHeapUsedSize": 5536636,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 329,
+        "Nodes": 326,
+        "JSHeapUsedSize": 5596872,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 329,
+        "Nodes": 326,
+        "JSHeapUsedSize": 5721580,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 329,
+        "Nodes": 326,
+        "JSHeapUsedSize": 5752708,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      },
+      {
+        "Documents": 1,
+        "JSEventListeners": 329,
+        "Nodes": 326,
+        "JSHeapUsedSize": 5785876,
+        "timers": {
+          "intervals": 0,
+          "timeouts": 0
+        },
+        "maps": 0
+      }
+    ],
+    "cycleRequests": [53, 53, 53, 53, 53, 53],
+    "idleSeconds": 122,
+    "idleRequests": [],
+    "final": {
+      "Documents": 1,
+      "JSEventListeners": 329,
+      "Nodes": 326,
+      "JSHeapUsedSize": 5785876,
+      "timers": {
+        "intervals": 0,
+        "timeouts": 0
+      },
+      "maps": 0
+    },
+    "errors": [],
+    "resources": [
+      {
+        "path": "/assets/index-Dhzj4riu.js",
+        "bytes": 587752,
+        "transfer": 588052
+      },
+      {
+        "path": "/assets/rolldown-runtime-D9-fqq9M.js",
+        "bytes": 86,
+        "transfer": 386
+      },
+      {
+        "path": "/assets/index-LaJPQBgq.css",
+        "bytes": 103469,
+        "transfer": 103769
+      },
+      {
+        "path": "/assets/ProvenanceMapScreen-C0koPXsU.js",
+        "bytes": 7610,
+        "transfer": 7910
+      },
+      {
+        "path": "/assets/ProvenanceMap-v4oyoEy5.js",
+        "bytes": 2161,
+        "transfer": 2461
+      },
+      {
+        "path": "/assets/config-BZAJoJpe.js",
+        "bytes": 149187,
+        "transfer": 149487
+      },
+      {
+        "path": "/assets/OccurrenceDensityMap-CMvxCQ5q.js",
+        "bytes": 909,
+        "transfer": 1209
+      }
+    ],
+    "workload": [
+      {
+        "name": "dashboard",
+        "ms": 509,
+        "external": 0,
+        "maps": 0,
+        "requests": []
+      },
+      {
+        "name": "identities",
+        "ms": 668,
+        "external": 0,
+        "maps": 0,
+        "requests": [
+          "/api/v1/botanical-identities",
+          "/api/v1/botanical-identities/{id}/cover-image/thumbnail"
+        ]
+      },
+      {
+        "name": "identity",
+        "ms": 698,
+        "external": 0,
+        "maps": 0,
+        "requests": [
+          "/api/v1/botanical-identities/{id}/cover-image",
+          "/api/v1/botanical-identities/{id}/collection",
+          "/api/v1/botanical-identities",
+          "/api/v1/attachments/{id}/content"
+        ]
+      },
+      {
+        "name": "reference",
+        "ms": 569,
+        "external": 0,
+        "maps": 0,
+        "requests": ["/api/v1/botanical-identities/{id}/profile"]
+      },
+      {
+        "name": "seeds",
+        "ms": 879,
+        "external": 0,
+        "maps": 0,
+        "requests": [
+          "/api/v1/seed-lots",
+          "/api/v1/botanical-identities",
+          "/api/v1/suppliers",
+          "/api/v1/locations",
+          "/api/v1/geographic-places",
+          "/api/v1/provenance-sites",
+          "/api/v1/collection-photos/local/{id}/thumbnail",
+          "/api/v1/collection-photos/local/{id}/thumbnail",
+          "/api/v1/collection-photos/local/{id}/thumbnail",
+          "/api/v1/collection-photos/local/{id}/thumbnail"
+        ]
+      },
+      {
+        "name": "seed",
+        "ms": 511,
+        "external": 0,
+        "maps": 0,
+        "requests": []
+      },
+      {
+        "name": "photos",
+        "ms": 1105,
+        "external": 0,
+        "maps": 0,
+        "requests": [
+          "/api/v1/collection-records/seed_lot/{id}/photos",
+          "/api/v1/attachments/{id}/content"
+        ]
+      },
+      {
+        "name": "lineage",
+        "ms": 1089,
+        "external": 0,
+        "maps": 0,
+        "requests": ["/api/v1/seed-lots/{id}/lineage"]
+      },
+      {
+        "name": "sowings",
+        "ms": 725,
+        "external": 0,
+        "maps": 0,
+        "requests": [
+          "/api/v1/sowings",
+          "/api/v1/seed-lots",
+          "/api/v1/locations"
+        ]
+      },
+      {
+        "name": "sowing",
+        "ms": 610,
+        "external": 0,
+        "maps": 0,
+        "requests": [
+          "/api/v1/sowings/{id}",
+          "/api/v1/sowings/{id}/propagation-summary",
+          "/api/v1/sowings/{id}/creation-reversal"
+        ]
+      },
+      {
+        "name": "germination",
+        "ms": 1093,
+        "external": 0,
+        "maps": 0,
+        "requests": ["/api/v1/sowings/{id}/germination"]
+      },
+      {
+        "name": "plants",
+        "ms": 932,
+        "external": 0,
+        "maps": 0,
+        "requests": [
+          "/api/v1/plants",
+          "/api/v1/plant-groups",
+          "/api/v1/botanical-identities",
+          "/api/v1/sowings",
+          "/api/v1/suppliers",
+          "/api/v1/geographic-places",
+          "/api/v1/locations",
+          "/api/v1/provenance-sites",
+          "/api/v1/collection-photos/local/{id}/thumbnail",
+          "/api/v1/collection-photos/local/{id}/thumbnail",
+          "/api/v1/collection-photos/local/{id}/thumbnail",
+          "/api/v1/collection-photos/local/{id}/thumbnail"
+        ]
+      },
+      {
+        "name": "plant",
+        "ms": 612,
+        "external": 0,
+        "maps": 0,
+        "requests": [
+          "/api/v1/plants/{id}",
+          "/api/v1/plants/{id}/creation-reversal"
+        ]
+      },
+      {
+        "name": "group",
+        "ms": 611,
+        "external": 0,
+        "maps": 0,
+        "requests": [
+          "/api/v1/plant-groups/{id}",
+          "/api/v1/plant-groups/{id}/creation-reversal"
+        ]
+      },
+      {
+        "name": "suppliers",
+        "ms": 562,
+        "external": 0,
+        "maps": 0,
+        "requests": ["/api/v1/suppliers"]
+      },
+      {
+        "name": "supplier",
+        "ms": 565,
+        "external": 0,
+        "maps": 0,
+        "requests": ["/api/v1/suppliers", "/api/v1/suppliers/{id}"]
+      },
+      {
+        "name": "locations",
+        "ms": 561,
+        "external": 0,
+        "maps": 0,
+        "requests": ["/api/v1/locations"]
+      },
+      {
+        "name": "location",
+        "ms": 558,
+        "external": 0,
+        "maps": 0,
+        "requests": ["/api/v1/locations"]
+      },
+      {
+        "name": "geography",
+        "ms": 610,
+        "external": 0,
+        "maps": 0,
+        "requests": ["/api/v1/geographic-places"]
+      },
+      {
+        "name": "site",
+        "ms": 613,
+        "external": 0,
+        "maps": 0,
+        "requests": ["/api/v1/geographic-places", "/api/v1/provenance-sites"]
+      },
+      {
+        "name": "place",
+        "ms": 612,
+        "external": 0,
+        "maps": 0,
+        "requests": ["/api/v1/geographic-places"]
+      },
+      {
+        "name": "events",
+        "ms": 660,
+        "external": 0,
+        "maps": 0,
+        "requests": ["/api/v1/events"]
+      },
+      {
+        "name": "provenance",
+        "ms": 935,
+        "external": 9,
+        "maps": 1,
+        "requests": [
+          "/assets/ProvenanceMapScreen-C0koPXsU.js",
+          "/assets/ProvenanceMap-v4oyoEy5.js",
+          "/assets/config-BZAJoJpe.js",
+          "/api/v1/provenance-sites/map",
+          "/9/273/193.png",
+          "/9/273/192.png",
+          "/9/272/193.png",
+          "/9/274/193.png",
+          "/9/273/194.png",
+          "/9/272/192.png",
+          "/9/274/192.png",
+          "/9/272/194.png",
+          "/9/274/194.png"
+        ]
+      },
+      {
+        "name": "occurrence",
+        "ms": 1601,
+        "external": 12,
+        "maps": 1,
+        "requests": [
+          "/api/v1/botanical-identities",
+          "/api/v1/botanical-identities/{id}/cover-image/thumbnail",
+          "/api/v1/botanical-identities/{id}/profile",
+          "/api/v1/botanical-identities/{id}/external-taxon-link",
+          "/api/v1/botanical-identities/{id}/occurrence-map/summary",
+          "/assets/OccurrenceDensityMap-CMvxCQ5q.js",
+          "/2/1/1.png",
+          "/2/2/1.png",
+          "/2/1/0.png",
+          "/2/2/0.png",
+          "/2/1/2.png",
+          "/2/2/2.png",
+          "/2/0/1.png",
+          "/2/3/1.png",
+          "/2/0/0.png",
+          "/2/3/0.png",
+          "/2/0/2.png",
+          "/2/3/2.png",
+          "/api/v1/botanical-identities/{id}/occurrence-map/tiles/2/1/1.png",
+          "/api/v1/botanical-identities/{id}/occurrence-map/tiles/2/2/1.png",
+          "/api/v1/botanical-identities/{id}/occurrence-map/tiles/2/1/0.png",
+          "/api/v1/botanical-identities/{id}/occurrence-map/tiles/2/2/0.png",
+          "/api/v1/botanical-identities/{id}/occurrence-map/tiles/2/1/2.png",
+          "/api/v1/botanical-identities/{id}/occurrence-map/tiles/2/2/2.png",
+          "/api/v1/botanical-identities/{id}/occurrence-map/tiles/2/0/1.png",
+          "/api/v1/botanical-identities/{id}/occurrence-map/tiles/2/3/1.png",
+          "/api/v1/botanical-identities/{id}/occurrence-map/tiles/2/0/0.png",
+          "/api/v1/botanical-identities/{id}/occurrence-map/tiles/2/3/0.png",
+          "/api/v1/botanical-identities/{id}/occurrence-map/tiles/2/0/2.png",
+          "/api/v1/botanical-identities/{id}/occurrence-map/tiles/2/3/2.png"
+        ]
+      },
+      {
+        "name": "labels",
+        "ms": 665,
+        "external": 0,
+        "maps": 0,
+        "requests": ["/api/v1/seed-lots"]
+      },
+      {
+        "name": "dashboard",
+        "ms": 613,
+        "external": 0,
+        "maps": 0,
+        "requests": ["/api/v1/dashboard"]
+      }
+    ],
+    "idle_samples": [
+      {
+        "at_s": 0,
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "41.42%",
+            "MemUsage": "161.5MiB / 7.361GiB",
+            "NetIO": "75MB / 55.9MB",
+            "PIDs": "8"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "8.742MiB / 7.361GiB",
+            "NetIO": "50.4MB / 52.2MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "0.14%",
+            "MemUsage": "126MiB / 7.361GiB",
+            "NetIO": "6.72MB / 74.1MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "load": "3.45 3.36 3.27 1/1943 128597"
+      },
+      {
+        "at_s": 10,
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "30.12%",
+            "MemUsage": "172.9MiB / 7.361GiB",
+            "NetIO": "75MB / 55.9MB",
+            "PIDs": "9"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "8.266MiB / 7.361GiB",
+            "NetIO": "50.4MB / 52.2MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "3.76%",
+            "MemUsage": "127.2MiB / 7.361GiB",
+            "NetIO": "6.72MB / 74.1MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "load": "3.23 3.32 3.26 4/1941 128880"
+      },
+      {
+        "at_s": 20,
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.16%",
+            "MemUsage": "160.6MiB / 7.361GiB",
+            "NetIO": "75MB / 55.9MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "8.262MiB / 7.361GiB",
+            "NetIO": "50.4MB / 52.2MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "3.61%",
+            "MemUsage": "127MiB / 7.361GiB",
+            "NetIO": "6.72MB / 74.1MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "load": "3.27 3.32 3.26 3/1942 129148"
+      },
+      {
+        "at_s": 30,
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.16%",
+            "MemUsage": "160.8MiB / 7.361GiB",
+            "NetIO": "75MB / 55.9MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "8.254MiB / 7.361GiB",
+            "NetIO": "50.4MB / 52.2MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "3.72%",
+            "MemUsage": "127MiB / 7.361GiB",
+            "NetIO": "6.72MB / 74.1MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "load": "3.08 3.28 3.25 2/1935 129375"
+      },
+      {
+        "at_s": 40,
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.16%",
+            "MemUsage": "160.6MiB / 7.361GiB",
+            "NetIO": "75MB / 55.9MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "8.25MiB / 7.361GiB",
+            "NetIO": "50.4MB / 52.2MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "3.69%",
+            "MemUsage": "127.1MiB / 7.361GiB",
+            "NetIO": "6.72MB / 74.1MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "load": "2.91 3.24 3.24 2/1935 129605"
+      },
+      {
+        "at_s": 50,
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.17%",
+            "MemUsage": "160.6MiB / 7.361GiB",
+            "NetIO": "75MB / 55.9MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "8.242MiB / 7.361GiB",
+            "NetIO": "50.4MB / 52.2MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "3.69%",
+            "MemUsage": "127MiB / 7.361GiB",
+            "NetIO": "6.72MB / 74.1MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "load": "3.00 3.25 3.24 1/1932 129850"
+      },
+      {
+        "at_s": 60,
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.16%",
+            "MemUsage": "160.6MiB / 7.361GiB",
+            "NetIO": "75MB / 55.9MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "8.219MiB / 7.361GiB",
+            "NetIO": "50.4MB / 52.2MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "126.6MiB / 7.361GiB",
+            "NetIO": "6.72MB / 74.1MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "load": "3.30 3.30 3.26 2/1935 130076"
+      },
+      {
+        "at_s": 70,
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.16%",
+            "MemUsage": "160.6MiB / 7.361GiB",
+            "NetIO": "75MB / 55.9MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "8.207MiB / 7.361GiB",
+            "NetIO": "50.4MB / 52.2MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "3.69%",
+            "MemUsage": "126.7MiB / 7.361GiB",
+            "NetIO": "6.72MB / 74.1MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "load": "3.33 3.31 3.26 2/1940 130358"
+      },
+      {
+        "at_s": 80,
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.16%",
+            "MemUsage": "160.6MiB / 7.361GiB",
+            "NetIO": "75MB / 55.9MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "8.207MiB / 7.361GiB",
+            "NetIO": "50.4MB / 52.2MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "126.6MiB / 7.361GiB",
+            "NetIO": "6.72MB / 74.1MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "load": "3.20 3.28 3.25 1/1944 130644"
+      },
+      {
+        "at_s": 90,
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.18%",
+            "MemUsage": "160.6MiB / 7.361GiB",
+            "NetIO": "75MB / 55.9MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.01%",
+            "MemUsage": "8.207MiB / 7.361GiB",
+            "NetIO": "50.4MB / 52.2MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "126.2MiB / 7.361GiB",
+            "NetIO": "6.72MB / 74.1MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "load": "3.16 3.27 3.25 1/1939 130903"
+      },
+      {
+        "at_s": 100,
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.14%",
+            "MemUsage": "160.6MiB / 7.361GiB",
+            "NetIO": "75MB / 55.9MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "8.207MiB / 7.361GiB",
+            "NetIO": "50.4MB / 52.3MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "125.9MiB / 7.361GiB",
+            "NetIO": "6.72MB / 74.1MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "load": "3.44 3.33 3.27 2/1936 131130"
+      },
+      {
+        "at_s": 110,
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.18%",
+            "MemUsage": "160.6MiB / 7.361GiB",
+            "NetIO": "75MB / 55.9MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.00%",
+            "MemUsage": "8.207MiB / 7.361GiB",
+            "NetIO": "50.4MB / 52.3MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "3.83%",
+            "MemUsage": "126.5MiB / 7.361GiB",
+            "NetIO": "6.72MB / 74.1MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "load": "3.29 3.30 3.26 3/1936 131397"
+      },
+      {
+        "at_s": 120,
+        "containers": [
+          {
+            "Name": "florabase-perf-backend-1",
+            "CPUPerc": "0.16%",
+            "MemUsage": "160.6MiB / 7.361GiB",
+            "NetIO": "75MB / 55.9MB",
+            "PIDs": "3"
+          },
+          {
+            "Name": "florabase-perf-frontend-1",
+            "CPUPerc": "0.01%",
+            "MemUsage": "8.207MiB / 7.361GiB",
+            "NetIO": "50.4MB / 52.3MB",
+            "PIDs": "10"
+          },
+          {
+            "Name": "florabase-perf-db-1",
+            "CPUPerc": "3.84%",
+            "MemUsage": "126MiB / 7.361GiB",
+            "NetIO": "6.72MB / 74.1MB",
+            "PIDs": "14"
+          }
+        ],
+        "connections": {
+          "total": 5,
+          "idle": 5
+        },
+        "load": "4.29 3.51 3.33 4/1938 131669"
+      }
+    ]
+  },
+  "baseline_profile": {
+    "calls": 4509486,
+    "total_s": 2.882,
+    "geography_display_path_cumulative_s": 1.899,
+    "display_path_calls": 4256
+  },
+  "duplicate_geography_loads": {
+    "/seed-lots": 2,
+    "/plants": 2,
+    "/plant-groups": 0,
+    "/botanical-identities/{id}/collection": 2
+  },
+  "raw_artifact_sha256": {
+    "/tmp/perf-baseline-api.json": "0300b83c140c789602a25de516cadd3a3c396f714a61d00e0899f8c8d0851a90",
+    "/tmp/perf-baseline-browser-v2.json": "f38aba5ff7b7978c2c13fa9139306f0fa1525f7220ca7fdf8ba2f81d4342cea2",
+    "/tmp/perf-baseline-profile.txt": "616d56004c3b9078b1cfd39cb4b0889cb18cf053c8864e88c49ba6a22ba849b5",
+    "/tmp/perf-baseline-plans.json": "4619127ef22d94a4c21a289b22b9de29d624933d64e7f63b744402d7fbfbe6de"
+  }
+}

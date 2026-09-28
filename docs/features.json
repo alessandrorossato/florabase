@@ -103,7 +103,7 @@
       ],
       "dependencies": ["UX-006", "MAP-002"],
       "priority": "P0",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "SECURITY-001",

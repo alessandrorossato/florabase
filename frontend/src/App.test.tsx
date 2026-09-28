@@ -1386,7 +1386,7 @@ test("primary navigation switches accessibly to the empty supplier directory", a
   expect(
     await screen.findByRole("heading", { name: "Suppliers" }),
   ).toBeInTheDocument();
-  expect(screen.getByText("No suppliers yet.")).toBeInTheDocument();
+  expect(await screen.findByText("No suppliers yet.")).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "New supplier" }));
   expect(
     screen.getByLabelText("Name", { selector: "#new-supplier-name" }),
@@ -1759,7 +1759,7 @@ test("primary navigation opens an empty accessible location directory", async ()
   expect(
     await screen.findByRole("heading", { name: "Locations" }),
   ).toBeInTheDocument();
-  expect(screen.getByText("No locations yet.")).toBeInTheDocument();
+  expect(await screen.findByText("No locations yet.")).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "New location" }));
   expect(
     screen.getByLabelText("Name", { selector: "#new-location-name" }),
