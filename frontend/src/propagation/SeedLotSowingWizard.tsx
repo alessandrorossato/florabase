@@ -84,7 +84,7 @@ const blankForm: FormState = {
 function quantityText(lot: SeedLotResponse): string {
   if (!lot.quantity) return "Quantity unknown";
   const unit = lot.quantity.kind === "seed_count" ? "seeds" : lot.quantity.unit;
-  return `${lot.quantity.is_approximate ? "~" : ""}${lot.quantity.value} ${unit ?? ""}`;
+  return `${lot.quantity.is_approximate ? "About " : ""}${lot.quantity.value} ${unit ?? ""}`;
 }
 
 export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
@@ -139,7 +139,9 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
       };
     return {
       compatible,
-      suggested: Math.max(0, source - used),
+      suggested: data.lot.quantity.is_approximate
+        ? null
+        : Math.max(0, source - used),
       oversubscribed: !data.lot.quantity.is_approximate && used > source,
       matchesSource: used === source,
     };
@@ -201,14 +203,8 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
       setMessages(errors);
       return;
     }
-    const naturalPartial =
-      lot.lifecycle === "active" && canPartial && !preview?.oversubscribed;
-    setUsage(naturalPartial ? "partial" : "none");
-    setRemainder(
-      sourceApproximate && preview?.suggested != null
-        ? String(preview.suggested)
-        : (lot.quantity?.value ?? ""),
-    );
+    setUsage("none");
+    setRemainder(lot.quantity?.value ?? "");
     setMessages([]);
     setStage(2);
   }
@@ -329,12 +325,44 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
           <p className="eyebrow">Guided propagation · Step {stage} of 2</p>
           <h2 id="guided-sowing-title">Start sowing</h2>
           <p>
-            From <strong>{lot.label ?? "Unlabelled SeedLot"}</strong> ·{" "}
-            {lot.botanical_identity.display_label} · {quantityText(lot)} ·{" "}
-            {lot.lifecycle}
+            Record the Sowing, then choose what happens to the source seed lot.
           </p>
         </div>
       </div>
+      <section
+        className="seed-sowing-source"
+        aria-labelledby="source-seed-lot-title"
+      >
+        <h3 id="source-seed-lot-title">Source seed lot</h3>
+        <dl>
+          <div>
+            <dt>Lot</dt>
+            <dd>
+              <a href={`#/seeds/${lot.id}`}>
+                {lot.label ?? "Unlabelled seed lot"}
+              </a>
+            </dd>
+          </div>
+          <div>
+            <dt>Botanical identity</dt>
+            <dd>{lot.botanical_identity.display_label}</dd>
+          </div>
+          <div>
+            <dt>Current quantity</dt>
+            <dd>{quantityText(lot)}</dd>
+          </div>
+          <div>
+            <dt>Storage</dt>
+            <dd>{lot.location?.display_path ?? "Not recorded"}</dd>
+          </div>
+          <div>
+            <dt>Status</dt>
+            <dd>
+              {lot.lifecycle.charAt(0).toUpperCase() + lot.lifecycle.slice(1)}
+            </dd>
+          </div>
+        </dl>
+      </section>
       <form
         className="propagation-form"
         onSubmit={(event) => void submit(event)}
@@ -538,7 +566,7 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
             )}
             <div className="actions">
               <button type="button" onClick={continueToUsage}>
-                Continue to SeedLot usage
+                Review seed usage
               </button>
               <a
                 className="button-link button--secondary"
@@ -550,9 +578,9 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
           </>
         ) : (
           <>
-            <h3>Confirm SeedLot usage</h3>
+            <h3>Seed usage</h3>
             <p>
-              Review the effect on the source before creating the Sowing.
+              Choose the effect on the source before starting the Sowing.
               Nothing changes until you submit.
             </p>
             <div className="quantity-effect" aria-live="polite">
@@ -563,11 +591,27 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
                 <strong>Sowing:</strong>{" "}
                 {form.quantityKind === "unknown"
                   ? "Quantity unknown"
-                  : `${form.quantityApproximate ? "~" : ""}${form.quantityValue} ${form.quantityKind === "seed_count" ? "seeds" : form.quantityUnit}`}
+                  : `${form.quantityApproximate ? "About " : ""}${form.quantityValue} ${form.quantityKind === "seed_count" ? "seeds" : form.quantityUnit}`}
               </p>
             </div>
             <fieldset className="choice-cards">
-              <legend>How should the SeedLot change?</legend>
+              <legend>What happens to the source seed lot?</legend>
+              <label>
+                <input
+                  type="radio"
+                  name="usage"
+                  checked={usage === "none"}
+                  onChange={() => {
+                    setUsage("none");
+                  }}
+                />{" "}
+                <span>
+                  <strong>Keep inventory unchanged</strong>
+                  <small>
+                    Creates the Sowing without adjusting the source quantity.
+                  </small>
+                </span>
+              </label>
               {canPartial && (
                 <label>
                   <input
@@ -581,19 +625,15 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
                   <span>
                     <strong>
                       {sourceUnknown
-                        ? "Keep quantity unknown"
-                        : sourceApproximate
-                          ? "Set a resulting estimate"
-                          : preview?.oversubscribed
-                            ? "Subtract (not available)"
-                            : `Subtract → ${String(preview?.suggested ?? "")} remaining`}
+                        ? "Record partial use; quantity stays unknown"
+                        : "Use part of the lot"}
                     </strong>
                     <small>
                       {sourceApproximate
-                        ? "The remainder remains an estimate and is editable."
+                        ? "Confirm an editable resulting estimate; no exact remainder is inferred."
                         : sourceUnknown
                           ? "No numeric amount will be invented."
-                          : "Florabase calculates the exact remainder."}
+                          : `${String(preview?.suggested ?? "")} ${lot.quantity?.kind === "seed_count" ? "seeds" : (lot.quantity?.unit ?? "")} will remain after exact subtraction.`}
                     </small>
                   </span>
                 </label>
@@ -609,27 +649,11 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
                   }}
                 />{" "}
                 <span>
-                  <strong>Use all → SeedLot exhausted</strong>
+                  <strong>Use the whole lot</strong>
                   <small>
                     {canUseAll
-                      ? "The source becomes exhausted; approximate or unknown material is not rewritten as exact zero."
+                      ? "The source becomes exhausted. Approximate or unknown quantities are not rewritten as exact zero."
                       : "For exact compatible quantities, the Sowing amount must equal the source amount."}
-                  </small>
-                </span>
-              </label>
-              <label>
-                <input
-                  type="radio"
-                  name="usage"
-                  checked={usage === "none"}
-                  onChange={() => {
-                    setUsage("none");
-                  }}
-                />{" "}
-                <span>
-                  <strong>Do not change SeedLot quantity</strong>
-                  <small>
-                    Creates the Sowing without adjusting the source.
                   </small>
                 </span>
               </label>
@@ -644,10 +668,6 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
             {usage === "partial" && sourceApproximate && (
               <div className="estimate-editor">
                 <p>Current estimate: {quantityText(lot)}</p>
-                <p>
-                  Suggested remainder: ~
-                  {String(preview?.suggested ?? lot.quantity?.value)}
-                </p>
                 <div className="field">
                   <label htmlFor="resulting-estimate">Resulting estimate</label>
                   <div className="quantity-controls">
@@ -672,6 +692,26 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
                 </div>
               </div>
             )}
+            <div className="seed-sowing-confirmation" role="status">
+              <strong>Before you start</strong>
+              <p>
+                A new Sowing will be recorded for {lot.label ?? "this seed lot"}
+                .
+              </p>
+              <p>
+                {usage === "none"
+                  ? "The source quantity and lifecycle will stay unchanged."
+                  : usage === "use_all"
+                    ? "The source will become exhausted; its quantity representation will follow the recorded exact, approximate, or unknown state."
+                    : sourceUnknown
+                      ? "Partial use will be recorded; the source quantity will remain unknown."
+                      : sourceApproximate
+                        ? remainder
+                          ? `The resulting source estimate must be confirmed as about ${remainder} ${lot.quantity?.kind === "seed_count" ? "seeds" : (lot.quantity?.unit ?? "")}.`
+                          : "Enter the resulting source estimate before starting."
+                        : `${String(preview?.suggested ?? "")} ${lot.quantity?.kind === "seed_count" ? "seeds" : (lot.quantity?.unit ?? "")} will remain in the source lot.`}
+              </p>
+            </div>
             {preview?.oversubscribed && (
               <div className="notice notice--error" role="alert">
                 The Sowing quantity exceeds the exact source quantity.
@@ -694,7 +734,7 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
             )}
             <div className="actions">
               <button type="submit" disabled={pending}>
-                {pending ? "Creating Sowing…" : "Create Sowing"}
+                {pending ? "Starting sowing…" : "Start sowing"}
               </button>
               <button
                 type="button"
@@ -707,6 +747,12 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
               >
                 Back to details
               </button>
+              <a
+                className="button-link button--secondary"
+                href={`#/seeds/${lot.id}`}
+              >
+                Cancel
+              </a>
             </div>
           </>
         )}

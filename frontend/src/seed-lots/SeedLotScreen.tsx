@@ -11,15 +11,16 @@ import { ApiError } from "../auth/api";
 import { labelComposerHref } from "../labels/labelData";
 import { useAuth } from "../auth/context";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
-import { DirectorySearch, RecordPreview } from "../components/ReferenceUI";
+import { DirectorySearch, QuickPreview } from "../components/ReferenceUI";
 import { setRecordRoute } from "../components/recordNavigation";
 import {
   Breadcrumbs,
   CollectionCard,
   DetailHeader,
   DetailTabs,
+  WorkspaceIntro,
 } from "../components/CollectionUI";
-import { FieldHelp, InfoDisclosure } from "../components/ContextualHelp";
+import { FieldHelp } from "../components/ContextualHelp";
 import { LineagePanel } from "../lineage/LineagePanel";
 import { PhotosSection } from "../photos/PhotosSection";
 import { PrimaryPhotoVisual } from "../photos/PrimaryPhotoVisual";
@@ -199,6 +200,85 @@ function quantityLabel(lot: SeedLotResponse): string {
   return `${lot.quantity.is_approximate ? "About " : ""}${lot.quantity.value} ${unit ?? ""}`;
 }
 
+function inventoryLabel(lot: SeedLotResponse): string {
+  return lot.lifecycle === "active" ? "Remaining" : "Recorded quantity";
+}
+
+function SeedLotPreview({
+  lot,
+  onOpen,
+  onEdit,
+}: {
+  lot: SeedLotResponse;
+  onOpen: () => void;
+  onEdit: () => void;
+}) {
+  return (
+    <QuickPreview>
+      <p className="record-preview__type">Seed lot</p>
+      <h3>{lot.label ?? "Unlabelled seed lot"}</h3>
+      <p className="seed-preview__identity">
+        <a href={`#/identities/${lot.botanical_identity.id}`}>
+          {lot.botanical_identity.display_label}
+        </a>
+      </p>
+      <div className="seed-preview__inventory">
+        <span>{inventoryLabel(lot)}</span>
+        <strong>{quantityLabel(lot)}</strong>
+        {lot.lifecycle !== "active" && (
+          <small>
+            This lot is {lifecycleLabels[lot.lifecycle].toLowerCase()}.
+          </small>
+        )}
+      </div>
+      <dl className="record-preview__facts">
+        <div>
+          <dt>Status</dt>
+          <dd>{lifecycleLabels[lot.lifecycle]}</dd>
+        </div>
+        <div>
+          <dt>Storage</dt>
+          <dd>
+            {lot.location ? (
+              <a href={`#/locations/${lot.location.id}`}>
+                {lot.location.display_path}
+              </a>
+            ) : (
+              "Not recorded"
+            )}
+          </dd>
+        </div>
+        <div>
+          <dt>Supplier</dt>
+          <dd>
+            {lot.supplier ? (
+              <a href={`#/suppliers/${lot.supplier.id}`}>{lot.supplier.name}</a>
+            ) : (
+              "Not recorded"
+            )}
+          </dd>
+        </div>
+      </dl>
+      <div className="actions record-preview__actions seed-preview__actions">
+        {lot.lifecycle === "active" && (
+          <a
+            className="button-link"
+            href={`#/sowings?action=start&seedLot=${lot.id}`}
+          >
+            Start sowing
+          </a>
+        )}
+        <button className="button--secondary" type="button" onClick={onOpen}>
+          Open details
+        </button>
+        <button className="button--secondary" type="button" onClick={onEdit}>
+          Edit
+        </button>
+      </div>
+    </QuickPreview>
+  );
+}
+
 function dateLabel(date: PartialDate | null): string {
   if (!date) return "Unknown";
   const year = String(date.year).padStart(4, "0");
@@ -335,7 +415,7 @@ function Detail({
       : "overview",
   );
   return (
-    <section className="seed-detail" aria-labelledby="seed-detail-title">
+    <section className="seed-detail" aria-label="Seed lot detail">
       <Breadcrumbs
         items={[
           { label: "Seeds", href: "#/seeds" },
@@ -425,95 +505,121 @@ function Detail({
       {tab === "overview" && (
         <div
           id="panel-overview"
-          className="detail-tab-panel overview-grid"
+          className="detail-tab-panel seed-overview"
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <h3 id="seed-detail-title">Seed lot facts</h3>
-          <dl>
-            <div>
-              <dt>Botanical identity</dt>
-              <dd>
-                <a href={`#/identities/${lot.botanical_identity.id}`}>
-                  {lot.botanical_identity.display_label}
-                </a>
-              </dd>
-            </div>
-            <div>
-              <dt>Lifecycle</dt>
-              <dd>{lifecycleLabels[lot.lifecycle]}</dd>
-            </div>
-            <div>
-              <dt>Quantity</dt>
-              <dd>{quantityLabel(lot)}</dd>
-            </div>
-            <div>
-              <dt>Source</dt>
-              <dd>
-                {sourceLabels[lot.source_kind]}
-                {lot.source_detail ? ` — ${lot.source_detail}` : ""}
-              </dd>
-            </div>
-            <div>
-              <dt>Supplier</dt>
-              <dd>
-                {lot.supplier ? (
-                  <a href={`#/suppliers/${lot.supplier.id}`}>
-                    {lot.supplier.name}
-                  </a>
-                ) : (
-                  "Not recorded"
-                )}
-              </dd>
-            </div>
-            <div>
-              <dt>Storage</dt>
-              <dd>
-                {lot.location ? (
-                  <a href={`#/locations/${lot.location.id}`}>
-                    {lot.location.display_path}
-                  </a>
-                ) : (
-                  "Not recorded"
-                )}
-              </dd>
-            </div>
-            <div>
-              <dt>Material provenance</dt>
-              <dd>{lot.material_provenance?.display_path ?? "Not recorded"}</dd>
-            </div>
-            <div>
-              <dt>Provenance site</dt>
-              <dd>
-                {lot.provenance_site ? (
-                  <a href={`#/geography/${lot.provenance_site.id}`}>
-                    {lot.provenance_site.geographic_place_path
-                      ? `${lot.provenance_site.geographic_place_path} → `
-                      : ""}
-                    {lot.provenance_site.name}
-                  </a>
-                ) : (
-                  "Not recorded"
-                )}
-              </dd>
-            </div>
-            <div>
-              <dt>Acquired</dt>
-              <dd>{dateLabel(lot.acquisition_date)}</dd>
-            </div>
-            <div>
-              <dt>Harvested</dt>
-              <dd>{dateLabel(lot.harvest_date)}</dd>
-            </div>
-            <div>
-              <dt>Expected viability</dt>
-              <dd>{dateLabel(lot.expected_viability_until)}</dd>
-            </div>
-            <div>
-              <dt>Notes</dt>
-              <dd className="preserve-lines">{lot.notes ?? "Not recorded"}</dd>
-            </div>
-          </dl>
+          <section
+            aria-labelledby="seed-overview-inventory"
+            className="seed-fact-group"
+          >
+            <h4 id="seed-overview-inventory">Inventory</h4>
+            <dl>
+              <div>
+                <dt>Lifecycle</dt>
+                <dd>{lifecycleLabels[lot.lifecycle]}</dd>
+              </div>
+              <div>
+                <dt>{inventoryLabel(lot)}</dt>
+                <dd>{quantityLabel(lot)}</dd>
+              </div>
+              <div>
+                <dt>Storage</dt>
+                <dd>
+                  {lot.location ? (
+                    <a href={`#/locations/${lot.location.id}`}>
+                      {lot.location.display_path}
+                    </a>
+                  ) : (
+                    "Not recorded"
+                  )}
+                </dd>
+              </div>
+            </dl>
+          </section>
+          <section
+            aria-labelledby="seed-overview-source"
+            className="seed-fact-group"
+          >
+            <h4 id="seed-overview-source">Source &amp; origin</h4>
+            <dl>
+              <div>
+                <dt>Source</dt>
+                <dd>
+                  {sourceLabels[lot.source_kind]}
+                  {lot.source_detail ? ` — ${lot.source_detail}` : ""}
+                </dd>
+              </div>
+              <div>
+                <dt>Supplier</dt>
+                <dd>
+                  {lot.supplier ? (
+                    <a href={`#/suppliers/${lot.supplier.id}`}>
+                      {lot.supplier.name}
+                    </a>
+                  ) : (
+                    "Not recorded"
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt>Material provenance</dt>
+                <dd>
+                  {lot.material_provenance ? (
+                    <a href={`#/geography?place=${lot.material_provenance.id}`}>
+                      {lot.material_provenance.display_path}
+                    </a>
+                  ) : (
+                    "Not recorded"
+                  )}
+                </dd>
+              </div>
+              <div>
+                <dt>Provenance site</dt>
+                <dd>
+                  {lot.provenance_site ? (
+                    <a href={`#/geography/${lot.provenance_site.id}`}>
+                      {lot.provenance_site.geographic_place_path
+                        ? `${lot.provenance_site.geographic_place_path} → `
+                        : ""}
+                      {lot.provenance_site.name}
+                    </a>
+                  ) : (
+                    "Not recorded"
+                  )}
+                </dd>
+              </div>
+            </dl>
+          </section>
+          <section
+            aria-labelledby="seed-overview-dates"
+            className="seed-fact-group"
+          >
+            <h4 id="seed-overview-dates">Dates &amp; condition</h4>
+            <dl>
+              <div>
+                <dt>Acquired</dt>
+                <dd>{dateLabel(lot.acquisition_date)}</dd>
+              </div>
+              <div>
+                <dt>Harvested</dt>
+                <dd>{dateLabel(lot.harvest_date)}</dd>
+              </div>
+              <div>
+                <dt>Expected viability</dt>
+                <dd>{dateLabel(lot.expected_viability_until)}</dd>
+              </div>
+            </dl>
+          </section>
+          {lot.notes && (
+            <section
+              aria-labelledby="seed-overview-notes"
+              className="seed-fact-group seed-fact-group--notes"
+            >
+              <h4 id="seed-overview-notes">Notes</h4>
+              <p className="preserve-lines">{lot.notes}</p>
+            </section>
+          )}
         </div>
       )}
       {tab === "sowings" && (
@@ -566,6 +672,13 @@ function Detail({
     </section>
   );
 }
+
+const seedPage = {
+  eyebrow: "Collection inventory",
+  title: "Seeds",
+  titleId: "seeds-title",
+  description: "Track seed lots from acquisition through sowing and history.",
+};
 
 export function SeedLotScreen({
   initialId,
@@ -700,16 +813,22 @@ export function SeedLotScreen({
 
   if (!references && inventory.status === "loading") {
     return (
-      <section className="workspace" aria-labelledby="seeds-title">
-        <h2 id="seeds-title">Seeds</h2>
+      <section
+        className="workspace seeds-workspace"
+        aria-labelledby="seeds-title"
+      >
+        <WorkspaceIntro {...seedPage} />
         <p role="status">Loading seed inventory…</p>
       </section>
     );
   }
   if (inventory.status === "error" || !references) {
     return (
-      <section className="workspace" aria-labelledby="seeds-title">
-        <h2 id="seeds-title">Seeds</h2>
+      <section
+        className="workspace seeds-workspace"
+        aria-labelledby="seeds-title"
+      >
+        <WorkspaceIntro {...seedPage} />
         <div className="notice notice--error" role="alert">
           <p>
             Florabase could not load the seed inventory or its reference
@@ -983,28 +1102,25 @@ export function SeedLotScreen({
       className="workspace seeds-workspace"
       aria-labelledby="seeds-title"
     >
-      <div className="workspace-intro seed-heading">
-        <div>
-          <p className="eyebrow">Collection inventory</p>
-          <h2 id="seeds-title">Seeds</h2>
-          <p>
-            See what is available, record newly obtained material, and retain
-            exhausted, discarded, or lost lots.
-          </p>
-        </div>
-        <button
-          type="button"
-          ref={creationTriggerRef}
-          aria-expanded={creationExpanded}
-          aria-controls="new-seed-lot-panel"
-          onClick={() => {
-            if (creationExpanded) focusCreation();
-            else startCreate();
-          }}
-        >
-          + New seed lot
-        </button>
-      </div>
+      <WorkspaceIntro
+        {...seedPage}
+        actions={
+          !editing && (
+            <button
+              type="button"
+              ref={creationTriggerRef}
+              aria-expanded={creationExpanded}
+              aria-controls="new-seed-lot-panel"
+              onClick={() => {
+                if (creationExpanded) focusCreation();
+                else startCreate();
+              }}
+            >
+              + New seed lot
+            </button>
+          )
+        }
+      />
       <div
         className={`seed-master-detail operational-layout${detailOpen || editing ? " is-detail-view" : ""}`}
       >
@@ -1055,7 +1171,7 @@ export function SeedLotScreen({
               </p>
             </div>
           ) : (
-            <ul className="seed-list" aria-label="Seed inventory">
+            <ul className="seed-list" aria-label="Seed inventory" tabIndex={0}>
               {visible.map((lot) => (
                 <li key={lot.id}>
                   <button
@@ -1080,12 +1196,17 @@ export function SeedLotScreen({
                         label={lot.label ?? "seed lot"}
                         compact
                       />
-                      <strong>{lot.label ?? "Unlabelled seed lot"}</strong>
-                      <small>{lot.botanical_identity.display_label}</small>
+                      <span className="seed-primary__text">
+                        <strong>{lot.label ?? "Unlabelled seed lot"}</strong>
+                        <small>{lot.botanical_identity.display_label}</small>
+                      </span>
                     </span>
-                    <span>{quantityLabel(lot)}</span>
-                    <span>
-                      {lot.location?.display_path ?? "Location unknown"}
+                    <span className="seed-quantity">
+                      <small>{inventoryLabel(lot)}</small>
+                      <strong>{quantityLabel(lot)}</strong>
+                    </span>
+                    <span className="seed-location">
+                      {lot.location?.display_path ?? "Storage not recorded"}
                     </span>
                     <span
                       className={`lifecycle-badge lifecycle-badge--${lot.lifecycle}`}
@@ -1134,7 +1255,7 @@ export function SeedLotScreen({
               <div className="seed-form-heading">
                 <div>
                   <p className="eyebrow">
-                    {selected ? "Correct seed lot" : "Fast entry"}
+                    {selected ? "Correct seed lot" : "Seeds · New record"}
                   </p>
                   <h3>
                     {selected
@@ -1142,24 +1263,8 @@ export function SeedLotScreen({
                       : "Add seed lot"}
                   </h3>
                 </div>
-                <button
-                  type="button"
-                  className="button--secondary"
-                  onClick={() => {
-                    setEditing(false);
-                    if (!selected) {
-                      setForm(blankForm());
-                      setMoreDetails(false);
-                      setSave({ status: "idle" });
-                      closeCreation();
-                      setDetailOpen(false);
-                    }
-                  }}
-                >
-                  Cancel
-                </button>
               </div>
-              <h4 className="form-group-heading">Identity</h4>
+              <h4 className="form-group-heading">Essentials</h4>
               <ReferencePicker
                 label="Botanical identity"
                 help="A shared botanical identity keeps the botanical name consistent across records; it does not establish lineage."
@@ -1182,13 +1287,10 @@ export function SeedLotScreen({
                 createLabel="Create identity"
               />
               {!selected && (
-                <InfoDisclosure label="More information about SeedLots">
-                  <p>
-                    A SeedLot is one physical packet or bag. Record a separate
-                    SeedLot for another packet even when it contains the same
-                    taxon and has the same descriptive details.
-                  </p>
-                </InfoDisclosure>
+                <p className="field-help seed-task-hint">
+                  One seed lot represents one physical packet or bag. Add
+                  another record for a separate packet, even of the same taxon.
+                </p>
               )}
               <div className="seed-primary-fields">
                 <div className="field">
@@ -1208,7 +1310,7 @@ export function SeedLotScreen({
                     }}
                   />
                 </div>
-                <h4 className="form-group-heading field--full">Material</h4>
+                <h4 className="form-group-heading field--full">Inventory</h4>
                 <fieldset
                   aria-describedby="seed-quantity-help"
                   className="quantity-field"
@@ -1269,9 +1371,33 @@ export function SeedLotScreen({
                     guessing.
                   </FieldHelp>
                 </fieldset>
-                <h4 className="form-group-heading field--full">
-                  Acquisition and source
-                </h4>
+                <div className="field">
+                  <label htmlFor="lifecycle">Lifecycle</label>
+                  <select
+                    id="lifecycle"
+                    value={form.lifecycle}
+                    disabled={pending}
+                    onChange={(event) => {
+                      const lifecycle = event.currentTarget
+                        .value as SeedLotLifecycle;
+                      setForm((current) => ({
+                        ...current,
+                        lifecycle,
+                      }));
+                    }}
+                  >
+                    {Object.entries(lifecycleLabels).map(([value, label]) => (
+                      <option value={value} key={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                  <small>
+                    Use Exhausted for an exact known zero quantity. Historical
+                    lots remain editable.
+                  </small>
+                </div>
+                <h4 className="form-group-heading field--full">Acquisition</h4>
                 <div className="field">
                   <label htmlFor="source-kind">Source</label>
                   <select
@@ -1333,6 +1459,20 @@ export function SeedLotScreen({
                   }}
                   createLabel="Create supplier"
                 />
+                <div className="field--full">
+                  <PartialDateField
+                    id="acquisition"
+                    label="Acquisition date"
+                    value={form.acquisitionDate}
+                    onChange={(value) => {
+                      setForm((current) => ({
+                        ...current,
+                        acquisitionDate: value,
+                      }));
+                    }}
+                    disabled={pending}
+                  />
+                </div>
                 <h4 className="form-group-heading field--full">Storage</h4>
                 <ReferencePicker
                   label="Storage location (optional)"
@@ -1356,21 +1496,25 @@ export function SeedLotScreen({
                   createLabel="Create location"
                 />
               </div>
-              <button
-                type="button"
-                className="button--secondary disclosure-button"
-                aria-expanded={moreDetails}
-                onClick={() => {
-                  setMoreDetails((value) => !value);
-                }}
-              >
-                {moreDetails ? "Fewer details" : "More details"}
-              </button>
-              {moreDetails && (
-                <div className="advanced-fields">
-                  <h4 className="form-group-heading field--full">
-                    Origin and dates
-                  </h4>
+              {!selected && (
+                <button
+                  type="button"
+                  className="button--secondary disclosure-button"
+                  aria-expanded={moreDetails}
+                  aria-controls="seed-additional-details"
+                  onClick={() => {
+                    setMoreDetails((value) => !value);
+                  }}
+                >
+                  {moreDetails ? "Fewer details" : "More details"}
+                </button>
+              )}
+              {(Boolean(selected) || moreDetails) && (
+                <div
+                  id={!selected ? "seed-additional-details" : undefined}
+                  className="advanced-fields"
+                >
+                  <h4 className="form-group-heading field--full">Provenance</h4>
                   <ReferencePicker
                     label="Material provenance (optional)"
                     help="Where the biological material originated, not its Supplier or current storage location."
@@ -1407,19 +1551,10 @@ export function SeedLotScreen({
                       }));
                     }}
                   />
+                  <h4 className="form-group-heading field--full">
+                    Seed details
+                  </h4>
                   <div className="partial-date-grid">
-                    <PartialDateField
-                      id="acquisition"
-                      label="Acquisition date"
-                      value={form.acquisitionDate}
-                      onChange={(value) => {
-                        setForm((current) => ({
-                          ...current,
-                          acquisitionDate: value,
-                        }));
-                      }}
-                      disabled={pending}
-                    />
                     <PartialDateField
                       id="harvest"
                       label="Harvest date"
@@ -1446,32 +1581,6 @@ export function SeedLotScreen({
                       }}
                       disabled={pending}
                     />
-                  </div>
-                  <div className="field">
-                    <label htmlFor="lifecycle">Lifecycle</label>
-                    <select
-                      id="lifecycle"
-                      value={form.lifecycle}
-                      disabled={pending}
-                      onChange={(event) => {
-                        const value = event.currentTarget
-                          .value as SeedLotLifecycle;
-                        setForm((current) => ({
-                          ...current,
-                          lifecycle: value,
-                        }));
-                      }}
-                    >
-                      {Object.entries(lifecycleLabels).map(([value, label]) => (
-                        <option value={value} key={value}>
-                          {label}
-                        </option>
-                      ))}
-                    </select>
-                    <small>
-                      Use Exhausted for an exact known zero quantity. Historical
-                      lots remain editable.
-                    </small>
                   </div>
                   <h4 className="form-group-heading field--full">Notes</h4>
                   <div className="field">
@@ -1508,13 +1617,31 @@ export function SeedLotScreen({
                   </ul>
                 </div>
               )}
-              <button type="submit" disabled={pending}>
-                {pending
-                  ? "Saving…"
-                  : selected
-                    ? "Save changes"
-                    : "Add to collection"}
-              </button>
+              <div className="actions seed-form-actions">
+                <button type="submit" disabled={pending}>
+                  {pending
+                    ? "Saving…"
+                    : selected
+                      ? "Save changes"
+                      : "Add to collection"}
+                </button>
+                <button
+                  type="button"
+                  className="button--secondary"
+                  onClick={() => {
+                    setEditing(false);
+                    setSave({ status: "idle" });
+                    if (!selected) {
+                      setForm(blankForm());
+                      setMoreDetails(false);
+                      closeCreation();
+                      setDetailOpen(false);
+                    }
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
             </form>
           ) : selected ? (
             detailOpen ? (
@@ -1542,72 +1669,15 @@ export function SeedLotScreen({
                 />
               </div>
             ) : (
-              <RecordPreview
-                type="Seed lot"
-                title={selected.label ?? "Unlabelled seed lot"}
-                secondary={
-                  <a href={`#/identities/${selected.botanical_identity.id}`}>
-                    {selected.botanical_identity.display_label}
-                  </a>
-                }
-                facts={[
-                  {
-                    label: "Lifecycle",
-                    value: lifecycleLabels[selected.lifecycle],
-                  },
-                  { label: "Quantity", value: quantityLabel(selected) },
-                  {
-                    label: "Storage",
-                    value: selected.location ? (
-                      <a href={`#/locations/${selected.location.id}`}>
-                        {selected.location.display_path}
-                      </a>
-                    ) : (
-                      "Not recorded"
-                    ),
-                  },
-                  {
-                    label: "Supplier",
-                    value: selected.supplier ? (
-                      <a href={`#/suppliers/${selected.supplier.id}`}>
-                        {selected.supplier.name}
-                      </a>
-                    ) : (
-                      "Not recorded"
-                    ),
-                  },
-                ]}
-                actions={
-                  <>
-                    {selected.lifecycle === "active" && (
-                      <a
-                        className="button-link"
-                        href={`#/sowings?action=start&seedLot=${selected.id}`}
-                      >
-                        Start sowing
-                      </a>
-                    )}
-                    <button
-                      type="button"
-                      className="button--secondary"
-                      onClick={() => {
-                        setDetailOpen(true);
-                        setRecordRoute(`#/seeds/${selected.id}`);
-                      }}
-                    >
-                      Open details
-                    </button>
-                    <button
-                      type="button"
-                      className="button--secondary"
-                      onClick={() => {
-                        startEdit(selected);
-                      }}
-                    >
-                      Edit
-                    </button>
-                  </>
-                }
+              <SeedLotPreview
+                lot={selected}
+                onOpen={() => {
+                  setDetailOpen(true);
+                  setRecordRoute(`#/seeds/${selected.id}`);
+                }}
+                onEdit={() => {
+                  startEdit(selected);
+                }}
               />
             )
           ) : (

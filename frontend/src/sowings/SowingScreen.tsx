@@ -17,6 +17,7 @@ import {
   Breadcrumbs,
   DetailHeader,
   DetailTabs,
+  WorkspaceIntro,
 } from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
 import {
@@ -178,22 +179,66 @@ function dateLabel(date: PartialDate | null): string {
 
 function quantityLabel(sowing: SowingResponse): string {
   const quantity = sowing.quantity;
-  const germinated = sowing.germinated_count;
-  if (!quantity)
-    return germinated === null
-      ? "Quantity not recorded"
-      : `${String(germinated)} germinated`;
+  if (!quantity) return "Unknown";
   const prefix = quantity.is_approximate ? "~" : "";
-  if (quantity.kind === "seed_count") {
-    const sown = `${prefix}${quantity.value} sown`;
-    return germinated === null
-      ? sown
-      : `${String(germinated)} germinated / ${sown}`;
-  }
-  const sown = `${prefix}${quantity.value} ${quantity.unit ?? "g"} sown`;
-  return germinated === null
-    ? sown
-    : `${String(germinated)} germinated · ${sown}`;
+  if (quantity.kind === "seed_count") return `${prefix}${quantity.value} seeds`;
+  return `${prefix}${quantity.value} ${quantity.unit ?? "g"}`;
+}
+
+function germinationProgress(sowing: SowingResponse): {
+  text: string;
+  percent: number | null;
+} {
+  const count = sowing.germinated_count;
+  const quantity = sowing.quantity;
+  if (count === null)
+    return { text: "Germination not recorded", percent: null };
+  if (
+    quantity?.kind === "seed_count" &&
+    !quantity.is_approximate &&
+    Number.isSafeInteger(Number(quantity.value)) &&
+    Number(quantity.value) === 0
+  )
+    return {
+      text: `${String(count)} germinated · 0 seeds recorded`,
+      percent: null,
+    };
+  if (
+    quantity?.kind !== "seed_count" ||
+    quantity.is_approximate ||
+    !Number.isSafeInteger(Number(quantity.value)) ||
+    Number(quantity.value) <= 0 ||
+    count > Number(quantity.value)
+  )
+    return {
+      text: `${String(count)} germinated · exact seed count unavailable`,
+      percent: null,
+    };
+  const denominator = Number(quantity.value);
+  const percent = (count / denominator) * 100;
+  const label = new Intl.NumberFormat(undefined, {
+    maximumFractionDigits: 1,
+  }).format(percent);
+  return {
+    text: `${String(count)} of ${String(denominator)} germinated · ${label}%`,
+    percent,
+  };
+}
+
+function GerminationProgress({ sowing }: { sowing: SowingResponse }) {
+  const progress = germinationProgress(sowing);
+  return (
+    <span className="sowing-progress">
+      <span>{progress.text}</span>
+      {progress.percent !== null && (
+        <progress
+          value={progress.percent}
+          max={100}
+          aria-label="Germination percentage"
+        />
+      )}
+    </span>
+  );
 }
 
 function seedLotLabel(lot: SeedLotResponse): string {
@@ -338,16 +383,23 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <section aria-labelledby="sowing-origin-title">
-            <p className="eyebrow">Source</p>
+          <section
+            aria-labelledby="sowing-origin-title"
+            className="sowing-fact-group"
+          >
             <h3 id="sowing-origin-title" tabIndex={-1} ref={headingRef}>
-              {sowing.seed_lot.botanical_identity_display_label}
+              Source
             </h3>
-            {sowing.label && <p className="seed-label">{sowing.label}</p>}
             <dl>
               <div>
-                <dt>Lifecycle</dt>
-                <dd>{lifecycleLabels[sowing.lifecycle]}</dd>
+                <dt>Botanical identity</dt>
+                <dd>
+                  <a
+                    href={`#/identities/${sowing.seed_lot.botanical_identity_id}`}
+                  >
+                    {sowing.seed_lot.botanical_identity_display_label}
+                  </a>
+                </dd>
               </div>
               <div>
                 <dt>Seed lot</dt>
@@ -358,10 +410,58 @@ function Detail({
                   · {sowing.seed_lot.lifecycle}
                 </dd>
               </div>
+              <div>
+                <dt>Quantity sown</dt>
+                <dd>{quantityLabel(sowing)}</dd>
+              </div>
             </dl>
           </section>
-          <section className="field--full" aria-labelledby="descendants-title">
-            <h4 id="descendants-title">Tracked descendants</h4>
+          <section
+            aria-labelledby="sowing-facts-title"
+            className="sowing-fact-group"
+          >
+            <h4 id="sowing-facts-title">Sowing</h4>
+            <dl>
+              <div>
+                <dt>Lifecycle</dt>
+                <dd>{lifecycleLabels[sowing.lifecycle]}</dd>
+              </div>
+              <div>
+                <dt>Sowing date</dt>
+                <dd>{dateLabel(sowing.sowing_date)}</dd>
+              </div>
+              <div>
+                <dt>Current location</dt>
+                <dd>
+                  {sowing.location ? (
+                    <a href={`#/locations/${sowing.location.id}`}>
+                      {sowing.location.display_path}
+                    </a>
+                  ) : (
+                    "Not recorded"
+                  )}
+                </dd>
+              </div>
+            </dl>
+          </section>
+          <section
+            aria-labelledby="sowing-germination-overview-title"
+            className="sowing-fact-group"
+          >
+            <h4 id="sowing-germination-overview-title">Germination</h4>
+            <p>
+              <GerminationProgress sowing={sowing} />
+            </p>
+            <p className="field-help">
+              This is the directly recorded total. Dated observations and
+              derived timing are in the Germination tab.
+            </p>
+          </section>
+          <section
+            className="sowing-fact-group"
+            aria-labelledby="descendants-title"
+          >
+            <h4 id="descendants-title">Results</h4>
             {summary.status === "loading" && (
               <p role="status">Loading propagation summary…</p>
             )}
@@ -442,31 +542,6 @@ function Detail({
                 />
               </>
             )}
-          </section>
-          <section aria-labelledby="sowing-facts-title">
-            <h4 id="sowing-facts-title">Sowing</h4>
-            <dl>
-              <div>
-                <dt>Sowing date</dt>
-                <dd>{dateLabel(sowing.sowing_date)}</dd>
-              </div>
-              <div>
-                <dt>Result</dt>
-                <dd>{quantityLabel(sowing)}</dd>
-              </div>
-              <div>
-                <dt>Current location</dt>
-                <dd>
-                  {sowing.location ? (
-                    <a href={`#/locations/${sowing.location.id}`}>
-                      {sowing.location.display_path}
-                    </a>
-                  ) : (
-                    "Not recorded"
-                  )}
-                </dd>
-              </div>
-            </dl>
           </section>
           {hasCultivation && (
             <section aria-labelledby="sowing-cultivation-title">
@@ -597,12 +672,21 @@ function Detail({
   );
 }
 
+const sowingPage = {
+  eyebrow: "Propagation",
+  title: "Sowings",
+  titleId: "sowings-title",
+  description: "Track sowing attempts, germination, outcomes, and descendants.",
+};
+
 export function SowingScreen({
   initialId,
   initialTab,
+  startCreating = false,
 }: {
   initialId?: string;
   initialTab?: string;
+  startCreating?: boolean;
 } = {}) {
   const auth = useAuth();
   const [collection, setCollection] = useState<CollectionState>({
@@ -650,6 +734,25 @@ export function SowingScreen({
     close: closeCreation,
     focusFirst: focusCreation,
   } = useCreationDisclosure();
+  const dashboardCreationStarted = useRef(false);
+
+  useEffect(() => {
+    if (
+      !startCreating ||
+      !references?.seedLots.length ||
+      dashboardCreationStarted.current
+    )
+      return;
+    dashboardCreationStarted.current = true;
+    setSelectedId(null);
+    setDetail({ status: "idle" });
+    setEditing(true);
+    setMobileDetail(true);
+    setForm(blankForm());
+    setMoreDetails(false);
+    setSave({ status: "idle" });
+    openCreation();
+  }, [openCreation, references, startCreating]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -729,16 +832,22 @@ export function SowingScreen({
 
   if (!references && collection.status === "loading") {
     return (
-      <section className="workspace" aria-labelledby="sowings-title">
-        <h2 id="sowings-title">Sowings</h2>
+      <section
+        className="workspace sowings-workspace"
+        aria-labelledby="sowings-title"
+      >
+        <WorkspaceIntro {...sowingPage} />
         <p role="status">Loading Sowings…</p>
       </section>
     );
   }
   if (collection.status === "error" || !references) {
     return (
-      <section className="workspace" aria-labelledby="sowings-title">
-        <h2 id="sowings-title">Sowings</h2>
+      <section
+        className="workspace sowings-workspace"
+        aria-labelledby="sowings-title"
+      >
+        <WorkspaceIntro {...sowingPage} />
         <div className="notice notice--error" role="alert">
           <p>Florabase could not load the Sowing collection or its choices.</p>
           <button
@@ -868,6 +977,7 @@ export function SowingScreen({
     if (pending) return;
     const errors = validate();
     if (errors.length) {
+      setMoreDetails(true);
       setSave({ status: "error", messages: errors });
       return;
     }
@@ -907,9 +1017,10 @@ export function SowingScreen({
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();
-      else if (error instanceof ApiError && error.status === 422)
+      else if (error instanceof ApiError && error.status === 422) {
+        setMoreDetails(true);
         setSave({ status: "error", messages: sowingValidationMessages(error) });
-      else if (error instanceof ApiError && error.status === 409)
+      } else if (error instanceof ApiError && error.status === 409)
         setSave({
           status: "error",
           messages: [
@@ -946,29 +1057,26 @@ export function SowingScreen({
       className="workspace sowings-workspace"
       aria-labelledby="sowings-title"
     >
-      <div className="workspace-intro seed-heading">
-        <div>
-          <p className="eyebrow">Propagation records</p>
-          <h2 id="sowings-title">Sowings</h2>
-          <p>
-            Record a simple attempt quickly, then retain cultivation details and
-            outcomes.
-          </p>
-        </div>
-        <button
-          type="button"
-          ref={creationTriggerRef}
-          aria-expanded={creationExpanded}
-          aria-controls="new-sowing-panel"
-          disabled={references.seedLots.length === 0}
-          onClick={() => {
-            if (creationExpanded) focusCreation();
-            else startCreate();
-          }}
-        >
-          + New Sowing
-        </button>
-      </div>
+      <WorkspaceIntro
+        {...sowingPage}
+        actions={
+          !editing && (
+            <button
+              type="button"
+              ref={creationTriggerRef}
+              aria-expanded={creationExpanded}
+              aria-controls="new-sowing-panel"
+              disabled={references.seedLots.length === 0}
+              onClick={() => {
+                if (creationExpanded) focusCreation();
+                else startCreate();
+              }}
+            >
+              + New sowing
+            </button>
+          )
+        }
+      />
       {references.seedLots.length === 0 && (
         <div className="notice" role="status">
           <p>
@@ -1018,14 +1126,18 @@ export function SowingScreen({
               <h4>No Sowings recorded yet</h4>
               <p>
                 {references.seedLots.length
-                  ? "Use + New Sowing to record the first attempt."
+                  ? "Use + New sowing to record the first attempt."
                   : "Create a SeedLot from Seeds first."}
               </p>
             </div>
           ) : visible.length === 0 ? (
             <p>No Sowings match this search and lifecycle view.</p>
           ) : (
-            <ul className="seed-list" aria-label="Sowing collection">
+            <ul
+              className="seed-list"
+              aria-label="Sowing collection"
+              tabIndex={0}
+            >
               {visible.map((sowing) => (
                 <li key={sowing.id}>
                   <button
@@ -1037,19 +1149,19 @@ export function SowingScreen({
                     }}
                   >
                     <span className="seed-primary">
-                      <strong>{sowing.label ?? "Unlabelled sowing"}</strong>
-                      <small>
-                        {sowing.seed_lot.botanical_identity_display_label}
-                      </small>
+                      <span className="seed-primary__text">
+                        <strong>{sowing.label ?? "Unlabelled sowing"}</strong>
+                        <small>
+                          {sowing.seed_lot.botanical_identity_display_label}
+                        </small>
+                      </span>
                     </span>
-                    <span>
-                      From {sowing.seed_lot.label ?? "Unlabelled seed lot"}
-                    </span>
-                    <span>{dateLabel(sowing.sowing_date)}</span>
-                    <span>{quantityLabel(sowing)}</span>
-                    <span>
+                    <span className="sowing-row__source">
+                      From {sowing.seed_lot.label ?? "Unlabelled seed lot"} ·{" "}
+                      {dateLabel(sowing.sowing_date)} ·{" "}
                       {sowing.location?.display_path ?? "Location not recorded"}
                     </span>
+                    <GerminationProgress sowing={sowing} />
                     <span
                       className={`lifecycle-badge lifecycle-badge--${sowing.lifecycle}`}
                     >
@@ -1088,25 +1200,12 @@ export function SowingScreen({
               <div className="seed-form-heading">
                 <div>
                   <p className="eyebrow">
-                    {selected ? "Correct Sowing" : "Fast entry"}
+                    {selected ? "Correct Sowing" : "Sowings · New record"}
                   </p>
                   <h3>{selected ? "Edit Sowing" : "Record Sowing"}</h3>
                 </div>
-                <button
-                  type="button"
-                  className="button--secondary"
-                  onClick={() => {
-                    setEditing(false);
-                    setSave({ status: "idle" });
-                    if (!selected) {
-                      setMobileDetail(false);
-                      closeCreation();
-                    }
-                  }}
-                >
-                  Cancel
-                </button>
               </div>
+              <h4 className="form-group-heading">Source</h4>
               <div className="field">
                 <label htmlFor="sowing-seed-lot">SeedLot</label>
                 <select
@@ -1144,7 +1243,7 @@ export function SowingScreen({
                   lots remain available for historical entry.
                 </FieldHelp>
               </div>
-              <h4 className="form-group-heading">Core sowing details</h4>
+              <h4 className="form-group-heading">Sowing</h4>
               <div className="sowing-fast-fields">
                 <div className="field">
                   <label htmlFor="sowing-label">
@@ -1168,6 +1267,7 @@ export function SowingScreen({
                     setForm((current) => ({ ...current, sowingDate: value }));
                   }}
                 />
+                <h4 className="form-group-heading field--full">Material</h4>
                 <fieldset
                   aria-describedby="sowing-quantity-help"
                   className="quantity-field"
@@ -1258,6 +1358,43 @@ export function SowingScreen({
                   </FieldHelp>
                 </fieldset>
               </div>
+              <h4 className="form-group-heading">Storage</h4>
+              <div className="field">
+                <label htmlFor="sowing-location">
+                  Current location <span className="optional">(optional)</span>
+                </label>
+                <select
+                  aria-describedby="sowing-location-help"
+                  id="sowing-location"
+                  value={form.locationId}
+                  disabled={pending}
+                  onChange={(event) => {
+                    updateForm("locationId", event.currentTarget.value);
+                  }}
+                >
+                  <option value="">Not recorded</option>
+                  {locationsForScope(references.locations, "sowings").map(
+                    (location) => (
+                      <option
+                        key={location.id}
+                        value={location.id}
+                        disabled={
+                          Boolean(location.retired_at) &&
+                          location.id !== form.locationId
+                        }
+                      >
+                        {location.display_path}
+                        {location.retired_at ? " (retired)" : ""}
+                      </option>
+                    ),
+                  )}
+                </select>
+                <FieldHelp id="sowing-location-help">
+                  Where this Sowing is currently kept in your collection, not
+                  where its biological material originated.
+                </FieldHelp>
+              </div>
+
               <button
                 type="button"
                 className="button--secondary disclosure-button"
@@ -1275,7 +1412,7 @@ export function SowingScreen({
                   className="advanced-fields sowing-advanced-fields"
                 >
                   <h4 className="form-group-heading field--full">
-                    Optional cultivation details
+                    Outcome and status
                   </h4>
                   <div className="field">
                     <label htmlFor="germinated-count">
@@ -1299,41 +1436,78 @@ export function SowingScreen({
                     </small>
                   </div>
                   <div className="field">
-                    <label htmlFor="sowing-location">
-                      Current location{" "}
-                      <span className="optional">(optional)</span>
-                    </label>
+                    <label htmlFor="sowing-lifecycle">Lifecycle</label>
                     <select
-                      aria-describedby="sowing-location-help"
-                      id="sowing-location"
-                      value={form.locationId}
+                      id="sowing-lifecycle"
+                      value={form.lifecycle}
                       disabled={pending}
                       onChange={(event) => {
-                        updateForm("locationId", event.currentTarget.value);
+                        updateForm(
+                          "lifecycle",
+                          event.currentTarget.value as SowingLifecycle,
+                        );
                       }}
                     >
-                      <option value="">Not recorded</option>
-                      {locationsForScope(references.locations, "sowings").map(
-                        (location) => (
-                          <option
-                            key={location.id}
-                            value={location.id}
-                            disabled={
-                              Boolean(location.retired_at) &&
-                              location.id !== form.locationId
-                            }
-                          >
-                            {location.display_path}
-                            {location.retired_at ? " (retired)" : ""}
+                      {(Object.keys(lifecycleLabels) as SowingLifecycle[])
+                        .filter(
+                          (value) =>
+                            value !== "reversed" ||
+                            selected?.lifecycle === "reversed",
+                        )
+                        .map((value) => (
+                          <option key={value} value={value}>
+                            {lifecycleLabels[value]}
                           </option>
-                        ),
-                      )}
+                        ))}
                     </select>
-                    <FieldHelp id="sowing-location-help">
-                      Where this Sowing is currently kept in your collection,
-                      not where its biological material originated.
-                    </FieldHelp>
                   </div>
+                  {form.lifecycle === "completed" && (
+                    <div
+                      className="completion-outcome field--full"
+                      aria-live="polite"
+                    >
+                      <h4>Final Sowing outcome</h4>
+                      {form.quantityKind === "seed_count" &&
+                      !form.quantityApproximate &&
+                      form.quantityValue !== "" &&
+                      form.germinatedCount !== "" &&
+                      Number(form.germinatedCount) <=
+                        Number(form.quantityValue) ? (
+                        <dl>
+                          <div>
+                            <dt>Sown</dt>
+                            <dd>{form.quantityValue}</dd>
+                          </div>
+                          <div>
+                            <dt>Germinated</dt>
+                            <dd>{form.germinatedCount}</dd>
+                          </div>
+                          <div>
+                            <dt>Not germinated</dt>
+                            <dd>
+                              {String(
+                                Number(form.quantityValue) -
+                                  Number(form.germinatedCount),
+                              )}
+                            </dd>
+                          </div>
+                        </dl>
+                      ) : (
+                        <p>
+                          The exact non-germinated remainder cannot be derived
+                          from the available quantity precision. You may still
+                          complete this Sowing.
+                        </p>
+                      )}
+                      <p className="field-help">
+                        Review the germinated count above before saving. No
+                        separate remainder is persisted.
+                      </p>
+                    </div>
+                  )}
+                  <h4 className="form-group-heading field--full">
+                    Cultivation
+                  </h4>
                   <div className="field">
                     <label htmlFor="sowing-substrate">
                       Substrate <span className="optional">(optional)</span>
@@ -1429,76 +1603,7 @@ export function SowingScreen({
                       }}
                     />
                   </div>
-                  <div className="field">
-                    <label htmlFor="sowing-lifecycle">Lifecycle</label>
-                    <select
-                      id="sowing-lifecycle"
-                      value={form.lifecycle}
-                      disabled={pending}
-                      onChange={(event) => {
-                        updateForm(
-                          "lifecycle",
-                          event.currentTarget.value as SowingLifecycle,
-                        );
-                      }}
-                    >
-                      {(Object.keys(lifecycleLabels) as SowingLifecycle[])
-                        .filter(
-                          (value) =>
-                            value !== "reversed" ||
-                            selected?.lifecycle === "reversed",
-                        )
-                        .map((value) => (
-                          <option key={value} value={value}>
-                            {lifecycleLabels[value]}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                  {form.lifecycle === "completed" && (
-                    <div
-                      className="completion-outcome field--full"
-                      aria-live="polite"
-                    >
-                      <h4>Final Sowing outcome</h4>
-                      {form.quantityKind === "seed_count" &&
-                      !form.quantityApproximate &&
-                      form.quantityValue !== "" &&
-                      form.germinatedCount !== "" &&
-                      Number(form.germinatedCount) <=
-                        Number(form.quantityValue) ? (
-                        <dl>
-                          <div>
-                            <dt>Sown</dt>
-                            <dd>{form.quantityValue}</dd>
-                          </div>
-                          <div>
-                            <dt>Germinated</dt>
-                            <dd>{form.germinatedCount}</dd>
-                          </div>
-                          <div>
-                            <dt>Not germinated</dt>
-                            <dd>
-                              {String(
-                                Number(form.quantityValue) -
-                                  Number(form.germinatedCount),
-                              )}
-                            </dd>
-                          </div>
-                        </dl>
-                      ) : (
-                        <p>
-                          The exact non-germinated remainder cannot be derived
-                          from the available quantity precision. You may still
-                          complete this Sowing.
-                        </p>
-                      )}
-                      <p className="field-help">
-                        Review the germinated count above before saving. No
-                        separate remainder is persisted.
-                      </p>
-                    </div>
-                  )}
+                  <h4 className="form-group-heading field--full">Notes</h4>
                   <div className="field field--full">
                     <label htmlFor="sowing-notes">
                       Notes <span className="optional">(optional)</span>
@@ -1535,6 +1640,20 @@ export function SowingScreen({
                     : selected
                       ? "Save changes"
                       : "Record Sowing"}
+                </button>
+                <button
+                  type="button"
+                  className="button--secondary"
+                  onClick={() => {
+                    setEditing(false);
+                    setSave({ status: "idle" });
+                    if (!selected) {
+                      setMobileDetail(false);
+                      closeCreation();
+                    }
+                  }}
+                >
+                  Cancel
                 </button>
               </div>
             </form>
@@ -1625,7 +1744,11 @@ export function SowingScreen({
                     value: lifecycleLabels[selected.lifecycle],
                   },
                   { label: "Sown", value: dateLabel(selected.sowing_date) },
-                  { label: "Result", value: quantityLabel(selected) },
+                  { label: "Sown quantity", value: quantityLabel(selected) },
+                  {
+                    label: "Germinated",
+                    value: <GerminationProgress sowing={selected} />,
+                  },
                   {
                     label: "Location",
                     value: selected.location ? (
@@ -1640,12 +1763,26 @@ export function SowingScreen({
                 actions={
                   <>
                     {selected.lifecycle !== "reversed" && (
-                      <a
-                        className="button-link"
-                        href={`#/plants?action=from-sowing&sowing=${selected.id}&kind=plant`}
-                      >
-                        Create Plant
-                      </a>
+                      <>
+                        <a
+                          className="button-link"
+                          href={`#/sowings/${selected.id}?tab=germination`}
+                        >
+                          Record germination
+                        </a>
+                        <a
+                          className="button-link button--secondary"
+                          href={`#/plants?action=from-sowing&sowing=${selected.id}&kind=plant`}
+                        >
+                          Create Plant
+                        </a>
+                        <a
+                          className="button-link button--secondary"
+                          href={`#/plants?action=from-sowing&sowing=${selected.id}&kind=group`}
+                        >
+                          Create Plant group
+                        </a>
+                      </>
                     )}
                     <button
                       type="button"

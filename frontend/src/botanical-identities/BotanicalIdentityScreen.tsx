@@ -906,7 +906,8 @@ function IdentityDetails({
 export function BotanicalIdentityScreen({
   initialId,
   initialTab,
-}: { initialId?: string; initialTab?: string } = {}) {
+  startCreating = false,
+}: { initialId?: string; initialTab?: string; startCreating?: boolean } = {}) {
   const auth = useAuth();
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
@@ -938,6 +939,19 @@ export function BotanicalIdentityScreen({
     close: closeCreation,
     focusFirst: focusCreation,
   } = useCreationDisclosure();
+  const dashboardCreationStarted = useRef(false);
+  useEffect(() => {
+    if (
+      !startCreating ||
+      directory.status !== "ready" ||
+      dashboardCreationStarted.current
+    )
+      return;
+    dashboardCreationStarted.current = true;
+    formRef.current?.reset();
+    setCreateState({ status: "idle" });
+    openCreation();
+  }, [directory.status, openCreation, startCreating]);
   const pending =
     createState.status === "submitting" ||
     createState.status === "loading-existing";
@@ -1169,7 +1183,8 @@ export function BotanicalIdentityScreen({
       <PageHeader
         title="Botanical identities"
         titleId="botanical-identities-title"
-        description="A botanical index of your collection. Find a name, explore its records, and grow its story."
+        eyebrow="Botanical reference"
+        description="Manage the botanical identities that connect collection records and reference data."
         actions={
           <button
             type="button"
@@ -1248,7 +1263,12 @@ export function BotanicalIdentityScreen({
                 </p>
               )}
             {filteredIdentities.length > 0 && (
-              <ul className="identity-cards" ref={directoryRef}>
+              <ul
+                className="identity-cards"
+                ref={directoryRef}
+                aria-label="Botanical identities"
+                tabIndex={0}
+              >
                 {filteredIdentities.map((identity) => (
                   <li key={identity.id}>
                     <button

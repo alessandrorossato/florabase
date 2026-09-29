@@ -45,6 +45,7 @@ branch = true
 
 [tool.coverage.report]
 exclude_also = ["if TYPE_CHECKING:"]
+precision = 2
 
 [tool.ruff]
 target-version = "py314"

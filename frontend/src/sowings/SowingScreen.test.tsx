@@ -187,6 +187,7 @@ async function openSowings() {
   const user = userEvent.setup();
   render(<App />);
   await user.click(await screen.findByRole("button", { name: "Sowings" }));
+  await screen.findByRole("heading", { name: "Sowings", level: 2 });
   return user;
 }
 
@@ -292,7 +293,9 @@ test("germination tab keeps simple and dated totals distinct and supports correc
       "No dated observations yet. Basic Sowing use does not require them.",
     ),
   ).toBeInTheDocument();
-  expect(screen.getAllByText("Not enough data")).toHaveLength(2);
+  expect(
+    screen.getByText(/add dated observations to see observed germination/i),
+  ).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Add observation" }));
   await user.type(screen.getByLabelText("Date"), "2026-04-14");
   await user.type(screen.getByLabelText("Newly germinated"), "8");
@@ -338,8 +341,22 @@ test("navigation exposes loading, empty, and missing-SeedLot states", async () =
   expect(
     await screen.findByRole("heading", { name: "No Sowings recorded yet" }),
   ).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "+ New Sowing" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "+ New sowing" })).toBeDisabled();
   expect(screen.getByText(/SeedLot is required/)).toBeInTheDocument();
+});
+
+test("Dashboard New sowing route opens the existing form with SeedLot selection", async () => {
+  window.history.replaceState(null, "", "#/sowings?action=create");
+  mockApi(sowingHandler([]));
+  setViewportMatches(true);
+  render(<App />);
+  expect(
+    await screen.findByRole("heading", { name: "Record Sowing" }),
+  ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "+ New sowing" }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByLabelText("SeedLot")).toBeInTheDocument();
 });
 
 test("list failure is explicit and retryable", async () => {
@@ -375,13 +392,15 @@ test("compact summaries, search fields, lifecycle views, selection, detail, and 
   mockApi(sowingHandler([sowing(), completed]));
   const user = await openSowings();
   await screen.findByRole("button", {
-    name: /Tray A.*Clitoria ternatea.*12 germinated \/ 20 sown/s,
+    name: /Tray A.*Clitoria ternatea.*12 of 20 germinated/s,
   });
   expect(screen.queryByText("GA3 test")).not.toBeInTheDocument();
 
   await user.click(screen.getByRole("button", { name: "Completed" }));
   expect(screen.getByText("GA3 test")).toBeInTheDocument();
-  expect(screen.getByText("12 germinated / ~20 sown")).toBeInTheDocument();
+  expect(
+    screen.getByText(/12 germinated · exact seed count unavailable/),
+  ).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "All" }));
 
   const search = screen.getByRole("searchbox", { name: "Search Sowings" });
@@ -392,11 +411,11 @@ test("compact summaries, search fields, lifecycle views, selection, detail, and 
   }
   await user.clear(search);
   const selectedRow = screen.getByRole("button", {
-    name: /Tray A.*Clitoria ternatea.*12 germinated \/ 20 sown/s,
+    name: /Tray A.*Clitoria ternatea.*12 of 20 germinated/s,
   });
   await user.click(selectedRow);
   expect(
-    await screen.findByRole("heading", { name: "Clitoria ternatea" }),
+    await screen.findByRole("heading", { name: "Source" }),
   ).toBeInTheDocument();
   expect(screen.getByText("Coco coir")).toBeInTheDocument();
   expect(screen.getByText("20.5–28 °C")).toBeInTheDocument();
@@ -404,6 +423,117 @@ test("compact summaries, search fields, lifecycle views, selection, detail, and 
   const back = screen.getByRole("button", { name: "← Back to Sowings" });
   await user.click(back);
   expect(selectedRow).toHaveFocus();
+});
+
+test("germination progress uses only an exact positive seed-count denominator", async () => {
+  const records = [
+    sowing(),
+    sowing({
+      id: "approx",
+      label: "Estimated count",
+      quantity: {
+        kind: "seed_count",
+        value: "20",
+        unit: null,
+        is_approximate: true,
+      },
+    }),
+    sowing({
+      id: "weight",
+      label: "Weighed tray",
+      quantity: {
+        kind: "weight",
+        value: "0.5",
+        unit: "g",
+        is_approximate: false,
+      },
+    }),
+    sowing({ id: "unknown", label: "Unknown tray", quantity: null }),
+    sowing({ id: "none", label: "No observations", germinated_count: null }),
+    sowing({
+      id: "zero",
+      label: "Zero exact seeds",
+      quantity: {
+        kind: "seed_count",
+        value: "0",
+        unit: null,
+        is_approximate: false,
+      },
+      germinated_count: 0,
+    }),
+  ];
+  mockApi(
+    sowingHandler(records, (path) =>
+      path === "/api/v1/sowings/zero/germination"
+        ? json({
+            sowing_id: "zero",
+            sowing_date: { precision: "month", year: 2026, month: 8 },
+            quantity: {
+              kind: "seed_count",
+              value: "0",
+              unit: null,
+              is_approximate: false,
+            },
+            simple_germinated_count: 0,
+            observations: [],
+            summary: {
+              observed_cumulative_count: 1,
+              first_germination_on: "2026-08-15",
+              days_to_first_germination: 1,
+              last_observation_on: "2026-08-15",
+              germination_percentage: "50",
+              cumulative_series: [],
+              t50_days: 1,
+            },
+          })
+        : undefined,
+    ),
+  );
+  const user = await openSowings();
+  await screen.findByRole("list", { name: "Sowing collection" });
+  await user.click(screen.getByRole("button", { name: "All" }));
+  const list = await screen.findByRole("list", { name: "Sowing collection" });
+  const row = (label: string) =>
+    within(list).getByRole("button", { name: new RegExp(label) });
+  expect(row("Tray A")).toHaveTextContent("12 of 20 germinated · 60%");
+  expect(within(row("Tray A")).getByRole("progressbar")).toHaveAttribute(
+    "value",
+    "60",
+  );
+  for (const label of ["Estimated count", "Weighed tray", "Unknown tray"]) {
+    expect(row(label)).toHaveTextContent(
+      "12 germinated · exact seed count unavailable",
+    );
+    expect(
+      within(row(label)).queryByRole("progressbar"),
+    ).not.toBeInTheDocument();
+  }
+  expect(row("No observations")).toHaveTextContent("Germination not recorded");
+  expect(row("Zero exact seeds")).toHaveTextContent(
+    "0 germinated · 0 seeds recorded",
+  );
+  expect(
+    within(row("Zero exact seeds")).queryByRole("progressbar"),
+  ).not.toBeInTheDocument();
+  await user.click(row("Zero exact seeds"));
+  expect(
+    await screen.findByRole("heading", { name: "Source" }),
+  ).toBeInTheDocument();
+  const detail = screen.getByRole("region", {
+    name: "Sowing detail and editor",
+  });
+  expect(
+    within(detail).getByText("0 germinated · 0 seeds recorded"),
+  ).toBeInTheDocument();
+  expect(within(detail).queryByRole("progressbar")).not.toBeInTheDocument();
+  await user.click(within(detail).getByRole("tab", { name: "Germination" }));
+  expect(
+    await within(detail).findByText("Simple germinated total"),
+  ).toBeInTheDocument();
+  expect(within(detail).queryByText("50%")).not.toBeInTheDocument();
+  expect(
+    within(detail).queryByText(/Time to 50% \(T50\)/),
+  ).not.toBeInTheDocument();
 });
 
 test("detail loading and failure have semantic states", async () => {
@@ -467,10 +597,12 @@ test("minimal creation requires only an understandable SeedLot choice", async ()
     }),
   );
   const user = await openSowings();
-  const trigger = await screen.findByRole("button", { name: "+ New Sowing" });
+  const trigger = await screen.findByRole("button", { name: "+ New sowing" });
   expect(trigger).toHaveAttribute("aria-expanded", "false");
   await user.click(trigger);
-  expect(trigger).toHaveAttribute("aria-expanded", "true");
+  expect(
+    screen.queryByRole("button", { name: "+ New sowing" }),
+  ).not.toBeInTheDocument();
   const selector = screen.getByLabelText("SeedLot");
   expect(
     within(selector).getByRole("option", {
@@ -520,7 +652,7 @@ test("full creation preserves partial dates, quantity kinds, germination, locati
     }),
   );
   const user = await openSowings();
-  await user.click(await screen.findByRole("button", { name: "+ New Sowing" }));
+  await user.click(await screen.findByRole("button", { name: "+ New sowing" }));
   await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
   await user.type(screen.getByLabelText("Sowing label (optional)"), "Heat mat");
   await user.selectOptions(screen.getByLabelText("Precision"), "year");
@@ -600,7 +732,7 @@ test.each([
     );
     const user = await openSowings();
     await user.click(
-      await screen.findByRole("button", { name: "+ New Sowing" }),
+      await screen.findByRole("button", { name: "+ New sowing" }),
     );
     await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
     await user.selectOptions(screen.getByLabelText("Precision"), precision);
@@ -627,7 +759,7 @@ test("germination and temperature validation applies only to trustworthy bounds"
     }),
   );
   const user = await openSowings();
-  await user.click(await screen.findByRole("button", { name: "+ New Sowing" }));
+  await user.click(await screen.findByRole("button", { name: "+ New sowing" }));
   await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
   await user.selectOptions(screen.getByLabelText("Kind"), "seed_count");
   await user.type(screen.getByLabelText("Amount"), "10");
@@ -665,7 +797,7 @@ test("germination and temperature validation applies only to trustworthy bounds"
   );
   const weightUser = await openSowings();
   await weightUser.click(
-    await screen.findByRole("button", { name: "+ New Sowing" }),
+    await screen.findByRole("button", { name: "+ New sowing" }),
   );
   await weightUser.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
   await weightUser.selectOptions(screen.getByLabelText("Kind"), "weight");
@@ -757,7 +889,7 @@ test("validation, forbidden, and expired-session API failures remain explicit", 
     }),
   );
   const user = await openSowings();
-  await user.click(await screen.findByRole("button", { name: "+ New Sowing" }));
+  await user.click(await screen.findByRole("button", { name: "+ New sowing" }));
   await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
   await user.click(screen.getByRole("button", { name: "Record Sowing" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(

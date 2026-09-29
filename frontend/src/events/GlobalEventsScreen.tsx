@@ -45,11 +45,10 @@ export function GlobalEventsScreen() {
     <section aria-labelledby="global-events-title" className="workspace">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Collection history</p>
+          <p className="eyebrow">Collection activity</p>
           <h2 id="global-events-title">Events</h2>
           <p>
-            Observations, cultivation work and status changes across the
-            collection.
+            Browse cultivation and lifecycle activity across your collection.
           </p>
         </div>
       </header>

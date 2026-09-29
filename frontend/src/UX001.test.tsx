@@ -110,10 +110,15 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
   const desktop = screen.getByRole("navigation", {
     name: "Primary navigation",
   });
-  for (const group of ["Overview", "Collection", "Botany", "Reference"])
+  for (const group of ["Overview", "Collection", "Reference", "Tools"])
     expect(
       within(desktop).getByRole("region", { name: group }),
     ).toBeInTheDocument();
+  expect(
+    within(
+      within(desktop).getByRole("region", { name: "Reference" }),
+    ).getByRole("button", { name: "Botanical identities" }),
+  ).toBeInTheDocument();
   const mobile = screen.getByRole("navigation", {
     name: "Mobile primary navigation",
   });
@@ -128,7 +133,7 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
   ).toHaveAttribute("href", "#/plants?type=group");
   expect(
     screen.getByRole("navigation", { name: "Quick actions" }),
-  ).toHaveTextContent("Add seed lot");
+  ).toHaveTextContent("New seed lot");
   await user.click(within(mobile).getByRole("button", { name: "More" }));
   expect(
     screen.getByRole("navigation", { name: "More navigation" }),

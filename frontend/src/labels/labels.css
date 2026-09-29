@@ -16,6 +16,15 @@
   list-style: none;
   padding: 0;
 }
+.label-capacity {
+  margin: -0.35rem 0 0.65rem;
+  color: #587064;
+  font-size: 0.85rem;
+}
+.label-entries:focus-visible {
+  outline: 3px solid #14704a;
+  outline-offset: -3px;
+}
 .label-entries li {
   padding: 1rem 0;
   border-bottom: 1px solid #cfdbd2;

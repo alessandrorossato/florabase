@@ -153,15 +153,9 @@ export function ProvenanceMapScreen() {
       />
       <header className="screen-heading">
         <div>
-          <p className="eyebrow">Collection provenance</p>
-          <h2 id="provenance-map-title">
-            Where your recorded material originated
-          </h2>
-          <p>
-            Markers are precise provenance sites linked directly to collection
-            records—not current Locations, Supplier addresses, or botanical
-            native ranges.
-          </p>
+          <p className="eyebrow">Collection origins</p>
+          <h2 id="provenance-map-title">Provenance map</h2>
+          <p>Explore precise provenance sites linked to collection records.</p>
         </div>
         <a className="button-link button--secondary" href="#/geography">
           Manage provenance sites

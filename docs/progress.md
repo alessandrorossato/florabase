@@ -1,8 +1,193 @@
 # Engineering progress
 
+## 2026-09-29 — independent shell and propagation UX QA
+
+- Independently swept Dashboard, Seeds, Sowings, Plants and Plant groups, Suppliers, Botanical
+  identities, Locations, Geography and provenance sites, Provenance map, Events, Labels, and Import /
+  Export. Rendered checks covered 1440 × 844, 1024 × 844, 390 × 844, and 1024 × 600. Sidebar hide
+  and reopen preserved the mounted workspace; hidden navigation had no focusable descendants, and
+  state reset on reload. No shared-shell overflow, clipping, or route-width regression was found.
+- Review corrected exact-zero Sowing copy and guarded observed percentages and T50 against zero-count
+  denominators even if a response supplies derived values. Added boundary coverage for exact positive,
+  approximate, weight, unknown, absent and zero quantities in list/detail paths. Test helpers now wait
+  for the route or collection state the test needs; the session-expiry Plant test keeps its login-path
+  assertion without waiting for an authenticated page title.
+- The full frontend suite passed (247 / 247 tests, 26 files). `make check` and `make feature-verify`
+  returned successfully; the latter recorded the final tree, ran disposable integration tests and
+  production builds, and confirmed no Alembic revisions were added. `git diff --check` passed.
+  No files were staged or committed.
+- Follow-up gate review found that pytest-cov's `--cov-fail-under=90` was active, while
+  coverage.py's default zero-decimal precision rounded 89.82% to 90 for its exit-status comparison.
+  The raw pytest process therefore returned status 0; Make, the feature gate, and CI did not swallow
+  an upstream failure. Coverage reports now use two-decimal precision, and a policy regression test
+  locks both the 90% threshold and precise comparison. Focused germination-service tests cover
+  validation and mutation paths; the direct backend run now passes 431 tests at 90.52% with status 0.
+
 This log preserves meaningful verified milestones and current repository state. Exact acceptance
 criteria and current status live in [`features.json`](features.json); Git history retains line-level
 implementation detail.
+
+## 2026-09-29 — shell and Sowings pre-release polish for operator review
+
+- The desktop sidebar now hides and reopens with labeled keyboard controls while keeping the same
+  workspace mounted. At 1440 × 844 and 1024 × 844 in the disposable preview, all groups and the
+  account footer fitted without sidebar scrolling; hiding reclaimed the full workspace width.
+  Navigation is Overview, Collection, Reference and Tools, with Botanical identities under Reference.
+  The shared shell no longer adds an outer page-like background, shadow or clipping edge; it keeps
+  readable maximum width and responsive gutters. Mobile retains its existing navigation behavior.
+- New Seed lot is a single task without a duplicate top action. Essentials and Inventory stay in the
+  fast-entry flow; Acquisition, Storage, Provenance, Seed details and Notes use a labeled disclosure
+  that retains entered values. Quantity, source and partial-date controls are grouped with their
+  related fields; final Add to collection and Cancel actions follow the form. Existing exact,
+  approximate, unknown, supplier, storage and geographic-origin meanings remain unchanged.
+- Sowings now uses a compact scrolling directory and persistent Quick Preview on desktop, with
+  explicit identity, source, context, lifecycle and germination row information. Percentages use only
+  a positive exact Sowing seed count as denominator; approximate, mass and unknown quantities keep
+  text-only germination totals. Overview separates Source, Sowing, Germination, Results, Cultivation
+  and Notes. Direct creation and editing use grouped fields and additional details; the Seed lot
+  guided task remains distinct. Germination observations remain evidence, with derived values shown
+  only when available. Descendant tasks distinguish the result and resulting Sowing state.
+- The full frontend suite passed with one worker (247 tests across 26 files) before the final mobile
+  row and descendant-copy corrections. After those edits, formatting, lint, TypeScript, production
+  build, the exact affected descendant test and whitespace checks passed. API drift passed earlier;
+  neither final edit touched the API. A broader
+  focused rerun on the loaded host missed several lazy-screen waits; that run is not counted as a
+  pass. `make check` passed formatting, lint, typing and all 425 backend unit tests, but its two
+  Docker frontend runs exited with different slow-test failures (246/247 and 242/247). The
+  originally timed-out Geography case then passed unchanged in the same Docker image; the two
+  variable Plants/Seeds files passed unchanged with one worker (48/48). No test timeout, assertion
+  or implementation was weakened for the loaded
+  host. The disposable browser pass checked shell fit, hide/show, workspace width, Seeds creation,
+  and Sowings directory, preview and detail at 1440 × 844 and 1024 × 844. A reopened 390 × 844
+  preview exposed cramped Sowing row wrapping; a mobile-only grid correction was rebuilt and visually
+  rechecked. Mobile Seed lot
+  create, additional details, Sowing detail, New Sowing, Germination and Sowing-to-Plant forms used
+  natural page scrolling without horizontal overflow. A 1440 × 844 route sweep covered Dashboard,
+  Plants, Events, Botanical identities, Suppliers, Locations, Geography, Labels, Import / Export
+  and the provenance map for headings and shell width. At 1024 × 600 the sidebar navigation scrolls
+  while its account footer stays visible. The disposable stack was removed. No backend, API, schema,
+  migration, dependency, eager route import or per-row request changed. All work remains unstaged
+  and uncommitted; `make feature-verify` is reserved for the authorized later phase.
+
+## 2026-09-28 — Seeds vertical UI polish for operator review
+
+- Dashboard Quick actions now contains four collection and four reference creation links, each using
+  the existing route and creation form. The Tools shortcuts were removed from that panel; both tools
+  remain in the sidebar. Clicking an active sidebar destination returns to its canonical root and
+  resets transient workspace state without a document reload. An edited form asks before discarding
+  changes. Plants retains `+ New plant or group` because that button still opens a choice between
+  individual Plant and PlantGroup creation.
+- Seeds now gives its inventory more desktop width, compact two-line rows, a bounded list scroll
+  area, and a persistent inspector. Rows, preview and detail distinguish active remaining quantity
+  from a historical recorded quantity and preserve exact, approximate and unknown wording. The
+  inspector shows the available Start sowing action and concise status, storage and Supplier facts.
+  Overview uses separate Inventory, Source & origin, Dates & condition and Notes groups, with
+  consistent internal links. The editor groups every existing field by task and keeps advanced
+  fields visible during correction.
+- Guided sowing shows the source lot and its state before entry, then requires an explicit choice to
+  keep inventory unchanged, use part or use the whole lot. Exact compatible partial use previews
+  its remainder; approximate partial use asks for a confirmed estimate without arithmetic; unknown
+  stays unknown. The final step states the resulting operation and retains cancel, validation and
+  conflict recovery. No backend, API, schema, migration, dependency or per-row data request changed.
+- An authoritative original denominator is not stored for SeedLots. Receipts and current Sowings do
+  not establish an all-time total after corrections and reversals, so a numeric utilization bar or
+  used percentage would imply unsupported precision. This remains a domain decision for a separate
+  increment; this pass shows the stored quantity and lifecycle truthfully.
+- The disposable populated preview was reviewed at 1440 × 844, 1024 × 844 and 390 × 844 for Seeds
+  directory, selection, filters, search, preview, detail tabs, editor, guided sowing, validation and
+  active-sidebar reset. Disposable approximate, unknown and exhausted lots confirmed truthful row,
+  preview and guided-use states alongside the exact fixture. Desktop list scroll and mobile natural
+  document scroll were confirmed with
+  no horizontal overflow. The final mobile pass restored bottom clearance below the fixed navigation
+  so the guided form's Cancel link and editor actions remain reachable. The preview was removed after
+  review. Focused tests passed, the full
+  frontend suite passed (245 tests across 26 files), and `make check` passed formatting, lint,
+  backend and frontend type checks, backend and frontend tests, and API drift. Production build and
+  whitespace checks also passed. Changes remain unstaged and uncommitted; independent Seeds visual
+  review precedes `make feature-verify`.
+
+## 2026-09-28 — cross-application UI consistency for review
+
+- Completed the existing Dashboard launcher with compact Create, Reference workspaces and Tools
+  groups. New seed lot, sowing, plant and plant group links open their existing creation flows; the
+  sowing link still requires an explicit SeedLot choice. Botanical identities, Suppliers, Locations
+  and Geography link to their workspaces because they have no canonical direct-create route. Events
+  remain contextual to a Plant or PlantGroup, so there is no global Event shortcut.
+- Aligned major workspace eyebrow, title and one-sentence subtitle copy with the reviewed product
+  terminology. Plants now says `+ New plant or group` because its button offers both creation paths;
+  Seed lots and Sowings use explicit sentence-case actions. Mobile Seeds, Sowings and Plants titles
+  now use the same compact 32 px scale as the other workspaces. Existing detail headers were
+  inspected without changing their record structure or content.
+- The route title flash came from bare loading/error `<h2>` elements on Seeds, Sowings and Plants
+  inheriting the global large heading style before each compact ready header appeared. These states
+  now share one `WorkspaceIntro` structure and copy. The lazy-route Suspense fallback is a restrained,
+  title-free skeleton; route-level lazy imports and the separate chunk-failure recovery boundary remain.
+  A deferred-module test covers the unresolved-chunk transition without introducing a duplicate title.
+- Live disposable populated-preview navigation covered Dashboard → Seeds → Sowings → Plants → Events
+  → Botanical identities → Suppliers → Geography → Labels → Dashboard at 1440 × 844 and 1024 × 844;
+  mobile navigation and the same major routes were reviewed at 390 × 844. Loading and ready headers,
+  the mobile More menu, four creation links, Quick actions, detail header structure, sidebar stability
+  and horizontal overflow were inspected. No oversized title, competing header, white flash or
+  horizontal overflow was observed. The preview was removed after review.
+- Focused frontend tests passed (64 in the final focused rerun), followed by the full frontend suite
+  (235 tests across 26 files); lint, formatting, TypeScript, production build and `git diff --check`
+  passed. The build retains 39 lazy JavaScript chunks, 761,743 raw JS bytes total (1,396 above the
+  preceding Dashboard pass), largest chunk 208,532 bytes (298 above), and 114,488 raw CSS bytes
+  (891 above), without a Vite size advisory. No dependency, eager route/map loading, backend, API,
+  schema or migration changed. This review boundary remains unstaged and uncommitted; the canonical
+  `make feature-verify` gate is reserved for the later authorized phase.
+
+## 2026-09-28 — Dashboard and sidebar-brand review pass
+
+- On `fix/release-ui-polish`, gave the existing serif sidebar wordmark a dedicated block with aligned
+  left padding, a restrained divider and normal letter spacing. Live inspection caught inherited
+  negative heading letter spacing that had visually compressed the brand; the corrected wordmark is
+  fully readable without widening the sidebar. The account footer and compact shell remain in place.
+- Dashboard keeps its existing search, filters, four holding counts, Event data and four actions.
+  Below the compact snapshot, Recent activity occupies the primary desktop column and Quick actions
+  sits in a compact secondary panel. The activity list alone scrolls beneath its persistent heading
+  and View all Events link. Compact Event rows align kind/date, record/badge and botanical context;
+  internal links use the Florabase green for normal and visited states, with visible keyboard focus.
+  Count links now announce their label and value clearly to assistive technology.
+- The populated disposable preview was inspected at 1440 × 844, 1024 × 844 and 390 × 844. Both
+  desktop widths had no document or horizontal overflow; activity scrolls within its column. At
+  1024, search moves below the heading to preserve a usable width while the two columns remain.
+  Mobile presents header, search, 2 × 2 snapshot, actions and activity in order, with natural page
+  scrolling and no nested activity scroll pane. The preview was removed after review.
+- Focused Dashboard/shell tests passed (58), full frontend tests passed (233), and frontend lint,
+  formatting, TypeScript and final production build passed. The build retains 39 lazy JavaScript
+  chunks, totaling 760,347 raw bytes (156 above the previous polish receipt); largest is 208,234
+  bytes (26 above). CSS totals 113,597 raw bytes including the existing Labels stylesheet, with no
+  Vite size advisory. No dependency, API, backend, schema or migration changed. The Dashboard visual
+  direction awaits operator review; this pass remains unstaged and uncommitted.
+
+## 2026-09-28 — final pre-release UI polish for visual review
+
+- Kept the frozen 0.1.0 product scope and current `fix/release-ui-polish` branch. The full-height
+  sidebar now carries brand, account and Sign out; the main masthead is gone. Shared compact headers
+  and flex/grid workspace sizing replace viewport subtraction heights on desktop. Seeds, Sowings,
+  Plants, Events, Botanical identities, Suppliers, Locations, Geography hierarchy and provenance
+  sites use their result region as the principal scroll surface. Dashboard's activity list takes
+  the remaining space. Mobile retains its navigation and natural document scrolling.
+- Suppliers use compact list rows with direct-record context. Geography now exposes Places,
+  Provenance sites and Map as peer views, retaining the stored-coordinate map and accessible
+  companion list. Labels retain the approved A4 print geometry and temporary state while showing
+  remaining sheet capacity and keeping the record picker visible during desktop composition.
+- No domain, API, schema, migration, authentication, photo, map-provider or persistence contract
+  changed. PERF-001 route and optional-map lazy loading remains in place. Browser review used the
+  guarded disposable populated fixture at 1440 × 844, 1024 × 844 and 390 × 844; directory, timeline,
+  hierarchy, selection, search and mobile scroll ownership were inspected without changing operator
+  data. The fixture was removed after review. Empty and loading states, long botanical names, label
+  copies and removal remain covered by focused component tests; physical label geometry was unchanged.
+- Focused frontend checks passed: 81 App/Labels cases on the final code. `make check` passed backend and
+  frontend formatting, lint and type checks, 425 backend unit tests, 232 frontend tests, and API
+  drift. The existing pytest-cov 89.82% warning still prints against a whole-percent 90% setting,
+  while pytest and the canonical `make check` exit successfully as explained in PERF-001. `pnpm
+  build`, feature graph validation (81 features), and whitespace checks passed. The production build
+  retains 39 JavaScript chunks: 760,191 raw bytes total versus PERF-001's 759,387; largest chunk
+  208,208 versus 207,746 bytes, with no Vite size advisory. CSS grows to 110,231 raw bytes from the
+  documented 100,981 because the shared viewport layouts are new. No dependency or eager route/map
+  loading was added. Independent visual review remains before any release-hardening work.
 
 ## 2026-09-27 — PERF-001 implemented for independent review
 
@@ -1348,8 +1533,9 @@ implementation detail.
   `ATTACHMENT-003`, `IMPORT-001`, `SEARCH-001`, and `UX-002` through `UX-006` are implemented in the
   graph; UX-004, UX-005, and UX-006 have landed on `main`, but their graph status has not been
   promoted to `verified`.
-  `PERF-001` is implemented for independent review on the frozen 0.1.0 scope before `RELEASE-001`
-  hardening and acceptance; its measurement report records the remaining costs and review caveats.
+  `PERF-001` is verified on the frozen 0.1.0 scope. The agreed blocking cross-application UI polish
+  is awaiting operator visual review before `RELEASE-001` hardening and acceptance; PERF-001's
+  measurement report records the remaining costs and review caveats.
   Optional product candidates are not dependencies of either required increment. Licensing,
   version/upgrade policy, and release readiness remain to be resolved in `RELEASE-001`.
 - `CI-001` repository automation is verified through the merged pull-request workflow and protected
@@ -1357,6 +1543,6 @@ implementation detail.
   Other unblocked P2 product items are listed by the machine-readable dependency graph rather than
   prioritized here.
 - Deliberately absent: generic thumbnails/derivatives beyond the fixed local identity-cover compact
-  response, collection-photo primary designations, identity-cover history or galleries, automatic or
+  response, identity-cover history or galleries, automatic or
   provider image discovery, dashboard cover rendering, PWA behavior,
   offline/synchronization behavior, generic graphs, and multi-user collaboration.

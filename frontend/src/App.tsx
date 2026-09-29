@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 import type { components } from "./api/schema";
 import { AuthProvider } from "./auth/AuthProvider";
@@ -215,12 +215,9 @@ const desktopGroups: {
     ],
   },
   {
-    label: "Botany",
-    items: [{ id: "identities", label: "Botanical identities" }],
-  },
-  {
     label: "Reference",
     items: [
+      { id: "identities", label: "Botanical identities" },
       { id: "locations", label: "Locations" },
       { id: "suppliers", label: "Suppliers" },
       { id: "geography", label: "Geography" },
@@ -235,12 +232,27 @@ const desktopGroups: {
   },
 ];
 
+function WorkspaceLoading() {
+  return (
+    <div className="workspace-route-loading" role="status">
+      <span aria-hidden="true" className="workspace-route-loading__eyebrow" />
+      <span aria-hidden="true" className="workspace-route-loading__title" />
+      <p>Loading workspace…</p>
+    </div>
+  );
+}
+
 function ApplicationShell() {
   const auth = useAuth();
   const state = auth.state;
   const [health, setHealth] = useState<HealthState>({ status: "loading" });
   const [route, setRoute] = useState<Route>(currentRoute);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [navigationReset, setNavigationReset] = useState(0);
+  const [navigationVisible, setNavigationVisible] = useState(true);
+  const showNavigationRef = useRef<HTMLButtonElement>(null);
+  const hideNavigationRef = useRef<HTMLButtonElement>(null);
+  const formChanged = useRef(false);
 
   useEffect(() => {
     const update = () => {
@@ -254,10 +266,29 @@ function ApplicationShell() {
     };
   }, []);
 
+  useEffect(() => {
+    formChanged.current = false;
+  }, [route.section]);
+
   function navigate(section: Section) {
-    window.history.pushState(null, "", `#/${section}`);
+    const sameDestination = route.section === section;
+    if (
+      formChanged.current &&
+      document.querySelector(".app-content form:not([role='search'])") &&
+      !window.confirm(
+        "Discard unsaved form changes and return to the workspace?",
+      )
+    )
+      return;
+    formChanged.current = false;
+    const target = `#/${section}`;
+    if (window.location.hash === target)
+      window.history.replaceState(null, "", target);
+    else window.history.pushState(null, "", target);
     setRoute({ section });
+    if (sameDestination) setNavigationReset((value) => value + 1);
     setMoreOpen(false);
+    if (window.scrollY > 0) window.scrollTo(0, 0);
   }
 
   useEffect(() => {
@@ -288,12 +319,30 @@ function ApplicationShell() {
   const signedInAs = state.session.display_name ?? state.session.login_name;
 
   return (
-    <div className="application-shell">
-      <aside className="desktop-sidebar">
+    <div
+      className={`application-shell${navigationVisible ? "" : " navigation-collapsed"}`}
+    >
+      <aside className="desktop-sidebar" aria-label="Application sidebar">
         <div className="desktop-sidebar__content">
-          <a className="brand" href="#/dashboard">
-            Florabase
-          </a>
+          <div className="sidebar-top">
+            <h1 className="sidebar-brand" id="page-title">
+              <a className="brand" href="#/dashboard">
+                Florabase
+              </a>
+            </h1>
+            <button
+              type="button"
+              className="sidebar-toggle sidebar-toggle--hide"
+              ref={hideNavigationRef}
+              aria-label="Hide navigation"
+              onClick={() => {
+                setNavigationVisible(false);
+                window.setTimeout(() => showNavigationRef.current?.focus(), 0);
+              }}
+            >
+              <span aria-hidden="true">‹</span>
+            </button>
+          </div>
           <nav aria-label="Primary navigation">
             {desktopGroups.map((group) => (
               <section key={group.label} aria-label={group.label}>
@@ -317,29 +366,53 @@ function ApplicationShell() {
             ))}
           </nav>
         </div>
-      </aside>
-      <section aria-labelledby="page-title" className="app-content">
-        <div className="session-bar app-header">
-          <div>
-            <p className="eyebrow">Self-hosted botanical records</p>
-            <h1 id="page-title">Florabase</h1>
-          </div>
-          <div>
-            <p>Signed in as {signedInAs}</p>
-            <button
-              className="button--secondary"
-              type="button"
-              disabled={state.status === "logging-out"}
-              onClick={() => {
-                void auth.logOut();
-              }}
-            >
-              {state.status === "logging-out" ? "Signing out…" : "Sign out"}
-            </button>
-          </div>
+        <div className="sidebar-utility">
+          <p>Signed in as {signedInAs}</p>
+          <button
+            className="button--secondary"
+            type="button"
+            disabled={state.status === "logging-out"}
+            onClick={() => {
+              void auth.logOut();
+            }}
+          >
+            {state.status === "logging-out" ? "Signing out…" : "Sign out"}
+          </button>
         </div>
-        <WorkspaceBoundary key={route.section}>
-          <Suspense fallback={<p aria-live="polite">Loading workspace…</p>}>
+      </aside>
+      <section
+        aria-label="Workspace content"
+        className="app-content"
+        onChangeCapture={(event) => {
+          if (
+            event.target instanceof Element &&
+            event.target.closest("form:not([role='search'])")
+          )
+            formChanged.current = true;
+        }}
+        onClickCapture={(event) => {
+          if (
+            event.target instanceof Element &&
+            event.target.closest("form [role='option']")
+          )
+            formChanged.current = true;
+        }}
+      >
+        <button
+          type="button"
+          className="sidebar-toggle sidebar-toggle--show"
+          ref={showNavigationRef}
+          aria-label="Show navigation"
+          onClick={() => {
+            setNavigationVisible(true);
+            window.setTimeout(() => hideNavigationRef.current?.focus(), 0);
+          }}
+        >
+          <span aria-hidden="true">☰</span>
+          <span>Open navigation</span>
+        </button>
+        <WorkspaceBoundary key={`${route.section}:${String(navigationReset)}`}>
+          <Suspense fallback={<WorkspaceLoading />}>
             {route.section === "sowings" &&
             route.action === "start" &&
             route.seedLotId ? (
@@ -362,7 +435,11 @@ function ApplicationShell() {
                 startCreating={route.action === "create"}
               />
             ) : route.section === "sowings" ? (
-              <SowingScreen initialId={route.recordId} initialTab={route.tab} />
+              <SowingScreen
+                initialId={route.recordId}
+                initialTab={route.tab}
+                startCreating={route.action === "create"}
+              />
             ) : route.section === "plants" ? (
               <PlantScreen
                 initialId={route.recordId}
@@ -385,12 +462,14 @@ function ApplicationShell() {
               <BotanicalIdentityScreen
                 initialId={route.recordId}
                 initialTab={route.tab}
+                startCreating={route.action === "create"}
               />
             ) : route.section === "suppliers" ? (
               <SupplierScreen
                 key={route.recordId ?? "directory"}
                 initialId={route.recordId}
                 initialTab={route.tab}
+                startCreating={route.action === "create"}
               />
             ) : route.section === "import-export" ? (
               <ImportExportScreen />
@@ -405,12 +484,14 @@ function ApplicationShell() {
               <LocationScreen
                 key={route.recordId ?? "directory"}
                 initialId={route.recordId}
+                startCreating={route.action === "create"}
               />
             ) : (
               <GeographyScreen
                 key={route.recordId ?? route.placeId ?? "directory"}
                 initialSiteId={route.recordId}
                 initialPlaceId={route.placeId}
+                startCreating={route.action === "create"}
               />
             )}
           </Suspense>
@@ -456,8 +537,9 @@ function ApplicationShell() {
             key={item.id}
             href={`#/${item.id}`}
             aria-current={route.section === item.id ? "page" : undefined}
-            onClick={() => {
-              setMoreOpen(false);
+            onClick={(event) => {
+              event.preventDefault();
+              navigate(item.id as Section);
             }}
           >
             {item.label}

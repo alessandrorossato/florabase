@@ -23,6 +23,7 @@ import {
   Breadcrumbs,
   DetailHeader,
   DetailTabs,
+  WorkspaceIntro,
 } from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
 import { EventJournal } from "../events/EventJournal";
@@ -683,6 +684,14 @@ function Detail({
   );
 }
 
+const plantPage = {
+  eyebrow: "Living collection",
+  title: "Plants",
+  titleId: "plants-title",
+  description:
+    "Manage individual plants and groups, their locations, history, and lineage.",
+};
+
 export function PlantScreen({
   initialId,
   initialKind = "plant",
@@ -978,15 +987,21 @@ export function PlantScreen({
 
   if (!references && collection.status === "loading")
     return (
-      <section className="workspace" aria-labelledby="plants-title">
-        <h2 id="plants-title">Plants</h2>
+      <section
+        className="workspace plants-workspace"
+        aria-labelledby="plants-title"
+      >
+        <WorkspaceIntro {...plantPage} />
         <p role="status">Loading Plants…</p>
       </section>
     );
   if (collection.status === "error" || !references)
     return (
-      <section className="workspace" aria-labelledby="plants-title">
-        <h2 id="plants-title">Plants</h2>
+      <section
+        className="workspace plants-workspace"
+        aria-labelledby="plants-title"
+      >
+        <WorkspaceIntro {...plantPage} />
         <div className="notice notice--error" role="alert">
           <p>Florabase could not load the Plant collection or its choices.</p>
           <button
@@ -1451,29 +1466,24 @@ export function PlantScreen({
       className="workspace plants-workspace"
       aria-labelledby="plants-title"
     >
-      <div className="workspace-intro seed-heading">
-        <div>
-          <p className="eyebrow">Living collection</p>
-          <h2 id="plants-title">Plants</h2>
-          <p>
-            Manage individual specimens and groups together without losing their
-            origin.
-          </p>
-        </div>
-        <button
-          type="button"
-          ref={creationTriggerRef}
-          aria-expanded={creationExpanded}
-          aria-controls="new-plant-panel"
-          disabled={references.identities.length === 0}
-          onClick={() => {
-            if (creationExpanded) focusCreation();
-            else startCreate();
-          }}
-        >
-          + New
-        </button>
-      </div>
+      <WorkspaceIntro
+        {...plantPage}
+        actions={
+          <button
+            type="button"
+            ref={creationTriggerRef}
+            aria-expanded={creationExpanded}
+            aria-controls="new-plant-panel"
+            disabled={references.identities.length === 0}
+            onClick={() => {
+              if (creationExpanded) focusCreation();
+              else startCreate();
+            }}
+          >
+            + New plant or group
+          </button>
+        }
+      />
       {references.identities.length === 0 && (
         <div className="notice" role="status">
           <p>
@@ -1540,12 +1550,19 @@ export function PlantScreen({
           {records.length === 0 ? (
             <div className="profile-empty">
               <h4>No Plants recorded yet</h4>
-              <p>Use + New to record the first Plant or Plant group.</p>
+              <p>
+                Use + New plant or group to record the first Plant or Plant
+                group.
+              </p>
             </div>
           ) : visible.length === 0 ? (
             <p>No Plants match this search and filter view.</p>
           ) : (
-            <ul className="seed-list" aria-label="Plants collection">
+            <ul
+              className="seed-list"
+              aria-label="Plants collection"
+              tabIndex={0}
+            >
               {visible.map((record) => {
                 const value = record.value;
                 return (

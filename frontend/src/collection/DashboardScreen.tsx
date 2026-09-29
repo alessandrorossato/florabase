@@ -63,7 +63,7 @@ function DashboardOverview() {
         </div>
       )}
       {state.status === "ready" && (
-        <>
+        <div className="dashboard-overview">
           <section
             aria-labelledby="collection-snapshot-title"
             className="dashboard-snapshot"
@@ -97,57 +97,100 @@ function DashboardOverview() {
                   href: "#/plants?type=group",
                 },
               ].map((item) => (
-                <a href={item.href} key={item.label}>
+                <a
+                  aria-label={`${item.label}: ${String(item.value)}`}
+                  href={item.href}
+                  key={item.label}
+                >
                   <span>{item.label}</span>
                   <strong>{item.value}</strong>
                 </a>
               ))}
             </div>
           </section>
-          <nav aria-label="Quick actions" className="dashboard-quick-actions">
-            <h3>Quick actions</h3>
-            <a
-              className="button-link button--secondary"
-              href="#/seeds?action=create"
-            >
-              Add seed lot
-            </a>
-            <a
-              className="button-link button--secondary"
-              href="#/plants?action=create&kind=plant"
-            >
-              Add plant
-            </a>
-            <a
-              className="button-link button--secondary"
-              href="#/plants?action=create&kind=group"
-            >
-              Add plant group
-            </a>
-            <a className="button-link button--secondary" href="#/import-export">
-              Import / Export
-            </a>
-          </nav>
-          <section
-            aria-labelledby="recent-activity-title"
-            className="dashboard-activity"
-          >
-            <div className="section-heading">
-              <div>
-                <p className="eyebrow">Across the collection</p>
-                <h3 id="recent-activity-title">Recent activity</h3>
+          <div className="dashboard-main">
+            <nav aria-label="Quick actions" className="dashboard-quick-actions">
+              <h3>Quick actions</h3>
+              <div className="dashboard-action-group">
+                <h4>Collection</h4>
+                <div className="dashboard-action-links">
+                  <a
+                    className="button-link button--secondary"
+                    href="#/seeds?action=create"
+                  >
+                    New seed lot
+                  </a>
+                  <a
+                    className="button-link button--secondary"
+                    href="#/sowings?action=create"
+                  >
+                    New sowing
+                  </a>
+                  <a
+                    className="button-link button--secondary"
+                    href="#/plants?action=create&kind=plant"
+                  >
+                    New plant
+                  </a>
+                  <a
+                    className="button-link button--secondary"
+                    href="#/plants?action=create&kind=group"
+                  >
+                    New plant group
+                  </a>
+                </div>
               </div>
-              <a href="#/events">View all Events</a>
-            </div>
-            {state.value.recent_events.length ? (
-              <EventFeed compact events={state.value.recent_events} />
-            ) : (
-              <div className="empty-state">
-                <p>No Events have been recorded yet.</p>
+              <div className="dashboard-action-group">
+                <h4>Reference</h4>
+                <div className="dashboard-action-links">
+                  <a
+                    className="button-link button--secondary"
+                    href="#/identities?action=create"
+                  >
+                    New botanical identity
+                  </a>
+                  <a
+                    className="button-link button--secondary"
+                    href="#/suppliers?action=create"
+                  >
+                    New supplier
+                  </a>
+                  <a
+                    className="button-link button--secondary"
+                    href="#/locations?action=create"
+                  >
+                    New location
+                  </a>
+                  <a
+                    className="button-link button--secondary"
+                    href="#/geography?action=create"
+                  >
+                    New local place
+                  </a>
+                </div>
               </div>
-            )}
-          </section>
-        </>
+            </nav>
+            <section
+              aria-labelledby="recent-activity-title"
+              className="dashboard-activity"
+            >
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">Across the collection</p>
+                  <h3 id="recent-activity-title">Recent activity</h3>
+                </div>
+                <a href="#/events">View all Events</a>
+              </div>
+              {state.value.recent_events.length ? (
+                <EventFeed compact events={state.value.recent_events} />
+              ) : (
+                <div className="empty-state">
+                  <p>No Events have been recorded yet.</p>
+                </div>
+              )}
+            </section>
+          </div>
+        </div>
       )}
     </>
   );
@@ -164,7 +207,7 @@ export function DashboardScreen() {
         <div>
           <p className="eyebrow">Collection overview</p>
           <h2 id="dashboard-title">Dashboard</h2>
-          <p>What is in your collection, and what happened recently.</p>
+          <p>See what is in your collection and what happened recently.</p>
         </div>
         {search.header}
       </header>

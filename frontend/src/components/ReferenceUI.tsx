@@ -6,16 +6,18 @@ export function PageHeader({
   titleId,
   description,
   actions,
+  eyebrow = "Collection reference",
 }: {
   title: string;
   titleId: string;
   description: string;
   actions: ReactNode;
+  eyebrow?: string;
 }) {
   return (
     <header className="page-header">
       <div>
-        <p className="eyebrow">Collection reference</p>
+        <p className="eyebrow">{eyebrow}</p>
         <h2 id={titleId}>{title}</h2>
         <p>{description}</p>
       </div>
