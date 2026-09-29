@@ -131,6 +131,7 @@ function PlaceTree({
   if (children.length === 0) return null;
   return (
     <ul
+      tabIndex={parentId ? undefined : 0}
       className={
         parentId ? "location-tree location-tree--nested" : "location-tree"
       }
@@ -181,9 +182,11 @@ function PlaceTree({
 export function GeographyScreen({
   initialSiteId,
   initialPlaceId,
+  startCreating = false,
 }: {
   initialSiteId?: string;
   initialPlaceId?: string;
+  startCreating?: boolean;
 }) {
   const auth = useAuth();
   const [directory, setDirectory] = useState<DirectoryState>({
@@ -214,6 +217,21 @@ export function GeographyScreen({
     open: openCreation,
     close: closeCreation,
   } = useCreationDisclosure();
+  const dashboardCreationStarted = useRef(false);
+  useEffect(() => {
+    if (
+      !startCreating ||
+      directory.status !== "ready" ||
+      dashboardCreationStarted.current
+    )
+      return;
+    dashboardCreationStarted.current = true;
+    setMode("places");
+    setCreateName("");
+    setCreateParentId("");
+    setSave({ status: "idle" });
+    openCreation();
+  }, [directory.status, openCreation, startCreating]);
   const pending = save.status === "saving";
 
   useEffect(() => {
@@ -381,11 +399,15 @@ export function GeographyScreen({
   );
 
   return (
-    <section aria-labelledby="geography-title" className="workspace">
+    <section
+      aria-labelledby="geography-title"
+      className="workspace geography-workspace"
+    >
       <PageHeader
         title="Geography"
         titleId="geography-title"
-        description="Named geographic areas and precise stored collection origins."
+        eyebrow="Geographic reference"
+        description="Manage named places and precise collection provenance sites."
         actions={
           mode === "places" ? (
             <button
@@ -406,8 +428,8 @@ export function GeographyScreen({
       />
       <DirectorySearch
         id="geography-filter"
-        label="Search geography"
-        placeholder="Place, path, or provenance site"
+        label={mode === "places" ? "Search places" : "Search provenance sites"}
+        placeholder={mode === "places" ? "Place or path" : "Provenance site"}
         value={filter}
         onChange={setFilter}
         className="geography-search"
@@ -415,12 +437,21 @@ export function GeographyScreen({
       <nav aria-label="Geography views" className="geography-view-nav">
         <button
           type="button"
-          aria-pressed={mode !== "map"}
+          aria-pressed={mode === "places"}
           onClick={() => {
             setMode("places");
           }}
         >
-          Browse
+          Places
+        </button>
+        <button
+          type="button"
+          aria-pressed={mode === "sites"}
+          onClick={() => {
+            setMode("sites");
+          }}
+        >
+          Provenance sites
         </button>
         <button
           type="button"
@@ -432,28 +463,6 @@ export function GeographyScreen({
           Map
         </button>
       </nav>
-      {mode !== "map" && (
-        <nav aria-label="Browse geography" className="geography-subnav">
-          <button
-            type="button"
-            aria-pressed={mode === "places"}
-            onClick={() => {
-              setMode("places");
-            }}
-          >
-            Places
-          </button>
-          <button
-            type="button"
-            aria-pressed={mode === "sites"}
-            onClick={() => {
-              setMode("sites");
-            }}
-          >
-            Provenance sites
-          </button>
-        </nav>
-      )}
       {mode === "places" && (
         <>
           <div className="reference-split">
@@ -487,7 +496,11 @@ export function GeographyScreen({
                   )}
                 {directory.status === "ready" &&
                   (filter.trim() ? (
-                    <ul className="identity-list">
+                    <ul
+                      className="identity-list"
+                      aria-label="Matching places"
+                      tabIndex={0}
+                    >
                       {matches.map((place) => (
                         <li key={place.id}>
                           <PlaceButton

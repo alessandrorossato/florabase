@@ -602,7 +602,8 @@ function SupplierFields({
 export function SupplierScreen({
   initialId,
   initialTab,
-}: { initialId?: string; initialTab?: string } = {}) {
+  startCreating = false,
+}: { initialId?: string; initialTab?: string; startCreating?: boolean } = {}) {
   const auth = useAuth();
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
@@ -627,6 +628,19 @@ export function SupplierScreen({
     open: openCreation,
     close: closeCreation,
   } = useCreationDisclosure();
+  const dashboardCreationStarted = useRef(false);
+  useEffect(() => {
+    if (
+      !startCreating ||
+      directory.status !== "ready" ||
+      dashboardCreationStarted.current
+    )
+      return;
+    dashboardCreationStarted.current = true;
+    createForm.current?.reset();
+    setSave({ status: "idle" });
+    openCreation();
+  }, [directory.status, openCreation, startCreating]);
   const pending = save.status === "saving";
 
   useEffect(() => {
@@ -837,7 +851,8 @@ export function SupplierScreen({
       <PageHeader
         title="Suppliers"
         titleId="suppliers-title"
-        description="People and organizations that directly supplied collection material."
+        eyebrow="Collection sources"
+        description="Manage the sources from which collection material was directly acquired."
         actions={
           <button
             type="button"
@@ -857,7 +872,7 @@ export function SupplierScreen({
         <div className="directory-column">
           <section
             aria-labelledby="supplier-directory-title"
-            className="identity-directory"
+            className="identity-directory supplier-directory"
           >
             <h3 id="supplier-directory-title">Supplier directory</h3>
             <DirectorySearch
@@ -900,7 +915,7 @@ export function SupplierScreen({
                 </p>
               )}
             {visible.length > 0 && (
-              <ul className="identity-list">
+              <ul className="identity-list" aria-label="Suppliers" tabIndex={0}>
                 {visible.map((supplier) => (
                   <li key={supplier.id}>
                     <button

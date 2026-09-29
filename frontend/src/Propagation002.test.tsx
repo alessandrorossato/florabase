@@ -165,14 +165,14 @@ test("guided exact SeedLot usage previews and submits the authoritative partial 
     await screen.findByRole("heading", { name: "Start sowing" }),
   ).toBeInTheDocument();
   await user.type(screen.getByLabelText("Amount"), "20");
-  await user.click(
-    screen.getByRole("button", { name: "Continue to SeedLot usage" }),
-  );
-  expect(screen.getByText(/Subtract → 100 remaining/)).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Review seed usage" }));
+  const partial = screen.getByRole("radio", { name: /Use part of the lot/ });
+  expect(partial).not.toBeChecked();
+  await user.click(partial);
   expect(
-    screen.getByRole("radio", { name: /Subtract → 100 remaining/ }),
-  ).toBeChecked();
-  await user.dblClick(screen.getByRole("button", { name: "Create Sowing" }));
+    screen.getByText(/100 seeds will remain in the source lot/),
+  ).toBeInTheDocument();
+  await user.dblClick(screen.getByRole("button", { name: "Start sowing" }));
   expect(submissions).toBe(1);
   expect(submitted).toMatchObject({
     source_adjustment: { mode: "partial", resulting_quantity: null },
@@ -208,13 +208,11 @@ test("exact use-all exhausts the source only when the Sowing amount matches", as
   render(<App />);
   await screen.findByRole("heading", { name: "Start sowing" });
   await user.type(screen.getByLabelText("Amount"), "120");
-  await user.click(
-    screen.getByRole("button", { name: "Continue to SeedLot usage" }),
-  );
-  const useAll = screen.getByRole("radio", { name: /Use all/ });
+  await user.click(screen.getByRole("button", { name: "Review seed usage" }));
+  const useAll = screen.getByRole("radio", { name: /Use the whole lot/ });
   expect(useAll).toBeEnabled();
   await user.click(useAll);
-  await user.click(screen.getByRole("button", { name: "Create Sowing" }));
+  await user.click(screen.getByRole("button", { name: "Start sowing" }));
   expect(submitted).toMatchObject({ source_adjustment: { mode: "use_all" } });
 });
 
@@ -237,20 +235,20 @@ test("oversubscription is visible, disables arithmetic, and still permits no adj
   render(<App />);
   await screen.findByRole("heading", { name: "Start sowing" });
   await user.type(screen.getByLabelText("Amount"), "130");
-  await user.click(
-    screen.getByRole("button", { name: "Continue to SeedLot usage" }),
-  );
+  await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   expect(screen.getByRole("alert")).toHaveTextContent(
     "exceeds the exact source quantity",
   );
   expect(
-    screen.queryByRole("radio", { name: /Subtract/ }),
+    screen.queryByRole("radio", { name: /Use part of the lot/ }),
   ).not.toBeInTheDocument();
-  expect(screen.getByRole("radio", { name: /Use all/ })).toBeDisabled();
   expect(
-    screen.getByRole("radio", { name: /Do not change SeedLot quantity/ }),
+    screen.getByRole("radio", { name: /Use the whole lot/ }),
+  ).toBeDisabled();
+  expect(
+    screen.getByRole("radio", { name: /Keep inventory unchanged/ }),
   ).toBeChecked();
-  await user.click(screen.getByRole("button", { name: "Create Sowing" }));
+  await user.click(screen.getByRole("button", { name: "Start sowing" }));
   expect(submitted).toMatchObject({ source_adjustment: { mode: "none" } });
 });
 
@@ -288,11 +286,10 @@ test("an approximate source offers an editable approximate remainder", async () 
   render(<App />);
   await screen.findByRole("heading", { name: "Start sowing" });
   await user.type(screen.getByLabelText("Amount"), "20");
-  await user.click(
-    screen.getByRole("button", { name: "Continue to SeedLot usage" }),
-  );
-  expect(screen.getByText("Suggested remainder: ~80")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Review seed usage" }));
+  await user.click(screen.getByRole("radio", { name: /Use part of the lot/ }));
   const remainder = screen.getByLabelText("Resulting estimate");
+  expect(remainder).toHaveValue("100");
   await user.clear(remainder);
   await user.type(remainder, "75");
   expect(remainder).toHaveValue("75");
@@ -324,11 +321,9 @@ test("an approximate source can be explicitly exhausted without inventing exact 
   render(<App />);
   await screen.findByRole("heading", { name: "Start sowing" });
   await user.type(screen.getByLabelText("Amount"), "20");
-  await user.click(
-    screen.getByRole("button", { name: "Continue to SeedLot usage" }),
-  );
-  await user.click(screen.getByRole("radio", { name: /Use all/ }));
-  await user.click(screen.getByRole("button", { name: "Create Sowing" }));
+  await user.click(screen.getByRole("button", { name: "Review seed usage" }));
+  await user.click(screen.getByRole("radio", { name: /Use the whole lot/ }));
+  await user.click(screen.getByRole("button", { name: "Start sowing" }));
   expect(submitted).toMatchObject({ source_adjustment: { mode: "use_all" } });
 });
 
@@ -354,9 +349,7 @@ test("an unknown source remains unknown after partial use", async () => {
   render(<App />);
   await screen.findByRole("heading", { name: "Start sowing" });
   await user.selectOptions(screen.getByLabelText("Kind"), "unknown");
-  await user.click(
-    screen.getByRole("button", { name: "Continue to SeedLot usage" }),
-  );
+  await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   expect(
     screen.getByText(
       (_, element) =>
@@ -364,7 +357,12 @@ test("an unknown source remains unknown after partial use", async () => {
         element.textContent === "Current source: Quantity unknown",
     ),
   ).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "Create Sowing" }));
+  await user.click(
+    screen.getByRole("radio", {
+      name: /Record partial use; quantity stays unknown/,
+    }),
+  );
+  await user.click(screen.getByRole("button", { name: "Start sowing" }));
   expect(submitted).toMatchObject({
     sowing: { quantity: null },
     source_adjustment: { mode: "partial", resulting_quantity: null },
@@ -389,20 +387,20 @@ test("incompatible units suppress arithmetic and a conflict preserves entered de
   await user.type(screen.getByLabelText("Label (optional)"), "Keep this");
   await user.selectOptions(screen.getByLabelText("Kind"), "weight");
   await user.type(screen.getByLabelText("Amount"), "2");
-  await user.click(
-    screen.getByRole("button", { name: "Continue to SeedLot usage" }),
-  );
+  await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   expect(
-    screen.queryByRole("radio", { name: /Subtract/ }),
+    screen.queryByRole("radio", { name: /Use part of the lot/ }),
   ).not.toBeInTheDocument();
-  expect(screen.getByRole("radio", { name: /Use all/ })).toBeDisabled();
+  expect(
+    screen.getByRole("radio", { name: /Use the whole lot/ }),
+  ).toBeDisabled();
   expect(
     screen.getByText(/incompatible dimensions or units/),
   ).toBeInTheDocument();
   await user.click(
-    screen.getByRole("radio", { name: /Do not change SeedLot quantity/ }),
+    screen.getByRole("radio", { name: /Keep inventory unchanged/ }),
   );
-  await user.click(screen.getByRole("button", { name: "Create Sowing" }));
+  await user.click(screen.getByRole("button", { name: "Start sowing" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "source SeedLot changed",
   );

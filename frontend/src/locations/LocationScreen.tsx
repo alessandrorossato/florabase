@@ -265,7 +265,10 @@ function LocationTree({
   );
 }
 
-export function LocationScreen({ initialId }: { initialId?: string } = {}) {
+export function LocationScreen({
+  initialId,
+  startCreating = false,
+}: { initialId?: string; startCreating?: boolean } = {}) {
   const auth = useAuth();
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
@@ -296,6 +299,20 @@ export function LocationScreen({ initialId }: { initialId?: string } = {}) {
     open: openCreation,
     close: closeCreation,
   } = useCreationDisclosure();
+  const dashboardCreationStarted = useRef(false);
+  useEffect(() => {
+    if (
+      !startCreating ||
+      directory.status !== "ready" ||
+      dashboardCreationStarted.current
+    )
+      return;
+    dashboardCreationStarted.current = true;
+    setCreateNameValue("");
+    setCreateParentId("");
+    setSave({ status: "idle" });
+    openCreation();
+  }, [directory.status, openCreation, startCreating]);
   const pending = save.status === "saving";
 
   useEffect(() => {
@@ -481,7 +498,8 @@ export function LocationScreen({ initialId }: { initialId?: string } = {}) {
         <PageHeader
           title="Locations"
           titleId="locations-title"
-          description="Browse where collection material is stored and plants are cultivated."
+          eyebrow="Collection organization"
+          description="Manage where seeds, sowings, plants, and groups are kept."
           actions={
             <button
               type="button"

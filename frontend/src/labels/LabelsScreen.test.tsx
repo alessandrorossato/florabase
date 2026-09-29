@@ -280,10 +280,12 @@ test("empty workspace, keyboard add, copy validation, printing and removal", asy
   const copies = screen.getByRole("spinbutton");
   fireEvent.change(copies, { target: { value: "3" } });
   expect(within(preview).getAllByRole("article")).toHaveLength(3);
+  expect(screen.getByText("33 spaces remaining")).toBeInTheDocument();
   fireEvent.change(copies, { target: { value: "37" } });
   expect(screen.getByRole("alert")).toHaveTextContent("sheet holds 36");
   expect(within(preview).getAllByRole("article")).toHaveLength(3);
   fireEvent.change(copies, { target: { value: "36" } });
+  expect(screen.getByText("0 spaces remaining")).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Add label" }));
   expect(screen.getByRole("alert")).toHaveTextContent("sheet is full");
   await user.click(screen.getByRole("button", { name: "Print sheet" }));
@@ -291,6 +293,7 @@ test("empty workspace, keyboard add, copy validation, printing and removal", asy
   await user.click(screen.getByRole("button", { name: /^Remove / }));
   expect(screen.getByRole("combobox", { name: "Record type" })).toHaveFocus();
   expect(screen.getByText("Your label sheet is empty.")).toBeVisible();
+  expect(screen.getByText("36 spaces remaining")).toBeInTheDocument();
 });
 
 test("detail entry adds once under StrictMode, supports mixing record types and duplicate copies", async () => {

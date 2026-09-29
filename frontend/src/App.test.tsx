@@ -1,4 +1,10 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { StrictMode } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
@@ -196,6 +202,29 @@ afterEach(() => {
   sessionStorage.clear();
 });
 
+test.each([
+  ["identities", "Create a botanical identity"],
+  ["suppliers", "Create supplier"],
+  ["locations", "New location"],
+  ["geography", "New local place"],
+])(
+  "direct creation route opens the canonical %s form",
+  async (section, dialogName) => {
+    mockFetch((path) => {
+      if (path.endsWith("/auth/session")) return jsonResponse(session);
+      if (path.endsWith("/auth/csrf"))
+        return jsonResponse({ csrf_token: "csrf" });
+      if (path.endsWith("/health")) return jsonResponse({ status: "ok" });
+      return jsonResponse([]);
+    });
+    window.history.replaceState(null, "", `#/${section}?action=create`);
+    render(<App />);
+    expect(
+      await screen.findByRole("dialog", { name: dialogName }),
+    ).toBeInTheDocument();
+  },
+);
+
 const supplier = {
   id: "01900000-0000-7000-8000-000000000200",
   name: "Rare Palm Seeds",
@@ -369,11 +398,80 @@ test("restores an existing session and recovers CSRF without a password", async 
   expect(
     await screen.findByText("Signed in as Florabase Owner"),
   ).toBeInTheDocument();
+  const sidebar = screen.getByRole("complementary", {
+    name: "Application sidebar",
+  });
+  expect(
+    within(sidebar).getByRole("heading", { name: "Florabase" }),
+  ).toBeInTheDocument();
+  expect(
+    within(sidebar).getByRole("button", { name: "Sign out" }),
+  ).toBeInTheDocument();
   expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
   expect(calls.slice(0, 2)).toEqual([
     "GET /api/v1/auth/session",
     "POST /api/v1/auth/csrf",
   ]);
+});
+
+test("desktop navigation hides and reopens without remounting the workspace", async () => {
+  window.history.replaceState(null, "", "#/dashboard");
+  mockFetch((path) => {
+    if (path.endsWith("/session")) return jsonResponse(session);
+    if (path.endsWith("/csrf"))
+      return jsonResponse({ csrf_token: "fresh-csrf" });
+    return jsonResponse({ status: "ok" });
+  });
+  const user = userEvent.setup();
+  const { unmount } = render(<App />);
+  const sidebar = await screen.findByRole("complementary", {
+    name: "Application sidebar",
+  });
+  const shell = sidebar.parentElement;
+  const workspace = screen.getByRole("region", { name: "Workspace content" });
+  const reference = within(sidebar).getByRole("region", { name: "Reference" });
+  expect(
+    within(reference).getByRole("button", { name: "Botanical identities" }),
+  ).toBeInTheDocument();
+  expect(
+    within(sidebar).queryByRole("region", { name: "Botany" }),
+  ).not.toBeInTheDocument();
+  expect(
+    within(sidebar).getByRole("region", { name: "Tools" }),
+  ).toHaveTextContent("Import / ExportLabels");
+  const hideNavigation = within(sidebar).getByRole("button", {
+    name: "Hide navigation",
+  });
+  expect(
+    within(sidebar).getByRole("button", { name: "Dashboard" }),
+  ).toHaveAttribute("aria-current", "page");
+  hideNavigation.focus();
+  await user.keyboard("{Enter}");
+  expect(shell).toHaveClass("navigation-collapsed");
+  expect(screen.getByRole("region", { name: "Workspace content" })).toBe(
+    workspace,
+  );
+  const showNavigation = screen.getByRole("button", {
+    name: "Show navigation",
+  });
+  await waitFor(() => {
+    expect(showNavigation).toHaveFocus();
+  });
+  showNavigation.focus();
+  await user.keyboard("{Enter}");
+  await waitFor(() => {
+    expect(hideNavigation).toHaveFocus();
+  });
+  expect(shell).not.toHaveClass("navigation-collapsed");
+  expect(screen.getByRole("region", { name: "Workspace content" })).toBe(
+    workspace,
+  );
+  unmount();
+  render(<App />);
+  const reloadedShell = await screen.findByRole("complementary", {
+    name: "Application sidebar",
+  });
+  expect(reloadedShell.parentElement).not.toHaveClass("navigation-collapsed");
 });
 
 test("a restoration service failure is explicit and retryable", async () => {
@@ -2296,6 +2394,7 @@ test("Geography navigation loads, filters, and selects broad and country canonic
         brazilPlace,
         thailandPlace,
       ]);
+    if (path === "/api/v1/provenance-sites") return jsonResponse([]);
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await openGeography();
@@ -2306,6 +2405,28 @@ test("Geography navigation loads, filters, and selects broad and country canonic
   expect(
     await screen.findByRole("heading", { name: "Geography" }),
   ).toBeInTheDocument();
+  const views = screen.getByRole("navigation", { name: "Geography views" });
+  expect(views.querySelectorAll("button")).toHaveLength(3);
+  expect(
+    screen.queryByRole("navigation", { name: "Browse geography" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "Places", pressed: true }),
+  ).toBeInTheDocument();
+  await user.click(
+    screen.getByRole("button", { name: "Provenance sites", pressed: false }),
+  );
+  expect(
+    screen.getByRole("button", { name: "Provenance sites", pressed: true }),
+  ).toBeInTheDocument();
+  expect(screen.getByLabelText("Search provenance sites")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Map", pressed: false }));
+  expect(
+    screen.getByRole("button", { name: "Map", pressed: true }),
+  ).toBeInTheDocument();
+  await user.click(
+    screen.getByRole("button", { name: "Places", pressed: false }),
+  );
   await user.click(screen.getByRole("button", { name: "New local place" }));
   expect(
     screen.getByLabelText("Name", {
@@ -2320,7 +2441,7 @@ test("Geography navigation loads, filters, and selects broad and country canonic
     screen.queryByRole("dialog", { name: "New local place" }),
   ).not.toBeInTheDocument();
   expect(newPlace).toHaveFocus();
-  const filter = screen.getByLabelText("Search geography");
+  const filter = screen.getByLabelText("Search places");
   await user.type(filter, "Brazil");
   const brazil = screen.getByRole("button", {
     name: /Brazil.*World.*South America.*Brazil/i,
@@ -2420,7 +2541,7 @@ test("local geography creation supports Thailand to Chiang Mai to Doi Suthep and
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await openGeography();
-  await user.type(await screen.findByLabelText("Search geography"), "Thailand");
+  await user.type(await screen.findByLabelText("Search places"), "Thailand");
   await user.click(screen.getByRole("button", { name: /Thailand.*World/i }));
   await user.click(screen.getByRole("button", { name: "Create local child" }));
   await user.type(
@@ -2446,7 +2567,7 @@ test("local geography creation supports Thailand to Chiang Mai to Doi Suthep and
     await screen.findByText(/Thailand → Chiang Mai → Doi Suthep was created/i),
   ).toBeInTheDocument();
 
-  await user.clear(screen.getByLabelText("Search geography"));
+  await user.clear(screen.getByLabelText("Search places"));
   await user.click(screen.getByRole("button", { name: /Chiang Mai.*Local/i }));
   await user.click(
     screen.getByRole("button", { name: "Edit geographic place" }),
@@ -2653,7 +2774,7 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
   ).toBeInTheDocument();
   await user.keyboard("{Escape}");
   expect(newPlace).toHaveFocus();
-  await user.type(screen.getByLabelText("Search geography"), "Garden hill");
+  await user.type(screen.getByLabelText("Search places"), "Garden hill");
   await user.click(screen.getByRole("button", { name: /Garden hill.*World/i }));
   const editPlace = screen.getByRole("button", {
     name: "Edit geographic place",

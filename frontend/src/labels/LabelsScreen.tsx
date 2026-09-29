@@ -131,7 +131,7 @@ export function LabelsScreen({
         <div>
           <p className="eyebrow">Collection tools</p>
           <h2 id="labels-heading">Labels</h2>
-          <p>Prepare an A4 sheet of 50 × 30 mm lookup labels.</p>
+          <p>Prepare printable 50 × 30 mm QR labels for collection records.</p>
         </div>
         <button
           type="button"
@@ -237,10 +237,17 @@ export function LabelsScreen({
             {message}
           </p>
           <h3>Sheet entries · {String(total)} / 36</h3>
+          <p className="label-capacity" aria-live="polite">
+            {String(labelsPerPage - total)} spaces remaining
+          </p>
           {entries.length === 0 ? (
             <p>Choose records to start your sheet.</p>
           ) : (
-            <ul className="label-entries">
+            <ul
+              className="label-entries"
+              aria-label="Selected labels"
+              tabIndex={0}
+            >
               {entries.map((entry) => {
                 const key = labelKey(entry.record);
                 const description = `${labelTypeNames[entry.record.kind]}: ${entry.record.botanicalName}${entry.record.context ? ` · ${entry.record.context}` : ""}`;

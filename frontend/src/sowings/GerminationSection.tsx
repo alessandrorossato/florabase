@@ -184,8 +184,11 @@ export function GerminationSection({ sowingId }: { sowingId: string }) {
     );
 
   const summary = detail.summary;
-  const exactCount =
-    detail.quantity?.kind === "seed_count" && !detail.quantity.is_approximate;
+  const positiveExactCount =
+    detail.quantity?.kind === "seed_count" &&
+    !detail.quantity.is_approximate &&
+    Number.isSafeInteger(Number(detail.quantity.value)) &&
+    Number(detail.quantity.value) > 0;
   const exactDate = detail.sowing_date?.precision === "day";
   const canEdit = auth.state.status === "authenticated";
   return (
@@ -221,48 +224,55 @@ export function GerminationSection({ sowingId }: { sowingId: string }) {
           <dt>Observed germinations</dt>
           <dd>{summary.observed_cumulative_count}</dd>
         </div>
-        <div>
-          <dt>Observed germination</dt>
-          <dd>
-            {summary.germination_percentage === null
-              ? exactCount
-                ? "Not enough data"
-                : "Exact seed count required"
-              : `${decimal(summary.germination_percentage)}%`}
-          </dd>
-        </div>
-        <div>
-          <dt>First germination</dt>
-          <dd>{metric(summary.first_germination_on, "Not observed")}</dd>
-        </div>
-        <div>
-          <dt>Days to first</dt>
-          <dd>
-            {summary.days_to_first_germination === null
-              ? exactDate
-                ? "Not enough data"
-                : "Exact sowing date required"
-              : `${String(summary.days_to_first_germination)} days`}
-          </dd>
-        </div>
-        <div>
-          <dt>Time to 50% (T50)</dt>
-          <dd>
-            {summary.t50_days === null
-              ? !exactCount
-                ? "Exact seed count required"
-                : !exactDate
-                  ? "Exact sowing date required"
-                  : "50% threshold not reached"
-              : `Estimated ${decimal(summary.t50_days)} days`}
-          </dd>
-        </div>
+        {positiveExactCount && summary.germination_percentage !== null && (
+          <div>
+            <dt>Observed germination</dt>
+            <dd>{decimal(summary.germination_percentage)}%</dd>
+          </div>
+        )}
+        {summary.first_germination_on && (
+          <div>
+            <dt>First germination</dt>
+            <dd>{summary.first_germination_on}</dd>
+          </div>
+        )}
+        {summary.days_to_first_germination !== null && (
+          <div>
+            <dt>Days to first</dt>
+            <dd>{String(summary.days_to_first_germination)} days</dd>
+          </div>
+        )}
+        {positiveExactCount && summary.t50_days !== null && (
+          <div>
+            <dt>Time to 50% (T50)</dt>
+            <dd>Estimated {decimal(summary.t50_days)} days</dd>
+          </div>
+        )}
       </dl>
-      <p className="field-help">
-        Time to 50% estimates when recorded cumulative germination reached half
-        of the exact seeds sown. Timing requires an exact sowing date;
-        percentages require an exact seed count.
-      </p>
+      {summary.observed_cumulative_count === 0 && (
+        <p className="field-help">
+          Add dated observations to see observed germination and timing.
+        </p>
+      )}
+      {!positiveExactCount && (
+        <p className="field-help">
+          A positive exact seed count is needed for an observed percentage and
+          time to 50%.
+        </p>
+      )}
+      {!exactDate && (
+        <p className="field-help">
+          An exact sowing date is needed for timing in days.
+        </p>
+      )}
+      {positiveExactCount &&
+        exactDate &&
+        summary.observed_cumulative_count > 0 &&
+        summary.t50_days === null && (
+          <p className="field-help">
+            The observed series has not reached 50% of the exact seeds sown.
+          </p>
+        )}
       <div className="germination-heading">
         <h4>Observation history</h4>
         {summary.last_observation_on && (

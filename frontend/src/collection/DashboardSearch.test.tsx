@@ -37,7 +37,10 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function setup(search: (path: string) => Response) {
+function setup(
+  search: (path: string) => Response,
+  overview: unknown = dashboard,
+) {
   const calls: string[] = [];
   vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
     const path =
@@ -60,7 +63,7 @@ function setup(search: (path: string) => Response) {
       return Promise.resolve(json({ csrf_token: "csrf" }));
     if (path.endsWith("/health"))
       return Promise.resolve(json({ status: "ok" }));
-    if (path === "/api/v1/dashboard") return Promise.resolve(json(dashboard));
+    if (path === "/api/v1/dashboard") return Promise.resolve(json(overview));
     if (path === "/api/v1/botanical-identities")
       return Promise.resolve(json([identity]));
     if (
@@ -80,6 +83,82 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
+});
+
+test("Dashboard keeps its counts, actions, and chronological Event context", async () => {
+  const event = {
+    id,
+    kind: "observation",
+    occurred_on: { precision: "year", year: 2024 },
+    created_at: "2024-06-01T00:00:00Z",
+    updated_at: "2024-06-01T00:00:00Z",
+    notes: "First growth",
+    destination_location: null,
+    destination_location_id: null,
+    recipient: null,
+    resulting_plant: null,
+    resulting_plant_id: null,
+    target: {
+      id,
+      type: "plant",
+      label: "Acmella plant",
+      lifecycle: "active",
+      botanical_identity: { id, display_label: "Acmella oleracea" },
+    },
+  };
+  setup(() => json({}), {
+    ...dashboard,
+    recent_events: [
+      event,
+      { ...event, id: `${id.slice(0, -1)}2`, notes: "Later growth" },
+    ],
+  });
+  render(<App />);
+  const snapshot = await screen.findByRole("region", {
+    name: "Collection snapshot",
+  });
+  for (const [name, count] of [
+    ["Seed lots", "2"],
+    ["Sowings", "1"],
+    ["Plants", "3"],
+    ["Plant groups", "1"],
+  ]) {
+    expect(
+      within(snapshot).getByRole("link", { name: `${name}: ${count}` }),
+    ).toBeInTheDocument();
+  }
+  const actions = screen.getByRole("navigation", { name: "Quick actions" });
+  expect(within(actions).getAllByRole("link")).toHaveLength(8);
+  for (const [name, href] of [
+    ["New seed lot", "#/seeds?action=create"],
+    ["New sowing", "#/sowings?action=create"],
+    ["New plant", "#/plants?action=create&kind=plant"],
+    ["New plant group", "#/plants?action=create&kind=group"],
+    ["New botanical identity", "#/identities?action=create"],
+    ["New supplier", "#/suppliers?action=create"],
+    ["New location", "#/locations?action=create"],
+    ["New local place", "#/geography?action=create"],
+  ]) {
+    expect(within(actions).getByRole("link", { name })).toHaveAttribute(
+      "href",
+      href,
+    );
+  }
+  const activity = screen.getByRole("region", { name: "Recent activity" });
+  expect(
+    within(activity).getByRole("link", { name: "View all Events" }),
+  ).toHaveAttribute("href", "#/events");
+  expect(within(activity).getAllByRole("article")).toHaveLength(2);
+  expect(within(activity).getAllByText("2024")).toHaveLength(2);
+  expect(within(activity).getByText("First growth")).toBeInTheDocument();
+  expect(within(activity).getByText("Later growth")).toBeInTheDocument();
+  expect(
+    within(activity).getAllByRole("link", { name: "Acmella oleracea" }),
+  ).toHaveLength(2);
+  expect(
+    screen.getByRole("searchbox", { name: "Search your collection" }),
+  ).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Filters" })).toBeEnabled();
 });
 
 test("Dashboard search replaces overview, groups results, and restores the normal route", async () => {
@@ -130,10 +209,14 @@ test("Dashboard search replaces overview, groups results, and restores the norma
     name: "Quick actions",
   });
   for (const [name, href] of [
-    ["Add seed lot", "#/seeds?action=create"],
-    ["Add plant", "#/plants?action=create&kind=plant"],
-    ["Add plant group", "#/plants?action=create&kind=group"],
-    ["Import / Export", "#/import-export"],
+    ["New seed lot", "#/seeds?action=create"],
+    ["New sowing", "#/sowings?action=create"],
+    ["New plant", "#/plants?action=create&kind=plant"],
+    ["New plant group", "#/plants?action=create&kind=group"],
+    ["New botanical identity", "#/identities?action=create"],
+    ["New supplier", "#/suppliers?action=create"],
+    ["New location", "#/locations?action=create"],
+    ["New local place", "#/geography?action=create"],
   ]) {
     expect(within(quickActions).getByRole("link", { name })).toHaveAttribute(
       "href",

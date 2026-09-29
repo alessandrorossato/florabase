@@ -42,14 +42,20 @@ full offline synchronization are outside that criterion.
 
 ### Required before 0.1.0: PERF-001 and RELEASE-001
 
-[`PERF-001`](features.json) is implemented for independent review on the frozen product scope.
+[`PERF-001`](features.json) is verified on the frozen product scope.
 Its [measurement report](performance/PERF-001.md) preserves the production-like baseline, identical
 workload comparisons, bounded query regressions, resource observations and limitations. Demonstrated
 costs justified response-local geography reuse, native workspace lazy loading and public static
 compression. Domain, security, privacy, API and schema contracts are unchanged; no speculative index,
-generic cache or hardware guarantee was added. The Vite advisory threshold is unchanged. The canonical
-verification and release acceptance remain pending. `RELEASE-001` should repeat the report's resource
+generic cache or hardware guarantee was added. The Vite advisory threshold is unchanged. Release
+acceptance remains pending. `RELEASE-001` should repeat the report's resource
 sanity checks on its exact candidate, real target hardware/persistent storage and HTTPS.
+
+The agreed final cross-application UI coherence pass follows PERF-001 and precedes RELEASE-001. It
+compacts the shell and headings, gives desktop directories and timelines the remaining viewport with
+one principal result scroll, keeps natural mobile scrolling, presents Suppliers as a list, and shows
+Places, Provenance sites, and Map as peer Geography views. This is blocking polish within the frozen
+product perimeter, not another feature or a change to the domain and API contracts.
 
 [`RELEASE-001`](features.json) is the planned P0 release-hardening increment. It is the release
 acceptance gate after `PERF-001`, not a claim that hardening or release acceptance has already passed.

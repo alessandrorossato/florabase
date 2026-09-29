@@ -288,6 +288,7 @@ export function SowingDescendantWizard({
         onSubmit={(event) => void submit(event)}
         noValidate
       >
+        <p className="eyebrow">Result</p>
         <h3>New {kind === "plant" ? "Plant" : "Plant group"} details</h3>
         <div className="guided-form-grid">
           <div className="field">
@@ -411,6 +412,7 @@ export function SowingDescendantWizard({
             />
           </div>
         </div>
+        <p className="eyebrow">Sowing state after creation</p>
         <fieldset className="choice-cards">
           <legend>Resulting Sowing lifecycle</legend>
           {(
@@ -433,13 +435,21 @@ export function SowingDescendantWizard({
                 <small>
                   {value === "active"
                     ? "Default. Descendant counts never complete a Sowing automatically."
-                    : `The Sowing will become ${value} in the same atomic operation.`}
+                    : `The Sowing will be marked ${value} in the same atomic operation.`}
                 </small>
               </span>
             </label>
           ))}
         </fieldset>
         {completionOutcome}
+        <p className="field-help">
+          Confirm to create the {kind === "plant" ? "Plant" : "Plant group"}{" "}
+          with an explicit link to this Sowing. The Sowing will{" "}
+          {resultingLifecycle === "active"
+            ? "remain active"
+            : `be marked ${resultingLifecycle}`}
+          .
+        </p>
         {messages.length > 0 && (
           <div
             className="notice notice--error"

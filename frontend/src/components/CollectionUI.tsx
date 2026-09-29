@@ -5,6 +5,31 @@ export interface TabItem<TabId extends string = string> {
   label: string;
 }
 
+export function WorkspaceIntro({
+  eyebrow,
+  title,
+  titleId,
+  description,
+  actions,
+}: {
+  eyebrow: string;
+  title: string;
+  titleId: string;
+  description: string;
+  actions?: ReactNode;
+}) {
+  return (
+    <header className="workspace-intro seed-heading">
+      <div>
+        <p className="eyebrow">{eyebrow}</p>
+        <h2 id={titleId}>{title}</h2>
+        <p>{description}</p>
+      </div>
+      {actions}
+    </header>
+  );
+}
+
 export function Breadcrumbs({
   items,
 }: {

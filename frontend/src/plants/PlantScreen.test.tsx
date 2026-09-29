@@ -314,12 +314,18 @@ function setViewportMatches(matches: boolean) {
   }));
 }
 
-async function openPlants() {
+async function openPlants(waitForReady = true) {
   // Existing interaction cases exercise the list-to-detail mobile path.
   setViewportMatches(true);
   const user = userEvent.setup();
   render(<App />);
   await user.click(await screen.findByRole("button", { name: "Plants" }));
+  if (waitForReady)
+    await screen.findByRole(
+      "heading",
+      { name: "Plants", level: 2 },
+      { timeout: 10_000 },
+    );
   return user;
 }
 
@@ -382,7 +388,9 @@ test("Plants navigation exposes loading, empty, missing-identity, and failure st
   expect(
     await screen.findByRole("heading", { name: "No Plants recorded yet" }),
   ).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "+ New" })).toBeDisabled();
+  expect(
+    screen.getByRole("button", { name: "+ New plant or group" }),
+  ).toBeDisabled();
   expect(
     screen.getByText(/Botanical identity is required/),
   ).toBeInTheDocument();
@@ -479,7 +487,9 @@ test("one New disclosure chooses type and supports BotanicalIdentity-only Plant 
     }),
   );
   const user = await openPlants();
-  const trigger = await screen.findByRole("button", { name: "+ New" });
+  const trigger = await screen.findByRole("button", {
+    name: "+ New plant or group",
+  });
   expect(trigger).toHaveAttribute("aria-expanded", "false");
   await user.click(trigger);
   expect(trigger).toHaveAttribute("aria-expanded", "true");
@@ -544,7 +554,9 @@ test("minimal group creation keeps quantity unknown", async () => {
     }),
   );
   const user = await openPlants();
-  await user.click(await screen.findByRole("button", { name: "+ New" }));
+  await user.click(
+    await screen.findByRole("button", { name: "+ New plant or group" }),
+  );
   await user.click(
     screen.getByRole("button", { name: /Plant group.*Multiple/s }),
   );
@@ -588,7 +600,9 @@ test("direct origin, references, partial date, Location, lifecycle, notes, and s
     }),
   );
   const user = await openPlants();
-  await user.click(await screen.findByRole("button", { name: "+ New" }));
+  await user.click(
+    await screen.findByRole("button", { name: "+ New plant or group" }),
+  );
   await user.click(
     screen.getByRole("button", { name: /Plant.*One individually/s }),
   );
@@ -672,7 +686,9 @@ test("known Sowing clears direct provenance and preserves an independently chose
     }),
   );
   const user = await openPlants();
-  await user.click(await screen.findByRole("button", { name: "+ New" }));
+  await user.click(
+    await screen.findByRole("button", { name: "+ New plant or group" }),
+  );
   await user.click(
     screen.getByRole("button", { name: /Plant.*One individually/s }),
   );
@@ -736,7 +752,9 @@ test("group count validation covers exact and approximate zero before valid atom
     }),
   );
   const user = await openPlants();
-  await user.click(await screen.findByRole("button", { name: "+ New" }));
+  await user.click(
+    await screen.findByRole("button", { name: "+ New plant or group" }),
+  );
   await user.click(
     screen.getByRole("button", { name: /Plant group.*Multiple/s }),
   );
@@ -765,7 +783,9 @@ test("group count validation covers exact and approximate zero before valid atom
     lifecycle: "completed",
     quantity: { value: 0, is_approximate: false },
   });
-  await user.click(screen.getByRole("button", { name: "+ New" }));
+  await user.click(
+    screen.getByRole("button", { name: "+ New plant or group" }),
+  );
   await user.click(
     screen.getByRole("button", { name: /Plant group.*Multiple/s }),
   );
@@ -892,7 +912,7 @@ test("detail loading, detail failure, authorization, and session expiry are expl
   );
   const forbiddenUser = await openPlants();
   await forbiddenUser.click(
-    await screen.findByRole("button", { name: "+ New" }),
+    await screen.findByRole("button", { name: "+ New plant or group" }),
   );
   await forbiddenUser.click(
     screen.getByRole("button", { name: /Plant.*One individually/s }),
@@ -918,7 +938,7 @@ test("detail loading, detail failure, authorization, and session expiry are expl
         : undefined,
     ),
   );
-  await openPlants();
+  await openPlants(false);
   expect(
     await screen.findByText("Your session expired. Sign in again to continue."),
   ).toBeInTheDocument();
