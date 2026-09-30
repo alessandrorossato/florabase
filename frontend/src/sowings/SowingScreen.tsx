@@ -1,3 +1,8 @@
+import { sowingFormPanels } from "./SowingFormFields";
+import { RecordVisual } from "../photos/RecordVisual";
+import { useRecordName } from "../components/recordPresentation";
+import { FormSections } from "../components/FormSections";
+import { firstValidationField } from "../components/formValidation";
 import { CreationReversal } from "../propagation/CreationReversal";
 import {
   useEffect,
@@ -16,16 +21,12 @@ import { setRecordRoute } from "../components/recordNavigation";
 import {
   Breadcrumbs,
   DetailHeader,
+  DetailContext,
   DetailTabs,
   WorkspaceIntro,
 } from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
-import {
-  listLocations,
-  locationsForScope,
-  type LocationResponse,
-} from "../locations/api";
-import { PartialDateField } from "../seed-lots/PartialDateField";
+import { listLocations, type LocationResponse } from "../locations/api";
 import { PhotosSection } from "../photos/PhotosSection";
 import { listSeedLots, type SeedLotResponse } from "../seed-lots/api";
 import { PropagationPath } from "../propagation/PropagationPath";
@@ -58,7 +59,7 @@ type SaveState =
   | { status: "idle" }
   | { status: "saving" }
   | { status: "success"; message: string }
-  | { status: "error"; messages: string[] };
+  | { status: "error"; messages: string[]; field?: string };
 type QuantityKind = "unknown" | "seed_count" | "weight";
 
 interface References {
@@ -258,6 +259,8 @@ function Detail({
   onEdit: () => void;
   initialTab?: string;
 }) {
+  const recordName = useRecordName();
+
   const [summary, setSummary] = useState<
     | { status: "loading" }
     | { status: "ready"; value: SowingPropagationSummary }
@@ -301,28 +304,39 @@ function Detail({
           ? `Maximum ${sowing.temperature_max_c} °C`
           : null;
   return (
-    <article className="sowing-detail">
+    <article className="sowing-detail collection-detail">
       <Breadcrumbs
         items={[
+          { label: "Collection", href: "#/dashboard" },
           { label: "Sowings", href: "#/sowings" },
-          {
-            label: sowing.label ?? "Unlabelled sowing",
-          },
         ]}
       />
       <DetailHeader
         eyebrow="Sowing"
-        title={sowing.label ?? "Unlabelled sowing"}
+        title={recordName(sowing, "Unlabelled sowing")}
         secondary={
-          <>
-            <a href={`#/identities/${sowing.seed_lot.botanical_identity_id}`}>
-              {sowing.seed_lot.botanical_identity_display_label}
-            </a>{" "}
-            ·{" "}
-            <a href={`#/seeds/${sowing.seed_lot.id}`}>
-              {sowing.seed_lot.label ?? "Unlabelled SeedLot"}
-            </a>
-          </>
+          <DetailContext
+            items={[
+              {
+                label: "Botanical identity",
+                value: (
+                  <a
+                    href={`#/identities/${sowing.seed_lot.botanical_identity_id}`}
+                  >
+                    {sowing.seed_lot.botanical_identity_display_label}
+                  </a>
+                ),
+              },
+              {
+                label: "Seed lot",
+                value: (
+                  <a href={`#/seeds/${sowing.seed_lot.id}`}>
+                    {recordName(sowing.seed_lot, "Unlabelled SeedLot")}
+                  </a>
+                ),
+              },
+            ]}
+          />
         }
         status={
           <>
@@ -392,20 +406,10 @@ function Detail({
             </h3>
             <dl>
               <div>
-                <dt>Botanical identity</dt>
-                <dd>
-                  <a
-                    href={`#/identities/${sowing.seed_lot.botanical_identity_id}`}
-                  >
-                    {sowing.seed_lot.botanical_identity_display_label}
-                  </a>
-                </dd>
-              </div>
-              <div>
                 <dt>Seed lot</dt>
                 <dd>
                   <a href={`#/seeds/${sowing.seed_lot.id}`}>
-                    {sowing.seed_lot.label ?? "Unlabelled lot"}
+                    {recordName(sowing.seed_lot, "Unlabelled lot")}
                   </a>{" "}
                   · {sowing.seed_lot.lifecycle}
                 </dd>
@@ -509,7 +513,10 @@ function Detail({
                     [
                       {
                         type: "Source SeedLot",
-                        label: sowing.seed_lot.label ?? "Unlabelled SeedLot",
+                        label: recordName(
+                          sowing.seed_lot,
+                          "Unlabelled SeedLot",
+                        ),
                         href: `#/seeds/${sowing.seed_lot.id}`,
                         state: sowing.seed_lot.lifecycle,
                       },
@@ -517,7 +524,7 @@ function Detail({
                     [
                       {
                         type: "Current Sowing",
-                        label: sowing.label ?? "Unlabelled Sowing",
+                        label: recordName(sowing, "Unlabelled Sowing"),
                         href: `#/sowings/${sowing.id}`,
                         state: sowing.lifecycle,
                       },
@@ -525,13 +532,13 @@ function Detail({
                     [
                       ...summary.value.plants.map((plant) => ({
                         type: "Plant",
-                        label: plant.label ?? "Unlabelled Plant",
+                        label: recordName(plant, "Unlabelled Plant"),
                         href: `#/plants/${plant.id}`,
                         state: plant.lifecycle,
                       })),
                       ...summary.value.plant_groups.map((group) => ({
                         type: "Plant group",
-                        label: group.label ?? "Unlabelled Plant group",
+                        label: recordName(group, "Unlabelled Plant group"),
                         href: `#/plant-groups/${group.id}`,
                         state: group.quantity
                           ? `${group.quantity.is_approximate ? "~" : ""}${String(group.quantity.value)} · ${group.lifecycle}`
@@ -610,7 +617,7 @@ function Detail({
                 [
                   {
                     type: "Source SeedLot",
-                    label: sowing.seed_lot.label ?? "Unlabelled SeedLot",
+                    label: recordName(sowing.seed_lot, "Unlabelled SeedLot"),
                     href: `#/seeds/${sowing.seed_lot.id}`,
                     state: sowing.seed_lot.lifecycle,
                   },
@@ -618,7 +625,7 @@ function Detail({
                 [
                   {
                     type: "Current Sowing",
-                    label: sowing.label ?? "Unlabelled Sowing",
+                    label: recordName(sowing, "Unlabelled Sowing"),
                     href: `#/sowings/${sowing.id}`,
                     state: sowing.lifecycle,
                   },
@@ -626,13 +633,13 @@ function Detail({
                 [
                   ...summary.value.plants.map((plant) => ({
                     type: "Plant",
-                    label: plant.label ?? "Unlabelled Plant",
+                    label: recordName(plant, "Unlabelled Plant"),
                     href: `#/plants/${plant.id}`,
                     state: plant.lifecycle,
                   })),
                   ...summary.value.plant_groups.map((group) => ({
                     type: "Plant group",
-                    label: group.label ?? "Unlabelled Plant group",
+                    label: recordName(group, "Unlabelled Plant group"),
                     href: `#/plant-groups/${group.id}`,
                     state: group.quantity
                       ? `${group.quantity.is_approximate ? "~" : ""}${String(group.quantity.value)} · ${group.lifecycle}`
@@ -664,7 +671,7 @@ function Detail({
           <PhotosSection
             target="sowing"
             targetId={sowing.id}
-            targetLabel={sowing.label ?? "Unlabelled sowing"}
+            targetLabel={recordName(sowing, "Unlabelled sowing")}
           />
         </div>
       )}
@@ -688,6 +695,8 @@ export function SowingScreen({
   initialTab?: string;
   startCreating?: boolean;
 } = {}) {
+  const recordName = useRecordName();
+
   const auth = useAuth();
   const [collection, setCollection] = useState<CollectionState>({
     status: "loading",
@@ -721,7 +730,6 @@ export function SowingScreen({
     };
   }, [initialId, selectedId]);
   const [form, setForm] = useState<FormState>(blankForm);
-  const [moreDetails, setMoreDetails] = useState(false);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const feedback = useRef<HTMLDivElement>(null);
   const detailHeading = useRef<HTMLHeadingElement>(null);
@@ -749,7 +757,6 @@ export function SowingScreen({
     setEditing(true);
     setMobileDetail(true);
     setForm(blankForm());
-    setMoreDetails(false);
     setSave({ status: "idle" });
     openCreation();
   }, [openCreation, references, startCreating]);
@@ -881,7 +888,6 @@ export function SowingScreen({
     setEditing(true);
     setMobileDetail(true);
     setForm(blankForm());
-    setMoreDetails(false);
     setSave({ status: "idle" });
     openCreation();
   }
@@ -889,7 +895,6 @@ export function SowingScreen({
   function startEdit(sowing: SowingResponse) {
     if (creationExpanded) closeCreation({ returnFocus: false });
     setForm(formFrom(sowing));
-    setMoreDetails(true);
     setEditing(true);
     setMobileDetail(true);
     setSave({ status: "idle" });
@@ -977,7 +982,6 @@ export function SowingScreen({
     if (pending) return;
     const errors = validate();
     if (errors.length) {
-      setMoreDetails(true);
       setSave({ status: "error", messages: errors });
       return;
     }
@@ -1018,8 +1022,11 @@ export function SowingScreen({
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();
       else if (error instanceof ApiError && error.status === 422) {
-        setMoreDetails(true);
-        setSave({ status: "error", messages: sowingValidationMessages(error) });
+        setSave({
+          status: "error",
+          messages: sowingValidationMessages(error),
+          field: firstValidationField(error),
+        });
       } else if (error instanceof ApiError && error.status === 409)
         setSave({
           status: "error",
@@ -1058,6 +1065,19 @@ export function SowingScreen({
       aria-labelledby="sowings-title"
     >
       <WorkspaceIntro
+        contextActions={
+          mobileDetail &&
+          !editing && (
+            <button
+              type="button"
+              className="sowing-back button--secondary"
+              onClick={returnToList}
+            >
+              ← Back to Sowings
+            </button>
+          )
+        }
+        contextOnly={mobileDetail || editing}
         {...sowingPage}
         actions={
           !editing && (
@@ -1149,16 +1169,28 @@ export function SowingScreen({
                     }}
                   >
                     <span className="seed-primary">
+                      <RecordVisual
+                        kind="sowing"
+                        label={recordName(sowing, "Sowing")}
+                        compact
+                        identity={{
+                          id: sowing.seed_lot.botanical_identity_id,
+                          display_label:
+                            sowing.seed_lot.botanical_identity_display_label,
+                        }}
+                      />
                       <span className="seed-primary__text">
-                        <strong>{sowing.label ?? "Unlabelled sowing"}</strong>
+                        <strong>
+                          {recordName(sowing, "Unlabelled sowing")}
+                        </strong>
                         <small>
                           {sowing.seed_lot.botanical_identity_display_label}
                         </small>
                       </span>
                     </span>
                     <span className="sowing-row__source">
-                      From {sowing.seed_lot.label ?? "Unlabelled seed lot"} ·{" "}
-                      {dateLabel(sowing.sowing_date)} ·{" "}
+                      From {recordName(sowing.seed_lot, "Unlabelled seed lot")}{" "}
+                      · {dateLabel(sowing.sowing_date)} ·{" "}
                       {sowing.location?.display_path ?? "Location not recorded"}
                     </span>
                     <GerminationProgress sowing={sowing} />
@@ -1179,13 +1211,6 @@ export function SowingScreen({
           ref={creationExpanded ? creationPanelRef : undefined}
           aria-label="Sowing detail and editor"
         >
-          <button
-            type="button"
-            className="sowing-back button--secondary"
-            onClick={returnToList}
-          >
-            ← Back to Sowings
-          </button>
           {save.status === "success" && (
             <div className="notice notice--success" role="status">
               {save.message}
@@ -1193,432 +1218,233 @@ export function SowingScreen({
           )}
           {editing ? (
             <form
-              className="seed-form sowing-form"
+              className="seed-form sowing-form collection-form"
               onSubmit={(event) => void submit(event)}
               noValidate
             >
-              <div className="seed-form-heading">
-                <div>
-                  <p className="eyebrow">
-                    {selected ? "Correct Sowing" : "Sowings · New record"}
-                  </p>
-                  <h3>{selected ? "Edit Sowing" : "Record Sowing"}</h3>
-                </div>
-              </div>
-              <h4 className="form-group-heading">Source</h4>
-              <div className="field">
-                <label htmlFor="sowing-seed-lot">SeedLot</label>
-                <select
-                  aria-describedby="sowing-seed-lot-help"
-                  id="sowing-seed-lot"
-                  required
-                  value={form.seedLotId}
-                  disabled={pending}
-                  onChange={(event) => {
-                    updateForm("seedLotId", event.currentTarget.value);
-                  }}
-                >
-                  <option value="">Choose a SeedLot</option>
-                  {activeSeedLots.length > 0 && (
-                    <optgroup label="Active SeedLots">
-                      {activeSeedLots.map((lot) => (
-                        <option key={lot.id} value={lot.id}>
-                          {seedLotLabel(lot)}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                  {inactiveSeedLots.length > 0 && (
-                    <optgroup label="Historical SeedLots">
-                      {inactiveSeedLots.map((lot) => (
-                        <option key={lot.id} value={lot.id}>
-                          {seedLotLabel(lot)}
-                        </option>
-                      ))}
-                    </optgroup>
-                  )}
-                </select>
-                <FieldHelp id="sowing-seed-lot-help">
-                  A Sowing uses material from exactly one SeedLot. Historical
-                  lots remain available for historical entry.
-                </FieldHelp>
-              </div>
-              <h4 className="form-group-heading">Sowing</h4>
-              <div className="sowing-fast-fields">
-                <div className="field">
-                  <label htmlFor="sowing-label">
-                    Sowing label <span className="optional">(optional)</span>
-                  </label>
-                  <input
-                    id="sowing-label"
-                    value={form.label}
-                    disabled={pending}
-                    onChange={(event) => {
-                      updateForm("label", event.currentTarget.value);
-                    }}
-                  />
-                </div>
-                <PartialDateField
-                  id="sowing-date"
-                  label="Sowing date (optional)"
-                  value={form.sowingDate}
-                  disabled={pending}
-                  onChange={(value) => {
-                    setForm((current) => ({ ...current, sowingDate: value }));
-                  }}
-                />
-                <h4 className="form-group-heading field--full">Material</h4>
-                <fieldset
-                  aria-describedby="sowing-quantity-help"
-                  className="quantity-field"
-                >
-                  <legend>
-                    Quantity sown <span className="optional">(optional)</span>
-                  </legend>
-                  <div className="field">
-                    <label htmlFor="sowing-quantity-kind">Kind</label>
-                    <select
-                      id="sowing-quantity-kind"
-                      value={form.quantityKind}
-                      disabled={pending}
-                      onChange={(event) => {
-                        const quantityKind = event.currentTarget
-                          .value as QuantityKind;
-                        setForm((current) => ({
-                          ...current,
-                          quantityKind,
-                          quantityValue:
-                            quantityKind === "unknown"
-                              ? ""
-                              : current.quantityValue,
-                        }));
-                      }}
-                    >
-                      <option value="unknown">Unknown</option>
-                      <option value="seed_count">Seed count</option>
-                      <option value="weight">Weight</option>
-                    </select>
-                  </div>
-                  {form.quantityKind !== "unknown" && (
-                    <div className="quantity-controls sowing-quantity-controls">
+              <Breadcrumbs
+                items={[
+                  { label: "Sowings", href: "#/sowings" },
+                  { label: selected ? "Edit Sowing" : "New Sowing" },
+                ]}
+              />
+              <DetailHeader
+                eyebrow="Sowing"
+                title={selected ? "Edit Sowing" : "Record Sowing"}
+                secondary={
+                  selected && (
+                    <DetailContext
+                      items={[
+                        {
+                          label: "Record",
+                          value: recordName(selected, "Unlabelled sowing"),
+                        },
+                        {
+                          label: "Botanical identity",
+                          value:
+                            selected.seed_lot.botanical_identity_display_label,
+                        },
+                      ]}
+                    />
+                  )
+                }
+              />
+              <FormSections
+                disabled={pending}
+                error={save.status === "error" ? save : undefined}
+                errorFields={[
+                  { match: /seedlot|seed lot/i, selector: "#sowing-seed-lot" },
+                  {
+                    match: /quantity|seed count/i,
+                    selector: "#sowing-quantity-value",
+                  },
+                  { match: /germinated/i, selector: "#germinated-count" },
+                  {
+                    match: /maximum|temperature max/i,
+                    selector: "#temperature-max",
+                  },
+                  {
+                    match: /minimum|temperature/i,
+                    selector: "#temperature-min",
+                  },
+                  { match: /notes/i, selector: "#sowing-notes" },
+                  { match: /substrate/i, selector: "#sowing-substrate" },
+                  { match: /environment/i, selector: "#sowing-environment" },
+                  { match: /location/i, selector: "#sowing-location" },
+                  { match: /label/i, selector: "#sowing-label" },
+                  { match: /lifecycle/i, selector: "#sowing-lifecycle" },
+                  { match: /method/i, selector: "#sowing-method" },
+                  { match: /pretreatment/i, selector: "#sowing-pretreatment" },
+                  { match: /sowing date/i, selector: "#sowing-date-precision" },
+                ]}
+                panels={sowingFormPanels({
+                  form,
+                  updateForm: (key, value) => {
+                    setForm((current) => ({ ...current, [key]: value }));
+                  },
+                  locations: references.locations,
+                  pending,
+                  source: (
+                    <div className="field">
+                      <label htmlFor="sowing-seed-lot">SeedLot</label>
+                      <select
+                        aria-describedby="sowing-seed-lot-help"
+                        id="sowing-seed-lot"
+                        required
+                        value={form.seedLotId}
+                        disabled={pending}
+                        onChange={(event) => {
+                          updateForm("seedLotId", event.currentTarget.value);
+                        }}
+                      >
+                        <option value="">Choose a SeedLot</option>
+                        {activeSeedLots.length > 0 && (
+                          <optgroup label="Active SeedLots">
+                            {activeSeedLots.map((lot) => (
+                              <option key={lot.id} value={lot.id}>
+                                {seedLotLabel(lot)}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {inactiveSeedLots.length > 0 && (
+                          <optgroup label="Historical SeedLots">
+                            {inactiveSeedLots.map((lot) => (
+                              <option key={lot.id} value={lot.id}>
+                                {seedLotLabel(lot)}
+                              </option>
+                            ))}
+                          </optgroup>
+                        )}
+                      </select>
+                      <FieldHelp id="sowing-seed-lot-help">
+                        A Sowing uses material from exactly one SeedLot.
+                        Historical lots remain available for historical entry.
+                      </FieldHelp>
+                    </div>
+                  ),
+                  outcome: (
+                    <>
                       <div className="field">
-                        <label htmlFor="sowing-quantity-value">Amount</label>
+                        <label htmlFor="germinated-count">
+                          Germinated count{" "}
+                          <span className="optional">(optional)</span>
+                        </label>
                         <input
-                          id="sowing-quantity-value"
-                          inputMode="decimal"
-                          value={form.quantityValue}
+                          id="germinated-count"
+                          inputMode="numeric"
+                          value={form.germinatedCount}
                           disabled={pending}
                           onChange={(event) => {
                             updateForm(
-                              "quantityValue",
+                              "germinatedCount",
                               event.currentTarget.value,
                             );
                           }}
                         />
+                        <small>
+                          Use 0 when none germinated; leave empty when unknown.
+                        </small>
                       </div>
-                      {form.quantityKind === "weight" && (
-                        <div className="field">
-                          <label htmlFor="sowing-quantity-unit">Unit</label>
-                          <select
-                            id="sowing-quantity-unit"
-                            value={form.quantityUnit}
-                            disabled={pending}
-                            onChange={(event) => {
-                              updateForm(
-                                "quantityUnit",
-                                event.currentTarget.value as "g" | "mg",
-                              );
-                            }}
-                          >
-                            <option value="g">g</option>
-                            <option value="mg">mg</option>
-                          </select>
+                      <div className="field">
+                        <label htmlFor="sowing-lifecycle">Lifecycle</label>
+                        <select
+                          id="sowing-lifecycle"
+                          value={form.lifecycle}
+                          disabled={pending}
+                          onChange={(event) => {
+                            updateForm(
+                              "lifecycle",
+                              event.currentTarget.value as SowingLifecycle,
+                            );
+                          }}
+                        >
+                          {(Object.keys(lifecycleLabels) as SowingLifecycle[])
+                            .filter(
+                              (value) =>
+                                value !== "reversed" ||
+                                selected?.lifecycle === "reversed",
+                            )
+                            .map((value) => (
+                              <option key={value} value={value}>
+                                {lifecycleLabels[value]}
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                      {form.lifecycle === "completed" && (
+                        <div
+                          className="completion-outcome field--full"
+                          aria-live="polite"
+                        >
+                          <h4>Final Sowing outcome</h4>
+                          {form.quantityKind === "seed_count" &&
+                          !form.quantityApproximate &&
+                          form.quantityValue !== "" &&
+                          form.germinatedCount !== "" &&
+                          Number(form.germinatedCount) <=
+                            Number(form.quantityValue) ? (
+                            <dl>
+                              <div>
+                                <dt>Sown</dt>
+                                <dd>{form.quantityValue}</dd>
+                              </div>
+                              <div>
+                                <dt>Germinated</dt>
+                                <dd>{form.germinatedCount}</dd>
+                              </div>
+                              <div>
+                                <dt>Not germinated</dt>
+                                <dd>
+                                  {String(
+                                    Number(form.quantityValue) -
+                                      Number(form.germinatedCount),
+                                  )}
+                                </dd>
+                              </div>
+                            </dl>
+                          ) : (
+                            <p>
+                              The exact non-germinated remainder cannot be
+                              derived from the available quantity precision. You
+                              may still complete this Sowing.
+                            </p>
+                          )}
+                          <p className="field-help">
+                            Review the germinated count above before saving. No
+                            separate remainder is persisted.
+                          </p>
                         </div>
                       )}
-                      <label className="checkbox-label">
-                        <input
-                          type="checkbox"
-                          checked={form.quantityApproximate}
-                          disabled={pending}
-                          onChange={(event) => {
-                            updateForm(
-                              "quantityApproximate",
-                              event.currentTarget.checked,
-                            );
-                          }}
-                        />
-                        Approximate
-                      </label>
-                    </div>
-                  )}
-                  <FieldHelp id="sowing-quantity-help">
-                    Keep count and weight as distinct measurements. Mark an
-                    estimate as approximate, or leave the quantity unknown
-                    rather than guessing.
-                  </FieldHelp>
-                </fieldset>
-              </div>
-              <h4 className="form-group-heading">Storage</h4>
-              <div className="field">
-                <label htmlFor="sowing-location">
-                  Current location <span className="optional">(optional)</span>
-                </label>
-                <select
-                  aria-describedby="sowing-location-help"
-                  id="sowing-location"
-                  value={form.locationId}
-                  disabled={pending}
-                  onChange={(event) => {
-                    updateForm("locationId", event.currentTarget.value);
-                  }}
-                >
-                  <option value="">Not recorded</option>
-                  {locationsForScope(references.locations, "sowings").map(
-                    (location) => (
-                      <option
-                        key={location.id}
-                        value={location.id}
-                        disabled={
-                          Boolean(location.retired_at) &&
-                          location.id !== form.locationId
-                        }
-                      >
-                        {location.display_path}
-                        {location.retired_at ? " (retired)" : ""}
-                      </option>
-                    ),
-                  )}
-                </select>
-                <FieldHelp id="sowing-location-help">
-                  Where this Sowing is currently kept in your collection, not
-                  where its biological material originated.
-                </FieldHelp>
-              </div>
-
-              <button
-                type="button"
-                className="button--secondary disclosure-button"
-                aria-expanded={moreDetails}
-                aria-controls="sowing-advanced-fields"
-                onClick={() => {
-                  setMoreDetails((value) => !value);
-                }}
-              >
-                {moreDetails ? "Fewer details" : "More details"}
-              </button>
-              {moreDetails && (
-                <div
-                  id="sowing-advanced-fields"
-                  className="advanced-fields sowing-advanced-fields"
-                >
-                  <h4 className="form-group-heading field--full">
-                    Outcome and status
-                  </h4>
-                  <div className="field">
-                    <label htmlFor="germinated-count">
-                      Germinated count{" "}
-                      <span className="optional">(optional)</span>
-                    </label>
-                    <input
-                      id="germinated-count"
-                      inputMode="numeric"
-                      value={form.germinatedCount}
-                      disabled={pending}
-                      onChange={(event) => {
-                        updateForm(
-                          "germinatedCount",
-                          event.currentTarget.value,
-                        );
-                      }}
-                    />
-                    <small>
-                      Use 0 when none germinated; leave empty when unknown.
-                    </small>
-                  </div>
-                  <div className="field">
-                    <label htmlFor="sowing-lifecycle">Lifecycle</label>
-                    <select
-                      id="sowing-lifecycle"
-                      value={form.lifecycle}
-                      disabled={pending}
-                      onChange={(event) => {
-                        updateForm(
-                          "lifecycle",
-                          event.currentTarget.value as SowingLifecycle,
-                        );
-                      }}
-                    >
-                      {(Object.keys(lifecycleLabels) as SowingLifecycle[])
-                        .filter(
-                          (value) =>
-                            value !== "reversed" ||
-                            selected?.lifecycle === "reversed",
-                        )
-                        .map((value) => (
-                          <option key={value} value={value}>
-                            {lifecycleLabels[value]}
-                          </option>
-                        ))}
-                    </select>
-                  </div>
-                  {form.lifecycle === "completed" && (
-                    <div
-                      className="completion-outcome field--full"
-                      aria-live="polite"
-                    >
-                      <h4>Final Sowing outcome</h4>
-                      {form.quantityKind === "seed_count" &&
-                      !form.quantityApproximate &&
-                      form.quantityValue !== "" &&
-                      form.germinatedCount !== "" &&
-                      Number(form.germinatedCount) <=
-                        Number(form.quantityValue) ? (
-                        <dl>
-                          <div>
-                            <dt>Sown</dt>
-                            <dd>{form.quantityValue}</dd>
-                          </div>
-                          <div>
-                            <dt>Germinated</dt>
-                            <dd>{form.germinatedCount}</dd>
-                          </div>
-                          <div>
-                            <dt>Not germinated</dt>
-                            <dd>
-                              {String(
-                                Number(form.quantityValue) -
-                                  Number(form.germinatedCount),
-                              )}
-                            </dd>
-                          </div>
-                        </dl>
-                      ) : (
-                        <p>
-                          The exact non-germinated remainder cannot be derived
-                          from the available quantity precision. You may still
-                          complete this Sowing.
-                        </p>
-                      )}
-                      <p className="field-help">
-                        Review the germinated count above before saving. No
-                        separate remainder is persisted.
-                      </p>
-                    </div>
-                  )}
-                  <h4 className="form-group-heading field--full">
-                    Cultivation
-                  </h4>
-                  <div className="field">
-                    <label htmlFor="sowing-substrate">
-                      Substrate <span className="optional">(optional)</span>
-                    </label>
-                    <input
-                      id="sowing-substrate"
-                      value={form.substrate}
-                      disabled={pending}
-                      onChange={(event) => {
-                        updateForm("substrate", event.currentTarget.value);
-                      }}
-                    />
-                  </div>
-                  <div className="field">
-                    <label htmlFor="sowing-method">
-                      Method / container{" "}
-                      <span className="optional">(optional)</span>
-                    </label>
-                    <input
-                      id="sowing-method"
-                      value={form.methodContainer}
-                      disabled={pending}
-                      onChange={(event) => {
-                        updateForm(
-                          "methodContainer",
-                          event.currentTarget.value,
-                        );
-                      }}
-                    />
-                  </div>
-                  <div className="field">
-                    <label htmlFor="sowing-pretreatment">
-                      Pretreatment <span className="optional">(optional)</span>
-                    </label>
-                    <input
-                      id="sowing-pretreatment"
-                      value={form.pretreatment}
-                      disabled={pending}
-                      onChange={(event) => {
-                        updateForm("pretreatment", event.currentTarget.value);
-                      }}
-                    />
-                  </div>
-                  <fieldset className="temperature-field">
-                    <legend>
-                      Temperature{" "}
-                      <span className="optional">(optional, °C)</span>
-                    </legend>
-                    <div className="temperature-controls">
-                      <div className="field">
-                        <label htmlFor="temperature-min">Minimum °C</label>
-                        <input
-                          id="temperature-min"
-                          inputMode="decimal"
-                          value={form.temperatureMinC}
-                          disabled={pending}
-                          onChange={(event) => {
-                            updateForm(
-                              "temperatureMinC",
-                              event.currentTarget.value,
-                            );
-                          }}
-                        />
-                      </div>
-                      <div className="field">
-                        <label htmlFor="temperature-max">Maximum °C</label>
-                        <input
-                          id="temperature-max"
-                          inputMode="decimal"
-                          value={form.temperatureMaxC}
-                          disabled={pending}
-                          onChange={(event) => {
-                            updateForm(
-                              "temperatureMaxC",
-                              event.currentTarget.value,
-                            );
-                          }}
-                        />
-                      </div>
-                    </div>
-                  </fieldset>
-                  <div className="field field--full">
-                    <label htmlFor="sowing-environment">
-                      Environment / conditions{" "}
-                      <span className="optional">(optional)</span>
-                    </label>
-                    <textarea
-                      id="sowing-environment"
-                      value={form.environment}
-                      disabled={pending}
-                      onChange={(event) => {
-                        updateForm("environment", event.currentTarget.value);
-                      }}
-                    />
-                  </div>
-                  <h4 className="form-group-heading field--full">Notes</h4>
-                  <div className="field field--full">
-                    <label htmlFor="sowing-notes">
-                      Notes <span className="optional">(optional)</span>
-                    </label>
-                    <textarea
-                      id="sowing-notes"
-                      value={form.notes}
-                      disabled={pending}
-                      onChange={(event) => {
-                        updateForm("notes", event.currentTarget.value);
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
+                    </>
+                  ),
+                })}
+                submit={
+                  <button type="submit" disabled={pending}>
+                    {pending
+                      ? "Saving…"
+                      : selected
+                        ? "Save changes"
+                        : "Record Sowing"}
+                  </button>
+                }
+                cancel={
+                  <button
+                    type="button"
+                    className="button--secondary"
+                    onClick={() => {
+                      setEditing(false);
+                      setSave({ status: "idle" });
+                      if (!selected) {
+                        setMobileDetail(false);
+                        closeCreation();
+                      }
+                    }}
+                  >
+                    Cancel
+                  </button>
+                }
+              />
               {save.status === "error" && (
                 <div
                   className="notice notice--error"
@@ -1633,29 +1459,6 @@ export function SowingScreen({
                   </ul>
                 </div>
               )}
-              <div className="actions">
-                <button type="submit" disabled={pending}>
-                  {pending
-                    ? "Saving…"
-                    : selected
-                      ? "Save changes"
-                      : "Record Sowing"}
-                </button>
-                <button
-                  type="button"
-                  className="button--secondary"
-                  onClick={() => {
-                    setEditing(false);
-                    setSave({ status: "idle" });
-                    if (!selected) {
-                      setMobileDetail(false);
-                      closeCreation();
-                    }
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
             </form>
           ) : detail.status === "loading" ? (
             <p role="status">Loading Sowing detail…</p>
@@ -1723,8 +1526,20 @@ export function SowingScreen({
               </div>
             ) : (
               <RecordPreview
+                visual={
+                  <RecordVisual
+                    kind="sowing"
+                    label={recordName(selected, "Sowing")}
+                    compact
+                    identity={{
+                      id: selected.seed_lot.botanical_identity_id,
+                      display_label:
+                        selected.seed_lot.botanical_identity_display_label,
+                    }}
+                  />
+                }
                 type="Sowing"
-                title={selected.label ?? "Unlabelled sowing"}
+                title={recordName(selected, "Unlabelled sowing")}
                 secondary={
                   <>
                     <a
@@ -1734,7 +1549,7 @@ export function SowingScreen({
                     </a>{" "}
                     · From{" "}
                     <a href={`#/seeds/${selected.seed_lot.id}`}>
-                      {selected.seed_lot.label ?? "Unlabelled seed lot"}
+                      {recordName(selected.seed_lot, "Unlabelled seed lot")}
                     </a>
                   </>
                 }
@@ -1762,14 +1577,46 @@ export function SowingScreen({
                 ]}
                 actions={
                   <>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMobileDetail(true);
+                        setRecordRoute(`#/sowings/${selected.id}`);
+                      }}
+                    >
+                      Open details
+                    </button>
+                    <div
+                      className="preview-action-group"
+                      role="group"
+                      aria-label="Record maintenance"
+                    >
+                      <button
+                        type="button"
+                        className="button--secondary"
+                        onClick={() => {
+                          startEdit(selected);
+                        }}
+                      >
+                        Edit
+                      </button>
+                      {selected.lifecycle !== "reversed" && (
+                        <>
+                          <a
+                            className="button-link button--secondary"
+                            href={`#/sowings/${selected.id}?tab=germination`}
+                          >
+                            Record germination
+                          </a>
+                        </>
+                      )}
+                    </div>
                     {selected.lifecycle !== "reversed" && (
-                      <>
-                        <a
-                          className="button-link"
-                          href={`#/sowings/${selected.id}?tab=germination`}
-                        >
-                          Record germination
-                        </a>
+                      <div
+                        className="preview-action-group preview-action-group--descendants"
+                        role="group"
+                        aria-label="Descendant creation"
+                      >
                         <a
                           className="button-link button--secondary"
                           href={`#/plants?action=from-sowing&sowing=${selected.id}&kind=plant`}
@@ -1782,27 +1629,8 @@ export function SowingScreen({
                         >
                           Create Plant group
                         </a>
-                      </>
+                      </div>
                     )}
-                    <button
-                      type="button"
-                      className="button--secondary"
-                      onClick={() => {
-                        setMobileDetail(true);
-                        setRecordRoute(`#/sowings/${selected.id}`);
-                      }}
-                    >
-                      Open details
-                    </button>
-                    <button
-                      type="button"
-                      className="button--secondary"
-                      onClick={() => {
-                        startEdit(selected);
-                      }}
-                    >
-                      Edit
-                    </button>
                   </>
                 }
               />

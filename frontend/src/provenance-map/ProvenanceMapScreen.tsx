@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { Breadcrumbs } from "../components/CollectionUI";
+import { WorkspaceIntro } from "../components/CollectionUI";
 import {
   getCollectionProvenanceMap,
   type ProvenanceMapRecord,
@@ -145,22 +145,20 @@ export function ProvenanceMapScreen() {
 
   return (
     <section
-      className="screen map-screen"
+      className="workspace map-screen"
       aria-labelledby="provenance-map-title"
     >
-      <Breadcrumbs
-        items={[{ label: "Collection", href: "#/dashboard" }, { label: "Map" }]}
+      <WorkspaceIntro
+        eyebrow="Collection origins"
+        title="Provenance map"
+        titleId="provenance-map-title"
+        description="Explore precise provenance sites linked to collection records."
+        actions={
+          <a className="button-link button--secondary" href="#/geography">
+            Manage provenance sites
+          </a>
+        }
       />
-      <header className="screen-heading">
-        <div>
-          <p className="eyebrow">Collection origins</p>
-          <h2 id="provenance-map-title">Provenance map</h2>
-          <p>Explore precise provenance sites linked to collection records.</p>
-        </div>
-        <a className="button-link button--secondary" href="#/geography">
-          Manage provenance sites
-        </a>
-      </header>
 
       {state.status === "loading" && (
         <p aria-live="polite">Loading provenance map…</p>

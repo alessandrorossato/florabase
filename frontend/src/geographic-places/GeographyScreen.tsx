@@ -207,7 +207,9 @@ export function GeographyScreen({
   >("other_named_area");
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [editing, setEditing] = useState(false);
+  const [siteCreating, setSiteCreating] = useState(false);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const initialExpansionApplied = useRef(false);
   const createNameInput = useRef<HTMLInputElement>(null);
   const feedback = useRef<HTMLDivElement>(null);
   const {
@@ -239,18 +241,27 @@ export function GeographyScreen({
     void listGeographicPlaces(controller.signal)
       .then((places) => {
         setDirectory({ status: "ready", places });
-        if (
-          initialPlaceId &&
-          places.some((place) => place.id === initialPlaceId)
-        ) {
+        if (!initialExpansionApplied.current) {
+          initialExpansionApplied.current = true;
+          const initial = new Set(
+            places
+              .filter(
+                (place) =>
+                  place.place_kind === "canonical" &&
+                  place.source_code === "001" &&
+                  place.parent_id === null,
+              )
+              .map((place) => place.id),
+          );
           const byId = new Map(places.map((place) => [place.id, place]));
-          const ancestors = new Set<string>();
-          let parent = byId.get(initialPlaceId)?.parent_id;
+          let parent = initialPlaceId
+            ? byId.get(initialPlaceId)?.parent_id
+            : null;
           while (parent) {
-            ancestors.add(parent);
+            initial.add(parent);
             parent = byId.get(parent)?.parent_id ?? null;
           }
-          setExpanded(ancestors);
+          setExpanded(initial);
         }
       })
       .catch((error: unknown) => {
@@ -423,7 +434,16 @@ export function GeographyScreen({
             >
               New local place
             </button>
-          ) : null
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setSiteCreating(true);
+              }}
+            >
+              New provenance site
+            </button>
+          )
         }
       />
       <DirectorySearch
@@ -968,6 +988,11 @@ export function GeographyScreen({
       )}
       {directory.status === "ready" && mode !== "places" && (
         <ProvenanceSiteManager
+          startCreating={siteCreating}
+          onCreationStarted={() => {
+            setSiteCreating(false);
+          }}
+          showCreateAction={false}
           places={places}
           csrfToken={csrfToken}
           initialSiteId={initialSiteId}

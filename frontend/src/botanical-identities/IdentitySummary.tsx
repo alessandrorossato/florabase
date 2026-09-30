@@ -1,67 +1,20 @@
-import { useState } from "react";
+import { RecordVisual } from "../photos/RecordVisual";
 import { StatStrip } from "../components/ReferenceUI";
 import type { BotanicalIdentityResponse } from "./api";
-
-function IdentityImageFallback({ label }: { label: string }) {
-  return (
-    <>
-      <svg viewBox="0 0 120 120" fill="none" aria-hidden="true">
-        <path
-          d="M40 102C57 80 61 49 78 18M58 70C30 74 25 54 26 43C45 42 62 53 58 70ZM67 48C89 53 100 37 102 24C83 23 71 32 67 48ZM48 87C28 91 18 79 17 66C34 62 47 71 48 87Z"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <span className="sr-only">{label}</span>
-    </>
-  );
-}
 
 export function IdentityImage({
   identity,
 }: {
   identity: BotanicalIdentityResponse;
 }) {
-  const sourceKey = `${identity.id}:${identity.compact_cover_kind ?? "none"}:${identity.compact_external_cover_url ?? ""}`;
-  const [brokenSource, setBrokenSource] = useState<string | null>(null);
-  const imageSource =
-    identity.compact_cover_kind === "local"
-      ? `/api/v1/botanical-identities/${identity.id}/cover-image/thumbnail`
-      : identity.compact_cover_kind === "external"
-        ? identity.compact_external_cover_url
-        : null;
   return (
-    <span
+    <RecordVisual
+      identity={identity}
+      kind="identity"
+      label={identity.display_label}
+      allowExternalCover
       className={`identity-image identity-image--${identity.compact_cover_kind ?? "none"}`}
-    >
-      {imageSource && brokenSource !== sourceKey ? (
-        <img
-          alt={`Cover for ${identity.display_label}`}
-          loading="lazy"
-          decoding="async"
-          referrerPolicy={
-            identity.compact_cover_kind === "external"
-              ? "no-referrer"
-              : undefined
-          }
-          src={imageSource}
-          onError={() => {
-            setBrokenSource(sourceKey);
-          }}
-        />
-      ) : (
-        <IdentityImageFallback
-          label={
-            brokenSource === sourceKey
-              ? "Cover unavailable"
-              : identity.compact_cover_kind === "external"
-                ? "External image"
-                : "No cover image"
-          }
-        />
-      )}
-    </span>
+    />
   );
 }
 

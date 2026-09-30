@@ -5,6 +5,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+from florabase.collection_photos.schemas import PrimaryPhotoResponse
 from florabase.events.model import EventKind
 from florabase.plants.model import PlantGroupLifecycle, PlantLifecycle
 from florabase.plants.schemas import (
@@ -117,6 +118,7 @@ class PlantEventTarget(BaseModel):
     label: str | None
     lifecycle: PlantLifecycle
     botanical_identity: BotanicalIdentitySummary
+    primary_photo: PrimaryPhotoResponse | None = None
 
 
 class PlantGroupEventTarget(BaseModel):
@@ -125,6 +127,7 @@ class PlantGroupEventTarget(BaseModel):
     label: str | None
     lifecycle: PlantGroupLifecycle
     botanical_identity: BotanicalIdentitySummary
+    primary_photo: PrimaryPhotoResponse | None = None
 
 
 EventTarget = Annotated[

@@ -426,7 +426,10 @@ test("identity overflow keeps delete anchored and restores trigger focus on Esca
   expect(screen.getByRole("button", { name: "Delete" })).toBeVisible();
   await user.keyboard("{Escape}");
   expect(more).toHaveFocus();
-  expect(more.closest("details")).not.toHaveAttribute("open");
+  expect(more).toHaveAttribute("aria-expanded", "false");
+  expect(
+    screen.queryByRole("button", { name: /^Delete$/ }),
+  ).not.toBeInTheDocument();
 });
 
 test("edit validation stays linked to the field and retains contextual help", async () => {

@@ -8,6 +8,7 @@ import pytest
 from fastapi import HTTPException, Response
 
 from florabase.botanical_identities.model import BotanicalIdentity
+from florabase.collection_photos.schemas import PrimaryPhotoResponse
 from florabase.events import api, service
 from florabase.events.model import Event
 from florabase.events.schemas import (
@@ -326,6 +327,10 @@ def test_get_and_response_projection_are_typed_and_target_aware(
     database.execute.return_value.one_or_none.return_value = None
     assert service.get_event(database, uuid7()) is None
     monkeypatch.setattr(service, "list_locations", lambda _: [destination])
+    local_photo = PrimaryPhotoResponse(kind="local", photo_id=uuid7(), thumbnail_url="/local-thumb")
+    external_photo = PrimaryPhotoResponse(kind="external", photo_id=uuid7(), thumbnail_url=None)
+    summaries = MagicMock(side_effect=[{plant.id: local_photo}, {group.id: external_photo}])
+    monkeypatch.setattr(service, "primary_summaries", summaries)
     responses = service.event_responses(
         database,
         [
@@ -340,6 +345,13 @@ def test_get_and_response_projection_are_typed_and_target_aware(
     assert responses[0].destination_location is not None
     assert responses[0].destination_location.display_path == "Greenhouse"
     assert responses[1].target.type == "plant_group"
+    assert responses[0].target.primary_photo == local_photo
+    assert responses[1].target.primary_photo == external_photo
+    assert summaries.call_count == 2
+    assert summaries.call_args_list[0].args == (database, "plant", [plant.id])
+    assert summaries.call_args_list[1].args == (database, "plant_group", [group.id])
+    summaries.side_effect = None
+    summaries.return_value = {}
     with pytest.raises(RuntimeError):
         service.event_responses(
             database, [EventProjection(group_event, None, None, None, None, None, None, None)]

@@ -407,172 +407,178 @@ export function useDashboardSearch() {
               Close
             </button>
           </div>
-          <fieldset className="dashboard-kind-filters">
-            <legend>Record type</legend>
-            {categories.map((category) => (
-              <div key={category.title}>
-                <strong>{category.title}</strong>
-                {category.kinds.map((kind) => (
-                  <label key={kind}>
-                    <input
-                      type="checkbox"
-                      checked={state.kinds.includes(kind)}
-                      onChange={(event) => {
-                        const next = event.currentTarget.checked
-                          ? [...state.kinds, kind]
-                          : state.kinds.filter((item) => item !== kind);
-                        apply({
-                          ...state,
-                          kinds: next,
-                          lifecycle: "",
-                          eventKind: "",
-                          year: "",
-                        });
-                      }}
-                    />
-                    {labels[kind]}
-                  </label>
-                ))}
-              </div>
-            ))}
-          </fieldset>
-          <p className="field-hint">
-            Collection filters below apply to recorded relationships. Location
-            includes descendants; geographic provenance matches the exact
-            recorded place or site.
-          </p>
-          {references.status === "idle" || references.status === "loading" ? (
-            <p role="status">Loading filter choices…</p>
-          ) : null}
-          {references.status === "error" && (
-            <div className="notice notice--error" role="alert">
-              <p>Could not load filter choices.</p>
-              <button
-                type="button"
-                onClick={() => {
-                  setReferences({ status: "idle" });
-                  setReferenceAttempt((value) => value + 1);
-                }}
-              >
-                Retry
-              </button>
-            </div>
-          )}
-          {references.status === "ready" && (
-            <div className="dashboard-reference-filters">
-              <ReferencePicker
-                label="Botanical identity"
-                choices={references.value.identities}
-                value={state.identityId}
-                onChange={(id) => {
-                  update("identityId", id);
-                }}
-              />
-              <ReferencePicker
-                label="Collection location"
-                choices={references.value.locations}
-                value={state.locationId}
-                onChange={(id) => {
-                  update("locationId", id);
-                }}
-              />
-              <ReferencePicker
-                label="Supplier"
-                choices={references.value.suppliers}
-                value={state.supplierId}
-                onChange={(id) => {
-                  update("supplierId", id);
-                }}
-              />
-              <ReferencePicker
-                label="Geographic provenance place"
-                choices={references.value.places}
-                value={state.provenancePlaceId}
-                onChange={(id) => {
-                  update("provenancePlaceId", id);
-                }}
-              />
-              <ReferencePicker
-                label="Provenance site"
-                choices={references.value.sites}
-                value={state.provenanceSiteId}
-                onChange={(id) => {
-                  update("provenanceSiteId", id);
-                }}
-              />
-            </div>
-          )}
-          <div className="dashboard-filter-details">
-            {lifecycleOptions && (
-              <div className="field">
-                <label htmlFor="search-lifecycle">
-                  {singleKind ? labels[singleKind] : "Record"} lifecycle
-                </label>
-                <select
-                  id="search-lifecycle"
-                  value={state.lifecycle}
-                  onChange={(event) => {
-                    update("lifecycle", event.currentTarget.value);
+          <div className="dashboard-filter-fields">
+            <fieldset className="dashboard-kind-filters">
+              <legend>Record type</legend>
+              {categories.map((category) => (
+                <div key={category.title}>
+                  <strong>{category.title}</strong>
+                  {category.kinds.map((kind) => (
+                    <label key={kind}>
+                      <input
+                        type="checkbox"
+                        checked={state.kinds.includes(kind)}
+                        onChange={(event) => {
+                          const next = event.currentTarget.checked
+                            ? [...state.kinds, kind]
+                            : state.kinds.filter((item) => item !== kind);
+                          apply({
+                            ...state,
+                            kinds: next,
+                            lifecycle: "",
+                            eventKind: "",
+                            year: "",
+                          });
+                        }}
+                      />
+                      {labels[kind]}
+                    </label>
+                  ))}
+                </div>
+              ))}
+            </fieldset>
+            <p className="field-hint">
+              Collection filters below apply to recorded relationships. Location
+              includes descendants; geographic provenance matches the exact
+              recorded place or site.
+            </p>
+            {references.status === "idle" || references.status === "loading" ? (
+              <p role="status">Loading filter choices…</p>
+            ) : null}
+            {references.status === "error" && (
+              <div className="notice notice--error" role="alert">
+                <p>Could not load filter choices.</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReferences({ status: "idle" });
+                    setReferenceAttempt((value) => value + 1);
                   }}
                 >
-                  <option value="">Any lifecycle</option>
-                  {lifecycleOptions.map((value) => (
-                    <option value={value} key={value}>
-                      {value.replaceAll("_", " ")}
-                    </option>
-                  ))}
-                </select>
+                  Retry
+                </button>
               </div>
             )}
-            {singleKind === "event" && (
-              <div className="field">
-                <label htmlFor="search-event-kind">Event kind</label>
-                <select
-                  id="search-event-kind"
-                  value={state.eventKind}
-                  onChange={(event) => {
-                    update("eventKind", event.currentTarget.value);
+            {references.status === "ready" && (
+              <div className="dashboard-reference-filters">
+                <ReferencePicker
+                  label="Botanical identity"
+                  choices={references.value.identities}
+                  value={state.identityId}
+                  onChange={(id) => {
+                    update("identityId", id);
                   }}
-                >
-                  <option value="">Any kind</option>
-                  {eventKinds.map((value) => (
-                    <option value={value} key={value}>
-                      {value.replaceAll("_", " ")}
-                    </option>
-                  ))}
-                </select>
+                />
+                <ReferencePicker
+                  label="Collection location"
+                  choices={references.value.locations}
+                  value={state.locationId}
+                  onChange={(id) => {
+                    update("locationId", id);
+                  }}
+                />
+                <ReferencePicker
+                  label="Supplier"
+                  choices={references.value.suppliers}
+                  value={state.supplierId}
+                  onChange={(id) => {
+                    update("supplierId", id);
+                  }}
+                />
+                <ReferencePicker
+                  label="Geographic provenance place"
+                  choices={references.value.places}
+                  value={state.provenancePlaceId}
+                  onChange={(id) => {
+                    update("provenancePlaceId", id);
+                  }}
+                />
+                <ReferencePicker
+                  label="Provenance site"
+                  choices={references.value.sites}
+                  value={state.provenanceSiteId}
+                  onChange={(id) => {
+                    update("provenanceSiteId", id);
+                  }}
+                />
               </div>
             )}
-            {singleKind &&
-              ["seed_lot", "sowing", "plant", "plant_group", "event"].includes(
-                singleKind,
-              ) && (
+            <div className="dashboard-filter-details">
+              {lifecycleOptions && (
                 <div className="field">
-                  <label htmlFor="search-year">
-                    {singleKind === "seed_lot"
-                      ? "Acquisition"
-                      : singleKind === "sowing"
-                        ? "Sowing"
-                        : singleKind === "event"
-                          ? "Occurred"
-                          : "Collection entry"}{" "}
-                    year
+                  <label htmlFor="search-lifecycle">
+                    {singleKind ? labels[singleKind] : "Record"} lifecycle
                   </label>
-                  <input
-                    id="search-year"
-                    type="number"
-                    min="1"
-                    max="9999"
-                    value={state.year}
+                  <select
+                    id="search-lifecycle"
+                    value={state.lifecycle}
                     onChange={(event) => {
-                      update("year", event.currentTarget.value);
+                      update("lifecycle", event.currentTarget.value);
                     }}
-                  />
-                  <small>
-                    Matches the recorded year without assuming a month or day.
-                  </small>
+                  >
+                    <option value="">Any lifecycle</option>
+                    {lifecycleOptions.map((value) => (
+                      <option value={value} key={value}>
+                        {value.replaceAll("_", " ")}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
+              {singleKind === "event" && (
+                <div className="field">
+                  <label htmlFor="search-event-kind">Event kind</label>
+                  <select
+                    id="search-event-kind"
+                    value={state.eventKind}
+                    onChange={(event) => {
+                      update("eventKind", event.currentTarget.value);
+                    }}
+                  >
+                    <option value="">Any kind</option>
+                    {eventKinds.map((value) => (
+                      <option value={value} key={value}>
+                        {value.replaceAll("_", " ")}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {singleKind &&
+                [
+                  "seed_lot",
+                  "sowing",
+                  "plant",
+                  "plant_group",
+                  "event",
+                ].includes(singleKind) && (
+                  <div className="field">
+                    <label htmlFor="search-year">
+                      {singleKind === "seed_lot"
+                        ? "Acquisition"
+                        : singleKind === "sowing"
+                          ? "Sowing"
+                          : singleKind === "event"
+                            ? "Occurred"
+                            : "Collection entry"}{" "}
+                      year
+                    </label>
+                    <input
+                      id="search-year"
+                      type="number"
+                      min="1"
+                      max="9999"
+                      value={state.year}
+                      onChange={(event) => {
+                        update("year", event.currentTarget.value);
+                      }}
+                    />
+                    <small>
+                      Matches the recorded year without assuming a month or day.
+                    </small>
+                  </div>
+                )}
+            </div>
           </div>
         </section>
         {active && (

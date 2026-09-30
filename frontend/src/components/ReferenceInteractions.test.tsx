@@ -125,29 +125,30 @@ test("overflow menus dismiss outside and on action, Escape, or another menu", as
       <button type="button">Outside</button>
     </>,
   );
-  const first = screen.getByLabelText("First actions").closest("details");
-  const second = screen.getByLabelText("Second actions").closest("details");
-  expect(first).not.toBeNull();
-  expect(second).not.toBeNull();
-  await user.click(screen.getByLabelText("First actions"));
-  expect(first).toHaveAttribute("open");
+  const first = screen.getByRole("button", { name: "First actions" });
+  const second = screen.getByRole("button", { name: "Second actions" });
+  await user.click(first);
+  expect(first).toHaveAttribute("aria-expanded", "true");
+  const menu = screen.getByRole("group", { name: "First actions menu" });
+  expect(menu.parentElement).toBe(document.body);
   fireEvent.pointerDown(screen.getByRole("button", { name: "Retire" }));
-  expect(first).toHaveAttribute("open");
+  expect(first).toHaveAttribute("aria-expanded", "true");
   await user.click(screen.getByRole("button", { name: "Retire" }));
   expect(action).toHaveBeenCalledOnce();
-  expect(first).not.toHaveAttribute("open");
-  expect(screen.getByLabelText("First actions")).toHaveFocus();
-  await user.click(screen.getByLabelText("First actions"));
+  expect(first).toHaveAttribute("aria-expanded", "false");
+  expect(first).toHaveFocus();
+  await user.click(first);
   fireEvent.pointerDown(screen.getByRole("button", { name: "Outside" }));
-  expect(first).not.toHaveAttribute("open");
-  await user.click(screen.getByLabelText("First actions"));
+  expect(first).toHaveAttribute("aria-expanded", "false");
+  await user.click(first);
   await user.keyboard("{Escape}");
-  expect(first).not.toHaveAttribute("open");
-  expect(screen.getByLabelText("First actions")).toHaveFocus();
-  await user.click(screen.getByLabelText("First actions"));
-  await user.click(screen.getByLabelText("Second actions"));
+  expect(first).toHaveAttribute("aria-expanded", "false");
+  expect(first).toHaveFocus();
+  await user.keyboard("{ArrowDown}");
   await waitFor(() => {
-    expect(first).not.toHaveAttribute("open");
-    expect(second).toHaveAttribute("open");
+    expect(screen.getByRole("button", { name: "Retire" })).toHaveFocus();
   });
+  await user.click(second);
+  expect(first).toHaveAttribute("aria-expanded", "false");
+  expect(second).toHaveAttribute("aria-expanded", "true");
 });

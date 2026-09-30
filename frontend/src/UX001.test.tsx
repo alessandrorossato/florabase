@@ -589,6 +589,7 @@ test("Botanical identity edit and guarded deletion stay explicit", async () => {
   ).toHaveAttribute("role", "alert");
 
   referenced = false;
+  await user.click(screen.getByLabelText("More botanical identity actions"));
   await user.click(screen.getByRole("button", { name: "Delete" }));
   await user.click(
     screen.getByRole("button", { name: "Delete botanical identity" }),

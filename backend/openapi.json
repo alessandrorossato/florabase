@@ -3168,6 +3168,16 @@
           "lifecycle": {
             "$ref": "#/components/schemas/PlantLifecycle"
           },
+          "primary_photo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrimaryPhotoResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "type": {
             "const": "plant",
             "default": "plant",
@@ -3530,6 +3540,16 @@
           },
           "lifecycle": {
             "$ref": "#/components/schemas/PlantGroupLifecycle"
+          },
+          "primary_photo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrimaryPhotoResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "type": {
             "const": "plant_group",

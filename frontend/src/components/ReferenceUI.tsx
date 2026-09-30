@@ -1,4 +1,12 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 
 /** Small layout vocabulary, proven by the BotanicalIdentity reference. */
 export function PageHeader({
@@ -117,15 +125,18 @@ export function RecordPreview({
   secondary,
   facts,
   actions,
+  visual,
 }: {
   title: string;
   type: string;
   secondary?: ReactNode;
+  visual?: ReactNode;
   facts: { label: string; value: ReactNode }[];
   actions: ReactNode;
 }) {
   return (
     <QuickPreview>
+      {visual}
       <p className="record-preview__type">{type}</p>
       <h3>{title}</h3>
       {secondary && <p>{secondary}</p>}
@@ -151,68 +162,150 @@ export function OverflowMenu({
   ariaLabel?: string;
   children: ReactNode;
 }) {
-  const detailsRef = useRef<HTMLDetailsElement>(null);
-  const triggerRef = useRef<HTMLElement>(null);
-  const close = (restoreFocus = false) => {
-    const details = detailsRef.current;
-    if (!details?.open) return;
-    details.open = false;
-    if (restoreFocus) triggerRef.current?.focus();
+  const id = useId();
+  const trigger = useRef<HTMLButtonElement>(null);
+  const panel = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState({ left: 12, top: 12 });
+  const close = (restore = false) => {
+    setOpen(false);
+    if (restore) trigger.current?.focus();
   };
-
-  useEffect(() => {
-    const details = detailsRef.current;
-    if (!details) return;
-    const dismissOutside = (event: Event) => {
-      if (
-        details.open &&
-        event.target instanceof Node &&
-        !details.contains(event.target)
-      ) {
-        details.open = false;
-      }
+  useLayoutEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const anchor = trigger.current?.getBoundingClientRect();
+      const box = panel.current?.getBoundingClientRect();
+      if (!anchor || !box) return;
+      const left = Math.max(
+        12,
+        Math.min(anchor.right - box.width, window.innerWidth - box.width - 12),
+      );
+      const below = anchor.bottom + 8;
+      const top = Math.max(
+        12,
+        Math.min(
+          below + box.height <= window.innerHeight - 12
+            ? below
+            : anchor.top - box.height - 8,
+          window.innerHeight - box.height - 12,
+        ),
+      );
+      setPosition((current) =>
+        current.left === left && current.top === top ? current : { left, top },
+      );
     };
-    const closePeers = () => {
-      if (!details.open) return;
-      for (const peer of document.querySelectorAll<HTMLDetailsElement>(
-        "details.overflow-menu[open]",
-      )) {
-        if (peer !== details) peer.open = false;
-      }
-    };
-    document.addEventListener("pointerdown", dismissOutside);
-    document.addEventListener("focusin", dismissOutside);
-    details.addEventListener("toggle", closePeers);
+    place();
+    const observer =
+      typeof ResizeObserver === "undefined"
+        ? undefined
+        : new ResizeObserver(place);
+    if (panel.current) observer?.observe(panel.current);
+    window.addEventListener("resize", place);
+    window.addEventListener("scroll", place, true);
     return () => {
-      document.removeEventListener("pointerdown", dismissOutside);
-      document.removeEventListener("focusin", dismissOutside);
-      details.removeEventListener("toggle", closePeers);
+      observer?.disconnect();
+      window.removeEventListener("resize", place);
+      window.removeEventListener("scroll", place, true);
     };
-  }, []);
-
-  return (
-    <details
-      className={`overflow-menu${label === "More" ? " overflow-menu--text" : ""}`}
-      ref={detailsRef}
-      onKeyDown={(event) => {
-        if (event.key !== "Escape" || !detailsRef.current?.open) return;
+  }, [open]);
+  useEffect(() => {
+    if (!open) return;
+    const dismiss = (event: Event) => {
+      if (
+        event.target instanceof Node &&
+        !trigger.current?.contains(event.target) &&
+        !panel.current?.contains(event.target)
+      )
+        setOpen(false);
+    };
+    const escape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
         event.preventDefault();
-        event.stopPropagation();
-        close(true);
-      }}
-    >
-      <summary ref={triggerRef} aria-label={ariaLabel}>
-        {label}
-      </summary>
-      <div
-        className="overflow-menu__panel"
-        onClick={(event) => {
-          if (event.target instanceof Element && event.target.closest("button"))
-            close(true);
+        setOpen(false);
+        trigger.current?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", dismiss);
+    document.addEventListener("focusin", dismiss);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", dismiss);
+      document.removeEventListener("focusin", dismiss);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [open]);
+  return (
+    <>
+      <button
+        className="overflow-trigger button--secondary"
+        ref={trigger}
+        type="button"
+        aria-label={ariaLabel}
+        aria-expanded={open}
+        aria-controls={open ? id : undefined}
+        onClick={() => {
+          setOpen((current) => !current);
+        }}
+        onKeyDown={(event) => {
+          if (event.key === "ArrowDown") {
+            event.preventDefault();
+            setOpen(true);
+            requestAnimationFrame(() =>
+              panel.current
+                ?.querySelector<HTMLElement>("button:not(:disabled),a[href]")
+                ?.focus(),
+            );
+          }
         }}
       >
-        {children}
-      </div>
-    </details>
+        {label}
+      </button>
+      {open &&
+        createPortal(
+          <div
+            id={id}
+            ref={panel}
+            className="overflow-popover"
+            role="group"
+            aria-label={`${ariaLabel ?? "More actions"} menu`}
+            style={position}
+            onClick={(event) => {
+              if (
+                event.target instanceof Element &&
+                event.target.closest("button,a[href]")
+              )
+                close(true);
+            }}
+            onKeyDown={(event) => {
+              const items = Array.from(
+                panel.current?.querySelectorAll<HTMLElement>(
+                  "button:not(:disabled),a[href]",
+                ) ?? [],
+              );
+              const index = items.indexOf(
+                document.activeElement as HTMLElement,
+              );
+              const next =
+                event.key === "ArrowDown"
+                  ? (index + 1) % items.length
+                  : event.key === "ArrowUp"
+                    ? (index - 1 + items.length) % items.length
+                    : event.key === "Home"
+                      ? 0
+                      : event.key === "End"
+                        ? items.length - 1
+                        : null;
+              if (next !== null) {
+                event.preventDefault();
+                items[next]?.focus();
+              }
+            }}
+          >
+            {children}
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }

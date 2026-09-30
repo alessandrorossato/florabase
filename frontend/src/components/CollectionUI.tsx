@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, RefObject } from "react";
 
 export interface TabItem<TabId extends string = string> {
   id: TabId;
@@ -11,13 +11,31 @@ export function WorkspaceIntro({
   titleId,
   description,
   actions,
+  contextOnly = false,
+  contextActions,
 }: {
   eyebrow: string;
   title: string;
   titleId: string;
   description: string;
   actions?: ReactNode;
+  contextOnly?: boolean;
+  contextActions?: ReactNode;
 }) {
+  if (contextOnly)
+    return (
+      <>
+        <h2 className="sr-only" id={titleId}>
+          {title}
+        </h2>
+        {(Boolean(actions) || Boolean(contextActions)) && (
+          <div className="workspace-context-actions">
+            {contextActions}
+            {actions}
+          </div>
+        )}
+      </>
+    );
   return (
     <header className="workspace-intro seed-heading">
       <div>
@@ -57,6 +75,8 @@ export function DetailHeader({
   onEdit,
   editLabel = "Edit",
   overflow,
+  headingRef,
+  visual,
 }: {
   eyebrow: string;
   title: string;
@@ -66,14 +86,21 @@ export function DetailHeader({
   onEdit?: () => void;
   editLabel?: string;
   overflow?: ReactNode;
+  headingRef?: RefObject<HTMLHeadingElement | null>;
+  visual?: ReactNode;
 }) {
   return (
     <header className="detail-header">
-      <div>
-        <p className="eyebrow">{eyebrow}</p>
-        <h3>{title}</h3>
-        {secondary && <div className="detail-secondary">{secondary}</div>}
-        {status && <div className="detail-status">{status}</div>}
+      <div className="detail-identity">
+        {visual && <div className="detail-visual">{visual}</div>}
+        <div>
+          <p className="eyebrow">{eyebrow}</p>
+          <h3 ref={headingRef} tabIndex={headingRef ? -1 : undefined}>
+            {title}
+          </h3>
+          {secondary && <div className="detail-secondary">{secondary}</div>}
+          {status && <div className="detail-status">{status}</div>}
+        </div>
       </div>
       {(primaryActions ?? onEdit ?? overflow) && (
         <div className="actions detail-actions">
@@ -91,6 +118,23 @@ export function DetailHeader({
         </div>
       )}
     </header>
+  );
+}
+
+export function DetailContext({
+  items,
+}: {
+  items: { label: string; value: ReactNode }[];
+}) {
+  return (
+    <dl className="detail-context">
+      {items.map(({ label, value }) => (
+        <div key={label}>
+          <dt>{label}</dt>
+          <dd>{value}</dd>
+        </div>
+      ))}
+    </dl>
   );
 }
 

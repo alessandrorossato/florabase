@@ -131,21 +131,7 @@ export function CreationReversal({
         </p>
       ) : (
         <>
-          <dl className="operation-facts">
-            <div>
-              <dt>What will be restored</dt>
-              <dd>
-                {kind === "sowing"
-                  ? "The source SeedLot quantity and lifecycle snapshot"
-                  : "The source Sowing lifecycle snapshot"}
-              </dd>
-            </div>
-            <div>
-              <dt>Historical result</dt>
-              <dd>
-                This {labels[kind]} remains as Reversed with notes and lineage.
-              </dd>
-            </div>
+          <dl className="operation-state">
             <div>
               <dt>Dependency state</dt>
               <dd>
@@ -159,22 +145,42 @@ export function CreationReversal({
               </dd>
             </div>
           </dl>
-          <ContextHelpDialog
-            buttonLabel="Understand creation reversal"
-            title="How creation reversal works"
-          >
-            <p>
-              Undo restores the source lifecycle and quantity snapshot recorded
-              immediately before this creation. It does not reconstruct values
-              from later Events.
-            </p>
-            <p>
-              The created result is not deleted: it remains readable as Reversed
-              with its identity, lineage, notes, and Event history. Later
-              structural work can block reversal, while retained observations
-              may require explicit confirmation.
-            </p>
-          </ContextHelpDialog>
+          <details className="operation-explanation">
+            <summary>Creation details</summary>
+            <dl className="operation-facts">
+              <div>
+                <dt>What will be restored</dt>
+                <dd>
+                  {kind === "sowing"
+                    ? "The source SeedLot quantity and lifecycle snapshot"
+                    : "The source Sowing lifecycle snapshot"}
+                </dd>
+              </div>
+              <div>
+                <dt>Historical result</dt>
+                <dd>
+                  This {labels[kind]} remains as Reversed with notes and
+                  lineage.
+                </dd>
+              </div>
+            </dl>
+            <ContextHelpDialog
+              buttonLabel="Understand creation reversal"
+              title="How creation reversal works"
+            >
+              <p>
+                Undo restores the source lifecycle and quantity snapshot
+                recorded immediately before this creation. It does not
+                reconstruct values from later Events.
+              </p>
+              <p>
+                The created result is not deleted: it remains readable as
+                Reversed with its identity, lineage, notes, and Event history.
+                Later structural work can block reversal, while retained
+                observations may require explicit confirmation.
+              </p>
+            </ContextHelpDialog>
+          </details>
           {error && <p role="alert">{error}</p>}
           {!eligibility && !error && (
             <p role="status">Checking reversal eligibility…</p>

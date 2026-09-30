@@ -174,3 +174,73 @@
     box-shadow: none;
   }
 }
+
+@media screen {
+  .label-composer {
+    gap: 1.5rem;
+    grid-template-columns: minmax(15rem, 18rem) minmax(0, 1fr);
+  }
+  .label-controls {
+    padding: 1rem;
+    border: 1px solid #cfdbd2;
+    border-radius: 0.65rem;
+    background: #f4f7f4;
+  }
+  .label-controls > h3 {
+    margin-top: 0;
+  }
+  .label-print-guidance {
+    padding: 0.65rem;
+    margin: 0.75rem 0;
+    background: #fff;
+    border-left: 3px solid #cfdbd2;
+    font-size: 0.8rem;
+  }
+  .label-print-guidance .notice {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  .label-print-guidance .field-help {
+    margin-bottom: 0;
+  }
+  .label-preview > h3 {
+    margin-top: 0;
+  }
+  .label-empty {
+    padding: 1rem;
+  }
+  .label-entries li {
+    padding: 0.65rem 0;
+  }
+}
+@media screen and (min-width: 1101px) {
+  .labels-workspace {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+  }
+  .label-composer {
+    flex: 1 1 auto;
+    min-height: 0;
+    align-items: stretch;
+  }
+  .label-controls,
+  .label-preview {
+    overflow: auto;
+    min-height: 0;
+  }
+  .label-preview {
+    padding: 0.75rem;
+    background: #f4f7f4;
+    border-radius: 0.65rem;
+  }
+}
+@media screen and (max-width: 1100px) {
+  .label-composer {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+}

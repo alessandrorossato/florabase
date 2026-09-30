@@ -164,7 +164,9 @@ test("guided exact SeedLot usage previews and submits the authoritative partial 
   expect(
     await screen.findByRole("heading", { name: "Start sowing" }),
   ).toBeInTheDocument();
+  await user.click(screen.getByRole("tab", { name: "Material & location" }));
   await user.type(screen.getByLabelText("Amount"), "20");
+  await user.click(screen.getByRole("tab", { name: /^Notes$/ }));
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   const partial = screen.getByRole("radio", { name: /Use part of the lot/ });
   expect(partial).not.toBeChecked();
@@ -207,7 +209,9 @@ test("exact use-all exhausts the source only when the Sowing amount matches", as
   const user = userEvent.setup();
   render(<App />);
   await screen.findByRole("heading", { name: "Start sowing" });
+  await user.click(screen.getByRole("tab", { name: "Material & location" }));
   await user.type(screen.getByLabelText("Amount"), "120");
+  await user.click(screen.getByRole("tab", { name: /^Notes$/ }));
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   const useAll = screen.getByRole("radio", { name: /Use the whole lot/ });
   expect(useAll).toBeEnabled();
@@ -234,7 +238,9 @@ test("oversubscription is visible, disables arithmetic, and still permits no adj
   const user = userEvent.setup();
   render(<App />);
   await screen.findByRole("heading", { name: "Start sowing" });
+  await user.click(screen.getByRole("tab", { name: "Material & location" }));
   await user.type(screen.getByLabelText("Amount"), "130");
+  await user.click(screen.getByRole("tab", { name: /^Notes$/ }));
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   expect(screen.getByRole("alert")).toHaveTextContent(
     "exceeds the exact source quantity",
@@ -285,7 +291,9 @@ test("an approximate source offers an editable approximate remainder", async () 
   const user = userEvent.setup();
   render(<App />);
   await screen.findByRole("heading", { name: "Start sowing" });
+  await user.click(screen.getByRole("tab", { name: "Material & location" }));
   await user.type(screen.getByLabelText("Amount"), "20");
+  await user.click(screen.getByRole("tab", { name: /^Notes$/ }));
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   await user.click(screen.getByRole("radio", { name: /Use part of the lot/ }));
   const remainder = screen.getByLabelText("Resulting estimate");
@@ -320,7 +328,9 @@ test("an approximate source can be explicitly exhausted without inventing exact 
   const user = userEvent.setup();
   render(<App />);
   await screen.findByRole("heading", { name: "Start sowing" });
+  await user.click(screen.getByRole("tab", { name: "Material & location" }));
   await user.type(screen.getByLabelText("Amount"), "20");
+  await user.click(screen.getByRole("tab", { name: /^Notes$/ }));
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   await user.click(screen.getByRole("radio", { name: /Use the whole lot/ }));
   await user.click(screen.getByRole("button", { name: "Start sowing" }));
@@ -348,7 +358,9 @@ test("an unknown source remains unknown after partial use", async () => {
   const user = userEvent.setup();
   render(<App />);
   await screen.findByRole("heading", { name: "Start sowing" });
+  await user.click(screen.getByRole("tab", { name: "Material & location" }));
   await user.selectOptions(screen.getByLabelText("Kind"), "unknown");
+  await user.click(screen.getByRole("tab", { name: /^Notes$/ }));
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   expect(
     screen.getByText(
@@ -384,9 +396,15 @@ test("incompatible units suppress arithmetic and a conflict preserves entered de
   const user = userEvent.setup();
   render(<App />);
   await screen.findByRole("heading", { name: "Start sowing" });
-  await user.type(screen.getByLabelText("Label (optional)"), "Keep this");
+  await user.type(
+    screen.getByLabelText("Sowing label (optional)"),
+    "Keep this",
+  );
+  await user.click(screen.getByRole("tab", { name: "Material & location" }));
   await user.selectOptions(screen.getByLabelText("Kind"), "weight");
+  await user.click(screen.getByRole("tab", { name: "Material & location" }));
   await user.type(screen.getByLabelText("Amount"), "2");
+  await user.click(screen.getByRole("tab", { name: /^Notes$/ }));
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   expect(
     screen.queryByRole("radio", { name: /Use part of the lot/ }),
@@ -405,7 +423,10 @@ test("incompatible units suppress arithmetic and a conflict preserves entered de
     "source SeedLot changed",
   );
   await user.click(screen.getByRole("button", { name: "Back to details" }));
-  expect(screen.getByLabelText("Label (optional)")).toHaveValue("Keep this");
+  await user.click(screen.getByRole("tab", { name: "Essentials" }));
+  expect(screen.getByLabelText("Sowing label (optional)")).toHaveValue(
+    "Keep this",
+  );
 });
 
 test("creating a Plant from a Sowing defaults active and makes completion outcome deliberate", async () => {
@@ -435,6 +456,7 @@ test("creating a Plant from a Sowing defaults active and makes completion outcom
   expect(
     await screen.findByRole("heading", { name: "Create Plant" }),
   ).toBeInTheDocument();
+  await user.click(screen.getByRole("tab", { name: "Lifecycle & notes" }));
   expect(screen.getByRole("radio", { name: /Keep active/ })).toBeChecked();
   await user.click(screen.getByRole("radio", { name: /Complete Sowing/ }));
   expect(screen.getByText("Not germinated")).toBeInTheDocument();
@@ -478,6 +500,7 @@ test.each([
     const user = userEvent.setup();
     render(<App />);
     await screen.findByRole("heading", { name: "Create Plant" });
+    await user.click(screen.getByRole("tab", { name: "Lifecycle & notes" }));
     await user.click(screen.getByRole("radio", { name: /Complete Sowing/ }));
     expect(screen.getByText(expectedExplanation)).toBeInTheDocument();
     expect(screen.queryByText("Not germinated")).not.toBeInTheDocument();
@@ -511,11 +534,9 @@ test("creating an approximate Plant group preserves uncertainty and the chosen l
   expect(
     await screen.findByRole("heading", { name: "Create Plant group" }),
   ).toBeInTheDocument();
-  await user.selectOptions(
-    screen.getAllByLabelText("Precision")[1],
-    "approximate",
-  );
-  await user.type(screen.getByLabelText("Individuals"), "8");
+  await user.selectOptions(screen.getByLabelText("Kind"), "approximate");
+  await user.type(screen.getByLabelText("Count"), "8");
+  await user.click(screen.getByRole("tab", { name: "Lifecycle & notes" }));
   await user.click(screen.getByRole("radio", { name: /Mark failed/ }));
   await user.click(screen.getByRole("button", { name: "Create Plant group" }));
   expect(submitted).toMatchObject({

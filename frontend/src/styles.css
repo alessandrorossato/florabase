@@ -110,7 +110,7 @@
 
 .propagation-workspace {
   max-width: 68rem;
-  margin-inline: auto;
+  margin-inline: 0;
 }
 
 .propagation-form {
@@ -2254,6 +2254,7 @@ button:disabled {
 }
 
 .provenance-map {
+  isolation: isolate;
   width: 100%;
   min-height: 30rem;
   background: #edf3ec;
@@ -2702,7 +2703,8 @@ button:disabled {
   box-shadow: inset 3px 0 var(--color-accent);
 }
 .identity-card:focus-visible,
-.identity-reference-page :is(a, button, summary, input):focus-visible {
+.identity-reference-page
+  :is(a, button, summary, input:not([type="search"])):focus-visible {
   outline: 3px solid var(--color-focus);
   outline-offset: 3px;
 }
@@ -2958,6 +2960,7 @@ button:disabled {
 }
 .form-grid {
   display: grid;
+  align-items: start;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-4);
 }
@@ -3083,7 +3086,7 @@ button:disabled {
     overflow-y: auto;
     overscroll-behavior: contain;
     contain: paint;
-    padding: 2px var(--space-2) 2px 2px;
+    padding: 0.3rem;
     scrollbar-width: thin;
   }
 }
@@ -4192,8 +4195,9 @@ button:disabled {
   overflow-wrap: anywhere;
 }
 .record-preview__actions {
-  display: flex !important;
-  flex-wrap: wrap;
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
 }
 .record-preview__actions > :is(button, a) {
   flex: 1 1 8rem;
@@ -5305,12 +5309,12 @@ button:disabled {
     min-height: 0;
     height: 100%;
     overflow: hidden;
-    padding: clamp(1rem, 2vw, 1.75rem);
+    padding: 1.5rem;
   }
   .app-content > :is(.workspace, .labels-workspace, .screen) {
     width: 100%;
     max-width: 86rem;
-    margin-inline: auto;
+    margin-inline: 0;
   }
   .desktop-sidebar nav section + section {
     margin-top: 0.8rem;
@@ -5422,10 +5426,10 @@ button:disabled {
     scrollbar-width: auto;
   }
   .operational-layout .seed-list {
-    padding-right: 0.25rem;
+    padding: 0.3rem;
   }
   .reference-split .identity-cards {
-    padding: 0 0.25rem 0 0;
+    padding: 0.3rem;
   }
   .reference-split .location-tree .location-tree {
     overflow: visible;
@@ -5636,16 +5640,6 @@ button:disabled {
   .supplier-directory .identity-list-item:hover,
   .supplier-directory .identity-list-item[aria-pressed="true"] {
     background: var(--color-sage);
-  }
-  :is(
-    .seed-list,
-    .identity-list,
-    .identity-cards,
-    .location-tree,
-    .event-feed
-  ):focus-visible {
-    outline: 3px solid var(--color-focus);
-    outline-offset: -3px;
   }
 }
 
@@ -6461,4 +6455,1374 @@ button:disabled {
     margin: 0;
     flex-wrap: wrap;
   }
+}
+
+/* UI consistency: bounded results share rounded selection and inset keyboard focus. */
+:is(
+  .seed-list,
+  .identity-list,
+  .identity-cards,
+  .location-tree,
+  .event-feed
+):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: -3px;
+  border-radius: var(--radius-small);
+}
+:is(
+  .operational-layout .seed-row,
+  .identity-reference-page .identity-card,
+  .reference-split .identity-list-item,
+  .dashboard-result-group a
+) {
+  border-radius: var(--radius-small);
+}
+:is(
+  .operational-layout .seed-row,
+  .identity-reference-page .identity-card,
+  .reference-split .identity-list-item
+)[aria-pressed="true"] {
+  background: var(--color-sage);
+  box-shadow: inset 0.2rem 0 var(--color-accent);
+}
+:is(
+  .operational-layout .seed-row,
+  .identity-reference-page .identity-card,
+  .reference-split .identity-list-item,
+  .dashboard-result-group a
+):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: -3px;
+}
+.dashboard-result-group ul {
+  padding: 0.25rem;
+}
+.dashboard-filter-panel {
+  margin: 0.25rem 0.3rem 1rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--color-border);
+}
+.dashboard-filter-chips {
+  padding: 0.3rem;
+}
+/* Record/task identity is the visible page heading; collection context stays semantic. */
+.collection-detail .breadcrumbs ol,
+.collection-form .breadcrumbs ol {
+  margin-bottom: 0.65rem;
+}
+:is(.collection-detail, .collection-form) .detail-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.75rem 1.25rem;
+}
+:is(.collection-detail, .collection-form) .detail-header > div {
+  min-width: 0;
+}
+:is(.collection-detail, .collection-form) .detail-header h3 {
+  margin: 0.15rem 0 0;
+  font: 400 1.75rem/1.18 var(--font-editorial);
+  overflow-wrap: anywhere;
+}
+:is(.collection-detail, .collection-form) .detail-header .eyebrow {
+  margin: 0;
+}
+:is(.collection-detail, .collection-form) .detail-actions {
+  justify-content: end;
+  max-width: 25rem;
+  margin: 0;
+}
+.collection-detail .detail-secondary,
+.collection-detail .detail-status {
+  margin-top: 0.4rem;
+}
+.operational-layout .collection-detail .detail-tabs {
+  margin-top: 0.85rem;
+}
+/* Existing field groups become predictable two-column rows, without changing disclosure. */
+.operational-layout .collection-form {
+  width: 100%;
+  max-width: none;
+}
+.collection-form
+  :is(
+    .seed-primary-fields,
+    .advanced-fields,
+    .sowing-fast-fields,
+    .plant-fast-fields
+  ) {
+  gap: 0.85rem 1.25rem;
+  align-items: start;
+}
+.operational-layout .collection-form .field {
+  min-width: 0;
+  margin: 0;
+  align-content: start;
+}
+.operational-layout
+  .collection-form
+  .field
+  :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  width: 100%;
+  max-width: none;
+}
+.collection-form :is(.quantity-field, .partial-date, .temperature-field) {
+  min-width: 0;
+}
+.operational-layout .collection-form .advanced-fields > .reference-picker {
+  grid-column: auto;
+}
+.operational-layout .collection-form .advanced-fields {
+  margin-top: 0.5rem;
+  padding-top: 0;
+  border-top: 0;
+}
+.operational-layout .collection-form .form-group-heading {
+  grid-column: 1 / -1;
+  margin: 0.8rem 0 0;
+  padding-top: 0.65rem;
+}
+.operational-layout .collection-form .partial-date-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.operational-layout .collection-form .partial-date .field {
+  max-width: none;
+}
+.operational-layout .collection-form .partial-date-parts {
+  max-width: none;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.collection-form .disclosure-button {
+  margin-block: 0.85rem 0.5rem;
+}
+.collection-form .field-help {
+  margin-block: 0.35rem 0;
+}
+.collection-form .plant-form-section {
+  margin-block: 0.85rem;
+}
+/* Consistent fact alignment; desktop columns remove stacking without hiding content. */
+.collection-detail
+  :is(.seed-fact-group, .sowing-fact-group, .plant-fact-group) {
+  padding: 0.85rem;
+}
+.collection-detail
+  :is(.seed-fact-group, .sowing-fact-group, .plant-fact-group)
+  dl
+  > div {
+  min-width: 0;
+  display: grid;
+  align-content: start;
+  gap: 0.2rem;
+}
+.collection-detail
+  :is(.seed-fact-group, .sowing-fact-group, .plant-fact-group)
+  dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.collection-detail
+  :is(.seed-fact-group, .sowing-fact-group, .plant-fact-group)
+  :is(h3, h4) {
+  margin-bottom: 0.65rem;
+}
+@media (min-width: 75rem) {
+  .sowings-workspace .collection-detail .overview-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .plants-workspace .collection-detail .plant-fact-group--origin dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 75rem) {
+  .collection-form .partial-date {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+    gap: 0.5rem 0.75rem;
+    align-items: start;
+  }
+  .collection-form .partial-date > legend {
+    margin-bottom: 0.4rem;
+  }
+  .sowings-workspace .collection-form .sowing-fast-fields > .quantity-field {
+    grid-column: auto;
+  }
+}
+@media (max-width: 64rem) {
+  :is(.collection-detail, .collection-form) .detail-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  :is(.collection-detail, .collection-form) .detail-actions {
+    justify-content: start;
+    max-width: none;
+  }
+}
+@media (max-width: 48rem) {
+  .operational-layout .collection-form .partial-date-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* Dashboard imagery always represents the Event's explicit target. */
+.workspace--dashboard
+  .event-feed--compact
+  > li
+  > article:has(.event-target-photo) {
+  grid-template-columns: 3rem minmax(0, 1fr) auto;
+}
+.workspace--dashboard .event-target-photo {
+  grid-column: 1;
+  grid-row: 1 / 4;
+  align-self: center;
+  min-width: 0;
+}
+.workspace--dashboard .event-target-photo .primary-photo-thumb {
+  width: 3rem;
+  height: 3rem;
+  object-fit: contain;
+}
+.workspace--dashboard .event-target-photo .primary-photo-fallback {
+  font-size: 0.65rem;
+  overflow-wrap: anywhere;
+}
+.workspace--dashboard article:has(.event-target-photo) .event-feed-heading,
+.workspace--dashboard article:has(.event-target-photo) p {
+  grid-column: 2 / -1;
+}
+.workspace--dashboard .event-feed--compact .record-state {
+  align-self: start;
+  justify-self: start;
+}
+
+@media (max-width: 48rem) {
+  .workspace--dashboard
+    .event-feed--compact
+    > li
+    > article:has(.event-target-photo) {
+    display: grid;
+    gap: 0.2rem 0.6rem;
+  }
+}
+
+.workspace-context-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.65rem;
+}
+.workspace-context-actions > button {
+  background: transparent;
+  color: var(--color-accent);
+}
+.search-control:has(input:focus-visible) {
+  outline-offset: -3px;
+}
+
+.workspace-context-actions > :is(.operational-back, .sowing-back, .plant-back) {
+  display: inline-flex;
+  margin: 0;
+}
+.detail-identity:has(.detail-visual) {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  gap: 0.85rem;
+}
+.collection-detail .detail-visual .primary-photo-thumb {
+  width: 4.5rem;
+  max-height: 5.5rem;
+  object-fit: contain;
+}
+.collection-detail .detail-visual .primary-photo-fallback {
+  font-size: 0.75rem;
+  overflow-wrap: anywhere;
+}
+
+.collection-detail .detail-visual .collection-primary-detail {
+  margin: 0;
+}
+.detail-identity > div {
+  min-width: 0;
+}
+.collection-detail .detail-tab-panel {
+  padding-top: 0.85rem;
+}
+.operational-layout .collection-form .quantity-controls {
+  grid-template-columns: minmax(0, 1fr) minmax(4rem, 0.5fr);
+}
+.operational-layout .collection-form .quantity-controls > :is(input, select) {
+  width: 100%;
+  min-width: 0;
+}
+.collection-form .quantity-controls .checkbox-label {
+  grid-column: 1 / -1;
+}
+.operational-layout .collection-form .quantity-controls:not(:has(select)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Corrective pass: explicit relationships and compact, readable field groups. */
+.detail-context {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+}
+.detail-context > div {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.65rem;
+}
+.detail-context dt {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+  text-transform: none;
+}
+.detail-context dd {
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.collection-form-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 0.85rem 1.5rem;
+}
+.seed-form-additional {
+  display: contents;
+}
+.collection-form-section {
+  display: grid;
+  align-content: start;
+  min-width: 0;
+  gap: 0.65rem;
+}
+.operational-layout
+  .collection-form
+  .collection-form-section
+  .form-group-heading {
+  margin: 0;
+  padding-top: 0.5rem;
+}
+.collection-form-section .partial-date {
+  display: block;
+}
+.operational-layout .collection-form-section .partial-date-grid {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.65rem;
+}
+.collection-form-sections > .disclosure-button {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+.collection-form-section--notes {
+  grid-column: 1 / -1;
+}
+.collection-form-section textarea {
+  min-height: 5rem;
+}
+.collection-detail .detail-context :is(dt, dd) {
+  margin: 0;
+}
+.collection-detail .detail-context {
+  grid-template-columns: minmax(0, 1fr);
+}
+.collection-detail .detail-context > div {
+  display: flex;
+}
+.seeds-workspace .operational-layout .seed-row > .seed-quantity {
+  justify-self: stretch;
+  text-align: left;
+}
+@media (min-width: 48.01rem) {
+  .seeds-workspace .seed-row {
+    grid-template-columns: minmax(0, 1fr) 8rem 4.5rem;
+  }
+  .seeds-workspace .operational-layout .seed-row > .seed-location {
+    grid-column: 1 / -1;
+    justify-self: start;
+    text-align: left;
+  }
+  .seeds-workspace .seed-row > .seed-primary {
+    grid-row: 1;
+  }
+}
+@media (max-width: 74.99rem) {
+  .seeds-workspace .seed-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto;
+  }
+  .seeds-workspace .seed-row > .seed-primary {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .seeds-workspace .seed-row > .lifecycle-badge {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .seeds-workspace .operational-layout .seed-row > .seed-quantity {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .seeds-workspace .operational-layout .seed-row > .seed-location {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    text-align: left;
+  }
+}
+@media (min-width: 75rem) {
+  .collection-detail
+    .plant-overview
+    > [aria-labelledby="group-extracted-title"] {
+    grid-column: auto;
+  }
+  .collection-form-sections {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .sowing-form > .collection-form-sections:first-of-type > :nth-child(2) {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+  .sowing-form > .collection-form-sections:first-of-type > :nth-child(3) {
+    grid-column: 3;
+    grid-row: 1 / 3;
+  }
+  .sowing-form > .collection-form-sections:first-of-type > :nth-child(4) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .plants-workspace .collection-form .plant-fast-fields,
+  .plants-workspace .collection-form .plant-advanced-fields {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .plants-workspace .collection-form .plant-fast-fields > .reference-picker {
+    grid-column: auto;
+  }
+  .plants-workspace
+    .collection-form
+    .plant-advanced-fields
+    > .origin-mode-field,
+  .plants-workspace
+    .collection-form
+    .plant-advanced-fields
+    > div.field--full:has(.reference-picker) {
+    grid-column: auto;
+  }
+  .plants-workspace
+    .collection-form
+    .plant-advanced-fields
+    > .field--full:has(textarea) {
+    grid-column: span 2;
+  }
+  .plants-workspace .collection-form .partial-date {
+    display: block;
+  }
+}
+@media (max-width: 48rem) {
+  .collection-form-sections {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.sowings-workspace .record-preview__actions > :is(a, button) {
+  min-width: 0;
+  width: 100%;
+  text-align: center;
+}
+.dashboard-filter-panel {
+  overflow: visible;
+}
+.dashboard-filter-fields {
+  padding: 0.25rem 0.85rem 0.25rem 0.25rem;
+  scrollbar-gutter: stable;
+  max-height: min(32rem, 65dvh);
+  overflow-y: auto;
+}
+.event-target-photo:empty {
+  display: none;
+}
+.event-target-photo .primary-photo-thumb {
+  width: 3.5rem;
+  height: 3.5rem;
+  object-fit: contain;
+  border-radius: var(--radius-small);
+  background: var(--color-sage);
+}
+.event-feed:not(.event-feed--compact) article:has(.event-target-photo),
+.event-card:has(.event-target-photo) {
+  display: grid;
+  grid-template-columns: 3.5rem minmax(0, 1fr);
+  align-content: start;
+  gap: 0.35rem 0.85rem;
+}
+.event-feed:not(.event-feed--compact)
+  article:has(.event-target-photo)
+  > :not(.event-target-photo),
+.event-card:has(.event-target-photo) > :not(.event-target-photo) {
+  grid-column: 2;
+}
+.event-feed:not(.event-feed--compact)
+  article:has(.event-target-photo)
+  > .record-state {
+  justify-self: start;
+}
+.event-card .event-target-photo,
+.event-feed:not(.event-feed--compact) .event-target-photo {
+  grid-column: 1;
+  grid-row: 1 / 6;
+}
+.collection-detail .germination-section,
+.collection-detail .photos-section {
+  margin-top: 0;
+}
+.collection-detail .germination-metrics {
+  margin-block: 0.65rem;
+  gap: 0.65rem;
+}
+.collection-detail .germination-metrics > div {
+  padding: 0.6rem;
+}
+.collection-detail .photos-heading {
+  gap: 0.5rem;
+  align-items: baseline;
+}
+.collection-detail .collection-photo-image {
+  max-height: 12rem;
+}
+.collection-detail .photo-gallery {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: 0.75rem;
+}
+.collection-detail .photo-card {
+  padding: 0.75rem;
+}
+.collection-detail .propagation-path {
+  container-type: inline-size;
+  margin-block: 0.65rem;
+  padding: 0.65rem;
+}
+@media (min-width: 75rem) {
+  .collection-detail .germination-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .collection-detail .germination-section {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 0.65rem 1.25rem;
+    align-items: start;
+  }
+  .collection-detail .germination-section > .germination-heading:first-child {
+    grid-column: 1 / -1;
+  }
+  .collection-detail .germination-metrics {
+    grid-column: 1;
+    grid-row: 2 / 4;
+    margin: 0;
+  }
+  .collection-detail
+    .germination-section
+    > .germination-heading:not(:first-child) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .collection-detail .germination-history {
+    grid-column: 2;
+    grid-row: 3;
+    margin: 0;
+  }
+  .collection-detail .germination-section > p {
+    grid-column: 1 / -1;
+  }
+  .sowing-advanced-fields > .collection-form-section:nth-child(2) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sowing-advanced-fields
+    > .collection-form-section:nth-child(2)
+    > :is(h4, fieldset, .field--full) {
+    grid-column: 1 / -1;
+  }
+  .sowings-workspace .collection-detail .overview-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .sowings-workspace
+    .collection-detail
+    .overview-grid
+    > [aria-labelledby="descendants-title"] {
+    grid-column: 1 / -1;
+  }
+}
+@container (min-width: 28rem) {
+  .collection-detail .propagation-path ol {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    align-items: start;
+  }
+  .collection-detail .propagation-path li + li::before {
+    content: "→";
+    top: 0.7rem;
+    left: -0.9rem;
+  }
+  .collection-detail .propagation-path-stage {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.collection-detail .photos-heading h4 {
+  margin: 0.2rem 0 0;
+}
+.operational-layout .creation-reversal {
+  margin-top: 0.75rem;
+  padding-top: 0.65rem;
+}
+.operational-layout .creation-reversal h4 {
+  margin: 0 0 0.5rem;
+}
+.operational-layout .creation-reversal dl {
+  margin-block: 0.5rem;
+}
+.operational-layout .creation-reversal ul {
+  margin-block: 0.65rem;
+}
+
+/* Final operator pass: use the viewport through grouping and disclosure. */
+.primary-photo-placeholder {
+  display: block;
+  width: 3.25rem;
+  height: 3.25rem;
+  flex: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  background: var(--color-sage);
+}
+.seed-primary:has(.primary-photo-placeholder) {
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  column-gap: 0.65rem;
+}
+.seed-primary > .primary-photo-placeholder {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+.quick-preview
+  > :is(.primary-photo-thumb--compact, .primary-photo-placeholder) {
+  float: right;
+  margin-inline-start: 0.75rem;
+  margin-block-end: 0.5rem;
+}
+.sowings-workspace .record-preview__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.preview-action-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.preview-action-group > :is(a, button) {
+  flex: 1 1 auto;
+}
+.preview-action-group--descendants {
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.75rem;
+  margin-top: 0.25rem;
+}
+.operation-state {
+  margin: 0;
+}
+.operation-state > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+}
+.operation-state dd {
+  margin: 0;
+  font-weight: 600;
+}
+.operation-explanation {
+  margin-block: 0.5rem;
+}
+.operation-explanation summary {
+  cursor: pointer;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  color: var(--color-accent);
+}
+.operation-explanation summary::before {
+  content: "▸";
+  margin-inline-end: 0.5rem;
+}
+.operation-explanation[open] summary::before {
+  content: "▾";
+}
+.identity-cover__image-frame img {
+  height: 100%;
+  max-height: 18rem;
+  object-fit: contain;
+}
+.identity-summary .identity-cover__image-frame {
+  aspect-ratio: 4 / 3;
+}
+.identity-summary .identity-cover--hero .identity-cover__image-frame img {
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: contain;
+}
+/* The rounded parent owns search focus; generic input rules must not add a square outline. */
+.search-control input:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+.search-control:has(input:focus-visible) {
+  outline: 3px solid var(--color-focus);
+  outline-offset: -3px;
+}
+.map-record-list li {
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.map-record-list li > div {
+  flex: 1 1 9rem;
+  min-width: 0;
+}
+.map-record-list .lifecycle-badge {
+  flex: none;
+  white-space: nowrap;
+}
+@media (min-width: 48.01rem) {
+  .identity-reference-page:has(> .identity-detail-stack) {
+    overflow-y: auto;
+  }
+  .identity-reference-page .identity-form {
+    margin-block: 0.75rem;
+    padding: 1rem;
+  }
+  .identity-form .form-section {
+    margin-block: 0.75rem;
+  }
+  .collection-detail .plant-operations {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.25rem 1rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+  }
+  .collection-detail .plant-operations h4,
+  .collection-detail .plant-operations p {
+    margin: 0;
+  }
+  .collection-detail .plant-operations .actions {
+    grid-column: 2;
+    grid-row: 1 / 3;
+    margin: 0;
+  }
+  .reintegration-panel {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    padding: 0.75rem;
+    margin-block: 0.75rem 0;
+  }
+  .reintegration-panel > :is(h4, p, ul) {
+    margin: 0;
+  }
+  .map-screen {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+  .map-screen > :not(.map-layout) {
+    flex: none;
+  }
+  .map-screen .map-layout {
+    flex: 1 1 auto;
+    min-height: 0;
+    grid-template-columns: minmax(0, 1.8fr) minmax(17rem, 0.9fr);
+    align-items: stretch;
+  }
+  .map-screen .map-canvas-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .map-screen .provenance-map {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  .map-screen .map-provider-note {
+    flex: none;
+  }
+  .map-screen .map-side-rail {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow-y: auto;
+    gap: 0.75rem;
+    scrollbar-gutter: stable;
+  }
+  .map-screen .map-companion {
+    flex: 1 1 50%;
+    min-height: 8rem;
+    max-height: none;
+  }
+  .map-screen .map-site-detail {
+    flex: 1 1 50%;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0.75rem;
+  }
+}
+@media (min-width: 75rem) {
+  .seeds-workspace .seed-form > .collection-form-sections {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .seed-form > .collection-form-sections > :nth-child(2),
+  .seed-form > .collection-form-sections > :nth-child(3) {
+    grid-row: 1 / 3;
+  }
+  .seed-form > .collection-form-sections > :nth-child(2) {
+    grid-column: 2;
+  }
+  .seed-form > .collection-form-sections > :nth-child(3) {
+    grid-column: 3;
+  }
+  .seed-form > .collection-form-sections > :nth-child(4) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .seeds-workspace .collection-form-section .partial-date-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+  .identity-form .form-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .identity-form .field--full {
+    grid-column: auto;
+  }
+}
+@media (min-width: 48.01rem) {
+  .operational-layout .creation-reversal {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.25rem 1rem;
+    margin-bottom: 0;
+    padding: 0.75rem;
+  }
+  .operational-layout .creation-reversal > h4,
+  .operational-layout .creation-reversal > .operation-state,
+  .operational-layout .creation-reversal > ul {
+    grid-column: 1;
+    margin: 0;
+  }
+  .operational-layout .creation-reversal > .operation-explanation {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0;
+  }
+  .operation-explanation summary {
+    min-height: 2.75rem;
+  }
+  .operational-layout .creation-reversal > button {
+    grid-column: 2;
+    grid-row: 2 / 4;
+    align-self: start;
+  }
+  .operational-layout .creation-reversal > :is(p, label) {
+    grid-column: 1 / -1;
+    margin-block: 0.5rem;
+  }
+  .operational-layout .creation-reversal:has(.operation-explanation[open]) {
+    display: block;
+  }
+  .collection-detail .plant-operations > .field-help {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 75rem) {
+  .sowings-workspace .sowing-detail .sowing-fact-group dl > div {
+    grid-template-columns: minmax(6rem, 0.6fr) minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+  .sowings-workspace .sowing-detail .sowing-fact-group dl {
+    gap: 0.5rem;
+  }
+  .sowings-workspace
+    .sowing-detail
+    .overview-grid
+    > [aria-labelledby="descendants-title"] {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: baseline;
+    gap: 0.25rem 1rem;
+  }
+  .sowings-workspace [aria-labelledby="descendants-title"] > .descendant-total {
+    margin: 0;
+    justify-self: end;
+  }
+  .sowings-workspace
+    [aria-labelledby="descendants-title"]
+    > :not(h4, .descendant-total) {
+    grid-column: 1 / -1;
+  }
+  .sowings-workspace .collection-detail .propagation-path {
+    margin: 0;
+    padding: 0.5rem 0;
+  }
+  .sowings-workspace .collection-detail .propagation-path h4 {
+    margin-bottom: 0.5rem;
+  }
+}
+@container (min-width: 28rem) {
+  .collection-detail .propagation-path-stage {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  }
+}
+@media (min-width: 75rem) {
+  .sowings-workspace .sowing-detail .overview-grid > .sowing-fact-group {
+    padding: 0.75rem;
+  }
+  .sowings-workspace .sowing-detail .sowing-fact-group > p {
+    margin-block: 0.35rem;
+  }
+  .sowings-workspace .sowing-detail .sowing-fact-group > :is(h3, h4) {
+    margin-bottom: 0.5rem;
+  }
+}
+.operational-layout
+  .creation-reversal:has(.retained-history-confirmation)
+  > button {
+  grid-row: auto;
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+@media (min-width: 75rem) {
+  .collection-detail .plant-overview:not(:has(#plant-group-title)) {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  }
+  .collection-detail .plant-fact-group--origin dl:has(> div:only-child) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .collection-detail .plant-fact-group--origin > p {
+    margin-block: 0.5rem 0;
+  }
+  .collection-detail .plant-fact-group--origin .propagation-path {
+    padding: 0.5rem 0;
+    margin-block: 0.5rem;
+  }
+}
+
+.map-site-detail__header > a {
+  flex: none;
+  white-space: nowrap;
+}
+.map-site-detail__header > div {
+  min-width: 0;
+}
+.map-site-detail__header :is(h3, p) {
+  margin-block: 0 0.5rem;
+}
+.map-site-detail .detail-list {
+  gap: 0.5rem;
+  margin-block: 0.5rem;
+}
+
+/* One stateful form, with the same navigation language as record detail tabs. */
+.form-sections {
+  min-width: 0;
+}
+.form-section-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-block: 1rem;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0.5rem;
+}
+.form-section-tabs [role="tab"] {
+  min-height: 2.75rem;
+  background: transparent;
+  color: var(--color-ink);
+  border: 1px solid transparent;
+  padding: 0.55rem 0.85rem;
+}
+.form-section-tabs [aria-selected="true"] {
+  background: var(--color-sage);
+  border-color: var(--color-border);
+  color: var(--color-leaf);
+}
+.form-section-panel:not([hidden]) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 1rem 1.25rem;
+  padding-block: 0.5rem 1rem;
+}
+.form-section-panel[hidden] {
+  display: none;
+}
+.form-section-panel
+  > :is(.quantity-field, .partial-date-grid, .field--full, .origin-mode-field),
+.form-section-panel > .field:has(textarea),
+.form-section-panel > .field-help {
+  grid-column: 1 / -1;
+}
+.form-section-panel > .field textarea {
+  min-height: 7rem;
+}
+.form-section-footer,
+.form-section-footer__return {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+.form-section-footer {
+  justify-content: space-between;
+  border-top: 1px solid var(--color-border);
+  padding-top: 1rem;
+}
+.record-visual {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  overflow: hidden;
+  border-radius: 0.5rem;
+  background: var(--color-paper);
+  color: var(--color-muted);
+  border: 1px solid var(--color-border);
+}
+.record-visual--compact {
+  width: 3.25rem;
+  height: 3.25rem;
+}
+.record-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.record-visual svg {
+  width: 60%;
+  height: 60%;
+}
+.quick-preview > .identity-image {
+  width: 100%;
+  height: 12rem;
+  max-height: 12rem;
+  aspect-ratio: auto;
+}
+.quick-preview > .identity-image img {
+  object-fit: contain;
+}
+.photo-gallery,
+.collection-detail .photo-gallery {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  align-items: start;
+  gap: 1rem;
+}
+.photo-card,
+.collection-detail .photo-card {
+  width: 100%;
+  max-width: 20rem;
+  min-width: 0;
+}
+.photo-card .collection-photo-image,
+.collection-detail .photo-card .collection-photo-image {
+  width: 100%;
+  height: 14rem;
+  max-height: 14rem;
+  object-fit: contain;
+  border-radius: 0.5rem;
+}
+.photo-card .actions {
+  flex-wrap: wrap;
+}
+.record-preview__actions > .preview-action-group,
+.quick-preview-actions > .preview-action-group {
+  width: 100%;
+}
+.preview-action-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.preview-action-group--descendants {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-border);
+}
+@media (max-width: 40rem) {
+  .form-section-panel:not([hidden]) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .form-section-tabs {
+    gap: 0.25rem;
+  }
+  .form-section-tabs [role="tab"] {
+    padding-inline: 0.6rem;
+  }
+}
+.sowings-workspace .seed-row > .seed-primary {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-width: 0;
+}
+.reference-split .identity-list-item {
+  border-radius: var(--radius-small);
+}
+.quick-preview-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.workspace--dashboard .event-target-photo .record-visual {
+  width: 3rem;
+  height: 3rem;
+}
+/* A column action stack must not wrap into another column or treat width as height. */
+.sowings-workspace .record-preview__actions {
+  flex-wrap: nowrap;
+}
+.record-preview__actions > :is(button, a),
+.record-preview__actions > .preview-action-group {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+
+/* Final operator pass: adjustable desktop navigation and viewport-anchored actions. */
+.sidebar-resizer {
+  display: none;
+}
+@media (min-width: 48.01rem) {
+  .application-shell {
+    grid-template-columns: var(--sidebar-width, 248px) minmax(0, 1fr);
+  }
+  .desktop-sidebar {
+    position: relative;
+  }
+  .sidebar-resizer {
+    display: block;
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 8px;
+    cursor: col-resize;
+    touch-action: none;
+    z-index: 3;
+  }
+  .sidebar-resizer:hover,
+  .sidebar-resizer:focus-visible {
+    background: #6a8978;
+    outline: 2px solid var(--color-focus);
+    outline-offset: -2px;
+  }
+  .application-shell.navigation-collapsed {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .navigation-collapsed .app-content {
+    padding-inline: 2rem;
+  }
+}
+.overflow-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.overflow-popover {
+  position: fixed;
+  z-index: 100;
+  display: grid;
+  gap: 0.5rem;
+  width: max-content;
+  min-width: min(11rem, calc(100vw - 1.5rem));
+  max-width: min(22rem, calc(100vw - 1.5rem));
+  max-height: calc(100dvh - 1.5rem);
+  overflow: auto;
+  padding: 0.5rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-small);
+  box-shadow: 0 0.65rem 1.5rem rgb(20 58 43 / 16%);
+}
+.overflow-popover button {
+  position: static;
+  width: 100%;
+  white-space: normal;
+  text-align: left;
+}
+.overflow-popover .overflow-actions {
+  position: static;
+  display: grid;
+  gap: 0.5rem;
+  padding: 0;
+  border: 0;
+  box-shadow: none;
+}
+.overflow-popover .button--danger {
+  margin-top: 0.5rem;
+  border-top: 3px solid #d8beb7;
+}
+.provenance-sites-workspace > .page-header {
+  margin-bottom: 1rem;
+}
+.propagation-form > .form-sections {
+  width: 100%;
+}
+.propagation-form .form-section-panel .choice-cards {
+  margin-top: 0.5rem;
+}
+.coordinate-mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.75rem;
+}
+.coordinate-mode label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.coordinate-mode input {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+}
+.dms-coordinate {
+  min-width: 0;
+}
+.dms-parts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+.dms-parts input,
+.dms-parts select {
+  min-width: 0;
+  width: 100%;
+}
+.identity-editor {
+  min-width: 0;
+}
+.identity-editor > h3 {
+  margin: 0;
+}
+.identity-editor .identity-form {
+  margin: 0;
+  padding: 0;
+}
+.identity-editor .profile-form {
+  margin-top: 0;
+}
+.identity-editor .profile-form textarea {
+  min-height: 6rem;
+}
+.identity-detail-stack--editing .identity-detail-tabs {
+  opacity: 0.6;
+  margin-top: 0;
+}
+.identity-editor .botanical-profile {
+  margin: 0;
+}
+.identity-editor .form-section-panel .form-section-panel {
+  display: block;
+}
+.identity-editor .form-section-panel .form-section-panel[hidden] {
+  display: none;
+}
+@media (max-width: 40rem) {
+  .coordinate-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dms-parts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 800px) {
+  .propagation-workspace > .propagation-path {
+    padding: 0.75rem 0;
+  }
+  .propagation-workspace > .propagation-path h4 {
+    margin: 0 0 0.5rem;
+  }
+  .propagation-workspace > .propagation-path ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+  }
+  .propagation-workspace > .propagation-path li + li::before {
+    content: "→";
+    top: 0.75rem;
+    left: -1.2rem;
+  }
+}
+
+.identity-detail-stack--editing {
+  gap: 0.5rem;
+}
+.identity-detail-stack--editing .identity-work-header {
+  margin-block: 0;
+  padding-block: 0.5rem;
+}
+.identity-editor .profile-panel {
+  padding-top: 0;
+  border-top: 0;
+}
+.identity-editor .profile-heading h3,
+.identity-editor .profile-form h4 {
+  margin: 0 0 0.5rem;
+}
+.identity-editor .profile-form {
+  padding: 0.75rem;
+}
+.identity-editor .profile-form textarea {
+  height: 6rem;
+}
+.identity-editor .identity-cover__placeholder svg {
+  max-height: 6rem;
+}
+@media (min-width: 800px) {
+  .identity-editor .profile-form .form-section-panel:not([hidden]) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .identity-editor .profile-form .form-section-panel > .field {
+    grid-column: auto;
+  }
+}
+
+.form-section-panel .sowing-quantity-controls {
+  grid-template-columns: minmax(0, 1fr) minmax(4rem, 0.4fr);
+}
+.form-section-panel .sowing-quantity-controls > .field {
+  min-width: 0;
+}
+.form-section-panel .sowing-quantity-controls .field > :is(input, select) {
+  width: 100%;
+  min-width: 0;
+}
+.form-section-panel .sowing-quantity-controls .checkbox-label {
+  grid-column: 1 / -1;
+}
+.form-section-panel .sowing-quantity-controls:not(:has(select)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.identity-editor .form-section-tabs {
+  margin-block: 0.5rem;
+}
+.identity-editor .form-section-panel:not([hidden]) {
+  padding-block: 0.25rem 0.5rem;
 }

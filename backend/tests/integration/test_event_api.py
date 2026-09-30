@@ -128,6 +128,7 @@ def test_event_partial_dates_listing_targets_and_optional_notes(
             "id": event_references["identity"],
             "display_label": "Eventus journalis",
         },
+        "primary_photo": None,
     }
     assert created[-1]["notes"] == "First.\nSecond."
     cookie, _ = authenticated_browser

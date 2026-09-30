@@ -14,6 +14,7 @@ import { FieldHelp } from "../components/ContextualHelp";
 import { locationsForScope, type LocationResponse } from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
 import { PhotosSection } from "../photos/PhotosSection";
+import { EventTargetPhoto } from "./EventTargetPhoto";
 import type { PartialDate } from "../seed-lots/api";
 import {
   createEvent,
@@ -463,6 +464,12 @@ export function EventJournal({
                 >
                   <div className="event-marker" aria-hidden="true" />
                   <article className="event-card">
+                    <EventTargetPhoto
+                      photo={item.target.primary_photo}
+                      identity={item.target.botanical_identity}
+                      kind={item.target.type === "plant" ? "plant" : "group"}
+                      label={targetLabel}
+                    />
                     <div className="event-card-heading">
                       <div>
                         <h5>{eventKindLabels[item.kind]}</h5>

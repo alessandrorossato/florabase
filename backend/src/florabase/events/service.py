@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session, aliased
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
+from florabase.collection_photos.primary import primary_summaries
 from florabase.events.model import Event, EventKind
 from florabase.events.schemas import (
     EventCreate,
@@ -372,6 +373,15 @@ def _partial_date(event: Event) -> PartialDate | None:
 
 def event_responses(database: Session, projections: list[EventProjection]) -> list[EventResponse]:
     locations = list_locations(database)
+    # The concrete Event target owns this designation; related records never supply it.
+    plant_photos = primary_summaries(
+        database, "plant", list({item.plant.id for item in projections if item.plant is not None})
+    )
+    group_photos = primary_summaries(
+        database,
+        "plant_group",
+        list({item.plant_group.id for item in projections if item.plant_group is not None}),
+    )
     responses: list[EventResponse] = []
     for projection in projections:
         event = projection.event
@@ -387,6 +397,7 @@ def event_responses(database: Session, projections: list[EventProjection]) -> li
                 id=projection.plant.id,
                 label=projection.plant.label,
                 lifecycle=projection.plant.lifecycle,
+                primary_photo=plant_photos.get(projection.plant.id),
                 botanical_identity=BotanicalIdentitySummary(
                     id=identity.id, display_label=identity.display_label
                 ),
@@ -399,6 +410,7 @@ def event_responses(database: Session, projections: list[EventProjection]) -> li
                 id=projection.plant_group.id,
                 label=projection.plant_group.label,
                 lifecycle=projection.plant_group.lifecycle,
+                primary_photo=group_photos.get(projection.plant_group.id),
                 botanical_identity=BotanicalIdentitySummary(
                     id=identity.id, display_label=identity.display_label
                 ),

@@ -209,6 +209,14 @@ async function chooseReference(
   label: string,
   option: string,
 ) {
+  const section = label.includes("Storage")
+    ? "Inventory"
+    : label.includes("Supplier")
+      ? "Acquisition"
+      : label.includes("provenance")
+        ? "Origin"
+        : "Essentials";
+  await user.click(screen.getByRole("tab", { name: section }));
   const picker = screen.getByRole("combobox", { name: label });
   await user.click(picker);
   await user.click(await screen.findByRole("button", { name: option }));
@@ -450,6 +458,16 @@ test("selection shows complete details without internal identifiers and opens co
   const detail = screen
     .getByRole("heading", { name: "Blue packet" })
     .closest("section");
+  const header = screen
+    .getByRole("heading", { name: "Blue packet" })
+    .closest("header");
+  if (!header) throw new Error("The record heading must belong to its header.");
+  expect(
+    within(header).getByRole("link", { name: "Clitoria ternatea" }),
+  ).toHaveAttribute("href", `#/identities/${lot().botanical_identity.id}`);
+  expect(
+    screen.getByRole("navigation", { name: "Breadcrumb" }),
+  ).not.toHaveTextContent("Clitoria ternatea");
   expect(detail).toHaveTextContent("Purchased");
   expect(detail).toHaveTextContent("Rare Seed House");
   expect(detail).toHaveTextContent("World → Asia");
@@ -461,24 +479,38 @@ test("selection shows complete details without internal identifiers and opens co
   );
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   expect(
-    screen.getByRole("button", { name: "Save changes" }),
-  ).toBeInTheDocument();
+    screen.queryByRole("button", { name: "Save changes" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("heading", { name: "Edit Blue packet" }).closest("header"),
+  ).toHaveTextContent("Clitoria ternatea");
   expect(screen.getByLabelText("Lifecycle")).toHaveValue("active");
-  for (const heading of [
+  expect(screen.getByLabelText("Notes (optional)")).not.toBeVisible();
+  for (const label of [
     "Essentials",
     "Inventory",
     "Acquisition",
-    "Storage",
-    "Provenance",
+    "Origin",
     "Seed details",
-    "Notes",
   ])
-    expect(screen.getByRole("heading", { name: heading })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: label })).toBeInTheDocument();
+  await user.click(screen.getByRole("tab", { name: "Origin" }));
   expect(screen.getByLabelText("Material provenance (optional)")).toHaveValue(
     place.display_path,
   );
+  await user.click(screen.getByRole("tab", { name: "Inventory" }));
   expect(screen.getByLabelText("Storage location (optional)")).toHaveValue(
     location.display_path,
+  );
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
+  await user.type(
+    screen.getByLabelText("Notes (optional)"),
+    "Edit retained note",
+  );
+  await user.click(screen.getByRole("button", { name: "Back" }));
+  await user.click(screen.getByRole("button", { name: "Next" }));
+  expect(screen.getByLabelText("Notes (optional)")).toHaveValue(
+    "Keep dry.Edit retained note",
   );
 });
 
@@ -514,7 +546,9 @@ test("guided sowing distinguishes no adjustment, exact partial use and use-all",
     ),
   ).toBeInTheDocument();
   expect(screen.getByText("10 seeds")).toBeInTheDocument();
+  await user.click(screen.getByRole("tab", { name: "Material & location" }));
   await user.type(screen.getByLabelText("Amount"), "3");
+  await user.click(screen.getByRole("tab", { name: /^Notes$/ }));
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   expect(
     screen.getByRole("radio", { name: /Keep inventory unchanged/ }),
@@ -530,8 +564,11 @@ test("guided sowing distinguishes no adjustment, exact partial use and use-all",
     screen.getByRole("radio", { name: /Use the whole lot/ }),
   ).toBeDisabled();
   await user.click(screen.getByRole("button", { name: "Back to details" }));
+  await user.click(screen.getByRole("tab", { name: "Material & location" }));
   await user.clear(screen.getByLabelText("Amount"));
+  await user.click(screen.getByRole("tab", { name: "Material & location" }));
   await user.type(screen.getByLabelText("Amount"), "10");
+  await user.click(screen.getByRole("tab", { name: /^Notes$/ }));
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   await user.click(screen.getByRole("radio", { name: /Use the whole lot/ }));
   expect(screen.getByText(/source will become exhausted/)).toBeInTheDocument();
@@ -556,7 +593,9 @@ test("guided sowing asks for a resulting estimate only after approximate partial
     { name: "Source seed lot" },
     { timeout: 10_000 },
   );
+  await user.click(screen.getByRole("tab", { name: "Material & location" }));
   await user.type(screen.getByLabelText("Amount"), "3");
+  await user.click(screen.getByRole("tab", { name: /^Notes$/ }));
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   expect(screen.queryByLabelText("Resulting estimate")).not.toBeInTheDocument();
   await user.click(screen.getByRole("radio", { name: /Use part of the lot/ }));
@@ -580,6 +619,7 @@ test("guided sowing leaves unknown source quantity unknown", async () => {
     { name: "Source seed lot" },
     { timeout: 10_000 },
   );
+  await user.click(screen.getByRole("tab", { name: /^Notes$/ }));
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   await user.click(
     screen.getByRole("radio", {
@@ -602,14 +642,17 @@ test("layered help explains ambiguous SeedLot fields without adding chrome to No
   expect(
     screen.getByRole("combobox", { name: "Botanical identity" }),
   ).toHaveAccessibleDescription(/does not establish lineage/i);
+  await user.click(screen.getByRole("tab", { name: "Inventory" }));
   expect(
     screen.getByRole("group", { name: /Quantity/ }),
   ).toHaveAccessibleDescription(
     /leave the quantity empty rather than guessing/i,
   );
+  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
   expect(
     screen.getByRole("combobox", { name: "Supplier (optional)" }),
   ).toHaveAccessibleDescription(/does not establish its biological origin/i);
+  await user.click(screen.getByRole("tab", { name: "Inventory" }));
   expect(
     screen.getByRole("combobox", { name: "Storage location (optional)" }),
   ).toHaveAccessibleDescription(/currently kept.*not where it originated/i);
@@ -618,12 +661,14 @@ test("layered help explains ambiguous SeedLot fields without adding chrome to No
     screen.getByText(/one seed lot represents one physical packet or bag/i),
   ).toBeInTheDocument();
 
-  await user.click(screen.getByRole("button", { name: "More details" }));
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
+  await user.click(screen.getByRole("tab", { name: "Origin" }));
   expect(
     screen.getByRole("combobox", { name: "Material provenance (optional)" }),
   ).toHaveAccessibleDescription(
     /not its Supplier or current storage location/i,
   );
+  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
   const acquisitionDate = screen.getByRole("group", {
     name: "Acquisition date",
   });
@@ -678,6 +723,7 @@ test("minimal fast entry submits only known user information and uses authoritat
     screen.getByRole("combobox", { name: "Botanical identity" }),
   ).toHaveFocus();
   await chooseReference(user, "Botanical identity", "Clitoria ternatea");
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.click(screen.getByRole("button", { name: "Add to collection" }));
   await screen.findByText("Seed lot was added to the collection.");
   expect(submitted).toMatchObject({
@@ -722,10 +768,15 @@ test("full entry maps count, approximate g/mg quantity, Other source, references
   );
   await chooseReference(user, "Botanical identity", "Clitoria ternatea");
   await user.type(screen.getByLabelText("Lot label (optional)"), "Fresh blue");
+  await user.click(screen.getByRole("tab", { name: "Inventory" }));
   await user.type(screen.getByLabelText("Quantity value"), "2.5");
+  await user.click(screen.getByRole("tab", { name: "Inventory" }));
   await user.selectOptions(screen.getByLabelText("Quantity unit"), "g");
+  await user.click(screen.getByRole("tab", { name: "Inventory" }));
   await user.click(screen.getByLabelText("Approximately"));
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.selectOptions(screen.getByLabelText("Source"), "other");
+  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
   await user.type(
     screen.getByLabelText("Source detail (optional)"),
     "Community swap",
@@ -736,45 +787,53 @@ test("full entry maps count, approximate g/mg quantity, Other source, references
     "Storage location (optional)",
     "Seed cabinet → Drawer A",
   );
-  await user.click(screen.getByRole("button", { name: "More details" }));
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await chooseReference(
     user,
     "Material provenance (optional)",
     place.display_path,
   );
+  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
   await user.selectOptions(
     screen.getByLabelText("Precision", { selector: "#acquisition-precision" }),
     "year",
   );
+  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
   await user.clear(
     screen.getByLabelText("Year", { selector: "#acquisition-year" }),
   );
+  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
   await user.type(
     screen.getByLabelText("Year", { selector: "#acquisition-year" }),
     "2024",
   );
+  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
   await user.selectOptions(
     screen.getByLabelText("Precision", { selector: "#harvest-precision" }),
     "month",
   );
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.clear(
     screen.getByLabelText("Year", { selector: "#harvest-year" }),
   );
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.type(
     screen.getByLabelText("Year", { selector: "#harvest-year" }),
     "2023",
   );
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.selectOptions(
     screen.getByLabelText("Precision", { selector: "#viability-precision" }),
     "day",
   );
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.type(
     screen.getByLabelText("Notes (optional)"),
     "Cool dry storage",
   );
-  await user.click(screen.getByRole("button", { name: "Fewer details" }));
-  expect(screen.queryByLabelText("Notes (optional)")).not.toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "More details" }));
+  await user.click(screen.getByRole("tab", { name: "Essentials" }));
+  expect(screen.getByLabelText("Notes (optional)")).not.toBeVisible();
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   expect(screen.getByLabelText("Notes (optional)")).toHaveValue(
     "Cool dry storage",
   );
@@ -784,6 +843,7 @@ test("full entry maps count, approximate g/mg quantity, Other source, references
   expect(
     screen.getByLabelText("Year", { selector: "#acquisition-year" }),
   ).toHaveValue(2024);
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.click(screen.getByRole("button", { name: "Add to collection" }));
   await screen.findByText("Seed lot was added to the collection.");
   expect(screen.getByRole("link", { name: "Rare Seed House" })).toHaveAttribute(
@@ -826,17 +886,23 @@ test("milligram weight maps cleanly and leaving Other clears its detail", async 
     await screen.findByRole("button", { name: "+ New seed lot" }),
   );
   await chooseReference(user, "Botanical identity", "Clitoria ternatea");
+  await user.click(screen.getByRole("tab", { name: "Inventory" }));
   await user.type(screen.getByLabelText("Quantity value"), "125");
+  await user.click(screen.getByRole("tab", { name: "Inventory" }));
   await user.selectOptions(screen.getByLabelText("Quantity unit"), "mg");
+  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
   await user.selectOptions(screen.getByLabelText("Source"), "other");
+  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
   await user.type(
     screen.getByLabelText("Source detail (optional)"),
     "Old note",
   );
+  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
   await user.selectOptions(screen.getByLabelText("Source"), "purchased");
   expect(
     screen.queryByLabelText("Source detail (optional)"),
   ).not.toBeInTheDocument();
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.click(screen.getByRole("button", { name: "Add to collection" }));
   await screen.findByText("Seed lot was added to the collection.");
   expect(submitted).toMatchObject({
@@ -883,7 +949,9 @@ test("historical exhausted zero is valid while active zero is explained before s
     await screen.findByRole("button", { name: "+ New seed lot" }),
   );
   await chooseReference(user, "Botanical identity", "Clitoria ternatea");
+  await user.click(screen.getByRole("tab", { name: "Inventory" }));
   await user.type(screen.getByLabelText("Quantity value"), "0");
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.click(screen.getByRole("button", { name: "Add to collection" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "only valid for an exhausted lot",
@@ -893,8 +961,9 @@ test("historical exhausted zero is valid while active zero is explained before s
   ).not.toBeInTheDocument();
   expect(screen.getByLabelText("Quantity value")).toHaveValue("0");
   expect(postCalls).toBe(0);
-  await user.click(screen.getByRole("button", { name: "More details" }));
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.selectOptions(screen.getByLabelText("Lifecycle"), "exhausted");
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.click(screen.getByRole("button", { name: "Add to collection" }));
   await screen.findByText("Seed lot was added to the collection.");
   expect(postCalls).toBe(1);
@@ -926,17 +995,23 @@ test("one PUT supports lost to active and exhausted zero to active positive corr
   );
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   await user.selectOptions(screen.getByLabelText("Lifecycle"), "active");
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   await screen.findByText("Seed lot changes were saved.");
   expect(updates[0]).toMatchObject({ lifecycle: "active", quantity: null });
 
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   await user.selectOptions(screen.getByLabelText("Lifecycle"), "exhausted");
+  await user.click(screen.getByRole("tab", { name: "Inventory" }));
   await user.clear(screen.getByLabelText("Quantity value"));
+  await user.click(screen.getByRole("tab", { name: "Inventory" }));
   await user.type(screen.getByLabelText("Quantity value"), "0");
   await user.selectOptions(screen.getByLabelText("Lifecycle"), "active");
+  await user.click(screen.getByRole("tab", { name: "Inventory" }));
   await user.clear(screen.getByLabelText("Quantity value"));
+  await user.click(screen.getByRole("tab", { name: "Inventory" }));
   await user.type(screen.getByLabelText("Quantity value"), "15");
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   expect(updates[1]).toMatchObject({
     lifecycle: "active",
@@ -1018,6 +1093,7 @@ test("contextual creators auto-select references, preserve unsaved lot data, and
     "Unsaved packet",
   );
 
+  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
   const supplierPicker = screen.getByRole("combobox", {
     name: "Supplier (optional)",
   });
@@ -1030,6 +1106,7 @@ test("contextual creators auto-select references, preserve unsaved lot data, and
     expect(supplierPicker).toHaveValue("Local swap");
   });
 
+  await user.click(screen.getByRole("tab", { name: "Inventory" }));
   const locationPicker = screen.getByRole("combobox", {
     name: "Storage location (optional)",
   });
@@ -1042,7 +1119,8 @@ test("contextual creators auto-select references, preserve unsaved lot data, and
     expect(locationPicker).toHaveValue("Seed cabinet → Drawer B");
   });
 
-  await user.click(screen.getByRole("button", { name: "More details" }));
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
+  await user.click(screen.getByRole("tab", { name: "Origin" }));
   const provenancePicker = screen.getByRole("combobox", {
     name: "Material provenance (optional)",
   });
@@ -1056,6 +1134,7 @@ test("contextual creators auto-select references, preserve unsaved lot data, and
     expect(provenancePicker).toHaveValue(`${place.display_path} → Chiang Mai`);
   });
 
+  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
   await user.click(supplierPicker);
   await user.click(screen.getByRole("button", { name: /Create supplier/ }));
   const dialogInput = screen.getByRole("dialog").querySelector("input");
@@ -1103,6 +1182,7 @@ test("duplicate and failed contextual creation keep the seed form intact", async
       screen.getByRole("combobox", { name: "Botanical identity" }),
     ).toHaveValue("Clitoria ternatea");
   });
+  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
   await user.type(
     screen.getByRole("combobox", { name: "Supplier (optional)" }),
     "Broken supplier",
@@ -1140,10 +1220,17 @@ test("retired current references remain visible in edit while ordinary retired c
     await screen.findByRole("button", { name: /Clitoria ternatea/ }),
   );
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
+  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
   expect(
     screen.getByRole("combobox", { name: "Supplier (optional)" }),
   ).toHaveValue(supplier.name);
-  expect(screen.getAllByText("Current selection is retired.")).toHaveLength(2);
+  expect(
+    screen.getByLabelText("Supplier (optional)"),
+  ).toHaveAccessibleDescription(/retired/i);
+  await user.click(screen.getByRole("tab", { name: "Inventory" }));
+  expect(
+    screen.getByLabelText("Storage location (optional)"),
+  ).toHaveAccessibleDescription(/retired/i);
 });
 
 test("load, validation, forbidden, update, network, and session-expiry failures are explicit", async () => {
@@ -1192,19 +1279,29 @@ test("load, validation, forbidden, update, network, and session-expiry failures 
     await screen.findByRole("button", { name: "+ New seed lot" }),
   );
   await chooseReference(user, "Botanical identity", "Clitoria ternatea");
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.click(screen.getByRole("button", { name: "Add to collection" }));
   expect(await screen.findByRole("alert")).toHaveTextContent("zero quantity");
+  await waitFor(() => {
+    expect(screen.getByRole("tab", { name: "Inventory" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+  });
   mode = "forbidden";
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.click(screen.getByRole("button", { name: "Add to collection" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "could not authorize",
   );
   mode = "network";
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.click(screen.getByRole("button", { name: "Add to collection" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "Check the connection",
   );
   mode = "session";
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.click(screen.getByRole("button", { name: "Add to collection" }));
   expect(
     await screen.findByRole("button", { name: "Sign in" }),
@@ -1247,6 +1344,7 @@ test("update and stale-reference failures retain the editable lot", async () => 
     screen.getByLabelText("Lot label (optional)"),
     "Unsaved correction",
   );
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "Storage location no longer exists",
@@ -1255,6 +1353,7 @@ test("update and stale-reference failures retain the editable lot", async () => 
     "Unsaved correction",
   );
   responseKind = "server";
+  await user.click(screen.getByRole("tab", { name: "Seed details" }));
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "could not save or refresh",

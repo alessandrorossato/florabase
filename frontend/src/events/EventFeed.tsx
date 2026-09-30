@@ -1,3 +1,6 @@
+import { useRecordName } from "../components/recordPresentation";
+import { EventTargetPhoto } from "./EventTargetPhoto";
+
 import type { EventResponse } from "../collection/api";
 import { eventLabels, formatPartialDate, type EventFilter } from "./eventData";
 
@@ -32,23 +35,36 @@ export function EventFilters({
 export function EventFeed({
   events,
   compact = false,
+  showTargetPhoto = false,
 }: {
   events: EventResponse[];
   compact?: boolean;
+  showTargetPhoto?: boolean;
 }) {
+  const recordName = useRecordName();
+
   return (
     <ol className={`event-feed${compact ? " event-feed--compact" : ""}`}>
       {events.map((event) => {
         const type = event.target.type === "plant" ? "Plant" : "Plant group";
-        const name =
-          event.target.label ??
-          (event.target.type === "plant"
+        const name = recordName(
+          event.target,
+          event.target.type === "plant"
             ? "Unlabelled plant"
-            : "Unlabelled plant group");
+            : "Unlabelled plant group",
+        );
         const href = `#/${event.target.type === "plant" ? "plants" : "plant-groups"}/${event.target.id}?tab=events`;
         return (
           <li key={event.id}>
             <article>
+              {showTargetPhoto && (
+                <EventTargetPhoto
+                  photo={event.target.primary_photo}
+                  identity={event.target.botanical_identity}
+                  kind={event.target.type === "plant" ? "plant" : "group"}
+                  label={name}
+                />
+              )}
               <div className="event-feed-heading">
                 <span className="event-kind">{eventLabels[event.kind]}</span>
                 <time>{formatPartialDate(event.occurred_on)}</time>
@@ -73,7 +89,7 @@ export function EventFeed({
                 <p>
                   1 individual extracted →{" "}
                   <a href={`#/plants/${event.resulting_plant.id}`}>
-                    {event.resulting_plant.label ?? "Unlabelled plant"}
+                    {recordName(event.resulting_plant, "Unlabelled plant")}
                   </a>
                 </p>
               )}
@@ -81,7 +97,7 @@ export function EventFeed({
                 <p>
                   Plant returned to this group →{" "}
                   <a href={`#/plants/${event.resulting_plant.id}`}>
-                    {event.resulting_plant.label ?? "Unlabelled plant"}
+                    {recordName(event.resulting_plant, "Unlabelled plant")}
                   </a>
                 </p>
               )}

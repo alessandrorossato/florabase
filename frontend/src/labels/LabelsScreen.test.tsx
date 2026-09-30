@@ -271,6 +271,13 @@ test("empty workspace, keyboard add, copy validation, printing and removal", asy
   render(<LabelsScreen canonicalOrigin={canonicalOrigin} />);
   expect(screen.getByRole("button", { name: "Print sheet" })).toBeDisabled();
   expect(screen.getByText("Your label sheet is empty.")).toBeVisible();
+  const printSetup = screen.getByText("Print setup and QR guidance");
+  expect(printSetup.closest("details")).not.toHaveAttribute("open");
+  await user.click(printSetup);
+  expect(printSetup.closest("details")).toHaveAttribute("open");
+  expect(screen.getByText(/Print at 100%/)).toBeVisible();
+  await user.click(printSetup);
+  expect(printSetup.closest("details")).not.toHaveAttribute("open");
   const picker = await screen.findByRole("combobox", { name: "Record" });
   await user.click(picker);
   await user.keyboard("{ArrowDown}{Enter}");
