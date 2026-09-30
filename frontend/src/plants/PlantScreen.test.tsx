@@ -420,7 +420,7 @@ test("unified rows, search, lifecycle and type filters, detail, and Back remain 
 
   await user.click(within(lifecycle).getByRole("button", { name: "History" }));
   const groupRow = screen.getByRole("button", {
-    name: /Seedlings 2026.*Cyphomandra betacea.*Group.*From sowing · Tray A.*0 plants/s,
+    name: /Seedlings 2026.*Cyphomandra betacea.*Group.*0 plants.*From sowing · Tray A/s,
   });
   expect(within(groupRow).getByText("Group")).toBeInTheDocument();
   await user.click(within(lifecycle).getByRole("button", { name: "All" }));
@@ -492,7 +492,9 @@ test("one New disclosure chooses type and supports BotanicalIdentity-only Plant 
   });
   expect(trigger).toHaveAttribute("aria-expanded", "false");
   await user.click(trigger);
-  expect(trigger).toHaveAttribute("aria-expanded", "true");
+  expect(
+    screen.queryByRole("button", { name: "+ New plant or group" }),
+  ).not.toBeInTheDocument();
   expect(
     screen.getByRole("heading", { name: "What are you tracking?" }),
   ).toBeInTheDocument();
@@ -519,7 +521,9 @@ test("one New disclosure chooses type and supports BotanicalIdentity-only Plant 
     lifecycle: "active",
     notes: null,
   });
-  expect(trigger).toHaveAttribute("aria-expanded", "false");
+  expect(
+    screen.getByRole("button", { name: "+ New plant or group" }),
+  ).toHaveAttribute("aria-expanded", "false");
 });
 
 test("minimal group creation keeps quantity unknown", async () => {
@@ -611,7 +615,7 @@ test("direct origin, references, partial date, Location, lifecycle, notes, and s
     screen.getByLabelText("Label (optional)"),
     "Courtyard avocado",
   );
-  await user.click(screen.getByRole("button", { name: "More details" }));
+  await user.click(screen.getByRole("button", { name: "Additional details" }));
   await user.selectOptions(screen.getByLabelText("Direct origin"), "other");
   await user.type(
     screen.getByLabelText("Other origin detail"),
@@ -693,7 +697,7 @@ test("known Sowing clears direct provenance and preserves an independently chose
     screen.getByRole("button", { name: /Plant.*One individually/s }),
   );
   await chooseReference(user, "Botanical identity", "Persea americana");
-  await user.click(screen.getByRole("button", { name: "More details" }));
+  await user.click(screen.getByRole("button", { name: "Additional details" }));
   await user.selectOptions(screen.getByLabelText("Direct origin"), "purchased");
   await user.selectOptions(
     screen.getByLabelText("Supplier (optional)"),
@@ -770,7 +774,9 @@ test("group count validation covers exact and approximate zero before valid atom
   expect(screen.getByRole("alert")).toHaveTextContent(
     "Approximate group count",
   );
-  await user.click(screen.getByRole("button", { name: "More details" }));
+  expect(
+    screen.getByRole("button", { name: "Hide additional details" }),
+  ).toHaveAttribute("aria-expanded", "true");
   await user.selectOptions(screen.getByLabelText("Lifecycle"), "lost");
   await user.selectOptions(screen.getByLabelText("Kind"), "exact");
   await user.click(screen.getByRole("button", { name: "Record Plant group" }));
@@ -1407,8 +1413,8 @@ test("explicit Plant transfer records recipient and keeps the historical detail 
   const user = await openPlants();
   await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
   const transfer = screen.getByRole("button", { name: "Transfer" });
-  expect(transfer).not.toHaveClass("button--secondary");
-  expect(screen.getByRole("button", { name: "Edit Plant" })).toHaveClass(
+  expect(transfer).toHaveClass("button--secondary");
+  expect(screen.getByRole("button", { name: "Edit Plant" })).not.toHaveClass(
     "button--secondary",
   );
   await user.click(transfer);
@@ -1925,4 +1931,318 @@ test("reselecting a previewed record after narrowing the viewport opens its deta
     await screen.findByRole("tab", { name: "Events" }),
   ).toBeInTheDocument();
   expect(screen.queryByText(/Loading .* detail/)).not.toBeInTheDocument();
+});
+
+test.each(["plant", "group"] as const)(
+  "%s entry keeps location essential and retains additional values through keyboard disclosure",
+  async (kind) => {
+    let saved: Record<string, unknown> | undefined;
+    mockApi(
+      plantHandler([], [], (path, init) => {
+        if (
+          path === `/api/v1/${kind === "plant" ? "plants" : "plant-groups"}` &&
+          init?.method === "POST"
+        ) {
+          saved = body(init);
+          return json(kind === "plant" ? plant(saved) : group(saved), 201);
+        }
+        return undefined;
+      }),
+    );
+    const user = await openPlants();
+    await user.click(
+      screen.getByRole("button", { name: "+ New plant or group" }),
+    );
+    await user.click(
+      screen.getByRole("button", {
+        name:
+          kind === "plant"
+            ? /Plant.*One individually/
+            : /Plant group.*Multiple/,
+      }),
+    );
+    expect(
+      screen.getByRole("heading", {
+        name: kind === "plant" ? "Record Plant" : "Record Plant group",
+      }),
+    ).toHaveFocus();
+    await chooseReference(user, "Botanical identity", "Persea americana");
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Current location (optional)" }),
+      locationId,
+    );
+    expect(
+      screen.queryByRole("textbox", { name: "Notes (optional)" }),
+    ).not.toBeInTheDocument();
+    if (kind === "plant")
+      expect(
+        screen.queryByRole("group", { name: /Quantity/ }),
+      ).not.toBeInTheDocument();
+    const disclosure = screen.getByRole("button", {
+      name: "Additional details",
+    });
+    disclosure.focus();
+    await user.keyboard("{Enter}");
+    await user.type(
+      screen.getByRole("textbox", { name: "Notes (optional)" }),
+      "Keep this observation.",
+    );
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Direct origin" }),
+      "gift_exchange",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Hide additional details" }),
+    );
+    expect(
+      screen.queryByRole("textbox", { name: "Notes (optional)" }),
+    ).not.toBeInTheDocument();
+    await user.click(
+      screen.getByRole("button", { name: "Additional details" }),
+    );
+    expect(
+      screen.getByRole("textbox", { name: "Notes (optional)" }),
+    ).toHaveValue("Keep this observation.");
+    await user.click(
+      screen.getByRole("button", { name: "Hide additional details" }),
+    );
+    await user.click(
+      screen.getByRole("button", {
+        name: kind === "plant" ? "Record Plant" : "Record Plant group",
+      }),
+    );
+    await screen.findByText(
+      `${kind === "plant" ? "Plant" : "Plant group"} was added to the collection.`,
+    );
+    expect(saved).toMatchObject({
+      location_id: locationId,
+      notes: "Keep this observation.",
+      direct_origin_kind: "gift_exchange",
+    });
+  },
+);
+
+test("closing new entry returns focus to its single creation action", async () => {
+  mockApi(plantHandler([], []));
+  const user = await openPlants();
+  await user.click(
+    screen.getByRole("button", { name: "+ New plant or group" }),
+  );
+  await user.click(
+    screen.getByRole("button", { name: /Plant.*One individually/ }),
+  );
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  await waitFor(() => {
+    expect(
+      screen.getByRole("button", { name: "+ New plant or group" }),
+    ).toHaveFocus();
+  });
+});
+
+test.each([
+  { quantity: null, expected: "Quantity unknown" },
+  { quantity: { value: 7, is_approximate: true }, expected: "About 7 plants" },
+  { quantity: { value: 7, is_approximate: false }, expected: "7 plants" },
+])(
+  "group row and preview show $expected without member arithmetic",
+  async ({ quantity, expected }) => {
+    mockApi(plantHandler([], [group({ lifecycle: "active", quantity })]));
+    const user = await openPlants();
+    setViewportMatches(false);
+    const row = screen.getByRole("button", { name: /Seedlings 2026/ });
+    expect(row).toHaveTextContent(expected);
+    await user.click(row);
+    const preview = await screen.findByRole("complementary", {
+      name: "Quick preview",
+    });
+    expect(preview).toHaveTextContent(expected);
+    expect(
+      within(preview).queryByRole("button", { name: /Extract|Transfer/ }),
+    ).not.toBeInTheDocument();
+  },
+);
+
+test("sparse unlabelled Plant keeps its botanical identity primary without invented metadata", async () => {
+  mockApi(
+    plantHandler(
+      [
+        plant({
+          label: null,
+          location: null,
+          location_id: null,
+          supplier: null,
+          supplier_id: null,
+          direct_origin_kind: "unknown",
+        }),
+      ],
+      [],
+    ),
+  );
+  await openPlants();
+  const row = screen.getByRole("button", {
+    name: /Persea americana.*Unlabelled Plant/,
+  });
+  expect(row).toHaveAccessibleName(/^Persea americana\s*Unlabelled Plant/);
+  expect(row).not.toHaveTextContent(
+    /Location not recorded|Origin unknown|Quantity/,
+  );
+});
+
+test("group extraction history uses only recorded group origin and includes retained individuals", async () => {
+  const extracted = plant({
+    label: "Returned specimen",
+    lifecycle: "reintegrated",
+    originating_plant_group_id: groupId,
+  });
+  const unrelated = plant({
+    id: "unrelated-plant",
+    label: "Same identity, different origin",
+  });
+  mockApi(
+    plantHandler(
+      [extracted, unrelated],
+      [
+        group({
+          lifecycle: "active",
+          quantity: { value: 5, is_approximate: false },
+        }),
+      ],
+    ),
+  );
+  const user = await openPlants();
+  await user.click(screen.getByRole("button", { name: /Seedlings 2026/ }));
+  const history = screen.getByRole("region", { name: "Extracted Plants" });
+  expect(
+    within(history).getByRole("link", { name: "Returned specimen" }),
+  ).toHaveAttribute("href", `#/plants/${plantId}`);
+  expect(history).toHaveTextContent("Reintegrated");
+  expect(history).not.toHaveTextContent("Same identity, different origin");
+  expect(history).toHaveTextContent("not a count of current group members");
+  expect(
+    screen.getByRole("region", { name: "Managed group" }),
+  ).toHaveTextContent("5 plants");
+});
+
+test("transfer dialog contains keyboard focus and restores the operation trigger on escape", async () => {
+  mockApi(plantHandler([plant()], []));
+  const user = await openPlants();
+  await user.click(screen.getByRole("button", { name: /Avocado #1/ }));
+  const trigger = screen.getByRole("button", { name: "Transfer" });
+  await user.click(trigger);
+  const dialog = screen.getByRole("dialog", { name: "Transfer" });
+  expect(
+    within(dialog).getByRole("textbox", { name: "Recipient (optional)" }),
+  ).toHaveFocus();
+  within(dialog).getByRole("button", { name: "Cancel" }).focus();
+  await user.tab();
+  expect(
+    within(dialog).getByRole("combobox", { name: "Precision" }),
+  ).toHaveFocus();
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(trigger).toHaveFocus();
+});
+
+test.each(["local", "external"] as const)(
+  "Plant preview respects %s primary-photo loading",
+  async (kind) => {
+    const photo = {
+      photo_id: "primary-photo",
+      kind,
+      thumbnail_url:
+        kind === "local" ? "/api/v1/attachments/photo/thumbnail" : null,
+    };
+    mockApi(plantHandler([plant({ primary_photo: photo })], []));
+    const user = await openPlants();
+    setViewportMatches(false);
+    await user.click(screen.getByRole("button", { name: /Avocado #1/ }));
+    const preview = await screen.findByRole("complementary", {
+      name: "Quick preview",
+    });
+    if (kind === "local") {
+      expect(
+        within(preview).getByRole("img", {
+          name: "Primary photo for Avocado #1",
+        }),
+      ).toHaveAttribute("src", photo.thumbnail_url);
+    } else {
+      expect(
+        within(preview).getByText("External primary photo"),
+      ).toBeInTheDocument();
+      expect(within(preview).queryByRole("img")).not.toBeInTheDocument();
+    }
+  },
+);
+
+test("historical group detail labels retained location and zero count without claiming current holdings", async () => {
+  mockApi(
+    plantHandler(
+      [],
+      [
+        group({
+          location: { id: locationId, display_path: location.display_path },
+          location_id: locationId,
+        }),
+      ],
+    ),
+  );
+  const user = await openPlants();
+  await user.click(
+    within(screen.getByRole("group", { name: "Lifecycle" })).getByRole(
+      "button",
+      { name: "History" },
+    ),
+  );
+  await user.click(screen.getByRole("button", { name: /Seedlings 2026/ }));
+  expect(
+    screen.getByRole("region", { name: "Record summary" }),
+  ).toHaveTextContent("Last recorded location");
+  expect(
+    screen.getByRole("region", { name: "Managed group" }),
+  ).toHaveTextContent("Recorded quantity0 plants");
+  expect(
+    screen.queryByRole("button", { name: "Extract plant" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("region", { name: "Collection operations" }),
+  ).not.toBeInTheDocument();
+});
+
+test("server validation reopens additional fields and focuses the visible error", async () => {
+  mockApi(
+    plantHandler([], [], (path, init) => {
+      if (path === "/api/v1/plants" && init?.method === "POST")
+        return json(
+          { detail: [{ loc: ["body", "supplier_id"], msg: "not found" }] },
+          422,
+        );
+      return undefined;
+    }),
+  );
+  const user = await openPlants();
+  await user.click(
+    screen.getByRole("button", { name: "+ New plant or group" }),
+  );
+  await user.click(
+    screen.getByRole("button", { name: /Plant.*One individually/ }),
+  );
+  await chooseReference(user, "Botanical identity", "Persea americana");
+  await user.click(screen.getByRole("button", { name: "Additional details" }));
+  await user.selectOptions(
+    screen.getByLabelText("Supplier (optional)"),
+    supplierId,
+  );
+  await user.click(
+    screen.getByRole("button", { name: "Hide additional details" }),
+  );
+  await user.click(screen.getByRole("button", { name: "Record Plant" }));
+  const error = await screen.findByRole("alert");
+  expect(error).toHaveTextContent("no longer exists");
+  expect(error).toHaveFocus();
+  expect(
+    screen.getByRole("button", { name: "Hide additional details" }),
+  ).toHaveAttribute("aria-expanded", "true");
+  expect(
+    screen.getByRole("combobox", { name: "Supplier (optional)" }),
+  ).toHaveValue(supplierId);
 });
