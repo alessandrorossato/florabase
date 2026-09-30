@@ -149,16 +149,6 @@ export function LabelsScreen({
           Print sheet
         </button>
       </header>
-      <p className="notice">
-        Print at 100% / Actual size. Turn off Fit to page and browser headers
-        and footers. Use A4 portrait with the stylesheet’s margins. Measure one
-        label: 50 mm wide × 30 mm high.
-      </p>
-      <p className="field-help">
-        Sheet edits are discarded when you leave or refresh. QR links use the
-        configured Florabase address; the scanning device must be able to reach
-        it and sign in normally.
-      </p>
       {!canonicalOrigin && (
         <p className="notice" role="alert">
           Florabase has no canonical public address configured; labels cannot be
@@ -240,6 +230,22 @@ export function LabelsScreen({
           <p className="label-capacity" aria-live="polite">
             {String(labelsPerPage - total)} spaces remaining
           </p>
+          <aside className="label-print-guidance" aria-label="Print guidance">
+            <p className="field-help">A4 portrait · 100% / Actual size</p>
+            <details>
+              <summary>Print setup and QR guidance</summary>
+              <p className="notice">
+                Print at 100% / Actual size. Turn off Fit to page and browser
+                headers and footers. Use A4 portrait with the stylesheet’s
+                margins. Measure one label: 50 mm wide × 30 mm high.
+              </p>
+              <p className="field-help">
+                Sheet edits are discarded when you leave or refresh. QR links
+                use the configured Florabase address; the scanning device must
+                be able to reach it and sign in normally.
+              </p>
+            </details>
+          </aside>
           {entries.length === 0 ? (
             <p>Choose records to start your sheet.</p>
           ) : (

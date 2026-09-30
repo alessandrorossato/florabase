@@ -2615,6 +2615,7 @@ export interface components {
             /** Label */
             label: string | null;
             lifecycle: components["schemas"]["PlantLifecycle"];
+            primary_photo?: components["schemas"]["PrimaryPhotoResponse"] | null;
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}
@@ -2712,6 +2713,7 @@ export interface components {
             /** Label */
             label: string | null;
             lifecycle: components["schemas"]["PlantGroupLifecycle"];
+            primary_photo?: components["schemas"]["PrimaryPhotoResponse"] | null;
             /**
              * @description discriminator enum property added by openapi-typescript
              * @enum {string}

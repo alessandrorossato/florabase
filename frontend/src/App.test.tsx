@@ -439,6 +439,50 @@ test("desktop navigation hides and reopens without remounting the workspace", as
   expect(
     within(sidebar).getByRole("region", { name: "Tools" }),
   ).toHaveTextContent("Import / ExportLabels");
+  const resize = within(sidebar).getByRole("separator", {
+    name: "Resize navigation",
+  });
+  const dashboard = await screen.findByRole("heading", { name: "Dashboard" });
+  resize.focus();
+  await user.keyboard("{End}");
+  expect(resize).toHaveAttribute(
+    "aria-valuenow",
+    String(Math.min(400, Math.floor(window.innerWidth * 0.35))),
+  );
+  expect(await screen.findByRole("heading", { name: "Dashboard" })).toBe(
+    dashboard,
+  );
+  await user.keyboard("{Home}");
+  expect(resize).toHaveAttribute("aria-valuenow", "220");
+  await user.keyboard("{ArrowRight}");
+  expect(resize).toHaveAttribute("aria-valuenow", "228");
+  const initialWidth = window.innerWidth;
+  try {
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 1440,
+    });
+    window.dispatchEvent(new Event("resize"));
+    await waitFor(() => {
+      expect(resize).toHaveAttribute("aria-valuemax", "400");
+    });
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: 1024,
+    });
+    window.dispatchEvent(new Event("resize"));
+    await waitFor(() => {
+      expect(resize).toHaveAttribute("aria-valuemax", "358");
+    });
+    expect(resize).toHaveAttribute("aria-valuenow", "228");
+    expect(screen.getByRole("heading", { name: "Dashboard" })).toBe(dashboard);
+  } finally {
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: initialWidth,
+    });
+    window.dispatchEvent(new Event("resize"));
+  }
   const hideNavigation = within(sidebar).getByRole("button", {
     name: "Hide navigation",
   });
@@ -1143,10 +1187,16 @@ test("no-profile state explains reference knowledge and exposes accessible optio
     "Uses",
     "Warnings",
   ]) {
-    expect(screen.getByLabelText(label)).not.toBeRequired();
-    expect(screen.getByLabelText(label).tagName).toBe("TEXTAREA");
+    expect(
+      screen.getByLabelText(label, { selector: "textarea" }),
+    ).not.toBeRequired();
+    expect(screen.getByLabelText(label, { selector: "textarea" }).tagName).toBe(
+      "TEXTAREA",
+    );
   }
-  expect(screen.getByLabelText("Cultivation")).toHaveAccessibleDescription(
+  expect(
+    screen.getByLabelText("Cultivation", { selector: "textarea" }),
+  ).toHaveAccessibleDescription(
     /general cultivation guidance, not measurements or outcomes/i,
   );
 });
@@ -1198,6 +1248,7 @@ test("profile creation uses PUT with CSRF and announces a multiline save", async
     description,
     "First paragraph.{Enter}{Enter}Second paragraph.",
   );
+  await user.click(screen.getByRole("tab", { name: "Uses & warnings" }));
   await user.click(screen.getByRole("button", { name: "Save profile" }));
 
   expect(await screen.findByRole("status")).toHaveTextContent(
@@ -1240,12 +1291,14 @@ test("clearing one section updates the profile and clearing the final section re
   await user.click(await screen.findByRole("button", { name: "Edit profile" }));
   const description = await screen.findByLabelText("Description");
   await user.clear(description);
+  await user.click(screen.getByRole("tab", { name: "Uses & warnings" }));
   await user.click(screen.getByRole("button", { name: "Save profile" }));
   expect(await screen.findByRole("status")).toHaveTextContent(/profile saved/i);
   await user.click(screen.getByRole("button", { name: "Edit profile" }));
   expect(screen.getByLabelText("Uses")).toHaveValue("Ornamental");
 
   await user.clear(screen.getByLabelText("Uses"));
+  await user.click(screen.getByRole("tab", { name: "Uses & warnings" }));
   await user.click(screen.getByRole("button", { name: "Save profile" }));
   expect(await screen.findByRole("status")).toHaveTextContent(
     /profile cleared/i,
@@ -1269,14 +1322,18 @@ test("profile validation and network failures are announced without duplicate sa
   const user = await createSelectedIdentity();
 
   await user.click(await screen.findByRole("button", { name: "Add profile" }));
+  await user.click(screen.getByRole("tab", { name: "Uses & warnings" }));
   await user.click(await screen.findByRole("button", { name: "Save profile" }));
   const validation = await screen.findByRole("alert");
   expect(validation).toHaveTextContent(
     /add profile text or a structured native range/i,
   );
-  expect(validation).toHaveFocus();
-
+  await waitFor(() => {
+    expect(screen.getByLabelText("Description")).toHaveFocus();
+  });
+  await user.click(screen.getByRole("tab", { name: "Uses & warnings" }));
   await user.type(screen.getByLabelText("Warnings"), "Handle carefully.");
+  await user.click(screen.getByRole("tab", { name: "Uses & warnings" }));
   await user.click(screen.getByRole("button", { name: "Save profile" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     /could not save this botanical profile.*check the connection/i,
@@ -1302,6 +1359,7 @@ test("profile session expiry returns to the shared login boundary", async () => 
     await screen.findByLabelText("Description"),
     "Reference text",
   );
+  await user.click(screen.getByRole("tab", { name: "Uses & warnings" }));
   await user.click(screen.getByRole("button", { name: "Save profile" }));
 
   expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -2413,6 +2471,13 @@ test("Geography navigation loads, filters, and selects broad and country canonic
   expect(
     screen.getByRole("button", { name: "Places", pressed: true }),
   ).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: "Collapse World" }),
+  ).toHaveAttribute("aria-expanded", "true");
+  expect(
+    screen.getByRole("button", { name: "Expand South America" }),
+  ).toHaveAttribute("aria-expanded", "false");
+  await user.click(screen.getByRole("button", { name: "Collapse World" }));
   await user.click(
     screen.getByRole("button", { name: "Provenance sites", pressed: false }),
   );
@@ -2426,6 +2491,10 @@ test("Geography navigation loads, filters, and selects broad and country canonic
   ).toBeInTheDocument();
   await user.click(
     screen.getByRole("button", { name: "Places", pressed: false }),
+  );
+  expect(screen.getByRole("button", { name: "Expand World" })).toHaveAttribute(
+    "aria-expanded",
+    "false",
   );
   await user.click(screen.getByRole("button", { name: "New local place" }));
   expect(
@@ -2786,4 +2855,63 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
   ).toBeInTheDocument();
   await user.keyboard("{Escape}");
   expect(editPlace).toHaveFocus();
+});
+
+test("Botanical identity editor keeps name and profile drafts across its separate edit sections", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    `#/identities/${botanicalIdentity.id}?tab=edit`,
+  );
+  const writes: RequestInit[] = [];
+  authenticatedDirectoryThen((path, init) => {
+    if (init?.method === "PUT") {
+      writes.push(init);
+      return jsonResponse(botanicalIdentity);
+    }
+    if (path === "/api/v1/botanical-identities")
+      return jsonResponse([botanicalIdentity]);
+    if (path.endsWith("/collection"))
+      return jsonResponse({
+        identity: botanicalIdentity,
+        seed_lots: [],
+        sowings: [],
+        plants: [],
+        plant_groups: [],
+        events: [],
+      });
+    if (path.endsWith("/profile")) return jsonResponse(botanicalProfile);
+    if (path.endsWith("/cover")) return jsonResponse(null);
+    throw new Error(`unexpected request ${path}`);
+  });
+  const user = userEvent.setup();
+  render(<App />);
+  await screen.findByLabelText("Scientific name");
+  const editor = screen.getByRole("tablist", {
+    name: "Botanical identity edit sections",
+  });
+  await user.clear(screen.getByLabelText("Common name"));
+  await user.type(screen.getByLabelText("Common name"), "Draft maple");
+  await user.click(within(editor).getByRole("tab", { name: "Reference" }));
+  const description = await screen.findByLabelText("Description");
+  await user.type(description, " Draft profile");
+  expect(
+    screen.queryByLabelText("Saved botanical profile"),
+  ).not.toBeInTheDocument();
+  await user.click(within(editor).getByRole("tab", { name: "Native range" }));
+  await screen.findByRole("heading", { name: /Native range/ });
+  await user.click(within(editor).getByRole("tab", { name: "Identity" }));
+  expect(screen.getByLabelText("Common name")).toHaveValue("Draft maple");
+  await user.click(within(editor).getByRole("tab", { name: "Reference" }));
+  expect(screen.getByLabelText("Description")).toHaveValue(
+    `${botanicalProfile.description} Draft profile`,
+  );
+  expect(writes).toHaveLength(0);
+  await user.click(screen.getByRole("button", { name: "Close editor" }));
+  expect(
+    screen.queryByRole("tablist", { name: "Botanical identity edit sections" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("tablist", { name: "Record sections" }),
+  ).not.toHaveAttribute("inert");
 });

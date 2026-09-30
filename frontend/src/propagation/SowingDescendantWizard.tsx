@@ -1,3 +1,16 @@
+import { firstValidationField } from "../components/formValidation";
+import { useMemo } from "react";
+import { FormSections } from "../components/FormSections";
+import {
+  PlantEssentialsFields,
+  PlantEntryDateField,
+  PlantNotesField,
+  type PlantFieldsState,
+} from "../plants/PlantFormFields";
+import {
+  useRecordName,
+  usePublishRecordIdentities,
+} from "../components/recordPresentation";
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
 import { ApiError } from "../auth/api";
@@ -8,24 +21,17 @@ import {
   listBotanicalIdentities,
   type BotanicalIdentityResponse,
 } from "../botanical-identities/api";
-import {
-  listLocations,
-  locationsForScope,
-  type LocationResponse,
-} from "../locations/api";
-import { PartialDateField } from "../seed-lots/PartialDateField";
+import { listLocations, type LocationResponse } from "../locations/api";
 import {
   createPlantFromSowing,
   createPlantGroupFromSowing,
   getSowing,
-  type PartialDate,
   type SowingLifecycle,
   type SowingResponse,
 } from "../sowings/api";
 import { PropagationPath } from "./PropagationPath";
 
 type Kind = "plant" | "group";
-type QuantityKind = "unknown" | "exact" | "approximate";
 
 const sowingLifecycleLabels: Record<
   Exclude<SowingLifecycle, "reversed">,
@@ -45,6 +51,7 @@ export function SowingDescendantWizard({
   kind: Kind;
 }) {
   const auth = useAuth();
+  const recordName = useRecordName();
   const [data, setData] = useState<
     | { status: "loading" }
     | { status: "error" }
@@ -56,17 +63,41 @@ export function SowingDescendantWizard({
       }
   >({ status: "loading" });
   const [identityId, setIdentityId] = useState("");
-  const [label, setLabel] = useState("");
-  const [entryDate, setEntryDate] = useState<PartialDate | null>(null);
-  const [locationId, setLocationId] = useState("");
-  const [notes, setNotes] = useState("");
-  const [quantityKind, setQuantityKind] = useState<QuantityKind>("unknown");
-  const [quantityValue, setQuantityValue] = useState("");
+  const [form, setForm] = useState<PlantFieldsState>({
+    label: "",
+    locationId: "",
+    collectionEntryDate: null,
+    notes: "",
+    quantityKind: "unknown",
+    quantityValue: "",
+  });
+  const {
+    label,
+    locationId,
+    collectionEntryDate: entryDate,
+    notes,
+    quantityKind,
+    quantityValue,
+  } = form;
+  const updateForm = <K extends keyof PlantFieldsState>(
+    key: K,
+    value: PlantFieldsState[K],
+  ) => {
+    setForm((current) => ({ ...current, [key]: value }));
+  };
   const [resultingLifecycle, setResultingLifecycle] =
     useState<SowingLifecycle>("active");
   const [pending, setPending] = useState(false);
   const [messages, setMessages] = useState<string[]>([]);
+  const [validationField, setValidationField] = useState<string | undefined>();
   const feedback = useRef<HTMLDivElement>(null);
+  usePublishRecordIdentities(
+    data.status === "ready" ? data.identities : undefined,
+  );
+  const sectionError = useMemo(
+    () => (messages.length ? { messages, field: validationField } : undefined),
+    [messages, validationField],
+  );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -78,7 +109,10 @@ export function SowingDescendantWizard({
       .then(([sowing, identities, locations]) => {
         setData({ status: "ready", sowing, identities, locations });
         setIdentityId(sowing.seed_lot.botanical_identity_id);
-        setLocationId(sowing.location_id ?? "");
+        setForm((current) => ({
+          ...current,
+          locationId: sowing.location_id ?? "",
+        }));
       })
       .catch(() => {
         if (!controller.signal.aborted) setData({ status: "error" });
@@ -165,6 +199,7 @@ export function SowingDescendantWizard({
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
+    setValidationField(undefined);
     const errors: string[] = [];
     if (!identityId) errors.push("Choose a Botanical identity.");
     if (kind === "group" && quantityKind !== "unknown") {
@@ -192,6 +227,7 @@ export function SowingDescendantWizard({
         : "";
     setPending(true);
     setMessages([]);
+    setValidationField(undefined);
     try {
       if (kind === "plant") {
         const result = await createPlantFromSowing(
@@ -221,6 +257,10 @@ export function SowingDescendantWizard({
         window.location.hash = `/plant-groups/${result.plant_group.id}`;
       }
     } catch (error: unknown) {
+      if (error instanceof ApiError && error.status === 422) {
+        setValidationField(firstValidationField(error));
+      }
+
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();
       else if (error instanceof ApiError && error.status === 409)
@@ -247,7 +287,10 @@ export function SowingDescendantWizard({
             label: sowing.seed_lot.botanical_identity_display_label,
             href: `#/identities/${sowing.seed_lot.botanical_identity_id}?tab=plants`,
           },
-          { label: sowing.label ?? "Sowing", href: `#/sowings/${sowing.id}` },
+          {
+            label: recordName(sowing, "Sowing"),
+            href: `#/sowings/${sowing.id}`,
+          },
           { label: kind === "plant" ? "Create Plant" : "Create Plant group" },
         ]}
       />
@@ -258,7 +301,7 @@ export function SowingDescendantWizard({
             Create {kind === "plant" ? "Plant" : "Plant group"}
           </h2>
           <p>
-            From <strong>{sowing.label ?? "Unlabelled Sowing"}</strong>. The
+            From <strong>{recordName(sowing, "Unlabelled Sowing")}</strong>. The
             originating Sowing is stored explicitly.
           </p>
         </div>
@@ -268,7 +311,15 @@ export function SowingDescendantWizard({
           [
             {
               type: "Source SeedLot",
-              label: sowing.seed_lot.label ?? "Unlabelled SeedLot",
+              label: recordName(
+                {
+                  label: sowing.seed_lot.label,
+                  botanical_identity_id: sowing.seed_lot.botanical_identity_id,
+                  botanical_identity_display_label:
+                    sowing.seed_lot.botanical_identity_display_label,
+                },
+                "Unlabelled SeedLot",
+              ),
               href: `#/seeds/${sowing.seed_lot.id}`,
               state: sowing.seed_lot.lifecycle,
             },
@@ -276,7 +327,7 @@ export function SowingDescendantWizard({
           [
             {
               type: "Current Sowing",
-              label: sowing.label ?? "Unlabelled Sowing",
+              label: recordName(sowing, "Unlabelled Sowing"),
               href: `#/sowings/${sowing.id}`,
               state: sowing.lifecycle,
             },
@@ -290,166 +341,151 @@ export function SowingDescendantWizard({
       >
         <p className="eyebrow">Result</p>
         <h3>New {kind === "plant" ? "Plant" : "Plant group"} details</h3>
-        <div className="guided-form-grid">
-          <div className="field">
-            <label htmlFor="descendant-identity">Botanical identity</label>
-            <select
-              aria-describedby="descendant-identity-help"
-              id="descendant-identity"
-              value={identityId}
-              onChange={(event) => {
-                setIdentityId(event.currentTarget.value);
-              }}
-            >
-              {identities.map((identity) => (
-                <option key={identity.id} value={identity.id}>
-                  {identity.display_label}
-                </option>
-              ))}
-            </select>
-            <FieldHelp id="descendant-identity-help">
-              The source identity is preselected, but a valid changed identity
-              may be chosen. Sharing an identity does not establish lineage.
-            </FieldHelp>
-          </div>
-          <div className="field">
-            <label htmlFor="descendant-label">
-              Label <span className="optional">(optional)</span>
-            </label>
-            <input
-              id="descendant-label"
-              value={label}
-              onChange={(event) => {
-                setLabel(event.currentTarget.value);
-              }}
-            />
-          </div>
-          <PartialDateField
-            id="descendant-entry-date"
-            label="Collection-entry date (optional)"
-            value={entryDate}
-            disabled={pending}
-            onChange={setEntryDate}
-          />
-          <div className="field">
-            <label htmlFor="descendant-location">
-              Current location <span className="optional">(optional)</span>
-            </label>
-            <select
-              aria-describedby="descendant-location-help"
-              id="descendant-location"
-              value={locationId}
-              onChange={(event) => {
-                setLocationId(event.currentTarget.value);
-              }}
-            >
-              <option value="">Not recorded</option>
-              {locationsForScope(locations, "plants").map((location) => (
-                <option
-                  key={location.id}
-                  value={location.id}
-                  disabled={Boolean(location.retired_at)}
-                >
-                  {location.display_path}
-                </option>
-              ))}
-            </select>
-            <FieldHelp id="descendant-location-help">
-              Where this record is currently kept in your collection, not where
-              its biological material originated.
-            </FieldHelp>
-          </div>
-          {kind === "group" && (
-            <fieldset
-              aria-describedby="descendant-quantity-help"
-              className="quantity-field"
-            >
-              <legend>Plant group quantity</legend>
-              <div className="field">
-                <label htmlFor="descendant-quantity-kind">Precision</label>
-                <select
-                  id="descendant-quantity-kind"
-                  value={quantityKind}
-                  onChange={(event) => {
-                    setQuantityKind(event.currentTarget.value as QuantityKind);
-                  }}
-                >
-                  <option value="unknown">Unknown</option>
-                  <option value="exact">Exact</option>
-                  <option value="approximate">Approximate</option>
-                </select>
-              </div>
-              {quantityKind !== "unknown" && (
-                <div className="field">
-                  <label htmlFor="descendant-quantity">Individuals</label>
-                  <input
-                    id="descendant-quantity"
-                    inputMode="numeric"
-                    value={quantityValue}
-                    onChange={(event) => {
-                      setQuantityValue(event.currentTarget.value);
-                    }}
+        <FormSections
+          disabled={pending}
+          error={sectionError}
+          errorFields={[
+            { match: /identity/i, selector: "#descendant-identity" },
+            {
+              match: /quantity|whole number/i,
+              selector: "#plant-quantity-value",
+            },
+            {
+              match: /collection entry/i,
+              selector: "#plant-entry-date-precision",
+            },
+            { match: /notes/i, selector: "#plant-notes" },
+          ]}
+          panels={[
+            {
+              id: "essentials",
+              label: "Essentials",
+              content: (
+                <>
+                  <div className="field">
+                    <label htmlFor="descendant-identity">
+                      Botanical identity
+                    </label>
+                    <select
+                      aria-describedby="descendant-identity-help"
+                      id="descendant-identity"
+                      value={identityId}
+                      onChange={(event) => {
+                        setIdentityId(event.currentTarget.value);
+                      }}
+                    >
+                      {identities.map((identity) => (
+                        <option key={identity.id} value={identity.id}>
+                          {identity.display_label}
+                        </option>
+                      ))}
+                    </select>
+                    <FieldHelp id="descendant-identity-help">
+                      The source identity is preselected, but a valid changed
+                      identity may be chosen. Sharing an identity does not
+                      establish lineage.
+                    </FieldHelp>
+                  </div>
+                  <PlantEssentialsFields
+                    form={form}
+                    updateForm={updateForm}
+                    pending={pending}
+                    kind={kind}
+                    locations={locations}
                   />
-                </div>
-              )}
-              <FieldHelp id="descendant-quantity-help">
-                Exact groups contribute their quantity to exact tracked
-                descendants. Choose Approximate for an estimate, or Unknown
-                rather than guessing.
-              </FieldHelp>
-            </fieldset>
-          )}
-          <div className="field field--full">
-            <label htmlFor="descendant-notes">
-              Notes <span className="optional">(optional)</span>
-            </label>
-            <textarea
-              id="descendant-notes"
-              value={notes}
-              onChange={(event) => {
-                setNotes(event.currentTarget.value);
-              }}
-            />
-          </div>
-        </div>
-        <p className="eyebrow">Sowing state after creation</p>
-        <fieldset className="choice-cards">
-          <legend>Resulting Sowing lifecycle</legend>
-          {(
-            Object.keys(sowingLifecycleLabels) as Exclude<
-              SowingLifecycle,
-              "reversed"
-            >[]
-          ).map((value) => (
-            <label key={value}>
-              <input
-                type="radio"
-                name="resulting-lifecycle"
-                checked={resultingLifecycle === value}
-                onChange={() => {
-                  setResultingLifecycle(value);
-                }}
-              />
-              <span>
-                <strong>{sowingLifecycleLabels[value]}</strong>
-                <small>
-                  {value === "active"
-                    ? "Default. Descendant counts never complete a Sowing automatically."
-                    : `The Sowing will be marked ${value} in the same atomic operation.`}
-                </small>
-              </span>
-            </label>
-          ))}
-        </fieldset>
-        {completionOutcome}
-        <p className="field-help">
-          Confirm to create the {kind === "plant" ? "Plant" : "Plant group"}{" "}
-          with an explicit link to this Sowing. The Sowing will{" "}
-          {resultingLifecycle === "active"
-            ? "remain active"
-            : `be marked ${resultingLifecycle}`}
-          .
-        </p>
+                </>
+              ),
+            },
+            {
+              id: "origin",
+              label: "Origin",
+              content: (
+                <>
+                  <div className="notice field--full">
+                    Originating Sowing:{" "}
+                    <strong>{recordName(sowing, "Sowing")}</strong>. This
+                    explicit link is created with the result.
+                  </div>
+                  <PlantEntryDateField
+                    form={form}
+                    updateForm={updateForm}
+                    pending={pending}
+                  />
+                </>
+              ),
+            },
+            {
+              id: "lifecycle",
+              label: "Lifecycle & notes",
+              content: (
+                <>
+                  <PlantNotesField
+                    form={form}
+                    updateForm={updateForm}
+                    pending={pending}
+                  />
+                  <div className="field--full">
+                    {" "}
+                    <p className="eyebrow">Sowing state after creation</p>
+                    <fieldset className="choice-cards">
+                      <legend>Resulting Sowing lifecycle</legend>
+                      {(
+                        Object.keys(sowingLifecycleLabels) as Exclude<
+                          SowingLifecycle,
+                          "reversed"
+                        >[]
+                      ).map((value) => (
+                        <label key={value}>
+                          <input
+                            type="radio"
+                            name="resulting-lifecycle"
+                            checked={resultingLifecycle === value}
+                            onChange={() => {
+                              setResultingLifecycle(value);
+                            }}
+                          />
+                          <span>
+                            <strong>{sowingLifecycleLabels[value]}</strong>
+                            <small>
+                              {value === "active"
+                                ? "Default. Descendant counts never complete a Sowing automatically."
+                                : `The Sowing will be marked ${value} in the same atomic operation.`}
+                            </small>
+                          </span>
+                        </label>
+                      ))}
+                    </fieldset>
+                    {completionOutcome}
+                    <p className="field-help">
+                      Confirm to create the{" "}
+                      {kind === "plant" ? "Plant" : "Plant group"} with an
+                      explicit link to this Sowing. The Sowing will{" "}
+                      {resultingLifecycle === "active"
+                        ? "remain active"
+                        : `be marked ${resultingLifecycle}`}
+                      .
+                    </p>
+                  </div>
+                </>
+              ),
+            },
+          ]}
+          submit={
+            <button type="submit" disabled={pending}>
+              {pending
+                ? "Creating…"
+                : `Create ${kind === "plant" ? "Plant" : "Plant group"}`}
+            </button>
+          }
+          cancel={
+            <a
+              className="button-link button--secondary"
+              href={`#/sowings/${sowing.id}`}
+            >
+              Cancel
+            </a>
+          }
+        />
         {messages.length > 0 && (
           <div
             className="notice notice--error"
@@ -464,19 +500,6 @@ export function SowingDescendantWizard({
             </ul>
           </div>
         )}
-        <div className="actions">
-          <button type="submit" disabled={pending}>
-            {pending
-              ? "Creating…"
-              : `Create ${kind === "plant" ? "Plant" : "Plant group"}`}
-          </button>
-          <a
-            className="button-link button--secondary"
-            href={`#/sowings/${sowing.id}`}
-          >
-            Cancel
-          </a>
-        </div>
       </form>
     </section>
   );

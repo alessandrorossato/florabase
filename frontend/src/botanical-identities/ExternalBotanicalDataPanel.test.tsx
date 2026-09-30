@@ -157,11 +157,11 @@ test("linked stale state refreshes, changes, and unlinks without editing identit
   await waitFor(() => {
     expect(screen.queryByText(/retained cached data/i)).not.toBeInTheDocument();
   });
-  await user.click(screen.getByText("More", { selector: "summary" }));
-  const more = screen.getByText("More", { selector: "summary" });
+  await user.click(screen.getByRole("button", { name: "More" }));
+  const more = screen.getByRole("button", { name: "More" });
   await user.keyboard("{Escape}");
   expect(more).toHaveFocus();
-  expect(more.closest("details")).not.toHaveAttribute("open");
+  expect(more).toHaveAttribute("aria-expanded", "false");
   await user.click(more);
   await user.click(screen.getByRole("button", { name: "Change link" }));
   expect(more).toHaveFocus();

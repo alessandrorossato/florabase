@@ -201,3 +201,60 @@ def test_explicit_primary_photo_lifecycle_and_thumbnail(
             ).status_code
             == 422
         )
+
+
+def test_dashboard_events_show_only_the_exact_targets_designated_photo(
+    photo_browser: tuple[tuple[str, str], AttachmentStorage],  # noqa: F811
+    database_connection: Connection,
+) -> None:
+    browser, _ = photo_browser
+    plant_id = _plant(database_connection)
+    other_id = _plant(database_connection)
+    for target_id in (plant_id, other_id):
+        assert (
+            request(
+                "POST",
+                f"/api/v1/plants/{target_id}/events",
+                browser=browser,
+                mutation_headers=True,
+                body={"kind": "observation"},
+            ).status_code
+            == 201
+        )
+    base = f"/api/v1/collection-records/plant/{plant_id}"
+    photo = request(
+        "POST",
+        f"{base}/photos/local",
+        browser=browser,
+        mutation_headers=True,
+        file=("leaf.png", png(), "image/png"),
+    ).json()
+
+    def targets() -> dict[str, object]:
+        dashboard = request("GET", "/api/v1/dashboard", browser=browser)
+        assert dashboard.status_code == 200
+        return {
+            event["target"]["id"]: event["target"]["primary_photo"]
+            for event in dashboard.json()["recent_events"]
+        }
+
+    assert targets() == {plant_id: None, other_id: None}
+    selected = request(
+        "PUT",
+        f"{base}/primary-photo",
+        browser=browser,
+        mutation_headers=True,
+        body={"kind": "local", "photo_id": photo["id"]},
+    )
+    assert selected.status_code == 200
+    assert targets() == {plant_id: selected.json(), other_id: None}
+    thumbnail = request("GET", selected.json()["thumbnail_url"], browser=browser)
+    assert thumbnail.status_code == 200
+    assert request("GET", selected.json()["thumbnail_url"]).status_code == 401
+    assert (
+        request(
+            "DELETE", f"{base}/primary-photo", browser=browser, mutation_headers=True
+        ).status_code
+        == 204
+    )
+    assert targets() == {plant_id: None, other_id: None}

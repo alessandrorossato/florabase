@@ -1,3 +1,15 @@
+import {
+  PlantEssentialsFields,
+  PlantEntryDateField,
+  PlantNotesField,
+} from "./PlantFormFields";
+import { usePublishRecordIdentities } from "../components/recordPresentation";
+import {
+  useRecordName,
+  recordDisplayName,
+} from "../components/recordPresentation";
+import { FormSections } from "../components/FormSections";
+import { firstValidationField } from "../components/formValidation";
 import { labelComposerHref } from "../labels/labelData";
 import { CreationReversal } from "../propagation/CreationReversal";
 import {
@@ -22,6 +34,7 @@ import { setRecordRoute } from "../components/recordNavigation";
 import {
   Breadcrumbs,
   DetailHeader,
+  DetailContext,
   DetailTabs,
   WorkspaceIntro,
 } from "../components/CollectionUI";
@@ -29,17 +42,13 @@ import { FieldHelp } from "../components/ContextualHelp";
 import { EventJournal } from "../events/EventJournal";
 import { LineagePanel } from "../lineage/LineagePanel";
 import { PhotosSection } from "../photos/PhotosSection";
-import { PrimaryPhotoVisual } from "../photos/PrimaryPhotoVisual";
+import { RecordVisual } from "../photos/RecordVisual";
 import type { PrimaryPhoto } from "../photos/api";
 import {
   listGeographicPlaces,
   type GeographicPlaceResponse,
 } from "../geographic-places/api";
-import {
-  listLocations,
-  locationsForScope,
-  type LocationResponse,
-} from "../locations/api";
+import { listLocations, type LocationResponse } from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
 import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import { PropagationPath } from "../propagation/PropagationPath";
@@ -93,7 +102,7 @@ type SaveState =
   | { status: "idle" }
   | { status: "saving" }
   | { status: "success"; message: string }
-  | { status: "error"; messages: string[] };
+  | { status: "error"; messages: string[]; field?: string };
 type QuantityKind = "unknown" | "exact" | "approximate";
 type OriginMode = "direct" | "sowing";
 type TransferState =
@@ -287,7 +296,7 @@ function originSummary(record: PlantRecord): string {
   const originatingGroup =
     record.kind === "plant" ? record.value.originating_plant_group : null;
   if (originatingGroup)
-    return `Extracted from group · ${originatingGroup.label ?? "Unlabelled plant group"}`;
+    return `Extracted from group · ${recordDisplayName(originatingGroup, "Unlabelled plant group")}`;
   if (value.originating_sowing)
     return `From sowing${value.originating_sowing.label ? ` · ${value.originating_sowing.label}` : ""}`;
   const kind = value.direct_origin_kind ?? "unknown";
@@ -331,6 +340,8 @@ function Detail({
   extractedPlants: PlantResponse[];
   initialTab?: string;
 }) {
+  const recordName = useRecordName();
+
   const value = record.value;
   const sowing = value.originating_sowing_id
     ? sowings.find(({ id }) => id === value.originating_sowing_id)
@@ -344,31 +355,49 @@ function Detail({
   );
   const route = record.kind === "plant" ? "plants" : "plant-groups";
   return (
-    <article className="plant-detail">
+    <article className="plant-detail collection-detail">
       <Breadcrumbs
         items={[
+          { label: "Collection", href: "#/dashboard" },
           { label: "Plants", href: "#/plants" },
-          {
-            label:
-              value.label ??
-              (record.kind === "plant"
-                ? "Unlabelled plant"
-                : "Unlabelled plant group"),
-          },
         ]}
       />
       <DetailHeader
-        eyebrow={record.kind === "plant" ? "Plant" : "Plant group"}
-        title={
-          value.label ??
-          (record.kind === "plant"
-            ? "Unlabelled plant"
-            : "Unlabelled plant group")
+        visual={
+          value.primary_photo && (
+            <div className="collection-primary-detail">
+              <RecordVisual
+                photo={value.primary_photo}
+                label={
+                  value.label ??
+                  (record.kind === "plant" ? "plant" : "plant group")
+                }
+                identity={value.botanical_identity}
+                kind={record.kind}
+              />
+            </div>
+          )
         }
+        eyebrow={record.kind === "plant" ? "Plant" : "Plant group"}
+        title={recordName(
+          value,
+          record.kind === "plant"
+            ? "Unlabelled plant"
+            : "Unlabelled plant group",
+        )}
         secondary={
-          <a href={`#/identities/${value.botanical_identity.id}`}>
-            {value.botanical_identity.display_label}
-          </a>
+          <DetailContext
+            items={[
+              {
+                label: "Botanical identity",
+                value: (
+                  <a href={`#/identities/${value.botanical_identity.id}`}>
+                    {value.botanical_identity.display_label}
+                  </a>
+                ),
+              },
+            ]}
+          />
         }
         status={
           <>
@@ -398,16 +427,6 @@ function Detail({
           </a>
         }
       />
-      {value.primary_photo && (
-        <div className="collection-primary-detail">
-          <PrimaryPhotoVisual
-            photo={value.primary_photo}
-            label={
-              value.label ?? (record.kind === "plant" ? "plant" : "plant group")
-            }
-          />
-        </div>
-      )}
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
@@ -440,14 +459,6 @@ function Detail({
               Record summary
             </h4>
             <dl>
-              <div>
-                <dt>Botanical identity</dt>
-                <dd>
-                  <a href={`#/identities/${value.botanical_identity.id}`}>
-                    {value.botanical_identity.display_label}
-                  </a>
-                </dd>
-              </div>
               <div>
                 <dt>Lifecycle</dt>
                 <dd>{lifecycleLabel(record)}</dd>
@@ -507,7 +518,7 @@ function Detail({
                   <dt>Extracted from group</dt>
                   <dd>
                     <a href={`#/plant-groups/${originatingGroup.id}`}>
-                      {originatingGroup.label ?? "Unlabelled plant group"}
+                      {recordName(originatingGroup, "Unlabelled plant group")}
                     </a>
                   </dd>
                 </div>
@@ -524,15 +535,17 @@ function Detail({
                     [
                       {
                         type: "SeedLot",
-                        label: sowing?.seed_lot.label ?? "Source SeedLot",
+                        label: recordName(sowing?.seed_lot, "Source SeedLot"),
                         href: `#/seeds/${value.originating_sowing.seed_lot_id}`,
                       },
                     ],
                     [
                       {
                         type: "Sowing",
-                        label:
-                          value.originating_sowing.label ?? "Unlabelled Sowing",
+                        label: recordName(
+                          value.originating_sowing,
+                          "Unlabelled Sowing",
+                        ),
                         href: `#/sowings/${value.originating_sowing.id}`,
                         state: value.originating_sowing.lifecycle,
                       },
@@ -543,11 +556,12 @@ function Detail({
                           record.kind === "plant"
                             ? "This Plant"
                             : "This Plant group",
-                        label:
-                          value.label ??
-                          (record.kind === "plant"
+                        label: recordName(
+                          value,
+                          record.kind === "plant"
                             ? "Unlabelled plant"
-                            : "Unlabelled plant group"),
+                            : "Unlabelled plant group",
+                        ),
                         href: `#/${route}/${value.id}`,
                         state: value.lifecycle,
                       },
@@ -633,7 +647,7 @@ function Detail({
                   {extractedPlants.map((plant) => (
                     <li key={plant.id}>
                       <a href={`#/plants/${plant.id}`}>
-                        {plant.label ?? "Unlabelled plant"}
+                        {recordName(plant, "Unlabelled plant")}
                       </a>
                       <span>{plant.botanical_identity.display_label}</span>
                       <span>{plantLifecycleLabels[plant.lifecycle]}</span>
@@ -687,12 +701,12 @@ function Detail({
             key={`${record.kind}:${value.id}`}
             targetKind={record.kind}
             targetId={value.id}
-            targetLabel={
-              value.label ??
-              (record.kind === "plant"
+            targetLabel={recordName(
+              value,
+              record.kind === "plant"
                 ? "Unlabelled plant"
-                : "Unlabelled plant group")
-            }
+                : "Unlabelled plant group",
+            )}
             locations={locations}
             onTargetRefresh={onEventTargetRefresh}
           />
@@ -722,12 +736,12 @@ function Detail({
             key={`${record.kind}:${value.id}`}
             target={record.kind === "plant" ? "plant" : "plant_group"}
             targetId={value.id}
-            targetLabel={
-              value.label ??
-              (record.kind === "plant"
+            targetLabel={recordName(
+              value,
+              record.kind === "plant"
                 ? "Unlabelled plant"
-                : "Unlabelled plant group")
-            }
+                : "Unlabelled plant group",
+            )}
             primaryPhoto={value.primary_photo}
             onPrimaryChanged={onPrimaryChanged}
           />
@@ -762,11 +776,14 @@ export function PlantScreen({
   initialCreationKind?: RecordKind;
   startCreating?: boolean;
 } = {}) {
+  const recordName = useRecordName();
+
   const auth = useAuth();
   const [collection, setCollection] = useState<CollectionState>({
     status: "loading",
   });
   const [references, setReferences] = useState<References | null>(null);
+  usePublishRecordIdentities(references?.identities);
   const [attempt, setAttempt] = useState(0);
   const [detailAttempt, setDetailAttempt] = useState(0);
   const [reversalRevision, setReversalRevision] = useState(0);
@@ -787,7 +804,6 @@ export function PlantScreen({
   const [creationKind, setCreationKind] = useState<RecordKind | null>(null);
   const [mobileDetail, setMobileDetail] = useState(Boolean(initialId));
   const [form, setForm] = useState<FormState>(blankForm);
-  const [moreDetails, setMoreDetails] = useState(false);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [extractionSource, setExtractionSource] =
     useState<PlantGroupResponse | null>(null);
@@ -866,7 +882,6 @@ export function PlantScreen({
       ...blankForm(),
       botanicalIdentityId: initialIdentityId ?? "",
     });
-    setMoreDetails(Boolean(initialCreationKind));
     setSave({ status: "idle" });
     openCreation();
   }, [
@@ -1113,7 +1128,6 @@ export function PlantScreen({
     setEditing(true);
     setMobileDetail(true);
     setForm(blankForm());
-    setMoreDetails(false);
     setSave({ status: "idle" });
     openCreation();
   }
@@ -1121,7 +1135,6 @@ export function PlantScreen({
   function chooseCreationKind(kind: RecordKind) {
     setCreationKind(kind);
     setForm(blankForm());
-    setMoreDetails(false);
     setSave({ status: "idle" });
   }
 
@@ -1130,7 +1143,6 @@ export function PlantScreen({
     if (creationExpanded) closeCreation({ returnFocus: false });
     setCreationKind(null);
     setForm(formFrom(record));
-    setMoreDetails(true);
     setEditing(true);
     setMobileDetail(true);
     setSave({ status: "idle" });
@@ -1192,7 +1204,6 @@ export function PlantScreen({
       botanicalIdentityId: group.botanical_identity_id,
       locationId: group.location_id ?? "",
     });
-    setMoreDetails(true);
     setEditing(true);
     setMobileDetail(true);
     setSave({ status: "idle" });
@@ -1388,7 +1399,6 @@ export function PlantScreen({
     if (pending || !formKind) return;
     const errors = validate();
     if (errors.length) {
-      setMoreDetails(true);
       setSave({ status: "error", messages: errors });
       return;
     }
@@ -1507,8 +1517,11 @@ export function PlantScreen({
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();
       else if (error instanceof ApiError && error.status === 422) {
-        setMoreDetails(true);
-        setSave({ status: "error", messages: plantValidationMessages(error) });
+        setSave({
+          status: "error",
+          messages: plantValidationMessages(error),
+          field: firstValidationField(error),
+        });
       } else if (
         extractionSource &&
         error instanceof ApiError &&
@@ -1559,6 +1572,19 @@ export function PlantScreen({
       aria-labelledby="plants-title"
     >
       <WorkspaceIntro
+        contextActions={
+          mobileDetail &&
+          !editing && (
+            <button
+              type="button"
+              className="plant-back button--secondary"
+              onClick={returnToList}
+            >
+              ← Back to Plants
+            </button>
+          )
+        }
+        contextOnly={mobileDetail || editing}
         {...plantPage}
         actions={
           !editing && (
@@ -1675,25 +1701,26 @@ export function PlantScreen({
                       }}
                     >
                       <span className="seed-primary">
-                        <PrimaryPhotoVisual
+                        <RecordVisual
                           photo={value.primary_photo ?? null}
                           label={
                             value.label ??
                             (record.kind === "plant" ? "plant" : "plant group")
                           }
                           compact
+
+                          identity={value.botanical_identity}
+                          kind={record.kind}
                         />
                         <span className="plant-row__identity">
                           <strong>
-                            {value.label ??
-                              value.botanical_identity.display_label}
+                            {recordName(
+                              value,
+                              value.botanical_identity.display_label,
+                            )}
                           </strong>
                           <small>
-                            {value.label
-                              ? value.botanical_identity.display_label
-                              : record.kind === "plant"
-                                ? "Unlabelled Plant"
-                                : "Unlabelled Plant group"}
+                            {value.botanical_identity.display_label}
                           </small>
                         </span>
                       </span>
@@ -1729,15 +1756,6 @@ export function PlantScreen({
           ref={creationExpanded ? creationPanelRef : undefined}
           aria-label="Plant detail and editor"
         >
-          {!editing && (
-            <button
-              type="button"
-              className="plant-back button--secondary"
-              onClick={returnToList}
-            >
-              ← Back to Plants
-            </button>
-          )}
           {save.status === "success" && (
             <div className="notice notice--success" role="status">
               {save.message}
@@ -1791,33 +1809,58 @@ export function PlantScreen({
               </div>
             ) : formKind ? (
               <form
-                className="seed-form plant-form"
+                className="seed-form plant-form collection-form"
                 onSubmit={(event) => void submit(event)}
                 noValidate
               >
-                <div className="seed-form-heading">
-                  <div>
-                    <p className="eyebrow">
-                      {extractionSource
-                        ? "Plant group extraction"
-                        : selected
-                          ? "Correct record"
-                          : "Fast entry"}
-                    </p>
-                    <h3 ref={editorHeading} tabIndex={-1}>
-                      {extractionSource
+                <Breadcrumbs
+                  items={[
+                    { label: "Plants", href: "#/plants" },
+                    {
+                      label: extractionSource
                         ? "Extract plant"
                         : selected
-                          ? `Edit ${formKind === "plant" ? "Plant" : "Plant group"}`
-                          : `Record ${formKind === "plant" ? "Plant" : "Plant group"}`}
-                    </h3>
-                  </div>
-                </div>
+                          ? "Edit record"
+                          : "New record",
+                    },
+                  ]}
+                />
+                <DetailHeader
+                  eyebrow={formKind === "plant" ? "Plant" : "Plant group"}
+                  title={
+                    extractionSource
+                      ? "Extract plant"
+                      : selected
+                        ? `Edit ${formKind === "plant" ? "Plant" : "Plant group"}`
+                        : `Record ${formKind === "plant" ? "Plant" : "Plant group"}`
+                  }
+                  headingRef={editorHeading}
+                  secondary={
+                    selected && (
+                      <DetailContext
+                        items={[
+                          {
+                            label: "Record",
+                            value: recordName(
+                              selected.value,
+                              "Unlabelled record",
+                            ),
+                          },
+                          {
+                            label: "Botanical identity",
+                            value:
+                              selected.value.botanical_identity.display_label,
+                          },
+                        ]}
+                      />
+                    )
+                  }
+                />
                 {extractionSource && (
                   <div className="notice quantity-effect" role="status">
                     <p>
                       <strong>Source group:</strong>{" "}
-                      {extractionSource.label ?? "Unlabelled Plant group"} ·{" "}
+                      {recordName(extractionSource, "Unlabelled Plant group")} ·{" "}
                       {quantityLabel({
                         kind: "group",
                         value: extractionSource,
@@ -1838,448 +1881,421 @@ export function PlantScreen({
                     ? "One individually tracked specimen; no quantity is recorded."
                     : "Multiple individuals of one botanical identity managed together. Keep an uncertain count approximate or unknown."}
                 </p>
-                <fieldset className="plant-form-section">
-                  <legend>Essentials</legend>
-                  <div className="plant-fast-fields">
-                    <ReferencePicker
-                      key={`${selectedKey ?? "new"}-${formKind}-identity`}
-                      label="Botanical identity"
-                      help="A shared botanical identity keeps the botanical name consistent across records; it does not establish lineage."
-                      required
-                      disabled={pending}
-                      value={form.botanicalIdentityId}
-                      onChange={(value) => {
-                        updateForm("botanicalIdentityId", value);
-                      }}
-                      choices={references.identities.map((identity) => ({
-                        id: identity.id,
-                        label: identity.display_label,
-                      }))}
-                    />
-                    <div className="field">
-                      <label htmlFor="plant-label">
-                        Label <span className="optional">(optional)</span>
-                      </label>
-                      <input
-                        id="plant-label"
-                        value={form.label}
-                        disabled={pending}
-                        onChange={(event) => {
-                          updateForm("label", event.currentTarget.value);
-                        }}
-                      />
-                    </div>
-                    {formKind === "group" && (
-                      <fieldset
-                        aria-describedby="plant-group-quantity-help"
-                        className="quantity-field"
-                      >
-                        <legend>
-                          Quantity <span className="optional">(optional)</span>
-                        </legend>
-                        <div className="field">
-                          <label htmlFor="plant-quantity-kind">Kind</label>
-                          <select
-                            id="plant-quantity-kind"
-                            value={form.quantityKind}
-                            disabled={pending}
-                            onChange={(event) => {
-                              const quantityKind = event.currentTarget
-                                .value as QuantityKind;
-                              setForm((current) => ({
-                                ...current,
-                                quantityKind,
-                                quantityValue:
-                                  quantityKind === "unknown"
-                                    ? ""
-                                    : current.quantityValue,
-                              }));
-                            }}
-                          >
-                            <option value="unknown">Unknown</option>
-                            <option value="exact">Exact count</option>
-                            <option value="approximate">
-                              Approximate count
-                            </option>
-                          </select>
-                        </div>
-                        {form.quantityKind !== "unknown" && (
-                          <div className="field">
-                            <label htmlFor="plant-quantity-value">Count</label>
-                            <input
-                              id="plant-quantity-value"
-                              inputMode="numeric"
-                              value={form.quantityValue}
-                              disabled={pending}
-                              onChange={(event) => {
-                                updateForm(
-                                  "quantityValue",
-                                  event.currentTarget.value,
-                                );
-                              }}
-                            />
-                          </div>
-                        )}
-                        <FieldHelp id="plant-group-quantity-help">
-                          Choose Exact only for a known count, Approximate for
-                          an estimate, or Unknown rather than guessing.
-                        </FieldHelp>
-                      </fieldset>
-                    )}
-                    <div className="field">
-                      <label htmlFor="plant-location">
-                        Current location{" "}
-                        <span className="optional">(optional)</span>
-                      </label>
-                      <select
-                        aria-describedby="plant-location-help"
-                        id="plant-location"
-                        value={form.locationId}
-                        disabled={pending}
-                        onChange={(event) => {
-                          updateForm("locationId", event.currentTarget.value);
-                        }}
-                      >
-                        <option value="">Not recorded</option>
-                        {locationsForScope(references.locations, "plants").map(
-                          (location) => (
-                            <option
-                              key={location.id}
-                              value={location.id}
-                              disabled={
-                                Boolean(location.retired_at) &&
-                                location.id !== form.locationId
-                              }
-                            >
-                              {location.display_path}
-                              {location.retired_at ? " (retired)" : ""}
-                            </option>
-                          ),
-                        )}
-                      </select>
-                      <FieldHelp id="plant-location-help">
-                        The record's current physical collection position.
-                        Editing corrects current state; record a movement in
-                        Events to retain its history.
-                      </FieldHelp>
-                    </div>
-                  </div>
-                </fieldset>
-                {!extractionSource && (
-                  <button
-                    type="button"
-                    className="button--secondary disclosure-button"
-                    aria-expanded={moreDetails}
-                    aria-controls="plant-advanced-fields"
-                    onClick={() => {
-                      setMoreDetails((value) => !value);
-                    }}
-                  >
-                    {moreDetails
-                      ? "Hide additional details"
-                      : "Additional details"}
-                  </button>
-                )}
-                <div
-                  hidden={!moreDetails}
-                  id="plant-advanced-fields"
-                  className="advanced-fields plant-advanced-fields"
-                >
-                  <h4 className="form-group-heading field--full">
-                    Origin and acquisition
-                  </h4>
-                  {!extractionSource && !extractedEdit ? (
-                    <>
-                      <fieldset className="origin-mode-field field--full">
-                        <legend>Origin</legend>
-                        <label className="checkbox-label">
-                          <input
-                            type="radio"
-                            name="origin-mode"
-                            checked={form.originMode === "direct"}
-                            disabled={pending}
-                            onChange={() => {
-                              setForm((current) => ({
-                                ...current,
-                                originMode: "direct",
-                                sowingId: "",
-                              }));
-                            }}
-                          />
-                          Direct / origin not tracked through a Sowing
-                        </label>
-                        <label className="checkbox-label">
-                          <input
-                            type="radio"
-                            name="origin-mode"
-                            checked={form.originMode === "sowing"}
-                            disabled={pending}
-                            onChange={() => {
-                              setForm((current) => ({
-                                ...current,
-                                originMode: "sowing",
-                                directOriginKind: "unknown",
-                                directOriginDetail: "",
-                                supplierId: "",
-                                provenanceId: "",
-                              }));
-                            }}
-                          />
-                          Known Sowing
-                        </label>
-                      </fieldset>
-                      {form.originMode === "sowing" ? (
-                        <div className="field--full">
+                <FormSections
+                  disabled={pending}
+                  error={save.status === "error" ? save : undefined}
+                  errorFields={[
+                    { match: /supplier/i, selector: "#plant-supplier" },
+                    { match: /location/i, selector: "#plant-location" },
+                    {
+                      match: /provenance site/i,
+                      selector: "#plant-provenance-site",
+                    },
+                    { match: /provenance/i, selector: "#plant-provenance" },
+                    { match: /identity/i, selector: '[role="combobox"]' },
+                    {
+                      match: /sowing/i,
+                      selector: '[data-form-panel="origin"] [role="combobox"]',
+                    },
+                    {
+                      match: /origin detail|other direct origin/i,
+                      selector: "#plant-origin-detail",
+                    },
+                    {
+                      match: /count|quantity|exact zero/i,
+                      selector: "#plant-quantity-value",
+                    },
+                    { match: /notes/i, selector: "#plant-notes" },
+                    {
+                      match: /collection entry/i,
+                      selector: "#plant-entry-date-year",
+                    },
+                    { match: /label/i, selector: "#plant-label" },
+                    { match: /lifecycle/i, selector: "#plant-lifecycle" },
+                  ]}
+                  panels={[
+                    {
+                      id: "essentials",
+                      label: "Essentials",
+                      content: (
+                        <>
                           <ReferencePicker
-                            key={`${selectedKey ?? "new"}-${formKind}-sowing`}
-                            label="Originating Sowing"
+                            key={`${selectedKey ?? "new"}-${formKind}-identity`}
+                            label="Botanical identity"
+                            help="A shared botanical identity keeps the botanical name consistent across records; it does not establish lineage."
                             required
                             disabled={pending}
-                            value={form.sowingId}
+                            value={form.botanicalIdentityId}
                             onChange={(value) => {
-                              updateForm("sowingId", value);
+                              updateForm("botanicalIdentityId", value);
                             }}
-                            choices={references.sowings
-                              .filter(
-                                (sowing) =>
-                                  sowing.lifecycle !== "reversed" ||
-                                  sowing.id === form.sowingId,
-                              )
-                              .map((sowing) => ({
-                                id: sowing.id,
-                                label: sowingChoice(sowing),
-                              }))}
+                            choices={references.identities.map((identity) => ({
+                              id: identity.id,
+                              label: identity.display_label,
+                            }))}
                           />
-                          <small>
-                            Active and historical Sowings are available.
-                            Choosing one never changes this record's Botanical
-                            identity.
-                          </small>
-                        </div>
-                      ) : (
+                          <PlantEssentialsFields
+                            form={form}
+                            updateForm={(key, value) => {
+                              setForm((current) => ({
+                                ...current,
+                                [key]: value,
+                              }));
+                            }}
+                            pending={pending}
+                            locations={references.locations}
+                            kind={formKind}
+                          />
+                        </>
+                      ),
+                    },
+                    {
+                      id: "origin",
+                      label: "Origin",
+                      content: (
                         <>
-                          <div className="field">
-                            <label htmlFor="plant-direct-origin">
-                              Direct origin
-                            </label>
-                            <select
-                              id="plant-direct-origin"
-                              value={form.directOriginKind}
-                              disabled={pending}
-                              onChange={(event) => {
-                                const directOriginKind = event.currentTarget
-                                  .value as DirectOriginKind;
-                                setForm((current) => ({
-                                  ...current,
-                                  directOriginKind,
-                                  directOriginDetail:
-                                    directOriginKind === "other"
-                                      ? current.directOriginDetail
-                                      : "",
-                                }));
-                              }}
-                            >
-                              {(
-                                Object.keys(originLabels) as DirectOriginKind[]
-                              ).map((kind) => (
-                                <option key={kind} value={kind}>
-                                  {originLabels[kind]}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          {form.directOriginKind === "other" && (
+                          {!extractionSource && !extractedEdit ? (
+                            <>
+                              <fieldset className="origin-mode-field field--full">
+                                <legend>Origin</legend>
+                                <label className="checkbox-label">
+                                  <input
+                                    type="radio"
+                                    name="origin-mode"
+                                    checked={form.originMode === "direct"}
+                                    disabled={pending}
+                                    onChange={() => {
+                                      setForm((current) => ({
+                                        ...current,
+                                        originMode: "direct",
+                                        sowingId: "",
+                                      }));
+                                    }}
+                                  />
+                                  Direct / origin not tracked through a Sowing
+                                </label>
+                                <label className="checkbox-label">
+                                  <input
+                                    type="radio"
+                                    name="origin-mode"
+                                    checked={form.originMode === "sowing"}
+                                    disabled={pending}
+                                    onChange={() => {
+                                      setForm((current) => ({
+                                        ...current,
+                                        originMode: "sowing",
+                                        directOriginKind: "unknown",
+                                        directOriginDetail: "",
+                                        supplierId: "",
+                                        provenanceId: "",
+                                      }));
+                                    }}
+                                  />
+                                  Known Sowing
+                                </label>
+                              </fieldset>
+                              {form.originMode === "sowing" ? (
+                                <div className="field--full">
+                                  <ReferencePicker
+                                    key={`${selectedKey ?? "new"}-${formKind}-sowing`}
+                                    label="Originating Sowing"
+                                    required
+                                    disabled={pending}
+                                    value={form.sowingId}
+                                    onChange={(value) => {
+                                      updateForm("sowingId", value);
+                                    }}
+                                    choices={references.sowings
+                                      .filter(
+                                        (sowing) =>
+                                          sowing.lifecycle !== "reversed" ||
+                                          sowing.id === form.sowingId,
+                                      )
+                                      .map((sowing) => ({
+                                        id: sowing.id,
+                                        label: sowingChoice(sowing),
+                                      }))}
+                                  />
+                                  <small>
+                                    Active and historical Sowings are available.
+                                    Choosing one never changes this record's
+                                    Botanical identity.
+                                  </small>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="field">
+                                    <label htmlFor="plant-direct-origin">
+                                      Direct origin
+                                    </label>
+                                    <select
+                                      id="plant-direct-origin"
+                                      value={form.directOriginKind}
+                                      disabled={pending}
+                                      onChange={(event) => {
+                                        const directOriginKind = event
+                                          .currentTarget
+                                          .value as DirectOriginKind;
+                                        setForm((current) => ({
+                                          ...current,
+                                          directOriginKind,
+                                          directOriginDetail:
+                                            directOriginKind === "other"
+                                              ? current.directOriginDetail
+                                              : "",
+                                        }));
+                                      }}
+                                    >
+                                      {(
+                                        Object.keys(
+                                          originLabels,
+                                        ) as DirectOriginKind[]
+                                      ).map((kind) => (
+                                        <option key={kind} value={kind}>
+                                          {originLabels[kind]}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                  {form.directOriginKind === "other" && (
+                                    <div className="field">
+                                      <label htmlFor="plant-origin-detail">
+                                        Other origin detail
+                                      </label>
+                                      <input
+                                        id="plant-origin-detail"
+                                        value={form.directOriginDetail}
+                                        disabled={pending}
+                                        onChange={(event) => {
+                                          updateForm(
+                                            "directOriginDetail",
+                                            event.currentTarget.value,
+                                          );
+                                        }}
+                                      />
+                                    </div>
+                                  )}
+                                  <div className="field">
+                                    <label htmlFor="plant-supplier">
+                                      Supplier{" "}
+                                      <span className="optional">
+                                        (optional)
+                                      </span>
+                                    </label>
+                                    <select
+                                      aria-describedby="plant-supplier-help"
+                                      id="plant-supplier"
+                                      value={form.supplierId}
+                                      disabled={pending}
+                                      onChange={(event) => {
+                                        updateForm(
+                                          "supplierId",
+                                          event.currentTarget.value,
+                                        );
+                                      }}
+                                    >
+                                      <option value="">Not recorded</option>
+                                      {references.suppliers.map((supplier) => (
+                                        <option
+                                          key={supplier.id}
+                                          value={supplier.id}
+                                          disabled={
+                                            Boolean(supplier.retired_at) &&
+                                            supplier.id !== form.supplierId
+                                          }
+                                        >
+                                          {supplier.name}
+                                          {supplier.retired_at
+                                            ? " (retired)"
+                                            : ""}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <FieldHelp id="plant-supplier-help">
+                                      Who or what supplied this record; a
+                                      Supplier does not establish biological
+                                      origin or change the direct-origin kind.
+                                    </FieldHelp>
+                                  </div>
+                                  <div className="field">
+                                    <label htmlFor="plant-provenance">
+                                      Material provenance{" "}
+                                      <span className="optional">
+                                        (optional)
+                                      </span>
+                                    </label>
+                                    <select
+                                      aria-describedby="plant-provenance-help"
+                                      id="plant-provenance"
+                                      value={form.provenanceId}
+                                      disabled={pending}
+                                      onChange={(event) => {
+                                        updateForm(
+                                          "provenanceId",
+                                          event.currentTarget.value,
+                                        );
+                                      }}
+                                    >
+                                      <option value="">Not recorded</option>
+                                      {references.places.map((place) => (
+                                        <option
+                                          key={place.id}
+                                          value={place.id}
+                                          disabled={
+                                            Boolean(place.retired_at) &&
+                                            place.id !== form.provenanceId
+                                          }
+                                        >
+                                          {place.display_path}
+                                          {place.retired_at ? " (retired)" : ""}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <FieldHelp id="plant-provenance-help">
+                                      Where the biological material originated
+                                      or was collected, not its Supplier or
+                                      current Location.
+                                    </FieldHelp>
+                                  </div>
+                                  <div className="field">
+                                    <label htmlFor="plant-provenance-site">
+                                      Precise provenance site{" "}
+                                      <span className="optional">
+                                        (optional)
+                                      </span>
+                                    </label>
+                                    <select
+                                      id="plant-provenance-site"
+                                      value={form.provenanceSiteId}
+                                      disabled={pending}
+                                      onChange={(event) => {
+                                        updateForm(
+                                          "provenanceSiteId",
+                                          event.currentTarget.value,
+                                        );
+                                      }}
+                                    >
+                                      <option value="">Not recorded</option>
+                                      {references.sites.map((site) => (
+                                        <option key={site.id} value={site.id}>
+                                          {site.geographic_place_path
+                                            ? `${site.geographic_place_path} → `
+                                            : ""}
+                                          {site.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                </>
+                              )}
+                            </>
+                          ) : (
+                            <div className="field--full notice">
+                              <strong>Origin is read-only.</strong>{" "}
+                              {extractionSource
+                                ? `This Plant will be extracted from ${recordName(extractionSource, "Unlabelled plant group")}.`
+                                : `This Plant was extracted from ${selected?.kind === "plant" ? recordName(selected.value.originating_plant_group, "Unlabelled plant group") : "its Plant group"}.`}
+                            </div>
+                          )}
+                          <PlantEntryDateField
+                            form={form}
+                            updateForm={(key, value) => {
+                              setForm((current) => ({
+                                ...current,
+                                [key]: value,
+                              }));
+                            }}
+                            pending={pending}
+                          />
+                        </>
+                      ),
+                    },
+                    {
+                      id: "lifecycle",
+                      label: "Lifecycle & notes",
+                      content: (
+                        <>
+                          {!extractionSource && (
                             <div className="field">
-                              <label htmlFor="plant-origin-detail">
-                                Other origin detail
-                              </label>
-                              <input
-                                id="plant-origin-detail"
-                                value={form.directOriginDetail}
+                              <label htmlFor="plant-lifecycle">Lifecycle</label>
+                              <select
+                                id="plant-lifecycle"
+                                value={form.lifecycle}
                                 disabled={pending}
                                 onChange={(event) => {
                                   updateForm(
-                                    "directOriginDetail",
-                                    event.currentTarget.value,
+                                    "lifecycle",
+                                    event.currentTarget
+                                      .value as FormState["lifecycle"],
                                   );
                                 }}
-                              />
+                              >
+                                {Object.entries(
+                                  formKind === "plant"
+                                    ? plantLifecycleLabels
+                                    : groupLifecycleLabels,
+                                )
+                                  .filter(
+                                    ([value]) =>
+                                      (value !== "reversed" ||
+                                        selected?.value.lifecycle ===
+                                          "reversed") &&
+                                      (value !== "reintegrated" ||
+                                        (selected?.kind === "plant" &&
+                                          selected.value.lifecycle ===
+                                            "reintegrated")),
+                                  )
+                                  .map(([value, label]) => (
+                                    <option key={value} value={value}>
+                                      {label}
+                                    </option>
+                                  ))}
+                              </select>
                             </div>
                           )}
-                          <div className="field">
-                            <label htmlFor="plant-supplier">
-                              Supplier{" "}
-                              <span className="optional">(optional)</span>
-                            </label>
-                            <select
-                              aria-describedby="plant-supplier-help"
-                              id="plant-supplier"
-                              value={form.supplierId}
-                              disabled={pending}
-                              onChange={(event) => {
-                                updateForm(
-                                  "supplierId",
-                                  event.currentTarget.value,
-                                );
-                              }}
-                            >
-                              <option value="">Not recorded</option>
-                              {references.suppliers.map((supplier) => (
-                                <option
-                                  key={supplier.id}
-                                  value={supplier.id}
-                                  disabled={
-                                    Boolean(supplier.retired_at) &&
-                                    supplier.id !== form.supplierId
-                                  }
-                                >
-                                  {supplier.name}
-                                  {supplier.retired_at ? " (retired)" : ""}
-                                </option>
-                              ))}
-                            </select>
-                            <FieldHelp id="plant-supplier-help">
-                              Who or what supplied this record; a Supplier does
-                              not establish biological origin or change the
-                              direct-origin kind.
-                            </FieldHelp>
-                          </div>
-                          <div className="field">
-                            <label htmlFor="plant-provenance">
-                              Material provenance{" "}
-                              <span className="optional">(optional)</span>
-                            </label>
-                            <select
-                              aria-describedby="plant-provenance-help"
-                              id="plant-provenance"
-                              value={form.provenanceId}
-                              disabled={pending}
-                              onChange={(event) => {
-                                updateForm(
-                                  "provenanceId",
-                                  event.currentTarget.value,
-                                );
-                              }}
-                            >
-                              <option value="">Not recorded</option>
-                              {references.places.map((place) => (
-                                <option
-                                  key={place.id}
-                                  value={place.id}
-                                  disabled={
-                                    Boolean(place.retired_at) &&
-                                    place.id !== form.provenanceId
-                                  }
-                                >
-                                  {place.display_path}
-                                  {place.retired_at ? " (retired)" : ""}
-                                </option>
-                              ))}
-                            </select>
-                            <FieldHelp id="plant-provenance-help">
-                              Where the biological material originated or was
-                              collected, not its Supplier or current Location.
-                            </FieldHelp>
-                          </div>
-                          <div className="field">
-                            <label htmlFor="plant-provenance-site">
-                              Precise provenance site{" "}
-                              <span className="optional">(optional)</span>
-                            </label>
-                            <select
-                              id="plant-provenance-site"
-                              value={form.provenanceSiteId}
-                              disabled={pending}
-                              onChange={(event) => {
-                                updateForm(
-                                  "provenanceSiteId",
-                                  event.currentTarget.value,
-                                );
-                              }}
-                            >
-                              <option value="">Not recorded</option>
-                              {references.sites.map((site) => (
-                                <option key={site.id} value={site.id}>
-                                  {site.geographic_place_path
-                                    ? `${site.geographic_place_path} → `
-                                    : ""}
-                                  {site.name}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
+                          <PlantNotesField
+                            form={form}
+                            updateForm={(key, value) => {
+                              setForm((current) => ({
+                                ...current,
+                                [key]: value,
+                              }));
+                            }}
+                            pending={pending}
+                          />
                         </>
-                      )}
-                    </>
-                  ) : (
-                    <div className="field--full notice">
-                      <strong>Origin is read-only.</strong>{" "}
-                      {extractionSource
-                        ? `This Plant will be extracted from ${extractionSource.label ?? "Unlabelled plant group"}.`
-                        : `This Plant was extracted from ${selected?.kind === "plant" ? (selected.value.originating_plant_group?.label ?? "Unlabelled plant group") : "its Plant group"}.`}
-                    </div>
-                  )}
-                  <PartialDateField
-                    id="plant-entry-date"
-                    label="Collection-entry date (optional)"
-                    value={form.collectionEntryDate}
-                    disabled={pending}
-                    onChange={(value) => {
-                      updateForm("collectionEntryDate", value);
-                    }}
-                  />
-                  <h4 className="form-group-heading field--full">
-                    Lifecycle and notes
-                  </h4>
-                  {!extractionSource && (
-                    <div className="field">
-                      <label htmlFor="plant-lifecycle">Lifecycle</label>
-                      <select
-                        id="plant-lifecycle"
-                        value={form.lifecycle}
-                        disabled={pending}
-                        onChange={(event) => {
-                          updateForm(
-                            "lifecycle",
-                            event.currentTarget.value as FormState["lifecycle"],
-                          );
-                        }}
-                      >
-                        {Object.entries(
-                          formKind === "plant"
-                            ? plantLifecycleLabels
-                            : groupLifecycleLabels,
-                        )
-                          .filter(
-                            ([value]) =>
-                              (value !== "reversed" ||
-                                selected?.value.lifecycle === "reversed") &&
-                              (value !== "reintegrated" ||
-                                (selected?.kind === "plant" &&
-                                  selected.value.lifecycle === "reintegrated")),
-                          )
-                          .map(([value, label]) => (
-                            <option key={value} value={value}>
-                              {label}
-                            </option>
-                          ))}
-                      </select>
-                    </div>
-                  )}
-                  <div className="field field--full">
-                    <label htmlFor="plant-notes">
-                      Notes <span className="optional">(optional)</span>
-                    </label>
-                    <textarea
-                      id="plant-notes"
-                      value={form.notes}
+                      ),
+                    },
+                  ]}
+                  submit={
+                    <button
+                      type="submit"
+                      disabled={
+                        pending ||
+                        (extractionSource !== null &&
+                          extractionSource.lifecycle !== "active")
+                      }
+                    >
+                      {pending
+                        ? "Saving…"
+                        : extractionSource
+                          ? "Extract plant"
+                          : selected
+                            ? "Save changes"
+                            : `Record ${formKind === "plant" ? "Plant" : "Plant group"}`}
+                    </button>
+                  }
+                  cancel={
+                    <button
+                      type="button"
+                      className="button--secondary"
                       disabled={pending}
-                      onChange={(event) => {
-                        updateForm("notes", event.currentTarget.value);
-                      }}
-                    />
-                  </div>
-                </div>
+                      onClick={cancelEditor}
+                    >
+                      Cancel
+                    </button>
+                  }
+                />
                 {save.status === "error" && (
                   <div
                     className="notice notice--error"
@@ -2294,32 +2310,6 @@ export function PlantScreen({
                     </ul>
                   </div>
                 )}
-                <div className="actions seed-form-actions">
-                  <button
-                    type="submit"
-                    disabled={
-                      pending ||
-                      (extractionSource !== null &&
-                        extractionSource.lifecycle !== "active")
-                    }
-                  >
-                    {pending
-                      ? "Saving…"
-                      : extractionSource
-                        ? "Extract plant"
-                        : selected
-                          ? "Save changes"
-                          : `Record ${formKind === "plant" ? "Plant" : "Plant group"}`}
-                  </button>
-                  <button
-                    type="button"
-                    className="button--secondary"
-                    disabled={pending}
-                    onClick={cancelEditor}
-                  >
-                    Cancel
-                  </button>
-                </div>
               </form>
             ) : null
           ) : detail.status === "loading" ? (
@@ -2494,8 +2484,10 @@ export function PlantScreen({
                         <a
                           href={`#/plant-groups/${selected.value.originating_plant_group.id}`}
                         >
-                          {selected.value.originating_plant_group.label ??
-                            "Unlabelled plant group"}
+                          {recordName(
+                            selected.value.originating_plant_group,
+                            "Unlabelled plant group",
+                          )}
                         </a>
                       </p>
                       {selected.value.lifecycle === "reintegrated" ? (
@@ -2553,13 +2545,23 @@ export function PlantScreen({
               </div>
             ) : (
               <RecordPreview
-                type={selected.kind === "plant" ? "Plant" : "Plant group"}
-                title={
-                  selected.value.label ??
-                  (selected.kind === "plant"
-                    ? "Unlabelled plant"
-                    : "Unlabelled plant group")
+                visual={
+                  <RecordVisual
+                    photo={selected.value.primary_photo ?? null}
+                    label={recordName(selected.value, "collection record")}
+                    compact
+
+                    identity={selected.value.botanical_identity}
+                    kind={selected.kind}
+                  />
                 }
+                type={selected.kind === "plant" ? "Plant" : "Plant group"}
+                title={recordName(
+                  selected.value,
+                  selected.kind === "plant"
+                    ? "Unlabelled plant"
+                    : "Unlabelled plant group",
+                )}
                 secondary={
                   <a
                     href={`#/identities/${selected.value.botanical_identity.id}`}
@@ -2568,24 +2570,6 @@ export function PlantScreen({
                   </a>
                 }
                 facts={[
-                  ...(selected.value.primary_photo
-                    ? [
-                        {
-                          label: "Collection photo",
-                          value: (
-                            <PrimaryPhotoVisual
-                              photo={selected.value.primary_photo}
-                              label={
-                                selected.value.label ??
-                                (selected.kind === "plant"
-                                  ? "plant"
-                                  : "plant group")
-                              }
-                            />
-                          ),
-                        },
-                      ]
-                    : []),
                   { label: "Lifecycle", value: lifecycleLabel(selected) },
                   {
                     label:
@@ -2696,8 +2680,10 @@ export function PlantScreen({
               <p>
                 Florabase will restore the recorded pre-extraction state of{" "}
                 <strong>
-                  {selected.value.originating_plant_group.label ??
-                    "Unlabelled plant group"}
+                  {recordName(
+                    selected.value.originating_plant_group,
+                    "Unlabelled plant group",
+                  )}
                 </strong>{" "}
                 and add one reintegration Event to that group.
               </p>

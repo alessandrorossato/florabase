@@ -115,30 +115,37 @@ test("creates, edits, and deletes a path-aware ProvenanceSite", async () => {
   render(<ProvenanceSiteManager places={[world]} csrfToken="csrf" />);
   await screen.findByText("No provenance sites recorded.");
   await user.click(screen.getByRole("button", { name: "New provenance site" }));
+  await user.click(screen.getByRole("tab", { name: "Essentials" }));
   await user.type(
     screen.getByLabelText("Provenance site name"),
     "Monte Pellegrino",
   );
+  await user.click(screen.getByRole("tab", { name: "Essentials" }));
   await user.selectOptions(
     screen.getByLabelText("Geographic place (optional)"),
     world.id,
   );
+  await user.click(screen.getByRole("tab", { name: "Coordinates" }));
   await user.type(
     screen.getByLabelText("Latitude (WGS84 decimal)"),
     "38.166667",
   );
+  await user.click(screen.getByRole("tab", { name: "Coordinates" }));
   await user.type(
     screen.getByLabelText("Longitude (WGS84 decimal)"),
     "13.350000",
   );
+  await user.click(screen.getByRole("tab", { name: "Coordinates" }));
   await user.type(
     screen.getByLabelText("Coordinate accuracy in metres (optional)"),
     "25.5",
   );
+  await user.click(screen.getByRole("tab", { name: "Notes" }));
   await user.type(
     screen.getByLabelText("Notes (optional)"),
     "Historical label",
   );
+  await user.click(screen.getByRole("tab", { name: "Notes" }));
   await user.click(
     screen.getByRole("button", { name: "Save provenance site" }),
   );
@@ -157,11 +164,14 @@ test("creates, edits, and deletes a path-aware ProvenanceSite", async () => {
   expect(new Headers(post?.init?.headers).get("X-CSRF-Token")).toBe("csrf");
 
   await user.click(screen.getByRole("button", { name: "Edit" }));
+  await user.click(screen.getByRole("tab", { name: "Essentials" }));
   await user.clear(screen.getByLabelText("Provenance site name"));
+  await user.click(screen.getByRole("tab", { name: "Essentials" }));
   await user.type(
     screen.getByLabelText("Provenance site name"),
     "Monte Pellegrino ridge",
   );
+  await user.click(screen.getByRole("tab", { name: "Notes" }));
   await user.click(
     screen.getByRole("button", { name: "Save provenance site" }),
   );
@@ -189,7 +199,19 @@ test("shows an actionable coordinate-pair validation error", async () => {
       requestPath(input) === "/api/v1/provenance-sites" &&
       init?.method === "POST"
     ) {
-      return Promise.resolve(response({ detail: [] }, 422));
+      return Promise.resolve(
+        response(
+          {
+            detail: [
+              {
+                loc: ["body", "longitude"],
+                msg: "Longitude is required with latitude",
+              },
+            ],
+          },
+          422,
+        ),
+      );
     }
     return Promise.resolve(response([]));
   });
@@ -197,17 +219,35 @@ test("shows an actionable coordinate-pair validation error", async () => {
   render(<ProvenanceSiteManager places={[world]} csrfToken="csrf" />);
   await screen.findByText("No provenance sites recorded.");
   await user.click(screen.getByRole("button", { name: "New provenance site" }));
+  await user.click(screen.getByRole("tab", { name: "Essentials" }));
   await user.type(
     screen.getByLabelText("Provenance site name"),
     "Half coordinate",
   );
+  await user.click(screen.getByRole("tab", { name: "Coordinates" }));
   await user.type(screen.getByLabelText("Latitude (WGS84 decimal)"), "38");
+  await user.click(screen.getByRole("tab", { name: "Notes" }));
   await user.click(
     screen.getByRole("button", { name: "Save provenance site" }),
   );
   expect(await screen.findByRole("status")).toHaveTextContent(
     "Latitude and longitude must be entered together",
   );
+  await waitFor(() => {
+    expect(screen.getByRole("tab", { name: "Coordinates" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByLabelText("Longitude (WGS84 decimal)")).toHaveFocus();
+  });
+  expect(screen.getByLabelText("Latitude (WGS84 decimal)")).toHaveValue(38);
+  await user.click(screen.getByRole("tab", { name: "Essentials" }));
+  await user.type(screen.getByLabelText("Provenance site name"), " corrected");
+  expect(screen.getByRole("tab", { name: "Essentials" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  expect(screen.getByLabelText("Provenance site name")).toHaveFocus();
 });
 
 test("Browse retains coordinate-less sites while map mode lists stored coordinate pairs only", async () => {

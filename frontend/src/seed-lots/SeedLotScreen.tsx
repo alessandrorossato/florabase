@@ -1,3 +1,7 @@
+import { usePublishRecordIdentities } from "../components/recordPresentation";
+import { useRecordName } from "../components/recordPresentation";
+import { FormSections } from "../components/FormSections";
+import { firstValidationField } from "../components/formValidation";
 import {
   useEffect,
   useMemo,
@@ -17,13 +21,14 @@ import {
   Breadcrumbs,
   CollectionCard,
   DetailHeader,
+  DetailContext,
   DetailTabs,
   WorkspaceIntro,
 } from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
 import { LineagePanel } from "../lineage/LineagePanel";
 import { PhotosSection } from "../photos/PhotosSection";
-import { PrimaryPhotoVisual } from "../photos/PrimaryPhotoVisual";
+import { RecordVisual } from "../photos/RecordVisual";
 import type { PrimaryPhoto } from "../photos/api";
 import { listSowings, type SowingResponse } from "../sowings/api";
 import {
@@ -86,7 +91,7 @@ type SaveState =
   | { status: "idle" }
   | { status: "saving" }
   | { status: "success"; message: string }
-  | { status: "error"; messages: string[] };
+  | { status: "error"; messages: string[]; field?: string };
 type ContextKind = "identity" | "supplier" | "location" | "place";
 
 interface FormState {
@@ -213,10 +218,20 @@ function SeedLotPreview({
   onOpen: () => void;
   onEdit: () => void;
 }) {
+  const recordName = useRecordName();
+
   return (
     <QuickPreview>
+      <RecordVisual
+        photo={lot.primary_photo ?? null}
+        label={recordName(lot, "Seed lot")}
+        compact
+
+        identity={lot.botanical_identity}
+        kind={"seed"}
+      />
       <p className="record-preview__type">Seed lot</p>
-      <h3>{lot.label ?? "Unlabelled seed lot"}</h3>
+      <h3>{recordName(lot, "Unlabelled seed lot")}</h3>
       <p className="seed-preview__identity">
         <a href={`#/identities/${lot.botanical_identity.id}`}>
           {lot.botanical_identity.display_label}
@@ -347,6 +362,8 @@ function ContextDialog({
 }
 
 function RelatedSowings({ seedLotId }: { seedLotId: string }) {
+  const recordName = useRecordName();
+
   const [sowings, setSowings] = useState<SowingResponse[] | null>(null);
   useEffect(() => {
     const controller = new AbortController();
@@ -377,7 +394,7 @@ function RelatedSowings({ seedLotId }: { seedLotId: string }) {
           key={sowing.id}
           eyebrow={sowing.lifecycle}
           href={`#/sowings/${sowing.id}`}
-          title={sowing.label ?? "Unlabelled Sowing"}
+          title={recordName(sowing, "Unlabelled Sowing")}
         >
           <p>{dateLabel(sowing.sowing_date)}</p>
           <p>
@@ -408,6 +425,8 @@ function Detail({
   onPrimaryChanged?: (photo: PrimaryPhoto | null) => void;
   initialTab?: string;
 }) {
+  const recordName = useRecordName();
+
   const [tab, setTab] = useState(
     initialTab &&
       ["overview", "sowings", "photos", "lineage"].includes(initialTab)
@@ -415,24 +434,44 @@ function Detail({
       : "overview",
   );
   return (
-    <section className="seed-detail" aria-label="Seed lot detail">
+    <section
+      className="seed-detail collection-detail"
+      aria-label="Seed lot detail"
+    >
       <Breadcrumbs
         items={[
+          { label: "Collection", href: "#/dashboard" },
           { label: "Seeds", href: "#/seeds" },
-          {
-            label: lot.botanical_identity.display_label,
-            href: `#/identities/${lot.botanical_identity.id}?tab=seeds`,
-          },
-          { label: lot.label ?? "Unlabelled seed lot" },
         ]}
       />
       <DetailHeader
+        visual={
+          lot.primary_photo && (
+            <div className="collection-primary-detail">
+              <RecordVisual
+                photo={lot.primary_photo}
+                label={recordName(lot, "Seed lot")}
+                identity={lot.botanical_identity}
+                kind={"seed"}
+              />
+            </div>
+          )
+        }
         eyebrow="Seed lot"
-        title={lot.label ?? "Unlabelled seed lot"}
+        title={recordName(lot, "Unlabelled seed lot")}
         secondary={
-          <a href={`#/identities/${lot.botanical_identity.id}`}>
-            {lot.botanical_identity.display_label}
-          </a>
+          <DetailContext
+            items={[
+              {
+                label: "Botanical identity",
+                value: (
+                  <a href={`#/identities/${lot.botanical_identity.id}`}>
+                    {lot.botanical_identity.display_label}
+                  </a>
+                ),
+              },
+            ]}
+          />
         }
         status={
           <>
@@ -469,14 +508,6 @@ function Detail({
           </a>
         }
       />
-      {lot.primary_photo && (
-        <div className="collection-primary-detail">
-          <PrimaryPhotoVisual
-            photo={lot.primary_photo}
-            label={lot.label ?? "seed lot"}
-          />
-        </div>
-      )}
       {lot.lifecycle !== "active" && (
         <div className="contextual-actions">
           <p className="field-help">
@@ -663,7 +694,7 @@ function Detail({
             key={lot.id}
             target="seed_lot"
             targetId={lot.id}
-            targetLabel={lot.label ?? "Unlabelled seed lot"}
+            targetLabel={recordName(lot, "Unlabelled seed lot")}
             primaryPhoto={lot.primary_photo}
             onPrimaryChanged={onPrimaryChanged}
           />
@@ -691,11 +722,14 @@ export function SeedLotScreen({
   initialIdentityId?: string;
   startCreating?: boolean;
 } = {}) {
+  const recordName = useRecordName();
+
   const auth = useAuth();
   const [inventory, setInventory] = useState<InventoryState>({
     status: "loading",
   });
   const [references, setReferences] = useState<References | null>(null);
+  usePublishRecordIdentities(references?.identities);
   const [attempt, setAttempt] = useState(0);
   const [filter, setFilter] = useState<"active" | "history" | "all">("active");
   const [search, setSearch] = useState("");
@@ -717,7 +751,6 @@ export function SeedLotScreen({
     };
   }, [initialId]);
   const [form, setForm] = useState<FormState>(blankForm);
-  const [moreDetails, setMoreDetails] = useState(false);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [context, setContext] = useState<{
     kind: ContextKind;
@@ -748,7 +781,6 @@ export function SeedLotScreen({
       ...blankForm(),
       botanicalIdentityId: initialIdentityId ?? "",
     });
-    setMoreDetails(false);
     setSave({ status: "idle" });
     openCreation();
   }, [initialIdentityId, openCreation, references, startCreating]);
@@ -860,7 +892,6 @@ export function SeedLotScreen({
     setEditing(true);
     setDetailOpen(true);
     setForm(blankForm());
-    setMoreDetails(false);
     setSave({ status: "idle" });
     openCreation();
   }
@@ -870,7 +901,6 @@ export function SeedLotScreen({
     setEditing(true);
     setDetailOpen(true);
     setForm(formFrom(lot));
-    setMoreDetails(true);
     setSave({ status: "idle" });
   }
   function openContext(kind: ContextKind, query: string) {
@@ -949,12 +979,13 @@ export function SeedLotScreen({
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();
-      else if (error instanceof ApiError && error.status === 422)
+      else if (error instanceof ApiError && error.status === 422) {
         setSave({
           status: "error",
           messages: seedLotValidationMessages(error),
+          field: firstValidationField(error),
         });
-      else if (error instanceof ApiError && error.status === 403)
+      } else if (error instanceof ApiError && error.status === 403)
         setSave({
           status: "error",
           messages: [
@@ -1103,6 +1134,22 @@ export function SeedLotScreen({
       aria-labelledby="seeds-title"
     >
       <WorkspaceIntro
+        contextActions={
+          detailOpen &&
+          !editing && (
+            <button
+              className="operational-back button--secondary"
+              type="button"
+              onClick={() => {
+                setDetailOpen(false);
+                setRecordRoute("#/seeds", true);
+              }}
+            >
+              ← Back to seed lots
+            </button>
+          )
+        }
+        contextOnly={detailOpen || editing}
         {...seedPage}
         actions={
           !editing && (
@@ -1191,13 +1238,18 @@ export function SeedLotScreen({
                     }}
                   >
                     <span className="seed-primary">
-                      <PrimaryPhotoVisual
+                      <RecordVisual
                         photo={lot.primary_photo ?? null}
-                        label={lot.label ?? "seed lot"}
+                        label={recordName(lot, "Seed lot")}
                         compact
+
+                        identity={lot.botanical_identity}
+                        kind={"seed"}
                       />
                       <span className="seed-primary__text">
-                        <strong>{lot.label ?? "Unlabelled seed lot"}</strong>
+                        <strong>
+                          {recordName(lot, "Unlabelled seed lot")}
+                        </strong>
                         <small>{lot.botanical_identity.display_label}</small>
                       </span>
                     </span>
@@ -1234,375 +1286,468 @@ export function SeedLotScreen({
               {save.message}
             </div>
           )}
-          {detailOpen && !editing && (
-            <button
-              className="operational-back button--secondary"
-              type="button"
-              onClick={() => {
-                setDetailOpen(false);
-                setRecordRoute("#/seeds", true);
-              }}
-            >
-              ← Back to seed lots
-            </button>
-          )}
           {editing ? (
             <form
-              className="seed-form"
+              className="seed-form collection-form"
               onSubmit={(event) => void submit(event)}
               noValidate
             >
-              <div className="seed-form-heading">
-                <div>
-                  <p className="eyebrow">
-                    {selected ? "Correct seed lot" : "Seeds · New record"}
-                  </p>
-                  <h3>
-                    {selected
-                      ? `Edit ${selected.botanical_identity.display_label}`
-                      : "Add seed lot"}
-                  </h3>
-                </div>
-              </div>
-              <h4 className="form-group-heading">Essentials</h4>
-              <ReferencePicker
-                label="Botanical identity"
-                help="A shared botanical identity keeps the botanical name consistent across records; it does not establish lineage."
-                required
-                disabled={pending}
-                choices={references.identities.map((item) => ({
-                  id: item.id,
-                  label: item.display_label,
-                }))}
-                value={form.botanicalIdentityId}
-                onChange={(id) => {
-                  setForm((current) => ({
-                    ...current,
-                    botanicalIdentityId: id,
-                  }));
-                }}
-                onCreate={(query) => {
-                  openContext("identity", query);
-                }}
-                createLabel="Create identity"
+              <Breadcrumbs
+                items={[
+                  { label: "Seeds", href: "#/seeds" },
+                  { label: selected ? "Edit seed lot" : "New seed lot" },
+                ]}
               />
-              {!selected && (
-                <p className="field-help seed-task-hint">
-                  One seed lot represents one physical packet or bag. Add
-                  another record for a separate packet, even of the same taxon.
-                </p>
-              )}
-              <div className="seed-primary-fields">
-                <div className="field">
-                  <label htmlFor="lot-label">
-                    Lot label <span className="optional">(optional)</span>
-                  </label>
-                  <input
-                    id="lot-label"
-                    value={form.label}
-                    disabled={pending}
-                    onChange={(event) => {
-                      const value = event.currentTarget.value;
-                      setForm((current) => ({
-                        ...current,
-                        label: value,
-                      }));
-                    }}
-                  />
-                </div>
-                <h4 className="form-group-heading field--full">Inventory</h4>
-                <fieldset
-                  aria-describedby="seed-quantity-help"
-                  className="quantity-field"
-                >
-                  <legend>
-                    Quantity <span className="optional">(optional)</span>
-                  </legend>
-                  <div className="quantity-controls">
-                    <input
-                      aria-label="Quantity value"
-                      inputMode="decimal"
-                      value={form.quantityValue}
-                      disabled={pending}
-                      onChange={(event) => {
-                        const value = event.currentTarget.value;
-                        setForm((current) => ({
-                          ...current,
-                          quantityValue: value,
-                        }));
-                      }}
+              <DetailHeader
+                eyebrow="Seed lot"
+                title={
+                  selected
+                    ? `Edit ${recordName(selected, "seed lot")}`
+                    : "Add seed lot"
+                }
+                secondary={
+                  selected && (
+                    <DetailContext
+                      items={[
+                        {
+                          label: "Botanical identity",
+                          value: selected.botanical_identity.display_label,
+                        },
+                      ]}
                     />
-                    <select
-                      aria-label="Quantity unit"
-                      value={form.quantityUnit}
-                      disabled={pending}
-                      onChange={(event) => {
-                        const value = event.currentTarget
-                          .value as FormState["quantityUnit"];
-                        setForm((current) => ({
-                          ...current,
-                          quantityUnit: value,
-                        }));
-                      }}
-                    >
-                      <option value="seeds">seeds</option>
-                      <option value="g">g</option>
-                      <option value="mg">mg</option>
-                    </select>
-                    <label className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={form.quantityApproximate}
-                        disabled={pending || !form.quantityValue}
-                        onChange={(event) => {
-                          const checked = event.currentTarget.checked;
-                          setForm((current) => ({
-                            ...current,
-                            quantityApproximate: checked,
-                          }));
-                        }}
-                      />
-                      Approximately
-                    </label>
-                  </div>
-                  <FieldHelp id="seed-quantity-help">
-                    Enter a value only when known, mark estimates as
-                    approximate, and leave the quantity empty rather than
-                    guessing.
-                  </FieldHelp>
-                </fieldset>
-                <div className="field">
-                  <label htmlFor="lifecycle">Lifecycle</label>
-                  <select
-                    id="lifecycle"
-                    value={form.lifecycle}
-                    disabled={pending}
-                    onChange={(event) => {
-                      const lifecycle = event.currentTarget
-                        .value as SeedLotLifecycle;
-                      setForm((current) => ({
-                        ...current,
-                        lifecycle,
-                      }));
+                  )
+                }
+              />
+              <FormSections
+                disabled={pending}
+                error={save.status === "error" ? save : undefined}
+                errorFields={[
+                  {
+                    match: /location|storage/i,
+                    selector: '[data-form-panel="inventory"] [role="combobox"]',
+                  },
+                  {
+                    match: /supplier/i,
+                    selector:
+                      '[data-form-panel="acquisition"] [role="combobox"]',
+                  },
+                  {
+                    match: /provenance site/i,
+                    selector:
+                      '[data-form-panel="origin"] .field:last-child [role="combobox"]',
+                  },
+                  {
+                    match: /provenance/i,
+                    selector: '[data-form-panel="origin"] [role="combobox"]',
+                  },
+                  { match: /identity/i, selector: '[role="combobox"]' },
+                  {
+                    match: /quantity|seed count/i,
+                    selector: '[aria-label="Quantity value"]',
+                  },
+                  { match: /label/i, selector: "#lot-label" },
+                  { match: /source detail/i, selector: "#source-detail" },
+                  { match: /source/i, selector: "#source-kind" },
+                  { match: /acquisition/i, selector: "#acquisition-year" },
+                  { match: /harvest/i, selector: "#harvest-year" },
+                  { match: /viability/i, selector: "#viability-year" },
+                  { match: /notes/i, selector: "#seed-notes" },
+                  { match: /lifecycle/i, selector: "#lifecycle" },
+                ]}
+                panels={[
+                  {
+                    id: "essentials",
+                    label: "Essentials",
+                    content: (
+                      <>
+                        <ReferencePicker
+                          label="Botanical identity"
+                          help="A shared botanical identity keeps the botanical name consistent across records; it does not establish lineage."
+                          required
+                          disabled={pending}
+                          choices={references.identities.map((item) => ({
+                            id: item.id,
+                            label: item.display_label,
+                          }))}
+                          value={form.botanicalIdentityId}
+                          onChange={(id) => {
+                            setForm((current) => ({
+                              ...current,
+                              botanicalIdentityId: id,
+                            }));
+                          }}
+                          onCreate={(query) => {
+                            openContext("identity", query);
+                          }}
+                          createLabel="Create identity"
+                        />
+                        {!selected && (
+                          <p className="field-help seed-task-hint">
+                            One seed lot represents one physical packet or bag.
+                            Add another record for a separate packet, even of
+                            the same taxon.
+                          </p>
+                        )}
+
+                        <div className="field">
+                          <label htmlFor="lot-label">
+                            Lot label{" "}
+                            <span className="optional">(optional)</span>
+                          </label>
+                          <input
+                            id="lot-label"
+                            value={form.label}
+                            disabled={pending}
+                            onChange={(event) => {
+                              const value = event.currentTarget.value;
+                              setForm((current) => ({
+                                ...current,
+                                label: value,
+                              }));
+                            }}
+                          />
+                        </div>
+                        <div className="field">
+                          <label htmlFor="lifecycle">Lifecycle</label>
+                          <select
+                            id="lifecycle"
+                            value={form.lifecycle}
+                            disabled={pending}
+                            onChange={(event) => {
+                              const lifecycle = event.currentTarget
+                                .value as SeedLotLifecycle;
+                              setForm((current) => ({
+                                ...current,
+                                lifecycle,
+                              }));
+                            }}
+                          >
+                            {Object.entries(lifecycleLabels).map(
+                              ([value, label]) => (
+                                <option value={value} key={value}>
+                                  {label}
+                                </option>
+                              ),
+                            )}
+                          </select>
+                          <small>
+                            Use Exhausted for an exact known zero quantity.
+                            Historical lots remain editable.
+                          </small>
+                        </div>
+                      </>
+                    ),
+                  },
+                  {
+                    id: "inventory",
+                    label: "Inventory",
+                    content: (
+                      <>
+                        <fieldset
+                          aria-describedby="seed-quantity-help"
+                          className="quantity-field"
+                        >
+                          <legend>
+                            Quantity{" "}
+                            <span className="optional">(optional)</span>
+                          </legend>
+                          <div className="quantity-controls">
+                            <input
+                              aria-label="Quantity value"
+                              inputMode="decimal"
+                              value={form.quantityValue}
+                              disabled={pending}
+                              onChange={(event) => {
+                                const value = event.currentTarget.value;
+                                setForm((current) => ({
+                                  ...current,
+                                  quantityValue: value,
+                                }));
+                              }}
+                            />
+                            <select
+                              aria-label="Quantity unit"
+                              value={form.quantityUnit}
+                              disabled={pending}
+                              onChange={(event) => {
+                                const value = event.currentTarget
+                                  .value as FormState["quantityUnit"];
+                                setForm((current) => ({
+                                  ...current,
+                                  quantityUnit: value,
+                                }));
+                              }}
+                            >
+                              <option value="seeds">seeds</option>
+                              <option value="g">g</option>
+                              <option value="mg">mg</option>
+                            </select>
+                            <label className="checkbox-label">
+                              <input
+                                type="checkbox"
+                                checked={form.quantityApproximate}
+                                disabled={pending || !form.quantityValue}
+                                onChange={(event) => {
+                                  const checked = event.currentTarget.checked;
+                                  setForm((current) => ({
+                                    ...current,
+                                    quantityApproximate: checked,
+                                  }));
+                                }}
+                              />
+                              Approximately
+                            </label>
+                          </div>
+                          <FieldHelp id="seed-quantity-help">
+                            Enter a value only when known, mark estimates as
+                            approximate, and leave the quantity empty rather
+                            than guessing.
+                          </FieldHelp>
+                        </fieldset>
+
+                        <ReferencePicker
+                          label="Storage location (optional)"
+                          help="Where this SeedLot is currently kept in your collection, not where it originated."
+                          disabled={pending}
+                          choices={locationsForScope(
+                            references.locations,
+                            "seed_lots",
+                          ).map((item) => ({
+                            id: item.id,
+                            label: item.display_path,
+                            retired: Boolean(item.retired_at),
+                          }))}
+                          value={form.locationId}
+                          onChange={(id) => {
+                            setForm((current) => ({
+                              ...current,
+                              locationId: id,
+                            }));
+                          }}
+                          onCreate={(query) => {
+                            openContext("location", query);
+                          }}
+                          createLabel="Create location"
+                        />
+                      </>
+                    ),
+                  },
+                  {
+                    id: "acquisition",
+                    label: "Acquisition",
+                    content: (
+                      <>
+                        <div className="field">
+                          <label htmlFor="source-kind">Source</label>
+                          <select
+                            id="source-kind"
+                            value={form.sourceKind}
+                            disabled={pending}
+                            onChange={(event) => {
+                              const value = event.currentTarget
+                                .value as SeedLotSourceKind;
+                              setForm((current) => ({
+                                ...current,
+                                sourceKind: value,
+                                sourceDetail:
+                                  value === "other" ? current.sourceDetail : "",
+                              }));
+                            }}
+                          >
+                            {Object.entries(sourceLabels).map(
+                              ([value, label]) => (
+                                <option value={value} key={value}>
+                                  {label}
+                                </option>
+                              ),
+                            )}
+                          </select>
+                        </div>
+                        {form.sourceKind === "other" && (
+                          <div className="field">
+                            <label htmlFor="source-detail">
+                              Source detail{" "}
+                              <span className="optional">(optional)</span>
+                            </label>
+                            <input
+                              id="source-detail"
+                              value={form.sourceDetail}
+                              disabled={pending}
+                              onChange={(event) => {
+                                const value = event.currentTarget.value;
+                                setForm((current) => ({
+                                  ...current,
+                                  sourceDetail: value,
+                                }));
+                              }}
+                            />
+                          </div>
+                        )}
+                        <ReferencePicker
+                          label="Supplier (optional)"
+                          help="Who or what supplied this material; a Supplier does not establish its biological origin."
+                          disabled={pending}
+                          choices={references.suppliers.map((item) => ({
+                            id: item.id,
+                            label: item.name,
+                            retired: Boolean(item.retired_at),
+                          }))}
+                          value={form.supplierId}
+                          onChange={(id) => {
+                            setForm((current) => ({
+                              ...current,
+                              supplierId: id,
+                            }));
+                          }}
+                          onCreate={(query) => {
+                            openContext("supplier", query);
+                          }}
+                          createLabel="Create supplier"
+                        />
+                        <div className="field--full">
+                          <PartialDateField
+                            id="acquisition"
+                            label="Acquisition date"
+                            value={form.acquisitionDate}
+                            onChange={(value) => {
+                              setForm((current) => ({
+                                ...current,
+                                acquisitionDate: value,
+                              }));
+                            }}
+                            disabled={pending}
+                          />
+                        </div>
+                      </>
+                    ),
+                  },
+                  {
+                    id: "origin",
+                    label: "Origin",
+                    content: (
+                      <>
+                        <ReferencePicker
+                          label="Material provenance (optional)"
+                          help="Where the biological material originated, not its Supplier or current storage location."
+                          disabled={pending}
+                          choices={references.places.map((item) => ({
+                            id: item.id,
+                            label: item.display_path,
+                            retired: Boolean(item.retired_at),
+                          }))}
+                          value={form.materialProvenancePlaceId}
+                          onChange={(id) => {
+                            setForm((current) => ({
+                              ...current,
+                              materialProvenancePlaceId: id,
+                            }));
+                          }}
+                          onCreate={(query) => {
+                            openContext("place", query);
+                          }}
+                          createLabel="Create local place"
+                        />
+                        <ReferencePicker
+                          label="Precise provenance site (optional)"
+                          disabled={pending}
+                          choices={references.sites.map((site) => ({
+                            id: site.id,
+                            label: `${site.geographic_place_path ? `${site.geographic_place_path} → ` : ""}${site.name}`,
+                          }))}
+                          value={form.provenanceSiteId}
+                          onChange={(id) => {
+                            setForm((current) => ({
+                              ...current,
+                              provenanceSiteId: id,
+                            }));
+                          }}
+                        />
+                      </>
+                    ),
+                  },
+                  {
+                    id: "details",
+                    label: "Seed details",
+                    content: (
+                      <>
+                        <div className="partial-date-grid">
+                          <PartialDateField
+                            id="harvest"
+                            label="Harvest date"
+                            showHelp={false}
+                            value={form.harvestDate}
+                            onChange={(value) => {
+                              setForm((current) => ({
+                                ...current,
+                                harvestDate: value,
+                              }));
+                            }}
+                            disabled={pending}
+                          />
+                          <PartialDateField
+                            id="viability"
+                            label="Expected viability until"
+                            showHelp={false}
+                            value={form.expectedViabilityUntil}
+                            onChange={(value) => {
+                              setForm((current) => ({
+                                ...current,
+                                expectedViabilityUntil: value,
+                              }));
+                            }}
+                            disabled={pending}
+                          />
+                        </div>
+
+                        <div className="field">
+                          <label htmlFor="seed-notes">
+                            Notes <span className="optional">(optional)</span>
+                          </label>
+                          <textarea
+                            id="seed-notes"
+                            rows={4}
+                            value={form.notes}
+                            disabled={pending}
+                            onChange={(event) => {
+                              const value = event.currentTarget.value;
+                              setForm((current) => ({
+                                ...current,
+                                notes: value,
+                              }));
+                            }}
+                          />
+                        </div>
+                      </>
+                    ),
+                  },
+                ]}
+                submit={
+                  <button type="submit" disabled={pending}>
+                    {pending
+                      ? "Saving…"
+                      : selected
+                        ? "Save changes"
+                        : "Add to collection"}
+                  </button>
+                }
+                cancel={
+                  <button
+                    type="button"
+                    className="button--secondary"
+                    onClick={() => {
+                      setEditing(false);
+                      setSave({ status: "idle" });
+                      if (!selected) {
+                        setForm(blankForm());
+                        closeCreation();
+                        setDetailOpen(false);
+                      }
                     }}
                   >
-                    {Object.entries(lifecycleLabels).map(([value, label]) => (
-                      <option value={value} key={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                  <small>
-                    Use Exhausted for an exact known zero quantity. Historical
-                    lots remain editable.
-                  </small>
-                </div>
-                <h4 className="form-group-heading field--full">Acquisition</h4>
-                <div className="field">
-                  <label htmlFor="source-kind">Source</label>
-                  <select
-                    id="source-kind"
-                    value={form.sourceKind}
-                    disabled={pending}
-                    onChange={(event) => {
-                      const value = event.currentTarget
-                        .value as SeedLotSourceKind;
-                      setForm((current) => ({
-                        ...current,
-                        sourceKind: value,
-                        sourceDetail:
-                          value === "other" ? current.sourceDetail : "",
-                      }));
-                    }}
-                  >
-                    {Object.entries(sourceLabels).map(([value, label]) => (
-                      <option value={value} key={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {form.sourceKind === "other" && (
-                  <div className="field">
-                    <label htmlFor="source-detail">
-                      Source detail <span className="optional">(optional)</span>
-                    </label>
-                    <input
-                      id="source-detail"
-                      value={form.sourceDetail}
-                      disabled={pending}
-                      onChange={(event) => {
-                        const value = event.currentTarget.value;
-                        setForm((current) => ({
-                          ...current,
-                          sourceDetail: value,
-                        }));
-                      }}
-                    />
-                  </div>
-                )}
-                <ReferencePicker
-                  label="Supplier (optional)"
-                  help="Who or what supplied this material; a Supplier does not establish its biological origin."
-                  disabled={pending}
-                  choices={references.suppliers.map((item) => ({
-                    id: item.id,
-                    label: item.name,
-                    retired: Boolean(item.retired_at),
-                  }))}
-                  value={form.supplierId}
-                  onChange={(id) => {
-                    setForm((current) => ({ ...current, supplierId: id }));
-                  }}
-                  onCreate={(query) => {
-                    openContext("supplier", query);
-                  }}
-                  createLabel="Create supplier"
-                />
-                <div className="field--full">
-                  <PartialDateField
-                    id="acquisition"
-                    label="Acquisition date"
-                    value={form.acquisitionDate}
-                    onChange={(value) => {
-                      setForm((current) => ({
-                        ...current,
-                        acquisitionDate: value,
-                      }));
-                    }}
-                    disabled={pending}
-                  />
-                </div>
-                <h4 className="form-group-heading field--full">Storage</h4>
-                <ReferencePicker
-                  label="Storage location (optional)"
-                  help="Where this SeedLot is currently kept in your collection, not where it originated."
-                  disabled={pending}
-                  choices={locationsForScope(
-                    references.locations,
-                    "seed_lots",
-                  ).map((item) => ({
-                    id: item.id,
-                    label: item.display_path,
-                    retired: Boolean(item.retired_at),
-                  }))}
-                  value={form.locationId}
-                  onChange={(id) => {
-                    setForm((current) => ({ ...current, locationId: id }));
-                  }}
-                  onCreate={(query) => {
-                    openContext("location", query);
-                  }}
-                  createLabel="Create location"
-                />
-              </div>
-              {!selected && (
-                <button
-                  type="button"
-                  className="button--secondary disclosure-button"
-                  aria-expanded={moreDetails}
-                  aria-controls="seed-additional-details"
-                  onClick={() => {
-                    setMoreDetails((value) => !value);
-                  }}
-                >
-                  {moreDetails ? "Fewer details" : "More details"}
-                </button>
-              )}
-              {(Boolean(selected) || moreDetails) && (
-                <div
-                  id={!selected ? "seed-additional-details" : undefined}
-                  className="advanced-fields"
-                >
-                  <h4 className="form-group-heading field--full">Provenance</h4>
-                  <ReferencePicker
-                    label="Material provenance (optional)"
-                    help="Where the biological material originated, not its Supplier or current storage location."
-                    disabled={pending}
-                    choices={references.places.map((item) => ({
-                      id: item.id,
-                      label: item.display_path,
-                      retired: Boolean(item.retired_at),
-                    }))}
-                    value={form.materialProvenancePlaceId}
-                    onChange={(id) => {
-                      setForm((current) => ({
-                        ...current,
-                        materialProvenancePlaceId: id,
-                      }));
-                    }}
-                    onCreate={(query) => {
-                      openContext("place", query);
-                    }}
-                    createLabel="Create local place"
-                  />
-                  <ReferencePicker
-                    label="Precise provenance site (optional)"
-                    disabled={pending}
-                    choices={references.sites.map((site) => ({
-                      id: site.id,
-                      label: `${site.geographic_place_path ? `${site.geographic_place_path} → ` : ""}${site.name}`,
-                    }))}
-                    value={form.provenanceSiteId}
-                    onChange={(id) => {
-                      setForm((current) => ({
-                        ...current,
-                        provenanceSiteId: id,
-                      }));
-                    }}
-                  />
-                  <h4 className="form-group-heading field--full">
-                    Seed details
-                  </h4>
-                  <div className="partial-date-grid">
-                    <PartialDateField
-                      id="harvest"
-                      label="Harvest date"
-                      showHelp={false}
-                      value={form.harvestDate}
-                      onChange={(value) => {
-                        setForm((current) => ({
-                          ...current,
-                          harvestDate: value,
-                        }));
-                      }}
-                      disabled={pending}
-                    />
-                    <PartialDateField
-                      id="viability"
-                      label="Expected viability until"
-                      showHelp={false}
-                      value={form.expectedViabilityUntil}
-                      onChange={(value) => {
-                        setForm((current) => ({
-                          ...current,
-                          expectedViabilityUntil: value,
-                        }));
-                      }}
-                      disabled={pending}
-                    />
-                  </div>
-                  <h4 className="form-group-heading field--full">Notes</h4>
-                  <div className="field">
-                    <label htmlFor="seed-notes">
-                      Notes <span className="optional">(optional)</span>
-                    </label>
-                    <textarea
-                      id="seed-notes"
-                      rows={4}
-                      value={form.notes}
-                      disabled={pending}
-                      onChange={(event) => {
-                        const value = event.currentTarget.value;
-                        setForm((current) => ({
-                          ...current,
-                          notes: value,
-                        }));
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
+                    Cancel
+                  </button>
+                }
+              />
               {save.status === "error" && (
                 <div
                   className="notice notice--error"
@@ -1617,31 +1762,6 @@ export function SeedLotScreen({
                   </ul>
                 </div>
               )}
-              <div className="actions seed-form-actions">
-                <button type="submit" disabled={pending}>
-                  {pending
-                    ? "Saving…"
-                    : selected
-                      ? "Save changes"
-                      : "Add to collection"}
-                </button>
-                <button
-                  type="button"
-                  className="button--secondary"
-                  onClick={() => {
-                    setEditing(false);
-                    setSave({ status: "idle" });
-                    if (!selected) {
-                      setForm(blankForm());
-                      setMoreDetails(false);
-                      closeCreation();
-                      setDetailOpen(false);
-                    }
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
             </form>
           ) : selected ? (
             detailOpen ? (

@@ -1,3 +1,5 @@
+import { FormSections } from "../components/FormSections";
+import { usePublishRecordIdentities } from "../components/recordPresentation";
 import {
   useEffect,
   useMemo,
@@ -226,17 +228,12 @@ function IdentityDetails({
   const identityActions = (
     <div className="actions identity-header-actions">
       <a
-        className="button-link"
+        className="button-link button--secondary"
         href={`#/seeds?action=create&identity=${identity.id}`}
       >
         Add seed lot
       </a>
-      <button
-        className="button--secondary"
-        ref={editTrigger}
-        type="button"
-        onClick={openIdentityEditor}
-      >
+      <button ref={editTrigger} type="button" onClick={openIdentityEditor}>
         Edit botanical identity
       </button>
       <OverflowMenu label="…" ariaLabel="More botanical identity actions">
@@ -253,7 +250,9 @@ function IdentityDetails({
     </div>
   );
   return (
-    <div className="identity-detail-stack">
+    <div
+      className={`identity-detail-stack${editing ? " identity-detail-stack--editing" : ""}`}
+    >
       <Breadcrumbs
         items={[
           { label: "Botanical identities", href: "#/identities" },
@@ -261,7 +260,7 @@ function IdentityDetails({
         ]}
       />
       <div className="identity-detail-layout">
-        {tab === "overview" ? (
+        {tab === "overview" && !editing ? (
           <section
             className="identity-summary"
             aria-labelledby="identity-summary-title"
@@ -319,124 +318,217 @@ function IdentityDetails({
             </div>
           )}
           {editing && (
-            <form
-              className="identity-form"
-              ref={editPanel}
-              aria-busy={saving}
-              onSubmit={(event) => void saveEdit(event)}
+            <section
+              className="identity-editor"
+              aria-label="Edit botanical identity"
             >
               <h3>Edit botanical identity</h3>
-              <FormSection title="Botanical name">
-                <div className="field field--full">
-                  <label htmlFor="edit-scientific-name">Scientific name</label>
-                  <input
-                    aria-invalid={
-                      Boolean(editFieldError("Scientific name")) || undefined
-                    }
-                    aria-describedby={
-                      editFieldError("Scientific name")
-                        ? "edit-identity-help edit-scientific-name-error"
-                        : "edit-identity-help"
-                    }
-                    id="edit-scientific-name"
+              <p className="field-help">
+                Each section keeps its own existing save action. Switching
+                sections preserves your unsaved values.
+              </p>
+              <FormSections
+                label="Botanical identity edit sections"
+                disabled={saving}
+                panels={[
+                  {
+                    id: "identity",
+                    label: "Identity",
+                    content: (
+                      <div className="field--full">
+                        <form
+                          className="identity-form"
+                          ref={editPanel}
+                          aria-busy={saving}
+                          onSubmit={(event) => void saveEdit(event)}
+                        >
+                          <FormSection title="Botanical name">
+                            <div className="field field--full">
+                              <label htmlFor="edit-scientific-name">
+                                Scientific name
+                              </label>
+                              <input
+                                aria-invalid={
+                                  Boolean(editFieldError("Scientific name")) ||
+                                  undefined
+                                }
+                                aria-describedby={
+                                  editFieldError("Scientific name")
+                                    ? "edit-identity-help edit-scientific-name-error"
+                                    : "edit-identity-help"
+                                }
+                                id="edit-scientific-name"
+                                disabled={saving}
+                                required
+                                maxLength={255}
+                                value={editForm.scientific_name}
+                                onChange={(event) => {
+                                  const scientificName =
+                                    event.currentTarget.value;
+                                  setEditForm((value) => ({
+                                    ...value,
+                                    scientific_name: scientificName,
+                                  }));
+                                }}
+                              />
+                              <FieldHelp id="edit-identity-help">
+                                This stable collection-local identity can be
+                                shared by records without implying that those
+                                records share a lineage.
+                              </FieldHelp>
+                              {editFieldError("Scientific name") && (
+                                <p
+                                  className="field-error"
+                                  id="edit-scientific-name-error"
+                                >
+                                  {editFieldError("Scientific name")}
+                                </p>
+                              )}
+                            </div>
+                            <div className="field">
+                              <label htmlFor="edit-cultivar-name">
+                                Cultivar
+                              </label>
+                              <input
+                                id="edit-cultivar-name"
+                                aria-invalid={
+                                  Boolean(editFieldError("Cultivar")) ||
+                                  undefined
+                                }
+                                aria-describedby={
+                                  editFieldError("Cultivar")
+                                    ? "edit-cultivar-name-error"
+                                    : undefined
+                                }
+                                disabled={saving}
+                                maxLength={120}
+                                value={editForm.cultivar_name}
+                                onChange={(event) => {
+                                  const cultivarName =
+                                    event.currentTarget.value;
+                                  setEditForm((value) => ({
+                                    ...value,
+                                    cultivar_name: cultivarName,
+                                  }));
+                                }}
+                              />
+                              {editFieldError("Cultivar") && (
+                                <p
+                                  className="field-error"
+                                  id="edit-cultivar-name-error"
+                                >
+                                  {editFieldError("Cultivar")}
+                                </p>
+                              )}
+                            </div>
+                            <div className="field">
+                              <label htmlFor="edit-common-name">
+                                Common name
+                              </label>
+                              <input
+                                id="edit-common-name"
+                                aria-invalid={
+                                  Boolean(editFieldError("Common name")) ||
+                                  undefined
+                                }
+                                aria-describedby={
+                                  editFieldError("Common name")
+                                    ? "edit-common-name-error"
+                                    : undefined
+                                }
+                                disabled={saving}
+                                maxLength={160}
+                                value={editForm.common_name}
+                                onChange={(event) => {
+                                  const commonName = event.currentTarget.value;
+                                  setEditForm((value) => ({
+                                    ...value,
+                                    common_name: commonName,
+                                  }));
+                                }}
+                              />
+                              {editFieldError("Common name") && (
+                                <p
+                                  className="field-error"
+                                  id="edit-common-name-error"
+                                >
+                                  {editFieldError("Common name")}
+                                </p>
+                              )}
+                            </div>
+                          </FormSection>
+                          <FormActions>
+                            <button
+                              className="button--secondary"
+                              type="button"
+                              disabled={saving}
+                              onClick={() => {
+                                setEditing(false);
+                                editTrigger.current?.focus();
+                              }}
+                            >
+                              Cancel
+                            </button>
+                            <button type="submit" disabled={saving}>
+                              {saving ? "Saving…" : "Save changes"}
+                            </button>
+                          </FormActions>
+                        </form>
+                      </div>
+                    ),
+                  },
+                  {
+                    id: "reference",
+                    label: "Reference",
+                    content: (
+                      <div className="field--full">
+                        <BotanicalProfilePanel
+                          identityId={identity.id}
+                          includeNativeRange={false}
+                          startEditing
+                        />
+                      </div>
+                    ),
+                  },
+                  {
+                    id: "native-range",
+                    label: "Native range",
+                    content: (
+                      <div className="field--full">
+                        <BotanicalNativeRangeManager identityId={identity.id} />
+                      </div>
+                    ),
+                  },
+                  {
+                    id: "media",
+                    label: "Media",
+                    content: (
+                      <div className="field--full">
+                        <BotanicalIdentityCover
+                          csrfToken={csrfToken}
+                          identityId={identity.id}
+                          identityLabel={identity.display_label}
+                        />
+                      </div>
+                    ),
+                  },
+                ]}
+                cancel={
+                  <button
+                    type="button"
+                    className="button--secondary"
                     disabled={saving}
-                    required
-                    maxLength={255}
-                    value={editForm.scientific_name}
-                    onChange={(event) => {
-                      const scientificName = event.currentTarget.value;
-                      setEditForm((value) => ({
-                        ...value,
-                        scientific_name: scientificName,
-                      }));
+                    onClick={() => {
+                      setEditing(false);
+                      editTrigger.current?.focus();
                     }}
-                  />
-                  <FieldHelp id="edit-identity-help">
-                    This stable collection-local identity can be shared by
-                    records without implying that those records share a lineage.
-                  </FieldHelp>
-                  {editFieldError("Scientific name") && (
-                    <p className="field-error" id="edit-scientific-name-error">
-                      {editFieldError("Scientific name")}
-                    </p>
-                  )}
-                </div>
-                <div className="field">
-                  <label htmlFor="edit-cultivar-name">Cultivar</label>
-                  <input
-                    id="edit-cultivar-name"
-                    aria-invalid={
-                      Boolean(editFieldError("Cultivar")) || undefined
-                    }
-                    aria-describedby={
-                      editFieldError("Cultivar")
-                        ? "edit-cultivar-name-error"
-                        : undefined
-                    }
-                    disabled={saving}
-                    maxLength={120}
-                    value={editForm.cultivar_name}
-                    onChange={(event) => {
-                      const cultivarName = event.currentTarget.value;
-                      setEditForm((value) => ({
-                        ...value,
-                        cultivar_name: cultivarName,
-                      }));
-                    }}
-                  />
-                  {editFieldError("Cultivar") && (
-                    <p className="field-error" id="edit-cultivar-name-error">
-                      {editFieldError("Cultivar")}
-                    </p>
-                  )}
-                </div>
-                <div className="field">
-                  <label htmlFor="edit-common-name">Common name</label>
-                  <input
-                    id="edit-common-name"
-                    aria-invalid={
-                      Boolean(editFieldError("Common name")) || undefined
-                    }
-                    aria-describedby={
-                      editFieldError("Common name")
-                        ? "edit-common-name-error"
-                        : undefined
-                    }
-                    disabled={saving}
-                    maxLength={160}
-                    value={editForm.common_name}
-                    onChange={(event) => {
-                      const commonName = event.currentTarget.value;
-                      setEditForm((value) => ({
-                        ...value,
-                        common_name: commonName,
-                      }));
-                    }}
-                  />
-                  {editFieldError("Common name") && (
-                    <p className="field-error" id="edit-common-name-error">
-                      {editFieldError("Common name")}
-                    </p>
-                  )}
-                </div>
-              </FormSection>
-              <FormActions>
-                <button
-                  className="button--secondary"
-                  type="button"
-                  disabled={saving}
-                  onClick={() => {
-                    setEditing(false);
-                    editTrigger.current?.focus();
-                  }}
-                >
-                  Cancel
-                </button>
-                <button type="submit" disabled={saving}>
-                  {saving ? "Saving…" : "Save changes"}
-                </button>
-              </FormActions>
-            </form>
+                  >
+                    Close editor
+                  </button>
+                }
+                submit={null}
+              />
+            </section>
           )}
           {confirmDelete && (
             <PhotoDialog
@@ -470,7 +562,7 @@ function IdentityDetails({
               </div>
             </PhotoDialog>
           )}
-          <div className="identity-detail-tabs">
+          <div className="identity-detail-tabs" inert={editing}>
             <DetailTabs
               tabs={["overview", "collection", "reference", "events"].map(
                 (id) => ({
@@ -490,412 +582,424 @@ function IdentityDetails({
               }}
             />
           </div>
-          {tab !== "reference" && collection.status === "loading" && (
-            <p role="status">Loading collection context…</p>
-          )}
-          {tab !== "reference" && collection.status === "error" && (
-            <div className="notice notice--error" role="alert">
-              <p>
-                Florabase could not load this identity’s collection context.
-              </p>
-              <button
-                type="button"
-                onClick={() => {
-                  setCollectionAttempt((n) => n + 1);
-                }}
-              >
-                Retry collection
-              </button>
-            </div>
-          )}
-          {tab === "overview" && (
-            <div
-              id="panel-overview"
-              className="detail-tab-panel"
-              role="tabpanel"
-              aria-labelledby="tab-overview"
-            >
-              <article className="content-section">
-                <h3>Record details</h3>
-                <dl>
-                  <div>
-                    <dt>Created</dt>
-                    <dd>{displayDate(identity.created_at)}</dd>
-                  </div>
-                  <div>
-                    <dt>Last updated</dt>
-                    <dd>{displayDate(identity.updated_at)}</dd>
-                  </div>
-                </dl>
-              </article>
-              {counts && counts.events.length > 0 && (
-                <section>
-                  <h3>Recent events</h3>
-                  <EventFeed compact events={counts.events.slice(0, 4)} />
-                </section>
+          {!editing && (
+            <>
+              {tab !== "reference" && collection.status === "loading" && (
+                <p role="status">Loading collection context…</p>
               )}
-            </div>
-          )}
-          {tab === "reference" && (
-            <section
-              id="panel-reference"
-              className="detail-tab-panel identity-reference-stack"
-              role="tabpanel"
-              aria-labelledby="tab-reference"
-            >
-              <h3 className="reference-title">Reference</h3>
-              <DetailTabs
-                label="Reference sections"
-                tabs={[
-                  { id: "profile", label: "Profile" },
-                  { id: "native-range", label: "Native range" },
-                  { id: "source", label: "Botanical source" },
-                  { id: "occurrences", label: "Occurrences" },
-                ]}
-                selected={referenceModule}
-                onSelect={(next) => {
-                  setReferenceModule(next);
-                }}
-              />
-              <div
-                id={`panel-${referenceModule}`}
-                className="reference-module-panel"
-                role="tabpanel"
-                aria-labelledby={`tab-${referenceModule}`}
-              >
-                {referenceModule === "profile" && (
-                  <BotanicalProfilePanel
-                    identityId={identity.id}
-                    includeNativeRange={false}
-                    key={identity.id}
-                  />
-                )}
-                {referenceModule === "native-range" && (
-                  <BotanicalNativeRangeManager identityId={identity.id} />
-                )}
-                {referenceModule === "source" && (
-                  <ExternalBotanicalDataPanel
-                    key={`source-${identity.id}`}
-                    csrfToken={csrfToken}
-                    identityId={identity.id}
-                    scientificName={identity.scientific_name}
-                    view="source"
-                  />
-                )}
-                {referenceModule === "occurrences" && (
-                  <ExternalBotanicalDataPanel
-                    key={`occurrences-${identity.id}`}
-                    csrfToken={csrfToken}
-                    identityId={identity.id}
-                    scientificName={identity.scientific_name}
-                    view="occurrences"
-                  />
-                )}
-              </div>
-            </section>
-          )}
-          {["seeds", "sowings", "plants"].includes(tab) && (
-            <section
-              id="panel-collection"
-              role="tabpanel"
-              aria-labelledby="tab-collection"
-            >
-              <DetailTabs
-                label="Collection sections"
-                tabs={[
-                  { id: "seeds", label: "Seeds" },
-                  { id: "sowings", label: "Sowings" },
-                  { id: "plants", label: "Plants / Plant groups" },
-                ]}
-                selected={tab}
-                onSelect={selectTab}
-              />
-              {counts && tab === "seeds" && (
+              {tab !== "reference" && collection.status === "error" && (
+                <div className="notice notice--error" role="alert">
+                  <p>
+                    Florabase could not load this identity’s collection context.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCollectionAttempt((n) => n + 1);
+                    }}
+                  >
+                    Retry collection
+                  </button>
+                </div>
+              )}
+              {tab === "overview" && (
                 <div
-                  id="panel-seeds"
+                  id="panel-overview"
                   className="detail-tab-panel"
                   role="tabpanel"
-                  aria-labelledby="tab-seeds"
+                  aria-labelledby="tab-overview"
                 >
-                  <div className="contextual-workflow">
-                    <div>
-                      <p className="eyebrow">Next step</p>
-                      <h3>Add seed material</h3>
-                    </div>
-                    <a
-                      className="button-link"
-                      href={`#/seeds?action=create&identity=${identity.id}`}
-                    >
-                      Add seed lot
-                    </a>
-                  </div>
-                  {counts.seed_lots.length ? (
-                    <div className="card-grid">
-                      {counts.seed_lots.map((lot) => (
-                        <CollectionCard
-                          key={lot.id}
-                          eyebrow={lot.lifecycle}
-                          href={`#/seeds/${lot.id}`}
-                          title={
-                            lot.label ?? lot.botanical_identity.display_label
-                          }
-                        >
-                          <p>
-                            {lot.quantity
-                              ? `${lot.quantity.is_approximate ? "Approximately " : ""}${lot.quantity.value} ${lot.quantity.kind === "seed_count" ? "seeds" : (lot.quantity.unit ?? "weight")}`
-                              : "Quantity not recorded"}
-                          </p>
-                          <p>
-                            {lot.location?.display_path ??
-                              "Location not recorded"}
-                          </p>
-                        </CollectionCard>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="empty-state">
-                      <p>No seed lots use this identity.</p>
-                    </div>
+                  <article className="content-section">
+                    <h3>Record details</h3>
+                    <dl>
+                      <div>
+                        <dt>Created</dt>
+                        <dd>{displayDate(identity.created_at)}</dd>
+                      </div>
+                      <div>
+                        <dt>Last updated</dt>
+                        <dd>{displayDate(identity.updated_at)}</dd>
+                      </div>
+                    </dl>
+                  </article>
+                  {counts && counts.events.length > 0 && (
+                    <section>
+                      <h3>Recent events</h3>
+                      <EventFeed compact events={counts.events.slice(0, 4)} />
+                    </section>
                   )}
                 </div>
               )}
-              {counts && tab === "sowings" && (
-                <div
-                  id="panel-sowings"
-                  className="detail-tab-panel"
+              {tab === "reference" && (
+                <section
+                  id="panel-reference"
+                  className="detail-tab-panel identity-reference-stack"
                   role="tabpanel"
-                  aria-labelledby="tab-sowings"
+                  aria-labelledby="tab-reference"
                 >
-                  <section
-                    className="workflow-launcher"
-                    aria-labelledby="identity-start-sowing"
+                  <h3 className="reference-title">Reference</h3>
+                  <DetailTabs
+                    label="Reference sections"
+                    tabs={[
+                      { id: "profile", label: "Profile" },
+                      { id: "native-range", label: "Native range" },
+                      { id: "source", label: "Botanical source" },
+                      { id: "occurrences", label: "Occurrences" },
+                    ]}
+                    selected={referenceModule}
+                    onSelect={(next) => {
+                      setReferenceModule(next);
+                    }}
+                  />
+                  <div
+                    id={`panel-${referenceModule}`}
+                    className="reference-module-panel"
+                    role="tabpanel"
+                    aria-labelledby={`tab-${referenceModule}`}
                   >
-                    <div>
-                      <p className="eyebrow">Next step</p>
-                      <h3 id="identity-start-sowing">Start a sowing</h3>
-                      <p>Choose the source seed lot.</p>
-                    </div>
-                    {counts.seed_lots.some(
-                      ({ lifecycle }) => lifecycle === "active",
-                    ) ? (
-                      <div className="workflow-choice-list">
-                        {counts.seed_lots
-                          .filter(({ lifecycle }) => lifecycle === "active")
-                          .map((lot) => (
-                            <article className="workflow-choice" key={lot.id}>
-                              <p>
-                                <strong>
-                                  {lot.label ?? "Unlabelled seed lot"}
-                                </strong>
-                              </p>
-                              <p>
-                                {lot.quantity
-                                  ? `${lot.quantity.is_approximate ? "~" : ""}${lot.quantity.value} ${lot.quantity.kind === "seed_count" ? "seeds" : (lot.quantity.unit ?? "weight")}`
-                                  : "Quantity unknown"}{" "}
-                                · {lot.lifecycle}
-                              </p>
-                              <p>
-                                {lot.location?.display_path ??
-                                  "Storage not recorded"}
-                                {lot.supplier ? ` · ${lot.supplier.name}` : ""}
-                              </p>
-                              <a
-                                className="button-link"
-                                href={`#/sowings?action=start&seedLot=${lot.id}`}
-                              >
-                                Start sowing
-                              </a>
-                            </article>
-                          ))}
-                      </div>
-                    ) : (
-                      <div className="empty-state">
-                        <p>
-                          Record an active seed lot before starting a sowing.
-                        </p>
+                    {referenceModule === "profile" && (
+                      <BotanicalProfilePanel
+                        identityId={identity.id}
+                        includeNativeRange={false}
+                        key={identity.id}
+                      />
+                    )}
+                    {referenceModule === "native-range" && (
+                      <BotanicalNativeRangeManager identityId={identity.id} />
+                    )}
+                    {referenceModule === "source" && (
+                      <ExternalBotanicalDataPanel
+                        key={`source-${identity.id}`}
+                        csrfToken={csrfToken}
+                        identityId={identity.id}
+                        scientificName={identity.scientific_name}
+                        view="source"
+                      />
+                    )}
+                    {referenceModule === "occurrences" && (
+                      <ExternalBotanicalDataPanel
+                        key={`occurrences-${identity.id}`}
+                        csrfToken={csrfToken}
+                        identityId={identity.id}
+                        scientificName={identity.scientific_name}
+                        view="occurrences"
+                      />
+                    )}
+                  </div>
+                </section>
+              )}
+              {["seeds", "sowings", "plants"].includes(tab) && (
+                <section
+                  id="panel-collection"
+                  role="tabpanel"
+                  aria-labelledby="tab-collection"
+                >
+                  <DetailTabs
+                    label="Collection sections"
+                    tabs={[
+                      { id: "seeds", label: "Seeds" },
+                      { id: "sowings", label: "Sowings" },
+                      { id: "plants", label: "Plants / Plant groups" },
+                    ]}
+                    selected={tab}
+                    onSelect={selectTab}
+                  />
+                  {counts && tab === "seeds" && (
+                    <div
+                      id="panel-seeds"
+                      className="detail-tab-panel"
+                      role="tabpanel"
+                      aria-labelledby="tab-seeds"
+                    >
+                      <div className="contextual-workflow">
+                        <div>
+                          <p className="eyebrow">Next step</p>
+                          <h3>Add seed material</h3>
+                        </div>
                         <a
                           className="button-link"
                           href={`#/seeds?action=create&identity=${identity.id}`}
                         >
-                          Create seed lot
+                          Add seed lot
                         </a>
                       </div>
-                    )}
-                  </section>
-                  <section className="record-section">
-                    <h3>Recorded sowings</h3>
-                    {counts.sowings.length ? (
-                      <div className="card-grid">
-                        {counts.sowings.map((sowing) => (
-                          <CollectionCard
-                            key={sowing.id}
-                            eyebrow={sowing.lifecycle}
-                            href={`#/sowings/${sowing.id}`}
-                            title={sowing.label ?? "Unlabelled sowing"}
-                          >
-                            <p>
-                              From{" "}
-                              {sowing.seed_lot.label ?? "unlabelled seed lot"}
-                            </p>
-                            <p>
-                              {sowing.location?.display_path ??
-                                "Location not recorded"}
-                            </p>
-                          </CollectionCard>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="empty-state">
-                        <p>No recorded sowings for this identity.</p>
-                      </div>
-                    )}
-                  </section>
-                </div>
-              )}
-              {counts && tab === "plants" && (
-                <div
-                  id="panel-plants"
-                  className="detail-tab-panel"
-                  role="tabpanel"
-                  aria-labelledby="tab-plants"
-                >
-                  <section
-                    className="contextual-workflow"
-                    aria-labelledby="identity-add-plant"
-                  >
-                    <div>
-                      <p className="eyebrow">Next step</p>
-                      <h3 id="identity-add-plant">
-                        Add to the living collection
-                      </h3>
-                      <p>
-                        Choose explicit propagation lineage or preserve a
-                        legitimate direct/acquired origin.
-                      </p>
-                    </div>
-                    <div className="actions">
-                      <a
-                        className="button-link button--secondary"
-                        href={`#/plants?action=create&identity=${identity.id}&kind=plant`}
-                      >
-                        Direct / acquired plant
-                      </a>
-                      <a
-                        className="button-link button--secondary"
-                        href={`#/plants?action=create&identity=${identity.id}&kind=group`}
-                      >
-                        Direct / acquired plant group
-                      </a>
-                    </div>
-                  </section>
-                  <h3>From a sowing</h3>
-                  {counts.sowings.length > 0 && (
-                    <div className="source-choice-grid">
-                      {counts.sowings.map((sowing) => (
-                        <article className="source-choice" key={sowing.id}>
-                          <p>
-                            <strong>
-                              {sowing.label ?? "Unlabelled sowing"}
-                            </strong>{" "}
-                            · {sowing.lifecycle}
-                          </p>
-                          <p>
-                            From{" "}
-                            {sowing.seed_lot.label ?? "unlabelled seed lot"}
-                          </p>
-                          <div className="actions">
-                            <a
-                              href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=plant`}
+                      {counts.seed_lots.length ? (
+                        <div className="card-grid">
+                          {counts.seed_lots.map((lot) => (
+                            <CollectionCard
+                              key={lot.id}
+                              eyebrow={lot.lifecycle}
+                              href={`#/seeds/${lot.id}`}
+                              title={
+                                lot.label ??
+                                lot.botanical_identity.display_label
+                              }
                             >
-                              Create plant
-                            </a>
+                              <p>
+                                {lot.quantity
+                                  ? `${lot.quantity.is_approximate ? "Approximately " : ""}${lot.quantity.value} ${lot.quantity.kind === "seed_count" ? "seeds" : (lot.quantity.unit ?? "weight")}`
+                                  : "Quantity not recorded"}
+                              </p>
+                              <p>
+                                {lot.location?.display_path ??
+                                  "Location not recorded"}
+                              </p>
+                            </CollectionCard>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="empty-state">
+                          <p>No seed lots use this identity.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {counts && tab === "sowings" && (
+                    <div
+                      id="panel-sowings"
+                      className="detail-tab-panel"
+                      role="tabpanel"
+                      aria-labelledby="tab-sowings"
+                    >
+                      <section
+                        className="workflow-launcher"
+                        aria-labelledby="identity-start-sowing"
+                      >
+                        <div>
+                          <p className="eyebrow">Next step</p>
+                          <h3 id="identity-start-sowing">Start a sowing</h3>
+                          <p>Choose the source seed lot.</p>
+                        </div>
+                        {counts.seed_lots.some(
+                          ({ lifecycle }) => lifecycle === "active",
+                        ) ? (
+                          <div className="workflow-choice-list">
+                            {counts.seed_lots
+                              .filter(({ lifecycle }) => lifecycle === "active")
+                              .map((lot) => (
+                                <article
+                                  className="workflow-choice"
+                                  key={lot.id}
+                                >
+                                  <p>
+                                    <strong>
+                                      {lot.label ?? "Unlabelled seed lot"}
+                                    </strong>
+                                  </p>
+                                  <p>
+                                    {lot.quantity
+                                      ? `${lot.quantity.is_approximate ? "~" : ""}${lot.quantity.value} ${lot.quantity.kind === "seed_count" ? "seeds" : (lot.quantity.unit ?? "weight")}`
+                                      : "Quantity unknown"}{" "}
+                                    · {lot.lifecycle}
+                                  </p>
+                                  <p>
+                                    {lot.location?.display_path ??
+                                      "Storage not recorded"}
+                                    {lot.supplier
+                                      ? ` · ${lot.supplier.name}`
+                                      : ""}
+                                  </p>
+                                  <a
+                                    className="button-link"
+                                    href={`#/sowings?action=start&seedLot=${lot.id}`}
+                                  >
+                                    Start sowing
+                                  </a>
+                                </article>
+                              ))}
+                          </div>
+                        ) : (
+                          <div className="empty-state">
+                            <p>
+                              Record an active seed lot before starting a
+                              sowing.
+                            </p>
                             <a
-                              href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=group`}
+                              className="button-link"
+                              href={`#/seeds?action=create&identity=${identity.id}`}
                             >
-                              Create plant group
+                              Create seed lot
                             </a>
                           </div>
-                        </article>
-                      ))}
+                        )}
+                      </section>
+                      <section className="record-section">
+                        <h3>Recorded sowings</h3>
+                        {counts.sowings.length ? (
+                          <div className="card-grid">
+                            {counts.sowings.map((sowing) => (
+                              <CollectionCard
+                                key={sowing.id}
+                                eyebrow={sowing.lifecycle}
+                                href={`#/sowings/${sowing.id}`}
+                                title={sowing.label ?? "Unlabelled sowing"}
+                              >
+                                <p>
+                                  From{" "}
+                                  {sowing.seed_lot.label ??
+                                    "unlabelled seed lot"}
+                                </p>
+                                <p>
+                                  {sowing.location?.display_path ??
+                                    "Location not recorded"}
+                                </p>
+                              </CollectionCard>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="empty-state">
+                            <p>No recorded sowings for this identity.</p>
+                          </div>
+                        )}
+                      </section>
                     </div>
                   )}
-                  {counts.sowings.length === 0 && (
+                  {counts && tab === "plants" && (
+                    <div
+                      id="panel-plants"
+                      className="detail-tab-panel"
+                      role="tabpanel"
+                      aria-labelledby="tab-plants"
+                    >
+                      <section
+                        className="contextual-workflow"
+                        aria-labelledby="identity-add-plant"
+                      >
+                        <div>
+                          <p className="eyebrow">Next step</p>
+                          <h3 id="identity-add-plant">
+                            Add to the living collection
+                          </h3>
+                          <p>
+                            Choose explicit propagation lineage or preserve a
+                            legitimate direct/acquired origin.
+                          </p>
+                        </div>
+                        <div className="actions">
+                          <a
+                            className="button-link button--secondary"
+                            href={`#/plants?action=create&identity=${identity.id}&kind=plant`}
+                          >
+                            Direct / acquired plant
+                          </a>
+                          <a
+                            className="button-link button--secondary"
+                            href={`#/plants?action=create&identity=${identity.id}&kind=group`}
+                          >
+                            Direct / acquired plant group
+                          </a>
+                        </div>
+                      </section>
+                      <h3>From a sowing</h3>
+                      {counts.sowings.length > 0 && (
+                        <div className="source-choice-grid">
+                          {counts.sowings.map((sowing) => (
+                            <article className="source-choice" key={sowing.id}>
+                              <p>
+                                <strong>
+                                  {sowing.label ?? "Unlabelled sowing"}
+                                </strong>{" "}
+                                · {sowing.lifecycle}
+                              </p>
+                              <p>
+                                From{" "}
+                                {sowing.seed_lot.label ?? "unlabelled seed lot"}
+                              </p>
+                              <div className="actions">
+                                <a
+                                  href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=plant`}
+                                >
+                                  Create plant
+                                </a>
+                                <a
+                                  href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=group`}
+                                >
+                                  Create plant group
+                                </a>
+                              </div>
+                            </article>
+                          ))}
+                        </div>
+                      )}
+                      {counts.sowings.length === 0 && (
+                        <div className="empty-state">
+                          <p>
+                            No source sowings are recorded yet. Start from a
+                            seed lot to preserve propagation lineage.
+                          </p>
+                        </div>
+                      )}
+                      <h3>Plants and plant groups</h3>
+                      {counts.plants.length + counts.plant_groups.length ? (
+                        <div className="card-grid">
+                          {counts.plants.map((plant) => (
+                            <CollectionCard
+                              key={plant.id}
+                              eyebrow="Plant"
+                              href={`#/plants/${plant.id}`}
+                              title={
+                                plant.label ??
+                                plant.botanical_identity.display_label
+                              }
+                            >
+                              <span className="record-state">
+                                {plant.lifecycle}
+                              </span>
+                              <p>
+                                {plant.location?.display_path ??
+                                  "Location not recorded"}
+                              </p>
+                            </CollectionCard>
+                          ))}
+                          {counts.plant_groups.map((group) => (
+                            <CollectionCard
+                              key={group.id}
+                              eyebrow="Plant group"
+                              href={`#/plant-groups/${group.id}`}
+                              title={
+                                group.label ??
+                                group.botanical_identity.display_label
+                              }
+                            >
+                              <span className="record-state">
+                                {group.lifecycle}
+                              </span>
+                              <p>
+                                {group.location?.display_path ??
+                                  "Location not recorded"}
+                              </p>
+                            </CollectionCard>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="empty-state">
+                          <p>No plants or plant groups use this identity.</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </section>
+              )}
+              {counts && tab === "events" && (
+                <div
+                  id="panel-events"
+                  className="detail-tab-panel"
+                  role="tabpanel"
+                  aria-labelledby="tab-events"
+                >
+                  {counts.events.length ? (
+                    <EventFeed events={counts.events} />
+                  ) : (
                     <div className="empty-state">
                       <p>
-                        No source sowings are recorded yet. Start from a seed
-                        lot to preserve propagation lineage.
+                        No events belong to plants or plant groups with this
+                        identity.
                       </p>
                     </div>
                   )}
-                  <h3>Plants and plant groups</h3>
-                  {counts.plants.length + counts.plant_groups.length ? (
-                    <div className="card-grid">
-                      {counts.plants.map((plant) => (
-                        <CollectionCard
-                          key={plant.id}
-                          eyebrow="Plant"
-                          href={`#/plants/${plant.id}`}
-                          title={
-                            plant.label ??
-                            plant.botanical_identity.display_label
-                          }
-                        >
-                          <span className="record-state">
-                            {plant.lifecycle}
-                          </span>
-                          <p>
-                            {plant.location?.display_path ??
-                              "Location not recorded"}
-                          </p>
-                        </CollectionCard>
-                      ))}
-                      {counts.plant_groups.map((group) => (
-                        <CollectionCard
-                          key={group.id}
-                          eyebrow="Plant group"
-                          href={`#/plant-groups/${group.id}`}
-                          title={
-                            group.label ??
-                            group.botanical_identity.display_label
-                          }
-                        >
-                          <span className="record-state">
-                            {group.lifecycle}
-                          </span>
-                          <p>
-                            {group.location?.display_path ??
-                              "Location not recorded"}
-                          </p>
-                        </CollectionCard>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="empty-state">
-                      <p>No plants or plant groups use this identity.</p>
-                    </div>
-                  )}
                 </div>
               )}
-            </section>
-          )}
-          {counts && tab === "events" && (
-            <div
-              id="panel-events"
-              className="detail-tab-panel"
-              role="tabpanel"
-              aria-labelledby="tab-events"
-            >
-              {counts.events.length ? (
-                <EventFeed events={counts.events} />
-              ) : (
-                <div className="empty-state">
-                  <p>
-                    No events belong to plants or plant groups with this
-                    identity.
-                  </p>
-                </div>
-              )}
-            </div>
+            </>
           )}
         </div>
       </div>
@@ -912,6 +1016,9 @@ export function BotanicalIdentityScreen({
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
   });
+  usePublishRecordIdentities(
+    directory.status === "ready" ? directory.identities : undefined,
+  );
   const [selected, setSelected] = useState<BotanicalIdentityResponse | null>(
     null,
   );
@@ -1140,7 +1247,7 @@ export function BotanicalIdentityScreen({
   if (initialId)
     return (
       <section
-        className="identity-reference-page"
+        className="workspace identity-reference-page"
         aria-label="Botanical identity detail"
       >
         {directory.status === "loading" ? (
@@ -1489,13 +1596,30 @@ export function BotanicalIdentityScreen({
                 <a className="button-link" href={`#/identities/${selected.id}`}>
                   Open details
                 </a>
-                <a
-                  className="button-link button--secondary"
-                  href={`#/seeds?action=create&identity=${selected.id}`}
+                <div
+                  className="preview-action-group"
+                  role="group"
+                  aria-label="Record maintenance"
                 >
-                  Add seed lot
-                </a>
-                <a href={`#/identities/${selected.id}?tab=edit`}>Edit</a>
+                  <a
+                    className="button-link button--secondary"
+                    href={`#/identities/${selected.id}?tab=edit`}
+                  >
+                    Edit
+                  </a>
+                </div>
+                <div
+                  className="preview-action-group preview-action-group--descendants"
+                  role="group"
+                  aria-label="Collection creation"
+                >
+                  <a
+                    className="button-link button--secondary"
+                    href={`#/seeds?action=create&identity=${selected.id}`}
+                  >
+                    Add seed lot
+                  </a>
+                </div>
               </div>
             </>
           ) : (

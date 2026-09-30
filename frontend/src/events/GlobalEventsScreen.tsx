@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { InfoDisclosure } from "../components/ContextualHelp";
+import { WorkspaceIntro } from "../components/CollectionUI";
 import { listGlobalEvents, type EventResponse } from "../collection/api";
 import { EventFeed, EventFilters } from "./EventFeed";
 import { filteredEvents, type EventFilter } from "./eventData";
@@ -43,15 +44,12 @@ export function GlobalEventsScreen() {
 
   return (
     <section aria-labelledby="global-events-title" className="workspace">
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">Collection activity</p>
-          <h2 id="global-events-title">Events</h2>
-          <p>
-            Browse cultivation and lifecycle activity across your collection.
-          </p>
-        </div>
-      </header>
+      <WorkspaceIntro
+        eyebrow="Collection activity"
+        title="Events"
+        titleId="global-events-title"
+        description="Browse cultivation and lifecycle activity across your collection."
+      />
       <InfoDisclosure label="How Event corrections affect current state">
         <p>
           Editing or deleting an ordinary Event does not recompute a Plant or
@@ -85,7 +83,7 @@ export function GlobalEventsScreen() {
               No Events match this filter.
             </p>
           ) : (
-            <EventFeed events={visible} />
+            <EventFeed showTargetPhoto events={visible} />
           )}
         </>
       )}

@@ -127,6 +127,16 @@ operator reprioritizes them. They are not release-readiness dependencies.
 
 ### Post-0.1.0 by default
 
+- **Supplier directory imagery / supplier logo or image support** is an explicit
+  post-release candidate: an optional Supplier logo/image, compact directory and
+  Quick Preview visual, and a consistent absent-image placeholder. Attachment
+  ownership, storage and schema remain undecided; no Supplier media is added by
+  the current UI polish.
+- **Location descendant usage counts** remain a separate functional candidate.
+  Parent usage should distinguish `Direct here` from `Including descendants`
+  (for example, 2 directly and 7 including sublocations). The UI polish retains
+  existing direct counts and implements no hierarchical aggregation.
+
 - `BOTANY-003` remains `planned`, but does **not** block `0.1.0`. The confirmed exact provider path
   has not supplied eligible descriptive content under the accepted narrow contract. Source licensing
   and field-level capability must be adequate before retrieval resumes. Florabase must not use name

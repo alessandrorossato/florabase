@@ -1,5 +1,168 @@
 # Engineering progress
 
+## 2026-09-30 — Final operator pass 33–47 ready for visual acceptance
+
+- Continued `feat/ui-consistency-polish` at `cd5bf70`, preserving prior work. Guided
+  Sowing and Plant/PlantGroup forms now reuse normal field groups/section navigation,
+  retain source/lineage, atomic quantity/result semantics and receipts, and use the
+  existing display-name resolver. Nested native/server validation reveals and focuses
+  the owning section without discarding state.
+- Added accessible desktop sidebar resizing (248px default, 220px minimum, up to
+  400px/35% of viewport), live route-preserving width and 32px collapsed inset. World
+  initially expands to continents; user interaction remains. Shared More menus use
+  anchored viewport-bounded portals with outside/Escape/focus behavior. Geography
+  Sites/Map creation uses the existing page-header action pattern.
+- BotanicalIdentity Edit groups existing Identity/Reference/Native range/Media owners;
+  normal desktop sections fit, with independent detail navigation retained. Provenance
+  Sites accept validated decimal or DMS inputs through unchanged decimal payloads.
+  Labels adopts controls/preview composition and compact expandable print guidance,
+  preserving dimensions, 4 × 9 print sheet and configured-origin QR semantics.
+- Rendered review succeeded in the Codex in-app browser at 1440 × 844, 1024 × 844 and
+  390 × 844 for every requested surface. The [audit](ui-consistency-polish.md) records
+  the exact matrix, item 33–47 statuses, 108 chronological review captures and exact
+  final-pass/complete branch manifests. Final frames replace QA-found quantity overflow,
+  DMS label collisions, Botany spacing and tall Labels guidance. Operator acceptance
+  remains pending. The synthetic tmpfs project was removed and browser overrides reset;
+  no normal operator data or volumes were deleted.
+- Affected checks passed 174 tests/10 files, compatibility checks 58/5 and final
+  Seed/Labels checks 51/2. The final full frontend suite passed **304 tests/33 files**
+  (19:57:22, 124.57s); formatting, zero-warning lint, strict TypeScript/production build,
+  exporter/generator API drift, feature graph (81), Markdown formatting and diff checks
+  passed. Intermediate interrupted execution is excluded from verification evidence.
+- No backend/API/generated-contract/migration change was added by this final pass;
+  earlier branch changes remain preserved. Supplier imagery/logo is explicitly post-0.1.0;
+  Location `Direct here` / `Including descendants` remains a functional follow-up.
+  UX-006 stays `implemented`. No canonical gate, staging, commit, push, merge, delivery
+  or feature-finish ran. All work remains unstaged/uncommitted for visual acceptance.
+
+## 2026-09-30 — Sectioned forms and shared record presentation ready for visual review
+
+- Continued `feat/ui-consistency-polish` with the requested A–T refinement. Shared
+  left-aligned workspaces begin 24px from the desktop sidebar, with surplus width
+  on the right. A small shared form-section primitive keeps one mounted form/state,
+  direct keyboard-accessible tabs, Back/Next, final-only submission and invalid-field
+  reveal/focus. SeedLot, Sowing, Plant/PlantGroup, BotanicalProfile and ProvenanceSite
+  editors use it; compact identity names and independent reference actions remain
+  reachable. Existing payloads, partial dates, quantities and lineage are preserved.
+- Centralized record imagery resolves local designated primary, eligible botanical
+  cover, then type placeholder, including exact Event targets. Display names resolve
+  explicit label, common name, useful cultivar, scientific name, then generic fallback
+  without stored-name changes or numbering. Bounded photo cards and contained Botany
+  preview images preserve aspect ratio. Sowing preview groups primary, maintenance
+  and descendant actions. Reference shares shell, search and inset focus geometry.
+- Rendered review completed at 1440 × 844, 1024 × 844 and 390 × 844 across all
+  eleven requested routes and every required editor/photo/preview surface. The
+  [audit](ui-consistency-polish.md) records the exact matrix, 117 final captures,
+  image-shape checks, retained values and hidden native/server validation focus.
+  QA-found small Seed rows, Sowing action sizing, mobile focus and activity badges
+  were corrected. No page-wide horizontal overflow was found. Existing tablet/mobile
+  selection opens detail directly where Quick Preview is desktop-only. The earlier
+  browser limitation is resolved; final operator acceptance remains pending.
+- Affected frontend checks passed 108 tests across 10 files; the complete final
+  suite passed 281 tests across 30 files. Formatting, lint, TypeScript, production
+  build, API exporter/generator drift, feature graph (81 features) and diff checks
+  passed. No canonical gate or unrelated backend suite ran during this refinement;
+  initial-phase backend/generated changes remain preserved.
+- Shared media (`MediaAsset` ↔ `RecordMediaLink` ↔ records) and Location counts
+  (`Direct here: 2` / `Including sublocations: 7`) remain documented follow-ups.
+  UX-006 remains `implemented`; HEAD remains `cd5bf70`, all changes unstaged and
+  uncommitted. No push, delivery, merge or finish ran. The synthetic review project
+  and browser tab were removed without deleting operator data or volumes.
+
+## 2026-09-30 — Final operator UI pass, rendered confirmation pending
+
+- Continued `feat/ui-consistency-polish` for items 16–32. Shared desktop inset,
+  compact Seed/Plant edit disclosures, Sowing action groups/facts/path, compact
+  creation dependency panels, Plant origin/operations, neutral local-only directory
+  photo slots, viewport-sized map, and scoped Botany cover/actions/edit/search fixes
+  are implemented. The [audit](ui-consistency-polish.md) records the exact final-pass
+  and 31-file branch manifests, each requested status and remaining visual checks.
+  Shared media and Location subtree aggregation are documented follow-ups only;
+  current direct usage and descendant-aware Dashboard filtering are unchanged.
+- Focused checks passed 114 tests across eight files; the final complete frontend
+  suite passed 268 tests across 27 files. An added note-retention assertion was
+  corrected to retain original text; an intervening host-memory timeout run recovered
+  with unchanged tests after stopping only the disposable review web services.
+  Formatting, lint, TypeScript, production build, exporter/generator API drift,
+  feature graph validation (81 features), Markdown formatting and diff checks passed.
+- Rendered desktop checks confirmed compact Seed/Plant/Botany editors, keyboard
+  access to Botany fields/actions, two-observation Germination, landscape cover and
+  map composition. Final overview refinements, directory thumbnails/focus, actual
+  Botany overflow scroll and the full 1024 × 844 / 390 × 844 matrix remain
+  VISUAL_CONFIRMATION_PENDING: the browser connection disappeared under exhausted
+  host memory and did not recover after tests recovered. Saved `final-` desktop
+  screenshots remain available. Earlier 1–15 behavior passes regression checks;
+  final responsive visual reconfirmation is pending, not claimed.
+- Frontend/tests/docs only in this pass; earlier backend/generated changes are
+  preserved. UX-006 remains `implemented`; HEAD is `cd5bf70`, with all changes
+  unstaged/uncommitted. No gate, commit, push, delivery, merge or finish ran.
+  The disposable review project was removed without operator volume/data changes.
+
+## 2026-09-30 — Fifteen-item UI corrective pass for visual review
+
+- Continued on `feat/ui-consistency-polish` with the focused Dashboard, Seeds,
+  Sowings, Plants, Events and Provenance map corrections. The updated
+  [audit](ui-consistency-polish.md) records one PASS receipt for each requested item,
+  the exact 16 corrective-pass files and the full 26-file branch manifest. UX-006
+  remains `implemented`; no feature graph status changed.
+- Shared labelled record relationships clarify headers. Seed Remaining aligns in
+  directory rows; grouped Seed/Sowing/Plant editors use desktop width. Sowing preview
+  actions are grouped, Germination uses paired metrics/history, and propagation paths
+  respond to their own available width. Plant group origin/history share a desktop row.
+  Dashboard filter scroll controls reserve an inner gutter. Global Events and record
+  journals reuse local-only target thumbnails without external/absent/broken placeholders.
+  Map reuses the page intro and keeps its layers below mobile navigation. Existing
+  values, validation, disclosures, operation guards, privacy and payloads are preserved.
+- Corrective affected tests passed 113 cases across nine files; final full frontend
+  tests passed 265 cases across 27 files. Frontend formatting, lint, TypeScript and
+  production build passed. Existing API exporter/generator drift checks passed in the
+  disposable review environment, feature graph validation passed (81 features), and
+  Markdown formatting plus `git diff --check` passed. No backend/schema/generated
+  contract edits were made during this corrective pass; initial-phase changes remain.
+- Browser access recovered. Representative rendered checks covered 1440 × 844,
+  1024 × 844, 1024 × 600 and 390 × 844, with the exact surface matrix in the audit.
+  Long-label Seed edit height decreased approximately 39%; expanded individual Plant
+  edit decreased 30% during review. The PlantGroup essentials editor fit 844px height.
+  Measured views had no page-wide horizontal overflow; inset selected keyboard focus
+  remained visible. Screenshots are saved in this task's visualization folder.
+  Expanded editors, populated galleries/long history and operation receipts retain
+  natural scrolling; exhaustive content/viewport combinations and operator visual
+  acceptance remain pending. The disposable project was removed without deleting
+  operator data or volumes.
+- All changes remain unstaged and uncommitted at `cd5bf70`. No feature gate, delivery,
+  push, merge or finish was run. Suppliers and deeper Reference work remain deferred.
+
+## 2026-09-30 — Scoped UI consistency polish for visual review
+
+- Implemented the reported Dashboard, Seeds, Sowings and Plants polish on
+  `feat/ui-consistency-polish`. The [implementation audit](ui-consistency-polish.md) records the
+  shared header/form/highlight rules, root causes, exact changed files and visual-review limits.
+  UX-006 remains `implemented`; the feature graph is unchanged.
+- Reused `WorkspaceIntro`, `Breadcrumbs`, `DetailHeader` and `PrimaryPhotoVisual`. Record/task
+  headers reduce repeated context, forms use aligned responsive grids, fact values align and detail
+  sections use desktop width. Sowing preview gives Open details primary emphasis. Inset result
+  focus/selection and symmetric scrolling clearance resolve the identified clipping cause.
+- Dashboard Events expose only the explicit Plant/PlantGroup target's designated primary photo,
+  through the existing batched summary helper and protected local thumbnails. External designations
+  remain neutral. No inheritance rule, migration, attachment/privacy change or unresolved domain
+  decision was introduced. Existing disclosure, validation and payload contracts remain intact.
+- Final affected frontend checks passed 87 tests across five files; the complete suite passed
+  264 tests across 27 files. Frontend lint, formatting, TypeScript and production build passed.
+  Backend focused tests passed 42 cases; Ruff formatting/lint and Event mypy checks passed. The
+  affected PostgreSQL suites passed 17 tests, including Dashboard photo designation/clearing and
+  thumbnail authorization. The first full integration run passed 357 tests and failed one exact
+  response expectation; adding the new nullable target field to that expectation resolved it.
+  No test timeout, sleep, retry, skip or runner change was introduced.
+- API drift (`make api-check`), feature graph validation (81 valid features), Markdown formatting
+  and `git diff --check` passed. Interim rendered review at 1440 × 844 covered Dashboard imagery and
+  filters plus Seeds directory/preview/overview/detail with long context; no horizontal overflow was
+  visible there. Browser access then became unavailable during host memory pressure. Final desktop,
+  tablet and mobile layouts, affected editors and selected/focused result geometry remain pending
+  operator visual review; responsive rendering is not claimed as verified. The disposable
+  `florabase-ui-review` project was removed without deleting operator data or volumes.
+- Work remains unstaged and uncommitted. No canonical feature gate, delivery, merge or finish
+  workflow was run. Suppliers and the deeper Reference redesign remain intentionally deferred.
+
 ## 2026-09-30 — Plants and Plant groups UX consistency for visual review
 
 - Refined the Plants-specific UX-006 implementation on `feat/plants-plantgroups-ux`; the feature
@@ -1586,5 +1749,5 @@ implementation detail.
   prioritized here.
 - Deliberately absent: generic thumbnails/derivatives beyond the fixed local identity-cover compact
   response, identity-cover history or galleries, automatic or
-  provider image discovery, dashboard cover rendering, PWA behavior,
+  provider image discovery, PWA behavior,
   offline/synchronization behavior, generic graphs, and multi-user collaboration.

@@ -57,6 +57,8 @@ test("offers deep contextual help without starting a reversal", async () => {
   show();
   const user = userEvent.setup();
 
+  expect(await screen.findByText("Safe to reverse")).toBeVisible();
+  await user.click(screen.getByText("Creation details"));
   await user.click(
     await screen.findByRole("button", {
       name: "Understand creation reversal",

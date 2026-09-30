@@ -182,7 +182,11 @@ function DashboardOverview() {
                 <a href="#/events">View all Events</a>
               </div>
               {state.value.recent_events.length ? (
-                <EventFeed compact events={state.value.recent_events} />
+                <EventFeed
+                  compact
+                  showTargetPhoto
+                  events={state.value.recent_events}
+                />
               ) : (
                 <div className="empty-state">
                   <p>No Events have been recorded yet.</p>

@@ -1,3 +1,7 @@
+import { SidebarResizeHandle } from "./components/SidebarResizeHandle";
+import { sidebarWidthLimit } from "./components/sidebarWidth";
+import type { CSSProperties } from "react";
+import { RecordPresentationProvider } from "./components/RecordPresentationProvider";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 import type { components } from "./api/schema";
@@ -250,6 +254,18 @@ function ApplicationShell() {
   const [moreOpen, setMoreOpen] = useState(false);
   const [navigationReset, setNavigationReset] = useState(0);
   const [navigationVisible, setNavigationVisible] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(248);
+  useEffect(() => {
+    const resize = () => {
+      setSidebarWidth((current) =>
+        Math.min(current, sidebarWidthLimit(window.innerWidth)),
+      );
+    };
+    window.addEventListener("resize", resize);
+    return () => {
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
   const showNavigationRef = useRef<HTMLButtonElement>(null);
   const hideNavigationRef = useRef<HTMLButtonElement>(null);
   const formChanged = useRef(false);
@@ -321,6 +337,9 @@ function ApplicationShell() {
   return (
     <div
       className={`application-shell${navigationVisible ? "" : " navigation-collapsed"}`}
+      style={
+        { "--sidebar-width": `${String(sidebarWidth)}px` } as CSSProperties
+      }
     >
       <aside className="desktop-sidebar" aria-label="Application sidebar">
         <div className="desktop-sidebar__content">
@@ -379,6 +398,7 @@ function ApplicationShell() {
             {state.status === "logging-out" ? "Signing out…" : "Sign out"}
           </button>
         </div>
+        <SidebarResizeHandle width={sidebarWidth} onResize={setSidebarWidth} />
       </aside>
       <section
         aria-label="Workspace content"
@@ -411,91 +431,102 @@ function ApplicationShell() {
           <span aria-hidden="true">☰</span>
           <span>Open navigation</span>
         </button>
-        <WorkspaceBoundary key={`${route.section}:${String(navigationReset)}`}>
-          <Suspense fallback={<WorkspaceLoading />}>
-            {route.section === "sowings" &&
-            route.action === "start" &&
-            route.seedLotId ? (
-              <SeedLotSowingWizard seedLotId={route.seedLotId} />
-            ) : route.section === "plants" &&
-              route.action === "from-sowing" &&
-              route.sowingId &&
-              route.creationKind ? (
-              <SowingDescendantWizard
-                sowingId={route.sowingId}
-                kind={route.creationKind}
-              />
-            ) : route.section === "dashboard" ? (
-              <DashboardScreen />
-            ) : route.section === "seeds" ? (
-              <SeedLotScreen
-                initialId={route.recordId}
-                initialTab={route.tab}
-                initialIdentityId={route.identityId}
-                startCreating={route.action === "create"}
-              />
-            ) : route.section === "sowings" ? (
-              <SowingScreen
-                initialId={route.recordId}
-                initialTab={route.tab}
-                startCreating={route.action === "create"}
-              />
-            ) : route.section === "plants" ? (
-              <PlantScreen
-                initialId={route.recordId}
-                initialKind={route.recordKind}
-                initialTypeFilter={route.recordTypeFilter}
-                initialTab={route.tab}
-                initialIdentityId={route.identityId}
-                startCreating={route.action === "create"}
-                initialCreationKind={route.creationKind}
-              />
-            ) : route.section === "events" ? (
-              <GlobalEventsScreen />
-            ) : route.section === "map" ? (
-              <Suspense
-                fallback={<p aria-live="polite">Loading provenance map…</p>}
-              >
-                <ProvenanceMapScreen />
-              </Suspense>
-            ) : route.section === "identities" ? (
-              <BotanicalIdentityScreen
-                initialId={route.recordId}
-                initialTab={route.tab}
-                startCreating={route.action === "create"}
-              />
-            ) : route.section === "suppliers" ? (
-              <SupplierScreen
-                key={route.recordId ?? "directory"}
-                initialId={route.recordId}
-                initialTab={route.tab}
-                startCreating={route.action === "create"}
-              />
-            ) : route.section === "import-export" ? (
-              <ImportExportScreen />
-            ) : route.section === "labels" ? (
-              <LabelsScreen
-                key={`${route.labelKind ?? ""}:${route.labelRecord ?? ""}`}
-                initialKind={route.labelKind}
-                initialId={route.labelRecord}
-                canonicalOrigin={state.session.canonical_origin}
-              />
-            ) : route.section === "locations" ? (
-              <LocationScreen
-                key={route.recordId ?? "directory"}
-                initialId={route.recordId}
-                startCreating={route.action === "create"}
-              />
-            ) : (
-              <GeographyScreen
-                key={route.recordId ?? route.placeId ?? "directory"}
-                initialSiteId={route.recordId}
-                initialPlaceId={route.placeId}
-                startCreating={route.action === "create"}
-              />
-            )}
-          </Suspense>
-        </WorkspaceBoundary>
+        <RecordPresentationProvider
+          key={route.section}
+          fetchIdentities={
+            route.section === "dashboard" ||
+            route.section === "events" ||
+            route.section === "sowings"
+          }
+        >
+          <WorkspaceBoundary
+            key={`${route.section}:${String(navigationReset)}`}
+          >
+            <Suspense fallback={<WorkspaceLoading />}>
+              {route.section === "sowings" &&
+              route.action === "start" &&
+              route.seedLotId ? (
+                <SeedLotSowingWizard seedLotId={route.seedLotId} />
+              ) : route.section === "plants" &&
+                route.action === "from-sowing" &&
+                route.sowingId &&
+                route.creationKind ? (
+                <SowingDescendantWizard
+                  sowingId={route.sowingId}
+                  kind={route.creationKind}
+                />
+              ) : route.section === "dashboard" ? (
+                <DashboardScreen />
+              ) : route.section === "seeds" ? (
+                <SeedLotScreen
+                  initialId={route.recordId}
+                  initialTab={route.tab}
+                  initialIdentityId={route.identityId}
+                  startCreating={route.action === "create"}
+                />
+              ) : route.section === "sowings" ? (
+                <SowingScreen
+                  initialId={route.recordId}
+                  initialTab={route.tab}
+                  startCreating={route.action === "create"}
+                />
+              ) : route.section === "plants" ? (
+                <PlantScreen
+                  initialId={route.recordId}
+                  initialKind={route.recordKind}
+                  initialTypeFilter={route.recordTypeFilter}
+                  initialTab={route.tab}
+                  initialIdentityId={route.identityId}
+                  startCreating={route.action === "create"}
+                  initialCreationKind={route.creationKind}
+                />
+              ) : route.section === "events" ? (
+                <GlobalEventsScreen />
+              ) : route.section === "map" ? (
+                <Suspense
+                  fallback={<p aria-live="polite">Loading provenance map…</p>}
+                >
+                  <ProvenanceMapScreen />
+                </Suspense>
+              ) : route.section === "identities" ? (
+                <BotanicalIdentityScreen
+                  initialId={route.recordId}
+                  initialTab={route.tab}
+                  startCreating={route.action === "create"}
+                />
+              ) : route.section === "suppliers" ? (
+                <SupplierScreen
+                  key={route.recordId ?? "directory"}
+                  initialId={route.recordId}
+                  initialTab={route.tab}
+                  startCreating={route.action === "create"}
+                />
+              ) : route.section === "import-export" ? (
+                <ImportExportScreen />
+              ) : route.section === "labels" ? (
+                <LabelsScreen
+                  key={`${route.labelKind ?? ""}:${route.labelRecord ?? ""}`}
+                  initialKind={route.labelKind}
+                  initialId={route.labelRecord}
+                  canonicalOrigin={state.session.canonical_origin}
+                />
+              ) : route.section === "locations" ? (
+                <LocationScreen
+                  key={route.recordId ?? "directory"}
+                  initialId={route.recordId}
+                  startCreating={route.action === "create"}
+                />
+              ) : (
+                <GeographyScreen
+                  key={route.recordId ?? route.placeId ?? "directory"}
+                  initialSiteId={route.recordId}
+                  initialPlaceId={route.placeId}
+                  startCreating={route.action === "create"}
+                />
+              )}
+            </Suspense>
+          </WorkspaceBoundary>
+        </RecordPresentationProvider>
         {state.status === "logout-failed" && (
           <div className="notice notice--error" role="alert">
             <p>{state.message}</p>

@@ -1,3 +1,10 @@
+import { firstValidationField } from "../components/formValidation";
+import { FormSections } from "../components/FormSections";
+import {
+  sowingFormPanels,
+  sowingErrorFields,
+} from "../sowings/SowingFormFields";
+import { useRecordName } from "../components/recordPresentation";
 import {
   useEffect,
   useMemo,
@@ -9,13 +16,7 @@ import {
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { Breadcrumbs } from "../components/CollectionUI";
-import { FieldHelp } from "../components/ContextualHelp";
-import {
-  listLocations,
-  locationsForScope,
-  type LocationResponse,
-} from "../locations/api";
-import { PartialDateField } from "../seed-lots/PartialDateField";
+import { listLocations, type LocationResponse } from "../locations/api";
 import {
   createSowingFromSeedLot,
   listSeedLots,
@@ -89,6 +90,8 @@ function quantityText(lot: SeedLotResponse): string {
 
 export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
   const auth = useAuth();
+  const recordName = useRecordName();
+
   const [data, setData] = useState<
     | { status: "loading" }
     | { status: "error" }
@@ -99,6 +102,11 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
   const [usage, setUsage] = useState<UsageMode>("none");
   const [remainder, setRemainder] = useState("");
   const [messages, setMessages] = useState<string[]>([]);
+  const [validationField, setValidationField] = useState<string | undefined>();
+  const sectionError = useMemo(
+    () => (messages.length ? { messages, field: validationField } : undefined),
+    [messages, validationField],
+  );
   const [pending, setPending] = useState(false);
   const feedback = useRef<HTMLDivElement>(null);
 
@@ -198,6 +206,7 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
   }
 
   function continueToUsage() {
+    setValidationField(undefined);
     const errors = validateDetails();
     if (errors.length) {
       setMessages(errors);
@@ -212,6 +221,10 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     if (pending) return;
+    if (stage === 1) {
+      continueToUsage();
+      return;
+    }
     const errors: string[] = [];
     if (usage === "partial" && preview?.oversubscribed)
       errors.push("The Sowing quantity exceeds the exact quantity available.");
@@ -257,6 +270,7 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
             };
     setPending(true);
     setMessages([]);
+    setValidationField(undefined);
     try {
       const result = await createSowingFromSeedLot(
         lot.id,
@@ -286,6 +300,12 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
       );
       window.location.hash = `/sowings/${result.sowing.id}`;
     } catch (error: unknown) {
+      if (error instanceof ApiError && error.status === 422) {
+        setValidationField(firstValidationField(error));
+        const field = firstValidationField(error);
+        if (field?.startsWith("sowing_")) setStage(1);
+      }
+
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();
       else if (error instanceof ApiError && error.status === 409)
@@ -316,7 +336,7 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
             label: lot.botanical_identity.display_label,
             href: `#/identities/${lot.botanical_identity.id}?tab=seeds`,
           },
-          { label: lot.label ?? "SeedLot", href: `#/seeds/${lot.id}` },
+          { label: recordName(lot, "SeedLot"), href: `#/seeds/${lot.id}` },
           { label: "Start sowing" },
         ]}
       />
@@ -339,7 +359,7 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
             <dt>Lot</dt>
             <dd>
               <a href={`#/seeds/${lot.id}`}>
-                {lot.label ?? "Unlabelled seed lot"}
+                {recordName(lot, "Unlabelled seed lot")}
               </a>
             </dd>
           </div>
@@ -371,190 +391,37 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
         {stage === 1 ? (
           <>
             <h3>Sowing details</h3>
-            <div className="guided-form-grid">
-              <div className="field">
-                <label htmlFor="guided-sowing-label">
-                  Label <span className="optional">(optional)</span>
-                </label>
-                <input
-                  id="guided-sowing-label"
-                  value={form.label}
-                  onChange={(event) => {
-                    update("label", event.currentTarget.value);
-                  }}
-                />
-              </div>
-              <PartialDateField
-                id="guided-sowing-date"
-                label="Sowing date (optional)"
-                value={form.sowingDate}
-                disabled={pending}
-                onChange={(value) => {
-                  update("sowingDate", value);
-                }}
-              />
-              <fieldset
-                aria-describedby="guided-sowing-quantity-help"
-                className="quantity-field"
-              >
-                <legend>Quantity sown</legend>
-                <div className="field">
-                  <label htmlFor="guided-quantity-kind">Kind</label>
-                  <select
-                    id="guided-quantity-kind"
-                    value={form.quantityKind}
-                    onChange={(event) => {
-                      update(
-                        "quantityKind",
-                        event.currentTarget.value as QuantityKind,
-                      );
-                    }}
-                  >
-                    <option value="unknown">Unknown</option>
-                    <option value="seed_count">Seed count</option>
-                    <option value="weight">Weight</option>
-                  </select>
-                </div>
-                {form.quantityKind !== "unknown" && (
-                  <>
-                    <div className="field">
-                      <label htmlFor="guided-quantity-value">Amount</label>
-                      <input
-                        id="guided-quantity-value"
-                        inputMode="decimal"
-                        value={form.quantityValue}
-                        onChange={(event) => {
-                          update("quantityValue", event.currentTarget.value);
-                        }}
-                      />
-                    </div>
-                    {form.quantityKind === "weight" && (
-                      <div className="field">
-                        <label htmlFor="guided-quantity-unit">Unit</label>
-                        <select
-                          id="guided-quantity-unit"
-                          value={form.quantityUnit}
-                          onChange={(event) => {
-                            update(
-                              "quantityUnit",
-                              event.currentTarget.value as "g" | "mg",
-                            );
-                          }}
-                        >
-                          <option value="g">g</option>
-                          <option value="mg">mg</option>
-                        </select>
-                      </div>
-                    )}
-                    <label className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={form.quantityApproximate}
-                        onChange={(event) => {
-                          update(
-                            "quantityApproximate",
-                            event.currentTarget.checked,
-                          );
-                        }}
-                      />
-                      Approximate
-                    </label>
-                  </>
-                )}
-                <FieldHelp id="guided-sowing-quantity-help">
-                  Keep count and weight as distinct measurements. Mark an
-                  estimate as approximate, or choose Unknown rather than
-                  guessing.
-                </FieldHelp>
-              </fieldset>
-              <div className="field">
-                <label htmlFor="guided-location">
-                  Current location <span className="optional">(optional)</span>
-                </label>
-                <select
-                  aria-describedby="guided-sowing-location-help"
-                  id="guided-location"
-                  value={form.locationId}
-                  onChange={(event) => {
-                    update("locationId", event.currentTarget.value);
-                  }}
+            <FormSections
+              disabled={pending}
+              error={sectionError}
+              errorFields={sowingErrorFields}
+              panels={sowingFormPanels({
+                form,
+                updateForm: update,
+                locations,
+                pending,
+                source: (
+                  <div className="field">
+                    <span className="field-label">Source SeedLot</span>
+                    <strong>{recordName(lot, "SeedLot")}</strong>
+                    <small>Locked to the source above.</small>
+                  </div>
+                ),
+              })}
+              submit={
+                <button type="button" onClick={continueToUsage}>
+                  Review seed usage
+                </button>
+              }
+              cancel={
+                <a
+                  className="button-link button--secondary"
+                  href={`#/seeds/${lot.id}`}
                 >
-                  <option value="">Not recorded</option>
-                  {locationsForScope(locations, "sowings").map((location) => (
-                    <option
-                      key={location.id}
-                      value={location.id}
-                      disabled={Boolean(location.retired_at)}
-                    >
-                      {location.display_path}
-                    </option>
-                  ))}
-                </select>
-                <FieldHelp id="guided-sowing-location-help">
-                  Where this Sowing is currently kept in your collection, not
-                  where its biological material originated.
-                </FieldHelp>
-              </div>
-              {(
-                [
-                  ["methodContainer", "Method / container"],
-                  ["substrate", "Substrate"],
-                  ["pretreatment", "Pretreatment"],
-                  ["environment", "Environment / conditions"],
-                ] as const
-              ).map(([key, label]) => (
-                <div className="field" key={key}>
-                  <label htmlFor={`guided-${key}`}>
-                    {label} <span className="optional">(optional)</span>
-                  </label>
-                  <input
-                    id={`guided-${key}`}
-                    value={form[key]}
-                    onChange={(event) => {
-                      update(key, event.currentTarget.value);
-                    }}
-                  />
-                </div>
-              ))}
-              <div className="field">
-                <label htmlFor="guided-temperature-min">
-                  Minimum °C <span className="optional">(optional)</span>
-                </label>
-                <input
-                  id="guided-temperature-min"
-                  inputMode="decimal"
-                  value={form.temperatureMinC}
-                  onChange={(event) => {
-                    update("temperatureMinC", event.currentTarget.value);
-                  }}
-                />
-              </div>
-              <div className="field">
-                <label htmlFor="guided-temperature-max">
-                  Maximum °C <span className="optional">(optional)</span>
-                </label>
-                <input
-                  id="guided-temperature-max"
-                  inputMode="decimal"
-                  value={form.temperatureMaxC}
-                  onChange={(event) => {
-                    update("temperatureMaxC", event.currentTarget.value);
-                  }}
-                />
-              </div>
-              <div className="field field--full">
-                <label htmlFor="guided-notes">
-                  Notes <span className="optional">(optional)</span>
-                </label>
-                <textarea
-                  id="guided-notes"
-                  value={form.notes}
-                  onChange={(event) => {
-                    update("notes", event.currentTarget.value);
-                  }}
-                />
-              </div>
-            </div>
+                  Cancel
+                </a>
+              }
+            />
             {messages.length > 0 && (
               <div className="notice notice--error" role="alert">
                 <ul>
@@ -564,17 +431,6 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
                 </ul>
               </div>
             )}
-            <div className="actions">
-              <button type="button" onClick={continueToUsage}>
-                Review seed usage
-              </button>
-              <a
-                className="button-link button--secondary"
-                href={`#/seeds/${lot.id}`}
-              >
-                Cancel
-              </a>
-            </div>
           </>
         ) : (
           <>
@@ -695,8 +551,8 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
             <div className="seed-sowing-confirmation" role="status">
               <strong>Before you start</strong>
               <p>
-                A new Sowing will be recorded for {lot.label ?? "this seed lot"}
-                .
+                A new Sowing will be recorded for{" "}
+                {recordName(lot, "this seed lot")}.
               </p>
               <p>
                 {usage === "none"

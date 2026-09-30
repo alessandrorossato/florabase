@@ -6,20 +6,29 @@ export function PrimaryPhotoVisual({
   photo,
   label,
   compact = false,
+  fallback = "label",
 }: {
   photo: PrimaryPhoto | null;
   label: string;
   compact?: boolean;
+  fallback?: "label" | "omit" | "neutral";
 }) {
   const [brokenPhotoId, setBrokenPhotoId] = useState<string | null>(null);
   const broken = brokenPhotoId === photo?.photo_id;
-  if (!photo) return null;
+  const neutral = (
+    <span className="primary-photo-placeholder" aria-hidden="true" />
+  );
+  if (!photo) return fallback === "neutral" ? neutral : null;
   if (photo.kind === "external")
-    return (
+    return fallback === "neutral" ? (
+      neutral
+    ) : fallback === "omit" ? null : (
       <span className="primary-photo-fallback">External primary photo</span>
     );
   if (broken || !photo.thumbnail_url)
-    return (
+    return fallback === "neutral" ? (
+      neutral
+    ) : fallback === "omit" ? null : (
       <span className="primary-photo-fallback">Primary photo unavailable</span>
     );
   return (

@@ -40,3 +40,41 @@ test("no primary has no image or inferred fallback", () => {
   );
   expect(container).toBeEmptyDOMElement();
 });
+
+test.each([
+  null,
+  { kind: "external" as const, photo_id: "external", thumbnail_url: null },
+])(
+  "neutral directory slot never loads an absent or external image",
+  (photo) => {
+    const { container } = render(
+      <PrimaryPhotoVisual
+        photo={photo}
+        label="Record"
+        compact
+        fallback="neutral"
+      />,
+    );
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(container.querySelector("[aria-hidden=true]")).toBeInTheDocument();
+    expect(container).not.toHaveTextContent("External primary photo");
+  },
+);
+
+test("failed local directory thumbnail keeps its neutral slot", () => {
+  const { container } = render(
+    <PrimaryPhotoVisual
+      photo={{
+        kind: "local",
+        photo_id: "local",
+        thumbnail_url: "/api/v1/photos/local/thumbnail",
+      }}
+      label="Record"
+      compact
+      fallback="neutral"
+    />,
+  );
+  fireEvent.error(screen.getByRole("img"));
+  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  expect(container.querySelector("[aria-hidden=true]")).toBeInTheDocument();
+});
