@@ -1,5 +1,47 @@
 # Engineering progress
 
+## 2026-09-30 — Plants and Plant groups UX consistency for visual review
+
+- Refined the Plants-specific UX-006 implementation on `feat/plants-plantgroups-ux`; the feature
+  graph remains unchanged and UX-006 remains `implemented`. The
+  [audit and review notes](plants-plantgroups-ux.md) record findings, decisions, domain boundaries,
+  rendered coverage and scoped follow-ups.
+- Directory rows now prioritize identity, lifecycle and tracking type, with group-only exact,
+  approximate or unknown quantity and wrapping recorded context. Designated collection photos also
+  appear in the established desktop Quick Preview. Open details leads inspection; Edit leads normal
+  correction, while extraction and whole-record transfer are secondary collection operations.
+- Detail separates record summary, managed group, origin/provenance, notes and explicit extracted-Plant
+  history. History uses only stored group origin and retains Reintegrated Plants without inferring
+  current membership. Historical location/quantity labels describe retained facts; historical records
+  do not show empty current-operation sections. Existing Events, Photos, Lineage, receipt reintegration
+  and creation-reversal contracts remain intact.
+- Both entry types put identity, label, group-only quantity and location in Essentials. Additional
+  details retains mounted values, editing starts expanded, validation exposes corrective fields and
+  focuses visible feedback, and final submit/Cancel actions follow the fields. Creation and structural
+  dialog focus return behavior is covered. No shared component, backend, API, migration, dependency
+  or persistence contract changed; the added styles are scoped to Plants.
+- Live production-runtime review used only a separate disposable `florabase-ux-review` Compose
+  project. Inspected 1440 × 844, 1024 × 844, 390 × 844 and 1024 × 600: populated and single-record
+  directories, no-match/empty states, long botanical names/location paths, sparse records, landscape
+  and portrait primary photos, disclosure, detail and dialogs. No horizontal overflow was observed.
+  Exercised Plant creation/edit/location correction, movement Event and protected Photos; group
+  creation with unknown quantity, approximate/exact edits, extraction and receipt reintegration,
+  retained relationship history and authoritative Events. The review project was removed without
+  volume-deletion commands; operator projects and data were preserved.
+- The affected suite (`pnpm exec vitest run --configLoader runner src/plants/PlantScreen.test.tsx`)
+  passed 38 tests; `pnpm test` passed 260 tests across 26 files using the repository's existing runner
+  configuration. Thirteen behavioral cases were added
+  for disclosure/value retention, quantities, sparse identity, stored extraction links, primary-photo
+  privacy, historical facts and focus/validation. An overlapping test/lint attempt failed under host
+  memory pressure; final tests passed with checks separated. Timeouts, runner settings, retries and
+  skip behavior were not changed.
+- Frontend `pnpm lint`, `pnpm format:check`, `pnpm typecheck` and `pnpm build` passed, as did
+  Prettier checks for both changed Markdown documents. API drift (`make api-check`),
+  `python3 scripts/check-features.py` (81 valid features) and `git diff --check` passed. The
+  implementation is unstaged and uncommitted for independent visual review; no `feature-deliver` or
+  `feature-finish` workflow was run. Suppliers and Reference remain candidates for their separate
+  consistency passes.
+
 ## 2026-09-29 — independent shell and propagation UX QA
 
 - Independently swept Dashboard, Seeds, Sowings, Plants and Plant groups, Suppliers, Botanical
@@ -182,8 +224,8 @@ implementation detail.
 - Focused frontend checks passed: 81 App/Labels cases on the final code. `make check` passed backend and
   frontend formatting, lint and type checks, 425 backend unit tests, 232 frontend tests, and API
   drift. The existing pytest-cov 89.82% warning still prints against a whole-percent 90% setting,
-  while pytest and the canonical `make check` exit successfully as explained in PERF-001. `pnpm
-  build`, feature graph validation (81 features), and whitespace checks passed. The production build
+  while pytest and the canonical `make check` exit successfully as explained in PERF-001.
+  `pnpm build`, feature graph validation (81 features), and whitespace checks passed. The production build
   retains 39 JavaScript chunks: 760,191 raw bytes total versus PERF-001's 759,387; largest chunk
   208,208 versus 207,746 bytes, with no Vite size advisory. CSS grows to 110,231 raw bytes from the
   documented 100,981 because the shared viewport layouts are new. No dependency or eager route/map
