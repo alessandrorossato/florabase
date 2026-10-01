@@ -9,18 +9,20 @@ from uuid import UUID, uuid7
 
 from fastapi import UploadFile
 from PIL import Image, ImageOps, UnidentifiedImageError
-from sqlalchemy import Select, select
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, contains_eager
 from sqlalchemy.sql.elements import ColumnElement
 
 from florabase.attachments.model import Attachment, AttachmentState
-from florabase.attachments.storage import AttachmentStorage, AttachmentStorageError, StoredUpload
+from florabase.attachments.storage import AttachmentStorage, AttachmentStorageError
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.collection_photos.model import (
     BotanicalIdentityCoverImage,
     ExternalImageReference,
     LocalCollectionPhoto,
+    MediaAsset,
+    RecordMediaLink,
 )
 from florabase.collection_photos.schemas import (
     ExternalCoverResponse,
@@ -36,7 +38,9 @@ from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import Sowing
 
 TargetType = Literal["seed_lot", "sowing", "plant", "plant_group", "event"]
-TARGET_MODELS = {
+TARGET_MODELS: dict[
+    str, tuple[type[SeedLot] | type[Sowing] | type[Plant] | type[PlantGroup] | type[Event], str]
+] = {
     "seed_lot": (SeedLot, "seed_lot_id"),
     "sowing": (Sowing, "sowing_id"),
     "plant": (Plant, "plant_id"),
@@ -77,6 +81,8 @@ def local_response(photo: LocalCollectionPhoto, attachment: Attachment) -> Local
     return LocalPhotoResponse(
         id=photo.id,
         attachment_id=attachment.id,
+        media_asset_id=photo.media_asset_id,
+        display_order=photo.display_order or 0,
         original_filename=attachment.original_filename,
         media_type=cast(Literal["image/jpeg", "image/png", "image/webp"], attachment.media_type),
         caption=photo.caption,
@@ -94,19 +100,22 @@ def list_photos(
     require_target(database, target_type, target_id)
     local_rows = database.execute(
         select(LocalCollectionPhoto, Attachment)
-        .join(Attachment, Attachment.id == LocalCollectionPhoto.attachment_id)
+        .join(MediaAsset, MediaAsset.id == LocalCollectionPhoto.media_asset_id)
+        .options(contains_eager(LocalCollectionPhoto.media_asset))
+        .join(Attachment, Attachment.id == MediaAsset.attachment_id)
         .where(_target_filter(LocalCollectionPhoto, target_type, target_id))
     ).all()
     external = database.scalars(
-        select(ExternalImageReference).where(
-            _target_filter(ExternalImageReference, target_type, target_id)
-        )
+        select(ExternalImageReference)
+        .join(MediaAsset, MediaAsset.id == ExternalImageReference.media_asset_id)
+        .options(contains_eager(ExternalImageReference.media_asset))
+        .where(_target_filter(ExternalImageReference, target_type, target_id))
     ).all()
     combined: list[LocalPhotoResponse | ExternalImageReference] = [
         *(local_response(photo, attachment) for photo, attachment in local_rows),
         *external,
     ]
-    return sorted(combined, key=lambda item: (item.created_at, item.id))
+    return sorted(combined, key=lambda item: (item.display_order, item.created_at, item.id))
 
 
 async def upload_local_photo(
@@ -117,49 +126,61 @@ async def upload_local_photo(
     upload: UploadFile,
     metadata: PhotoMetadataWrite,
 ) -> LocalPhotoResponse:
-    require_target(database, target_type, target_id)
-    stored = await storage.store_upload(upload)
-    attachment = Attachment(
-        id=uuid7(),
-        storage_key=stored.storage_key,
-        original_filename=stored.original_filename,
-        media_type=stored.media_type,
-        byte_size=stored.byte_size,
-        sha256=stored.sha256,
-        state=AttachmentState.ACTIVE,
-    )
-    photo = LocalCollectionPhoto(
-        id=uuid7(),
-        attachment_id=attachment.id,
-        caption=metadata.caption,
-        attribution=metadata.attribution,
-        **_target_values(target_type, target_id),
-    )
+    from florabase.media.schemas import AssetMetadataWrite
+    from florabase.media.service import upload_asset
+
     try:
-        database.add_all([attachment, photo])
-        database.commit()
+        asset = await upload_asset(
+            database,
+            storage,
+            upload,
+            AssetMetadataWrite(attribution=metadata.attribution),
+            target=target_type,
+            target_id=target_id,
+            caption=metadata.caption,
+        )
+    except AttachmentStorageError, CollectionPhotoError:
+        raise
     except Exception as error:
-        database.rollback()
-        with suppress(OSError):
-            stored.path.unlink(missing_ok=True)
         raise CollectionPhotoError(
-            "photo_metadata_write_failed", "Could not persist the uploaded photo relationship"
+            "photo_metadata_write_failed", "Could not persist the uploaded media and record link"
         ) from error
+    photo = database.scalar(
+        select(LocalCollectionPhoto)
+        .where(LocalCollectionPhoto.media_asset_id == asset.id)
+        .options(contains_eager(LocalCollectionPhoto.media_asset))
+        .join(MediaAsset, MediaAsset.id == LocalCollectionPhoto.media_asset_id)
+    )
+    attachment = database.get(Attachment, asset.attachment_id)
+    assert photo is not None
+    assert attachment is not None
     return local_response(photo, attachment)
 
 
 def create_external_image(
-    database: Session,
-    target_type: TargetType,
-    target_id: UUID,
-    payload: ExternalImageWrite,
+    database: Session, target_type: TargetType, target_id: UUID, payload: ExternalImageWrite
 ) -> ExternalImageReference:
-    require_target(database, target_type, target_id)
-    reference = ExternalImageReference(
-        id=uuid7(), **payload.model_dump(), **_target_values(target_type, target_id)
+    from florabase.media.schemas import ExternalAssetCreate
+    from florabase.media.service import create_external_asset
+
+    asset = create_external_asset(
+        database,
+        ExternalAssetCreate(
+            image_url=payload.image_url,
+            source_url=payload.source_url,
+            attribution=payload.attribution,
+        ),
+        target=target_type,
+        target_id=target_id,
+        caption=payload.caption,
     )
-    database.add(reference)
-    database.commit()
+    reference = database.scalar(
+        select(ExternalImageReference)
+        .join(MediaAsset, MediaAsset.id == ExternalImageReference.media_asset_id)
+        .options(contains_eager(ExternalImageReference.media_asset))
+        .where(ExternalImageReference.media_asset_id == asset.id)
+    )
+    assert reference is not None
     return reference
 
 
@@ -168,14 +189,21 @@ def get_local_photo(
 ) -> tuple[LocalCollectionPhoto, Attachment] | None:
     row = database.execute(
         select(LocalCollectionPhoto, Attachment)
-        .join(Attachment, Attachment.id == LocalCollectionPhoto.attachment_id)
+        .join(MediaAsset, MediaAsset.id == LocalCollectionPhoto.media_asset_id)
+        .options(contains_eager(LocalCollectionPhoto.media_asset))
+        .join(Attachment, Attachment.id == MediaAsset.attachment_id)
         .where(LocalCollectionPhoto.id == photo_id)
     ).one_or_none()
     return None if row is None else (row[0], row[1])
 
 
 def get_external_image(database: Session, reference_id: UUID) -> ExternalImageReference | None:
-    return database.get(ExternalImageReference, reference_id)
+    return database.scalar(
+        select(ExternalImageReference)
+        .join(MediaAsset, MediaAsset.id == ExternalImageReference.media_asset_id)
+        .options(contains_eager(ExternalImageReference.media_asset))
+        .where(ExternalImageReference.id == reference_id)
+    )
 
 
 def update_local_photo(
@@ -184,115 +212,89 @@ def update_local_photo(
     attachment: Attachment,
     payload: PhotoMetadataWrite,
 ) -> LocalPhotoResponse:
-    if attachment.state != AttachmentState.ACTIVE:
-        raise CollectionPhotoError(
-            "photo_deletion_pending", "This photo is pending deletion and can only be retried"
-        )
-    photo.caption = payload.caption
-    photo.attribution = payload.attribution
-    photo.updated_at = datetime.now(UTC)
+    from florabase.media.service import locked_link, require_active
+
+    locked = locked_link(database, photo.id)
+    if locked is None or not isinstance(locked, LocalCollectionPhoto):
+        raise CollectionPhotoError("primary_photo_not_found", "Collection photo not found")
+    require_active(database, locked.media_asset)
+    if payload.display_order is not None:
+        locked.display_order = payload.display_order
+    locked.caption = payload.caption
+    locked.attribution = payload.attribution
+    locked.updated_at = datetime.now(UTC)
     database.commit()
-    return local_response(photo, attachment)
+    return local_response(locked, attachment)
 
 
 def update_external_image(
     database: Session, reference: ExternalImageReference, payload: ExternalImageWrite
 ) -> ExternalImageReference:
+    from florabase.media.service import MediaError, locked_link, reference_counts, require_active
+
+    locked = locked_link(database, reference.id)
+    if not isinstance(locked, ExternalImageReference):
+        raise MediaError("media_link_not_found", "Media link not found", 404)
+    require_active(database, locked.media_asset)
+    if reference_counts(database, locked.media_asset_id)[1] and (
+        payload.image_url != locked.image_url or payload.source_url != locked.source_url
+    ):
+        raise MediaError(
+            "cover_privacy_requires_replacement",
+            "This media is used as an identity cover. Replace the cover with a newly "
+            "approved external reference to change its URLs.",
+        )
     for field, value in payload.model_dump().items():
-        setattr(reference, field, value)
-    reference.updated_at = datetime.now(UTC)
+        if field != "display_order" or value is not None:
+            setattr(locked, field, value)
+    locked.updated_at = datetime.now(UTC)
     database.commit()
-    return reference
+    return locked
 
 
 def delete_local_photo(database: Session, storage: AttachmentStorage, photo_id: UUID) -> bool:
-    from florabase.collection_photos.primary import clear_photo_primary
+    from florabase.media.service import unlink
 
-    row = database.execute(
-        select(LocalCollectionPhoto, Attachment)
-        .join(Attachment, Attachment.id == LocalCollectionPhoto.attachment_id)
-        .where(LocalCollectionPhoto.id == photo_id)
-        .with_for_update()
-    ).one_or_none()
-    if row is None:
-        return False
-    photo, attachment = row
-    was_active = attachment.state == AttachmentState.ACTIVE
-    if was_active:
-        clear_photo_primary(database, "local", photo_id)
-        attachment.state = AttachmentState.PENDING_DELETE
-        try:
-            database.commit()
-        except SQLAlchemyError as error:
-            database.rollback()
-            raise CollectionPhotoError(
-                "photo_delete_state_failed", "Could not begin photo deletion"
-            ) from error
-    try:
-        removed = storage.delete_file(attachment.storage_key)
-    except AttachmentStorageError:
-        raise
-    if was_active and not removed:
-        raise CollectionPhotoError(
-            "attachment_content_missing",
-            "Photo content was already missing; deletion is pending a retry",
-        )
-    try:
-        clear_photo_primary(database, "local", photo_id)
-        database.delete(photo)
-        database.flush()
-        database.delete(attachment)
-        database.commit()
-    except SQLAlchemyError as error:
-        database.rollback()
-        raise CollectionPhotoError(
-            "photo_metadata_delete_failed",
-            "Photo content is gone but relationship cleanup must be retried",
-        ) from error
-    return True
+    return unlink(database, photo_id)
 
 
 def delete_external_image(database: Session, reference: ExternalImageReference) -> None:
-    from florabase.collection_photos.primary import clear_photo_primary
+    from florabase.media.service import unlink
 
-    database.scalar(
-        select(ExternalImageReference)
-        .where(ExternalImageReference.id == reference.id)
-        .with_for_update()
-    )
-    clear_photo_primary(database, "external", reference.id)
-    database.delete(reference)
-    database.commit()
+    unlink(database, reference.id)
 
 
 def target_photo_count(database: Session, target_type: TargetType, target_id: UUID) -> int:
-    local = database.scalars(
-        select(LocalCollectionPhoto.id).where(
-            _target_filter(LocalCollectionPhoto, target_type, target_id)
+    from sqlalchemy import func
+
+    return int(
+        database.scalar(
+            select(func.count())
+            .select_from(RecordMediaLink)
+            .where(getattr(RecordMediaLink, TARGET_MODELS[target_type][1]) == target_id)
         )
-    ).all()
-    external = database.scalars(
-        select(ExternalImageReference.id).where(
-            _target_filter(ExternalImageReference, target_type, target_id)
-        )
-    ).all()
-    return len(local) + len(external)
+        or 0
+    )
 
 
 def attachment_has_photo(database: Session, attachment_id: UUID) -> bool:
-    statement: Select[tuple[UUID]] = select(LocalCollectionPhoto.id).where(
-        LocalCollectionPhoto.attachment_id == attachment_id
+    return (
+        database.scalar(
+            select(RecordMediaLink.id)
+            .join(MediaAsset, MediaAsset.id == RecordMediaLink.media_asset_id)
+            .where(MediaAsset.attachment_id == attachment_id)
+        )
+        is not None
     )
-    return database.scalar(statement) is not None
 
 
 def attachment_image_owner(database: Session, attachment_id: UUID) -> str | None:
     if attachment_has_photo(database, attachment_id):
         return "collection_photo"
     cover = database.scalar(
-        select(BotanicalIdentityCoverImage.id).where(
-            BotanicalIdentityCoverImage.attachment_id == attachment_id
-        )
+        select(BotanicalIdentityCoverImage.id)
+        .join(MediaAsset, MediaAsset.id == BotanicalIdentityCoverImage.media_asset_id)
+        .where(MediaAsset.attachment_id == attachment_id)
     )
     return "botanical_identity_cover" if cover is not None else None
 
@@ -314,7 +316,9 @@ def get_identity_cover(
 ) -> tuple[BotanicalIdentityCoverImage, Attachment | None] | None:
     statement = (
         select(BotanicalIdentityCoverImage, Attachment)
-        .outerjoin(Attachment, Attachment.id == BotanicalIdentityCoverImage.attachment_id)
+        .join(MediaAsset, MediaAsset.id == BotanicalIdentityCoverImage.media_asset_id)
+        .options(contains_eager(BotanicalIdentityCoverImage.media_asset))
+        .outerjoin(Attachment, Attachment.id == MediaAsset.attachment_id)
         .where(BotanicalIdentityCoverImage.botanical_identity_id == botanical_identity_id)
     )
     if lock:
@@ -334,6 +338,7 @@ def cover_response(
         active = attachment.state == AttachmentState.ACTIVE
         return LocalCoverResponse(
             id=cover.id,
+            media_asset_id=cover.media_asset_id,
             attachment_id=attachment.id,
             original_filename=attachment.original_filename,
             media_type=cast(
@@ -349,7 +354,11 @@ def cover_response(
             "cover_external_metadata_missing", "The external cover metadata is incomplete"
         )
     return ExternalCoverResponse(
+        content_url=cover.content_url,
+        thumbnail_url=cover.thumbnail_url,
+        fetched_at=cover.fetched_at,
         id=cover.id,
+        media_asset_id=cover.media_asset_id,
         image_url=cover.image_url,
         source_url=cover.source_url,
         attribution=cover.attribution,
@@ -373,7 +382,7 @@ def local_identity_cover_attachment(
 ) -> Attachment | None:
     require_botanical_identity(database, botanical_identity_id)
     row = get_identity_cover(database, botanical_identity_id)
-    if row is None or row[0].source_mode != "local":
+    if row is None or row[0].attachment_id is None:
         return None
     cover, attachment = row
     if attachment is None or cover.attachment_id is None:
@@ -414,104 +423,40 @@ def render_identity_cover_thumbnail(path: Path) -> bytes:
         ) from error
 
 
-def _new_attachment(stored: StoredUpload) -> Attachment:
-    return Attachment(
-        id=uuid7(),
-        storage_key=stored.storage_key,
-        original_filename=stored.original_filename,
-        media_type=stored.media_type,
-        byte_size=stored.byte_size,
-        sha256=stored.sha256,
-        state=AttachmentState.ACTIVE,
-    )
-
-
-def _remove_stored_upload(stored: StoredUpload) -> None:
-    with suppress(OSError):
-        stored.path.unlink(missing_ok=True)
-
-
-def _begin_cover_attachment_delete(database: Session, attachment: Attachment) -> bool:
-    was_active = attachment.state == AttachmentState.ACTIVE
-    if was_active:
-        attachment.state = AttachmentState.PENDING_DELETE
-        try:
-            database.commit()
-        except SQLAlchemyError as error:
-            database.rollback()
-            raise CollectionPhotoError(
-                "cover_delete_state_failed", "Could not begin local cover deletion"
-            ) from error
-    return was_active
-
-
-def _unlink_cover_attachment(
-    storage: AttachmentStorage, attachment: Attachment, was_active: bool
-) -> None:
-    removed = storage.delete_file(attachment.storage_key)
-    if was_active and not removed:
-        raise CollectionPhotoError(
-            "attachment_content_missing",
-            "Cover content was already missing; cleanup is pending a retry",
-        )
-
-
 async def set_local_identity_cover(
-    database: Session,
-    storage: AttachmentStorage,
-    botanical_identity_id: UUID,
-    upload: UploadFile,
+    database: Session, storage: AttachmentStorage, botanical_identity_id: UUID, upload: UploadFile
 ) -> LocalCoverResponse:
+    from florabase.media.schemas import AssetMetadataWrite
+    from florabase.media.service import upload_asset
+
     require_botanical_identity(database, botanical_identity_id, lock=True)
-    stored = await storage.store_upload(upload)
-    new_attachment = _new_attachment(stored)
     row = get_identity_cover(database, botanical_identity_id, lock=True)
-    cover = row[0] if row is not None else None
-    old_attachment = row[1] if row is not None else None
-
-    if cover is not None and cover.source_mode == "local":
-        if old_attachment is None:
-            _remove_stored_upload(stored)
-            raise CollectionPhotoError(
-                "cover_attachment_missing", "The local cover attachment metadata is missing"
-            )
-        was_active = _begin_cover_attachment_delete(database, old_attachment)
-        try:
-            _unlink_cover_attachment(storage, old_attachment, was_active)
-        except Exception:
-            _remove_stored_upload(stored)
-            raise
-
+    asset = await upload_asset(database, storage, upload, AssetMetadataWrite(), commit=False)
+    new_attachment = database.get(Attachment, asset.attachment_id)
+    assert new_attachment is not None
+    new_storage_key = new_attachment.storage_key
     try:
-        database.add(new_attachment)
-        if cover is None:
-            cover = BotanicalIdentityCoverImage(
-                id=uuid7(),
-                botanical_identity_id=botanical_identity_id,
-                source_mode="local",
-                attachment_id=new_attachment.id,
+        cover = (
+            row[0]
+            if row
+            else BotanicalIdentityCoverImage(
+                id=uuid7(), botanical_identity_id=botanical_identity_id
             )
-            database.add(cover)
-        else:
-            cover.source_mode = "local"
-            cover.attachment_id = new_attachment.id
-            cover.image_url = None
-            cover.source_url = None
-            cover.attribution = None
-            cover.licence_label = None
-            cover.licence_url = None
-            cover.updated_at = datetime.now(UTC)
-            database.flush()
-            if old_attachment is not None:
-                database.delete(old_attachment)
+        )
+        cover.source_mode = "local"
+        cover.media_asset = asset
+        cover.updated_at = datetime.now(UTC)
+        database.add(cover)
         database.commit()
     except Exception as error:
         database.rollback()
-        _remove_stored_upload(stored)
+        with suppress(AttachmentStorageError):
+            storage.delete_file(new_storage_key)
         raise CollectionPhotoError(
-            "cover_metadata_write_failed", "Could not persist the local cover"
+            "cover_metadata_write_failed", "Could not save the local cover reference"
         ) from error
-    return cast(LocalCoverResponse, cover_response(cover, new_attachment))
+    attachment = database.get(Attachment, asset.attachment_id)
+    return cast(LocalCoverResponse, cover_response(cover, attachment))
 
 
 def set_external_identity_cover(
@@ -520,42 +465,33 @@ def set_external_identity_cover(
     botanical_identity_id: UUID,
     payload: ExternalCoverWrite,
 ) -> ExternalCoverResponse:
+    from florabase.media.schemas import ExternalAssetCreate
+    from florabase.media.service import create_external_asset
+
     require_botanical_identity(database, botanical_identity_id, lock=True)
     row = get_identity_cover(database, botanical_identity_id, lock=True)
-    cover = row[0] if row is not None else None
-    old_attachment = row[1] if row is not None else None
-    if cover is not None and cover.source_mode == "local":
-        if old_attachment is None:
-            raise CollectionPhotoError(
-                "cover_attachment_missing", "The local cover attachment metadata is missing"
-            )
-        was_active = _begin_cover_attachment_delete(database, old_attachment)
-        _unlink_cover_attachment(storage, old_attachment, was_active)
-
-    values = payload.model_dump(exclude={"privacy_acknowledged"})
+    asset = create_external_asset(
+        database,
+        ExternalAssetCreate(**payload.model_dump(exclude={"privacy_acknowledged"})),
+        commit=False,
+    )
     try:
-        if cover is None:
-            cover = BotanicalIdentityCoverImage(
-                id=uuid7(),
-                botanical_identity_id=botanical_identity_id,
-                source_mode="external",
-                **values,
+        cover = (
+            row[0]
+            if row
+            else BotanicalIdentityCoverImage(
+                id=uuid7(), botanical_identity_id=botanical_identity_id
             )
-            database.add(cover)
-        else:
-            cover.source_mode = "external"
-            cover.attachment_id = None
-            for field, value in values.items():
-                setattr(cover, field, value)
-            cover.updated_at = datetime.now(UTC)
-            database.flush()
-            if old_attachment is not None:
-                database.delete(old_attachment)
+        )
+        cover.source_mode = "external"
+        cover.media_asset = asset
+        cover.updated_at = datetime.now(UTC)
+        database.add(cover)
         database.commit()
     except Exception as error:
         database.rollback()
         raise CollectionPhotoError(
-            "cover_metadata_write_failed", "Could not persist the external cover"
+            "cover_metadata_write_failed", "Could not save the external cover reference"
         ) from error
     return cast(ExternalCoverResponse, cover_response(cover, None))
 
@@ -563,28 +499,20 @@ def set_external_identity_cover(
 def delete_identity_cover(
     database: Session, storage: AttachmentStorage, botanical_identity_id: UUID
 ) -> bool:
+    from florabase.media.service import require_asset
+
     require_botanical_identity(database, botanical_identity_id, lock=True)
-    row = get_identity_cover(database, botanical_identity_id, lock=True)
+    row = get_identity_cover(database, botanical_identity_id)
     if row is None:
         return False
-    cover, attachment = row
-    if cover.source_mode == "local":
-        if attachment is None:
-            raise CollectionPhotoError(
-                "cover_attachment_missing", "The local cover attachment metadata is missing"
-            )
-        was_active = _begin_cover_attachment_delete(database, attachment)
-        _unlink_cover_attachment(storage, attachment, was_active)
+    require_asset(database, row[0].media_asset_id, lock=True)
+    database.delete(row[0])
     try:
-        database.delete(cover)
-        database.flush()
-        if attachment is not None:
-            database.delete(attachment)
         database.commit()
     except SQLAlchemyError as error:
         database.rollback()
         raise CollectionPhotoError(
             "cover_metadata_delete_failed",
-            "Cover content is gone but metadata cleanup must be retried",
+            "Could not remove the cover reference. Refresh and retry.",
         ) from error
     return True

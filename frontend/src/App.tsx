@@ -11,6 +11,13 @@ import { LoginForm } from "./auth/LoginForm";
 import { WorkspaceBoundary } from "./components/WorkspaceBoundary";
 import { loadWorkspaceChunk } from "./components/workspaceChunk";
 
+const MediaScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./media/MediaScreen");
+    return { default: module.MediaScreen };
+  }),
+);
+
 const BotanicalIdentityScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module =
@@ -128,7 +135,8 @@ type Section =
   | "locations"
   | "geography"
   | "import-export"
-  | "labels";
+  | "labels"
+  | "media";
 
 interface Route {
   section: Section;
@@ -189,6 +197,7 @@ function currentRoute(): Route {
     "geography",
     "import-export",
     "labels",
+    "media",
   ];
   return {
     section: valid.includes(first as Section)
@@ -216,6 +225,7 @@ const desktopGroups: {
       { id: "plants", label: "Plants" },
       { id: "events", label: "Events" },
       { id: "map", label: "Provenance map" },
+      { id: "media", label: "Media" },
     ],
   },
   {
@@ -457,6 +467,11 @@ function ApplicationShell() {
                 />
               ) : route.section === "dashboard" ? (
                 <DashboardScreen />
+              ) : route.section === "media" ? (
+                <MediaScreen
+                  key={route.recordId ?? "directory"}
+                  initialId={route.recordId}
+                />
               ) : route.section === "seeds" ? (
                 <SeedLotScreen
                   initialId={route.recordId}

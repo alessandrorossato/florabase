@@ -573,6 +573,23 @@
       "status": "implemented"
     },
     {
+      "id": "ATTACHMENT-005",
+      "category": "attachment",
+      "description": "Introduce reusable MediaAssets, record links and a central Media library",
+      "acceptance_criteria": [
+        "Local and external MediaAssets may remain fully unreferenced; unlinking never deletes an asset and explicit deletion is blocked by collection links or BotanicalIdentity cover references",
+        "RecordMediaLinks retain exact supported SeedLot, Sowing, Plant, PlantGroup and Event targets, independent captions and order; primary selection remains explicit and limited to SeedLot, Plant and PlantGroup",
+        "A data-preserving Alembic migration retains originals, metadata, photo and cover relationships, privacy and primary selections with an explicit guarded downgrade policy",
+        "Paginated Media directory and detail, record Link existing media, multi-record association and precise unlink versus asset-delete workflows are accessible and responsive",
+        "Authenticated file and shared thumbnail access, external opt-in privacy, relational integrity, concurrent mutations and batched directory summaries are tested",
+        "External references support explicit persistent Save, Refresh and Remove local copy; protected saved content is preferred across views, failures retain valid snapshots, SSRF and concurrency boundaries are tested, and snapshots participate in backup/restore",
+        "Canonical verification, rendered review and basic query, storage and resource evidence are recorded"
+      ],
+      "dependencies": ["ATTACHMENT-004", "UX-006"],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "GERMINATION-001",
       "category": "sowing",
       "description": "Add dated germination observations and derived statistics",

@@ -9,10 +9,8 @@ import pytest
 from fastapi import UploadFile
 from PIL import Image
 from pydantic import ValidationError
-from sqlalchemy.exc import SQLAlchemyError
 
 from florabase.attachments.model import Attachment, AttachmentState
-from florabase.attachments.storage import StoredUpload
 from florabase.collection_photos.model import BotanicalIdentityCoverImage
 from florabase.collection_photos.schemas import ExternalCoverWrite
 from florabase.collection_photos.service import (
@@ -26,6 +24,7 @@ from florabase.collection_photos.service import (
     set_external_identity_cover,
     set_local_identity_cover,
 )
+from florabase.media import service as media
 
 
 def external_payload(**changes: object) -> ExternalCoverWrite:
@@ -98,18 +97,11 @@ def test_external_cover_schema_requires_explicit_privacy_and_safe_metadata() -> 
 
 def test_cover_model_is_separate_and_has_narrow_relational_columns() -> None:
     columns = set(BotanicalIdentityCoverImage.__table__.columns.keys())
-    assert {
-        "botanical_identity_id",
-        "source_mode",
-        "attachment_id",
-        "image_url",
-        "source_url",
-        "attribution",
-        "licence_label",
-        "licence_url",
-    } <= columns
+    assert {"botanical_identity_id", "source_mode", "media_asset_id"} <= columns
     assert "target_type" not in columns
     assert "caption" not in columns
+    assert "attachment_id" not in columns
+    assert "image_url" not in columns
 
 
 def test_cover_response_hides_pending_local_content_and_preserves_external_credit() -> None:
@@ -129,102 +121,75 @@ def test_cover_response_hides_pending_local_content_and_preserves_external_credi
     assert result.licence_url is None
 
 
-def test_external_replacement_handles_external_and_local_sources_without_network() -> None:
-    database = MagicMock()
+@pytest.mark.parametrize("mode", ["external", "local"])
+def test_external_replacement_retains_former_asset_without_network(mode: str) -> None:
+    database, storage = MagicMock(), MagicMock()
     database.scalar.return_value = object()
-    storage = MagicMock()
-    existing_external = cover(mode="external")
-    database.execute.return_value.one_or_none.return_value = (existing_external, None)
-
-    updated = set_external_identity_cover(
+    old_attachment = attachment() if mode == "local" else None
+    existing = cover(mode=mode, owned_attachment=old_attachment)
+    former_asset = existing.media_asset
+    database.execute.return_value.one_or_none.return_value = (existing, old_attachment)
+    result = set_external_identity_cover(
         database,
         storage,
-        existing_external.botanical_identity_id,
+        existing.botanical_identity_id,
         external_payload(attribution="Updated credit", licence_label="CC0"),
     )
-    assert updated.attribution == "Updated credit"
-    assert updated.licence_label == "CC0"
+    assert result.attribution == "Updated credit"
+    assert result.licence_label == "CC0"
+    assert existing.media_asset is not former_asset
+    assert former_asset.state == "active"
+    if old_attachment is not None:
+        assert old_attachment.state == "active"
     storage.delete_file.assert_not_called()
-
-    old_attachment = attachment()
-    existing_local = cover(mode="local", owned_attachment=old_attachment)
-    database.reset_mock()
-    database.scalar.return_value = object()
-    database.execute.return_value.one_or_none.return_value = (existing_local, old_attachment)
-    storage.delete_file.return_value = True
-    replaced = set_external_identity_cover(
-        database,
-        storage,
-        existing_local.botanical_identity_id,
-        external_payload(),
-    )
-    assert replaced.kind == "external"
-    assert old_attachment.state == AttachmentState.PENDING_DELETE
-    storage.delete_file.assert_called_once_with(old_attachment.storage_key)
-    database.delete.assert_called_once_with(old_attachment)
-    assert database.commit.call_count == 2
+    database.delete.assert_not_called()
+    database.commit.assert_called_once()
 
 
 @pytest.mark.parametrize("former_mode", ["external", "local"])
-def test_local_replacement_cleans_the_former_mode(tmp_path: Path, former_mode: str) -> None:
-    stored_path = tmp_path / "new-cover"
-    stored_path.write_bytes(b"image")
-    stored = StoredUpload(
-        storage_key="objects/bb/" + "b" * 32,
-        original_filename="new.png",
-        media_type="image/png",
-        byte_size=5,
-        sha256="b" * 64,
-        path=stored_path,
-    )
-    storage = MagicMock()
-    storage.store_upload = AsyncMock(return_value=stored)
-    storage.delete_file.return_value = True
-    database = MagicMock()
+def test_local_replacement_retains_former_media(
+    former_mode: str, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database, storage = MagicMock(), MagicMock()
     database.scalar.return_value = object()
-    old_attachment = attachment() if former_mode == "local" else None
-    existing = cover(mode=former_mode, owned_attachment=old_attachment)
-    database.execute.return_value.one_or_none.return_value = (existing, old_attachment)
-
+    original_file = attachment() if former_mode == "local" else None
+    existing = cover(mode=former_mode, owned_attachment=original_file)
+    former_asset = existing.media_asset
+    database.execute.return_value.one_or_none.return_value = (existing, original_file)
+    new_file = attachment()
+    new_cover = cover(mode="local", owned_attachment=new_file)
+    database.get.return_value = new_file
+    monkeypatch.setattr(media, "upload_asset", AsyncMock(return_value=new_cover.media_asset))
     result = asyncio.run(
         set_local_identity_cover(
-            database,
-            storage,
-            existing.botanical_identity_id,
-            MagicMock(spec=UploadFile),
+            database, storage, existing.botanical_identity_id, MagicMock(spec=UploadFile)
         )
     )
     assert result.kind == "local"
+    assert existing.media_asset is not former_asset
+    assert former_asset.state == "active"
     assert existing.source_mode == "local"
-    assert existing.image_url is None
-    if old_attachment is None:
-        storage.delete_file.assert_not_called()
-        assert database.commit.call_count == 1
-    else:
-        storage.delete_file.assert_called_once_with(old_attachment.storage_key)
-        database.delete.assert_called_once_with(old_attachment)
-        assert database.commit.call_count == 2
-
-
-def test_local_cover_unlink_failure_is_truthful_and_retryable() -> None:
-    owned = attachment()
-    existing = cover(mode="local", owned_attachment=owned)
-    database = MagicMock()
-    database.scalar.return_value = object()
-    database.execute.return_value.one_or_none.return_value = (existing, owned)
-    storage = MagicMock()
-    storage.delete_file.side_effect = OSError("blocked")
-
-    with pytest.raises(OSError, match="blocked"):
-        delete_identity_cover(database, storage, existing.botanical_identity_id)
-    assert owned.state == AttachmentState.PENDING_DELETE
+    storage.delete_file.assert_not_called()
     database.delete.assert_not_called()
+    database.commit.assert_called_once()
 
-    storage.delete_file.side_effect = None
-    storage.delete_file.return_value = False
-    assert delete_identity_cover(database, storage, existing.botanical_identity_id) is True
-    assert database.delete.call_args_list[0].args == (existing,)
-    assert database.delete.call_args_list[1].args == (owned,)
+
+def test_cover_removal_retains_local_file_and_asset_without_unlink(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    database, storage = MagicMock(), MagicMock()
+    database.scalar.return_value = object()
+    original = attachment()
+    existing = cover(mode="local", owned_attachment=original)
+    asset = existing.media_asset
+    database.execute.return_value.one_or_none.return_value = (existing, original)
+    monkeypatch.setattr(media, "require_asset", lambda *_args, **_kwargs: asset)
+    assert delete_identity_cover(database, storage, existing.botanical_identity_id)
+    database.delete.assert_called_once_with(existing)
+    database.commit.assert_called_once()
+    assert original.state == "active"
+    assert asset.state == "active"
+    storage.delete_file.assert_not_called()
 
 
 def test_attachment_owner_distinguishes_collection_photo_and_identity_cover() -> None:
@@ -278,115 +243,67 @@ def test_local_thumbnail_source_rejects_external_and_pending_covers() -> None:
     assert local_identity_cover_attachment(database, local.botanical_identity_id) is None
 
 
-def test_new_local_and_external_covers_create_one_current_row(tmp_path: Path) -> None:
+def test_new_local_and_external_covers_create_one_current_reference(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     now = datetime.now(UTC)
-    stored_path = tmp_path / "new-local-cover"
-    stored_path.write_bytes(b"image")
-    stored = StoredUpload(
-        storage_key="objects/cc/" + "c" * 32,
-        original_filename="new.png",
-        media_type="image/png",
-        byte_size=5,
-        sha256="c" * 64,
-        path=stored_path,
-    )
-    local_database = MagicMock()
-    local_database.scalar.return_value = object()
-    local_database.execute.return_value.one_or_none.return_value = None
+    database, storage = MagicMock(), MagicMock()
+    database.scalar.return_value = object()
+    database.execute.return_value.one_or_none.return_value = None
 
-    def populate_timestamps(value: object) -> None:
+    def timestamps(value: object) -> None:
         if isinstance(value, BotanicalIdentityCoverImage):
             value.created_at = now
             value.updated_at = now
 
-    local_database.add.side_effect = populate_timestamps
-    local_storage = MagicMock()
-    local_storage.store_upload = AsyncMock(return_value=stored)
-    local_result = asyncio.run(
-        set_local_identity_cover(local_database, local_storage, uuid7(), MagicMock(spec=UploadFile))
+    database.add.side_effect = timestamps
+    stored_file = attachment()
+    database.get.return_value = stored_file
+    new_cover = cover(mode="local", owned_attachment=stored_file)
+    monkeypatch.setattr(media, "upload_asset", AsyncMock(return_value=new_cover.media_asset))
+    local = asyncio.run(
+        set_local_identity_cover(database, storage, uuid7(), MagicMock(spec=UploadFile))
     )
-    assert local_result.kind == "local"
-    assert stored_path.exists()
-    assert local_database.add.call_count == 2
-
-    external_database = MagicMock()
-    external_database.scalar.return_value = object()
-    external_database.execute.return_value.one_or_none.return_value = None
-    external_database.add.side_effect = populate_timestamps
-    external_storage = MagicMock()
-    external_result = set_external_identity_cover(
-        external_database, external_storage, uuid7(), external_payload()
-    )
-    assert external_result.kind == "external"
-    assert external_result.licence_label is None
-    external_storage.delete_file.assert_not_called()
+    assert local.kind == "local"
+    database.add.assert_called_once()
+    database.reset_mock()
+    external = set_external_identity_cover(database, storage, uuid7(), external_payload())
+    assert external.kind == "external"
+    assert external.licence_label is None
+    storage.delete_file.assert_not_called()
 
 
-def test_cover_write_failures_clean_new_content_and_report_corrupt_ownership(
-    tmp_path: Path,
+def test_cover_write_failure_rolls_back_and_cleans_only_new_upload(
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    stored_path = tmp_path / "failed-local-cover"
-    stored_path.write_bytes(b"image")
-    stored = StoredUpload(
-        storage_key="objects/dd/" + "d" * 32,
-        original_filename="failed.png",
-        media_type="image/png",
-        byte_size=5,
-        sha256="d" * 64,
-        path=stored_path,
-    )
-    local_database = MagicMock()
-    local_database.scalar.return_value = object()
-    local_database.execute.return_value.one_or_none.return_value = None
-    local_database.commit.side_effect = RuntimeError("database unavailable")
-    storage = MagicMock()
-    storage.store_upload = AsyncMock(return_value=stored)
-    with pytest.raises(CollectionPhotoError, match="Could not persist the local cover"):
+    database, storage = MagicMock(), MagicMock()
+    database.scalar.return_value = object()
+    database.execute.return_value.one_or_none.return_value = None
+    database.commit.side_effect = RuntimeError("database unavailable")
+    stored_file = attachment()
+    database.get.return_value = stored_file
+    new_cover = cover(mode="local", owned_attachment=stored_file)
+    monkeypatch.setattr(media, "upload_asset", AsyncMock(return_value=new_cover.media_asset))
+    with pytest.raises(CollectionPhotoError, match="Could not save the local cover"):
         asyncio.run(
-            set_local_identity_cover(local_database, storage, uuid7(), MagicMock(spec=UploadFile))
+            set_local_identity_cover(database, storage, uuid7(), MagicMock(spec=UploadFile))
         )
-    assert not stored_path.exists()
-    local_database.rollback.assert_called_once()
-
-    external_database = MagicMock()
-    external_database.scalar.return_value = object()
-    external_database.execute.return_value.one_or_none.return_value = None
-    external_database.commit.side_effect = RuntimeError("database unavailable")
-    with pytest.raises(CollectionPhotoError, match="Could not persist the external cover"):
-        set_external_identity_cover(external_database, MagicMock(), uuid7(), external_payload())
-    external_database.rollback.assert_called_once()
-
-    corrupt_database = MagicMock()
-    corrupt_database.scalar.return_value = object()
-    corrupt_local = cover(mode="local")
-    corrupt_database.execute.return_value.one_or_none.return_value = (corrupt_local, None)
-    with pytest.raises(CollectionPhotoError, match="metadata is missing"):
-        set_external_identity_cover(
-            corrupt_database,
-            MagicMock(),
-            corrupt_local.botanical_identity_id,
-            external_payload(),
-        )
+    database.rollback.assert_called_once()
+    storage.delete_file.assert_called_once_with(stored_file.storage_key)
+    database.reset_mock()
+    with pytest.raises(CollectionPhotoError, match="Could not save the external cover"):
+        set_external_identity_cover(database, storage, uuid7(), external_payload())
+    database.rollback.assert_called_once()
 
 
-def test_cover_delete_handles_absence_corruption_and_metadata_retry() -> None:
-    absent_database = MagicMock()
-    absent_database.scalar.return_value = object()
-    absent_database.execute.return_value.one_or_none.return_value = None
-    assert delete_identity_cover(absent_database, MagicMock(), uuid7()) is False
-
-    corrupt_database = MagicMock()
-    corrupt_database.scalar.return_value = object()
-    corrupt_local = cover(mode="local")
-    corrupt_database.execute.return_value.one_or_none.return_value = (corrupt_local, None)
-    with pytest.raises(CollectionPhotoError, match="metadata is missing"):
-        delete_identity_cover(corrupt_database, MagicMock(), corrupt_local.botanical_identity_id)
-
-    failed_database = MagicMock()
-    failed_database.scalar.return_value = object()
-    external = cover(mode="external")
-    failed_database.execute.return_value.one_or_none.return_value = (external, None)
-    failed_database.flush.side_effect = SQLAlchemyError("write failed")
-    with pytest.raises(CollectionPhotoError, match="metadata cleanup must be retried"):
-        delete_identity_cover(failed_database, MagicMock(), external.botanical_identity_id)
-    failed_database.rollback.assert_called_once()
+def test_cover_delete_handles_absence_and_retains_asset(monkeypatch: pytest.MonkeyPatch) -> None:
+    database, storage = MagicMock(), MagicMock()
+    database.scalar.return_value = object()
+    database.execute.return_value.one_or_none.return_value = None
+    assert not delete_identity_cover(database, storage, uuid7())
+    existing = cover(mode="external")
+    database.execute.return_value.one_or_none.return_value = (existing, None)
+    monkeypatch.setattr(media, "require_asset", lambda *_args, **_kwargs: existing.media_asset)
+    assert delete_identity_cover(database, storage, existing.botanical_identity_id)
+    database.delete.assert_called_once_with(existing)
+    storage.delete_file.assert_not_called()

@@ -78,3 +78,37 @@ test.each(["seed", "sowing", "plant", "group", "identity"] as const)(
     expect(screen.queryByRole("img")).not.toBeInTheDocument();
   },
 );
+
+test("saved external primary and cover resolve to protected local content", () => {
+  const { rerender } = render(
+    <RecordVisual
+      label="Plant"
+      kind="plant"
+      photo={{
+        kind: "external",
+        photo_id: "external",
+        thumbnail_url: "/api/v1/media-assets/external/thumbnail?v=1",
+      }}
+    />,
+  );
+  expect(screen.getByRole("img")).toHaveAttribute(
+    "src",
+    "/api/v1/media-assets/external/thumbnail?v=1",
+  );
+  rerender(
+    <RecordVisual
+      label="Plant"
+      kind="plant"
+      identity={{
+        id: "identity",
+        display_label: "Flower",
+        compact_cover_kind: "local",
+        compact_external_cover_url: "/api/v1/media-assets/cover/thumbnail?v=1",
+      }}
+    />,
+  );
+  expect(screen.getByRole("img")).toHaveAttribute(
+    "src",
+    "/api/v1/media-assets/cover/thumbnail?v=1",
+  );
+});

@@ -32,7 +32,13 @@ async def create_attachment(
         state=AttachmentState.ACTIVE,
     )
     try:
+        from florabase.collection_photos.model import MediaAsset
+
         database.add(attachment)
+        database.flush()
+        database.add(
+            MediaAsset(id=attachment.id, kind="local", attachment_id=attachment.id, state="active")
+        )
         database.commit()
     except Exception as error:
         database.rollback()
@@ -65,24 +71,48 @@ def attachment_content_path(storage: AttachmentStorage, attachment: Attachment) 
 
 
 def delete_attachment(database: Session, storage: AttachmentStorage, attachment_id: UUID) -> bool:
-    attachment = get_attachment(database, attachment_id, lock=True)
+    attachment = get_attachment(database, attachment_id)
     if attachment is None:
         return False
 
+    from florabase.collection_photos.model import MediaAsset
+
+    asset = database.scalar(
+        select(MediaAsset).where(MediaAsset.attachment_id == attachment_id).with_for_update()
+    )
     from florabase.collection_photos.service import attachment_image_owner
 
     image_owner = attachment_image_owner(database, attachment_id)
     if image_owner == "collection_photo":
         raise AttachmentOperationError(
             "attachment_owned_by_photo",
-            "This attachment is owned by a collection photo; remove the photo instead",
+            "This attachment still has collection links; unlink them before deleting "
+            "its media asset",
         )
     if image_owner == "botanical_identity_cover":
         raise AttachmentOperationError(
             "attachment_owned_by_identity_cover",
-            "This attachment is owned by a botanical identity cover; remove the cover instead",
+            "This attachment still has a BotanicalIdentity cover reference; remove that "
+            "reference before deleting its media asset",
         )
 
+    if isinstance(asset, MediaAsset):
+        from florabase.media.service import MediaError, delete_asset
+
+        try:
+            delete_asset(database, storage, asset.id)
+        except MediaError as error:
+            raise AttachmentOperationError(error.code, error.message) from error
+        except SQLAlchemyError as error:
+            database.rollback()
+            raise AttachmentOperationError(
+                "attachment_metadata_delete_failed", "Deletion could not complete; retry deletion."
+            ) from error
+        return True
+
+    attachment = get_attachment(database, attachment_id, lock=True)
+    if attachment is None:
+        return False
     storage_key = attachment.storage_key
     was_active = attachment.state == AttachmentState.ACTIVE
     if was_active:

@@ -385,7 +385,17 @@ def test_collection_photo_targets_external_privacy_and_owned_local_deletion(
     assert removed_local.status_code == 204
     with Session(bind=database_connection) as database:
         assert database.get(LocalCollectionPhoto, local_body["id"]) is None
-        assert not [path for path in storage.objects.rglob("*") if path.is_file()]
+        assert len([path for path in storage.objects.rglob("*") if path.is_file()]) == 1
+    assert (
+        request(
+            "DELETE",
+            f"/api/v1/media-assets/{local_body['media_asset_id']}",
+            browser=browser,
+            mutation_headers=True,
+        ).status_code
+        == 204
+    )
+    assert not [path for path in storage.objects.rglob("*") if path.is_file()]
 
     external_id = listed.json()[0]["id"]
     assert (
@@ -477,7 +487,7 @@ def test_external_image_validation_never_contacts_remote_hosts(
         assert database.query(ExternalImageReference).count() == 0
 
 
-def test_local_photo_unlink_failure_is_hidden_and_retried_through_photo_route(
+def test_unlink_retains_content_and_asset_deletion_failures_are_retryable(
     attachment_browser: tuple[tuple[str, str], AttachmentStorage],
     database_connection: Connection,
     monkeypatch: pytest.MonkeyPatch,
@@ -509,33 +519,36 @@ def test_local_photo_unlink_failure_is_hidden_and_retried_through_photo_route(
         raise AttachmentStorageError("attachment_delete_failed", "Could not remove content")
 
     monkeypatch.setattr(storage, "delete_file", fail_unlink)
-    failed = request(
+    unlinked = request(
         "DELETE",
         f"/api/v1/collection-photos/local/{created['id']}",
         browser=browser,
         mutation_headers=True,
     )
-    assert failed.status_code == 503
-    listed = request(
-        "GET", f"/api/v1/collection-records/plant/{plant_id}/photos", browser=browser
-    ).json()
-    assert listed[0]["deletion_pending"] is True
-    assert listed[0]["content_url"] is None
+    assert unlinked.status_code == 204
+    assert (
+        request(
+            "GET", f"/api/v1/attachments/{created['attachment_id']}/content", browser=browser
+        ).status_code
+        == 200
+    )
+    asset_endpoint = f"/api/v1/media-assets/{created['media_asset_id']}"
+    assert (
+        request("DELETE", asset_endpoint, browser=browser, mutation_headers=True).status_code == 503
+    )
+    pending = request("GET", asset_endpoint, browser=browser).json()
+    assert pending["deletion_pending"] is True
+    assert pending["content_url"] is None
     assert (
         request(
             "GET", f"/api/v1/attachments/{created['attachment_id']}/content", browser=browser
         ).status_code
         == 404
     )
-
     monkeypatch.setattr(storage, "delete_file", original_delete)
-    retried = request(
-        "DELETE",
-        f"/api/v1/collection-photos/local/{created['id']}",
-        browser=browser,
-        mutation_headers=True,
+    assert (
+        request("DELETE", asset_endpoint, browser=browser, mutation_headers=True).status_code == 204
     )
-    assert retried.status_code == 204
     assert (
         request(
             "GET", f"/api/v1/collection-records/plant/{plant_id}/photos", browser=browser
@@ -543,9 +556,9 @@ def test_local_photo_unlink_failure_is_hidden_and_retried_through_photo_route(
         == []
     )
 
-    missing_file = request(
+    missing = request(
         "POST",
-        f"/api/v1/collection-records/plant/{plant_id}/photos/local",
+        "/api/v1/media-assets/local",
         browser=browser,
         mutation_headers=True,
         file=("missing.png", png(), "image/png"),
@@ -553,27 +566,12 @@ def test_local_photo_unlink_failure_is_hidden_and_retried_through_photo_route(
     stored_files = [path for path in storage.objects.rglob("*") if path.is_file()]
     assert len(stored_files) == 1
     stored_files[0].unlink()
-    first_missing_delete = request(
-        "DELETE",
-        f"/api/v1/collection-photos/local/{missing_file['id']}",
-        browser=browser,
-        mutation_headers=True,
-    )
-    assert first_missing_delete.status_code == 409
-    assert first_missing_delete.json()["detail"]["code"] == "attachment_content_missing"
-    pending = request(
-        "GET", f"/api/v1/collection-records/plant/{plant_id}/photos", browser=browser
-    ).json()
-    assert pending[0]["deletion_pending"] is True
-    assert (
-        request(
-            "DELETE",
-            f"/api/v1/collection-photos/local/{missing_file['id']}",
-            browser=browser,
-            mutation_headers=True,
-        ).status_code
-        == 204
-    )
+    endpoint = f"/api/v1/media-assets/{missing['id']}"
+    failed = request("DELETE", endpoint, browser=browser, mutation_headers=True)
+    assert failed.status_code == 409
+    assert failed.json()["detail"]["code"] == "attachment_content_missing"
+    assert request("GET", endpoint, browser=browser).json()["deletion_pending"] is True
+    assert request("DELETE", endpoint, browser=browser, mutation_headers=True).status_code == 204
 
 
 def test_external_identity_cover_is_explicit_private_metadata_and_guards_identity_delete(
@@ -746,8 +744,8 @@ def test_identity_cover_replaces_every_source_mode_and_owns_local_binary(
     assert second["id"] == first["id"]
     assert second["attachment_id"] != first["attachment_id"]
     with Session(bind=database_connection) as database:
-        assert database.get(Attachment, first["attachment_id"]) is None
-    assert len([path for path in storage.objects.rglob("*") if path.is_file()]) == 1
+        assert database.get(Attachment, first["attachment_id"]) is not None
+    assert len([path for path in storage.objects.rglob("*") if path.is_file()]) == 2
 
     external_payload = {
         "image_url": "https://images.example.test/external.jpg",
@@ -771,11 +769,11 @@ def test_identity_cover_replaces_every_source_mode_and_owns_local_binary(
     assert external_directory_item["compact_cover_kind"] == "external"
     assert external_directory_item["compact_external_cover_url"] == external_payload["image_url"]
     with Session(bind=database_connection) as database:
-        assert database.get(Attachment, second["attachment_id"]) is None
+        assert database.get(Attachment, second["attachment_id"]) is not None
         cover = database.get(BotanicalIdentityCoverImage, external["id"])
         assert cover is not None
         assert cover.attachment_id is None
-    assert not [path for path in storage.objects.rglob("*") if path.is_file()]
+    assert len([path for path in storage.objects.rglob("*") if path.is_file()]) == 2
 
     final_local = request(
         "POST",
@@ -788,9 +786,9 @@ def test_identity_cover_replaces_every_source_mode_and_owns_local_binary(
     assert final_local["kind"] == "local"
     assert request("DELETE", endpoint, browser=browser, mutation_headers=True).status_code == 204
     with Session(bind=database_connection) as database:
-        assert database.get(Attachment, final_local["attachment_id"]) is None
+        assert database.get(Attachment, final_local["attachment_id"]) is not None
         assert database.get(BotanicalIdentityCoverImage, first["id"]) is None
-    assert not [path for path in storage.objects.rglob("*") if path.is_file()]
+    assert len([path for path in storage.objects.rglob("*") if path.is_file()]) == 3
 
 
 def test_local_identity_cover_unlink_failure_and_missing_file_remain_retryable(
@@ -819,20 +817,23 @@ def test_local_identity_cover_unlink_failure_and_missing_file_remain_retryable(
         raise AttachmentStorageError("attachment_delete_failed", "Could not remove content")
 
     monkeypatch.setattr(storage, "delete_file", fail_unlink)
-    failed = request("DELETE", endpoint, browser=browser, mutation_headers=True)
-    assert failed.status_code == 503
-    pending = request("GET", endpoint, browser=browser).json()
-    assert pending["kind"] == "local"
-    assert pending["deletion_pending"] is True
-    assert pending["content_url"] is None
-    directory = request("GET", "/api/v1/botanical-identities", browser=browser).json()
+    removed = request("DELETE", endpoint, browser=browser, mutation_headers=True)
+    assert removed.status_code == 204
+    assert request("GET", endpoint, browser=browser).json() is None
+    attachment_id = created_response.json()["attachment_id"]
     assert (
-        next(item for item in directory if item["id"] == str(identity_id))["compact_cover_kind"]
-        is None
+        request("GET", f"/api/v1/attachments/{attachment_id}/content", browser=browser).status_code
+        == 200
     )
-
+    asset_endpoint = f"/api/v1/media-assets/{created_response.json()['media_asset_id']}"
+    assert (
+        request("DELETE", asset_endpoint, browser=browser, mutation_headers=True).status_code == 503
+    )
+    assert request("GET", asset_endpoint, browser=browser).json()["deletion_pending"] is True
     monkeypatch.setattr(storage, "delete_file", original_delete)
-    assert request("DELETE", endpoint, browser=browser, mutation_headers=True).status_code == 204
+    assert (
+        request("DELETE", asset_endpoint, browser=browser, mutation_headers=True).status_code == 204
+    )
 
     missing = request(
         "POST",
@@ -845,7 +846,11 @@ def test_local_identity_cover_unlink_failure_and_missing_file_remain_retryable(
         row = database.get(Attachment, missing["attachment_id"])
         assert row is not None
         storage.active_path(row.storage_key, row.byte_size).unlink()
-    first_delete = request("DELETE", endpoint, browser=browser, mutation_headers=True)
+    assert request("DELETE", endpoint, browser=browser, mutation_headers=True).status_code == 204
+    asset_endpoint = f"/api/v1/media-assets/{missing['media_asset_id']}"
+    first_delete = request("DELETE", asset_endpoint, browser=browser, mutation_headers=True)
     assert first_delete.status_code == 409
     assert first_delete.json()["detail"]["code"] == "attachment_content_missing"
-    assert request("DELETE", endpoint, browser=browser, mutation_headers=True).status_code == 204
+    assert (
+        request("DELETE", asset_endpoint, browser=browser, mutation_headers=True).status_code == 204
+    )

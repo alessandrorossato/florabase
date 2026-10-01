@@ -10,7 +10,11 @@ from sqlalchemy.orm import Session
 
 from florabase.attachments.storage import AttachmentStorage
 from florabase.botanical_identities.model import BotanicalIdentity
-from florabase.collection_photos.model import CollectionPrimaryPhoto, ExternalImageReference
+from florabase.collection_photos.model import (
+    CollectionPrimaryPhoto,
+    ExternalImageReference,
+    MediaAsset,
+)
 from florabase.collection_photos.primary import clear_photo_primary, set_primary
 from florabase.collection_photos.schemas import PrimaryPhotoResponse, PrimaryPhotoSelection
 from florabase.plants.model import Plant
@@ -52,6 +56,7 @@ def test_replacement_waits_for_concurrent_primary_photo_deletion(
         plant_id = plant.id
         old_reference_id = old_reference.id
         next_reference_id = next_reference.id
+        asset_ids = [old_reference.media_asset_id, next_reference.media_asset_id]
 
     # Hold the same source and designation locks as external-photo deletion through
     # its atomic clear/delete/commit sequence.
@@ -60,7 +65,7 @@ def test_replacement_waits_for_concurrent_primary_photo_deletion(
         locked_reference = deletion.scalar(
             select(ExternalImageReference)
             .where(ExternalImageReference.id == old_reference_id)
-            .with_for_update()
+            .with_for_update(of=ExternalImageReference)
         )
         assert locked_reference is not None
         clear_photo_primary(deletion, "external", old_reference_id)
@@ -122,7 +127,12 @@ def test_replacement_waits_for_concurrent_primary_photo_deletion(
         assert remaining_plant is not None
         assert remaining_identity is not None
         database.delete(remaining_reference)
+        database.flush()
         database.delete(remaining_plant)
         database.flush()
         database.delete(remaining_identity)
+        for asset_id in asset_ids:
+            asset = database.get(MediaAsset, asset_id)
+            assert asset is not None
+            database.delete(asset)
         database.commit()

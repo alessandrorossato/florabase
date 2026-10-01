@@ -122,3 +122,19 @@ archive retains such objects rather than silently deleting data. Automated orpha
 not part of ATTACHMENT-002.
 
 Encryption, retention, off-site copies, restore drills, and access control are operator responsibilities.
+
+## Shared media upgrade
+
+Before `20261001_0027`, take the existing coordinated database/original-file backup. Upgrade
+preserves original keys and moves only metadata. Gallery assets, record links and cover references
+are part of the database dump. Private `.thumbnails` derivatives are excluded from the original
+archive and regenerate after restore; they are not irreplaceable data. Populated schema downgrade
+is intentionally blocked: restore the paired pre-upgrade artifacts to return to exclusive ownership.
+Unlinked Gallery assets are retained originals and must remain in complete backups. No orphan purge
+or automatic cleanup is part of this feature.
+
+Persistent external copies (0028) are application originals in the same `objects/` archive as uploads.
+The database records their canonical URL, fetched-at metadata and Attachment reference. Include them
+in every coordinated backup and restore; only their `.thumbnails` derivatives are expendable. Never
+refetch external URLs as part of migration or restore. Pending explicit copy cleanup is preserved in
+the database and may be retried through the original action after recovery.

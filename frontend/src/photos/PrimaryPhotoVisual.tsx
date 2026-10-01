@@ -19,7 +19,7 @@ export function PrimaryPhotoVisual({
     <span className="primary-photo-placeholder" aria-hidden="true" />
   );
   if (!photo) return fallback === "neutral" ? neutral : null;
-  if (photo.kind === "external")
+  if (photo.kind === "external" && !photo.thumbnail_url)
     return fallback === "neutral" ? (
       neutral
     ) : fallback === "omit" ? null : (

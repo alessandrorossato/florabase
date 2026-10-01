@@ -134,6 +134,9 @@ def test_decompression_bomb_warning_fails_closed(tmp_path: Path) -> None:
         def __exit__(self, *_args: object) -> None:
             return None
 
+        def verify(self) -> None:
+            return None
+
         def load(self) -> None:
             raise Image.DecompressionBombWarning("unsafe dimensions")
 

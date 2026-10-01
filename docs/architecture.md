@@ -75,9 +75,11 @@ operation receipts. Direct foreign keys express the supported workflow lineage: 
 to Plant/PlantGroup, PlantGroup extraction to Plant, and Plant/PlantGroup production of a
 collection-produced SeedLot. Events record Plant and PlantGroup history without making the system
 event-sourced; operation receipts support the deliberately bounded reintegration and propagation
-reversals. Attachment metadata and guarded local binary storage are implemented without collection
-photo relationships. The implementation does not use a generic graph, polymorphic collection item,
-generic event framework, or generic media subsystem.
+reversals. Shared MediaAsset stores reusable local/external media; RecordMediaLink uses the existing
+five concrete collection-target foreign keys for caption/order. Collection primary and identity cover
+remain distinct references. Guarded binary storage, shared thumbnails, retained unlinked assets and
+reference-aware deletion are described in [the media contract](media-library.md). This remains a
+bounded capability, without a generic graph, polymorphic collection item or generic event framework.
 
 Location usage uses one batched PostgreSQL query for direct and descendant-inclusive counts across
 SeedLot, Sowing, Plant and PlantGroup. A recursive CTE derives distinct `(ancestor, descendant)` pairs,
@@ -111,8 +113,13 @@ proxy.
 
 ## Deliberately deferred
 
-Attachments and uploads, richer germination observations and Event payloads, advanced search,
-analytical dashboards, import/export, PWA installability, multi-user collaboration, automatic
+Supplier/harvest media, saved search views and bulk operations, richer Event payloads,
+analytical dashboards, PWA installability, multi-user collaboration, automatic
 taxonomy reconciliation, provider-backed profile enrichment, and additional external integrations
 remain backlog items. Their storage and service infrastructure will be designed only when a
 concrete feature requires it.
+
+ATTACHMENT-005 external snapshots remain external-reference assets. Explicit copy endpoints perform
+bounded SSRF-protected fetches with validated socket destinations and hostname-verified TLS, then use
+the ordinary Attachment store and shared thumbnails. Reads never fetch remotely; snapshot pointer
+swaps and retryable pending cleanup serialize under the asset lock. See [media library](media-library.md).

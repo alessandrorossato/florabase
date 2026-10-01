@@ -54,3 +54,16 @@ performs synchronous validation, which is adequate for the 25 MiB single-owner b
 deduplication, thumbnail worker, generic media framework, or distributed transaction. Operational
 backup artifacts are coordinated but are not an atomic storage-engine snapshot; unsupported direct
 database or volume writes remain outside the guarantee.
+
+## ATTACHMENT-005 extension
+
+[Shared media](../media-library.md) owns reusable MediaAssets and exact RecordMediaLinks above
+this unchanged original-file foundation. Unlink/cover removal retains assets; only fully
+unreferenced explicit asset deletion enters pending-delete cleanup. One regenerable private
+320px WebP derivative is cached per asset outside backed-up originals. This supersedes the
+earlier no-persisted-derivative limitation without introducing a worker or general resize API.
+
+ATTACHMENT-005 follow-up: explicit external snapshots use this same protected original-file and
+thumbnail pipeline, retain external identity/URL, and are included in coordinated backups. Validated
+new bytes precede a locked Attachment-pointer swap; one durable pending-cleanup pointer preserves
+retryability. Failed external refresh keeps its previous copy. No background fetch or purge is added.

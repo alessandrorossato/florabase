@@ -32,7 +32,7 @@ function saveError(error: unknown): string {
   if (error instanceof ApiError && error.status === 422)
     return "Check the cover details. External links need public HTTPS hosts and attribution is required.";
   if (error instanceof ApiError && error.status === 409)
-    return "The former local cover needs cleanup. Retry the change or remove the cover first.";
+    return "The cover changed or its media is unavailable. Refresh and retry the change.";
   return "Florabase could not save this cover image.";
 }
 
@@ -138,11 +138,13 @@ export function BotanicalIdentityCover({
       setState({ status: "ready", cover: null });
       setConfirmRemove(false);
       setBroken(false);
-      setNotice("Cover image was removed.");
+      setNotice(
+        "Cover reference removed. Media asset retained in the Gallery.",
+      );
     } catch (removeFailure: unknown) {
       setError(
         removeFailure instanceof ApiError && removeFailure.status === 409
-          ? "The local cover cleanup is pending. Retry removal."
+          ? "The cover reference changed or could not be removed. Refresh and retry."
           : "Florabase could not remove this cover image. Retry removal.",
       );
       setConfirmRemove(false);
@@ -250,8 +252,9 @@ export function BotanicalIdentityCover({
           <div className="identity-cover__image-frame">
             {cover.kind === "local" && cover.deletion_pending ? (
               <div className="notice notice--error">
-                Local cover deletion is pending. Its protected content is no
-                longer displayed; retry removal or replacement.
+                Local media deletion is pending. Its protected content is not
+                displayed. Remove or replace this cover reference; asset cleanup
+                is a separate action in Media.
               </div>
             ) : broken ? (
               <div className="notice notice--error" role="alert">
@@ -267,9 +270,8 @@ export function BotanicalIdentityCover({
                   cover.kind === "external" ? "no-referrer" : undefined
                 }
                 src={
-                  cover.kind === "local"
-                    ? (cover.content_url ?? "")
-                    : cover.image_url
+                  cover.content_url ??
+                  (cover.kind === "external" ? cover.image_url : "")
                 }
                 onError={() => {
                   setBroken(true);
@@ -488,9 +490,11 @@ export function BotanicalIdentityCover({
           }}
         >
           <p>
-            {cover.kind === "local"
-              ? "The locally managed image and its protected binary will be deleted."
-              : "Only Florabase metadata will be removed. No request is sent to the external host."}
+            This removes only the BotanicalIdentity cover reference. The media
+            asset, its stored image and any collection links remain in the
+            Gallery.
+            {cover.kind === "external" &&
+              " No request is sent to the external host."}
           </p>
           <div className="actions">
             <button

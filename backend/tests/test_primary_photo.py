@@ -94,6 +94,12 @@ def test_primary_mutation_errors_and_clear_paths(monkeypatch: pytest.MonkeyPatch
     selection = PrimaryPhotoSelection(kind="external", photo_id=photo_id)
     database = MagicMock()
     monkeypatch.setattr(primary, "_require_target", lambda *_args, **_kwargs: None)
+    from florabase.media import service as media
+
+    monkeypatch.setattr(
+        media, "locked_link", lambda database, *_args, **_kwargs: database.scalar("locked link")
+    )
+    monkeypatch.setattr(media, "require_active", lambda *_args: None)
     database.scalar.return_value = None
     with pytest.raises(CollectionPhotoError, match="Collection photo not found"):
         primary.set_primary(database, MagicMock(), "plant", target_id, selection)

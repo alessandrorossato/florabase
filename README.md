@@ -19,7 +19,8 @@ owner, but no stable public release or supported-version policy has been publish
 - Explicit lineage through `SeedLot → Sowing → Plant / PlantGroup`, PlantGroup extraction, and
   collection-produced seed lots, with receipt-proven reversal for supported authoritative operations
 - A collection provenance map for coordinate-bearing ProvenanceSites
-- Guarded local JPEG/PNG/WebP attachment storage with authenticated retrieval and coordinated backup
+- [Shared media library](docs/media-library.md): reusable local/external images, per-record captions
+  and order, explicit primary selection, protected thumbnails, retained unlinked assets and guarded deletion.
 - Collection-photo galleries and optional BotanicalIdentity covers; layered contextual form help
 - Local owner authentication with server-side sessions and CSRF protection
 

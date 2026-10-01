@@ -45,6 +45,7 @@ def external_reference() -> ExternalImageReference:
     return ExternalImageReference(
         id=uuid7(),
         plant_id=uuid7(),
+        display_order=0,
         image_url="https://images.example.test/leaf.jpg",
         source_url="https://example.test/source",
         attribution="Author",
@@ -236,7 +237,11 @@ def test_local_photo_thumbnail_private_validator_and_failures(
     monkeypatch.setattr(api, "get_local_photo", lambda *_args: (MagicMock(), attachment))
     storage.active_path.return_value = Path("/tmp/review-image")
     render = MagicMock(return_value=b"webp")
-    monkeypatch.setattr(api, "render_identity_cover_thumbnail", render)
+    from florabase.media import service as media
+
+    monkeypatch.setattr(media, "asset_thumbnail", render)
+    monkeypatch.setattr(media, "require_asset", lambda *_args, **_kwargs: MagicMock())
+    monkeypatch.setattr(media, "require_active", lambda *_args: None)
 
     response = api.get_collection_photo_thumbnail(photo_id, actor, database, storage)
     assert response.status_code == 200
@@ -361,7 +366,11 @@ def test_local_identity_cover_thumbnail_has_private_validator_and_no_resize_api(
     storage.active_path.return_value = MagicMock()
     monkeypatch.setattr(api, "local_identity_cover_attachment", lambda *_args: attachment)
     render = MagicMock(return_value=b"webp-thumbnail")
-    monkeypatch.setattr(api, "render_identity_cover_thumbnail", render)
+    from florabase.media import service as media
+
+    monkeypatch.setattr(media, "asset_thumbnail", render)
+    monkeypatch.setattr(media, "require_asset", lambda *_args, **_kwargs: MagicMock())
+    monkeypatch.setattr(media, "require_active", lambda *_args: None)
 
     response = api.get_botanical_identity_cover_thumbnail(
         identity_id, actor, database, storage, None
