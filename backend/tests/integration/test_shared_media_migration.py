@@ -165,10 +165,9 @@ def test_upgrade_preserves_originals_links_primary_covers_and_standalone(
                 connection.execute(text("SELECT * FROM attachments ORDER BY id")).mappings().all()
                 == original_files
             )
-            assert (
-                connection.execute(text("SELECT * FROM collection_primary_photos")).mappings().one()
-                == original_primary
-            )
+            assert connection.execute(
+                text("SELECT * FROM collection_primary_photos")
+            ).mappings().one() == {**original_primary, "harvest_id": None}
             links = (
                 connection.execute(
                     text(

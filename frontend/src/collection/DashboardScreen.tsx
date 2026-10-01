@@ -138,6 +138,12 @@ function DashboardOverview() {
                   >
                     New plant group
                   </a>
+                  <a
+                    className="button-link button--secondary"
+                    href="#/harvests?action=create"
+                  >
+                    Record harvest
+                  </a>
                 </div>
               </div>
               <div className="dashboard-action-group">

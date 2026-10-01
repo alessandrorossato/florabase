@@ -729,6 +729,13 @@
             "title": "Events",
             "type": "array"
           },
+          "harvests": {
+            "items": {
+              "$ref": "#/components/schemas/HarvestResponse"
+            },
+            "title": "Harvests",
+            "type": "array"
+          },
           "identity": {
             "$ref": "#/components/schemas/BotanicalIdentityResponse"
           },
@@ -767,7 +774,8 @@
           "sowings",
           "plants",
           "plant_groups",
-          "events"
+          "events",
+          "harvests"
         ],
         "title": "BotanicalIdentityCollectionResponse",
         "type": "object"
@@ -1389,6 +1397,39 @@
               }
             ],
             "title": "Destination Location Id"
+          },
+          "harvest_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Harvest Id"
+          },
+          "harvest_primary_photo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrimaryPhotoResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "harvest_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Harvest Title"
           },
           "id": {
             "format": "uuid",
@@ -2704,6 +2745,453 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "HarvestItemResponse": {
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "display_order": {
+            "title": "Display Order",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "material_kind": {
+            "$ref": "#/components/schemas/MaterialKind"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HarvestQuantity-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "display_order",
+          "material_kind",
+          "description",
+          "quantity"
+        ],
+        "title": "HarvestItemResponse",
+        "type": "object"
+      },
+      "HarvestItemWrite": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "material_kind": {
+            "$ref": "#/components/schemas/MaterialKind"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HarvestQuantity-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "material_kind"
+        ],
+        "title": "HarvestItemWrite",
+        "type": "object"
+      },
+      "HarvestQuantity-Input": {
+        "additionalProperties": false,
+        "properties": {
+          "is_approximate": {
+            "title": "Is Approximate",
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "item_count",
+              "weight"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "mg",
+                  "g",
+                  "kg"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "pattern": "^(?!^[-+.]*$)[+-]?0*\\d*\\.?\\d*$",
+                "type": "string"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "kind",
+          "value",
+          "is_approximate"
+        ],
+        "title": "HarvestQuantity",
+        "type": "object"
+      },
+      "HarvestQuantity-Output": {
+        "additionalProperties": false,
+        "properties": {
+          "is_approximate": {
+            "title": "Is Approximate",
+            "type": "boolean"
+          },
+          "kind": {
+            "enum": [
+              "item_count",
+              "weight"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "enum": [
+                  "mg",
+                  "g",
+                  "kg"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "value": {
+            "description": "An exact non-negative decimal serialized as a JSON string.",
+            "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$",
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "value",
+          "is_approximate"
+        ],
+        "title": "HarvestQuantity",
+        "type": "object"
+      },
+      "HarvestResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "display_title": {
+            "title": "Display Title",
+            "type": "string"
+          },
+          "event_id": {
+            "format": "uuid",
+            "title": "Event Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HarvestItemResponse"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "occurred_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "plant_group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plant Group Id"
+          },
+          "plant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plant Id"
+          },
+          "primary_photo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrimaryPhotoResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "$ref": "#/components/schemas/HarvestSource"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "plant_id",
+          "plant_group_id",
+          "label",
+          "display_title",
+          "source",
+          "occurred_on",
+          "notes",
+          "items",
+          "event_id",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "HarvestResponse",
+        "type": "object"
+      },
+      "HarvestSource": {
+        "properties": {
+          "botanical_identity": {
+            "$ref": "#/components/schemas/BotanicalIdentitySummary"
+          },
+          "display_name": {
+            "title": "Display Name",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "lifecycle": {
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "primary_photo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrimaryPhotoResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "type": {
+            "enum": [
+              "plant",
+              "plant_group"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "id",
+          "label",
+          "display_name",
+          "lifecycle",
+          "botanical_identity"
+        ],
+        "title": "HarvestSource",
+        "type": "object"
+      },
+      "HarvestWrite": {
+        "additionalProperties": false,
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HarvestItemWrite"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "occurred_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "plant_group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plant Group Id"
+          },
+          "plant_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Plant Id"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "HarvestWrite",
+        "type": "object"
+      },
       "HealthResponse": {
         "properties": {
           "status": {
@@ -3142,7 +3630,8 @@
               "sowing",
               "plant",
               "plant_group",
-              "event"
+              "event",
+              "harvest"
             ],
             "title": "Target Type",
             "type": "string"
@@ -3717,6 +4206,20 @@
         ],
         "title": "LogoutResponse",
         "type": "object"
+      },
+      "MaterialKind": {
+        "enum": [
+          "fruit",
+          "flower",
+          "leaf",
+          "root",
+          "seed",
+          "stem_or_shoot",
+          "whole_plant",
+          "other"
+        ],
+        "title": "MaterialKind",
+        "type": "string"
       },
       "NoSourceAdjustment": {
         "additionalProperties": false,
@@ -11895,7 +12398,8 @@
                 "sowing",
                 "plant",
                 "plant_group",
-                "event"
+                "event",
+                "harvest"
               ],
               "title": "Target Type",
               "type": "string"
@@ -11980,7 +12484,8 @@
                 "sowing",
                 "plant",
                 "plant_group",
-                "event"
+                "event",
+                "harvest"
               ],
               "title": "Target Type",
               "type": "string"
@@ -12057,7 +12562,8 @@
                 "sowing",
                 "plant",
                 "plant_group",
-                "event"
+                "event",
+                "harvest"
               ],
               "title": "Target Type",
               "type": "string"
@@ -12142,7 +12648,8 @@
                 "sowing",
                 "plant",
                 "plant_group",
-                "event"
+                "event",
+                "harvest"
               ],
               "title": "Target Type",
               "type": "string"
@@ -12225,7 +12732,8 @@
               "enum": [
                 "seed_lot",
                 "plant",
-                "plant_group"
+                "plant_group",
+                "harvest"
               ],
               "title": "Target Type",
               "type": "string"
@@ -12289,7 +12797,8 @@
               "enum": [
                 "seed_lot",
                 "plant",
-                "plant_group"
+                "plant_group",
+                "harvest"
               ],
               "title": "Target Type",
               "type": "string"
@@ -12352,7 +12861,8 @@
               "enum": [
                 "seed_lot",
                 "plant",
-                "plant_group"
+                "plant_group",
+                "harvest"
               ],
               "title": "Target Type",
               "type": "string"
@@ -13029,6 +13539,357 @@
         "summary": "Retire",
         "tags": [
           "geographic-places"
+        ]
+      }
+    },
+    "/api/v1/harvests": {
+      "get": {
+        "operationId": "listHarvests",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "botanical_identity_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Botanical Identity Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "plant_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Plant Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "plant_group_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Plant Group Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Query",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "material_kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/MaterialKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Material Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "source_type",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "plant",
+                    "plant_group"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source Type"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/HarvestResponse"
+                  },
+                  "title": "Response Listharvests",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List All",
+        "tags": [
+          "harvests"
+        ]
+      },
+      "post": {
+        "operationId": "createHarvest",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HarvestWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HarvestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create",
+        "tags": [
+          "harvests"
+        ]
+      }
+    },
+    "/api/v1/harvests/{harvest_id}": {
+      "delete": {
+        "operationId": "deleteHarvest",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "harvest_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Harvest Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete",
+        "tags": [
+          "harvests"
+        ]
+      },
+      "get": {
+        "operationId": "getHarvest",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "harvest_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Harvest Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HarvestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read",
+        "tags": [
+          "harvests"
+        ]
+      },
+      "put": {
+        "operationId": "updateHarvest",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "harvest_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Harvest Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HarvestWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HarvestResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update",
+        "tags": [
+          "harvests"
         ]
       }
     },
@@ -13785,7 +14646,8 @@
                     "sowing",
                     "plant",
                     "plant_group",
-                    "event"
+                    "event",
+                    "harvest"
                   ],
                   "type": "string"
                 },
@@ -14491,7 +15353,8 @@
                 "sowing",
                 "plant",
                 "plant_group",
-                "event"
+                "event",
+                "harvest"
               ],
               "title": "Target Type",
               "type": "string"

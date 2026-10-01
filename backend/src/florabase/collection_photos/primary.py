@@ -17,14 +17,16 @@ from florabase.collection_photos.model import (
 )
 from florabase.collection_photos.schemas import PrimaryPhotoResponse, PrimaryPhotoSelection
 from florabase.collection_photos.service import CollectionPhotoError
+from florabase.harvests.model import Harvest
 from florabase.plants.model import Plant, PlantGroup
 from florabase.seed_lots.model import SeedLot
 
-PrimaryTarget = Literal["seed_lot", "plant", "plant_group"]
-TARGETS = {
+PrimaryTarget = Literal["seed_lot", "plant", "plant_group", "harvest"]
+TARGETS: dict[str, tuple[type[SeedLot] | type[Plant] | type[PlantGroup] | type[Harvest], str]] = {
     "seed_lot": (SeedLot, "seed_lot_id"),
     "plant": (Plant, "plant_id"),
     "plant_group": (PlantGroup, "plant_group_id"),
+    "harvest": (Harvest, "harvest_id"),
 }
 
 
@@ -35,12 +37,7 @@ def _target_column(target: PrimaryTarget) -> str:
 def _require_target(
     database: Session, target: PrimaryTarget, target_id: UUID, *, lock: bool
 ) -> None:
-    if target == "seed_lot":
-        column = SeedLot.id
-    elif target == "plant":
-        column = Plant.id
-    else:
-        column = PlantGroup.id
+    column = TARGETS[target][0].id
     statement = select(column).where(column == target_id)
     if lock:
         statement = statement.with_for_update()

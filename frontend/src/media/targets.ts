@@ -6,4 +6,5 @@ export const mediaTargets: { id: PhotoTarget; label: string }[] = [
   { id: "plant", label: "Plant" },
   { id: "plant_group", label: "Plant group" },
   { id: "event", label: "Event" },
+  { id: "harvest", label: "Harvest" },
 ];

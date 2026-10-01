@@ -590,6 +590,30 @@
       "status": "implemented"
     },
     {
+      "id": "HARVEST-001",
+      "category": "harvest",
+      "description": "Record structured Harvest occurrences with ordered material lines and shared media",
+      "acceptance_criteria": [
+        "Harvest requires exactly one retained Plant or PlantGroup source, one or more ordered material lines, and reuses partial occurrence dates without denormalizing identity or Location",
+        "Controlled materials and optional positive count or weight quantities preserve exact, approximate and unknown precision without inventory or lifecycle side effects",
+        "Atomic aggregate creation, correction including source changes, and deletion keep exactly one explicitly owned harvest Event coherent; ordinary Event mutation is protected and free-form historical harvest Events remain unchanged",
+        "Harvest supports reusable MediaAsset links, target-specific captions/order and explicit primary images; unlink/deletion retains shared assets and safe visual fallback resolves direct primary, source and identity context",
+        "Harvest directory, search/material/source filters, compact preview, aggregate forms, detail, contextual source actions and identity collection history are accessible and responsive",
+        "Dashboard and Event history link to structured Harvest details without duplicate Events or media links and without adding historical Harvests to current holdings",
+        "PostgreSQL enforces source, item, owned Event and primary-link integrity; guarded migration, rollback, retention, permissions, bounded queries, tests, rendered review and canonical verification have recorded evidence",
+        "Future harvested-material inventory/disposition and explicit conversion to SeedLot remain documented pre-1.0 follow-ups"
+      ],
+      "dependencies": [
+        "PLANT-001",
+        "PLANT-002",
+        "EVENT-003",
+        "ATTACHMENT-005",
+        "UX-006"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "GERMINATION-001",
       "category": "sowing",
       "description": "Add dated germination observations and derived statistics",

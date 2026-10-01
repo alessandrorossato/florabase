@@ -19,6 +19,7 @@ from florabase.db.base import Base
 from florabase.events.model import Event
 from florabase.external_botany.model import ExternalProviderCache, ExternalTaxonLink
 from florabase.geographic_places.model import GeographicPlace
+from florabase.harvests.model import Harvest, HarvestItem
 from florabase.locations.model import Location
 from florabase.plants.model import Plant, PlantGroup
 from florabase.provenance_sites.model import ProvenanceSite
@@ -55,6 +56,8 @@ assert GerminationObservation.__table__.metadata is target_metadata
 assert Plant.__table__.metadata is target_metadata
 assert PlantGroup.__table__.metadata is target_metadata
 assert Event.__table__.metadata is target_metadata
+assert Harvest.__table__.metadata is target_metadata
+assert HarvestItem.__table__.metadata is target_metadata
 assert all(
     model.__table__.metadata is target_metadata for model in (User, AuthSession, LoginThrottle)
 )

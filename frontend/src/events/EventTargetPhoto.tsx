@@ -4,11 +4,13 @@ import type { components } from "../api/schema";
 
 export function EventTargetPhoto({
   photo,
+  fallbackPhoto,
   label,
   identity,
   kind,
 }: {
   photo: PrimaryPhoto | null | undefined;
+  fallbackPhoto?: PrimaryPhoto | null;
   label: string;
   identity: components["schemas"]["BotanicalIdentitySummary"];
   kind: RecordVisualKind;
@@ -17,6 +19,7 @@ export function EventTargetPhoto({
     <div className="event-target-photo">
       <RecordVisual
         photo={photo}
+        fallbackPhoto={fallbackPhoto}
         identity={identity}
         kind={kind}
         label={label}

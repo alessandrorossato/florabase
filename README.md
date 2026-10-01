@@ -112,3 +112,8 @@ GNU Affero General Public License v3.0 or later.
 SPDX-License-Identifier: AGPL-3.0-or-later
 
 See [LICENSE](LICENSE) for the full license text.
+
+Structured Harvests record material collected from a Plant or Plant group, with multiple material
+lines, honest count/weight precision, partial dates and shared media. Use **Collection → Harvests**
+or **Record harvest** on a source detail. Harvest records collection history; seed inventory and
+source lifecycle remain explicit separate workflows. See [Harvest guide](docs/harvests.md).

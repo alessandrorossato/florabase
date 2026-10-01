@@ -220,7 +220,21 @@ def transfer_target(
     return event, target
 
 
+def _protect_harvest(database: Session, event: Event) -> None:
+    from florabase.harvests.model import Harvest
+
+    if (
+        event.kind == "harvest"
+        and database.scalar(select(Harvest.id).where(Harvest.event_id == event.id)) is not None
+    ):
+        raise EventDomainConflictError(
+            "harvest_event_owned",
+            "Edit or delete this structured Harvest through its Harvest record",
+        )
+
+
 def update_event(database: Session, event: Event, payload: EventUpdate) -> Event:
+    _protect_harvest(database, event)
     operation_kinds = {EventKind.EXTRACTION.value, EventKind.REINTEGRATION.value}
     if event.kind in operation_kinds:
         raise EventDomainConflictError(
@@ -247,6 +261,7 @@ def update_event(database: Session, event: Event, payload: EventUpdate) -> Event
 
 
 def delete_event(database: Session, event: Event) -> None:
+    _protect_harvest(database, event)
     owner = database.scalar(
         select(OperationReceipt.id).where(OperationReceipt.event_id == event.id)
     )
@@ -372,6 +387,16 @@ def _partial_date(event: Event) -> PartialDate | None:
 
 
 def event_responses(database: Session, projections: list[EventProjection]) -> list[EventResponse]:
+    from florabase.harvests.service import list_harvests
+
+    harvests = (
+        {
+            item.event_id: item
+            for item in list_harvests(database, event_ids=[item.event.id for item in projections])
+        }
+        if projections
+        else {}
+    )
     locations = list_locations(database)
     # The concrete Event target owns this designation; related records never supply it.
     plant_photos = primary_summaries(
@@ -450,6 +475,11 @@ def event_responses(database: Session, projections: list[EventProjection]) -> li
                     and projection.resulting_plant_identity is not None
                     else None
                 ),
+                harvest_id=harvests[event.id].id if event.id in harvests else None,
+                harvest_title=harvests[event.id].display_title if event.id in harvests else None,
+                harvest_primary_photo=(harvests[event.id].primary_photo)
+                if event.id in harvests
+                else None,
                 operation_kind=(operation_receipt.kind if operation_receipt else None),
                 operation_status=(operation_receipt.status if operation_receipt else None),
                 created_at=event.created_at,

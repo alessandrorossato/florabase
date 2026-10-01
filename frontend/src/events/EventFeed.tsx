@@ -59,9 +59,22 @@ export function EventFeed({
             <article>
               {showTargetPhoto && (
                 <EventTargetPhoto
-                  photo={event.target.primary_photo}
+                  photo={
+                    event.harvest_id
+                      ? event.harvest_primary_photo
+                      : event.target.primary_photo
+                  }
+                  fallbackPhoto={
+                    event.harvest_id ? event.target.primary_photo : null
+                  }
                   identity={event.target.botanical_identity}
-                  kind={event.target.type === "plant" ? "plant" : "group"}
+                  kind={
+                    event.harvest_id
+                      ? "harvest"
+                      : event.target.type === "plant"
+                        ? "plant"
+                        : "group"
+                  }
                   label={name}
                 />
               )}
@@ -105,6 +118,13 @@ export function EventFeed({
                 event.operation_status === "reversed" && (
                   <p className="record-state">Reversed by reintegration</p>
                 )}
+              {event.harvest_id && (
+                <p>
+                  <a href={`#/harvests/${event.harvest_id}`}>
+                    Structured harvest · {event.harvest_title}
+                  </a>
+                </p>
+              )}
               {event.notes && <p className="preserve-lines">{event.notes}</p>}
             </article>
           </li>

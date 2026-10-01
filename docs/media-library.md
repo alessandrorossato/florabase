@@ -16,13 +16,13 @@ keys, authenticated files and fixed 320px WebP responses already existed.
 
 ## Current contract
 
-| Concept | Persisted responsibility |
-| --- | --- |
-| `MediaAsset` | UUIDv7, local/external kind, one unique protected Attachment for a local original or optional external snapshot, canonical HTTPS image/source metadata, fetched_at, title, attribution/licence, optional dimensions, state, UTC timestamps |
-| `Attachment` | Original key, filename, validated MIME, byte size, SHA-256, binary deletion state and creation timestamp; backend-only original file |
-| `RecordMediaLink` | Asset ID, exactly one of the existing five target foreign keys, per-record caption, nonnegative display order, UTC timestamps |
-| `CollectionPrimaryPhoto` | Exact SeedLot/Plant/PlantGroup and selected local/external link ID; independent for each target |
-| `BotanicalIdentityCoverImage` | One exact identity, asset ID and matching source kind; a separate active reference |
+| Concept                       | Persisted responsibility                                                                                                                                                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `MediaAsset`                  | UUIDv7, local/external kind, one unique protected Attachment for a local original or optional external snapshot, canonical HTTPS image/source metadata, fetched_at, title, attribution/licence, optional dimensions, state, UTC timestamps |
+| `Attachment`                  | Original key, filename, validated MIME, byte size, SHA-256, binary deletion state and creation timestamp; backend-only original file                                                                                                       |
+| `RecordMediaLink`             | Asset ID, exactly one of the SeedLot/Sowing/Plant/PlantGroup/Event/Harvest target foreign keys, per-record caption, nonnegative display order, UTC timestamps                                                                              |
+| `CollectionPrimaryPhoto`      | Exact SeedLot/Plant/PlantGroup/Harvest and selected local/external link ID; independent for each target                                                                                                                                    |
+| `BotanicalIdentityCoverImage` | One exact identity, asset ID and matching source kind; a separate active reference                                                                                                                                                         |
 
 The old local/external Python photo names are compatibility views over one link table. Asset fields
 are forwarded to the associated asset; they are not copied into each relationship. Link identity is
@@ -34,7 +34,7 @@ existing delete action is blocked until its collection links are removed.
 Primary is explicit. No upload, link, unlink or cover mutation guesses a selection or replacement.
 The same asset can be primary for A and secondary for B. Unlinking A clears only A's designation.
 Sowing and Event remain photo targets without a primary API. BotanicalIdentity remains excluded from
-RecordMediaLink and uses its separate cover; Supplier, Harvest and other target types are excluded.
+RecordMediaLink and uses its separate cover; Supplier and other target types are excluded.
 
 ### Retention and guarded deletion
 
@@ -70,17 +70,17 @@ the discovery/locking sequence. Conflicts roll back and return actionable errors
 All reads require an owner session; writes require existing owner, exact-Origin and CSRF guards.
 No API reveals original storage keys or paths.
 
-| Operation | `/api/v1` route |
-| --- | --- |
-| Gallery | `GET /media-assets` with query, kind, association, target, bounded limit/offset |
-| Detail / metadata / guarded deletion | `GET`, `PATCH`, `DELETE /media-assets/{id}` |
-| New local / external asset | `POST /media-assets/local`, `POST /media-assets/external` |
-| Paginated record choice | `GET /media-targets/{target_type}` |
-| Link existing | `POST /collection-records/{target_type}/{target_id}/media-links` |
-| Link context / unlink | `PATCH`, `DELETE /media-links/{id}` |
-| Save / refresh external snapshot | `POST /media-assets/{id}/save-local-copy`, `POST /media-assets/{id}/refresh-local-copy` |
-| Remove external snapshot | `DELETE /media-assets/{id}/local-copy` |
-| Shared thumbnail | `GET /media-assets/{id}/thumbnail` |
+| Operation                            | `/api/v1` route                                                                         |
+| ------------------------------------ | --------------------------------------------------------------------------------------- |
+| Gallery                              | `GET /media-assets` with query, kind, association, target, bounded limit/offset         |
+| Detail / metadata / guarded deletion | `GET`, `PATCH`, `DELETE /media-assets/{id}`                                             |
+| New local / external asset           | `POST /media-assets/local`, `POST /media-assets/external`                               |
+| Paginated record choice              | `GET /media-targets/{target_type}`                                                      |
+| Link existing                        | `POST /collection-records/{target_type}/{target_id}/media-links`                        |
+| Link context / unlink                | `PATCH`, `DELETE /media-links/{id}`                                                     |
+| Save / refresh external snapshot     | `POST /media-assets/{id}/save-local-copy`, `POST /media-assets/{id}/refresh-local-copy` |
+| Remove external snapshot             | `DELETE /media-assets/{id}/local-copy`                                                  |
+| Shared thumbnail                     | `GET /media-assets/{id}/thumbnail`                                                      |
 
 Existing Photos, cover, content and primary routes remain available. Photo IDs now identify links;
 photo/cover responses add `media_asset_id`, and photo responses add `display_order`. Legacy record
@@ -162,7 +162,8 @@ restore. See [backup and restore](backup-restore.md).
 Gallery uses two SELECTs independent of page size: total and paginated assets with grouped link/cover
 counts. It returns counts rather than a linked-record graph. Detail uses batched target reads, at
 most one per supported type, plus primary and cover queries; no per-link asset lookup. Record
-choices use two SELECTs, with identity labels joined to the requested target. Primary summaries
+choices use two SELECTs, with identity labels joined to the requested target; Harvest choices additionally
+batch material-derived titles for the bounded page. Primary summaries
 retain at most three batched queries; the empty case uses one. Regression instrumentation counts
 SELECTs, excluding fixture savepoints and expired-object setup. Linking three records leaves one
 original and one derivative; a 640×320 fixture renders 320×160 and repeated reads reuse its bytes.
@@ -220,11 +221,11 @@ assertion or runner setting is relaxed. Operator visual acceptance is still requ
 The isolated `florabase-media-review` Compose project used tmpfs PostgreSQL and synthetic images,
 records and external example URLs; no normal operator volumes or media were touched.
 
-| Viewport | Rendered evidence |
-| --- | --- |
-| 1440 × 844 | Gallery: 29 assets, 24/5 pagination, local three-shape grid and compact preview; landscape detail with three distinct links; Photos primary set/clear |
+| Viewport   | Rendered evidence                                                                                                                                                              |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1440 × 844 | Gallery: 29 assets, 24/5 pagination, local three-shape grid and compact preview; landscape detail with three distinct links; Photos primary set/clear                          |
 | 1024 × 844 | Gallery opens dedicated detail; local grid; square/landscape detail; Photos and asset picker; record picker including Sowing; last collection unlink retains cover-only square |
-| 390 × 844 | Natural scrolling Gallery/detail/Photos; local image containment; asset reuse with caption/order; record picker; wrapped actions; separate cover counts and blocked deletion |
+| 390 × 844  | Natural scrolling Gallery/detail/Photos; local image containment; asset reuse with caption/order; record picker; wrapped actions; separate cover counts and blocked deletion   |
 
 Search and source/all/linked/unlinked filters were exercised, including a cover-only asset in the
 unlinked filter and an empty search. Native keyboard Escape closed pickers and returned focus to
@@ -253,7 +254,6 @@ stay concise; saved metadata and actions wrap naturally on mobile. Screenshots a
 Operator acceptance remains pending.
 
 ### Exact changed-file inventory
-
 
 ```text
 README.md
@@ -329,3 +329,8 @@ frontend/src/photos/RecordVisual.test.tsx
 frontend/src/photos/RecordVisual.tsx
 frontend/src/styles.css
 ```
+
+HARVEST-001 extends supported record targets with Harvest and its independent explicit primary.
+Harvest unlink/deletion retains MediaAssets; owned journal Events resolve Harvest imagery through
+the aggregate relationship without duplicate media links. Supplier remains a separate future target.
+See [Harvest media contract](harvests.md).

@@ -465,9 +465,22 @@ export function EventJournal({
                   <div className="event-marker" aria-hidden="true" />
                   <article className="event-card">
                     <EventTargetPhoto
-                      photo={item.target.primary_photo}
+                      photo={
+                        item.harvest_id
+                          ? item.harvest_primary_photo
+                          : item.target.primary_photo
+                      }
+                      fallbackPhoto={
+                        item.harvest_id ? item.target.primary_photo : null
+                      }
                       identity={item.target.botanical_identity}
-                      kind={item.target.type === "plant" ? "plant" : "group"}
+                      kind={
+                        item.harvest_id
+                          ? "harvest"
+                          : item.target.type === "plant"
+                            ? "plant"
+                            : "group"
+                      }
                       label={targetLabel}
                     />
                     <div className="event-card-heading">
@@ -488,20 +501,28 @@ export function EventJournal({
                         >
                           Photos
                         </button>
-                        {!["extraction", "reintegration"].includes(
-                          item.kind,
-                        ) && (
-                          <button
-                            type="button"
-                            className="button--secondary"
-                            onClick={() => {
-                              openEdit(item);
-                            }}
+                        {!item.harvest_id &&
+                          !["extraction", "reintegration"].includes(
+                            item.kind,
+                          ) && (
+                            <button
+                              type="button"
+                              className="button--secondary"
+                              onClick={() => {
+                                openEdit(item);
+                              }}
+                            >
+                              Edit
+                            </button>
+                          )}
+                        {item.harvest_id ? (
+                          <a
+                            className="button-link button--secondary"
+                            href={`#/harvests/${item.harvest_id}`}
                           >
-                            Edit
-                          </button>
-                        )}
-                        {item.operation_kind ? (
+                            Open structured harvest
+                          </a>
+                        ) : item.operation_kind ? (
                           item.kind === "extraction" &&
                           item.operation_status === "applied" &&
                           item.resulting_plant ? (
@@ -534,6 +555,7 @@ export function EventJournal({
                         )}
                       </div>
                     </div>
+                    {item.harvest_id && <p>{item.harvest_title}</p>}
                     {item.destination_location && (
                       <p className="event-destination">
                         <strong>Destination:</strong>{" "}

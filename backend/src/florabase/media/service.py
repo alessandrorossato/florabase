@@ -230,7 +230,11 @@ def target_of(link: RecordMediaLink) -> tuple[MediaTarget, UUID]:
 
 
 def target_label(record: object, target: MediaTarget, *, include_id: bool = True) -> str:
-    label = getattr(record, "label", None)
+    label = (
+        getattr(record, "display_title", None)
+        if target == "harvest"
+        else getattr(record, "label", None)
+    )
     if label:
         return str(label)
     if target == "event":
@@ -248,6 +252,7 @@ def target_url(target: MediaTarget, target_id: UUID) -> str:
         "plant": "plants",
         "plant_group": "plant-groups",
         "event": "events",
+        "harvest": "harvests",
     }
     return f"#/{routes[target]}/{target_id}"
 
@@ -281,12 +286,19 @@ def asset_detail(database: Session, asset_id: UUID) -> AssetDetailResponse:
     for target, (model, column) in TARGET_MODELS.items():
         ids = [getattr(link, column) for link in links if getattr(link, column) is not None]
         if ids:
-            records.update(
-                {
-                    (target, cast(IdentifiedRecord, row).id): row
-                    for row in database.scalars(select(model).where(model.id.in_(ids)))
-                }
-            )
+            if target == "harvest":
+                from florabase.harvests.service import list_harvests
+
+                records.update(
+                    {(target, row.id): row for row in list_harvests(database, harvest_ids=ids)}
+                )
+            else:
+                records.update(
+                    {
+                        (target, cast(IdentifiedRecord, row).id): row
+                        for row in database.scalars(select(model).where(model.id.in_(ids)))
+                    }
+                )
     ids = [link.id for link in links]
     designations = (
         database.scalars(
@@ -600,6 +612,7 @@ def target_choices(
     from sqlalchemy.sql.elements import ColumnElement
 
     from florabase.events.model import Event
+    from florabase.harvests.model import Harvest
     from florabase.plants.model import Plant, PlantGroup
     from florabase.seed_lots.model import SeedLot
     from florabase.sowings.model import Sowing
@@ -610,9 +623,13 @@ def target_choices(
     if target == "sowing":
         statement = statement.join(SeedLot, SeedLot.id == Sowing.seed_lot_id)
         identity_id = SeedLot.botanical_identity_id
-    elif target == "event":
-        statement = statement.outerjoin(Plant, Plant.id == Event.plant_id).outerjoin(
-            PlantGroup, PlantGroup.id == Event.plant_group_id
+    elif target in {"event", "harvest"}:
+        statement = statement.outerjoin(
+            Plant, Plant.id == (Event.plant_id if target == "event" else Harvest.plant_id)
+        ).outerjoin(
+            PlantGroup,
+            PlantGroup.id
+            == (Event.plant_group_id if target == "event" else Harvest.plant_group_id),
         )
         identity_id = func.coalesce(Plant.botanical_identity_id, PlantGroup.botanical_identity_id)
     elif target == "seed_lot":
@@ -635,6 +652,13 @@ def target_choices(
         label_column = getattr(model, "label", None)
         if label_column is not None:
             conditions.append(label_column.ilike(needle, escape="\\"))
+        if target == "harvest":
+            conditions.extend(
+                [
+                    Plant.label.ilike(needle, escape="\\"),
+                    PlantGroup.label.ilike(needle, escape="\\"),
+                ]
+            )
         if target == "event":
             conditions.append(Event.kind.ilike(needle, escape="\\"))
         statement = statement.where(or_(*conditions))
@@ -642,6 +666,14 @@ def target_choices(
     rows = database.execute(
         statement.order_by(model.created_at.desc(), model.id).limit(limit).offset(offset)
     ).all()
+    harvest_titles: dict[UUID, str] = {}
+    if target == "harvest" and rows:
+        from florabase.harvests.service import list_harvests
+
+        harvest_titles = {
+            row.id: row.display_title
+            for row in list_harvests(database, harvest_ids=[record.id for record, _ in rows])
+        }
     choices = []
     for record, identity in rows:
         label = target_label(record, target, include_id=False)
@@ -649,6 +681,8 @@ def target_choices(
             label = identity.common_name or identity.cultivar_name or identity.scientific_name
             if target == "event":
                 label = f"{target_label(record, target, include_id=False)} · {label}"
+        if target == "harvest":
+            label = harvest_titles[record.id]
         lifecycle = getattr(record, "lifecycle", "active")
         if lifecycle != "active":
             label += f" · {lifecycle}"

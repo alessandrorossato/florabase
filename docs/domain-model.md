@@ -585,13 +585,13 @@ regenerable 320px WebP derivative. Gallery assets may have no links. Record uplo
 link atomically. Captions and nonnegative display order belong to each link; source, attribution,
 licence and optional dimensions belong to the asset. No automatic binary deduplication is performed.
 
-RecordMediaLink supports exactly SeedLot, Sowing, Plant, PlantGroup and Event through concrete
+RecordMediaLink supports exactly SeedLot, Sowing, Plant, PlantGroup, Event and Harvest through concrete
 foreign keys, one target per link and a unique asset/target pair. Target identity is immutable.
 Event hard deletion is blocked while links remain; the existing lifecycle rules of other targets
-are unchanged. Supplier and Harvest have no media target. BotanicalIdentity uses a distinct cover
+are unchanged. Supplier has no media target; Harvest uses shared links and explicit primary selection. BotanicalIdentity uses a distinct cover
 reference, excluded from RecordMediaLink.
 
-CollectionPrimaryPhoto remains an explicit designation for SeedLot, Plant and PlantGroup only,
+CollectionPrimaryPhoto remains an explicit designation for SeedLot, Plant, PlantGroup and Harvest,
 referencing a link on that exact target. Unlink clears only that link's primary, retains the asset
 and never guesses a replacement. Each record can independently designate the same shared asset.
 Safe batched summaries retain local primary, eligible local identity-cover fallback, then placeholder;
@@ -681,3 +681,15 @@ mutation repeats all validation under locks.
 Migration `20260907_0018` adds nullable typed snapshot fields and the three `reversed` lifecycles.
 It does not backfill. Downgrade refuses while new snapshot or reversal history exists, rather than
 discard immutable evidence; an empty disposable database supports the full downgrade/re-upgrade cycle.
+
+### Harvest and HarvestItem (HARVEST-001)
+
+A Harvest records one historical collection occurrence from exactly one retained Plant or PlantGroup,
+with one or more ordered material lines, partial date, optional label/notes and one explicit owned
+harvest Event. BotanicalIdentity derives through the source; Harvest has no storage Location or stock.
+Each item records controlled material, optional description and an exact/approximate positive whole
+item count or decimal weight (mg/g/kg), or honest absence. Aggregate create/correct/delete keeps the
+owned Event coherent atomically. Source correction is allowed; referenced source hard deletion is
+restricted. Existing free-form harvest Events remain independent. Neither Harvest nor seed-material
+lines change lifecycle, PlantGroup count, Location or SeedLot inventory. Harvest media and explicit
+primary use the shared library and central safe visual resolver. See [Harvest contract](harvests.md).

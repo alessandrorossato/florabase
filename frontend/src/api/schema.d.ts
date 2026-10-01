@@ -668,6 +668,43 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/harvests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List All */
+        get: operations["listHarvests"];
+        put?: never;
+        /** Create */
+        post: operations["createHarvest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/harvests/{harvest_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read */
+        get: operations["getHarvest"];
+        /** Update */
+        put: operations["updateHarvest"];
+        post?: never;
+        /** Delete */
+        delete: operations["deleteHarvest"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health": {
         parameters: {
             query?: never;
@@ -1938,6 +1975,8 @@ export interface components {
         BotanicalIdentityCollectionResponse: {
             /** Events */
             events: components["schemas"]["EventResponse"][];
+            /** Harvests */
+            harvests: components["schemas"]["HarvestResponse"][];
             identity: components["schemas"]["BotanicalIdentityResponse"];
             /** Plant Groups */
             plant_groups: components["schemas"]["PlantGroupResponse"][];
@@ -2144,6 +2183,11 @@ export interface components {
             destination_location: components["schemas"]["LocationSummary"] | null;
             /** Destination Location Id */
             destination_location_id: string | null;
+            /** Harvest Id */
+            harvest_id?: string | null;
+            harvest_primary_photo?: components["schemas"]["PrimaryPhotoResponse"] | null;
+            /** Harvest Title */
+            harvest_title?: string | null;
             /**
              * Id
              * Format: uuid
@@ -2559,6 +2603,133 @@ export interface components {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
         };
+        /** HarvestItemResponse */
+        HarvestItemResponse: {
+            /** Description */
+            description: string | null;
+            /** Display Order */
+            display_order: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            material_kind: components["schemas"]["MaterialKind"];
+            quantity: components["schemas"]["HarvestQuantity-Output"] | null;
+        };
+        /** HarvestItemWrite */
+        HarvestItemWrite: {
+            /** Description */
+            description?: string | null;
+            /** Id */
+            id?: string | null;
+            material_kind: components["schemas"]["MaterialKind"];
+            quantity?: components["schemas"]["HarvestQuantity-Input"] | null;
+        };
+        /** HarvestQuantity */
+        "HarvestQuantity-Input": {
+            /** Is Approximate */
+            is_approximate: boolean;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "item_count" | "weight";
+            /** Unit */
+            unit?: ("mg" | "g" | "kg") | null;
+            /** Value */
+            value: number | string;
+        };
+        /** HarvestQuantity */
+        "HarvestQuantity-Output": {
+            /** Is Approximate */
+            is_approximate: boolean;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "item_count" | "weight";
+            /** Unit */
+            unit?: ("mg" | "g" | "kg") | null;
+            /**
+             * Value
+             * @description An exact non-negative decimal serialized as a JSON string.
+             */
+            value: string;
+        };
+        /** HarvestResponse */
+        HarvestResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Display Title */
+            display_title: string;
+            /**
+             * Event Id
+             * Format: uuid
+             */
+            event_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Items */
+            items: components["schemas"]["HarvestItemResponse"][];
+            /** Label */
+            label: string | null;
+            /** Notes */
+            notes: string | null;
+            occurred_on: components["schemas"]["PartialDate"] | null;
+            /** Plant Group Id */
+            plant_group_id: string | null;
+            /** Plant Id */
+            plant_id: string | null;
+            primary_photo?: components["schemas"]["PrimaryPhotoResponse"] | null;
+            source: components["schemas"]["HarvestSource"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** HarvestSource */
+        HarvestSource: {
+            botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
+            /** Display Name */
+            display_name: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string | null;
+            /** Lifecycle */
+            lifecycle: string;
+            primary_photo?: components["schemas"]["PrimaryPhotoResponse"] | null;
+            /**
+             * Type
+             * @enum {string}
+             */
+            type: "plant" | "plant_group";
+        };
+        /** HarvestWrite */
+        HarvestWrite: {
+            /** Items */
+            items: components["schemas"]["HarvestItemWrite"][];
+            /** Label */
+            label?: string | null;
+            /** Notes */
+            notes?: string | null;
+            occurred_on?: components["schemas"]["PartialDate"] | null;
+            /** Plant Group Id */
+            plant_group_id?: string | null;
+            /** Plant Id */
+            plant_id?: string | null;
+        };
         /** HealthResponse */
         HealthResponse: {
             /** Status */
@@ -2723,7 +2894,7 @@ export interface components {
              * Target Type
              * @enum {string}
              */
-            target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event";
+            target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest";
             /** Target Url */
             target_url: string;
             /**
@@ -2955,6 +3126,11 @@ export interface components {
             /** Status */
             status: string;
         };
+        /**
+         * MaterialKind
+         * @enum {string}
+         */
+        MaterialKind: "fruit" | "flower" | "leaf" | "root" | "seed" | "stem_or_shoot" | "whole_plant" | "other";
         /** NoSourceAdjustment */
         NoSourceAdjustment: {
             /**
@@ -5971,7 +6147,7 @@ export interface operations {
                 "X-CSRF-Token"?: string | null;
             };
             path: {
-                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event";
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest";
                 target_id: string;
             };
             cookie?: never;
@@ -6007,7 +6183,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event";
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest";
                 target_id: string;
             };
             cookie?: never;
@@ -6041,7 +6217,7 @@ export interface operations {
                 "X-CSRF-Token"?: string | null;
             };
             path: {
-                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event";
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest";
                 target_id: string;
             };
             cookie?: never;
@@ -6079,7 +6255,7 @@ export interface operations {
                 "X-CSRF-Token"?: string | null;
             };
             path: {
-                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event";
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest";
                 target_id: string;
             };
             cookie?: never;
@@ -6115,7 +6291,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                target_type: "seed_lot" | "plant" | "plant_group";
+                target_type: "seed_lot" | "plant" | "plant_group" | "harvest";
                 target_id: string;
             };
             cookie?: never;
@@ -6149,7 +6325,7 @@ export interface operations {
                 "X-CSRF-Token"?: string | null;
             };
             path: {
-                target_type: "seed_lot" | "plant" | "plant_group";
+                target_type: "seed_lot" | "plant" | "plant_group" | "harvest";
                 target_id: string;
             };
             cookie?: never;
@@ -6187,7 +6363,7 @@ export interface operations {
                 "X-CSRF-Token"?: string | null;
             };
             path: {
-                target_type: "seed_lot" | "plant" | "plant_group";
+                target_type: "seed_lot" | "plant" | "plant_group" | "harvest";
                 target_id: string;
             };
             cookie?: never;
@@ -6588,6 +6764,176 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["GeographicPlaceResponse"];
                 };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listHarvests: {
+        parameters: {
+            query?: {
+                botanical_identity_id?: string | null;
+                plant_id?: string | null;
+                plant_group_id?: string | null;
+                query?: string;
+                material_kind?: components["schemas"]["MaterialKind"] | null;
+                source_type?: ("plant" | "plant_group") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HarvestResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createHarvest: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HarvestWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HarvestResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getHarvest: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                harvest_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HarvestResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateHarvest: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                harvest_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HarvestWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HarvestResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteHarvest: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                harvest_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             /** @description Validation Error */
             422: {
@@ -7017,7 +7363,7 @@ export interface operations {
                 query?: string;
                 kind?: ("local" | "external") | null;
                 association?: "all" | "linked" | "unlinked";
-                target?: ("seed_lot" | "sowing" | "plant" | "plant_group" | "event") | null;
+                target?: ("seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest") | null;
                 limit?: number;
                 offset?: number;
             };
@@ -7425,7 +7771,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event";
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest";
             };
             cookie?: never;
         };

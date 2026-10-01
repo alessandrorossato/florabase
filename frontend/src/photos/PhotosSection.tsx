@@ -219,7 +219,10 @@ export function PhotosSection({
   const currentPrimary =
     primaryOverride === undefined ? primaryPhoto : primaryOverride;
   const supportsPrimary =
-    target === "seed_lot" || target === "plant" || target === "plant_group";
+    target === "seed_lot" ||
+    target === "plant" ||
+    target === "plant_group" ||
+    target === "harvest";
 
   useEffect(() => {
     const controller = new AbortController();

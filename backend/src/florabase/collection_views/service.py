@@ -14,6 +14,7 @@ from florabase.collection_views.schemas import (
 )
 from florabase.events.model import Event
 from florabase.events.service import event_responses, list_all_events
+from florabase.harvests.service import list_harvests
 from florabase.plants.model import Plant, PlantGroup
 from florabase.plants.service import (
     list_plant_groups,
@@ -62,6 +63,7 @@ def botanical_identity_collection(
         plant_groups=plant_group_responses(
             database, list_plant_groups(database, botanical_identity_id)
         ),
+        harvests=list_harvests(database, botanical_identity_id=botanical_identity_id),
         events=event_responses(
             database,
             list_all_events(database, botanical_identity_id=botanical_identity_id),

@@ -112,3 +112,33 @@ test("saved external primary and cover resolve to protected local content", () =
     "/api/v1/media-assets/cover/thumbnail?v=1",
   );
 });
+
+test("Harvest falls through direct primary, source primary, safe cover and its own placeholder", () => {
+  render(
+    <RecordVisual
+      kind="harvest"
+      label="Fruit harvest"
+      identity={identity}
+      photo={{
+        kind: "local",
+        photo_id: "harvest",
+        thumbnail_url: "/harvest-primary",
+      }}
+      fallbackPhoto={{
+        kind: "local",
+        photo_id: "source",
+        thumbnail_url: "/source-primary",
+      }}
+    />,
+  );
+  expect(screen.getByRole("img")).toHaveAttribute("src", "/harvest-primary");
+  fireEvent.error(screen.getByRole("img"));
+  expect(screen.getByRole("img")).toHaveAttribute("src", "/source-primary");
+  fireEvent.error(screen.getByRole("img"));
+  expect(screen.getByRole("img")).toHaveAttribute(
+    "src",
+    "/api/v1/botanical-identities/identity/cover-image/thumbnail",
+  );
+  fireEvent.error(screen.getByRole("img"));
+  expect(screen.getByText("Harvest image placeholder")).toBeVisible();
+});

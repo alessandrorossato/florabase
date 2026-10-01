@@ -358,6 +358,12 @@ test.each(["plant", "plant-group"] as const)(
       await screen.findByRole("link", { name: "Print label" }),
     ).toHaveAttribute("href", `#/labels?kind=${kind}&record=${record.id}`);
     expect(
+      screen.getByRole("link", { name: "Record harvest" }),
+    ).toHaveAttribute(
+      "href",
+      `#/harvests?action=create&sourceType=${kind === "plant" ? "plant" : "plant_group"}&source=${record.id}`,
+    );
+    expect(
       screen.getByRole("button", {
         name: kind === "plant" ? "Edit Plant" : "Edit Plant group",
       }),

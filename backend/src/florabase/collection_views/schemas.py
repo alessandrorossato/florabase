@@ -2,6 +2,7 @@ from pydantic import BaseModel
 
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
 from florabase.events.schemas import EventResponse
+from florabase.harvests.schemas import HarvestResponse
 from florabase.plants.schemas import PlantGroupResponse, PlantResponse
 from florabase.seed_lots.schemas import SeedLotResponse
 from florabase.sowings.schemas import SowingResponse
@@ -28,3 +29,4 @@ class BotanicalIdentityCollectionResponse(BaseModel):
     plants: list[PlantResponse]
     plant_groups: list[PlantGroupResponse]
     events: list[EventResponse]
+    harvests: list[HarvestResponse]

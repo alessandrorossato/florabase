@@ -139,3 +139,38 @@ test("the full Events list uses the same exact-target thumbnail treatment for gr
     screen.getByRole("link", { name: "Glasshouse plant" }),
   ).toHaveAttribute("href", "#/plant-groups/plant?tab=events");
 });
+
+test("structured Harvest links to details and prefers Harvest imagery without duplicate Event media", () => {
+  render(
+    <EventFeed
+      showTargetPhoto
+      events={[
+        {
+          ...event,
+          kind: "harvest",
+          harvest_id: "harvest-1",
+          harvest_title: "Coffee — Fruit harvest",
+          harvest_primary_photo: {
+            kind: "local",
+            photo_id: "harvest-photo",
+            thumbnail_url: "/harvest-primary",
+          },
+          target: {
+            ...event.target,
+            primary_photo: {
+              kind: "local",
+              photo_id: "source",
+              thumbnail_url: "/source-primary",
+            },
+          },
+        },
+      ]}
+    />,
+  );
+  expect(
+    screen.getByRole("link", { name: /Structured harvest/ }),
+  ).toHaveAttribute("href", "#/harvests/harvest-1");
+  expect(screen.getByRole("img")).toHaveAttribute("src", "/harvest-primary");
+  fireEvent.error(screen.getByRole("img"));
+  expect(screen.getByRole("img")).toHaveAttribute("src", "/source-primary");
+});

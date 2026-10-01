@@ -411,7 +411,8 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                         </button>
                         {(link.target_type === "seed_lot" ||
                           link.target_type === "plant" ||
-                          link.target_type === "plant_group") && (
+                          link.target_type === "plant_group" ||
+                          link.target_type === "harvest") && (
                           <button
                             type="button"
                             className="button--secondary"
@@ -421,7 +422,8 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                               if (
                                 type !== "seed_lot" &&
                                 type !== "plant" &&
-                                type !== "plant_group"
+                                type !== "plant_group" &&
+                                type !== "harvest"
                               )
                                 return;
                               void action(

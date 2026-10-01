@@ -153,6 +153,9 @@ class EventResponse(BaseModel):
     recipient: str | None
     resulting_plant_id: UUID | None
     resulting_plant: ResultingPlantSummary | None
+    harvest_id: UUID | None = None
+    harvest_title: str | None = None
+    harvest_primary_photo: PrimaryPhotoResponse | None = None
     operation_kind: str | None = None
     operation_status: str | None = None
     created_at: datetime
