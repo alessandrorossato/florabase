@@ -17,6 +17,8 @@ function location(
       sowings: { active: 0, total: 0 },
       seed_lots: { active: 0, total: 0 },
     },
+    direct_usage: {},
+    usage_including_descendants: {},
     retired_at: null,
     created_at: "2026-09-07T10:00:00Z",
     updated_at: "2026-09-07T10:00:00Z",

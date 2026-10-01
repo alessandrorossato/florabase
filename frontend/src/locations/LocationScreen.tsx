@@ -15,7 +15,6 @@ import {
   PageHeader,
   QuickPreview,
   OverflowMenu,
-  StatStrip,
 } from "../components/ReferenceUI";
 import { TaskDialog } from "../components/TaskDialog";
 import {
@@ -67,6 +66,86 @@ const scopeLabels: Record<LocationUsageScope, string> = {
 };
 
 const allScopes: LocationUsageScope[] = ["plants", "sowings", "seed_lots"];
+
+const recordKinds = ["plants", "plant_groups", "sowings", "seed_lots"] as const;
+const recordLabels = {
+  plants: "Plants",
+  plant_groups: "Plant groups",
+  sowings: "Sowings",
+  seed_lots: "Seed lots",
+};
+
+function CompactUsage({ location }: { location: LocationResponse }) {
+  const occupied = recordKinds.filter(
+    (kind) => (location.usage_including_descendants[kind]?.total ?? 0) > 0,
+  );
+  return (
+    <span className="location-compact-usage">
+      {occupied.length === 0 ? (
+        <small>No collection records</small>
+      ) : (
+        occupied.map((kind) => {
+          const direct = location.direct_usage[kind]?.total ?? 0;
+          const inclusive =
+            location.usage_including_descendants[kind]?.total ?? 0;
+          return (
+            <small key={kind}>
+              {recordLabels[kind]}: {inclusive}
+              {inclusive === direct
+                ? " directly here"
+                : ` including sublocations · ${String(direct)} directly here`}
+            </small>
+          );
+        })
+      )}
+    </span>
+  );
+}
+
+function CollectionUsage({ location }: { location: LocationResponse }) {
+  return (
+    <section className="record-section" aria-labelledby="location-usage-title">
+      <h4 id="location-usage-title">Collection usage</h4>
+      <p className="field-help">
+        Current assignments, including retained historical records. Active
+        counts are shown in parentheses.
+      </p>
+      <table className="location-usage-table">
+        <thead>
+          <tr>
+            <th scope="col">Record type</th>
+            <th scope="col">Directly here</th>
+            <th scope="col">Including sublocations</th>
+          </tr>
+        </thead>
+        <tbody>
+          {recordKinds.map((kind) => (
+            <tr key={kind}>
+              <th scope="row">{recordLabels[kind]}</th>
+              {[
+                location.direct_usage,
+                location.usage_including_descendants,
+              ].map((usage, index) => (
+                <td key={index}>
+                  {usage[kind]?.total ?? 0} ({usage[kind]?.active ?? 0} active)
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="field-help">
+        Including sublocations counts this location and every location beneath
+        it.
+      </p>
+      <div className="actions">
+        <a href="#/plants">Browse plants and groups</a>
+        <a href="#/sowings">Browse sowings</a>
+        <a href="#/seeds">Browse seed lots</a>
+      </div>
+    </section>
+  );
+}
 
 function scopesOf(location: LocationResponse): LocationUsageScope[] {
   return location.usage_scopes;
@@ -184,6 +263,7 @@ function LocationTree({
   onSelect,
   expanded,
   onToggle,
+  depth = 0,
 }: {
   locations: LocationResponse[];
   parentId: string | null;
@@ -191,6 +271,7 @@ function LocationTree({
   onSelect: (id: string) => void;
   expanded: Set<string>;
   onToggle: (id: string) => void;
+  depth?: number;
 }) {
   const children = locations.filter(
     (location) => location.parent_id === parentId,
@@ -199,7 +280,9 @@ function LocationTree({
   return (
     <ul
       className={
-        parentId ? "location-tree location-tree--nested" : "location-tree"
+        !parentId
+          ? "location-tree"
+          : `location-tree location-tree--nested${depth > 3 ? " location-tree--compact-depth" : ""}`
       }
     >
       {children.map((location) => {
@@ -228,6 +311,7 @@ function LocationTree({
               <button
                 type="button"
                 className="identity-list-item"
+                title={location.display_path}
                 aria-pressed={selectedId === location.id}
                 onClick={() => {
                   onSelect(location.id);
@@ -239,6 +323,15 @@ function LocationTree({
                     <span className="record-state">Retired</span>
                   )}
                 </span>
+                {depth > 3 && (
+                  <small className="location-path">
+                    Within{" "}
+                    {
+                      locations.find((item) => item.id === location.parent_id)
+                        ?.name
+                    }
+                  </small>
+                )}
                 <span className="location-scope-list" aria-label="Usage scopes">
                   {scopesOf(location).map((scope) => (
                     <small className="location-scope" key={scope}>
@@ -246,6 +339,7 @@ function LocationTree({
                     </small>
                   ))}
                 </span>
+                <CompactUsage location={location} />
               </button>
             </div>
             {hasChildren && isExpanded && (
@@ -256,6 +350,7 @@ function LocationTree({
                 onSelect={onSelect}
                 expanded={expanded}
                 onToggle={onToggle}
+                depth={depth + 1}
               />
             )}
           </li>
@@ -631,13 +726,7 @@ export function LocationScreen({
                     .map((scope) => scopeLabels[scope])
                     .join(", ")}
                 </p>
-                <StatStrip
-                  label="Direct location usage"
-                  items={allScopes.map((scope) => ({
-                    label: scopeLabels[scope],
-                    value: selected.usage[scope]?.total ?? 0,
-                  }))}
-                />
+                <CompactUsage location={selected} />
                 <p>
                   {
                     locations.filter(
@@ -777,13 +866,6 @@ export function LocationScreen({
                     Retired location remains available for historical records.
                   </p>
                 )}
-                <StatStrip
-                  label="Direct location usage totals"
-                  items={allScopes.map((scope) => ({
-                    label: scopeLabels[scope],
-                    value: selected.usage[scope]?.total ?? 0,
-                  }))}
-                />
                 <div className="record-detail-grid">
                   <section
                     className="record-section"
@@ -846,30 +928,7 @@ export function LocationScreen({
                       <p className="record-empty">No child locations.</p>
                     )}
                   </section>
-                  <section
-                    className="record-section"
-                    aria-labelledby="location-usage-title"
-                  >
-                    <h4 id="location-usage-title">Current usage</h4>
-                    <ul className="record-link-list">
-                      {allScopes.map((scope) => {
-                        const counts = selected.usage[scope] ?? {
-                          active: 0,
-                          total: 0,
-                        };
-                        const href =
-                          scope === "seed_lots" ? "#/seeds" : `#/${scope}`;
-                        return (
-                          <li key={scope}>
-                            <a href={href}>{scopeLabels[scope]}</a>
-                            <span className="record-list-meta">
-                              {counts.active} active, {counts.total} total
-                            </span>
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </section>
+                  <CollectionUsage location={selected} />
                 </div>
                 {editing && (
                   <TaskDialog

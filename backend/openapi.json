@@ -2434,6 +2434,25 @@
         "title": "LocalPhotoUpdate",
         "type": "object"
       },
+      "LocationCollectionUsage": {
+        "description": "Per-record counts; plants here excludes PlantGroups, unlike legacy usage.",
+        "properties": {
+          "plant_groups": {
+            "$ref": "#/components/schemas/LocationUsageCount"
+          },
+          "plants": {
+            "$ref": "#/components/schemas/LocationUsageCount"
+          },
+          "seed_lots": {
+            "$ref": "#/components/schemas/LocationUsageCount"
+          },
+          "sowings": {
+            "$ref": "#/components/schemas/LocationUsageCount"
+          }
+        },
+        "title": "LocationCollectionUsage",
+        "type": "object"
+      },
       "LocationCreate": {
         "additionalProperties": false,
         "properties": {
@@ -2476,6 +2495,10 @@
             "format": "date-time",
             "title": "Created At",
             "type": "string"
+          },
+          "direct_usage": {
+            "$ref": "#/components/schemas/LocationCollectionUsage",
+            "description": "Records whose current location_id is exactly this Location, by record type."
           },
           "display_path": {
             "title": "Display Path",
@@ -2520,7 +2543,12 @@
             "type": "string"
           },
           "usage": {
-            "$ref": "#/components/schemas/LocationUsageSummary"
+            "$ref": "#/components/schemas/LocationUsageSummary",
+            "description": "Legacy direct usage; plants combines Plant and PlantGroup records."
+          },
+          "usage_including_descendants": {
+            "$ref": "#/components/schemas/LocationCollectionUsage",
+            "description": "Current assignments to this Location or any descendant, counted once."
           },
           "usage_scopes": {
             "items": {
@@ -2536,6 +2564,8 @@
           "parent_id",
           "usage_scopes",
           "usage",
+          "direct_usage",
+          "usage_including_descendants",
           "display_path",
           "retired_at",
           "created_at",

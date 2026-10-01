@@ -59,6 +59,12 @@ class LocationUsageSummary(BaseModel):
     seed_lots: LocationUsageCount = Field(default_factory=LocationUsageCount)
 
 
+class LocationCollectionUsage(LocationUsageSummary):
+    """Per-record counts; plants here excludes PlantGroups, unlike legacy usage."""
+
+    plant_groups: LocationUsageCount = Field(default_factory=LocationUsageCount)
+
+
 class LocationResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -66,7 +72,15 @@ class LocationResponse(BaseModel):
     name: str
     parent_id: UUID | None
     usage_scopes: list[LocationUsageScope]
-    usage: LocationUsageSummary
+    usage: LocationUsageSummary = Field(
+        description="Legacy direct usage; plants combines Plant and PlantGroup records."
+    )
+    direct_usage: LocationCollectionUsage = Field(
+        description="Records whose current location_id is exactly this Location, by record type."
+    )
+    usage_including_descendants: LocationCollectionUsage = Field(
+        description="Current assignments to this Location or any descendant, counted once."
+    )
     display_path: str
     retired_at: datetime | None
     created_at: datetime
@@ -74,7 +88,13 @@ class LocationResponse(BaseModel):
 
     @classmethod
     def from_model(
-        cls, location: Location, *, display_path: str, usage: LocationUsageSummary | None = None
+        cls,
+        location: Location,
+        *,
+        display_path: str,
+        usage: LocationUsageSummary | None = None,
+        direct_usage: LocationCollectionUsage | None = None,
+        usage_including_descendants: LocationCollectionUsage | None = None,
     ) -> Self:
         scopes = [
             scope
@@ -91,5 +111,9 @@ class LocationResponse(BaseModel):
                 "display_path": display_path,
                 "usage_scopes": scopes,
                 "usage": usage or LocationUsageSummary(),
+                "direct_usage": direct_usage or LocationCollectionUsage(),
+                "usage_including_descendants": (
+                    usage_including_descendants or LocationCollectionUsage()
+                ),
             }
         )

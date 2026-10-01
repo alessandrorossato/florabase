@@ -2350,6 +2350,16 @@ export interface components {
             /** Caption */
             caption?: string | null;
         };
+        /**
+         * LocationCollectionUsage
+         * @description Per-record counts; plants here excludes PlantGroups, unlike legacy usage.
+         */
+        LocationCollectionUsage: {
+            plant_groups?: components["schemas"]["LocationUsageCount"];
+            plants?: components["schemas"]["LocationUsageCount"];
+            seed_lots?: components["schemas"]["LocationUsageCount"];
+            sowings?: components["schemas"]["LocationUsageCount"];
+        };
         /** LocationCreate */
         LocationCreate: {
             /** Name */
@@ -2366,6 +2376,8 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+            /** @description Records whose current location_id is exactly this Location, by record type. */
+            direct_usage: components["schemas"]["LocationCollectionUsage"];
             /** Display Path */
             display_path: string;
             /**
@@ -2384,7 +2396,10 @@ export interface components {
              * Format: date-time
              */
             updated_at: string;
+            /** @description Legacy direct usage; plants combines Plant and PlantGroup records. */
             usage: components["schemas"]["LocationUsageSummary"];
+            /** @description Current assignments to this Location or any descendant, counted once. */
+            usage_including_descendants: components["schemas"]["LocationCollectionUsage"];
             /** Usage Scopes */
             usage_scopes: components["schemas"]["LocationUsageScope"][];
         };

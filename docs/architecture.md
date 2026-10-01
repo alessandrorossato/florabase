@@ -79,6 +79,23 @@ reversals. Attachment metadata and guarded local binary storage are implemented 
 photo relationships. The implementation does not use a generic graph, polymorphic collection item,
 generic event framework, or generic media subsystem.
 
+Location usage uses one batched PostgreSQL query for direct and descendant-inclusive counts across
+SeedLot, Sowing, Plant and PlantGroup. A recursive CTE derives distinct `(ancestor, descendant)` pairs,
+including each Location itself. Recursive `UNION` deduplicates pairs and terminates even with malformed
+cycles; the existing hierarchy guards and fail-closed path validation remain authoritative. Each
+record table is grouped by its canonical current `location_id` before joining containment pairs,
+avoiding row multiplication across record types. Conditional sums produce direct counts; full sums
+produce inclusive counts with identical lifecycle rules. Only count rows reach application memory.
+There are no persisted counters, synchronization jobs, or schema/index additions.
+
+A Location directory request uses two domain queries regardless of tree size: one Location read for
+hierarchy/display paths and one batched aggregate for all Locations/types. Authentication/session
+queries are separate. Individual Location reads use the same batched strategy plus the existing
+single-record lookup. No Location row issues its own recursive or record-table query. Existing indexes
+on `locations.parent_id` and all four canonical `location_id` columns remain available; planner evidence
+and bounded integration query-count checks are recorded in
+[location-descendant-aggregation.md](location-descendant-aggregation.md).
+
 See [domain-model.md](domain-model.md) for semantics and current limitations.
 
 ## Authentication and observability
