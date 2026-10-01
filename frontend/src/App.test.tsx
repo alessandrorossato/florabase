@@ -274,6 +274,18 @@ const houseLocation: LocationResponse = {
     sowings: { active: 0, total: 1 },
     seed_lots: { active: 1, total: 1 },
   },
+  direct_usage: {
+    plants: { active: 1, total: 2 },
+    plant_groups: { active: 0, total: 0 },
+    sowings: { active: 0, total: 1 },
+    seed_lots: { active: 1, total: 1 },
+  },
+  usage_including_descendants: {
+    plants: { active: 1, total: 2 },
+    plant_groups: { active: 0, total: 0 },
+    sowings: { active: 0, total: 1 },
+    seed_lots: { active: 1, total: 1 },
+  },
   retired_at: null as string | null,
   created_at: "2026-08-30T10:00:00Z",
   updated_at: "2026-08-30T10:00:00Z",
@@ -1967,7 +1979,7 @@ test("location hierarchy renders paths and supports keyboard selection", async (
       .getAllByRole("link", { name: "Plants" })
       .some((link) => link.getAttribute("href") === "#/plants"),
   ).toBe(true);
-  expect(screen.getByText(/1 active, 2 total/)).toBeInTheDocument();
+  expect(screen.getAllByText("2 (1 active)")).toHaveLength(2);
   expect(
     screen
       .getAllByLabelText("Usage scopes")
@@ -2914,4 +2926,165 @@ test("Botanical identity editor keeps name and profile drafts across its separat
   expect(
     screen.getByRole("tablist", { name: "Record sections" }),
   ).not.toHaveAttribute("inert");
+});
+
+test.each([
+  { direct: 2, inclusive: 2, text: "Plants: 2 directly here" },
+  {
+    direct: 0,
+    inclusive: 5,
+    text: "Plants: 5 including sublocations · 0 directly here",
+  },
+  {
+    direct: 2,
+    inclusive: 7,
+    text: "Plants: 7 including sublocations · 2 directly here",
+  },
+])(
+  "Location directory, preview and detail distinguish $direct direct from $inclusive inclusive Plants",
+  async ({ direct, inclusive, text }) => {
+    const location = {
+      ...houseLocation,
+      direct_usage: { plants: { active: direct, total: direct } },
+      usage_including_descendants: {
+        plants: { active: inclusive, total: inclusive },
+      },
+    };
+    authenticatedThen((path) => {
+      if (path === "/api/v1/locations") return jsonResponse([location]);
+      throw new Error(`unexpected request: ${path}`);
+    });
+    const user = await openLocations();
+    const row = await screen.findByRole("button", { name: /^House/ });
+    expect(within(row).getByText(text)).toBeInTheDocument();
+    expect(row).toHaveAccessibleName(
+      new RegExp(`Plants: ${String(inclusive)} `),
+    );
+    if (direct === inclusive)
+      expect(
+        within(row).queryByText(/including sublocations/),
+      ).not.toBeInTheDocument();
+    row.focus();
+    await user.keyboard("{Enter}");
+    expect(screen.getAllByText(text)).toHaveLength(2);
+    await user.click(screen.getByRole("link", { name: "Open details" }));
+    const table = await screen.findByRole("table");
+    expect(
+      within(table).getByRole("columnheader", { name: "Directly here" }),
+    ).toBeInTheDocument();
+    expect(
+      within(table).getByRole("columnheader", {
+        name: "Including sublocations",
+      }),
+    ).toBeInTheDocument();
+    const plantRow = within(table)
+      .getByRole("rowheader", { name: "Plants" })
+      .closest("tr");
+    if (!plantRow) throw new Error("Expected a Plants table row");
+    expect(
+      within(plantRow)
+        .getAllByRole("cell")
+        .map((cell) => cell.textContent),
+    ).toEqual([
+      `${String(direct)} (${String(direct)} active)`,
+      `${String(inclusive)} (${String(inclusive)} active)`,
+    ]);
+  },
+);
+
+test("Location empty usage avoids repeated zeroes in directory and preview, detail retains explicit counts", async () => {
+  const location = {
+    ...houseLocation,
+    direct_usage: {},
+    usage_including_descendants: {},
+  };
+  authenticatedThen((path) => {
+    if (path === "/api/v1/locations") return jsonResponse([location]);
+    throw new Error(`unexpected request: ${path}`);
+  });
+  const user = await openLocations();
+  const row = await screen.findByRole("button", { name: /^House/ });
+  expect(within(row).getByText("No collection records")).toBeInTheDocument();
+  await user.click(row);
+  expect(screen.getAllByText("No collection records")).toHaveLength(2);
+  await user.click(screen.getByRole("link", { name: "Open details" }));
+  const table = await screen.findByRole("table");
+  expect(
+    within(table)
+      .getAllByRole("rowheader")
+      .map((cell) => cell.textContent),
+  ).toEqual(["Plants", "Plant groups", "Sowings", "Seed lots"]);
+  expect(within(table).getAllByRole("cell")).toHaveLength(8);
+  for (const cell of within(table).getAllByRole("cell"))
+    expect(cell).toHaveTextContent("0 (0 active)");
+});
+
+test("Location aggregates show separate Plant groups and descendant content beyond the parent's enabled scopes", async () => {
+  const parent = {
+    ...houseLocation,
+    usage_scopes: ["seed_lots"] as LocationResponse["usage_scopes"],
+    direct_usage: {},
+    usage_including_descendants: {
+      plant_groups: { active: 1, total: 3 },
+      sowings: { active: 1, total: 1 },
+      seed_lots: { active: 0, total: 2 },
+    },
+  };
+  authenticatedThen((path) => {
+    if (path === "/api/v1/locations")
+      return jsonResponse([parent, cabinetLocation]);
+    throw new Error(`unexpected request: ${path}`);
+  });
+  const user = await openLocations();
+  await user.selectOptions(screen.getByLabelText("Usage scope"), "plants");
+  const row = await screen.findByRole("button", { name: /^House/ });
+  expect(
+    within(row).getByText(
+      "Plant groups: 3 including sublocations · 0 directly here",
+    ),
+  ).toBeInTheDocument();
+  expect(
+    within(row).getByText(
+      "Sowings: 1 including sublocations · 0 directly here",
+    ),
+  ).toBeInTheDocument();
+  await user.click(row);
+  await user.click(screen.getByRole("link", { name: "Open details" }));
+  expect(
+    await screen.findByRole("columnheader", { name: "Including sublocations" }),
+  ).toBeInTheDocument();
+});
+
+test("Deep Location hierarchy retains parent context and the full current path when indentation is bounded", async () => {
+  let parent = houseLocation;
+  const chain: LocationResponse[] = [parent];
+  for (let depth = 1; depth <= 12; depth++) {
+    const child: LocationResponse = {
+      ...houseLocation,
+      id: `deep-${String(depth)}`,
+      name: `Level ${String(depth)}`,
+      parent_id: parent.id,
+      display_path: `${parent.display_path} → Level ${String(depth)}`,
+      direct_usage: depth === 12 ? { plants: { active: 1, total: 1 } } : {},
+      usage_including_descendants: { plants: { active: 1, total: 1 } },
+    };
+    chain.push(child);
+    parent = child;
+  }
+  authenticatedThen((path) => {
+    if (path === "/api/v1/locations") return jsonResponse(chain);
+    throw new Error(`unexpected request: ${path}`);
+  });
+  const user = await openLocations();
+  await user.type(screen.getByLabelText("Search locations"), "Level 12");
+  const row = await screen.findByRole("button", { name: /^Level 12/ });
+  expect(within(row).getByText("Within Level 11")).toBeInTheDocument();
+  expect(row).toHaveAttribute("title", parent.display_path);
+  expect(within(row).getByText("Plants: 1 directly here")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Collapse Level 10" }));
+  expect(
+    screen.queryByRole("button", { name: /^Level 12/ }),
+  ).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Expand Level 10" }));
+  expect(screen.getByRole("button", { name: /^Level 12/ })).toBeInTheDocument();
 });

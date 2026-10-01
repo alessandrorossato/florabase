@@ -17,12 +17,13 @@ from florabase.locations.service import (
     LocationHierarchyError,
     LocationIntegrityError,
     LocationNotFoundError,
+    LocationUsageAggregation,
     create_location,
     delete_location,
     display_path,
     get_location,
     list_locations,
-    location_usage,
+    location_usage_aggregation,
     set_location_retired,
     update_location,
 )
@@ -53,9 +54,19 @@ def _require_location(database: Session, location_id: UUID) -> Location:
 
 def _response(database: Session, location: Location) -> LocationResponse:
     locations = list_locations(database)
-    usage = location_usage(database).get(location.id)
+    usage = location_usage_aggregation(database).get(location.id)
+    return _location_response(location, locations, usage)
+
+
+def _location_response(
+    location: Location, locations: list[Location], usage: LocationUsageAggregation | None
+) -> LocationResponse:
     return LocationResponse.from_model(
-        location, display_path=display_path(location, locations), usage=usage
+        location,
+        display_path=display_path(location, locations),
+        usage=usage.legacy_direct() if usage else None,
+        direct_usage=usage.direct if usage else None,
+        usage_including_descendants=usage.including_descendants if usage else None,
     )
 
 
@@ -65,14 +76,9 @@ def list_all(
     database: Annotated[Session, Depends(get_database_session)],
 ) -> list[LocationResponse]:
     locations = list_locations(database)
-    usage = location_usage(database)
+    usage = location_usage_aggregation(database)
     responses = [
-        LocationResponse.from_model(
-            location,
-            display_path=display_path(location, locations),
-            usage=usage.get(location.id),
-        )
-        for location in locations
+        _location_response(location, locations, usage.get(location.id)) for location in locations
     ]
     return sorted(
         responses,

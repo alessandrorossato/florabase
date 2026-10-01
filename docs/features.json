@@ -897,6 +897,26 @@
       "status": "implemented"
     },
     {
+      "id": "LOCATION-003",
+      "category": "location",
+      "description": "Derive explicit direct and descendant-inclusive collection usage",
+      "acceptance_criteria": [
+        "Current canonical Location assignments expose direct and arbitrary-depth descendant-inclusive active and lifecycle-total counts separately for SeedLot, Sowing, Plant and PlantGroup, preserving legacy direct usage fields",
+        "One batched set-based PostgreSQL aggregation avoids N+1 queries, deduplicates containment pairs and terminates for malformed cycles without persisted counters or a schema migration",
+        "Location directory, compact Quick Preview and detail communicate descendant content with explicit scope labels, accessible controls and responsive wrapping without duplicating equal leaf counts in compact surfaces",
+        "Deep trees, siblings, independent roots, empty branches, lifecycle inclusion, source non-inference and immediate reparenting results have integration coverage while assignment and deletion guards retain their semantics"
+      ],
+      "dependencies": [
+        "LOCATION-001",
+        "LOCATION-002",
+        "SEED-003",
+        "SOWING-002",
+        "PLANT-002"
+      ],
+      "priority": "P2",
+      "status": "implemented"
+    },
+    {
       "id": "GEOGRAPHY-003",
       "category": "geography",
       "description": "Add finer-grained geography and precise ProvenanceSites",

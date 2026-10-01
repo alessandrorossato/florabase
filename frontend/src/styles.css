@@ -842,6 +842,11 @@ button:disabled {
   padding-left: 0.75rem;
   border-left: 2px solid #dce6de;
 }
+.location-tree--compact-depth {
+  margin-left: 0;
+  padding-left: 0;
+  border-left: 0;
+}
 .location-tree-node {
   display: grid;
   grid-template-columns: 2.25rem minmax(0, 1fr);
@@ -888,6 +893,27 @@ button:disabled {
 }
 .location-usage {
   margin-top: 1rem;
+}
+.location-compact-usage {
+  display: grid;
+  gap: 0.2rem;
+  color: #587064;
+  overflow-wrap: anywhere;
+  text-align: left;
+}
+.location-usage-table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+.location-usage-table th,
+.location-usage-table td {
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px solid #cfdbd2;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
 }
 .location-path {
   overflow-wrap: anywhere;

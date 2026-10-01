@@ -504,3 +504,261 @@ def test_concurrent_opposite_reparents_cannot_persist_a_cycle(database_engine: E
         for location in locations:
             database.delete(location)
         database.commit()
+
+
+def test_batched_direct_and_inclusive_usage_deep_tree_and_reparent(
+    authenticated_browser: tuple[str, str], database_connection: Connection
+) -> None:
+    from sqlalchemy import event
+
+    from florabase.locations import api as location_api
+    from florabase.plants.model import Plant, PlantGroup
+    from florabase.seed_lots.model import SeedLot
+    from florabase.sowings.model import Sowing
+
+    _, _, root = create_location(authenticated_browser, "Greenhouse")
+    chain = [root]
+    for depth in range(1, 13):
+        _, _, child = create_location(
+            authenticated_browser,
+            f"Level {depth}",
+            chain[-1]["id"],
+            usage_scopes=["seed_lots"] if depth == 2 else None,
+        )
+        chain.append(child)
+    _, _, sibling = create_location(authenticated_browser, "Other shelf", root["id"])
+    _, _, outside = create_location(authenticated_browser, "Outside")
+    _, _, empty = create_location(authenticated_browser, "Empty")
+    _, _, empty_child = create_location(authenticated_browser, "Empty child", empty["id"])
+    records: list[SeedLot | Sowing | Plant | PlantGroup] = []
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        identity = BotanicalIdentity(scientific_name="Hibiscus sabdariffa")
+        database.add(identity)
+        database.flush()
+        source = SeedLot(botanical_identity_id=identity.id)
+        database.add(source)
+        database.flush()
+        for item in (root, chain[1], chain[-1], sibling, outside):
+            inactive = item is chain[-1]
+            records.extend(
+                [
+                    SeedLot(
+                        botanical_identity_id=identity.id,
+                        location_id=UUID(item["id"]),
+                        lifecycle="exhausted" if inactive else "active",
+                    ),
+                    Sowing(
+                        seed_lot_id=source.id,
+                        location_id=UUID(item["id"]),
+                        lifecycle="completed" if inactive else "active",
+                    ),
+                    Plant(
+                        botanical_identity_id=identity.id,
+                        direct_origin_kind="unknown",
+                        location_id=UUID(item["id"]),
+                        lifecycle="dead" if inactive else "active",
+                    ),
+                    PlantGroup(
+                        botanical_identity_id=identity.id,
+                        direct_origin_kind="unknown",
+                        location_id=UUID(item["id"]),
+                        lifecycle="completed" if inactive else "active",
+                    ),
+                ]
+            )
+        database.add_all(records)
+        database.commit()
+        assignments_before = [(record.id, record.location_id) for record in records]
+        statements: list[str] = []
+
+        def capture(_conn: Any, _cursor: Any, statement: str, *_args: Any) -> None:
+            statements.append(statement)
+
+        # API directory service uses exactly two queries regardless of tree depth/record count.
+        event.listen(database_connection, "before_cursor_execute", capture)
+        try:
+            responses = location_api.list_all(cast(Any, None), database)
+        finally:
+            event.remove(database_connection, "before_cursor_execute", capture)
+        assert len(statements) == 2
+        assert "WITH RECURSIVE" in statements[1]
+        assert len(responses) == 17
+
+    cookie, _ = authenticated_browser
+    status_code, _, listing = request("GET", "/api/v1/locations", headers={"cookie": cookie})
+    assert status_code == 200
+    by_id = {item["id"]: item for item in listing}
+    kinds = ("plants", "plant_groups", "sowings", "seed_lots")
+    for kind in kinds:
+        assert by_id[root["id"]]["direct_usage"][kind] == {"active": 1, "total": 1}
+        assert by_id[root["id"]]["usage_including_descendants"][kind] == {"active": 3, "total": 4}
+        assert by_id[chain[1]["id"]]["direct_usage"][kind] == {"active": 1, "total": 1}
+        assert by_id[chain[1]["id"]]["usage_including_descendants"][kind] == {
+            "active": 1,
+            "total": 2,
+        }
+        assert by_id[chain[2]["id"]]["direct_usage"][kind] == {"active": 0, "total": 0}
+        assert by_id[chain[2]["id"]]["usage_including_descendants"][kind] == {
+            "active": 0,
+            "total": 1,
+        }
+        for leaf in (chain[-1], sibling, outside):
+            assert (
+                by_id[leaf["id"]]["direct_usage"][kind]
+                == by_id[leaf["id"]]["usage_including_descendants"][kind]
+            )
+        for unoccupied in (empty, empty_child):
+            assert by_id[unoccupied["id"]]["direct_usage"][kind] == {"active": 0, "total": 0}
+            assert by_id[unoccupied["id"]]["usage_including_descendants"][kind] == {
+                "active": 0,
+                "total": 0,
+            }
+    assert by_id[root["id"]]["usage"]["plants"] == {"active": 2, "total": 2}
+    assert (
+        request("GET", f"/api/v1/locations/{root['id']}", headers={"cookie": cookie})[2]
+        == by_id[root["id"]]
+    )
+    # Parent scope eligibility never hides descendant assignments or changes deletion policy.
+    assert (
+        mutate(authenticated_browser, "DELETE", f"/api/v1/locations/{root['id']}")[2]["detail"][
+            "code"
+        ]
+        == "location_has_children"
+    )
+    moved_status, _, moved = mutate(
+        authenticated_browser,
+        "PUT",
+        f"/api/v1/locations/{chain[1]['id']}",
+        {"name": chain[1]["name"], "parent_id": outside["id"]},
+    )
+    assert moved_status == 200
+    assert moved["display_path"] == "Outside → Level 1"
+    after = request("GET", "/api/v1/locations", headers={"cookie": cookie})[2]
+    after_by_id = {item["id"]: item for item in after}
+    for kind in kinds:
+        assert after_by_id[root["id"]]["usage_including_descendants"][kind] == {
+            "active": 2,
+            "total": 2,
+        }
+        assert after_by_id[outside["id"]]["usage_including_descendants"][kind] == {
+            "active": 2,
+            "total": 3,
+        }
+        assert after_by_id[chain[-1]["id"]]["display_path"].startswith("Outside → Level 1 →")
+        for item in listing:
+            assert after_by_id[item["id"]]["direct_usage"] == item["direct_usage"]
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        for record, (record_id, assigned_location) in zip(records, assignments_before, strict=True):
+            persisted = cast(
+                SeedLot | Sowing | Plant | PlantGroup | None, database.get(type(record), record_id)
+            )
+            assert persisted is not None
+            assert persisted.location_id == assigned_location
+
+
+@pytest.mark.parametrize(
+    ("kind", "states"),
+    [
+        ("seed_lots", ("active", "exhausted", "discarded", "lost")),
+        ("sowings", ("active", "reversed", "completed", "failed", "abandoned")),
+        (
+            "plants",
+            ("active", "reversed", "reintegrated", "transferred", "dead", "lost", "discarded"),
+        ),
+        (
+            "plant_groups",
+            ("active", "reversed", "transferred", "completed", "dead", "lost", "discarded"),
+        ),
+    ],
+)
+def test_inclusive_usage_preserves_every_lifecycle_and_only_current_assignments(
+    kind: str, states: tuple[str, ...], database_connection: Connection
+) -> None:
+    from florabase.locations.service import location_usage, location_usage_aggregation
+    from florabase.plants.model import Plant, PlantGroup
+    from florabase.seed_lots.model import SeedLot
+    from florabase.sowings.model import Sowing
+
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        root = Location(name="Root")
+        unrelated = Location(name="Origin only")
+        identity = BotanicalIdentity(scientific_name="Abelmoschus esculentus")
+        database.add_all([root, unrelated, identity])
+        database.flush()
+        child = Location(name="Child", parent_id=root.id)
+        source = SeedLot(botanical_identity_id=identity.id, location_id=unrelated.id)
+        database.add_all([child, source])
+        database.flush()
+        sowing = Sowing(seed_lot_id=source.id, location_id=unrelated.id)
+        database.add(sowing)
+        database.flush()
+        models = {
+            "plants": Plant,
+            "plant_groups": PlantGroup,
+            "sowings": Sowing,
+            "seed_lots": SeedLot,
+        }
+        for state in states:
+            values: dict[str, Any] = {
+                "location_id": child.id if state == "active" else root.id,
+                "lifecycle": state,
+            }
+            if kind == "sowings":
+                values["seed_lot_id"] = source.id
+            else:
+                values["botanical_identity_id"] = identity.id
+                if kind in {"plants", "plant_groups"}:
+                    values["originating_sowing_id"] = sowing.id
+            database.add(models[kind](**values))
+        # Unassigned records must not inherit their source's physical Location.
+        database.add(Plant(botanical_identity_id=identity.id, originating_sowing_id=sowing.id))
+        database.flush()
+        aggregates = location_usage_aggregation(database)
+        direct = getattr(aggregates[root.id].direct, kind)
+        inclusive = getattr(aggregates[root.id].including_descendants, kind)
+        assert direct.total == len(states) - 1
+        assert direct.active == 0
+        assert inclusive.total == len(states)
+        assert inclusive.active == 1
+        legacy_kind = "plants" if kind == "plant_groups" else kind
+        assert getattr(location_usage(database)[root.id], legacy_kind) == direct
+        assert aggregates[unrelated.id].including_descendants.plants.total == 0
+        assert aggregates[unrelated.id].including_descendants.plant_groups.total == 0
+
+
+def test_usage_recursion_terminates_and_deduplicates_malformed_cycle(
+    database_connection: Connection,
+) -> None:
+    from sqlalchemy import text
+
+    from florabase.locations.service import location_usage_aggregation
+    from florabase.plants.model import Plant
+
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        first = Location(name="First")
+        second = Location(name="Second")
+        identity = BotanicalIdentity(scientific_name="Capsicum annuum")
+        database.add_all([first, second, identity])
+        database.flush()
+        first.parent_id = second.id
+        second.parent_id = first.id
+        database.add_all(
+            [
+                Plant(
+                    botanical_identity_id=identity.id,
+                    direct_origin_kind="unknown",
+                    location_id=first.id,
+                ),
+                Plant(
+                    botanical_identity_id=identity.id,
+                    direct_origin_kind="unknown",
+                    location_id=second.id,
+                ),
+            ]
+        )
+        database.flush()
+        database.execute(text("SET LOCAL statement_timeout = '2s'"))
+        aggregates = location_usage_aggregation(database)
+        for item in (first, second):
+            assert aggregates[item.id].direct.plants.total == 1
+            assert aggregates[item.id].including_descendants.plants.total == 2

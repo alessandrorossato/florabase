@@ -2,12 +2,14 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, literal, select, union_all
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import Select
 
 from florabase.events.model import Event
 from florabase.locations.model import Location
 from florabase.locations.schemas import (
+    LocationCollectionUsage,
     LocationCreate,
     LocationUpdate,
     LocationUsageCount,
@@ -107,6 +109,91 @@ def location_usage(database: Session) -> dict[UUID, LocationUsageSummary]:
             ),
             sowings=sowings.get(location_id, LocationUsageCount()),
             seed_lots=seed_lots.get(location_id, LocationUsageCount()),
+        )
+    return result
+
+
+@dataclass
+class LocationUsageAggregation:
+    direct: LocationCollectionUsage
+    including_descendants: LocationCollectionUsage
+
+    def legacy_direct(self) -> LocationUsageSummary:
+        return LocationUsageSummary(
+            plants=LocationUsageCount(
+                active=self.direct.plants.active + self.direct.plant_groups.active,
+                total=self.direct.plants.total + self.direct.plant_groups.total,
+            ),
+            sowings=self.direct.sowings,
+            seed_lots=self.direct.seed_lots,
+        )
+
+
+def location_usage_statement() -> Select[tuple[UUID, str, int, int, int, int]]:
+    """Aggregate all current assignments once, then roll up distinct containment pairs."""
+    containment = select(Location.id.label("ancestor_id"), Location.id.label("descendant_id")).cte(
+        "location_containment", recursive=True
+    )
+    # UNION (not UNION ALL) makes pairs unique and terminates even with a persisted cycle.
+    containment = containment.union(
+        select(containment.c.ancestor_id, Location.id).join(
+            Location, Location.parent_id == containment.c.descendant_id
+        )
+    )
+    assignments = union_all(
+        *(
+            select(
+                model.location_id.label("location_id"),
+                literal(kind).label("kind"),
+                func.count().label("total"),
+                func.count().filter(model.lifecycle == "active").label("active"),
+            )
+            .where(model.location_id.is_not(None))
+            .group_by(model.location_id)
+            for kind, model in (
+                ("plants", Plant),
+                ("plant_groups", PlantGroup),
+                ("sowings", Sowing),
+                ("seed_lots", SeedLot),
+            )
+        )
+    ).cte("location_assignments")
+    direct = containment.c.ancestor_id == containment.c.descendant_id
+    return (
+        select(
+            containment.c.ancestor_id,
+            assignments.c.kind,
+            func.coalesce(func.sum(assignments.c.total).filter(direct), 0),
+            func.coalesce(func.sum(assignments.c.active).filter(direct), 0),
+            func.sum(assignments.c.total),
+            func.sum(assignments.c.active),
+        )
+        .join(assignments, assignments.c.location_id == containment.c.descendant_id)
+        .group_by(containment.c.ancestor_id, assignments.c.kind)
+    )
+
+
+def location_usage_aggregation(database: Session) -> dict[UUID, LocationUsageAggregation]:
+    result: dict[UUID, LocationUsageAggregation] = {}
+    for (
+        location_id,
+        kind,
+        direct_total,
+        direct_active,
+        inclusive_total,
+        inclusive_active,
+    ) in database.execute(location_usage_statement()):
+        aggregation = result.setdefault(
+            location_id,
+            LocationUsageAggregation(LocationCollectionUsage(), LocationCollectionUsage()),
+        )
+        setattr(
+            aggregation.direct, kind, LocationUsageCount(total=direct_total, active=direct_active)
+        )
+        setattr(
+            aggregation.including_descendants,
+            kind,
+            LocationUsageCount(total=inclusive_total, active=inclusive_active),
         )
     return result
 

@@ -139,6 +139,27 @@ deleted only when it is a leaf and no Plant, PlantGroup, Sowing, SeedLot, or Eve
 it; retirement remains the non-destructive choice for retained reference data. Renames and moves
 change the current derived path. Florabase does not event-source historical Location names or paths.
 
+Location collection usage distinguishes **Directly here** (current `location_id` equals this
+Location) from **Including sublocations** (this Location plus every descendant at any depth).
+SeedLot, Sowing, Plant and PlantGroup are counted separately as records, never quantities. Both
+scopes retain every lifecycle state in `total`, with only `lifecycle = active` in `active`.
+Retained historical records count only at their retained current assignment; Events, provenance,
+identity, source records and lineage never supply or infer an assignment. Location eligibility scopes
+do not inherit and never hide material assigned to eligible descendants beneath another scope.
+
+The authenticated Location API preserves legacy `usage` as direct membership, including its combined
+Plant/PlantGroup `plants` count. Additive `direct_usage` and `usage_including_descendants` summaries
+separate `plants`, `plant_groups`, `sowings` and `seed_lots`, each with `active` and `total` counts.
+All counts are derived at read time, not persisted. Reparenting immediately changes inclusive usage
+and display paths without editing the records in the moved subtree. Independent roots stay isolated.
+Assignment-scope removal and deletion continue to use direct references and existing child/history
+guards; descendant totals do not change those policies.
+
+The directory and compact preview show nonzero inclusive usage, add the direct count when it differs,
+and show equal leaf counts once. Detail compares both scopes for all four supported record types,
+including explicit zeroes and active counts. Location detail currently links to collection directories;
+it does not list associated records, so LOCATION-003 introduces no record-list scope or default change.
+
 Location answers where managed material currently sits. It is not geographic provenance.
 It also does not identify a Supplier.
 

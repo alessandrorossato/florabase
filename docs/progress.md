@@ -1,5 +1,42 @@
 # Engineering progress
 
+## 2026-10-01 — LOCATION-003 hierarchical usage final review
+
+- Continued `feat/location-descendant-aggregation` at `c1fc7c5`. LOCATION-003 adds derived
+  direct and arbitrary-depth inclusive usage for SeedLot, Sowing, Plant and PlantGroup. Legacy
+  `usage` remains direct (including combined Plants/groups); additive `direct_usage` and
+  `usage_including_descendants` expose the four types separately. Total/all-lifecycle and
+  active-only semantics, assignment eligibility and child/direct/history deletion guards remain.
+- The directory uses one hierarchy read plus one batched recursive PostgreSQL aggregate;
+  distinct containment pairs terminate even for malformed cycles. No N+1 record queries,
+  persisted counters, new indexes or migration are introduced. A representative planner check
+  on 206 Locations/4,015 assignments reported 6.107 ms execution with one scan/aggregate per
+  record type. Reparent tests verify both roots change without any record Location update.
+- Directory and desktop Quick Preview show inclusive content with an explicit direct count when
+  different, equal leaf counts once, and one empty message. Detail compares both scopes with
+  per-type total/active counts. Existing general collection links are preserved: Location has
+  no associated-record list, so no listing scope/default was introduced. Deep rows retain parent
+  context and full paths while indentation stops growing after three levels.
+- Focused checks passed 12 backend unit tests, 16 PostgreSQL Location/migration tests and
+  66 frontend App/Location tests. Added coverage includes twelve-level trees, siblings, roots,
+  empty branches, every lifecycle/type, source non-inference, cycle termination, two-query batching,
+  additive API semantics, keyboard selection and deep-tree collapse/path context. Final complete
+  suites and quality/API/build checks run through the canonical local gate; the completed result
+  and tree receipt are reported with the handoff. No test settings or thresholds were weakened.
+- Rendered review in the in-app browser covered 1440 × 844, 1024 × 844 and 390 × 844,
+  including parent-only descendant content, mixed and leaf counts, empty Quick Preview, long paths
+  and the expanded twelve-level mobile tree. Review found and fixed indentation collapse from
+  26 px to a readable 211 px row. Final reviewed frames have no horizontal overflow; compact
+  counts are included in the accessible row names. The [audit](location-descendant-aggregation.md)
+  records contracts, query-plan evidence, visual matrix, screenshots and changed files.
+- Operator visual acceptance and independent final review are complete. The review confirmed the
+  direct/inclusive contract, all four canonical assignment types, unchanged legacy usage, recursive
+  cycle-safe aggregation, dynamic reparenting, lifecycle semantics, API drift, existing deletion
+  guards, and UI scope labels. No implementation defect or product ambiguity was found. The prior
+  canonical verification receipt matches this tree; `git diff --check` passes. LOCATION-003 remains
+  `implemented` pending final commit and delivery. All edits remain unstaged and uncommitted; no
+  commit, push, merge, delivery or feature-finish ran.
+
 ## 2026-09-30 — Final operator pass 33–47 ready for visual acceptance
 
 - Continued `feat/ui-consistency-polish` at `cd5bf70`, preserving prior work. Guided

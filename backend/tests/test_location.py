@@ -283,3 +283,35 @@ def test_scope_removal_and_delete_preserve_references(
     database.scalar.return_value = 0
     delete_location(database, item.id)
     database.delete.assert_called_once_with(item)
+
+
+def test_batched_usage_exposes_separate_record_types_and_legacy_direct_counts() -> None:
+    location_id = uuid7()
+    database = MagicMock()
+    database.execute.return_value = [
+        (location_id, "plants", 2, 1, 7, 4),
+        (location_id, "plant_groups", 3, 1, 5, 2),
+        (location_id, "sowings", 0, 0, 4, 2),
+        (location_id, "seed_lots", 1, 0, 1, 0),
+    ]
+    usage = location_service.location_usage_aggregation(database)[location_id]
+    database.execute.assert_called_once()
+    assert usage.direct.plants == LocationUsageCount(active=1, total=2)
+    assert usage.including_descendants.plants == LocationUsageCount(active=4, total=7)
+    assert usage.direct.plant_groups == LocationUsageCount(active=1, total=3)
+    assert usage.including_descendants.plant_groups == LocationUsageCount(active=2, total=5)
+    assert usage.legacy_direct().plants == LocationUsageCount(active=2, total=5)
+    item = location(id=location_id)
+    response = api._location_response(item, [item], usage)
+    assert response.usage.plants.total == 5
+    assert response.direct_usage.plants.total == 2
+    assert response.usage_including_descendants.plants.total == 7
+
+
+def test_empty_batched_usage_and_response_defaults() -> None:
+    database = MagicMock()
+    database.execute.return_value = []
+    assert location_service.location_usage_aggregation(database) == {}
+    response = LocationResponse.from_model(location(), display_path="Empty")
+    assert response.direct_usage == response.usage_including_descendants
+    assert response.direct_usage.plant_groups.total == 0
