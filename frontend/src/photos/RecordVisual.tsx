@@ -6,8 +6,9 @@ import type { PrimaryPhoto } from "./api";
 type Identity = Pick<BotanicalIdentityResponse, "id" | "display_label"> &
   Partial<BotanicalIdentityResponse>;
 export type RecordVisualKind =
-  "seed" | "sowing" | "plant" | "group" | "identity";
+  "seed" | "sowing" | "plant" | "group" | "identity" | "harvest";
 const placeholderPaths: Record<RecordVisualKind, string> = {
+  harvest: "M4 10h16l-2 10H6L4 10ZM8 10l4-7 4 7M9 14v3M15 14v3",
   seed: "M17 5C5 4 4 13 8 17s13 3 9-12ZM9 15l7-8",
   sowing:
     "M4 18h16M6 18v-5h12v5M12 13V5M12 9C6 10 5 6 6 4c4 0 6 2 6 5ZM12 11c5 0 7-3 6-6-4 0-6 3-6 6Z",
@@ -20,6 +21,7 @@ const placeholderPaths: Record<RecordVisualKind, string> = {
 };
 export function RecordVisual({
   photo,
+  fallbackPhoto,
   identity: summary,
   kind,
   label,
@@ -28,6 +30,7 @@ export function RecordVisual({
   className = "",
 }: {
   photo?: PrimaryPhoto | null;
+  fallbackPhoto?: PrimaryPhoto | null;
   identity?: Identity;
   kind: RecordVisualKind;
   label: string;
@@ -54,7 +57,10 @@ export function RecordVisual({
       : allowExternalCover && identity?.compact_cover_kind === "external"
         ? identity.compact_external_cover_url
         : null;
-  const source = [direct, cover].find((src) => src && !broken.has(src));
+  const inherited = fallbackPhoto?.thumbnail_url ?? null;
+  const source = [direct, inherited, cover].find(
+    (src) => src && !broken.has(src),
+  );
   const primary = source === direct;
   return (
     <span
@@ -63,7 +69,7 @@ export function RecordVisual({
       {source ? (
         <img
           src={source}
-          alt={`${primary ? "Primary photo" : "Cover"} for ${label}`}
+          alt={`${primary ? "Primary photo" : source === inherited ? "Source primary photo" : "Cover"} for ${label}`}
           loading="lazy"
           decoding="async"
           referrerPolicy={

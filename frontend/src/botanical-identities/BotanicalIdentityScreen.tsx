@@ -72,6 +72,7 @@ const tabs = [
   "seeds",
   "sowings",
   "plants",
+  "harvests",
   "events",
 ] as const;
 
@@ -571,7 +572,7 @@ function IdentityDetails({
                 }),
               )}
               selected={
-                ["seeds", "sowings", "plants"].includes(tab)
+                ["seeds", "sowings", "plants", "harvests"].includes(tab)
                   ? "collection"
                   : tab
               }
@@ -688,7 +689,7 @@ function IdentityDetails({
                   </div>
                 </section>
               )}
-              {["seeds", "sowings", "plants"].includes(tab) && (
+              {["seeds", "sowings", "plants", "harvests"].includes(tab) && (
                 <section
                   id="panel-collection"
                   role="tabpanel"
@@ -700,10 +701,37 @@ function IdentityDetails({
                       { id: "seeds", label: "Seeds" },
                       { id: "sowings", label: "Sowings" },
                       { id: "plants", label: "Plants / Plant groups" },
+                      { id: "harvests", label: "Harvests" },
                     ]}
                     selected={tab}
                     onSelect={selectTab}
                   />
+                  {counts && tab === "harvests" && (
+                    <div
+                      id="panel-harvests"
+                      className="detail-tab-panel"
+                      role="tabpanel"
+                      aria-labelledby="tab-harvests"
+                    >
+                      <p>{counts.harvests.length} harvests</p>
+                      <div className="card-grid">
+                        {counts.harvests.map((harvest) => (
+                          <CollectionCard
+                            key={harvest.id}
+                            title={harvest.display_title}
+                            href={`#/harvests/${harvest.id}`}
+                          >
+                            <p>
+                              {harvest.items.length}{" "}
+                              {harvest.items.length === 1
+                                ? "material line"
+                                : "material lines"}
+                            </p>
+                          </CollectionCard>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {counts && tab === "seeds" && (
                     <div
                       id="panel-seeds"

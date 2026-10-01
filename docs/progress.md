@@ -1,5 +1,38 @@
 # Engineering progress
 
+## 2026-10-01 — HARVEST-001 structured Harvest review handoff
+
+- Continued `feat/structured-harvests` at `6a44a18`. Harvest records one Plant XOR PlantGroup,
+  existing partial date, optional label/notes and 1–100 ordered material lines. Controlled material
+  kinds, exact/approximate count or weight and unknown quantities retain explicit precision.
+  Identity is derived from the source; lifecycle, group quantity, Location and seed inventory stay
+  unchanged, including root, whole-plant and seed collection.
+- Atomic aggregate writes own one protected harvest Event. Corrections update source/date/notes
+  coherently; deletion removes Harvest and owned Event while retaining shared assets. Existing
+  free-form harvest Events are preserved. Retained historical sources are selectable; concrete
+  restrictive foreign keys protect their history. No source hard-delete API is introduced.
+- Revision `20261001_0029` follows 0028. Concrete media/primary relationships extend the shared
+  library. Immediate constraints and deferred aggregate/Event checks enforce final validity;
+  populated downgrade refuses history loss and empty downgrade/reupgrade is supported.
+- Added Collection navigation, directory/filters, compact desktop preview, detail, accessible
+  multi-line forms, contextual source actions, identity Harvest history, Dashboard Quick action
+  and structured Event links/images. Central image fallback preserves external-image privacy.
+  Directory projection batches source/identity/material/image reads; 16 mixed-source records stay
+  within eight statements.
+- Baseline `make check` passed (502 backend unit tests, 90.89% coverage; 327 frontend tests).
+  Development checks passed Ruff, backend/frontend typing and focused suites; 16 PostgreSQL tests
+  cover rollback, coherence, source retention, media/primary membership and migration preservation.
+  The complete canonical `make feature-verify` result and receipt are reported in the handoff;
+  no thresholds, timeouts or runner settings are weakened.
+- Browser review uses isolated synthetic data at 1440 × 844, 1024 × 844 and 390 × 844, covering
+  directory/preview, one/multiple-item creation, correction, detail/media, Plant/PlantGroup contextual
+  creation, activity/journal links, long names and partial/unknown dates/quantities. Keyboard material
+  add/remove focus and dialog focus restoration were checked; no horizontal overflow was found.
+  The [Harvest handoff](harvests.md) records the contract, review matrix and exact changed files.
+- HARVEST-001 remains `implemented` pending operator acceptance. The tree stays unstaged and
+  uncommitted on the same branch. Harvested-material inventory/disposition and explicit SeedLot
+  conversion remain separate pre-1.0 candidates; all established roadmap milestones are preserved.
+
 ## 2026-10-01 — ATTACHMENT-005 persistent external copies
 
 - Continued the same unstaged `feat/shared-media-library` tree. External assets keep their kind,
@@ -1816,7 +1849,7 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20261001_0028`; ATTACHMENT-005 is implemented pending visual acceptance.
+- Alembic head: `20261001_0029`; ATTACHMENT-005 and HARVEST-001 are implemented pending visual acceptance.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the

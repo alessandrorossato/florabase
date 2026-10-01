@@ -416,15 +416,23 @@ function Detail({
         editLabel={`Edit ${record.kind === "plant" ? "Plant" : "Plant group"}`}
         onEdit={onEdit}
         overflow={
-          <a
-            className="button-link button--secondary"
-            href={labelComposerHref(
-              record.kind === "plant" ? "plant" : "plant-group",
-              value.id,
-            )}
-          >
-            Print label
-          </a>
+          <>
+            <a
+              className="button-link button--secondary"
+              href={`#/harvests?action=create&sourceType=${record.kind === "plant" ? "plant" : "plant_group"}&source=${value.id}`}
+            >
+              Record harvest
+            </a>
+            <a
+              className="button-link button--secondary"
+              href={labelComposerHref(
+                record.kind === "plant" ? "plant" : "plant-group",
+                value.id,
+              )}
+            >
+              Print label
+            </a>
+          </>
         }
       />
       <DetailTabs

@@ -128,12 +128,13 @@ test("Dashboard keeps its counts, actions, and chronological Event context", asy
     ).toBeInTheDocument();
   }
   const actions = screen.getByRole("navigation", { name: "Quick actions" });
-  expect(within(actions).getAllByRole("link")).toHaveLength(8);
+  expect(within(actions).getAllByRole("link")).toHaveLength(9);
   for (const [name, href] of [
     ["New seed lot", "#/seeds?action=create"],
     ["New sowing", "#/sowings?action=create"],
     ["New plant", "#/plants?action=create&kind=plant"],
     ["New plant group", "#/plants?action=create&kind=group"],
+    ["Record harvest", "#/harvests?action=create"],
     ["New botanical identity", "#/identities?action=create"],
     ["New supplier", "#/suppliers?action=create"],
     ["New location", "#/locations?action=create"],
@@ -213,6 +214,7 @@ test("Dashboard search replaces overview, groups results, and restores the norma
     ["New sowing", "#/sowings?action=create"],
     ["New plant", "#/plants?action=create&kind=plant"],
     ["New plant group", "#/plants?action=create&kind=group"],
+    ["Record harvest", "#/harvests?action=create"],
     ["New botanical identity", "#/identities?action=create"],
     ["New supplier", "#/suppliers?action=create"],
     ["New location", "#/locations?action=create"],

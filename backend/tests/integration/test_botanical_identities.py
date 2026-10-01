@@ -112,6 +112,8 @@ def test_schema_uses_native_types_named_constraints_and_only_one_botanical_table
         "external_taxon_links",
         "germination_observations",
         "geographic_places",
+        "harvests",
+        "harvest_items",
         "locations",
         "record_media_links",
         "login_throttles",

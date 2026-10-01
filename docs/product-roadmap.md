@@ -407,9 +407,10 @@ semantics.
 ATTACHMENT-005 establishes reusable assets and exact record links; it does not execute the work below.
 Each milestone requires a separate bounded increment and product contract before implementation.
 
-1. Structured harvest/collection records for fruits, flowers, roots, leaves, seeds and other harvested
-   material, with explicit domain quantities, dates and relationships; media can reuse this foundation
-   once target semantics are approved.
+1. HARVEST-001 structured harvest records are implemented for operator visual acceptance: explicit
+   sources, ordered materials, quantities, partial dates, owned Events and shared media. Future Harvest
+   material inventory/disposition remains separate: stored remainder, consumed/processed/discarded/
+   gifted material, propagation use, explicit SeedLot conversion and storage Location.
 2. Supplier imagery using MediaAsset after its separate target/role contract is selected. Supplier
    remains excluded from current media links.
 3. Broader global search, saved views and explicit bulk operations beyond the implemented SEARCH-001
@@ -430,3 +431,9 @@ Each milestone requires a separate bounded increment and product contract before
 8. Final technical repository cleanup and release hardening: dependency/tooling health, security and
    migration/recovery drills, CI, tests, installation/upgrade acceptance and release-candidate checks.
    Keep this technical gate distinct from the presentation/documentation audit above.
+
+The LOCATION-003 descendant aggregation milestone remains implemented alongside shared media.
+Controlled botanical enrichment, botanical distribution mapping, global search/saved views/bulk
+operations, measured resource optimization, public Docker images, repository presentation/documentation
+review and final technical cleanup/release hardening retain their separate pre-1.0 boundaries.
+HARVEST-001 does not perform those future milestones or the final documentation audit.

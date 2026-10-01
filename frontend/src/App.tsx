@@ -11,6 +11,13 @@ import { LoginForm } from "./auth/LoginForm";
 import { WorkspaceBoundary } from "./components/WorkspaceBoundary";
 import { loadWorkspaceChunk } from "./components/workspaceChunk";
 
+const HarvestScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./harvests/HarvestScreen");
+    return { default: module.HarvestScreen };
+  }),
+);
+
 const MediaScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./media/MediaScreen");
@@ -128,6 +135,7 @@ type Section =
   | "seeds"
   | "sowings"
   | "plants"
+  | "harvests"
   | "events"
   | "map"
   | "identities"
@@ -146,6 +154,8 @@ interface Route {
   tab?: string;
   action?: string;
   identityId?: string;
+  sourceType?: "plant" | "plant_group";
+  sourceId?: string;
   seedLotId?: string;
   sowingId?: string;
   creationKind?: "plant" | "group";
@@ -169,6 +179,9 @@ function currentRoute(): Route {
   const placeId = params.get("place") ?? undefined;
   const context = {
     action,
+    sourceType:
+      params.get("sourceType") === "plant_group" ? "plant_group" : "plant",
+    sourceId: params.get("source") ?? undefined,
     identityId,
     seedLotId,
     sowingId,
@@ -189,6 +202,7 @@ function currentRoute(): Route {
     "dashboard",
     "seeds",
     "sowings",
+    "harvests",
     "events",
     "map",
     "identities",
@@ -223,6 +237,7 @@ const desktopGroups: {
       { id: "seeds", label: "Seeds" },
       { id: "sowings", label: "Sowings" },
       { id: "plants", label: "Plants" },
+      { id: "harvests", label: "Harvests" },
       { id: "events", label: "Events" },
       { id: "map", label: "Provenance map" },
       { id: "media", label: "Media" },
@@ -446,7 +461,8 @@ function ApplicationShell() {
           fetchIdentities={
             route.section === "dashboard" ||
             route.section === "events" ||
-            route.section === "sowings"
+            route.section === "sowings" ||
+            route.section === "harvests"
           }
         >
           <WorkspaceBoundary
@@ -467,6 +483,14 @@ function ApplicationShell() {
                 />
               ) : route.section === "dashboard" ? (
                 <DashboardScreen />
+              ) : route.section === "harvests" ? (
+                <HarvestScreen
+                  key={route.recordId ?? "directory"}
+                  initialId={route.recordId}
+                  startCreating={route.action === "create"}
+                  sourceType={route.sourceType}
+                  sourceId={route.sourceId}
+                />
               ) : route.section === "media" ? (
                 <MediaScreen
                   key={route.recordId ?? "directory"}

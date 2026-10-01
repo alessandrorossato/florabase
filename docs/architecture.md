@@ -123,3 +123,10 @@ ATTACHMENT-005 external snapshots remain external-reference assets. Explicit cop
 bounded SSRF-protected fetches with validated socket destinations and hostname-verified TLS, then use
 the ordinary Attachment store and shared thumbnails. Reads never fetch remotely; snapshot pointer
 swaps and retryable pending cleanup serialize under the asset lock. See [media library](media-library.md).
+
+HARVEST-001 adds the `harvests` capability as an atomic historical aggregate. Concrete source FKs,
+ordered material lines and a unique owned Event relationship are protected by checks and deferred
+PostgreSQL integrity triggers. No event replay or source-state mutation is involved. Harvest extends
+shared record-media/primary infrastructure and batched presentation projections, deriving identity
+through its source. Revision 0029 preserves ordinary Events/media and guards populated downgrade.
+See [structured Harvests](harvests.md) for correction, deletion, precision and future inventory scope.
