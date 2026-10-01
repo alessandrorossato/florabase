@@ -440,6 +440,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/collection-records/{target_type}/{target_id}/media-links": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Link Media */
+        post: operations["linkRecordMedia"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/collection-records/{target_type}/{target_id}/photos": {
         parameters: {
             query?: never;
@@ -818,6 +835,179 @@ export interface paths {
         put?: never;
         /** Retire */
         post: operations["retireLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media-assets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Media */
+        get: operations["listMediaAssets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media-assets/external": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create External */
+        post: operations["createExternalMediaAsset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media-assets/local": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upload Media */
+        post: operations["uploadMediaAsset"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media-assets/{asset_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Media */
+        get: operations["getMediaAsset"];
+        put?: never;
+        post?: never;
+        /** Delete Media */
+        delete: operations["deleteMediaAsset"];
+        options?: never;
+        head?: never;
+        /** Edit Media */
+        patch: operations["updateMediaAsset"];
+        trace?: never;
+    };
+    "/api/v1/media-assets/{asset_id}/local-copy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove Local Copy */
+        delete: operations["removeExternalMediaLocalCopy"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media-assets/{asset_id}/refresh-local-copy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Refresh Local Copy */
+        post: operations["refreshExternalMediaLocalCopy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media-assets/{asset_id}/save-local-copy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Save Local Copy */
+        post: operations["saveExternalMediaLocalCopy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media-assets/{asset_id}/thumbnail": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Thumbnail */
+        get: operations["getMediaAssetThumbnail"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/media-links/{link_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Unlink Media */
+        delete: operations["unlinkRecordMedia"];
+        options?: never;
+        head?: never;
+        /** Edit Link */
+        patch: operations["updateRecordMediaLink"];
+        trace?: never;
+    };
+    "/api/v1/media-targets/{target_type}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Targets */
+        get: operations["listMediaTargets"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -1524,6 +1714,160 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AssetDetailResponse */
+        AssetDetailResponse: {
+            /** Attribution */
+            attribution: string | null;
+            /** Byte Size */
+            byte_size: number | null;
+            /** Can Delete */
+            can_delete: boolean;
+            /** Collection Link Count */
+            collection_link_count: number;
+            /** Content Url */
+            content_url: string | null;
+            /** Cover Reference Count */
+            cover_reference_count: number;
+            /** Covers */
+            covers: components["schemas"]["CoverReferenceResponse"][];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deletion Pending */
+            deletion_pending: boolean;
+            /** Fetched At */
+            fetched_at?: string | null;
+            /** Height */
+            height: number | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Image Url */
+            image_url: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "local" | "external";
+            /** Licence Label */
+            licence_label: string | null;
+            /** Licence Url */
+            licence_url: string | null;
+            /** Links */
+            links: components["schemas"]["LinkResponse"][];
+            /**
+             * Local Copy Cleanup Pending
+             * @default false
+             */
+            local_copy_cleanup_pending: boolean;
+            /** Media Type */
+            media_type: string | null;
+            /** Original Filename */
+            original_filename: string | null;
+            /** Source Url */
+            source_url: string | null;
+            /** Thumbnail Url */
+            thumbnail_url: string | null;
+            /** Title */
+            title: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Width */
+            width: number | null;
+        };
+        /** AssetMetadataWrite */
+        AssetMetadataWrite: {
+            /** Attribution */
+            attribution?: string | null;
+            /** Licence Label */
+            licence_label?: string | null;
+            /** Licence Url */
+            licence_url?: string | null;
+            /** Title */
+            title?: string | null;
+        };
+        /** AssetPageResponse */
+        AssetPageResponse: {
+            /** Items */
+            items: components["schemas"]["AssetResponse"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
+        /** AssetResponse */
+        AssetResponse: {
+            /** Attribution */
+            attribution: string | null;
+            /** Byte Size */
+            byte_size: number | null;
+            /** Can Delete */
+            can_delete: boolean;
+            /** Collection Link Count */
+            collection_link_count: number;
+            /** Content Url */
+            content_url: string | null;
+            /** Cover Reference Count */
+            cover_reference_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Deletion Pending */
+            deletion_pending: boolean;
+            /** Fetched At */
+            fetched_at?: string | null;
+            /** Height */
+            height: number | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Image Url */
+            image_url: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "local" | "external";
+            /** Licence Label */
+            licence_label: string | null;
+            /** Licence Url */
+            licence_url: string | null;
+            /**
+             * Local Copy Cleanup Pending
+             * @default false
+             */
+            local_copy_cleanup_pending: boolean;
+            /** Media Type */
+            media_type: string | null;
+            /** Original Filename */
+            original_filename: string | null;
+            /** Source Url */
+            source_url: string | null;
+            /** Thumbnail Url */
+            thumbnail_url: string | null;
+            /** Title */
+            title: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Width */
+            width: number | null;
+        };
         /** AttachmentResponse */
         AttachmentResponse: {
             /** Byte Size */
@@ -1580,6 +1924,15 @@ export interface components {
              * @description JPEG, PNG, or WebP collection photo
              */
             file: string;
+        };
+        /** Body_uploadMediaAsset */
+        Body_uploadMediaAsset: {
+            /** Attribution */
+            attribution?: string | null;
+            /** File */
+            file: string;
+            /** Title */
+            title?: string | null;
         };
         /** BotanicalIdentityCollectionResponse */
         BotanicalIdentityCollectionResponse: {
@@ -1715,6 +2068,23 @@ export interface components {
             /** Warnings */
             warnings: string | null;
         };
+        /** CoverReferenceResponse */
+        CoverReferenceResponse: {
+            /**
+             * Botanical Identity Id
+             * Format: uuid
+             */
+            botanical_identity_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string;
+            /** Url */
+            url: string;
+        };
         /** CsrfResponse */
         CsrfResponse: {
             /** Csrf Token */
@@ -1813,15 +2183,34 @@ export interface components {
             /** Resulting Plant Id */
             resulting_plant_id?: string | null;
         };
+        /** ExternalAssetCreate */
+        ExternalAssetCreate: {
+            /** Attribution */
+            attribution: string;
+            /** Image Url */
+            image_url: string;
+            /** Licence Label */
+            licence_label?: string | null;
+            /** Licence Url */
+            licence_url?: string | null;
+            /** Source Url */
+            source_url: string;
+            /** Title */
+            title?: string | null;
+        };
         /** ExternalCoverResponse */
         ExternalCoverResponse: {
             /** Attribution */
             attribution: string;
+            /** Content Url */
+            content_url?: string | null;
             /**
              * Created At
              * Format: date-time
              */
             created_at: string;
+            /** Fetched At */
+            fetched_at?: string | null;
             /**
              * Id
              * Format: uuid
@@ -1838,8 +2227,12 @@ export interface components {
             licence_label: string | null;
             /** Licence Url */
             licence_url: string | null;
+            /** Media Asset Id */
+            media_asset_id?: string | null;
             /** Source Url */
             source_url: string;
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
             /**
              * Updated At
              * Format: date-time
@@ -1870,6 +2263,8 @@ export interface components {
             attribution: string;
             /** Caption */
             caption?: string | null;
+            /** Display Order */
+            display_order?: number | null;
             /** Image Url */
             image_url: string;
             /** Source Url */
@@ -1881,11 +2276,20 @@ export interface components {
             attribution: string;
             /** Caption */
             caption: string | null;
+            /** Content Url */
+            content_url?: string | null;
             /**
              * Created At
              * Format: date-time
              */
             created_at: string;
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /** Fetched At */
+            fetched_at?: string | null;
             /**
              * Id
              * Format: uuid
@@ -1898,8 +2302,12 @@ export interface components {
              * @enum {string}
              */
             kind: "external";
+            /** Media Asset Id */
+            media_asset_id?: string | null;
             /** Source Url */
             source_url: string;
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
             /**
              * Updated At
              * Format: date-time
@@ -1912,6 +2320,8 @@ export interface components {
             attribution: string;
             /** Caption */
             caption?: string | null;
+            /** Display Order */
+            display_order?: number | null;
             /** Image Url */
             image_url: string;
             /** Source Url */
@@ -2261,6 +2671,77 @@ export interface components {
             /** Subject */
             subject: components["schemas"]["SeedLotLineageNode"] | components["schemas"]["SowingLineageNode"] | components["schemas"]["PlantLineageNode"] | components["schemas"]["PlantGroupLineageNode"];
         };
+        /** LinkCreate */
+        LinkCreate: {
+            /** Caption */
+            caption?: string | null;
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /**
+             * Media Asset Id
+             * Format: uuid
+             */
+            media_asset_id: string;
+        };
+        /** LinkResponse */
+        LinkResponse: {
+            /** Caption */
+            caption?: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Is Primary */
+            is_primary: boolean;
+            /**
+             * Media Asset Id
+             * Format: uuid
+             */
+            media_asset_id: string;
+            /**
+             * Target Id
+             * Format: uuid
+             */
+            target_id: string;
+            /** Target Label */
+            target_label: string;
+            /**
+             * Target Type
+             * @enum {string}
+             */
+            target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event";
+            /** Target Url */
+            target_url: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** LinkWrite */
+        LinkWrite: {
+            /** Caption */
+            caption?: string | null;
+            /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+        };
         /** LocalCoverResponse */
         LocalCoverResponse: {
             /**
@@ -2287,6 +2768,8 @@ export interface components {
              * @enum {string}
              */
             kind: "local";
+            /** Media Asset Id */
+            media_asset_id?: string | null;
             /**
              * Media Type
              * @enum {string}
@@ -2321,6 +2804,11 @@ export interface components {
             /** Deletion Pending */
             deletion_pending: boolean;
             /**
+             * Display Order
+             * @default 0
+             */
+            display_order: number;
+            /**
              * Id
              * Format: uuid
              */
@@ -2330,6 +2818,8 @@ export interface components {
              * @enum {string}
              */
             kind: "local";
+            /** Media Asset Id */
+            media_asset_id?: string | null;
             /**
              * Media Type
              * @enum {string}
@@ -2349,6 +2839,8 @@ export interface components {
             attribution?: string | null;
             /** Caption */
             caption?: string | null;
+            /** Display Order */
+            display_order?: number | null;
         };
         /**
          * LocationCollectionUsage
@@ -4103,6 +4595,27 @@ export interface components {
             /** Seed Lots Total */
             seed_lots_total: number;
         };
+        /** TargetChoiceResponse */
+        TargetChoiceResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string;
+        };
+        /** TargetPageResponse */
+        TargetPageResponse: {
+            /** Items */
+            items: components["schemas"]["TargetChoiceResponse"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /** TaxonCandidate */
         TaxonCandidate: {
             /** Accepted External Id */
@@ -5451,6 +5964,44 @@ export interface operations {
             };
         };
     };
+    linkRecordMedia: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event";
+                target_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     listCollectionPhotos: {
         parameters: {
             query?: never;
@@ -6447,6 +6998,446 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LocationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listMediaAssets: {
+        parameters: {
+            query?: {
+                query?: string;
+                kind?: ("local" | "external") | null;
+                association?: "all" | "linked" | "unlinked";
+                target?: ("seed_lot" | "sowing" | "plant" | "plant_group" | "event") | null;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetPageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createExternalMediaAsset: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExternalAssetCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    uploadMediaAsset: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_uploadMediaAsset"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getMediaAsset: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteMediaAsset: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateMediaAsset: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssetMetadataWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    removeExternalMediaLocalCopy: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refreshExternalMediaLocalCopy: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    saveExternalMediaLocalCopy: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getMediaAssetThumbnail: {
+        parameters: {
+            query?: never;
+            header?: {
+                "if-none-match"?: string | null;
+            };
+            path: {
+                asset_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Shared bounded local thumbnail */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/webp": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unlinkRecordMedia: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateRecordMediaLink: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                link_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LinkWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LinkResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listMediaTargets: {
+        parameters: {
+            query?: {
+                query?: string;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path: {
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TargetPageResponse"];
                 };
             };
             /** @description Validation Error */

@@ -1,5 +1,60 @@
 # Engineering progress
 
+## 2026-10-01 — ATTACHMENT-005 persistent external copies
+
+- Continued the same unstaged `feat/shared-media-library` tree. External assets keep their kind,
+  canonical URL, attribution, UUID, links, primary selections and covers while optionally referencing
+  one protected Attachment snapshot with UTC fetched-at metadata. Explicit Save/Refresh/Remove copy
+  routes reuse original storage and shared derivatives; reads prefer saved content across views.
+- Bounded fetches validate every DNS result and redirect, pin public IP connections, verify TLS
+  hostnames, reject unsafe destinations/credentials, cap timeout/bytes, and reuse strict still-image
+  decoding and pixel-bomb checks. Failed refresh retains the valid copy. Asset-row locks and a
+  durable pending-cleanup pointer serialize copy/deletion actions and support explicit retry.
+- Revision 0028 follows 0027, initializes old external copies as absent, performs no network access,
+  and guards downgrade while copies/cleanup remain. Both migration contracts and the full empty
+  cycle are covered. Persistent snapshots are included in paired original/database backups.
+- Focused checks passed: Ruff, strict backend typing (229 files), 85 backend security/storage/media
+  unit tests, 42 frontend media/photo/activity tests, frontend lint/types, and 19 PostgreSQL lifecycle,
+  rollback, migration and real lock-race tests. The final canonical gate covers the complete tree;
+  its result is reported in the handoff. No runner settings or thresholds are relaxed.
+- Browser review at 1440 × 844, 1024 × 844 and 390 × 844 exercised real Save/Refresh, concise Gallery
+  states, saved metadata, protected record/Photos/activity imagery, and removal confirmation with
+  Escape focus restoration. No horizontal overflow was found. The tree remains unstaged and
+  uncommitted; operator visual acceptance remains pending.
+
+## 2026-10-01 — ATTACHMENT-005 shared media review handoff
+
+- Continued the clean `feat/shared-media-library` branch at `1c4fbf1`, implementing the approved
+  unlinked-media policy. MediaAsset owns one local original or attributed external reference;
+  exact RecordMediaLinks retain the five established targets and independent caption/order.
+  Explicit SeedLot/Plant/PlantGroup primary designations remain per target. Identity covers remain
+  separate active references. Unlink and cover replacement retain assets; deletion requires zero
+  collection links and zero covers, with no automatic cleanup or destructive cascade.
+- Revision `20261001_0027` preserves existing IDs, files, technical/source metadata, targets,
+  captions, chronological order, primary and cover references. Representative pre-upgrade data
+  and guarded populated downgrade are tested. Empty downgrade/reupgrade is supported; populated
+  rollback requires the coordinated pre-upgrade database/content backup.
+- Added the paginated Media directory, compact preview, dedicated detail, shared metadata editor,
+  record picker and record Photos link-existing workflow. External references stay unloaded in
+  Gallery/Quick Preview and require explicit detail/Photos opt-in. Original storage/security and
+  central record-image fallback remain. One locked, cached 320px WebP derivative serves every link.
+- Baseline `make check` passed (433 backend / 310 frontend). Final focused checks passed Ruff,
+  backend typing, 45 media/cover/API unit tests, frontend format/lint/typing and 81 Media/Photos/App
+  tests. PostgreSQL migration, reference constraints, bounded queries, duplicate-link and
+  link/delete races, primary serialization and HTTP auth/CSRF checks passed. The canonical
+  `make feature-verify` runs the complete final suites, API drift, builds and migration cycle;
+  its completed outcome and tree receipt are reported in the handoff. No thresholds or runner
+  settings were weakened.
+- Rendered review used disposable synthetic fixtures at 1440 × 844, 1024 × 844 and 390 × 844:
+  Gallery/pagination/filters, landscape/portrait/square previews, detail, record Photos and both
+  pickers; primary set/clear, link reuse, last-unlink retention, cover-only deletion guard, external
+  opt-in/failure, empty search and keyboard Escape/focus restoration. Reviewed views have no
+  horizontal overflow. The [media handoff](media-library.md) records contracts, resource/query
+  evidence, migration/compatibility notes, review matrix and exact changed files.
+- ATTACHMENT-005 is `implemented`, awaiting operator visual acceptance. Architecture/domain/storage/
+  backup/deployment docs were updated, and the requested eight pre-1.0 roadmap milestones remain
+  future work. No stage, commit, push, delivery, merge, branch switch or feature-finish is performed.
+
 ## 2026-10-01 — LOCATION-003 hierarchical usage final review
 
 - Continued `feat/location-descendant-aggregation` at `c1fc7c5`. LOCATION-003 adds derived
@@ -1761,7 +1816,7 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20260925_0026`; PERF-001 adds no migration.
+- Alembic head: `20261001_0028`; ATTACHMENT-005 is implemented pending visual acceptance.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
@@ -1784,7 +1839,7 @@ implementation detail.
   `main` checks.
   Other unblocked P2 product items are listed by the machine-readable dependency graph rather than
   prioritized here.
-- Deliberately absent: generic thumbnails/derivatives beyond the fixed local identity-cover compact
-  response, identity-cover history or galleries, automatic or
+- Deliberately absent: arbitrary derivative pipelines beyond the fixed cached local 320px WebP,
+  identity-cover history, automatic or
   provider image discovery, PWA behavior,
   offline/synchronization behavior, generic graphs, and multi-user collaboration.

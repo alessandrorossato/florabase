@@ -2,6 +2,7 @@ from uuid import uuid7
 
 import pytest
 from sqlalchemy import Connection, text
+from sqlalchemy.exc import IntegrityError
 
 from florabase.attachments.storage import AttachmentStorage, AttachmentStorageError
 
@@ -66,20 +67,17 @@ def test_explicit_primary_photo_lifecycle_and_thumbnail(
         ).json()["detail"]["code"]
         == "primary_photo_wrong_target"
     )
-    # A cross-table mismatch introduced outside the service must fail closed on reads.
-    corrupt_id = uuid7()
-    database_connection.execute(
-        text(
-            "INSERT INTO collection_primary_photos "
-            "(id, plant_id, local_collection_photo_id, created_at, updated_at) "
-            "VALUES (:id, :plant, :photo, now(), now())"
-        ),
-        {"id": corrupt_id, "plant": other_id, "photo": local_id},
-    )
+    # Exact-target integrity is now enforced by PostgreSQL, including direct writes.
+    with pytest.raises(IntegrityError), database_connection.begin_nested():
+        database_connection.execute(
+            text(
+                "INSERT INTO collection_primary_photos "
+                "(id, plant_id, local_collection_photo_id, created_at, updated_at) "
+                "VALUES (:id, :plant, :photo, now(), now())"
+            ),
+            {"id": uuid7(), "plant": other_id, "photo": local_id},
+        )
     assert request("GET", f"{other}/primary-photo", browser=browser).json() is None
-    database_connection.execute(
-        text("DELETE FROM collection_primary_photos WHERE id = :id"), {"id": corrupt_id}
-    )
     selected = request(
         "PUT",
         f"{base}/primary-photo",
@@ -88,7 +86,7 @@ def test_explicit_primary_photo_lifecycle_and_thumbnail(
         body={"kind": "local", "photo_id": local_id},
     )
     assert selected.status_code == 200
-    assert selected.json()["thumbnail_url"].endswith(f"/{local_id}/thumbnail")
+    assert selected.json()["thumbnail_url"].endswith(f"/{local.json()['media_asset_id']}/thumbnail")
     thumb = request("GET", selected.json()["thumbnail_url"], browser=browser)
     assert thumb.status_code == 200
     assert thumb.headers["content-type"] == "image/webp"
@@ -175,21 +173,17 @@ def test_explicit_primary_photo_lifecycle_and_thumbnail(
             browser=browser,
             mutation_headers=True,
         ).status_code
-        == 503
-    )
-    assert request("GET", f"{base}/primary-photo", browser=browser).json() is None
-    assert request("GET", f"{base}/photos", browser=browser).json()[0]["deletion_pending"]
-    monkeypatch.setattr(storage, "delete_file", delete_file)
-    assert (
-        request(
-            "DELETE",
-            f"/api/v1/collection-photos/local/{local_id}",
-            browser=browser,
-            mutation_headers=True,
-        ).status_code
         == 204
     )
+    assert request("GET", f"{base}/primary-photo", browser=browser).json() is None
     assert request("GET", f"{base}/photos", browser=browser).json() == []
+    assert (
+        request(
+            "GET", f"/api/v1/media-assets/{local.json()['media_asset_id']}", browser=browser
+        ).status_code
+        == 200
+    )
+    monkeypatch.setattr(storage, "delete_file", delete_file)
     for unsupported in ("sowing", "event", "botanical_identity"):
         assert (
             request(

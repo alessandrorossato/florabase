@@ -232,6 +232,9 @@ class AttachmentStorage:
         try:
             with warnings.catch_warnings():
                 warnings.simplefilter("error", Image.DecompressionBombWarning)
+                with Image.open(stream) as verified:
+                    verified.verify()
+                stream.seek(0)
                 with Image.open(stream) as image:
                     detected_format = image.format
                     if getattr(image, "n_frames", 1) != 1:

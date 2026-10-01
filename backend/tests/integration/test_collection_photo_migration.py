@@ -18,7 +18,7 @@ def test_collection_photo_migration_constraints_guarded_downgrade_and_reupgrade(
         assert not inspector.has_table("local_collection_photos")
         assert not inspector.has_table("external_image_references")
         assert not inspector.has_table("botanical_identity_cover_images")
-        command.upgrade(config, "head")
+        command.upgrade(config, "20260913_0024")
         assert inspect(database_engine).has_table("botanical_identity_cover_images")
 
         with database_engine.begin() as connection:
@@ -228,5 +228,5 @@ def test_collection_photo_migration_constraints_guarded_downgrade_and_reupgrade(
     finally:
         command.upgrade(config, "head")
 
-    assert inspect(database_engine).has_table("local_collection_photos")
+    assert inspect(database_engine).has_table("record_media_links")
     assert inspect(database_engine).has_table("botanical_identity_cover_images")

@@ -2,18 +2,8 @@ import pytest
 from alembic.config import Config
 from sqlalchemy import Engine, inspect, text
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Session
 
 from alembic import command
-from florabase.attachments.model import Attachment
-from florabase.botanical_identities.model import BotanicalIdentity
-from florabase.collection_photos.model import (
-    BotanicalIdentityCoverImage,
-    CollectionPrimaryPhoto,
-    ExternalImageReference,
-    LocalCollectionPhoto,
-)
-from florabase.plants.model import Plant
 
 pytestmark = pytest.mark.integration
 
@@ -23,47 +13,74 @@ def test_primary_photo_migration_cycle_and_constraints(database_engine: Engine) 
     command.downgrade(config, "20260925_0025")
     assert not inspect(database_engine).has_table("collection_primary_photos")
     assert inspect(database_engine).has_table("local_collection_photos")
-    with Session(database_engine) as database:
-        identity = BotanicalIdentity(scientific_name="Primary migration fixture")
-        database.add(identity)
-        database.flush()
-        plant = Plant(botanical_identity_id=identity.id, direct_origin_kind="unknown")
-        attachment = Attachment(
-            storage_key="objects/aa/" + "a" * 32,
-            original_filename="leaf.png",
-            media_type="image/png",
-            byte_size=1,
-            sha256="a" * 64,
-            state="active",
+    from uuid import uuid7
+
+    ids = {
+        table: uuid7()
+        for table in (
+            "botanical_identities",
+            "plants",
+            "attachments",
+            "local_collection_photos",
+            "external_image_references",
+            "botanical_identity_cover_images",
         )
-        database.add_all([plant, attachment])
-        database.flush()
-        local = LocalCollectionPhoto(
-            plant_id=plant.id, attachment_id=attachment.id, caption="Preserved leaf"
+    }
+    with database_engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO botanical_identities (id, scientific_name, created_at, updated_at) "
+                "VALUES (:id, 'Primary migration fixture', now(), now())"
+            ),
+            {"id": ids["botanical_identities"]},
         )
-        external = ExternalImageReference(
-            plant_id=plant.id,
-            image_url="https://example.test/image.jpg",
-            source_url="https://example.test/source",
-            attribution="Preserved author",
+        connection.execute(
+            text(
+                "INSERT INTO plants (id, botanical_identity_id, direct_origin_kind, lifecycle, "
+                "created_at, updated_at) VALUES (:id, :identity, 'unknown', 'active', now(), now())"
+            ),
+            {"id": ids["plants"], "identity": ids["botanical_identities"]},
         )
-        cover = BotanicalIdentityCoverImage(
-            botanical_identity_id=identity.id,
-            source_mode="external",
-            image_url="https://example.test/cover.jpg",
-            source_url="https://example.test/source",
-            attribution="Cover author",
+        connection.execute(
+            text(
+                "INSERT INTO attachments (id, storage_key, original_filename, media_type, "
+                "byte_size, sha256, state, created_at) "
+                "VALUES (:id, :key, 'leaf.png', 'image/png', 1, :sha, 'active', now())"
+            ),
+            {"id": ids["attachments"], "key": "objects/aa/" + "a" * 32, "sha": "a" * 64},
         )
-        database.add_all([local, external, cover])
-        database.commit()
-        ids = {
-            "botanical_identities": identity.id,
-            "plants": plant.id,
-            "attachments": attachment.id,
-            "local_collection_photos": local.id,
-            "external_image_references": external.id,
-            "botanical_identity_cover_images": cover.id,
-        }
+        connection.execute(
+            text(
+                "INSERT INTO local_collection_photos (id, plant_id, attachment_id, caption, "
+                "created_at, updated_at) VALUES (:id, :plant, :file, 'Preserved leaf', "
+                "now(), now())"
+            ),
+            {
+                "id": ids["local_collection_photos"],
+                "plant": ids["plants"],
+                "file": ids["attachments"],
+            },
+        )
+        connection.execute(
+            text(
+                "INSERT INTO external_image_references (id, plant_id, image_url, source_url, "
+                "attribution, created_at, updated_at) VALUES (:id, :plant, "
+                "'https://example.test/image.jpg', 'https://example.test/source', "
+                "'Preserved author', now(), now())"
+            ),
+            {"id": ids["external_image_references"], "plant": ids["plants"]},
+        )
+        connection.execute(
+            text(
+                "INSERT INTO botanical_identity_cover_images (id, botanical_identity_id, "
+                "source_mode, "
+                "image_url, source_url, attribution, created_at, updated_at) VALUES (:id, "
+                ":identity, "
+                "'external', 'https://example.test/cover.jpg', 'https://example.test/source', "
+                "'Cover author', now(), now())"
+            ),
+            {"id": ids["botanical_identity_cover_images"], "identity": ids["botanical_identities"]},
+        )
 
     def photo_state() -> dict[str, dict[str, object]]:
         with database_engine.connect() as connection:
@@ -84,7 +101,7 @@ def test_primary_photo_migration_cycle_and_constraints(database_engine: Engine) 
             }
 
     original = photo_state()
-    command.upgrade(config, "head")
+    command.upgrade(config, "20260925_0026")
     assert inspect(database_engine).has_table("collection_primary_photos")
     assert photo_state() == original
     with database_engine.connect() as connection:
@@ -122,19 +139,20 @@ def test_primary_photo_migration_cycle_and_constraints(database_engine: Engine) 
                     "VALUES (gen_random_uuid(), gen_random_uuid(), now(), now())"
                 )
             )
-    with Session(database_engine) as database:
-        database.add(
-            CollectionPrimaryPhoto(
-                plant_id=ids["plants"], local_collection_photo_id=ids["local_collection_photos"]
-            )
+    with database_engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO collection_primary_photos (id, plant_id, local_collection_photo_id, "
+                "created_at, updated_at) VALUES (gen_random_uuid(), :plant, :link, now(), now())"
+            ),
+            {"plant": ids["plants"], "link": ids["local_collection_photos"]},
         )
-        database.commit()
     command.downgrade(config, "20260925_0025")
     assert not inspect(database_engine).has_table("collection_primary_photos")
     assert inspect(database_engine).has_table("local_collection_photos")
     assert inspect(database_engine).has_table("external_image_references")
     assert photo_state() == original
-    command.upgrade(config, "head")
+    command.upgrade(config, "20260925_0026")
     assert photo_state() == original
     with database_engine.begin() as connection:
         assert connection.scalar(text("SELECT count(*) FROM collection_primary_photos")) == 0
@@ -147,3 +165,5 @@ def test_primary_photo_migration_cycle_and_constraints(database_engine: Engine) 
             "botanical_identities",
         ):
             connection.execute(text(f"DELETE FROM {table} WHERE id = :id"), {"id": ids[table]})
+
+    command.upgrade(config, "head")

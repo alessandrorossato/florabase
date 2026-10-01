@@ -130,8 +130,8 @@ operator reprioritizes them. They are not release-readiness dependencies.
 - **Supplier directory imagery / supplier logo or image support** is an explicit
   post-release candidate: an optional Supplier logo/image, compact directory and
   Quick Preview visual, and a consistent absent-image placeholder. Attachment
-  ownership, storage and schema remain undecided; no Supplier media is added by
-  the current UI polish.
+  role/link semantics and schema remain a separate decision; ATTACHMENT-005 supplies shared
+  storage, but adds no Supplier media UI.
 - **Location descendant usage counts** remain a separate functional candidate.
   Parent usage should distinguish `Direct here` from `Including descendants`
   (for example, 2 directly and 7 including sublocations). The UI polish retains
@@ -156,7 +156,7 @@ operator reprioritizes them. They are not release-readiness dependencies.
   backup/restore. `INTEGRATION-001` waits for proven repeated automation workflows, and
   `SECURITY-003` for a real multi-user requirement.
 - Full offline mutation and synchronization is a larger contract than `PWA-001` installability.
-  Advanced media processing such as general derivatives, EXIF workflows, albums, photo ordering and
+  Advanced media processing such as general derivatives, EXIF workflows, albums, advanced ordering and
   version history also remains later work.
 
 ### Sequence to release
@@ -401,3 +401,32 @@ writes, a generic
 propagation-material hierarchy, a generic graph engine, or multi-user ownership. Future work should
 extend concrete workflows without weakening unknown-data, history, authorization, or provenance
 semantics.
+
+## Explicit future pre-1.0 milestones after shared media
+
+ATTACHMENT-005 establishes reusable assets and exact record links; it does not execute the work below.
+Each milestone requires a separate bounded increment and product contract before implementation.
+
+1. Structured harvest/collection records for fruits, flowers, roots, leaves, seeds and other harvested
+   material, with explicit domain quantities, dates and relationships; media can reuse this foundation
+   once target semantics are approved.
+2. Supplier imagery using MediaAsset after its separate target/role contract is selected. Supplier
+   remains excluded from current media links.
+3. Broader global search, saved views and explicit bulk operations beyond the implemented SEARCH-001
+   baseline; preserve deterministic search and destructive-operation boundaries.
+4. Further botanical enrichment and distribution maps beyond existing provider links and occurrence
+   density, with live-provider, attribution, precision and privacy acceptance.
+5. Performance and resource optimization on the expanded scope: measure CPU/memory, original and
+   derivative storage, queries, loading and chunk sizes before making demonstrated narrow changes.
+6. Public downloadable versioned Docker images through GHCR or equivalent: version/immutable release
+   tags, practical architecture support, production Compose using published images, clean install,
+   upgrade, backup-before-migration, visible version and release notes. Users should not need local
+   repository builds. No publishing tooling is added on this branch.
+7. Repository presentation and documentation review from a new external user's perspective: README
+   structure, description, screenshots, feature overview, installation, Docker deployment, upgrades,
+   migrations, backup/restore, configuration, import examples, architecture, terminology, doc links,
+   stale history and presentation consistency. Prove that somebody without project-history context
+   can understand and deploy Florabase. This is a separate future audit, not the current media docs update.
+8. Final technical repository cleanup and release hardening: dependency/tooling health, security and
+   migration/recovery drills, CI, tests, installation/upgrade acceptance and release-candidate checks.
+   Keep this technical gate distinct from the presentation/documentation audit above.

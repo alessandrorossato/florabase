@@ -58,7 +58,6 @@ from florabase.collection_photos.service import (
     list_photos,
     local_identity_cover_attachment,
     read_identity_cover,
-    render_identity_cover_thumbnail,
     set_external_identity_cover,
     set_local_identity_cover,
     update_external_image,
@@ -81,7 +80,7 @@ def _error(error: CollectionPhotoError) -> HTTPException:
         "primary_photo_not_found": status.HTTP_404_NOT_FOUND,
         "primary_photo_wrong_target": status.HTTP_409_CONFLICT,
         "primary_photo_unavailable": status.HTTP_409_CONFLICT,
-    }.get(error.code, status.HTTP_503_SERVICE_UNAVAILABLE)
+    }.get(error.code, getattr(error, "status", status.HTTP_503_SERVICE_UNAVAILABLE))
     return HTTPException(
         status_code=response_status,
         detail={"code": error.code, "message": error.message},
@@ -173,6 +172,10 @@ def get_collection_photo_thumbnail(
     row = get_local_photo(database, photo_id)
     if row is None or row[1].state != "active":
         raise _missing("collection_photo_thumbnail")
+    from florabase.media.service import asset_thumbnail, require_active, require_asset
+
+    asset = require_asset(database, row[0].media_asset_id, lock=True)
+    require_active(database, asset)
     attachment = row[1]
     etag = f'"collection-photo-{attachment.sha256}-320-webp-v1"'
     headers = {
@@ -182,11 +185,11 @@ def get_collection_photo_thumbnail(
         "X-Content-Type-Options": "nosniff",
     }
     try:
-        path = storage.active_path(attachment.storage_key, attachment.byte_size)
+        storage.active_path(attachment.storage_key, attachment.byte_size)
         validators = {value.strip() for value in (if_none_match or "").split(",")}
         if "*" in validators or etag in validators or f"W/{etag}" in validators:
             return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers=headers)
-        content = render_identity_cover_thumbnail(path)
+        content = asset_thumbnail(storage, asset, attachment)
         return Response(content=content, media_type="image/webp", headers=headers)
     except AttachmentStorageError as error:
         raise attachment_http_error(error) from error
@@ -243,11 +246,22 @@ def get_botanical_identity_cover_thumbnail(
             "Vary": "Cookie",
             "X-Content-Type-Options": "nosniff",
         }
+        from sqlalchemy import select
+
+        from florabase.collection_photos.model import MediaAsset
+        from florabase.media.service import asset_thumbnail, require_active
+
+        asset = database.scalar(
+            select(MediaAsset).where(MediaAsset.attachment_id == attachment.id).with_for_update()
+        )
+        if asset is None:
+            raise _missing("botanical_identity_cover_thumbnail")
+        require_active(database, asset)
+        storage.active_path(attachment.storage_key, attachment.byte_size)
         validators = {validator.strip() for validator in (if_none_match or "").split(",")}
         if "*" in validators or etag in validators or f"W/{etag}" in validators:
             return Response(status_code=status.HTTP_304_NOT_MODIFIED, headers=headers)
-        path = storage.active_path(attachment.storage_key, attachment.byte_size)
-        content = render_identity_cover_thumbnail(path)
+        content = asset_thumbnail(storage, asset, attachment)
         return Response(content=content, media_type="image/webp", headers=headers)
     except AttachmentStorageError as error:
         raise attachment_http_error(error) from error

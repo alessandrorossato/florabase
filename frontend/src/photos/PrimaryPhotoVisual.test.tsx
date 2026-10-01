@@ -78,3 +78,20 @@ test("failed local directory thumbnail keeps its neutral slot", () => {
   expect(screen.queryByRole("img")).not.toBeInTheDocument();
   expect(container.querySelector("[aria-hidden=true]")).toBeInTheDocument();
 });
+
+test("saved external primary uses its protected snapshot for activity visuals", () => {
+  render(
+    <PrimaryPhotoVisual
+      label="Plant"
+      photo={{
+        kind: "external",
+        photo_id: "external",
+        thumbnail_url: "/api/v1/media-assets/external/thumbnail?v=1",
+      }}
+    />,
+  );
+  expect(screen.getByRole("img")).toHaveAttribute(
+    "src",
+    "/api/v1/media-assets/external/thumbnail?v=1",
+  );
+});

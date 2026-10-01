@@ -12,6 +12,7 @@ from florabase.external_botany.api import router as external_botany_router
 from florabase.geographic_places.api import router as geographic_places_router
 from florabase.import_export.api import router as import_export_router
 from florabase.locations.api import router as locations_router
+from florabase.media.api import router as media_router
 from florabase.plants.api import plant_groups_router, plants_router
 from florabase.propagation.api import router as propagation_router
 from florabase.provenance_sites.api import router as provenance_sites_router
@@ -25,6 +26,7 @@ api_router.include_router(health_router)
 api_router.include_router(auth_router)
 api_router.include_router(attachments_router)
 api_router.include_router(collection_photos_router)
+api_router.include_router(media_router)
 api_router.include_router(botanical_identities_router)
 api_router.include_router(botanical_profiles_router)
 api_router.include_router(external_botany_router)

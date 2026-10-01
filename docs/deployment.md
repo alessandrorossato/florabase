@@ -129,3 +129,14 @@ and use PostgreSQL's supported `pg_upgrade` or dump/restore procedure for major 
 changes.
 
 See [backup and restore](backup-restore.md) and the [security architecture](security.md).
+
+### Shared media migration
+
+ATTACHMENT-005 adds explicit revisions `20261001_0027` and `20261001_0028`; startup does not apply it. Back up the
+database and original attachment volume before the operator upgrade. No file moves or re-uploads
+are needed. Populated downgrade requires that paired backup. See [shared media](media-library.md)
+for Gallery workflows, removal semantics and regenerable thumbnail storage.
+
+Explicit external Save/Refresh needs outbound public HTTP/HTTPS and DNS access. The backend rejects
+internal destinations and never fetches during migration, startup, restore or ordinary reads. Saved
+external snapshots persist in the existing attachment volume and belong in paired backups.

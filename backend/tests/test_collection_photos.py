@@ -31,6 +31,7 @@ from florabase.collection_photos.service import (
     update_local_photo,
     upload_local_photo,
 )
+from florabase.media import service as media
 
 
 def test_external_image_schema_normalizes_text_and_requires_safe_https_urls() -> None:
@@ -77,6 +78,7 @@ def test_external_image_schema_normalizes_text_and_requires_safe_https_urls() ->
     with pytest.raises(ValidationError):
         LocalPhotoUpdate(caption="x" * 2001)
     assert LocalPhotoUpdate(caption="  ", attribution="\n Credit \n").model_dump() == {
+        "display_order": None,
         "caption": None,
         "attribution": "Credit",
     }
@@ -136,36 +138,16 @@ def test_upload_relation_failure_removes_newly_stored_file(tmp_path: Path) -> No
     database.rollback.assert_called_once()
 
 
-def test_local_delete_retains_relation_until_retry() -> None:
-    now = datetime.now(UTC)
-    attachment = Attachment(
-        id=uuid7(),
-        storage_key="objects/aa/" + "a" * 32,
-        original_filename="leaf.png",
-        media_type="image/png",
-        byte_size=5,
-        sha256="a" * 64,
-        state=AttachmentState.ACTIVE,
-        created_at=now,
-    )
-    photo = LocalCollectionPhoto(
-        id=uuid7(), attachment_id=attachment.id, event_id=uuid7(), created_at=now, updated_at=now
-    )
-    database = MagicMock()
-    database.execute.return_value.one_or_none.return_value = (photo, attachment)
-    storage = MagicMock()
-    storage.delete_file.side_effect = OSError("blocked")
-    with pytest.raises(OSError, match="blocked"):
-        delete_local_photo(database, storage, photo.id)
-    assert attachment.state == AttachmentState.PENDING_DELETE
-    database.delete.assert_not_called()
-
-    storage.delete_file.side_effect = None
-    storage.delete_file.return_value = False
-    assert delete_local_photo(database, storage, photo.id) is True
-    assert database.delete.call_args_list[0].args == (photo,)
-    assert database.delete.call_args_list[1].args == (attachment,)
-    database.flush.assert_called_once()
+def test_record_removal_unlinks_without_touching_local_storage(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    database, storage = MagicMock(), MagicMock()
+    unlink = MagicMock(return_value=True)
+    monkeypatch.setattr(media, "unlink", unlink)
+    photo_id = uuid7()
+    assert delete_local_photo(database, storage, photo_id)
+    unlink.assert_called_once_with(database, photo_id)
+    storage.delete_file.assert_not_called()
 
 
 def test_external_models_have_explicit_target_columns() -> None:
@@ -198,6 +180,7 @@ def test_list_combines_local_and_external_photos_in_stable_order() -> None:
     external = ExternalImageReference(
         id=uuid7(),
         plant_id=target_id,
+        display_order=0,
         image_url="https://images.example.test/leaf.jpg",
         source_url="https://example.test/source",
         attribution="Author",
@@ -218,7 +201,7 @@ def test_list_combines_local_and_external_photos_in_stable_order() -> None:
     assert result[0].content_url is not None
 
 
-def test_external_crud_and_photo_lookup_helpers() -> None:
+def test_external_crud_and_photo_lookup_helpers(monkeypatch: pytest.MonkeyPatch) -> None:
     target_id = uuid7()
     database = MagicMock()
     database.get.return_value = object()
@@ -229,10 +212,22 @@ def test_external_crud_and_photo_lookup_helpers() -> None:
         caption="Leaf",
     )
 
+    reference = ExternalImageReference(
+        id=uuid7(),
+        plant_id=target_id,
+        display_order=0,
+        **payload.model_dump(exclude={"display_order"}),
+    )
+    asset = reference.media_asset
+    database.scalar.return_value = reference
+    create_asset = MagicMock(return_value=asset)
+    monkeypatch.setattr(media, "create_external_asset", create_asset)
     reference = create_external_image(database, "plant", target_id, payload)
     assert reference.plant_id == target_id
-    database.add.assert_called_once_with(reference)
-    assert get_external_image(database, reference.id) is database.get.return_value
+    assert create_asset.call_args.kwargs["caption"] == "Leaf"
+    assert get_external_image(database, reference.id) is reference
+    monkeypatch.setattr(media, "locked_link", lambda *_args: reference)
+    monkeypatch.setattr(media, "reference_counts", lambda *_args: (1, 0))
 
     updated = update_external_image(
         database,
@@ -244,8 +239,10 @@ def test_external_crud_and_photo_lookup_helpers() -> None:
         ),
     )
     assert updated.attribution == "New author"
+    unlink = MagicMock(return_value=True)
+    monkeypatch.setattr(media, "unlink", unlink)
     delete_external_image(database, reference)
-    database.delete.assert_called_once_with(reference)
+    unlink.assert_called_once_with(database, reference.id)
 
     photo = MagicMock()
     attachment = MagicMock()
@@ -254,13 +251,13 @@ def test_external_crud_and_photo_lookup_helpers() -> None:
     database.execute.return_value.one_or_none.return_value = None
     assert get_local_photo(database, uuid7()) is None
 
-    database.scalars.return_value.all.side_effect = [[uuid7()], [uuid7(), uuid7()]]
+    database.scalar.return_value = 3
     assert target_photo_count(database, "plant", target_id) == 3
     database.scalar.return_value = uuid7()
     assert attachment_has_photo(database, uuid7()) is True
 
 
-def test_local_metadata_update_rejects_pending_photo() -> None:
+def test_local_metadata_update_rejects_pending_photo(monkeypatch: pytest.MonkeyPatch) -> None:
     now = datetime.now(UTC)
     photo = LocalCollectionPhoto(
         id=uuid7(),
@@ -280,6 +277,8 @@ def test_local_metadata_update_rejects_pending_photo() -> None:
         created_at=now,
     )
     database = MagicMock()
+    database.get.return_value = attachment
+    monkeypatch.setattr(media, "locked_link", lambda *_args: photo)
     response = update_local_photo(
         database, photo, attachment, LocalPhotoUpdate(caption=" Leaf ", attribution=None)
     )
@@ -287,5 +286,5 @@ def test_local_metadata_update_rejects_pending_photo() -> None:
     database.commit.assert_called_once()
 
     attachment.state = AttachmentState.PENDING_DELETE
-    with pytest.raises(CollectionPhotoError, match="pending deletion"):
+    with pytest.raises(CollectionPhotoError, match="unavailable"):
         update_local_photo(database, photo, attachment, LocalPhotoUpdate())

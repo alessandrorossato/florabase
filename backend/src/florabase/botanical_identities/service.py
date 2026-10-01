@@ -158,15 +158,16 @@ def list_botanical_identity_directory(
     ]
 ]:
     from florabase.attachments.model import Attachment, AttachmentState
-    from florabase.collection_photos.model import BotanicalIdentityCoverImage
+    from florabase.collection_photos.model import BotanicalIdentityCoverImage, MediaAsset
 
     compact_cover_kind = case(
-        (BotanicalIdentityCoverImage.source_mode == "external", "external"),
         (
-            (BotanicalIdentityCoverImage.source_mode == "local")
+            (MediaAsset.attachment_id.is_not(None))
+            & (MediaAsset.state == "active")
             & (Attachment.state == AttachmentState.ACTIVE),
             "local",
         ),
+        (BotanicalIdentityCoverImage.source_mode == "external", "external"),
         else_=None,
     )
     # Aggregate before joining: one directory query with no row multiplication or N+1 loads.
@@ -190,14 +191,23 @@ def list_botanical_identity_directory(
         select(
             BotanicalIdentity,
             compact_cover_kind,
-            BotanicalIdentityCoverImage.image_url,
+            case(
+                (
+                    (MediaAsset.kind == "external") & (Attachment.state == AttachmentState.ACTIVE),
+                    func.concat(
+                        "/api/v1/media-assets/", MediaAsset.id, "/thumbnail?v=", Attachment.sha256
+                    ),
+                ),
+                else_=MediaAsset.image_url,
+            ),
             *[func.coalesce(c.c.total, 0) for c in counts],
         )
         .outerjoin(
             BotanicalIdentityCoverImage,
             BotanicalIdentityCoverImage.botanical_identity_id == BotanicalIdentity.id,
         )
-        .outerjoin(Attachment, Attachment.id == BotanicalIdentityCoverImage.attachment_id)
+        .outerjoin(MediaAsset, MediaAsset.id == BotanicalIdentityCoverImage.media_asset_id)
+        .outerjoin(Attachment, Attachment.id == MediaAsset.attachment_id)
         .order_by(
             func.lower(BotanicalIdentity.scientific_name),
             func.lower(BotanicalIdentity.cultivar_name).nulls_first(),

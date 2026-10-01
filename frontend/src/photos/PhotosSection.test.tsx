@@ -38,6 +38,7 @@ const auth: AuthContextValue = {
 const photos: CollectionPhoto[] = [
   {
     kind: "local",
+    display_order: 0,
     id: localId,
     attachment_id: "01900000-0000-7000-8000-000000000901",
     original_filename: "leaf.png",
@@ -52,6 +53,7 @@ const photos: CollectionPhoto[] = [
   },
   {
     kind: "external",
+    display_order: 1,
     id: externalId,
     image_url: "https://images.example.test/specimen.jpg",
     source_url: "https://example.test/specimen",
@@ -105,9 +107,11 @@ test("renders uploaded photos lazily and never loads an external image automatic
   expect(local).toHaveAttribute("loading", "lazy");
   expect(local).toHaveAttribute(
     "src",
-    "/api/v1/attachments/01900000-0000-7000-8000-000000000901/content",
+    `/api/v1/collection-photos/local/${localId}/thumbnail`,
   );
-  expect(screen.getByText("External image")).toBeVisible();
+  expect(
+    screen.getByText("External reference · not stored locally"),
+  ).toBeVisible();
   expect(
     screen.queryByRole("img", { name: "Flowering specimen" }),
   ).not.toBeInTheDocument();
@@ -115,7 +119,7 @@ test("renders uploaded photos lazily and never loads an external image automatic
   const source = screen.getByRole("link", { name: "Source: example.test" });
   expect(source).toHaveAttribute("rel", "noopener noreferrer");
 
-  await user.click(screen.getByRole("button", { name: "Load external image" }));
+  await user.click(screen.getByRole("button", { name: "Preview once" }));
   const external = screen.getByRole("img", { name: "Flowering specimen" });
   expect(external).toHaveAttribute("referrerpolicy", "no-referrer");
   expect(external).toHaveAttribute(
@@ -137,7 +141,7 @@ test("shows understandable local and external image failure states", async () =>
     await screen.findByText("The uploaded image content is unavailable."),
   ).toBeVisible();
 
-  await user.click(screen.getByRole("button", { name: "Load external image" }));
+  await user.click(screen.getByRole("button", { name: "Preview once" }));
   screen
     .getByRole("img", { name: "Flowering specimen" })
     .dispatchEvent(new Event("error"));
@@ -170,9 +174,9 @@ test.each([false, true])(
       { kind: "external", photo_id: externalId, thumbnail_url: null },
       onPrimaryChanged,
     );
-    await screen.findByText("External image");
+    await screen.findByText("External reference · not stored locally");
     const externalCard = screen
-      .getByText("External image")
+      .getByText("External reference · not stored locally")
       .closest<HTMLElement>("article");
     if (!externalCard) throw new Error("External image card was not rendered");
     await user.click(
@@ -198,19 +202,25 @@ test.each([false, true])(
     });
 
     const refreshedCard = screen
-      .getByText("External image")
+      .getByText("External reference · not stored locally")
       .closest<HTMLElement>("article");
     if (!refreshedCard)
       throw new Error("External image card was not refreshed");
     expect(within(refreshedCard).getByText("Primary")).toBeVisible();
     await user.click(
-      within(refreshedCard).getByRole("button", { name: "Remove" }),
+      within(refreshedCard).getByRole("button", {
+        name: "Unlink from this record",
+      }),
     );
     const removal = screen.getByRole("dialog", {
-      name: "Remove external image reference?",
+      name: "Unlink external image reference?",
     });
-    expect(removal).toHaveTextContent(/metadata only and does not contact/i);
-    await user.click(within(removal).getByRole("button", { name: "Remove" }));
+    expect(removal).toHaveTextContent(
+      /media asset, other record links, and identity cover references remain/i,
+    );
+    await user.click(
+      within(removal).getByRole("button", { name: "Unlink from this record" }),
+    );
     await waitFor(() => {
       expect(fetch).toHaveBeenCalledWith(
         `/api/v1/collection-photos/external/${externalId}`,
@@ -221,10 +231,12 @@ test.each([false, true])(
       expect(onPrimaryChanged).toHaveBeenCalledWith(null);
     });
     expect(screen.queryByText("Primary")).not.toBeInTheDocument();
-    expect(screen.queryByText("External image")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("External reference · not stored locally"),
+    ).not.toBeInTheDocument();
     if (refreshFails)
       expect(screen.getByRole("alert")).toHaveTextContent(
-        "Photo was removed, but Photos could not be refreshed.",
+        "Media was unlinked, but Photos could not be refreshed.",
       );
   },
 );
@@ -240,8 +252,8 @@ test("supports zero-photo state and an accessible upload workflow", async () => 
   expect(
     await screen.findByText("No photos or external image references yet."),
   ).toBeVisible();
-  await user.click(screen.getByRole("button", { name: "Upload photo" }));
-  const dialog = screen.getByRole("dialog", { name: "Upload photo" });
+  await user.click(screen.getByRole("button", { name: "Add new media" }));
+  const dialog = screen.getByRole("dialog", { name: "Add new media" });
   const file = new File(["png"], "leaf.png", { type: "image/png" });
   await user.upload(within(dialog).getByLabelText("Image file"), file);
   await user.type(within(dialog).getByLabelText(/Caption/), "New leaf");
@@ -304,7 +316,7 @@ test("primary selection is explicit and removing designation retains gallery pho
     screen.getByRole("button", { name: "Set Flowering specimen as primary" }),
   );
   expect(screen.getByText("Primary").closest("article")).toHaveTextContent(
-    "External image",
+    "External reference · not stored locally",
   );
   expect(
     screen.queryByRole("img", { name: "Flowering specimen" }),
@@ -340,3 +352,26 @@ test.each(["sowing", "event"] as const)(
     ).not.toBeInTheDocument();
   },
 );
+
+test("record-linked external media renders its saved local thumbnail without previewing remotely", async () => {
+  const stored = photos.map((photo) =>
+    photo.kind === "external"
+      ? {
+          ...photo,
+          thumbnail_url: "/api/v1/media-assets/saved/thumbnail?v=1",
+          content_url: "/api/v1/attachments/saved/content",
+          fetched_at: "2026-10-01T12:00:00Z",
+        }
+      : photo,
+  );
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(json(stored));
+  renderSection();
+  const image = await screen.findByRole("img", { name: "Flowering specimen" });
+  expect(image).toHaveAttribute(
+    "src",
+    "/api/v1/media-assets/saved/thumbnail?v=1",
+  );
+  expect(
+    screen.queryByRole("button", { name: "Preview once" }),
+  ).not.toBeInTheDocument();
+});

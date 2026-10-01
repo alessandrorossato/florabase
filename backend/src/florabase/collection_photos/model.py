@@ -1,3 +1,5 @@
+"""Assets are reusable; links and covers own only their record context."""
+
 from datetime import UTC, datetime
 from uuid import UUID, uuid7
 
@@ -5,13 +7,18 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
+    Integer,
     String,
     Text,
     UniqueConstraint,
     Uuid,
+    select,
 )
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.sql import SQLColumnExpression
 
 from florabase.db.base import Base
 
@@ -20,20 +27,7 @@ def utc_now() -> datetime:
     return datetime.now(UTC)
 
 
-TARGET_COLUMNS = (
-    "seed_lot_id",
-    "sowing_id",
-    "plant_id",
-    "plant_group_id",
-    "event_id",
-)
-
-
-def _target_constraint(table: str) -> CheckConstraint:
-    return CheckConstraint(
-        f"num_nonnulls({', '.join(TARGET_COLUMNS)}) = 1",
-        name=f"ck_{table}_exactly_one_target",
-    )
+TARGET_COLUMNS = ("seed_lot_id", "sowing_id", "plant_id", "plant_group_id", "event_id")
 
 
 def _optional_text_constraint(table: str, column: str) -> CheckConstraint:
@@ -45,75 +39,225 @@ def _optional_text_constraint(table: str, column: str) -> CheckConstraint:
     )
 
 
-class CollectionPhotoTargetMixin:
+class MediaAsset(Base):
+    __tablename__ = "media_assets"
+    __table_args__ = (
+        CheckConstraint("kind IN ('local', 'external')", name="ck_media_assets_kind"),
+        CheckConstraint("state IN ('active', 'pending_delete')", name="ck_media_assets_state"),
+        CheckConstraint(
+            "(kind = 'local' AND attachment_id IS NOT NULL AND image_url IS NULL AND "
+            "source_url IS NULL) OR (kind = 'external' AND "
+            "image_url IS NOT NULL AND source_url IS NOT NULL AND attribution IS NOT NULL)",
+            name="ck_media_assets_source",
+        ),
+        CheckConstraint(
+            "(kind = 'local' AND fetched_at IS NULL AND copy_cleanup_attachment_id IS NULL) OR "
+            "(kind = 'external' AND ((attachment_id IS NULL AND fetched_at IS NULL) OR "
+            "(attachment_id IS NOT NULL AND fetched_at IS NOT NULL)))",
+            name="ck_media_assets_local_copy",
+        ),
+        CheckConstraint(
+            "copy_cleanup_attachment_id IS NULL OR copy_cleanup_attachment_id <> attachment_id",
+            name="ck_media_assets_distinct_copy_cleanup",
+        ),
+        CheckConstraint("width IS NULL OR width > 0", name="ck_media_assets_width"),
+        CheckConstraint("height IS NULL OR height > 0", name="ck_media_assets_height"),
+        _optional_text_constraint("media_assets", "title"),
+        _optional_text_constraint("media_assets", "attribution"),
+        _optional_text_constraint("media_assets", "licence_label"),
+        *[
+            CheckConstraint(
+                f"{column} IS NULL OR (char_length({column}) BETWEEN 1 AND 2048 "
+                f"AND {column} ~ '^https://[^[:space:]]+$')",
+                name=f"ck_media_assets_{column}",
+            )
+            for column in ("image_url", "source_url", "licence_url")
+        ],
+        UniqueConstraint("id", "kind", name="uq_media_assets_id_kind"),
+    )
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid7)
+    kind: Mapped[str] = mapped_column(String(16))
+    attachment_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("attachments.id", ondelete="RESTRICT"), unique=True, nullable=True
+    )
+    fetched_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    copy_cleanup_attachment_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("attachments.id", ondelete="RESTRICT"), unique=True, nullable=True
+    )
+    title: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    image_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    source_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    attribution: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    licence_label: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    licence_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    width: Mapped[int | None] = mapped_column(Integer(), nullable=True)
+    height: Mapped[int | None] = mapped_column(Integer(), nullable=True)
+    state: Mapped[str] = mapped_column(String(32), default="active")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+
+class AssetMetadataMixin:
+    """Compatibility attributes for existing photo/cover helpers; persisted on the asset."""
+
+    media_asset: Mapped[MediaAsset]
+    media_asset_id: Mapped[UUID]
+
+    def _asset(self) -> MediaAsset:
+        if self.media_asset is None:
+            self.media_asset = MediaAsset(
+                id=uuid7(),
+                kind=getattr(self, "source_kind", None) or getattr(self, "source_mode", "local"),
+                state="active",
+            )
+        return self.media_asset
+
+    @hybrid_property
+    def attachment_id(self) -> UUID | None:
+        return self._asset().attachment_id
+
+    @attachment_id.inplace.setter
+    def _set_attachment_id(self, value: UUID | None) -> None:
+        self._asset().attachment_id = value
+
+    @attachment_id.inplace.expression
+    @classmethod
+    def _attachment_expression(cls) -> SQLColumnExpression[UUID | None]:
+        return (
+            select(MediaAsset.attachment_id)
+            .where(MediaAsset.id == cls.media_asset_id)
+            .scalar_subquery()
+        )
+
+    @property
+    def content_url(self) -> str | None:
+        asset = self._asset()
+        return (
+            f"/api/v1/attachments/{asset.attachment_id}/content"
+            if asset.attachment_id and asset.state == "active"
+            else None
+        )
+
+    @property
+    def thumbnail_url(self) -> str | None:
+        asset = self._asset()
+        return (
+            f"/api/v1/media-assets/{asset.id}/thumbnail"
+            + (f"?v={asset.fetched_at.isoformat()}" if asset.fetched_at else "")
+            if asset.attachment_id and asset.state == "active"
+            else None
+        )
+
+    @property
+    def fetched_at(self) -> datetime | None:
+        return self._asset().fetched_at
+
+    @property
+    def attribution(self) -> str | None:
+        return self._asset().attribution
+
+    @attribution.setter
+    def attribution(self, value: str | None) -> None:
+        self._asset().attribution = value
+
+    @property
+    def image_url(self) -> str | None:
+        return self._asset().image_url
+
+    @image_url.setter
+    def image_url(self, value: str | None) -> None:
+        self._asset().image_url = value
+
+    @property
+    def source_url(self) -> str | None:
+        return self._asset().source_url
+
+    @source_url.setter
+    def source_url(self, value: str | None) -> None:
+        self._asset().source_url = value
+
+    @property
+    def licence_label(self) -> str | None:
+        return self._asset().licence_label
+
+    @licence_label.setter
+    def licence_label(self, value: str | None) -> None:
+        self._asset().licence_label = value
+
+    @property
+    def licence_url(self) -> str | None:
+        return self._asset().licence_url
+
+    @licence_url.setter
+    def licence_url(self, value: str | None) -> None:
+        self._asset().licence_url = value
+
+
+class RecordMediaLink(AssetMetadataMixin, Base):
+    __tablename__ = "record_media_links"
+    __table_args__ = (
+        CheckConstraint(
+            f"num_nonnulls({', '.join(TARGET_COLUMNS)}) = 1",
+            name="ck_record_media_links_exactly_one_target",
+        ),
+        CheckConstraint("source_kind IN ('local', 'external')", name="ck_record_media_links_kind"),
+        CheckConstraint("display_order >= 0", name="ck_record_media_links_order"),
+        _optional_text_constraint("record_media_links", "caption"),
+        ForeignKeyConstraint(
+            ["media_asset_id", "source_kind"],
+            ["media_assets.id", "media_assets.kind"],
+            ondelete="RESTRICT",
+            name="fk_record_media_links_asset_kind",
+        ),
+        *[
+            UniqueConstraint("media_asset_id", column, name=f"uq_record_media_links_asset_{column}")
+            for column in TARGET_COLUMNS
+        ],
+        *[
+            UniqueConstraint("id", column, name=f"uq_record_media_links_id_{column}")
+            for column in TARGET_COLUMNS
+        ],
+    )
+    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid7)
+    media_asset_id: Mapped[UUID] = mapped_column(Uuid(), index=True)
+    source_kind: Mapped[str] = mapped_column(String(16))
     seed_lot_id: Mapped[UUID | None] = mapped_column(
-        Uuid(), ForeignKey("seed_lots.id", ondelete="RESTRICT"), nullable=True
+        Uuid(), ForeignKey("seed_lots.id", ondelete="RESTRICT"), nullable=True, index=True
     )
     sowing_id: Mapped[UUID | None] = mapped_column(
-        Uuid(), ForeignKey("sowings.id", ondelete="RESTRICT"), nullable=True
+        Uuid(), ForeignKey("sowings.id", ondelete="RESTRICT"), nullable=True, index=True
     )
     plant_id: Mapped[UUID | None] = mapped_column(
-        Uuid(), ForeignKey("plants.id", ondelete="RESTRICT"), nullable=True
+        Uuid(), ForeignKey("plants.id", ondelete="RESTRICT"), nullable=True, index=True
     )
     plant_group_id: Mapped[UUID | None] = mapped_column(
-        Uuid(), ForeignKey("plant_groups.id", ondelete="RESTRICT"), nullable=True
+        Uuid(), ForeignKey("plant_groups.id", ondelete="RESTRICT"), nullable=True, index=True
     )
     event_id: Mapped[UUID | None] = mapped_column(
-        Uuid(), ForeignKey("events.id", ondelete="RESTRICT"), nullable=True
-    )
-
-
-class LocalCollectionPhoto(CollectionPhotoTargetMixin, Base):
-    __tablename__ = "local_collection_photos"
-    __table_args__ = (
-        _target_constraint("local_collection_photos"),
-        _optional_text_constraint("local_collection_photos", "caption"),
-        _optional_text_constraint("local_collection_photos", "attribution"),
-        UniqueConstraint("attachment_id", name="uq_local_collection_photos_attachment_id"),
-    )
-
-    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid7)
-    attachment_id: Mapped[UUID] = mapped_column(
-        Uuid(),
-        ForeignKey("attachments.id", ondelete="RESTRICT"),
+        Uuid(), ForeignKey("events.id", ondelete="RESTRICT"), nullable=True, index=True
     )
     caption: Mapped[str | None] = mapped_column(Text(), nullable=True)
-    attribution: Mapped[str | None] = mapped_column(Text(), nullable=True)
+    display_order: Mapped[int] = mapped_column(Integer(), default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now
     )
+    media_asset: Mapped[MediaAsset] = relationship(lazy="joined")
+    __mapper_args__ = {"polymorphic_on": source_kind}  # noqa: RUF012 - SQLAlchemy mapper configuration
 
 
-class ExternalImageReference(CollectionPhotoTargetMixin, Base):
-    __tablename__ = "external_image_references"
-    __table_args__ = (
-        _target_constraint("external_image_references"),
-        _optional_text_constraint("external_image_references", "caption"),
-        CheckConstraint(
-            "char_length(attribution) BETWEEN 1 AND 2000 AND attribution = btrim(attribution) "
-            "AND regexp_replace(attribution, E'[\\n\\t]', '', 'g') !~ '[[:cntrl:]]'",
-            name="ck_external_image_references_attribution",
-        ),
-        CheckConstraint(
-            "char_length(image_url) BETWEEN 1 AND 2048 AND image_url ~ '^https://[^[:space:]]+$'",
-            name="ck_external_image_references_image_url",
-        ),
-        CheckConstraint(
-            "char_length(source_url) BETWEEN 1 AND 2048 AND source_url ~ '^https://[^[:space:]]+$'",
-            name="ck_external_image_references_source_url",
-        ),
-    )
+class LocalCollectionPhoto(RecordMediaLink):
+    """Compatibility local-photo view of a RecordMediaLink, not a separate owner."""
 
-    id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid7)
-    image_url: Mapped[str] = mapped_column(String(2048))
-    source_url: Mapped[str] = mapped_column(String(2048))
-    attribution: Mapped[str] = mapped_column(Text())
-    caption: Mapped[str | None] = mapped_column(Text(), nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=utc_now, onupdate=utc_now
-    )
+    __mapper_args__ = {"polymorphic_identity": "local"}  # noqa: RUF012 - SQLAlchemy mapper configuration
+
+
+class ExternalImageReference(RecordMediaLink):
+    """Compatibility external-photo view of a RecordMediaLink."""
+
+    __mapper_args__ = {"polymorphic_identity": "external"}  # noqa: RUF012 - SQLAlchemy mapper configuration
 
 
 class CollectionPrimaryPhoto(Base):
@@ -127,15 +271,27 @@ class CollectionPrimaryPhoto(Base):
             "num_nonnulls(local_collection_photo_id, external_image_reference_id) = 1",
             name="ck_collection_primary_photos_exactly_one_source",
         ),
-        UniqueConstraint("seed_lot_id", name="uq_collection_primary_photos_seed_lot_id"),
-        UniqueConstraint("plant_id", name="uq_collection_primary_photos_plant_id"),
-        UniqueConstraint("plant_group_id", name="uq_collection_primary_photos_plant_group_id"),
-        UniqueConstraint("local_collection_photo_id", name="uq_collection_primary_photos_local_id"),
-        UniqueConstraint(
-            "external_image_reference_id", name="uq_collection_primary_photos_external_id"
-        ),
+        *[
+            UniqueConstraint(column, name=f"uq_collection_primary_photos_{column}")
+            for column in (
+                "seed_lot_id",
+                "plant_id",
+                "plant_group_id",
+                "local_collection_photo_id",
+                "external_image_reference_id",
+            )
+        ],
+        *[
+            ForeignKeyConstraint(
+                [source, target],
+                ["record_media_links.id", f"record_media_links.{target}"],
+                ondelete="CASCADE",
+                name=f"fk_primary_{source}_{target}",
+            )
+            for source in ("local_collection_photo_id", "external_image_reference_id")
+            for target in ("seed_lot_id", "plant_id", "plant_group_id")
+        ],
     )
-
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid7)
     seed_lot_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("seed_lots.id", ondelete="RESTRICT"), nullable=True
@@ -147,10 +303,10 @@ class CollectionPrimaryPhoto(Base):
         Uuid(), ForeignKey("plant_groups.id", ondelete="RESTRICT"), nullable=True
     )
     local_collection_photo_id: Mapped[UUID | None] = mapped_column(
-        Uuid(), ForeignKey("local_collection_photos.id", ondelete="CASCADE"), nullable=True
+        Uuid(), ForeignKey("record_media_links.id", ondelete="CASCADE"), nullable=True
     )
     external_image_reference_id: Mapped[UUID | None] = mapped_column(
-        Uuid(), ForeignKey("external_image_references.id", ondelete="CASCADE"), nullable=True
+        Uuid(), ForeignKey("record_media_links.id", ondelete="CASCADE"), nullable=True
     )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
@@ -158,83 +314,31 @@ class CollectionPrimaryPhoto(Base):
     )
 
 
-class BotanicalIdentityCoverImage(Base):
+class BotanicalIdentityCoverImage(AssetMetadataMixin, Base):
     __tablename__ = "botanical_identity_cover_images"
     __table_args__ = (
+        ForeignKeyConstraint(
+            ["media_asset_id", "source_mode"],
+            ["media_assets.id", "media_assets.kind"],
+            ondelete="RESTRICT",
+            name="fk_identity_cover_asset_kind",
+        ),
         CheckConstraint(
             "source_mode IN ('local', 'external')",
             name="ck_botanical_identity_cover_images_source_mode",
         ),
-        CheckConstraint(
-            "(source_mode = 'local' AND attachment_id IS NOT NULL "
-            "AND image_url IS NULL AND source_url IS NULL AND attribution IS NULL "
-            "AND licence_label IS NULL AND licence_url IS NULL) OR "
-            "(source_mode = 'external' AND attachment_id IS NULL "
-            "AND image_url IS NOT NULL AND source_url IS NOT NULL "
-            "AND attribution IS NOT NULL)",
-            name="ck_botanical_identity_cover_images_source_fields",
-        ),
-        CheckConstraint(
-            "attribution IS NULL OR (char_length(attribution) BETWEEN 1 AND 2000 "
-            "AND attribution = btrim(attribution) "
-            "AND regexp_replace(attribution, E'[\\n\\t]', '', 'g') !~ '[[:cntrl:]]')",
-            name="ck_botanical_identity_cover_images_attribution",
-        ),
-        _optional_text_constraint("botanical_identity_cover_images", "licence_label"),
-        CheckConstraint(
-            "image_url IS NULL OR (char_length(image_url) BETWEEN 1 AND 2048 "
-            "AND image_url ~ '^https://[^[:space:]]+$')",
-            name="ck_botanical_identity_cover_images_image_url",
-        ),
-        CheckConstraint(
-            "source_url IS NULL OR (char_length(source_url) BETWEEN 1 AND 2048 "
-            "AND source_url ~ '^https://[^[:space:]]+$')",
-            name="ck_botanical_identity_cover_images_source_url",
-        ),
-        CheckConstraint(
-            "licence_url IS NULL OR (char_length(licence_url) BETWEEN 1 AND 2048 "
-            "AND licence_url ~ '^https://[^[:space:]]+$')",
-            name="ck_botanical_identity_cover_images_licence_url",
-        ),
-        UniqueConstraint(
-            "botanical_identity_id",
-            name="uq_botanical_identity_cover_images_botanical_identity_id",
-        ),
-        UniqueConstraint("attachment_id", name="uq_botanical_identity_cover_images_attachment_id"),
     )
-
     id: Mapped[UUID] = mapped_column(Uuid(), primary_key=True, default=uuid7)
     botanical_identity_id: Mapped[UUID] = mapped_column(
-        Uuid(), ForeignKey("botanical_identities.id", ondelete="RESTRICT")
+        Uuid(), ForeignKey("botanical_identities.id", ondelete="RESTRICT"), unique=True
     )
+    media_asset_id: Mapped[UUID] = mapped_column(Uuid(), index=True)
     source_mode: Mapped[str] = mapped_column(String(16))
-    attachment_id: Mapped[UUID | None] = mapped_column(
-        Uuid(), ForeignKey("attachments.id", ondelete="RESTRICT"), nullable=True
-    )
-    image_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
-    source_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
-    attribution: Mapped[str | None] = mapped_column(Text(), nullable=True)
-    licence_label: Mapped[str | None] = mapped_column(Text(), nullable=True)
-    licence_url: Mapped[str | None] = mapped_column(String(2048), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now
     )
+    media_asset: Mapped[MediaAsset] = relationship(lazy="joined")
 
 
-for model in (LocalCollectionPhoto, ExternalImageReference):
-    for column in TARGET_COLUMNS:
-        Index(f"ix_{model.__tablename__}_{column}", getattr(model, column))
-
-Index(
-    "ix_local_collection_photos_attachment_id",
-    LocalCollectionPhoto.attachment_id,
-)
-Index(
-    "ix_botanical_identity_cover_images_botanical_identity_id",
-    BotanicalIdentityCoverImage.botanical_identity_id,
-)
-Index(
-    "ix_botanical_identity_cover_images_attachment_id",
-    BotanicalIdentityCoverImage.attachment_id,
-)
+Index("ix_media_assets_created_at_id", MediaAsset.created_at, MediaAsset.id)

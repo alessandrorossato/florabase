@@ -11,6 +11,8 @@ from florabase.collection_photos.model import (
     CollectionPrimaryPhoto,
     ExternalImageReference,
     LocalCollectionPhoto,
+    MediaAsset,
+    RecordMediaLink,
 )
 from florabase.core.config import get_settings
 from florabase.db.base import Base
@@ -34,6 +36,8 @@ target_metadata = Base.metadata
 # Importing the mapping registers it with the shared metadata used by Alembic.
 assert BotanicalIdentity.__table__.metadata is target_metadata
 assert Attachment.__table__.metadata is target_metadata
+assert MediaAsset.__table__.metadata is target_metadata
+assert RecordMediaLink.__table__.metadata is target_metadata
 assert LocalCollectionPhoto.__table__.metadata is target_metadata
 assert ExternalImageReference.__table__.metadata is target_metadata
 assert CollectionPrimaryPhoto.__table__.metadata is target_metadata

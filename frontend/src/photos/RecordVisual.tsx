@@ -44,9 +44,12 @@ export function RecordVisual({
       : (identities.get(summary.id) ?? summary)
     : undefined;
   const [broken, setBroken] = useState<ReadonlySet<string>>(new Set());
-  const direct = photo?.kind === "local" ? photo.thumbnail_url : null;
-  const cover =
-    identity?.compact_cover_kind === "local"
+  const direct = photo?.thumbnail_url ?? null;
+  const cover = identity?.compact_external_cover_url?.startsWith(
+    "/api/v1/media-assets/",
+  )
+    ? identity.compact_external_cover_url
+    : identity?.compact_cover_kind === "local"
       ? `/api/v1/botanical-identities/${identity.id}/cover-image/thumbnail`
       : allowExternalCover && identity?.compact_cover_kind === "external"
         ? identity.compact_external_cover_url

@@ -5,7 +5,7 @@ from typing import Literal, cast
 from uuid import UUID
 
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, contains_eager
 
 from florabase.attachments.model import Attachment, AttachmentState
 from florabase.attachments.storage import AttachmentStorage, AttachmentStorageError
@@ -13,6 +13,7 @@ from florabase.collection_photos.model import (
     CollectionPrimaryPhoto,
     ExternalImageReference,
     LocalCollectionPhoto,
+    MediaAsset,
 )
 from florabase.collection_photos.schemas import PrimaryPhotoResponse, PrimaryPhotoSelection
 from florabase.collection_photos.service import CollectionPhotoError
@@ -75,14 +76,16 @@ def _summary(
         return PrimaryPhotoResponse(
             kind="local",
             photo_id=pair[0].id,
-            thumbnail_url=f"/api/v1/collection-photos/local/{pair[0].id}/thumbnail",
+            thumbnail_url=f"/api/v1/media-assets/{pair[0].media_asset_id}/thumbnail",
         )
     if designation.external_image_reference_id is not None:
         reference = externals_by_id.get(designation.external_image_reference_id)
         if reference is not None and getattr(reference, _target_column(target)) == getattr(
             designation, _target_column(target)
         ):
-            return PrimaryPhotoResponse(kind="external", photo_id=reference.id, thumbnail_url=None)
+            return PrimaryPhotoResponse(
+                kind="external", photo_id=reference.id, thumbnail_url=reference.thumbnail_url
+            )
     return None
 
 
@@ -107,7 +110,9 @@ def primary_summaries(
             photo.id: (photo, attachment)
             for photo, attachment in database.execute(
                 select(LocalCollectionPhoto, Attachment)
-                .join(Attachment, Attachment.id == LocalCollectionPhoto.attachment_id)
+                .join(MediaAsset, MediaAsset.id == LocalCollectionPhoto.media_asset_id)
+                .options(contains_eager(LocalCollectionPhoto.media_asset))
+                .join(Attachment, Attachment.id == MediaAsset.attachment_id)
                 .where(LocalCollectionPhoto.id.in_(local_ids))
             )
         }
@@ -115,7 +120,10 @@ def primary_summaries(
         {
             reference.id: reference
             for reference in database.scalars(
-                select(ExternalImageReference).where(ExternalImageReference.id.in_(external_ids))
+                select(ExternalImageReference)
+                .join(MediaAsset, MediaAsset.id == ExternalImageReference.media_asset_id)
+                .options(contains_eager(ExternalImageReference.media_asset))
+                .where(ExternalImageReference.id.in_(external_ids))
             )
         }
         if external_ids
@@ -146,14 +154,17 @@ def set_primary(
 ) -> PrimaryPhotoResponse:
     _require_target(database, target, target_id, lock=True)
     model = LocalCollectionPhoto if selection.kind == "local" else ExternalImageReference
-    photo = database.scalar(select(model).where(model.id == selection.photo_id).with_for_update())
-    if photo is None:
+    from florabase.media.service import locked_link, require_active
+
+    photo = locked_link(database, selection.photo_id, expected=(target, target_id))
+    if photo is None or not isinstance(photo, model):
         raise CollectionPhotoError("primary_photo_not_found", "Collection photo not found")
     if getattr(photo, _target_column(target)) != target_id:
         raise CollectionPhotoError(
             "primary_photo_wrong_target", "Photo does not belong to this collection record"
         )
-    if isinstance(photo, LocalCollectionPhoto):
+    require_active(database, photo.media_asset)
+    if photo.attachment_id is not None:
         attachment = database.scalar(
             select(Attachment).where(Attachment.id == photo.attachment_id).with_for_update()
         )
@@ -178,11 +189,7 @@ def set_primary(
     return PrimaryPhotoResponse(
         kind=selection.kind,
         photo_id=selection.photo_id,
-        thumbnail_url=(
-            f"/api/v1/collection-photos/local/{selection.photo_id}/thumbnail"
-            if selection.kind == "local"
-            else None
-        ),
+        thumbnail_url=photo.thumbnail_url,
     )
 
 

@@ -195,7 +195,7 @@ test("compacts URL-like attribution instead of exposing a raw URL", async () => 
   );
 });
 
-test("keeps pending local cleanup truthful and provides deterministic removal retry", async () => {
+test("removes only the pending cover reference and retains the media asset", async () => {
   const pending: Cover = {
     ...local,
     deletion_pending: true,
@@ -208,12 +208,15 @@ test("keeps pending local cleanup truthful and provides deterministic removal re
   const user = userEvent.setup();
   renderCover();
   expect(
-    await screen.findByText(/local cover deletion is pending/i),
+    await screen.findByText(/local media deletion is pending/i),
   ).toBeVisible();
   expect(screen.queryByRole("img")).not.toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Retry removal" }));
   const dialog = screen.getByRole("dialog", { name: "Remove identity cover?" });
-  expect(dialog).toHaveTextContent(/protected binary will be deleted/i);
+  expect(dialog).toHaveTextContent(
+    /removes only the BotanicalIdentity cover reference/i,
+  );
+  expect(dialog).toHaveTextContent(/collection links remain in the Gallery/i);
   await user.click(
     within(dialog).getByRole("button", { name: "Remove cover" }),
   );
@@ -223,5 +226,26 @@ test("keeps pending local cleanup truthful and provides deterministic removal re
       expect.objectContaining({ method: "DELETE" }),
     );
   });
-  expect(await screen.findByText("Cover image was removed.")).toBeVisible();
+  expect(
+    await screen.findByText(
+      "Cover reference removed. Media asset retained in the Gallery.",
+    ),
+  ).toBeVisible();
+});
+
+test("external identity cover prefers its persistent protected local copy", async () => {
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    json({
+      ...external,
+      content_url: "/api/v1/attachments/snapshot/content",
+      thumbnail_url: "/api/v1/media-assets/snapshot/thumbnail?v=1",
+      fetched_at: "2026-10-01T12:00:00Z",
+    }),
+  );
+  renderCover();
+  expect(
+    await screen.findByRole("img", {
+      name: "Representative image for Passiflora edulis",
+    }),
+  ).toHaveAttribute("src", "/api/v1/attachments/snapshot/content");
 });

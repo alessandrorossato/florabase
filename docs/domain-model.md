@@ -579,88 +579,47 @@ Deletion commits `pending_delete` before unlinking, immediately blocks retrieval
 only after content is absent. Failed unlink retains the pending row for a deterministic DELETE retry;
 an unexpectedly missing active file is reported before a later pending retry completes cleanup.
 
-This storage foundation itself contains no collection-record relationship. `ATTACHMENT-003` builds
-explicit optional collection-photo and BotanicalIdentity-cover ownership layers on it while no
-record requires an image.
+`ATTACHMENT-005` separates reusable MediaAsset from exact RecordMediaLink. Attachment remains
+technical metadata for one local original; each asset has at most one original and one shared,
+regenerable 320px WebP derivative. Gallery assets may have no links. Record uploads create asset and
+link atomically. Captions and nonnegative display order belong to each link; source, attribution,
+licence and optional dimensions belong to the asset. No automatic binary deduplication is performed.
 
-### Collection photos and external image references
+RecordMediaLink supports exactly SeedLot, Sowing, Plant, PlantGroup and Event through concrete
+foreign keys, one target per link and a unique asset/target pair. Target identity is immutable.
+Event hard deletion is blocked while links remain; the existing lifecycle rules of other targets
+are unchanged. Supplier and Harvest have no media target. BotanicalIdentity uses a distinct cover
+reference, excluded from RecordMediaLink.
 
-A local collection photo is a one-to-one owner of exactly one active `Attachment`, with optional
-caption and attribution. An external image reference stores no binary: it contains separate
-absolute HTTPS image and source-page URLs, required attribution, and an optional caption. Florabase
-never fetches an external image on the backend, and the browser loads one only after the operator
-chooses to disclose normal network information to its host; the image request sends no referrer.
+CollectionPrimaryPhoto remains an explicit designation for SeedLot, Plant and PlantGroup only,
+referencing a link on that exact target. Unlink clears only that link's primary, retains the asset
+and never guesses a replacement. Each record can independently designate the same shared asset.
+Safe batched summaries retain local primary, eligible local identity-cover fallback, then placeholder;
+external primaries with saved snapshots use protected local thumbnails; reference-only primaries
+remain unloaded until explicit Preview once in Photos or media detail.
 
-Both forms have an application-generated UUIDv7 ID, timezone-aware UTC creation/update timestamps,
-and exactly one nullable foreign key to a `SeedLot`, `Sowing`, `Plant`, `PlantGroup`, or `Event`.
-Database constraints enforce the one-target invariant, and each local `Attachment` can belong to at
-most one photo. A transaction-locked database ownership check also prevents a locally managed
-Attachment from simultaneously becoming a BotanicalIdentity cover. These are concrete supported
-relationships rather than a generic polymorphic target. Changing caption, attribution, or external
-URLs never retargets a row.
+BotanicalIdentityCoverImage keeps one current cover per identity, backed by a MediaAsset. It is an
+active reference independent of collection links. Cover replacement/removal retains the former
+asset. Existing local upload and external privacy acknowledgement remain; the accepted external
+cover can render in the existing Botany compact/detail views with no referrer, without granting
+Gallery or collection views permission to load it automatically.
 
-Lists combine both forms in ascending creation time and ID order. Inactive collection records retain
-their photo history. Only Event currently has an ordinary hard-delete route, which refuses deletion
-while photo rows remain; the other four targets continue to have no hard-delete API.
+Unlinked means zero RecordMediaLinks; fully unreferenced additionally means zero cover references.
+Local and external assets remain valid Gallery items with either state and are never automatically
+cleaned up. Explicit asset deletion is blocked until fully unreferenced. Eligible local deletion
+uses pending-delete retry for original, derivative and metadata; unlink and cover removal never
+perform that deletion. PostgreSQL constraints and asset/target locks protect concurrent linking,
+primary selection, unlinking and deletion. Historical mixed-owner metadata migrates without moving
+files or changing references. Populated downgrade requires the paired pre-upgrade backup.
 
-Local removal first commits the Attachment as `pending_delete`, which hides it from ordinary display,
-then unlinks the binary and finally deletes both relationship and Attachment metadata. Unlink,
-missing-file, or final metadata failures leave an explicit retry-only state. External removal deletes
-Florabase metadata only and never contacts the remote host. Collection-photo galleries have no
-cover selection and remain independent from BotanicalIdentity reference imagery.
+An external MediaAsset may own one persistent Attachment snapshot and fetched-at timestamp while
+retaining external kind, canonical URL, attribution and UUID. Explicit save/refresh/remove actions
+never change its links, primary selections or covers. Refresh validates before publishing and retains
+a valid copy on fetch failure. The snapshot is included in paired backups and adds no logical
+reference for deletion eligibility. One pending-attachment pointer supports interrupted cleanup,
+without version history or automatic cleanup. Revision 0028 introduces absent copies for old data.
 
-`ATTACHMENT-004` adds a separate `CollectionPrimaryPhoto` designation for SeedLot, Plant, and
-PlantGroup only. Exactly one supported target and one existing local or external collection-photo
-source are stored per row. Unique constraints limit each target and source to one designation. The
-service locks the target and selected photo, verifies its exact existing ownership, and rejects a
-local photo whose Attachment is not active or whose stored content fails the trusted resolver.
-Summary reads also reject cross-target inconsistencies. Existing records and newly uploaded photos have no
-primary until an owner explicitly selects one. Sowing, Event, and BotanicalIdentity have no
-collection-primary designation; BotanicalIdentity covers remain separate.
-
-Changing or removing a designation leaves the gallery photo and its chronological position intact.
-External removal clears the designation in the deletion transaction without contacting the host.
-Local removal clears it when `pending_delete` begins, so failed unlink/retry never presents the
-pending photo as primary. A database cascade on photo deletion is a final integrity guard. Inactive
-collection records retain a valid designation. Directory/detail responses include only a compact
-primary kind, photo ID, and fixed local thumbnail URL. That authenticated WebP thumbnail uses the
-trusted storage resolver, safe orientation and decode, a 320px maximum edge without upscaling,
-private ETag caching, and no persisted derivative. External primaries show a neutral indicator in
-compact views; only the Photos gallery offers the explicit `Load external image` disclosure.
-
-### BotanicalIdentity cover images
-
-A `BotanicalIdentityCoverImage` is the optional current representative image for exactly one
-BotanicalIdentity. It is reference presentation for a taxon or cultivar, not evidence about a
-SeedLot, Sowing, Plant, PlantGroup, or Event and not part of collection-photo history. A unique
-identity foreign key enforces at most one cover per identity. The source-mode constraint requires
-exactly one of:
-
-- a locally managed cover that uniquely owns one ATTACHMENT-002 `Attachment`; or
-- external metadata containing separate absolute HTTPS image and source-page URLs, required
-  attribution, and optional licence label and HTTPS licence URL.
-
-The local-upload API creates a new Attachment through the existing validated JPEG/PNG/WebP, 25 MiB
-storage path; it never accepts an arbitrary existing Attachment ID. The external API stores only
-validated metadata, requires an explicit privacy acknowledgement, never infers a licence, and never
-makes a backend request to any supplied URL. Once saved, the browser may render the current external
-cover on that identity's detail page with no referrer because saving it records the operator's
-informed opt-in to normal network disclosure to the image host.
-
-Replacement updates this one current presentation image and creates no version history. Replacing
-or removing a local cover uses `active → pending_delete → unlink → relationship/Attachment cleanup`;
-failed or unexpectedly missing content remains represented by a retry-only cover relation until
-cleanup succeeds. Replacing or removing an external cover changes metadata only. Direct Attachment
-deletion and BotanicalIdentity hard deletion are explicitly blocked while the active cover remains.
-
-There is no automatic discovery, provider-backed search, cover album or reordering, EXIF inspection,
-persisted derivative, background media worker, or generic resize API. Compact identity directory
-rows render a locally managed cover only through a fixed-purpose authenticated endpoint that safely
-decodes the validated source and returns a WebP thumbnail with a maximum 320-pixel edge without
-upscaling. The response exposes no storage path and uses private HTTP caching plus an ETag derived
-from the attachment digest and transform version. External covers never load in compact views or
-pass through the backend; they use a neutral indicator while the operator-approved original remains
-available on the identity detail. Identities without a cover use a local fallback.
+See [shared media contract, APIs, migration and review evidence](media-library.md).
 
 ## Ownership and mutation boundary
 

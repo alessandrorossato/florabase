@@ -8,6 +8,7 @@ import {
 } from "react";
 
 import { ApiError } from "../auth/api";
+import { MediaPicker } from "../media/MediaPicker";
 import { useAuth } from "../auth/context";
 import {
   clearPrimaryPhoto,
@@ -50,7 +51,9 @@ export function PhotoDialog({
         ? document.activeElement
         : null;
     dialog.current
-      ?.querySelector<HTMLElement>("input, textarea, button")
+      ?.querySelector<HTMLElement>(
+        "input:not([type=hidden]), textarea, select, button, a[href]",
+      )
       ?.focus();
     return () => {
       previousFocus?.focus();
@@ -78,7 +81,7 @@ export function PhotoDialog({
           if (event.key !== "Tab" || !dialog.current) return;
           const focusable = Array.from(
             dialog.current.querySelectorAll<HTMLElement>(
-              "button:not([disabled]), input:not([disabled]), textarea:not([disabled])",
+              "button:not([disabled]), input:not([disabled]):not([type=hidden]), textarea:not([disabled]), select:not([disabled]), a[href]",
             ),
           );
           const first = focusable.at(0);
@@ -117,6 +120,21 @@ function ExternalPreview({
   const [state, setState] = useState<"hidden" | "loading" | "loaded" | "error">(
     "hidden",
   );
+  if (photo.thumbnail_url && state === "error")
+    return <p role="status">The saved local image is unavailable.</p>;
+  if (photo.thumbnail_url)
+    return (
+      <img
+        alt={alt}
+        className="collection-photo-image"
+        decoding="async"
+        loading="lazy"
+        src={photo.thumbnail_url}
+        onError={() => {
+          setState("error");
+        }}
+      />
+    );
   if (state === "hidden")
     return (
       <div className="external-preview-disclosure">
@@ -131,7 +149,7 @@ function ExternalPreview({
             setState("loading");
           }}
         >
-          Load external image
+          Preview once
         </button>
       </div>
     );
@@ -191,6 +209,7 @@ export function PhotosSection({
   const [editor, setEditor] = useState<Editor>(null);
   const [removing, setRemoving] = useState<CollectionPhoto | null>(null);
   const [pending, setPending] = useState(false);
+  const [linking, setLinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [brokenLocal, setBrokenLocal] = useState<Set<string>>(new Set());
@@ -313,7 +332,11 @@ export function PhotosSection({
       } else if (editor.kind === "local") {
         await updateLocalPhoto(
           editor.id,
-          { caption: caption || null, attribution: attribution || null },
+          {
+            caption: caption || null,
+            attribution: attribution || null,
+            display_order: Number(field("display_order")),
+          },
           csrfToken,
         );
       } else {
@@ -324,6 +347,7 @@ export function PhotosSection({
             source_url: field("source_url"),
             attribution,
             caption: caption || null,
+            display_order: Number(field("display_order")),
           },
           csrfToken,
         );
@@ -361,7 +385,10 @@ export function PhotosSection({
         onPrimaryChanged?.(null);
       }
       setRemoving(null);
-      await refresh("Photo was removed.", true);
+      await refresh(
+        "Media unlinked from this record. Asset retained in the library.",
+        true,
+      );
     } catch (removeError: unknown) {
       if (removeError instanceof ApiError && removeError.status === 401) {
         auth.sessionExpired();
@@ -369,13 +396,13 @@ export function PhotosSection({
       }
       if (removed) {
         setError(
-          "Photo was removed, but Photos could not be refreshed. Reload this record to see the latest state.",
+          "Media was unlinked, but Photos could not be refreshed. Reload this record to see the latest state.",
         );
         return;
       }
       setError(
         removing.kind === "local"
-          ? "Florabase could not finish deleting this uploaded photo. It is hidden while deletion is pending; retry removal."
+          ? "Florabase could not unlink this image from the record. Refresh and try again."
           : "Florabase could not remove this external image reference. Try again.",
       );
       if (supportsPrimary) {
@@ -415,7 +442,16 @@ export function PhotosSection({
               setError(null);
             }}
           >
-            Upload photo
+            Add new media
+          </button>
+          <button
+            className="button--secondary"
+            type="button"
+            onClick={() => {
+              setLinking(true);
+            }}
+          >
+            Link existing media
           </button>
           <button
             className="button--secondary"
@@ -430,8 +466,9 @@ export function PhotosSection({
         </div>
       </div>
       <p className="field-help">
-        Uploaded photos stay in protected Florabase storage. External images are
-        saved as attributed links and never load without your choice.
+        Uploaded photos and saved local copies stay in protected Florabase
+        storage. External references need Preview once to load remotely; manage
+        saved copies in media details.
       </p>
       {notice && (
         <p className="notice notice--success" role="status">
@@ -469,7 +506,11 @@ export function PhotosSection({
             return (
               <article className="photo-card" key={`${photo.kind}:${photo.id}`}>
                 <p className="card-type">
-                  {photo.kind === "local" ? "Uploaded photo" : "External image"}
+                  {photo.kind === "local"
+                    ? "Uploaded photo"
+                    : photo.content_url
+                      ? "External reference · local copy saved"
+                      : "External reference · not stored locally"}
                   {currentPrimary?.kind === photo.kind &&
                     currentPrimary.photo_id === photo.id && (
                       <span className="primary-photo-badge">Primary</span>
@@ -493,14 +534,22 @@ export function PhotosSection({
                       className="collection-photo-image"
                       decoding="async"
                       loading="lazy"
-                      src={photo.content_url ?? undefined}
+                      src={
+                        photo.media_asset_id
+                          ? `/api/v1/media-assets/${photo.media_asset_id}/thumbnail`
+                          : `/api/v1/collection-photos/local/${photo.id}/thumbnail`
+                      }
                       onError={() => {
                         setBrokenLocal((ids) => new Set(ids).add(photo.id));
                       }}
                     />
                   )
                 ) : (
-                  <ExternalPreview photo={photo} alt={alt} />
+                  <ExternalPreview
+                    key={photo.thumbnail_url ?? photo.image_url}
+                    photo={photo}
+                    alt={alt}
+                  />
                 )}
                 {photo.caption && (
                   <p className="photo-caption">{photo.caption}</p>
@@ -522,6 +571,11 @@ export function PhotosSection({
                   </p>
                 )}
                 <div className="actions">
+                  {photo.media_asset_id && (
+                    <a href={`#/media/${photo.media_asset_id}`}>
+                      Open media details
+                    </a>
+                  )}
                   {supportsPrimary &&
                     (currentPrimary?.kind === photo.kind &&
                     currentPrimary.photo_id === photo.id ? (
@@ -569,8 +623,8 @@ export function PhotosSection({
                     }}
                   >
                     {photo.kind === "local" && photo.deletion_pending
-                      ? "Retry removal"
-                      : "Remove"}
+                      ? "Unlink unavailable media"
+                      : "Unlink from this record"}
                   </button>
                 </div>
               </article>
@@ -578,12 +632,30 @@ export function PhotosSection({
           })}
         </div>
       )}
+      {linking && (
+        <MediaPicker
+          target={target}
+          targetId={targetId}
+          targetLabel={targetLabel}
+          onClose={() => {
+            setLinking(false);
+          }}
+          onLinked={() => {
+            setLinking(false);
+            void refresh("Media linked to this record.", true).catch(() => {
+              setError(
+                "Media was linked, but Photos could not refresh. Reload this record.",
+              );
+            });
+          }}
+        />
+      )}
       {editor && (
         <PhotoDialog
           className="photo-dialog"
           title={
             editor === "local"
-              ? "Upload photo"
+              ? "Add new media"
               : editor === "external"
                 ? "Add external image"
                 : "Edit photo details"
@@ -642,7 +714,7 @@ export function PhotosSection({
               />
             </label>
             <label>
-              Attribution{" "}
+              Attribution (shared media){" "}
               <span className="field-help">
                 {externalEditor ? "required" : "optional"}
               </span>
@@ -653,6 +725,25 @@ export function PhotosSection({
                 required={externalEditor}
               />
             </label>
+            {editing && (
+              <label>
+                Display order for this record
+                <input
+                  name="display_order"
+                  type="number"
+                  min={0}
+                  max={2147483647}
+                  required
+                  defaultValue={editing.display_order}
+                />
+              </label>
+            )}
+            {editing && (
+              <p>
+                Caption and order apply only to this record. Attribution and
+                external source details apply everywhere this media is used.
+              </p>
+            )}
             {error && (
               <p className="notice notice--error" role="alert">
                 {error}
@@ -678,7 +769,7 @@ export function PhotosSection({
       )}
       {removing && (
         <PhotoDialog
-          title={`Remove ${
+          title={`Unlink ${
             removing.kind === "local"
               ? "uploaded photo"
               : "external image reference"
@@ -688,9 +779,9 @@ export function PhotosSection({
           }}
         >
           <p>
-            {removing.kind === "local"
-              ? "This permanently removes the protected image and its metadata."
-              : "This removes Florabase metadata only and does not contact the external host."}
+            Remove this record's link only. Its primary designation will be
+            cleared if selected. The media asset, other record links, and
+            identity cover references remain in the Gallery.
           </p>
           {error && (
             <p className="notice notice--error" role="alert">
@@ -704,11 +795,7 @@ export function PhotosSection({
               type="button"
               onClick={() => void confirmRemove()}
             >
-              {pending
-                ? "Removing…"
-                : removing.kind === "local" && removing.deletion_pending
-                  ? "Retry removal"
-                  : "Remove"}
+              {pending ? "Unlinking…" : "Unlink from this record"}
             </button>
             <button
               className="button--secondary"

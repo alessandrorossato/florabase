@@ -68,6 +68,7 @@ def validate_external_cover_url(value: str) -> str:
 class PhotoMetadataWrite(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    display_order: int | None = Field(default=None, ge=0, le=2147483647)
     caption: str | None = Field(default=None, max_length=2000)
     attribution: str | None = Field(default=None, max_length=2000)
 
@@ -158,6 +159,8 @@ class ExternalCoverWrite(BaseModel):
 
 
 class LocalPhotoResponse(BaseModel):
+    media_asset_id: UUID | None = None
+    display_order: int = 0
     kind: Literal["local"] = "local"
     id: UUID
     attachment_id: UUID
@@ -172,6 +175,11 @@ class LocalPhotoResponse(BaseModel):
 
 
 class ExternalImageResponse(BaseModel):
+    content_url: str | None = None
+    thumbnail_url: str | None = None
+    fetched_at: datetime | None = None
+    media_asset_id: UUID | None = None
+    display_order: int = 0
     kind: Literal["external"] = "external"
     id: UUID
     image_url: str
@@ -194,6 +202,7 @@ class PrimaryPhotoResponse(PrimaryPhotoSelection):
 
 
 class LocalCoverResponse(BaseModel):
+    media_asset_id: UUID | None = None
     kind: Literal["local"] = "local"
     id: UUID
     attachment_id: UUID
@@ -206,6 +215,10 @@ class LocalCoverResponse(BaseModel):
 
 
 class ExternalCoverResponse(BaseModel):
+    content_url: str | None = None
+    thumbnail_url: str | None = None
+    fetched_at: datetime | None = None
+    media_asset_id: UUID | None = None
     kind: Literal["external"] = "external"
     id: UUID
     image_url: str

@@ -27,7 +27,8 @@ def database_for(item: Attachment) -> MagicMock:
     database = MagicMock()
     database.scalar.side_effect = lambda statement: (
         None
-        if "local_collection_photos" in str(statement)
+        if "record_media_links" in str(statement)
+        or "media_assets" in str(statement)
         or "botanical_identity_cover_images" in str(statement)
         else item
     )
