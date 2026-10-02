@@ -1,5 +1,26 @@
 # Engineering progress
 
+## 2026-10-02 — CI-003 portable development and quality identity
+
+- PR #64's GitHub `quality` failure reached frontend `pnpm format:check` but could not create
+  `/app/_tmp_*`: Compose's 1000:1000 defaults did not match the invoking checkout owner. Both
+  development application services shared this bind-mount assumption.
+- DEV, Review and QUALITY now explicitly use the invoking POSIX UID/GID for both runtimes and
+  project-local dependency/media initialization, overriding stale shell and `.env` defaults. Root
+  invocation refuses; platforms without UID/GID APIs require an explicit numeric non-root identity
+  in the process environment. Production and Stable Preview retain their image users and topology.
+- Focused checks passed 26 environment tests and 37 feature-workflow tests, plus workflow Ruff
+  lint/format and strict mypy. New linked-worktree cases cover UID 1000, UID 20023/GID 20024, stale
+  settings, root refusal, missing/invalid host identity and production isolation.
+- A separate synthetic `/tmp` checkout owned by 20023:20024 reproduced the exact frontend EACCES
+  at UID 1000, then passed the same `pnpm format:check` with the corrected identity. Real non-root
+  frontend/backend bind writes, backend media writes, fresh noninteractive dependency bootstrap,
+  root-owned `.bin` repair, backend formatting/API drift and production configuration checks passed.
+  Only the proven-new fixture resources were removed; the real checkout was never ownership-modified.
+- Reviewed the correction and froze the tree before fresh `make feature-verify`; the canonical result
+  and exact-worktree receipt are reported in the handoff. Correction remains uncommitted for operator
+  review/redelivery on the existing branch and PR; no push, delivery, merge or finish was performed.
+
 ## 2026-10-02 — CI-003 safe foreign-source DEV recovery
 
 - Fixed the independent review's recovery dead end: `dev-stop` no longer needs the primary or old

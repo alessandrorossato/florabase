@@ -153,13 +153,21 @@ requires a coordinated DB-and-media snapshot, a destination replacement confirma
 compatibility checks. That complete clone is deferred. The old database-only Preview import now
 refuses before reading or replacing data because it could create dangling media references.
 
-## Frontend dependencies
+## Development runtime identity and dependencies
+
+DEV, Feature Review and QUALITY helpers explicitly supply the invoking POSIX user's UID/GID as
+`LOCAL_UID:LOCAL_GID` to both frontend and backend. These values override stale shell or `.env`
+defaults, so bind-mounted source remains writable by its owner in local and CI checkouts, including
+linked worktrees. Run as the user who owns the selected source; root invocation refuses before
+Compose runs. On platforms without host UID/GID APIs, explicitly export numeric `LOCAL_UID` and
+`LOCAL_GID` for a non-root Docker identity that can write the bind mounts; missing/invalid values or
+UID zero refuse. Production and Stable Preview retain their image-defined users.
 
 The development image seeds `node_modules` with non-root ownership. A short-lived root initializer
-mounts only the project's dependency and media volumes, fixes their configured UID/GID ownership and
-exits. It never mounts source files. The frontend itself runs as `LOCAL_UID:LOCAL_GID` (1000:1000 by
-default) and installs with `CI=true`, `--frozen-lockfile` and `--prefer-offline` before executing pnpm. Corepack uses the image's read-only pinned package cache; its temporary
-home supports configured non-default host UIDs.
+mounts only the project's dependency and media volumes, fixes ownership to that same UID/GID and
+exits. It never mounts or changes source files. The non-root frontend installs with `CI=true`,
+`--frozen-lockfile` and `--prefer-offline` before executing pnpm. Corepack uses the image's read-only
+pinned package cache; its temporary home supports non-default host UIDs.
 Fresh volumes, root-owned historical `.bin` files and changed lockfiles need no interactive TTY,
 manual `chown`, world-writable permissions or populated host dependency directory.
 

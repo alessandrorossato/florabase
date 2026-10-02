@@ -77,6 +77,61 @@ class EnvironmentTests(unittest.TestCase):
         with patch.dict(os.environ, {"FLORABASE_ENV_FILE": str(self.primary / ".env")}):
             self.assertEqual(self.repo.env_file(), self.primary / ".env")
 
+    def test_bind_mount_roles_propagate_invoking_uid_gid_over_stale_settings(self) -> None:
+        for uid, gid in ((1000, 1000), (20023, 20024)):
+            for role in ("dev", "review", "quality"):
+                with (
+                    self.subTest(role=role, uid=uid, gid=gid),
+                    patch("workflow_environment.os.getuid", return_value=uid),
+                    patch("workflow_environment.os.getgid", return_value=gid),
+                    patch.dict(os.environ, {"LOCAL_UID": "1000", "LOCAL_GID": "1000"}),
+                ):
+                    env = Environment(self.repo, role).environment()
+                    self.assertEqual(env["LOCAL_UID"], str(uid))
+                    self.assertEqual(env["LOCAL_GID"], str(gid))
+
+    def test_root_invocation_refuses_development_roles_without_affecting_production(self) -> None:
+        with (
+            patch("workflow_environment.os.getuid", return_value=0) as get_uid,
+            patch("workflow_environment.os.getgid", return_value=0) as get_gid,
+            patch.dict(os.environ, {"LOCAL_UID": "1000", "LOCAL_GID": "1000"}),
+        ):
+            for role in ("dev", "review", "quality"):
+                with self.assertRaisesRegex(WorkflowError, "non-root invoking user.*without sudo"):
+                    Environment(self.repo, role).environment()
+            get_uid.reset_mock()
+            get_gid.reset_mock()
+            production = Environment(self.repo, "prod").environment()
+            self.assertEqual(production["LOCAL_UID"], "1000")
+            get_uid.assert_not_called()
+            get_gid.assert_not_called()
+            self.assertNotIn(
+                str(self.feature / "compose.dev.yaml"), Environment(self.repo, "prod").command()
+            )
+
+    def test_missing_host_identity_apis_require_explicit_non_root_identity(self) -> None:
+        with (
+            patch("workflow_environment.os.getuid", None),
+            patch("workflow_environment.os.getgid", None),
+            patch.dict(os.environ, {}, clear=True),
+        ):
+            for settings in (
+                {},
+                {"LOCAL_UID": "20023"},
+                {"LOCAL_UID": "invalid", "LOCAL_GID": "20024"},
+            ):
+                with patch.dict(os.environ, settings):
+                    with self.assertRaisesRegex(
+                        WorkflowError, "APIs are unavailable.*explicitly set"
+                    ):
+                        Environment(self.repo, "quality").environment()
+            with patch.dict(os.environ, {"LOCAL_UID": "0", "LOCAL_GID": "20024"}):
+                with self.assertRaisesRegex(WorkflowError, "non-root invoking user"):
+                    Environment(self.repo, "quality").environment()
+            with patch.dict(os.environ, {"LOCAL_UID": "20023", "LOCAL_GID": "20024"}):
+                env = Environment(self.repo, "quality").environment()
+                self.assertEqual((env["LOCAL_UID"], env["LOCAL_GID"]), ("20023", "20024"))
+
     def test_init_creates_only_linked_branch_and_is_idempotent_with_dirty_source(self) -> None:
         with contextlib.redirect_stdout(io.StringIO()):
             self.repo.initialize("ci/environment-workflow")

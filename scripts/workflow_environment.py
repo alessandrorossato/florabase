@@ -29,6 +29,26 @@ class WorkflowError(RuntimeError):
     pass
 
 
+def local_identity(environment: dict[str, str]) -> dict[str, str]:
+    """Use the bind-mount owner's invoking identity, never a workstation/CI-specific UID."""
+    get_uid, get_gid = getattr(os, "getuid", None), getattr(os, "getgid", None)
+    if callable(get_uid) and callable(get_gid):
+        uid, gid = str(get_uid()), str(get_gid())
+    else:
+        uid, gid = environment.get("LOCAL_UID", ""), environment.get("LOCAL_GID", "")
+        if not re.fullmatch(r"[0-9]+", uid) or not re.fullmatch(r"[0-9]+", gid):
+            raise WorkflowError(
+                "host UID/GID APIs are unavailable; explicitly set LOCAL_UID and LOCAL_GID "
+                "to the non-root Docker identity that can write the development bind mounts"
+            )
+    if int(uid) == 0:
+        raise WorkflowError(
+            "DEV/Review/QUALITY require a non-root invoking user who owns the checkout; "
+            "run these commands as that user without sudo"
+        )
+    return {"LOCAL_UID": str(int(uid)), "LOCAL_GID": str(int(gid))}
+
+
 def run(command: list[str], *, capture: bool = False, env: dict[str, str] | None = None) -> str:
     try:
         result = subprocess.run(
@@ -256,6 +276,10 @@ class Environment:
         env.update({f"FLORABASE_{key.upper()}": value for key, value in identity.items()})
         env["COMPOSE_PROJECT_NAME"] = self.project
         env["FLORABASE_ROLE"] = self.role
+        if self.role in {"dev", "review", "quality"}:
+            # Shell values override .env and Compose's defaults, including stale 1000:1000
+            # settings. Runtime users and dev-state-init receive the same numeric identity.
+            env.update(local_identity(env))
         if self.role in {"review", "quality"}:
             database = "florabase_review" if self.role == "review" else "florabase_quality"
             env.update(
