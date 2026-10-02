@@ -19,10 +19,12 @@ from workflow_environment import (
     Repository,
     WorkflowError,
     code_heads,
+    main,
     migration_graph,
     preserve_media,
     require_upgradeable,
 )
+from workflow_environment import run as execute
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -193,6 +195,274 @@ class EnvironmentTests(unittest.TestCase):
                 dev.upgrade()
         compose.assert_not_called()
         require_upgradeable(["0029"], migration_graph(self.primary))
+
+    def test_upgrade_rebuilds_stale_or_absent_initializer_before_migration_and_retry(self) -> None:
+        versions = self.primary / "backend/alembic/versions"
+        (versions / "0030.py").write_text("revision = '0030'\ndown_revision = '0029'\n")
+        for image in ("stale", "absent"):
+            for revision in ("0029", "0030"):
+                with self.subTest(image=image, revision=revision):
+                    dev = Environment(self.repo, "dev")
+                    current = [revision]
+                    ready = {"value": False}
+                    commands: list[tuple[str, ...]] = []
+                    events: list[tuple[str, ...]] = []
+
+                    def compose(
+                        *args: str,
+                        capture: bool = False,
+                        image_state: str = image,
+                        revision_state: list[str] = current,
+                        command_log: list[tuple[str, ...]] = commands,
+                        ready_state: dict[str, bool] = ready,
+                        event_log: list[tuple[str, ...]] = events,
+                    ) -> str:
+                        command_log.append(args)
+                        event_log.append(("compose", *args))
+                        if args[0] == "build" and "dev-state-init" in args:
+                            ready_state["value"] = True
+                        if args == ("config", "--format", "json"):
+                            return json.dumps(
+                                {"services": {"dev-state-init": {"image": "fixture-frontend"}}}
+                            )
+                        if "alembic" in args:
+                            self.assertTrue(
+                                ready_state["value"], "initializer must precede DB mutation"
+                            )
+                            self.assertIn(
+                                (
+                                    "docker",
+                                    "docker",
+                                    "run",
+                                    "--rm",
+                                    "--network",
+                                    "none",
+                                    "--read-only",
+                                    "--entrypoint",
+                                    "sh",
+                                    "fixture-frontend",
+                                    "-ec",
+                                    'test -x "$(command -v florabase-dev-state-init)"',
+                                ),
+                                event_log,
+                            )
+                            self.assertEqual(args[-2:], ("upgrade", "head"))
+                            revision_state[:] = ["0030"]
+                        return ""
+
+                    def docker_run(
+                        command: list[str],
+                        *,
+                        capture: bool = False,
+                        env: dict[str, str] | None = None,
+                        ready_state: dict[str, bool] = ready,
+                        image_state: str = image,
+                        event_log: list[tuple[str, ...]] = events,
+                    ) -> str:
+                        if command[:2] != ["docker", "run"]:
+                            return execute(command, capture=capture, env=env)
+                        self.assertTrue(
+                            ready_state["value"], f"{image_state} image was not freshly built"
+                        )
+                        self.assertNotIn("-v", command)
+                        event_log.append(("docker", *command))
+                        return ""
+
+                    with (
+                        patch("workflow_environment.Repository", return_value=self.repo),
+                        patch("workflow_environment.Environment", return_value=dev),
+                        patch("sys.argv", ["workflow", "dev", "upgrade"]),
+                        patch.object(dev, "validate") as validate,
+                        patch.object(dev, "require_owner") as owner,
+                        patch.object(dev, "require_durable_legacy_media"),
+                        patch.object(dev, "containers", return_value=[]),
+                        patch.object(
+                            dev, "current", side_effect=lambda current=current: list(current)
+                        ),
+                        patch.object(dev, "compose", side_effect=compose),
+                        patch("workflow_environment.run", side_effect=docker_run),
+                        contextlib.redirect_stdout(io.StringIO()),
+                        contextlib.redirect_stderr(io.StringIO()),
+                    ):
+                        self.assertEqual(main(), 0)
+                        # Retry after the migration completed, with a stale image again.
+                        ready["value"] = False
+                        self.assertEqual(main(), 0)
+                    validate.assert_called_with(require_durable_dev=True)
+                    owner.assert_called_with(allow_stopped_dev=True)
+                    expected = [
+                        ("compose", "build", "backend", "dev-state-init"),
+                        ("compose", "config", "--format", "json"),
+                        (
+                            "docker",
+                            "docker",
+                            "run",
+                            "--rm",
+                            "--network",
+                            "none",
+                            "--read-only",
+                            "--entrypoint",
+                            "sh",
+                            "fixture-frontend",
+                            "-ec",
+                            'test -x "$(command -v florabase-dev-state-init)"',
+                        ),
+                        ("compose", "up", "-d", "--wait", "--wait-timeout", "120", "db"),
+                        (
+                            "compose",
+                            "run",
+                            "--rm",
+                            "-T",
+                            "--no-deps",
+                            "backend",
+                            "alembic",
+                            "upgrade",
+                            "head",
+                        ),
+                        ("compose", "run", "--rm", "-T", "--no-deps", "dev-state-init"),
+                    ]
+                    actual = events
+                    self.assertEqual(actual, expected * 2)
+                    expected_commands = [
+                        ("build", "backend", "dev-state-init"),
+                        ("config", "--format", "json"),
+                        ("up", "-d", "--wait", "--wait-timeout", "120", "db"),
+                        ("run", "--rm", "-T", "--no-deps", "backend", "alembic", "upgrade", "head"),
+                        ("run", "--rm", "-T", "--no-deps", "dev-state-init"),
+                    ]
+                    self.assertEqual(commands, expected_commands * 2)
+                    self.assertEqual(current, ["0030"])
+                    # Exact commands exclude downgrade, DB recreation/removal and volume deletion.
+
+    def test_upgrade_build_or_executable_failure_precedes_any_database_operation(self) -> None:
+        (self.primary / "backend/alembic/versions/0030.py").write_text(
+            "revision = '0030'\ndown_revision = '0029'\n"
+        )
+        for failure in ("build", "executable"):
+            with self.subTest(failure=failure):
+                dev = Environment(self.repo, "dev")
+                commands: list[tuple[str, ...]] = []
+
+                def compose(
+                    *args: str,
+                    capture: bool = False,
+                    failure_state: str = failure,
+                    command_log: list[tuple[str, ...]] = commands,
+                ) -> str:
+                    command_log.append(args)
+                    if args[0] == "build" and failure_state == "build":
+                        raise WorkflowError("initializer image build failed")
+                    if args == ("config", "--format", "json"):
+                        return json.dumps(
+                            {"services": {"dev-state-init": {"image": "fixture-frontend"}}}
+                        )
+                    return ""
+
+                def docker_run(
+                    command: list[str],
+                    *,
+                    capture: bool = False,
+                    env: dict[str, str] | None = None,
+                    failure_state: str = failure,
+                ) -> str:
+                    if command[:2] != ["docker", "run"]:
+                        return execute(command, capture=capture, env=env)
+                    if failure_state == "executable":
+                        raise WorkflowError("initializer executable missing")
+                    return ""
+
+                with (
+                    patch("workflow_environment.Repository", return_value=self.repo),
+                    patch("workflow_environment.Environment", return_value=dev),
+                    patch("sys.argv", ["workflow", "dev", "upgrade"]),
+                    patch.object(dev, "validate"),
+                    patch.object(dev, "require_owner"),
+                    patch.object(dev, "require_durable_legacy_media"),
+                    patch.object(dev, "start_database") as start,
+                    patch.object(dev, "current", return_value=["0029"]) as current,
+                    patch.object(dev, "upgrade") as upgrade,
+                    patch.object(dev, "compose", side_effect=compose),
+                    patch("workflow_environment.run", side_effect=docker_run),
+                    contextlib.redirect_stderr(io.StringIO()),
+                ):
+                    self.assertEqual(main(), 1)
+                start.assert_not_called()
+                current.assert_not_called()
+                upgrade.assert_not_called()
+                self.assertEqual(commands[0], ("build", "backend", "dev-state-init"))
+
+    def test_quality_frontend_prepares_shared_initializer_image_before_use(self) -> None:
+        quality = Environment(self.repo, "quality")
+        with (
+            patch("workflow_environment.Repository", return_value=self.repo),
+            patch("workflow_environment.Environment", return_value=quality),
+            patch(
+                "sys.argv",
+                [
+                    "workflow",
+                    "quality",
+                    "compose",
+                    "--",
+                    "run",
+                    "--rm",
+                    "--no-deps",
+                    "frontend",
+                    "pnpm",
+                    "lint",
+                ],
+            ),
+            patch.object(
+                quality,
+                "compose",
+                side_effect=lambda *args, **kwargs: (
+                    json.dumps({"services": {"dev-state-init": {"image": "quality-frontend"}}})
+                    if args == ("config", "--format", "json")
+                    else ""
+                ),
+            ) as compose,
+            patch(
+                "workflow_environment.run",
+                side_effect=lambda command, **kwargs: (
+                    execute(
+                        command,
+                        capture=kwargs.get("capture", False),
+                        env=kwargs.get("env"),
+                    )
+                    if command[:2] != ["docker", "run"]
+                    else None
+                ),
+            ) as docker_run,
+        ):
+            self.assertEqual(main(), 0)
+        commands = [call.args for call in compose.call_args_list]
+        self.assertEqual(commands[0], ("build", "dev-state-init"))
+        self.assertEqual(commands[1], ("config", "--format", "json"))
+        docker_calls = [
+            call.args for call in docker_run.call_args_list if call.args[0][:2] == ["docker", "run"]
+        ]
+        self.assertEqual(len(docker_calls), 1)
+        self.assertEqual(
+            docker_calls[0][0],
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--network",
+                "none",
+                "--read-only",
+                "--entrypoint",
+                "sh",
+                "quality-frontend",
+                "-ec",
+                'test -x "$(command -v florabase-dev-state-init)"',
+            ],
+        )
+        quality_call = next(
+            call for call in docker_run.call_args_list if call.args[0][:2] == ["docker", "run"]
+        )
+        self.assertEqual(quality_call.kwargs, {"env": quality.environment()})
+        self.assertEqual(commands[2], ("run", "--rm", "-T", "--no-deps", "dev-state-init"))
+        self.assertEqual(commands[3], ("run", "--rm", "--no-deps", "frontend", "pnpm", "lint"))
 
     def test_review_remove_requires_exact_scope_confirmation_before_commands(self) -> None:
         review = Environment(self.repo, "review")
