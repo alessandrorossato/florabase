@@ -645,6 +645,44 @@ class Environment:
             raise WorkflowError("database did not reach this source's code head")
         print(f"Database current after upgrade: {','.join(result)}")
 
+    def prepare_initializer(self, *services: str) -> str:
+        # Frontend and initializer share this image. Always build the selected source,
+        # even when a historical tag exists. Probe the rendered image directly so
+        # preflight cannot mount or initialize persistent application volumes.
+        self.compose("build", *services, "dev-state-init")
+        config = json.loads(self.compose("config", "--format", "json", capture=True))
+        image = config.get("services", {}).get("dev-state-init", {}).get("image")
+        if not isinstance(image, str) or not image:
+            raise WorkflowError(
+                "DEV initializer image is missing from rendered Compose configuration"
+            )
+        run(
+            [
+                "docker",
+                "run",
+                "--rm",
+                "--network",
+                "none",
+                "--read-only",
+                "--entrypoint",
+                "sh",
+                image,
+                "-ec",
+                'test -x "$(command -v florabase-dev-state-init)"',
+            ],
+            env=self.environment(),
+        )
+        return image
+
+    def upgrade_state(self) -> None:
+        self.validate(require_durable_dev=self.role == "dev")
+        self.require_owner(allow_stopped_dev=self.role == "dev")
+        self.require_durable_legacy_media()
+        self.prepare_initializer("backend")
+        self.start_database()
+        self.upgrade()
+        self.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")
+
     def start_database(self) -> None:
         if self.role == "dev" and any(
             item["Config"].get("Labels", {}).get("com.docker.compose.service") == "db"
@@ -800,6 +838,7 @@ def main() -> int:
                 if env.role == "dev" and command[0] in {"up", "down", "stop", "restart"}:
                     env.require_durable_legacy_media()
             if env.role == "quality" and command[:1] == ["run"] and "frontend" in command:
+                env.prepare_initializer()
                 env.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")
             env.compose(*command)
         elif args.action == "status":
@@ -807,13 +846,7 @@ def main() -> int:
         elif args.action == "up":
             env.up()
         elif args.action == "upgrade":
-            env.validate(require_durable_dev=env.role == "dev")
-            env.require_owner(allow_stopped_dev=env.role == "dev")
-            env.require_durable_legacy_media()
-            env.compose("build", "backend")
-            env.start_database()
-            env.upgrade()
-            env.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")
+            env.upgrade_state()
         elif args.action in {"stop", "remove"}:
             env.stop(
                 remove=args.action == "remove", confirm=os.environ.get("CONFIRM_REMOVE_REVIEW", "")

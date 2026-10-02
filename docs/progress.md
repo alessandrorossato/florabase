@@ -1,5 +1,35 @@
 # Engineering progress
 
+## 2026-10-02 — DEV upgrade initializer image portability fix
+
+- Confirmed PR #64's upgrade path built only `backend`, then migrated before invoking
+  `dev-state-init` from a potentially historical frontend development image. DEV upgrade now
+  builds `backend` and `dev-state-init` together from the selected primary source and checks the
+  initializer executable in the rendered image through a read-only, network-disabled Docker run
+  without mounting DEV volumes, before starting the DB or applying migrations. Migration compatibility,
+  revision confirmation and migration-before-initialization order retain their existing semantics.
+- QUALITY frontend commands had the same initializer freshness assumption and now share this
+  preparation helper. DEV up and Feature Review already build all services before initialization;
+  Stable Preview/production/integration do not invoke this development initializer.
+- Regressions failed against the old implementation and pass after the fix: stale/absent images,
+  pending migration, already-at-head retry, build/executable failure before any DB operation,
+  explicit current-source build ordering and QUALITY initialization. Focused checks passed
+  29 environment tests, 37 feature-workflow tests, 19 Preview tests and shell helper fixtures;
+  `make workflow-check` passed Ruff lint/format and strict mypy, plus `git diff --check`.
+- `make smoke-dev-upgrade` passed on UUID project
+  `florabase-dev-upgrade-smoke-51021aa5ae37`: the deliberately old image lacked the initializer;
+  failed initializer build preserved revision 0029 and DB rows; rebuilding applied 0029 → 0030,
+  initialized ownership, retried successfully at head and rebuilt again with the image absent.
+  DB rows, media/dependency markers, all three volume identities and the DB container survived.
+  Only fixture containers/network/volumes/image tags were removed. Before/after operator
+  DEV/Review/Preview/production container+volume and primary Git snapshots match.
+- Updated the canonical runtime freshness/retry invariant and added the repeatable isolated smoke
+  target to script static checks. This worktree is attached through `make feature-init` to
+  `fix/dev-upgrade-initializer-image` at main base `31209b2`. No primary checkout changes, operator
+  DEV mutation, staging, commit, push, delivery, merge or finish. Ready for independent infrastructure
+  review; the final canonical `make feature-verify` gate remains after that review. No graphical
+  product review or feature-status promotion was performed.
+
 ## 2026-10-02 — CI-003 portable development and quality identity
 
 - PR #64's GitHub `quality` failure reached frontend `pnpm format:check` but could not create

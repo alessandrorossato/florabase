@@ -69,8 +69,14 @@ These commands select the primary checkout even when invoked in a Codex feature 
 prints that source's current branch/SHA/dirty state, URL, project, network, volume names, service
 health, code head and DB revision. Existing containers bound to another source cause an explicit
 refusal instead of silently acquiring new source mounts. `dev-up` does not migrate the database;
-`dev-upgrade` explicitly builds the owning backend and upgrades only DEV, then checks its revision.
-No command automatically downgrades.
+`dev-upgrade` builds the current primary backend and `dev-state-init` images and checks that the
+initializer is executable in the rendered image before starting the DB or applying migrations.
+The read-only, network-disabled preflight runs directly from that exact image without mounting DEV
+volumes. The initializer shares the frontend development image; an existing local image is never treated as proof of freshness. Upgrade
+checks migration compatibility, applies `upgrade head`, confirms the revision, then initializes DEV
+volume ownership. Retrying when the DB is already at code head is safe: images are still prepared,
+Alembic performs no pending migration, and ownership initialization repeats without replacing data
+or volumes. No command automatically downgrades.
 
 ### Returning old-worktree DEV to primary
 
@@ -168,6 +174,7 @@ mounts only the project's dependency and media volumes, fixes ownership to that 
 exits. It never mounts or changes source files. The non-root frontend installs with `CI=true`,
 `--frozen-lockfile` and `--prefer-offline` before executing pnpm. Corepack uses the image's read-only
 pinned package cache; its temporary home supports non-default host UIDs.
+QUALITY frontend commands also build and validate that shared image before initialization.
 Fresh volumes, root-owned historical `.bin` files and changed lockfiles need no interactive TTY,
 manual `chown`, world-writable permissions or populated host dependency directory.
 

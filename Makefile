@@ -8,7 +8,7 @@ REF ?= origin/main
 PREVIEW_PATH ?=
 LOGIN ?= owner
 
-.PHONY: smoke-dev-recovery dev-bootstrap-owner workflow-check feature-init dev-up dev-status dev-stop feature-review-up feature-review-status feature-review-stop feature-review-remove feature-review-bootstrap-owner test-environment-workflow smoke-environment-workflow help setup up dev down logs build test test-backend test-integration test-frontend lint format format-check typecheck check ci migrate dev-upgrade migration backup restore health api-generate api-check dependency-update preview preview-status preview-stop preview-bootstrap-owner preview-import-dev preview-remove feature-start feature-verify feature-deliver feature-finish test-workflow-helpers test-feature-workflow test-preview-workflow
+.PHONY: smoke-dev-upgrade smoke-dev-recovery dev-bootstrap-owner workflow-check feature-init dev-up dev-status dev-stop feature-review-up feature-review-status feature-review-stop feature-review-remove feature-review-bootstrap-owner test-environment-workflow smoke-environment-workflow help setup up dev down logs build test test-backend test-integration test-frontend lint format format-check typecheck check ci migrate dev-upgrade migration backup restore health api-generate api-check dependency-update preview preview-status preview-stop preview-bootstrap-owner preview-import-dev preview-remove feature-start feature-verify feature-deliver feature-finish test-workflow-helpers test-feature-workflow test-preview-workflow
 
 help:
 	@awk 'BEGIN {FS = ":.*## "; print "Florabase commands:"} /^[a-zA-Z_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -176,7 +176,10 @@ smoke-environment-workflow: ## Run isolated real Compose smoke (never changes op
 smoke-dev-recovery: ## Prove recovery on unique fixtures without touching operator environments
 	@python3 ./scripts/smoke-dev-recovery.py
 
+smoke-dev-upgrade: ## Prove upgrade image freshness/retry on unique disposable state
+	@python3 ./scripts/smoke-dev-upgrade.py
+
 workflow-check: ## Lint, format-check and strictly type-check the new environment helpers
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff check --no-cache --isolated --select E4,E7,E9,F,I,B,UP /workflow/workflow_environment.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff format --no-cache --check /workflow/workflow_environment.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend mypy --strict --follow-imports=skip /workflow/workflow_environment.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff check --no-cache --isolated --select E4,E7,E9,F,I,B,UP /workflow/workflow_environment.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff format --no-cache --check /workflow/workflow_environment.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend mypy --strict --follow-imports=skip /workflow/workflow_environment.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py
