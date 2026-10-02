@@ -498,3 +498,50 @@ def test_traversal_roots_sowing_group_partial_identity_and_security(
 
     assert request("GET", f"/api/v1/plants/{lineage_records['plant_a']}/lineage")[0] == 401
     assert request("GET", f"/api/v1/plants/{uuid7()}/lineage", headers={"cookie": cookie})[0] == 404
+
+
+@pytest.mark.parametrize("route", ["plants", "plant-groups", "sowings"])
+def test_source_corrections_cannot_close_a_producer_cycle(
+    authenticated_browser: tuple[str, str], lineage_records: dict[str, str], route: str
+) -> None:
+    records = lineage_records
+    if route == "sowings":
+        item_id = records["root_sowing"]
+        payload = {"seed_lot_id": records["lot_b"]}
+    elif route == "plants":
+        item_id = records["plant_a"]
+        payload = {
+            "botanical_identity_id": records["producer_identity"],
+            "originating_sowing_id": records["sowing_b"],
+            "lifecycle": "dead",
+        }
+    else:
+        item_id = records["group_a"]
+        lot_status, _, lot = mutate(
+            authenticated_browser,
+            "POST",
+            "/api/v1/seed-lots",
+            _producer_payload(records["root_identity"], producer_plant_group_id=item_id),
+        )
+        assert lot_status == 201
+        sowing_status, _, sowing = mutate(
+            authenticated_browser, "POST", "/api/v1/sowings", {"seed_lot_id": lot["id"]}
+        )
+        assert sowing_status == 201
+        payload = {
+            "botanical_identity_id": records["producer_identity"],
+            "originating_sowing_id": sowing["id"],
+            "lifecycle": "completed",
+        }
+    suffix = "" if route == "sowings" else "/lineage"
+    before = request(
+        "GET", f"/api/v1/{route}/{item_id}{suffix}", headers={"cookie": authenticated_browser[0]}
+    )[2]
+    status, _, error = mutate(authenticated_browser, "PUT", f"/api/v1/{route}/{item_id}", payload)
+    assert status == 409
+    assert error["detail"]["code"] == "lineage_cycle"
+    after_status, _, after = request(
+        "GET", f"/api/v1/{route}/{item_id}{suffix}", headers={"cookie": authenticated_browser[0]}
+    )
+    assert after_status == 200
+    assert after == before

@@ -1,5 +1,46 @@
 # Engineering progress
 
+## 2026-10-02 — lineage integrity audit for independent logical review
+
+- Audited `320865b` / `fix/lineage-integrity-audit`, including HARVEST-001. Canonical ancestry uses
+  explicit SeedLot/Sowing/Plant/PlantGroup foreign keys, including collection-produced SeedLot
+  producers and immutable immediate extraction origins. Receipts, Events, Harvest, shared media,
+  Location, geographic provenance/native ranges and botanical identity remain distinct. The
+  [audit and invariant matrix](lineage-integrity.md) records corrections, historical retention,
+  end-to-end representations, concurrency, query evidence and deferred capabilities.
+- Reproduced three correction API cycles returning 200. All mutable source corrections now use
+  the existing typed walker. Revision `20261002_0030` adds serialized acyclic graph writes and
+  insertion-time source/result/Event correlation for all six receipt kinds. Existing cycles block
+  upgrade without data repair; populated guard-only downgrade/reupgrade preserves all facts.
+  READ COMMITTED graph-write isolation is enforced to avoid stale-snapshot lock races.
+- Reproduced cached-ORM failures after competing commits in extraction, reintegration eligibility
+  and SeedLot consumption. Locked reads now refresh current state before quantity/snapshot guards.
+  Two further interleavings reproduced stale Plant/PlantGroup origin comparisons bypassing the
+  reversed-Sowing guard; compare persisted origins before source-first row locking.
+  Added complete exact/approximate/unknown extraction/reintegration/reversal histories, sibling and
+  transfer isolation, five production generations, reference/Harvest/media separation, direct SQL
+  corruption guards, stale-receipt correction, migration preservation and real lock contention.
+- Semantic UI changes display ancestor lifecycle, prevent stale cross-record paths, and separate
+  extracted Plants from direct Sowing results using an additive exact source-group API field.
+  Both generated API artifacts are updated. No graphical polish, new lineage capability, feature ID
+  or feature-status change is introduced; stale Event/reintegration documentation is corrected.
+- Focused checks passed Ruff, strict mypy (240 source/test files), 83 backend unit tests, 72
+  PostgreSQL tests, frontend lint/types and 68 affected frontend tests. The long-chain read returns
+  22 ancestors in five statements. The main baseline test stages passed 546 backend / 336 frontend;
+  its API-drift stage overlapped the contract edit and is superseded by final verification.
+- The first full gate passed 550 backend unit and 339 frontend tests, then reached 434 successful
+  PostgreSQL tests and failed the old expected migration-head assertion. Updated that assertion
+  for revision 0030; the final gate is rerun after the confirmed origin-race fix.
+- The next gate passed 550 backend unit tests (91.25% coverage), 339 frontend tests and 437
+  PostgreSQL tests, production builds and the migration cycle, then failed receipt storage because
+  `.git` is a file in this linked worktree. The helper now resolves its actual per-worktree Git
+  metadata directory for write/read. A real linked-worktree regression and all 35 feature-workflow
+  helper tests pass. Rerun the unchanged complete canonical gate on the final tree.
+- Final full suites, API drift, feature graph/workflow helpers, production builds, migration cycle,
+  whitespace and verification receipt run through `make feature-verify`; its exact completed result
+  is reported in the handoff. No thresholds or runner settings are relaxed. The operator database
+  is not upgraded; all work remains unstaged and uncommitted, with no push, delivery, merge or finish.
+
 ## 2026-10-01 — HARVEST-001 structured Harvest review handoff
 
 - Continued `feat/structured-harvests` at `6a44a18`. Harvest records one Plant XOR PlantGroup,

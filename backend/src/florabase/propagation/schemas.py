@@ -172,6 +172,7 @@ class SowingPlantGroupTransitionResponse(BaseModel):
 
 
 class PropagationPlantSummary(BaseModel):
+    originating_plant_group_id: UUID | None = None
     id: UUID
     botanical_identity_id: UUID
     label: str | None

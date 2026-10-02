@@ -13,9 +13,6 @@ import sys
 from pathlib import Path
 
 
-RECEIPT = Path(".git/info/florabase-feature-verification.json")
-
-
 def git(*args: str) -> str:
     return subprocess.run(
         ["git", *args], check=True, stdout=subprocess.PIPE, text=True
@@ -89,6 +86,8 @@ def main() -> None:
     verify.add_argument("--branch", required=True)
     verify.add_argument("--base", required=True)
     args = parser.parse_args()
+    # Linked worktrees have a .git file and need an isolated receipt in their own metadata.
+    receipt_path = Path(git("rev-parse", "--git-dir")) / "info/florabase-feature-verification.json"
 
     if args.command == "write":
         receipt = {
@@ -97,13 +96,13 @@ def main() -> None:
             "base": args.base,
             "working_tree_digest": digest(working_entries()),
         }
-        RECEIPT.parent.mkdir(parents=True, exist_ok=True)
-        RECEIPT.write_text(json.dumps(receipt, sort_keys=True) + "\n", encoding="utf-8")
+        receipt_path.parent.mkdir(parents=True, exist_ok=True)
+        receipt_path.write_text(json.dumps(receipt, sort_keys=True) + "\n", encoding="utf-8")
         print("feature receipt: recorded verified working tree")
         return
 
     try:
-        receipt = json.loads(RECEIPT.read_text(encoding="utf-8"))
+        receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as error:
         fail(f"no usable verification receipt ({error}); rerun make feature-verify")
     if receipt.get("version") != 1 or receipt.get("branch") != args.branch:

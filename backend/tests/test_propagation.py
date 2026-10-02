@@ -334,6 +334,10 @@ def test_descendant_creation_and_explicit_summary() -> None:
     assert summary.unknown_plant_group_count == 1
     assert summary.germinated_count == 9
     assert {item.id for item in summary.plants} == {plant.id, extracted.id}
+    assert {item.id: item.originating_plant_group_id for item in summary.plants} == {
+        plant.id: None,
+        extracted.id: group.id,
+    }
     assert summary.plant_groups[0].quantity is not None
 
 

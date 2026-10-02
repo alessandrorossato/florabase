@@ -1019,3 +1019,74 @@ test("reselecting a previewed record after narrowing the viewport opens its deta
   ).toBeInTheDocument();
   expect(screen.queryByText(/Loading .* detail/)).not.toBeInTheDocument();
 });
+
+test("propagation paths distinguish direct results from retained extracted individuals", async () => {
+  const directId = "direct-result";
+  const groupId = "source-group";
+  const extractedId = "extracted-result";
+  mockApi(
+    sowingHandler([sowing()], (path) => {
+      if (path === `/api/v1/sowings/${sowingId}/propagation-summary`)
+        return json({
+          sowing_id: sowingId,
+          lifecycle: "active",
+          germinated_count: 12,
+          exact_descendant_count: 1,
+          approximate_plant_group_count: 0,
+          unknown_plant_group_count: 0,
+          plants: [
+            {
+              id: directId,
+              botanical_identity_id: identityId,
+              label: "Direct specimen",
+              lifecycle: "active",
+              originating_plant_group_id: null,
+            },
+            {
+              id: extractedId,
+              botanical_identity_id: identityId,
+              label: "Historical extraction",
+              lifecycle: "reintegrated",
+              originating_plant_group_id: groupId,
+            },
+          ],
+          plant_groups: [
+            {
+              id: groupId,
+              botanical_identity_id: identityId,
+              label: "Original group",
+              lifecycle: "reversed",
+              quantity: null,
+            },
+          ],
+        });
+      return undefined;
+    }),
+  );
+  const user = await openSowings();
+  await user.click(
+    await screen.findByRole("button", { name: /Tray A.*Clitoria ternatea/s }),
+  );
+  const path = await screen.findByRole("region", { name: "Propagation path" });
+  const directLink = within(path).getByRole("link", {
+    name: /Direct specimen/,
+  });
+  const extractedLink = within(path).getByRole("link", {
+    name: /Historical extraction/,
+  });
+  expect(extractedLink).toHaveTextContent(
+    "Plant extracted from Original group",
+  );
+  expect(extractedLink).toHaveTextContent("reintegrated");
+  expect(directLink.closest("li")).not.toBe(extractedLink.closest("li"));
+  await user.click(screen.getByRole("tab", { name: "Propagation" }));
+  const recorded = screen.getByRole("region", { name: "Recorded propagation" });
+  expect(
+    within(recorded).getByRole("link", { name: /Historical extraction/ }),
+  ).toHaveTextContent("Plant extracted from Original group");
+  expect(
+    within(recorded).getByRole("link", {
+      name: /Original group.*quantity unknown/s,
+    }),
+  ).toHaveTextContent("reversed");
+});

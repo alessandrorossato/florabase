@@ -15,6 +15,11 @@ from florabase.events.model import Event, EventKind
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.service import display_path as geographic_display_path
 from florabase.geographic_places.service import list_geographic_places
+from florabase.lineage.service import (
+    LineageCycleError,
+    lock_lineage_writes,
+    validate_source_assignment,
+)
 from florabase.locations.model import Location
 from florabase.locations.schemas import LocationUsageScope
 from florabase.locations.service import (
@@ -172,6 +177,7 @@ def _common_write_values(payload: PlantCommonWrite) -> dict[str, object]:
 
 
 def create_plant(database: Session, payload: PlantCreate) -> Plant:
+    lock_lineage_writes(database)
     _lock_forward_sowing(database, payload.originating_sowing_id)
     _require_references(database, payload)
     plant = Plant(**_common_write_values(payload), lifecycle=payload.lifecycle.value)
@@ -181,7 +187,12 @@ def create_plant(database: Session, payload: PlantCreate) -> Plant:
 
 
 def update_plant(database: Session, plant: Plant, payload: PlantUpdate) -> Plant:
-    if payload.originating_sowing_id != plant.originating_sowing_id:
+    lock_lineage_writes(database)
+    # Read the persisted edge before source-first row locking: route projections may be stale.
+    current_origin = database.scalar(
+        select(Plant.originating_sowing_id).where(Plant.id == plant.id)
+    )
+    if payload.originating_sowing_id != current_origin:
         _lock_forward_sowing(database, payload.originating_sowing_id)
     database.refresh(plant, with_for_update=True)
     if (plant.lifecycle == "reversed") != (payload.lifecycle.value == "reversed"):
@@ -197,6 +208,14 @@ def update_plant(database: Session, plant: Plant, payload: PlantUpdate) -> Plant
             "reversed_origin_immutable", "Historical propagation origin cannot be changed"
         )
     _require_references(database, payload)
+    try:
+        validate_source_assignment(
+            database,
+            ("plant", plant.id),
+            ("sowing", payload.originating_sowing_id) if payload.originating_sowing_id else None,
+        )
+    except LineageCycleError as error:
+        raise PlantDomainConflictError(error.code, error.message) from error
     if plant.lifecycle == "reintegrated" and payload.lifecycle.value != "reintegrated":
         raise PlantDomainConflictError(
             "reintegrated_plant_lifecycle_immutable",
@@ -236,8 +255,12 @@ def update_plant(database: Session, plant: Plant, payload: PlantUpdate) -> Plant
 def extract_plant(
     database: Session, plant_group_id: UUID, payload: PlantExtractionCreate
 ) -> tuple[Plant, PlantGroup, Event]:
+    lock_lineage_writes(database)
     plant_group = database.scalar(
-        select(PlantGroup).where(PlantGroup.id == plant_group_id).with_for_update()
+        select(PlantGroup)
+        .where(PlantGroup.id == plant_group_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
     )
     if plant_group is None:
         raise PlantReferenceNotFoundError("plant_group_not_found", "PlantGroup not found")
@@ -359,7 +382,7 @@ def evaluate_reintegration(
     )
     if lock:
         receipt_statement = receipt_statement.with_for_update()
-    receipt = database.scalar(receipt_statement)
+    receipt = database.scalar(receipt_statement.execution_options(populate_existing=lock))
     group_statement = (
         select(PlantGroup).where(PlantGroup.id == receipt.plant_group_id)
         if receipt is not None
@@ -367,11 +390,15 @@ def evaluate_reintegration(
     )
     if lock and group_statement is not None:
         group_statement = group_statement.with_for_update()
-    plant_group = database.scalar(group_statement) if group_statement is not None else None
+    plant_group = (
+        database.scalar(group_statement.execution_options(populate_existing=lock))
+        if group_statement is not None
+        else None
+    )
     plant_statement = select(Plant).where(Plant.id == plant_id)
     if lock:
         plant_statement = plant_statement.with_for_update()
-    plant = database.scalar(plant_statement)
+    plant = database.scalar(plant_statement.execution_options(populate_existing=lock))
     if plant is None:
         raise PlantReferenceNotFoundError("plant_not_found", "Plant not found")
     if receipt is None:
@@ -590,6 +617,7 @@ def reintegrate_plant(
 
 
 def create_plant_group(database: Session, payload: PlantGroupCreate) -> PlantGroup:
+    lock_lineage_writes(database)
     _lock_forward_sowing(database, payload.originating_sowing_id)
     _require_references(database, payload)
     values = _common_write_values(payload)
@@ -609,7 +637,11 @@ def create_plant_group(database: Session, payload: PlantGroupCreate) -> PlantGro
 def update_plant_group(
     database: Session, plant_group: PlantGroup, payload: PlantGroupUpdate
 ) -> PlantGroup:
-    if payload.originating_sowing_id != plant_group.originating_sowing_id:
+    lock_lineage_writes(database)
+    current_origin = database.scalar(
+        select(PlantGroup.originating_sowing_id).where(PlantGroup.id == plant_group.id)
+    )
+    if payload.originating_sowing_id != current_origin:
         _lock_forward_sowing(database, payload.originating_sowing_id)
     database.refresh(plant_group, with_for_update=True)
     if (plant_group.lifecycle == "reversed") != (payload.lifecycle.value == "reversed"):
@@ -625,6 +657,14 @@ def update_plant_group(
             "reversed_origin_immutable", "Historical propagation origin cannot be changed"
         )
     _require_references(database, payload)
+    try:
+        validate_source_assignment(
+            database,
+            ("plant_group", plant_group.id),
+            ("sowing", payload.originating_sowing_id) if payload.originating_sowing_id else None,
+        )
+    except LineageCycleError as error:
+        raise PlantDomainConflictError(error.code, error.message) from error
     values = _common_write_values(payload)
     values.update(
         quantity_value=payload.quantity.value if payload.quantity else None,

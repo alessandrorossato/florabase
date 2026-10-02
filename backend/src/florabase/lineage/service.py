@@ -27,7 +27,7 @@ LineageKey = tuple[LineageKind, UUID]
 @dataclass(frozen=True)
 class LineageCycleError(Exception):
     code: str = "lineage_cycle"
-    message: str = "The proposed producer would create a lineage cycle"
+    message: str = "The proposed source relationship would create a lineage cycle"
 
 
 _WALK = text(
@@ -89,6 +89,22 @@ def _walk(database: Session, subject: LineageKey) -> list[LineageKey]:
     return keys
 
 
+def lock_lineage_writes(database: Session) -> None:
+    """Serialize changes to the existing four-table lineage, before aggregate locks.
+
+    The migration's statement triggers use the same transaction-scoped namespace.
+    Readers and operations that cannot write origin columns do not take this lock.
+    """
+    database.execute(text("SELECT pg_advisory_xact_lock(1179406162, 1)"))
+
+
+def validate_source_assignment(
+    database: Session, subject: LineageKey, source: LineageKey | None
+) -> None:
+    if source is not None and subject in _walk(database, source):
+        raise LineageCycleError()
+
+
 def validate_producer_assignment(
     database: Session,
     seed_lot_id: UUID,
@@ -100,8 +116,7 @@ def validate_producer_assignment(
         producer = ("plant", producer_plant_id)
     elif producer_plant_group_id is not None:
         producer = ("plant_group", producer_plant_group_id)
-    if producer is not None and ("seed_lot", seed_lot_id) in _walk(database, producer):
-        raise LineageCycleError()
+    validate_source_assignment(database, ("seed_lot", seed_lot_id), producer)
 
 
 def _identity_summary(identity: BotanicalIdentity) -> BotanicalIdentitySummary:

@@ -424,9 +424,10 @@ for current lifecycle.
 The receipt boundary preserves this rule. An ordinary journal Event remains independently editable
 or deletable and never reverses current state. A transfer or extraction Event created by an
 authoritative operation has a one-to-one receipt relationship and ordinary deletion is rejected;
-editing remains correction of journal history and never changes the immutable receipt or aggregate
-state. The focused reintegration action resolves an applied extraction receipt, validates and locks
-its PlantGroup and resulting Plant, restores the snapshot, records one compensating reintegration
+transfer editing remains correction of journal history and never changes the immutable receipt or
+aggregate state. Authoritative extraction and reintegration Events cannot be edited through the
+ordinary Event API. The focused reintegration action resolves an applied extraction receipt,
+validates and locks its PlantGroup and resulting Plant, restores the snapshot, records one compensating reintegration
 Event, and marks the receipt reversed in one transaction. Other operation receipts have no undo UI.
 
 Plant and PlantGroup detail pages expose the same protected Event journal. Desktop presents the
@@ -535,15 +536,19 @@ PlantGroup → extracted Plant
 Plant / PlantGroup → collection-produced SeedLot
 ```
 
-The arrows show material/workflow descent. The lineage API walks the reverse direction from a
+The arrows show material/workflow descent. The lineage service walks the reverse direction from a
 SeedLot, Sowing, Plant, or PlantGroup to its recorded ancestors and returns typed summaries in
-immediate-first order.
+immediate-first order. Public upstream endpoints exist for SeedLot, Plant and PlantGroup; Sowing
+exposes its direct SeedLot and descendant propagation summary.
 
 A Plant's Sowing origin, PlantGroup extraction origin, and direct origin are mutually exclusive. A
 PlantGroup's Sowing and direct origins are mutually exclusive. An extracted Plant does not duplicate
 the group's Sowing or SeedLot links; those ancestors are derived by traversal. Producer assignment
 to a collection-produced SeedLot is also exclusive between Plant and PlantGroup, and application
-validation prevents a proposed producer from creating a cycle.
+validation prevents every source correction from creating a cycle. PostgreSQL also serializes
+lineage writes and rejects cycles on every concrete edge; new operation receipts must correlate
+their concrete source/result/Event references at insertion. See the
+[lineage integrity audit](lineage-integrity.md) for correction, retention and concurrency invariants.
 
 BotanicalIdentity is deliberately independent at every applicable level. A downstream correction
 does not rewrite upstream records or invalidate lineage. Inactive SeedLots, Sowings, Plants,
@@ -551,8 +556,8 @@ PlantGroups, Suppliers, Locations, and custom GeographicPlaces retain historical
 
 Unknown or partial lineage remains honest absence. Florabase does not infer a Sowing from matching
 names, create placeholder ancestors, or use a generic genealogy graph. Maternal/paternal pairs,
-pollen donors, controlled crosses, multiple producers, reverse extraction/merge, and visual lineage
-navigation are deferred.
+pollen donors, controlled crosses, multiple producers, arbitrary group merge and graphical lineage
+navigation are deferred. Receipt-proven extraction reintegration is already implemented.
 
 ## Attachment storage contract
 

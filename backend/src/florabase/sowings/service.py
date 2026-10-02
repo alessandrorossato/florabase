@@ -10,6 +10,11 @@ from sqlalchemy.sql import Select
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
+from florabase.lineage.service import (
+    LineageCycleError,
+    lock_lineage_writes,
+    validate_source_assignment,
+)
 from florabase.locations.model import Location
 from florabase.locations.schemas import LocationUsageScope
 from florabase.locations.service import (
@@ -97,6 +102,7 @@ def _write_values(payload: SowingCreate | SowingUpdate) -> dict[str, object]:
 
 
 def create_sowing(database: Session, payload: SowingCreate) -> Sowing:
+    lock_lineage_writes(database)
     _require_references(database, payload)
     sowing = Sowing(**_write_values(payload))
     database.add(sowing)
@@ -105,6 +111,7 @@ def create_sowing(database: Session, payload: SowingCreate) -> Sowing:
 
 
 def update_sowing(database: Session, sowing: Sowing, payload: SowingUpdate) -> Sowing:
+    lock_lineage_writes(database)
     database.refresh(sowing, with_for_update=True)
     if (sowing.lifecycle == "reversed") != (payload.lifecycle.value == "reversed"):
         raise SowingDomainConflictError(
@@ -143,6 +150,12 @@ def update_sowing(database: Session, sowing: Sowing, payload: SowingUpdate) -> S
                 "Observed germinations exceed the new exact seed count sown",
             )
     _require_references(database, payload)
+    try:
+        validate_source_assignment(
+            database, ("sowing", sowing.id), ("seed_lot", payload.seed_lot_id)
+        )
+    except LineageCycleError as error:
+        raise SowingDomainConflictError(error.code, error.message) from error
     for field, value in _write_values(payload).items():
         setattr(sowing, field, value)
     sowing.updated_at = datetime.now(UTC)

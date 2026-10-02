@@ -127,6 +127,37 @@ class VerifyHelperTests(unittest.TestCase):
         self.assertIn("stage failed: quality", result.stderr)
         self.assertIn("FEATURE_VERIFICATION_FAILED", result.stderr)
 
+    def test_linked_worktree_keeps_its_receipt_in_its_own_git_directory(self) -> None:
+        primary = self.work
+        linked = self.root / "linked"
+        self.shell("git", "-C", str(primary), "worktree", "add", "-b", "fix/worktree-receipt", str(linked))
+        shutil.copytree(primary / "scripts", linked / "scripts")
+        self.work = linked
+        self.assertTrue((linked / ".git").is_file())
+        result = self.verify()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("FEATURE_VERIFICATION_PASSED", result.stdout)
+        git_directory = Path(subprocess.run(
+            ["git", "rev-parse", "--absolute-git-dir"], cwd=linked,
+            check=True, text=True, stdout=subprocess.PIPE,
+        ).stdout.strip())
+        receipt = git_directory / "info/florabase-feature-verification.json"
+        self.assertEqual(json.loads(receipt.read_text())["branch"], "fix/worktree-receipt")
+        self.assertFalse((primary / ".git/info/florabase-feature-verification.json").exists())
+        # Commit only this temporary fixture to exercise the delivery-time read path.
+        self.shell("git", "-C", str(linked), "add", ".")
+        self.shell("git", "-C", str(linked), "commit", "-m", "fixture helpers")
+        base = subprocess.run(
+            ["git", "rev-parse", "origin/main"], cwd=linked,
+            check=True, text=True, stdout=subprocess.PIPE,
+        ).stdout.strip()
+        checked = subprocess.run(
+            [sys.executable, str(linked / "scripts/feature-tree-fingerprint.py"), "verify",
+             "--branch", "fix/worktree-receipt", "--base", base],
+            cwd=linked, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        self.assertEqual(checked.returncode, 0, checked.stderr)
+
     def test_added_migration_selects_disposable_cycle(self) -> None:
         migration = self.work / "backend/alembic/versions/0002_feature.py"
         migration.write_text('revision: str = "0002"\ndown_revision: str | None = "0001"\n')

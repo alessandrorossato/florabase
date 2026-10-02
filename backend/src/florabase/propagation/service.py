@@ -6,6 +6,7 @@ from uuid import UUID
 from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
+from florabase.lineage.service import lock_lineage_writes
 from florabase.plants.model import Plant, PlantGroup
 from florabase.plants.schemas import PlantCreate, PlantGroupCreate, PlantGroupQuantity
 from florabase.plants.service import create_plant, create_plant_group
@@ -161,7 +162,13 @@ def _validate_use_all(seed_lot: SeedLot, sowing: SowingCreate) -> SeedQuantity |
 def create_sowing_from_seed_lot(
     database: Session, seed_lot_id: UUID, payload: SeedLotSowingTransitionCreate
 ) -> tuple[Sowing, SeedLot]:
-    seed_lot = database.scalar(select(SeedLot).where(SeedLot.id == seed_lot_id).with_for_update())
+    lock_lineage_writes(database)
+    seed_lot = database.scalar(
+        select(SeedLot)
+        .where(SeedLot.id == seed_lot_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     if seed_lot is None:
         raise PropagationNotFoundError("seed_lot_not_found", "SeedLot not found")
     before_lifecycle = seed_lot.lifecycle
@@ -203,7 +210,13 @@ def create_sowing_from_seed_lot(
 
 
 def _lock_sowing(database: Session, sowing_id: UUID) -> Sowing:
-    sowing = database.scalar(select(Sowing).where(Sowing.id == sowing_id).with_for_update())
+    lock_lineage_writes(database)
+    sowing = database.scalar(
+        select(Sowing)
+        .where(Sowing.id == sowing_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
     if sowing is None:
         raise PropagationNotFoundError("sowing_not_found", "Sowing not found")
     if sowing.lifecycle == "reversed":
@@ -318,6 +331,7 @@ def propagation_summary(database: Session, sowing_id: UUID) -> SowingPropagation
                 botanical_identity_id=plant.botanical_identity_id,
                 label=plant.label,
                 lifecycle=plant.lifecycle,
+                originating_plant_group_id=plant.originating_plant_group_id,
             )
             for plant in plants
         ],
