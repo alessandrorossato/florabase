@@ -3756,6 +3756,8 @@ export interface components {
             /** Label */
             label: string | null;
             lifecycle: components["schemas"]["PlantLifecycle"];
+            /** Originating Plant Group Id */
+            originating_plant_group_id?: string | null;
         };
         /** PropagationReversalCreate */
         PropagationReversalCreate: {

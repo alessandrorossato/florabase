@@ -13,7 +13,7 @@ from florabase.collection_photos.primary import primary_summaries
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.service import display_path as geographic_display_path
 from florabase.geographic_places.service import list_geographic_places
-from florabase.lineage.service import validate_producer_assignment
+from florabase.lineage.service import lock_lineage_writes, validate_producer_assignment
 from florabase.locations.model import Location
 from florabase.locations.schemas import LocationUsageScope
 from florabase.locations.service import (
@@ -173,6 +173,7 @@ def _write_values(payload: SeedLotCreate | SeedLotUpdate) -> dict[str, object]:
 
 
 def create_seed_lot(database: Session, payload: SeedLotCreate) -> SeedLot:
+    lock_lineage_writes(database)
     _lock_new_producers(database, payload)
     _require_references(database, payload)
     seed_lot = SeedLot(id=uuid7(), **_write_values(payload))
@@ -185,6 +186,7 @@ def create_seed_lot(database: Session, payload: SeedLotCreate) -> SeedLot:
 
 
 def update_seed_lot(database: Session, seed_lot: SeedLot, payload: SeedLotUpdate) -> SeedLot:
+    lock_lineage_writes(database)
     database.refresh(seed_lot, with_for_update=True)
     _lock_new_producers(database, payload, seed_lot)
     _require_references(database, payload)

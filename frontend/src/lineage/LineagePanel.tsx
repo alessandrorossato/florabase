@@ -33,10 +33,10 @@ function href(kind: string, id: string) {
 export function LineagePanel({ kind, id }: { kind: Kind; id: string }) {
   const [attempt, setAttempt] = useState(0);
   const [state, setState] = useState<
-    | { status: "loading" }
-    | { status: "ready"; value: LineageResponse }
-    | { status: "error" }
-  >({ status: "loading" });
+    | { status: "loading"; key: string }
+    | { status: "ready"; key: string; value: LineageResponse }
+    | { status: "error"; key: string }
+  >({ status: "loading", key: `${kind}:${id}` });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -44,17 +44,19 @@ export function LineagePanel({ kind, id }: { kind: Kind; id: string }) {
       signal: controller.signal,
     })
       .then((value) => {
-        setState({ status: "ready", value });
+        if (!controller.signal.aborted)
+          setState({ status: "ready", key: `${kind}:${id}`, value });
       })
       .catch(() => {
-        if (!controller.signal.aborted) setState({ status: "error" });
+        if (!controller.signal.aborted)
+          setState({ status: "error", key: `${kind}:${id}` });
       });
     return () => {
       controller.abort();
     };
   }, [id, kind, attempt]);
 
-  if (state.status === "loading")
+  if (state.key !== `${kind}:${id}` || state.status === "loading")
     return <p role="status">Loading recorded lineage…</p>;
   if (state.status === "error")
     return (
@@ -63,7 +65,7 @@ export function LineagePanel({ kind, id }: { kind: Kind; id: string }) {
         <button
           type="button"
           onClick={() => {
-            setState({ status: "loading" });
+            setState({ status: "loading", key: `${kind}:${id}` });
             setAttempt((value) => value + 1);
           }}
         >
@@ -91,7 +93,8 @@ export function LineagePanel({ kind, id }: { kind: Kind; id: string }) {
             <span className="record-state">{labels[node.kind]}</span>{" "}
             <a href={href(node.kind, node.id)}>
               {node.label ?? fallbackLabels[node.kind]}
-            </a>
+            </a>{" "}
+            <span className="record-state">{node.lifecycle}</span>
           </li>
         ))}
       </ol>

@@ -6394,6 +6394,18 @@
           },
           "lifecycle": {
             "$ref": "#/components/schemas/PlantLifecycle"
+          },
+          "originating_plant_group_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Originating Plant Group Id"
           }
         },
         "required": [

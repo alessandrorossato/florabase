@@ -80,6 +80,10 @@ five concrete collection-target foreign keys for caption/order. Collection prima
 remain distinct references. Guarded binary storage, shared thumbnails, retained unlinked assets and
 reference-aware deletion are described in [the media contract](media-library.md). This remains a
 bounded capability, without a generic graph, polymorphic collection item or generic event framework.
+The [lineage integrity audit](lineage-integrity.md) documents the concrete edge contract, isolated
+reference relationships, guarded corrections and retained compensated results. Revision 0030 adds
+acyclic lineage-write enforcement and insertion-time receipt-reference correlation without changing
+the domain relationships. Lineage queries use one recursive walk plus at most four summary batches.
 
 Location usage uses one batched PostgreSQL query for direct and descendant-inclusive counts across
 SeedLot, Sowing, Plant and PlantGroup. A recursive CTE derives distinct `(ancestor, descendant)` pairs,

@@ -530,12 +530,14 @@ function Detail({
                       },
                     ],
                     [
-                      ...summary.value.plants.map((plant) => ({
-                        type: "Plant",
-                        label: recordName(plant, "Unlabelled Plant"),
-                        href: `#/plants/${plant.id}`,
-                        state: plant.lifecycle,
-                      })),
+                      ...summary.value.plants
+                        .filter((plant) => !plant.originating_plant_group_id)
+                        .map((plant) => ({
+                          type: "Plant",
+                          label: recordName(plant, "Unlabelled Plant"),
+                          href: `#/plants/${plant.id}`,
+                          state: plant.lifecycle,
+                        })),
                       ...summary.value.plant_groups.map((group) => ({
                         type: "Plant group",
                         label: recordName(group, "Unlabelled Plant group"),
@@ -545,6 +547,7 @@ function Detail({
                           : `quantity unknown · ${group.lifecycle}`,
                       })),
                     ],
+                    ...extractedStages(summary.value, recordName),
                   ]}
                 />
               </>
@@ -631,12 +634,14 @@ function Detail({
                   },
                 ],
                 [
-                  ...summary.value.plants.map((plant) => ({
-                    type: "Plant",
-                    label: recordName(plant, "Unlabelled Plant"),
-                    href: `#/plants/${plant.id}`,
-                    state: plant.lifecycle,
-                  })),
+                  ...summary.value.plants
+                    .filter((plant) => !plant.originating_plant_group_id)
+                    .map((plant) => ({
+                      type: "Plant",
+                      label: recordName(plant, "Unlabelled Plant"),
+                      href: `#/plants/${plant.id}`,
+                      state: plant.lifecycle,
+                    })),
                   ...summary.value.plant_groups.map((group) => ({
                     type: "Plant group",
                     label: recordName(group, "Unlabelled Plant group"),
@@ -646,6 +651,7 @@ function Detail({
                       : `quantity unknown · ${group.lifecycle}`,
                   })),
                 ],
+                ...extractedStages(summary.value, recordName),
               ]}
             />
           )}
@@ -677,6 +683,29 @@ function Detail({
       )}
     </article>
   );
+}
+
+function extractedStages(
+  summary: SowingPropagationSummary,
+  recordName: ReturnType<typeof useRecordName>,
+) {
+  const extracted = summary.plants.filter(
+    (plant) => plant.originating_plant_group_id,
+  );
+  if (extracted.length === 0) return [];
+  return [
+    extracted.map((plant) => {
+      const group = summary.plant_groups.find(
+        (item) => item.id === plant.originating_plant_group_id,
+      );
+      return {
+        type: `Plant extracted from ${recordName(group, "recorded Plant group")}`,
+        label: recordName(plant, "Unlabelled Plant"),
+        href: `#/plants/${plant.id}`,
+        state: plant.lifecycle,
+      };
+    }),
+  ];
 }
 
 const sowingPage = {
