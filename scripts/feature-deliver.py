@@ -69,6 +69,9 @@ class Commands:
                 stdout=subprocess.PIPE if capture else None,
                 stderr=None,
             )
+        except FileNotFoundError as error:
+            label = "GitHub CLI `gh`" if command[0] == "gh" else command[0]
+            raise DeliveryError(f"{label} is required but was not found in PATH") from error
         except (OSError, subprocess.CalledProcessError) as error:
             rendered = " ".join(command)
             raise DeliveryError(f"command failed: {rendered}") from error
@@ -177,7 +180,10 @@ class Delivery:
             self.normalize_origin(origin) == f"https://github.com/{REPOSITORY}",
             "origin is not the expected Florabase GitHub repository",
         )
-        self.gh("auth", "status")
+        try:
+            self.gh("auth", "status")
+        except DeliveryError:
+            fail("GitHub CLI is unauthenticated or authentication failed; run gh auth login")
         self.git("fetch", "origin", "main")
         self.git("show-ref", "--verify", "--quiet", "refs/remotes/origin/main")
         base = self.git("merge-base", "origin/main", "HEAD", capture=True)
@@ -517,7 +523,8 @@ class Delivery:
 def main() -> None:
     try:
         Delivery(Commands()).execute()
-    except DeliveryError:
+    except DeliveryError as error:
+        print(f"feature-deliver: {error}", file=sys.stderr)
         raise SystemExit(1)
 
 

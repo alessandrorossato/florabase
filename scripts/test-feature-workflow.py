@@ -82,6 +82,7 @@ class VerifyHelperTests(unittest.TestCase):
         (self.bin / "make").write_text(
             "#!/usr/bin/env bash\nset -eu\nprintf '%s\\n' \"$*\" >>\"${VERIFY_LOG}\"\n"
             "if [[ \"${VERIFY_FAIL_STAGE:-}\" == \"$1\" ]]; then exit 7; fi\n"
+            "if [[ \"${VERIFY_MUTATE_STAGE:-}\" == \"$1\" ]]; then echo changed > during-verify.txt; fi\n"
         )
         (self.bin / "docker").write_text(
             "#!/usr/bin/env bash\nset -eu\nprintf '%s\\n' \"$*\" >>\"${VERIFY_LOG}\"\n"
@@ -122,16 +123,28 @@ class VerifyHelperTests(unittest.TestCase):
         self.assertNotIn("down --volumes", self.log.read_text())
 
     def test_stage_failure_propagates_failure_marker(self) -> None:
+        self.assertEqual(self.verify().returncode, 0)
         result = self.verify(VERIFY_FAIL_STAGE="check")
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("stage failed: quality", result.stderr)
         self.assertIn("FEATURE_VERIFICATION_FAILED", result.stderr)
+        self.assertFalse((self.work / ".git/info/florabase-feature-verification.json").exists())
+
+    def test_concurrent_source_change_cannot_receive_a_verification_receipt(self) -> None:
+        result = self.verify(VERIFY_MUTATE_STAGE="check")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("source tree changed during verification", result.stderr)
+        self.assertFalse((self.work / ".git/info/florabase-feature-verification.json").exists())
 
     def test_linked_worktree_keeps_its_receipt_in_its_own_git_directory(self) -> None:
         primary = self.work
         linked = self.root / "linked"
+        self.shell("git", "-C", str(primary), "switch", "main")
         self.shell("git", "-C", str(primary), "worktree", "add", "-b", "fix/worktree-receipt", str(linked))
         shutil.copytree(primary / "scripts", linked / "scripts")
+        migration = linked / "backend/alembic/versions/0002_dirty.py"
+        migration.write_text('revision: str = "0002"\ndown_revision: str = "0001"\n')
+        (linked / "symlink.txt").symlink_to("backend/alembic/versions/0002_dirty.py")
         self.work = linked
         self.assertTrue((linked / ".git").is_file())
         result = self.verify()
@@ -144,6 +157,18 @@ class VerifyHelperTests(unittest.TestCase):
         receipt = git_directory / "info/florabase-feature-verification.json"
         self.assertEqual(json.loads(receipt.read_text())["branch"], "fix/worktree-receipt")
         self.assertFalse((primary / ".git/info/florabase-feature-verification.json").exists())
+        base = self.shell_output("git", "-C", str(linked), "rev-parse", "origin/main")
+        receipt_command = [
+            sys.executable, str(linked / "scripts/feature-tree-fingerprint.py"), "verify",
+            "--branch", "fix/worktree-receipt", "--base", base,
+        ]
+        before_commit = subprocess.run(
+            [*receipt_command, "--worktree"], cwd=linked, text=True, capture_output=True,
+        )
+        self.assertEqual(before_commit.returncode, 0, before_commit.stderr)
+        delivery_before_commit = subprocess.run(receipt_command, cwd=linked, text=True, capture_output=True)
+        self.assertNotEqual(delivery_before_commit.returncode, 0)
+        self.assertIn("commit the verified tree", delivery_before_commit.stderr)
         # Commit only this temporary fixture to exercise the delivery-time read path.
         self.shell("git", "-C", str(linked), "add", ".")
         self.shell("git", "-C", str(linked), "commit", "-m", "fixture helpers")
@@ -157,6 +182,21 @@ class VerifyHelperTests(unittest.TestCase):
             cwd=linked, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
         )
         self.assertEqual(checked.returncode, 0, checked.stderr)
+        self.assertEqual(self.shell_output("git", "-C", str(primary), "branch", "--show-current"), "main")
+        # Dirty/untracked source after commit must invalidate even direct receipt verification.
+        migration.write_text(migration.read_text() + "# changed after verification\n")
+        invalid = subprocess.run(checked.args, cwd=linked, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        self.assertNotEqual(invalid.returncode, 0)
+        self.assertIn("working tree differs", invalid.stderr)
+        dirty_worktree_check = subprocess.run(
+            [*receipt_command, "--worktree"], cwd=linked, text=True, capture_output=True,
+        )
+        self.assertNotEqual(dirty_worktree_check.returncode, 0)
+        self.assertIn("working tree differs", dirty_worktree_check.stderr)
+
+    @staticmethod
+    def shell_output(*command: str) -> str:
+        return subprocess.run(command, check=True, text=True, stdout=subprocess.PIPE).stdout.strip()
 
     def test_added_migration_selects_disposable_cycle(self) -> None:
         migration = self.work / "backend/alembic/versions/0002_feature.py"
@@ -251,6 +291,17 @@ def completed_delivery_lookup(nodes: list[dict[str, object]] | None) -> dict[str
 class DeliveryTests(unittest.TestCase):
     def delivery(self) -> feature_deliver.Delivery:
         return feature_deliver.Delivery(FakeCommands({}), sleep=lambda _: None)
+
+    def test_real_missing_gh_command_has_actionable_stderr(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            Path(temporary, "git").symlink_to(shutil.which("git"))
+            result = subprocess.run(
+                [sys.executable, str(DELIVER_PATH)], cwd=ROOT,
+                env={**os.environ, "PATH": temporary}, text=True,
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("GitHub CLI `gh` is required but was not found in PATH", result.stderr)
 
     def test_preflight_rejects_main_dirty_wrong_origin_and_missing_gh(self) -> None:
         for branch, dirty, origin, error in (

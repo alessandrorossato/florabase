@@ -1,14 +1,14 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-COMPOSE := docker compose
-DEV_COMPOSE := $(COMPOSE) -f compose.yaml -f compose.dev.yaml
+COMPOSE := python3 ./scripts/workflow_environment.py prod compose --
+DEV_COMPOSE := python3 ./scripts/workflow_environment.py quality compose --
 BACKUP_DIR ?= backups
 REF ?= origin/main
-PREVIEW_PATH ?= ../florabase-preview
+PREVIEW_PATH ?=
 LOGIN ?= owner
 
-.PHONY: help setup up dev down logs build test test-backend test-integration test-frontend lint format format-check typecheck check ci migrate dev-upgrade migration backup restore health api-generate api-check dependency-update preview preview-status preview-stop preview-bootstrap-owner preview-import-dev preview-remove feature-start feature-verify feature-deliver feature-finish test-workflow-helpers test-feature-workflow test-preview-workflow
+.PHONY: smoke-dev-recovery dev-bootstrap-owner workflow-check feature-init dev-up dev-status dev-stop feature-review-up feature-review-status feature-review-stop feature-review-remove feature-review-bootstrap-owner test-environment-workflow smoke-environment-workflow help setup up dev down logs build test test-backend test-integration test-frontend lint format format-check typecheck check ci migrate dev-upgrade migration backup restore health api-generate api-check dependency-update preview preview-status preview-stop preview-bootstrap-owner preview-import-dev preview-remove feature-start feature-verify feature-deliver feature-finish test-workflow-helpers test-feature-workflow test-preview-workflow
 
 help:
 	@awk 'BEGIN {FS = ":.*## "; print "Florabase commands:"} /^[a-zA-Z_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -20,8 +20,19 @@ setup: ## Create local environment configuration
 up: ## Build and start the production-oriented stack
 	$(COMPOSE) up --detach --build
 
-dev: ## Start the hot-reloading development stack
-	$(DEV_COMPOSE) up --build
+dev: dev-up ## Start the persistent development stack from the primary checkout
+
+dev-up: ## Build/start DEV from the primary checkout, preserving its data
+	@python3 ./scripts/workflow_environment.py dev up
+
+dev-status: ## Identify DEV source, project, health and migration state
+	@python3 ./scripts/workflow_environment.py dev status
+
+dev-stop: ## Stop identified DEV (including old-source DEV), preserving all state
+	@python3 ./scripts/workflow_environment.py dev stop
+
+dev-bootstrap-owner: ## Create DEV owner interactively using the primary checkout
+	@python3 ./scripts/workflow_environment.py dev compose -- run --rm backend python -m florabase.auth.bootstrap "$(LOGIN)"
 
 down: ## Stop containers without deleting persistent volumes
 	$(COMPOSE) down
@@ -68,22 +79,17 @@ api-check: ## Verify generated API artifacts are current
 
 check: format-check lint typecheck test api-check ## Run the main non-destructive verification suite
 
-ci: test-workflow-helpers test-feature-workflow test-preview-workflow check test-integration build ## Run the complete local equivalent of pull-request CI
+ci: test-workflow-helpers test-feature-workflow test-preview-workflow test-environment-workflow workflow-check check test-integration build ## Run the complete local equivalent of pull-request CI
 
 migrate: ## Apply all pending database migrations explicitly
 	$(COMPOSE) run --rm backend alembic upgrade head
 
-dev-upgrade: ## Show, upgrade, and recheck the development database revision
-	@echo "Current development database revision:"
-	$(DEV_COMPOSE) run --rm backend alembic current
-	@echo "Upgrading development database to Alembic head:"
-	$(DEV_COMPOSE) run --rm backend alembic upgrade head
-	@echo "Resulting development database revision:"
-	$(DEV_COMPOSE) run --rm backend alembic current
+dev-upgrade: ## Upgrade only DEV using its primary checkout migration code
+	@python3 ./scripts/workflow_environment.py dev upgrade
 
 migration: ## Create a migration: make migration MESSAGE="describe change"
 	@test -n "$(MESSAGE)" || { echo 'MESSAGE is required'; exit 2; }
-	$(DEV_COMPOSE) run --rm backend alembic revision --autogenerate -m "$(MESSAGE)"
+	python3 ./scripts/workflow_environment.py review compose -- run --rm backend alembic revision --autogenerate -m "$(MESSAGE)"
 
 backup: ## Create coordinated PostgreSQL and attachment-volume backup artifacts
 	BACKUP_DIR="$(BACKUP_DIR)" ./scripts/backup.sh
@@ -108,7 +114,7 @@ preview-stop: ## Stop preview containers while preserving its worktree and datab
 preview-bootstrap-owner: ## Interactively create the preview owner: make preview-bootstrap-owner LOGIN=owner
 	@python3 ./scripts/preview.py --path "$(PREVIEW_PATH)" bootstrap-owner --login "$(LOGIN)"
 
-preview-import-dev: ## Replace preview data from development with explicit confirmation
+preview-import-dev: ## Explain the blocked legacy DB-only import (coordinated media clone deferred)
 	@python3 ./scripts/preview.py --path "$(PREVIEW_PATH)" import-dev --confirm "$(CONFIRM_REPLACE_PREVIEW)" --confirm-database "$(CONFIRM_DATABASE)"
 
 preview-remove: ## Stop preview and safely remove its clean worktree, preserving its database
@@ -118,6 +124,10 @@ dependency-update: ## Refresh lockfiles after reviewing direct pins
 	$(DEV_COMPOSE) run --rm --no-deps backend pip-compile --strip-extras --output-file requirements.lock pyproject.toml
 	$(DEV_COMPOSE) run --rm --no-deps backend pip-compile --strip-extras --extra dev --output-file requirements-dev.lock pyproject.toml
 	$(DEV_COMPOSE) run --rm --no-deps frontend pnpm install --lockfile-only
+
+feature-init: export BRANCH := $(BRANCH)
+feature-init: ## Validate/attach feature context in an existing Codex worktree
+	@python3 ./scripts/workflow_environment.py init
 
 feature-start: export BRANCH := $(BRANCH)
 feature-start: ## Create a branch from updated main: make feature-start BRANCH=feat/example
@@ -140,3 +150,33 @@ test-feature-workflow: ## Test feature verification and delivery orchestration w
 
 test-preview-workflow: ## Test stable-preview safety and isolation without Docker or network
 	@python3 ./scripts/test-preview-workflow.py
+
+feature-review-up: ## Build dirty current worktree, migrate isolated Review DB, wait for health
+	@python3 ./scripts/workflow_environment.py review up
+
+feature-review-status: ## Identify exactly which source and database Feature Review uses
+	@python3 ./scripts/workflow_environment.py review status
+
+feature-review-stop: ## Stop Feature Review; preserve all its state
+	@python3 ./scripts/workflow_environment.py review stop
+
+feature-review-remove: export CONFIRM_REMOVE_REVIEW := $(CONFIRM_REMOVE_REVIEW)
+feature-review-remove: ## Delete ONLY Review resources; CONFIRM_REMOVE_REVIEW=florabase-feature-review
+	@python3 ./scripts/workflow_environment.py review remove
+
+feature-review-bootstrap-owner: ## Create isolated Review owner interactively
+	@python3 ./scripts/workflow_environment.py review compose -- run --rm backend python -m florabase.auth.bootstrap "$(LOGIN)"
+
+test-environment-workflow: ## Test source/config/migration/resource isolation in local fixtures
+	@python3 ./scripts/test-environment-workflow.py
+
+smoke-environment-workflow: ## Run isolated real Compose smoke (never changes operator DEV)
+	@python3 ./scripts/smoke-environment-workflow.py
+
+smoke-dev-recovery: ## Prove recovery on unique fixtures without touching operator environments
+	@python3 ./scripts/smoke-dev-recovery.py
+
+workflow-check: ## Lint, format-check and strictly type-check the new environment helpers
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff check --no-cache --isolated --select E4,E7,E9,F,I,B,UP /workflow/workflow_environment.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff format --no-cache --check /workflow/workflow_environment.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend mypy --strict --follow-imports=skip /workflow/workflow_environment.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py

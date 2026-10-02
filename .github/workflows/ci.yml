@@ -30,7 +30,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Test repository workflow helpers
-        run: make test-workflow-helpers test-feature-workflow test-preview-workflow
+        run: make test-workflow-helpers test-feature-workflow test-preview-workflow test-environment-workflow workflow-check
       - name: Run formatting, lint, typing, unit, frontend, and API drift checks
         run: make check
 
@@ -45,9 +45,6 @@ jobs:
           persist-credentials: false
       - name: Run disposable PostgreSQL integration tests
         run: make test-integration
-      - name: Remove disposable integration services
-        if: always()
-        run: docker compose --project-name florabase-integration --file compose.integration.yaml down --volumes --remove-orphans
 
   build:
     name: build

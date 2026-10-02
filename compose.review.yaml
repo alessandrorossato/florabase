@@ -1,0 +1,30 @@
+# Merge with compose.yaml + compose.dev.yaml only through the review helper.
+name: florabase-feature-review
+
+x-source: &source
+  io.florabase.role: review
+  io.florabase.source: ${FLORABASE_SOURCE:?Source worktree is required}
+  io.florabase.branch: ${FLORABASE_BRANCH:?Source branch is required}
+  io.florabase.sha: ${FLORABASE_SHA:?Source SHA is required}
+  io.florabase.dirty: ${FLORABASE_DIRTY:?Source dirty state is required}
+
+services:
+  db:
+    ports: !reset []
+    labels: *source
+  backend:
+    ports: !reset []
+    labels: *source
+  frontend:
+    labels: *source
+
+volumes:
+  postgres_data:
+    labels:
+      io.florabase.source: ${FLORABASE_SOURCE}
+  attachment_data:
+    labels:
+      io.florabase.source: ${FLORABASE_SOURCE}
+  frontend_node_modules:
+    labels:
+      io.florabase.source: ${FLORABASE_SOURCE}

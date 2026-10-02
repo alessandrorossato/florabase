@@ -8,22 +8,30 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import shutil
 import subprocess
 import sys
-import tempfile
 import time
 import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import IO, Any
 
+from workflow_environment import (
+    PORTS,
+    Environment,
+    Repository,
+    WorkflowError,
+    code_heads,
+    migration_graph,
+    require_upgradeable,
+)
+
 PROJECT = "florabase-preview"
 DEV_PROJECT = "florabase"
 PREVIEW_DATABASE = "florabase_preview"
 PREVIEW_USER = "florabase_preview"
 PREVIEW_PASSWORD = "local-preview-only-password"
-PREVIEW_URL = "http://localhost:15173"
+PREVIEW_URL = f"http://localhost:{PORTS['preview']}"
 DEFAULT_REF = "origin/main"
 
 
@@ -77,8 +85,10 @@ class Preview:
         self.sha = ""
 
     def require_safe_path(self) -> None:
-        if self.preview_path == self.repository or self.repository in self.preview_path.parents:
-            raise PreviewError("preview path must be outside the primary worktree")
+        primary = Repository(self.repository).primary
+        for source in (self.repository, primary):
+            if self.preview_path == source or source in self.preview_path.parents or self.preview_path in source.parents:
+                raise PreviewError("preview path must be outside both primary and current worktrees")
 
     def git(self, *args: str, at_preview: bool = False, capture: bool = False) -> str:
         worktree = self.preview_path if at_preview else self.repository
@@ -92,6 +102,8 @@ class Preview:
             raise PreviewError(
                 f"preview path is not a healthy registered Git worktree: {self.preview_path}"
             )
+        if "detached" not in matching[0]:
+            raise PreviewError("preview must be a detached worktree; refusing another checkout's branch")
 
     def resolve_and_prepare_worktree(self, ref: str) -> str:
         self.require_safe_path()
@@ -138,6 +150,7 @@ class Preview:
             raise PreviewError(
                 f"preview worktree does not exist: {self.preview_path}; run make preview"
             )
+        self.require_registered_preview()
         self.sha = self.git("rev-parse", "HEAD", at_preview=True, capture=True)
 
     def preview_environment(self) -> dict[str, str]:
@@ -160,6 +173,8 @@ class Preview:
         return [
             "docker",
             "compose",
+            "--env-file",
+            "/dev/null",
             "--project-name",
             PROJECT,
             "--project-directory",
@@ -167,7 +182,7 @@ class Preview:
             "--file",
             str(self.preview_path / "compose.yaml"),
             "--file",
-            str(self.repository / "compose.preview.yaml"),
+            str(self.preview_path / "compose.preview.yaml"),
             *args,
         ]
 
@@ -198,21 +213,10 @@ class Preview:
         stdin: IO[bytes] | None = None,
         stdout: IO[bytes] | None = None,
     ) -> str:
-        command = [
-            "docker",
-            "compose",
-            "--project-name",
-            DEV_PROJECT,
-            "--project-directory",
-            str(self.repository),
-            "--file",
-            str(self.repository / "compose.yaml"),
-            "--file",
-            str(self.repository / "compose.dev.yaml"),
-            *args,
-        ]
+        environment = Environment(Repository(self.repository), "dev")
         return self.commands.run(
-            command, capture=capture, env=os.environ.copy(), stdin=stdin, stdout=stdout
+            environment.command(*args), capture=capture, env=environment.environment(),
+            stdin=stdin, stdout=stdout,
         )
 
     def validate_compose_config(self) -> None:
@@ -331,7 +335,7 @@ for current in os.environ['FLORABASE_SOURCE_REVISIONS'].split(','):
         except PreviewError as error:
             raise PreviewError(
                 "selected ref cannot safely use the current preview database; choose another ref "
-                "or replace preview data through the supported import workflow"
+                "or preserve and restore a coordinated Preview DB/media snapshot; only forward migration is supported"
             ) from error
         self.compose("run", "--rm", "backend", "alembic", "upgrade", "head")
         return self.database_revisions()
@@ -368,7 +372,7 @@ for current in os.environ['FLORABASE_SOURCE_REVISIONS'].split(','):
                     f"preview readiness failed: {last_error}; inspect logs with: "
                     f"docker compose --project-name {PROJECT} --project-directory "
                     f"{self.preview_path} --file {self.preview_path / 'compose.yaml'} --file "
-                    f"{self.repository / 'compose.preview.yaml'} logs --tail=100"
+                    f"{self.preview_path / 'compose.preview.yaml'} logs --tail=100"
                 )
 
     def start(self, ref: str) -> None:
@@ -386,12 +390,15 @@ for current in os.environ['FLORABASE_SOURCE_REVISIONS'].split(','):
             self.compose("ps", "--all", check=False)
             raise
         print("Florabase preview ready")
+        print(f"Worktree: {self.preview_path}")
+        print(f"Code head: {','.join(code_heads(migration_graph(self.preview_path)))}")
         print(f"Ref: {self.ref}")
         print(f"SHA: {self.sha}")
         print(f"URL: {PREVIEW_URL}")
         print(f"Compose project: {PROJECT}")
         revision_label = ",".join(revisions) or "unversioned"
         print(f"Database: persistent isolated preview database ({revision_label})")
+        print(f"Database current: {revision_label}")
         if not self.owner_exists():
             print("Owner: none; create one with: make preview-bootstrap-owner LOGIN=owner")
 
@@ -422,79 +429,10 @@ for current in os.environ['FLORABASE_SOURCE_REVISIONS'].split(','):
                 "import replaces preview data only; re-run with CONFIRM_REPLACE_PREVIEW=yes "
                 f"CONFIRM_DATABASE={PREVIEW_DATABASE}"
             )
-        self.validate_compose_config()
-        self.compose("build", "backend")
-        self.compose("up", "--detach", "--wait", "--wait-timeout", "120", "db")
-        source_database = self.dev_compose(
-            "exec", "-T", "db", "sh", "-c", 'printf "%s" "$POSTGRES_DB"', capture=True
+        raise PreviewError(
+            "database-only DEV import is disabled: media references require a coordinated DB+media "
+            "snapshot. DEV is unchanged. Use synthetic preview data until paired cloning is supported."
         )
-        target_database = self.compose(
-            "exec", "-T", "db", "sh", "-c", 'printf "%s" "$POSTGRES_DB"', capture=True
-        )
-        if not source_database or source_database == PREVIEW_DATABASE:
-            raise PreviewError("development source database identity is unsafe or ambiguous")
-        if target_database != PREVIEW_DATABASE:
-            raise PreviewError("preview restore target database identity does not match the guard")
-        source_revisions = self.database_revisions(development=True)
-        if not source_revisions:
-            raise PreviewError(
-                "development source has no Alembic revision; preview data was not replaced"
-            )
-        try:
-            self.ensure_revisions_upgradeable(source_revisions)
-        except PreviewError as error:
-            raise PreviewError(
-                "development database is newer or incompatible with the selected preview ref; "
-                "preview data was not replaced"
-            ) from error
-
-        temporary_dir = Path(tempfile.mkdtemp(prefix="florabase-preview-import-"))
-        dump = temporary_dir / "development.dump"
-        try:
-            with dump.open("wb") as output:
-                self.dev_compose(
-                    "exec",
-                    "-T",
-                    "db",
-                    "sh",
-                    "-c",
-                    'pg_dump --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" '
-                    "--format=custom --no-owner --no-privileges",
-                    stdout=output,
-                )
-            if not dump.is_file() or dump.stat().st_size == 0:
-                raise PreviewError("development database dump is empty")
-            with dump.open("rb") as source:
-                self.dev_compose("exec", "-T", "db", "pg_restore", "--list", stdin=source)
-            self.compose("stop", "backend", "frontend", check=False)
-            self.compose(
-                "exec",
-                "-T",
-                "db",
-                "sh",
-                "-c",
-                'dropdb --if-exists --force --username "$POSTGRES_USER" "$POSTGRES_DB" && '
-                'createdb --username "$POSTGRES_USER" --owner "$POSTGRES_USER" "$POSTGRES_DB"',
-            )
-            with dump.open("rb") as source:
-                self.compose(
-                    "exec",
-                    "-T",
-                    "db",
-                    "sh",
-                    "-c",
-                    'pg_restore --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" '
-                    "--no-owner --no-privileges",
-                    stdin=source,
-                )
-            revisions = self.migrate_forward()
-            self.compose("up", "--detach", "--wait", "--wait-timeout", "120", "--remove-orphans")
-            self.wait_for_readiness()
-        finally:
-            shutil.rmtree(temporary_dir)
-        print("Development data imported into the isolated preview database")
-        print(f"Preview revisions: {','.join(revisions) or 'unversioned'}")
-        print(f"URL: {PREVIEW_URL}")
 
     def status(self) -> None:
         print(f"Worktree: {self.preview_path}")
@@ -503,6 +441,7 @@ for current in os.environ['FLORABASE_SOURCE_REVISIONS'].split(','):
             dirty = bool(self.git("status", "--porcelain=v1", at_preview=True, capture=True))
             print(f"SHA: {sha}")
             print(f"Git: {'dirty' if dirty else 'clean'} (detached preview worktree)")
+            print(f"Code head: {','.join(code_heads(migration_graph(self.preview_path)))}")
         else:
             print("Git: preview worktree absent")
         print(f"Compose project: {PROJECT}")
@@ -552,6 +491,9 @@ for current in os.environ['FLORABASE_SOURCE_REVISIONS'].split(','):
                 labels = {}
             if labels.get("io.florabase.preview.ref"):
                 print(f"Ref: {labels['io.florabase.preview.ref']}")
+        print(f"Media volume: {PROJECT}_attachment_data")
+        print("Dependencies: immutable frontend build (no mutable node_modules volume)")
+        print(f"Network: {PROJECT}_internal")
         volume = self.commands.run(
             ["docker", "volume", "inspect", f"{PROJECT}_postgres_data", "--format", "{{.Name}}"],
             capture=True,
@@ -566,15 +508,21 @@ for current in os.environ['FLORABASE_SOURCE_REVISIONS'].split(','):
             try:
                 revisions = self.database_revisions()
                 print(f"Alembic: {','.join(revisions) or 'unversioned'}")
-            except PreviewError:
-                print("Alembic: unavailable")
+                print(f"Database current: {','.join(revisions) or 'unversioned'}")
+                try:
+                    graph = migration_graph(self.preview_path)
+                    require_upgradeable(revisions, graph)
+                except WorkflowError as error:
+                    raise PreviewError(str(error)) from error
+            except PreviewError as error:
+                raise PreviewError(f"preview migration status failed: {error}") from error
 
 
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(description=__doc__)
     result.add_argument(
         "--path",
-        default="../florabase-preview",
+        default="",
         help="preview worktree path relative to repository",
     )
     subcommands = result.add_subparsers(dest="command", required=True)
@@ -595,8 +543,9 @@ def parser() -> argparse.ArgumentParser:
 def main() -> int:
     args = parser().parse_args()
     repository = Path(__file__).resolve().parents[1]
-    requested_path = Path(args.path)
-    preview_path = requested_path if requested_path.is_absolute() else repository / requested_path
+    primary = Repository(repository).primary
+    requested_path = Path(args.path) if args.path else primary.parent / "florabase-preview"
+    preview_path = requested_path if requested_path.is_absolute() else primary / requested_path
     preview = Preview(repository, preview_path)
     try:
         if args.command == "start":

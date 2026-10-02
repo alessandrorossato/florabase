@@ -27,10 +27,10 @@ if [[ "${CONFIRM_REPLACE:-}" != "yes" ]]; then
   exit 2
 fi
 
-docker compose exec -T db pg_restore --list <"$source_file" >/dev/null
-docker compose run --rm --no-deps -T backend \
+python3 "$(dirname "$0")/workflow_environment.py" prod compose -- exec -T db pg_restore --list <"$source_file" >/dev/null
+python3 "$(dirname "$0")/workflow_environment.py" prod compose -- run --rm --no-deps -T backend \
   python scripts/attachment_artifacts.py validate-archive <"$attachment_file"
-target_database="$(docker compose exec -T db sh -c 'printf "%s" "$POSTGRES_DB"')"
+target_database="$(python3 "$(dirname "$0")/workflow_environment.py" prod compose -- exec -T db sh -c 'printf "%s" "$POSTGRES_DB"')"
 if [[ -z "$target_database" ]]; then
   echo "The database container did not report a target database; refusing restore." >&2
   exit 2
@@ -39,16 +39,16 @@ if [[ "${CONFIRM_DATABASE:-}" != "$target_database" ]]; then
   echo "Restore target is '$target_database'. Re-run with CONFIRM_DATABASE=$target_database." >&2
   exit 2
 fi
-docker compose stop backend
-docker compose exec -T db sh -c \
+python3 "$(dirname "$0")/workflow_environment.py" prod compose -- stop backend
+python3 "$(dirname "$0")/workflow_environment.py" prod compose -- exec -T db sh -c \
   'dropdb --if-exists --force --username "$POSTGRES_USER" "$POSTGRES_DB"'
-docker compose exec -T db sh -c \
+python3 "$(dirname "$0")/workflow_environment.py" prod compose -- exec -T db sh -c \
   'createdb --username "$POSTGRES_USER" --owner "$POSTGRES_USER" "$POSTGRES_DB"'
-docker compose exec -T db sh -c \
+python3 "$(dirname "$0")/workflow_environment.py" prod compose -- exec -T db sh -c \
   'pg_restore --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" --no-owner --no-privileges' \
   <"$source_file"
-docker compose run --rm --no-deps -T backend \
+python3 "$(dirname "$0")/workflow_environment.py" prod compose -- run --rm --no-deps -T backend \
   python scripts/attachment_artifacts.py restore <"$attachment_file"
-docker compose run --rm --no-deps backend python scripts/attachment_artifacts.py verify
-docker compose start backend
+python3 "$(dirname "$0")/workflow_environment.py" prod compose -- run --rm --no-deps backend python scripts/attachment_artifacts.py verify
+python3 "$(dirname "$0")/workflow_environment.py" prod compose -- start backend
 echo "Restore completed from $source_file and $attachment_file"

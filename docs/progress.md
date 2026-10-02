@@ -1,5 +1,77 @@
 # Engineering progress
 
+## 2026-10-02 — CI-003 safe foreign-source DEV recovery
+
+- Fixed the independent review's recovery dead end: `dev-stop` no longer needs the primary or old
+  Compose files to operate an existing DEV stack. Exact project/service/role (including recognized
+  legacy metadata), source-mount and volume ownership checks identify DEV and fail closed on ambiguous
+  resources. Stop retains its containers, network, DB/media/dependency volumes and all persistent data.
+- Legacy media really uses Docker tmpfs, which disappears on stop. An initial isolated smoke caught
+  Docker `cp`'s unsupported tmpfs view before any operator use. The final fixed helper reads the frozen
+  backend's live filesystem through its PID namespace, exclusively copies missing regular files into
+  the validated DEV attachment volume, verifies preservation and kills the frozen writer without a
+  new-write window. Conflicts/copy errors leave the original backend alive; no media or volume is deleted.
+- Primary startup accepts only a validated stopped stack, starts the retained DB without rebinding it,
+  and refuses ahead/incompatible revisions before dependency initialization or application recreation.
+  Explicit upgrade keeps the same revision guard; no automatic downgrade or implicit migration occurs.
+  Stopped status reports retained source and exited state rather than cached healthy/running claims.
+- Focused checks: 23 environment tests and 37 feature-workflow tests; workflow Ruff lint/format and
+  strict mypy. Recovery coverage includes primary/foreign stop, old source absent, media conflicts,
+  non-root ownership restoration, idempotence, ambiguous identity, destructive refusal, primary reuse
+  and ahead-of-code state. Existing Review/Preview contracts and their isolation guards remain intact.
+- `make smoke-dev-recovery` passed on a UUID-scoped real Compose fixture: vanished old source,
+  tmpfs+durable media, DB rows and dependency state survive stop/recreation; services become healthy
+  from primary; repeated stop is safe; ahead startup/upgrade refuse without downgrade. Operator DEV,
+  Review, Preview, production and primary Git snapshots match before/after, including fixture cleanup.
+- The prior receipt's digest `233acab3...` matched the dirty worktree. Its reported mismatch came from
+  using the delivery check against uncommitted `HEAD`, not from stale source evidence. Added explicit
+  `verify --worktree` for pre-commit review; default verification still requires both HEAD and working
+  source for delivery. This fix changes the tree and requires fresh evidence. The final frozen-tree
+  `make feature-verify` result and new exact-worktree receipt are reported in the handoff.
+- Updated the canonical operator recovery flow and added the isolated smoke target. The live `8a70`
+  DEV remains running and healthy; only read-only identity/status checks were performed on it. Primary
+  is clean `main` at `4e90cce`; no real worktree creation, commit, push, delivery, merge or finish.
+
+## 2026-10-02 — CI-003 environment/worktree workflow consolidation
+
+- Discovered this Codex worktree clean/detached at `4e90cce`, identical to `origin/main` and primary
+  `main`; attached `ci/development-environment-workflow` only here. No additional real worktree,
+  commit, push, delivery, merge or finish was performed. Primary source/index remains untouched.
+- Added idempotent existing-worktree initialization, isolated dirty-source Feature Review commands,
+  primary-sourced DEV status/up/upgrade/stop, explicit production and worktree-quality projects,
+  per-run disposable integration identity, automatic `.env` discovery and source/health/revision
+  observability. DEV deliberately retains `florabase` to preserve existing operator volumes.
+- Fresh named dependency/media volumes are initialized automatically; frontend stays non-root,
+  bootstraps frozen dependencies without TTY and uses the pinned Corepack cache. DEV media is now
+  persistent; legacy temporary media prevents unsafe recreation/stop. Revision compatibility guards
+  distinguish code head from DB current and refuse ahead/incompatible state without downgrading.
+- Stable Preview keeps clean `origin/main` source and immutable dependencies, uses its own stable
+  overlay, rejects primary/other-branch paths and reports current/head. Its incomplete database-only
+  import now refuses before mutation; coordinated DEV DB+media cloning is explicitly deferred.
+- Delivery errors now print missing-CLI/auth/API/precondition evidence. Linked finish fast-forwards
+  only clean primary `main`, retains the detached Codex checkout and atomically deletes only the
+  proven merged branch. Receipt tests cover dirty/untracked migrations, symlinks, post-commit validity,
+  later edits, per-worktree metadata, stale-evidence invalidation and edits during verification.
+- Focused gates passed shell helper fixtures, 37 feature-workflow tests, 19 Preview tests, 13 environment
+  tests, workflow Ruff lint/format and strict mypy for the new operational helpers, shell syntax,
+  85-feature graph validation and whitespace checks. Early `make check` passed formatting/lint/types,
+  550 backend unit tests, 339 frontend tests and API drift before final verification.
+- Real `make smoke-environment-workflow` passed on this dirty linked source: untracked no-op migration
+  applied only to Review, all three services healthy, frontend UID 1000, fresh noninteractive install,
+  automated root-owned `.bin` repair, changed dependency/lockfile fixture, DB/media/dependency
+  stop/restart persistence, Review-only destruction and independently healthy stable archive Preview.
+  Production/integration configurations validate; smoke resource cleanup and DEV before/after
+  container/mount/Git/revision snapshots match. No operator data was destroyed.
+- Read-only `make dev-status` reveals the existing operator `florabase` project is still bound to the
+  previous `8a70` worktree, with healthy services, temporary media root and DB revision 0030; selected
+  primary code is also 0030. The command reports that source mismatch and refuses takeover. This
+  legacy environment is deliberately left running and unchanged for operator reconciliation.
+- [Canonical workflow](development-workflow.md), AGENTS, CONTRIBUTING, development/deployment guidance
+  and the CI-003 graph entry are updated. CI-003 remains `implemented` pending independent infrastructure
+  review. The frozen-tree canonical `make feature-verify` result and matching per-worktree receipt are
+  reported in the handoff; no product graphical review is required. Public images/GHCR, release
+  packaging, unrelated roadmap features and full DEV data cloning remain outside this increment.
+
 ## 2026-10-02 — lineage integrity audit for independent logical review
 
 - Audited `320865b` / `fix/lineage-integrity-audit`, including HARVEST-001. Canonical ancestry uses

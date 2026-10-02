@@ -25,7 +25,7 @@ assert_attachment_configuration() {
   [[ "$(grep -Fc 'attachment_data:/var/lib/florabase/attachments' "${compose}")" -eq 1 ]] ||
     fail "production attachment volume must be mounted exactly once"
   grep -Fq 'attachment_data:' "${compose}" || fail "production attachment volume is not declared"
-  grep -Fq 'FLORABASE_ATTACHMENT_STORAGE_ROOT: /tmp/florabase-attachments' "${development}" ||
+  grep -Fq 'FLORABASE_ATTACHMENT_STORAGE_ROOT: /var/lib/florabase/attachments' "${development}" ||
     fail "development attachment storage override is missing"
   grep -Fq 'FLORABASE_ATTACHMENT_STORAGE_ROOT: /tmp/florabase-attachments' "${integration}" ||
     fail "integration attachment storage override is missing"
@@ -34,7 +34,7 @@ assert_attachment_configuration() {
     fail "attachment directory is not created for the runtime user"
   grep -Fq 'USER florabase' "${dockerfile}" || fail "backend runtime is not non-root"
 
-  grep -Fq 'docker compose stop backend' "${backup}" || fail "backup does not quiesce writes"
+  grep -Fq 'prod compose -- stop backend' "${backup}" || fail "backup does not quiesce writes"
   grep -Fq 'attachment_artifacts.py verify' "${backup}" || fail "backup does not verify content"
   grep -Fq 'attachment_artifacts.py archive' "${backup}" || fail "backup does not archive content"
   grep -Fq '.attachments.tar' "${backup}" || fail "backup does not create paired artifacts"
@@ -149,8 +149,40 @@ if git -C "${work}" show-ref --verify --quiet refs/heads/feat/finish; then
 fi
 [[ "$(git -C "${work}" rev-parse HEAD)" == "${merge_oid}" ]] || fail "main was not updated"
 
-dev_upgrade_plan="$(make --directory "${repository_root}" --dry-run dev-upgrade)"
-[[ "$(grep -c 'alembic current' <<<"${dev_upgrade_plan}")" -eq 2 ]] || fail "dev-upgrade must show both revisions"
-grep -q 'alembic upgrade head' <<<"${dev_upgrade_plan}" || fail "dev-upgrade is not wired to upgrade head"
+# Linked worktree finish: primary main/index are never replaced with feature contents.
+IFS='|' read -r seed work remote <<<"$(new_fixture linked-finish)"
+linked="${temporary_root}/linked feature spaces"
+git -C "${work}" worktree add -b feat/finish "${linked}" >/dev/null
+printf 'linked feature\n' >"${linked}/feature.txt"
+git -C "${linked}" add feature.txt
+git -C "${linked}" commit -m 'linked feature' >/dev/null
+feature_oid="$(git -C "${linked}" rev-parse HEAD)"
+git -C "${linked}" push origin feat/finish >/dev/null
+git -C "${seed}" fetch origin feat/finish >/dev/null
+git -C "${seed}" merge --squash origin/feat/finish >/dev/null
+git -C "${seed}" commit -m 'squash linked feature' >/dev/null
+merge_oid="$(git -C "${seed}" rev-parse HEAD)"
+git -C "${seed}" push origin main >/dev/null
+printf 'operator staged work\n' >>"${work}/tracked.txt"
+git -C "${work}" add tracked.txt
+expect_failure env -C "${linked}" PATH="${mock_bin}:${PATH}" MOCK_PR_STATE=MERGED \
+  MOCK_HEAD_OID="${feature_oid}" MOCK_MERGE_OID="${merge_oid}" "${feature_finish}"
+[[ "$(git -C "${work}" branch --show-current)" == "main" ]] || fail "dirty primary branch changed"
+git -C "${work}" diff --cached --quiet && fail "primary staged work was lost"
+[[ "$(git -C "${linked}" branch --show-current)" == "feat/finish" ]] || fail "failed finish detached feature"
+git -C "${work}" restore --staged --worktree tracked.txt
+env -C "${linked}" PATH="${mock_bin}:${PATH}" MOCK_PR_STATE=MERGED \
+  MOCK_HEAD_OID="${feature_oid}" MOCK_MERGE_OID="${merge_oid}" "${feature_finish}" >/dev/null
+[[ "$(git -C "${work}" branch --show-current)" == "main" ]] || fail "primary did not retain main"
+[[ "$(git -C "${work}" rev-parse HEAD)" == "${merge_oid}" ]] || fail "primary main not fast-forwarded"
+[[ -z "$(git -C "${work}" status --porcelain)" ]] || fail "primary index/worktree mismatch after finish"
+[[ -z "$(git -C "${linked}" branch --show-current)" ]] || fail "Codex worktree should be retained detached"
+[[ -z "$(git -C "${linked}" status --porcelain)" ]] || fail "linked index/worktree mismatch after finish"
+[[ -d "${linked}" ]] || fail "Codex-managed worktree removed"
+if git -C "${work}" show-ref --verify --quiet refs/heads/feat/finish; then
+  fail "linked verified merged branch was not deleted"
+fi
+
+grep -Fq 'workflow_environment.py dev upgrade' "${repository_root}/Makefile" || fail "dev-upgrade is not source-aware"
 
 printf 'workflow helper tests: all passed\n'

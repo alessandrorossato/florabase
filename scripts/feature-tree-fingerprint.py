@@ -42,7 +42,13 @@ def working_entries() -> list[dict[str, str]]:
             {
                 "path": path_text,
                 "mode": mode_for(path),
-                "blob": git("hash-object", "--path", path_text, path_text),
+                "blob": (
+                    subprocess.run(
+                        ["git", "hash-object", "--stdin"], input=os.readlink(path).encode(),
+                        check=True, stdout=subprocess.PIPE,
+                    ).stdout.decode().strip()
+                    if path.is_symlink() else git("hash-object", "--path", path_text, path_text)
+                ),
             }
         )
     return entries
@@ -79,15 +85,29 @@ def fail(message: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     command = parser.add_subparsers(dest="command", required=True)
+    command.add_parser("digest")
+    command.add_parser("invalidate")
     write = command.add_parser("write")
     write.add_argument("--branch", required=True)
     write.add_argument("--base", required=True)
     verify = command.add_parser("verify")
     verify.add_argument("--branch", required=True)
     verify.add_argument("--base", required=True)
+    verify.add_argument(
+        "--worktree", action="store_true",
+        help="compare the exact dirty/untracked worktree; default also requires committed HEAD for delivery",
+    )
     args = parser.parse_args()
+    os.chdir(git("rev-parse", "--show-toplevel"))
     # Linked worktrees have a .git file and need an isolated receipt in their own metadata.
     receipt_path = Path(git("rev-parse", "--git-dir")) / "info/florabase-feature-verification.json"
+
+    if args.command == "digest":
+        print(digest(working_entries()))
+        return
+    if args.command == "invalidate":
+        receipt_path.unlink(missing_ok=True)
+        return
 
     if args.command == "write":
         receipt = {
@@ -109,9 +129,14 @@ def main() -> None:
         fail("receipt belongs to another branch; rerun make feature-verify")
     if receipt.get("base") != args.base:
         fail("receipt uses another main base; rerun make feature-verify")
-    if receipt.get("working_tree_digest") != digest(head_entries()):
-        fail("HEAD tree differs from verified working tree; rerun make feature-verify")
-    print("feature receipt: current HEAD matches verified working tree")
+    if receipt.get("working_tree_digest") != digest(working_entries()):
+        fail("working tree differs from verified tree; rerun make feature-verify")
+    if not args.worktree and receipt.get("working_tree_digest") != digest(head_entries()):
+        fail("HEAD tree differs from verified working tree; commit the verified tree before delivery")
+    print(
+        "feature receipt: exact worktree matches verified tree"
+        if args.worktree else "feature receipt: current HEAD matches verified working tree"
+    )
 
 
 if __name__ == "__main__":

@@ -8,6 +8,12 @@ a tested backup before every upgrade.
 Install Docker Engine with Docker Compose v2, GNU Make, and `curl`. Clone the repository on a host
 where an operator-managed HTTPS reverse proxy can forward to the frontend port.
 
+`compose.yaml` builds the production targets in the explicit `florabase-prod` project. DEV retains
+its separate legacy `florabase` project; Review and Preview use their own resources. Existing baseline
+installations previously using `florabase` must preserve and deliberately migrate coordinated DB/media
+before adopting the new production project name. No helper silently attaches those volumes.
+See [environment boundaries](development-workflow.md).
+
 `compose.yaml` builds the production targets. PostgreSQL and FastAPI remain on the internal Compose
 network; only the nginx frontend proxy publishes `${APP_BIND_ADDRESS}:${APP_PORT}`. The frontend
 serves the React application and forwards `/api/` to FastAPI.
