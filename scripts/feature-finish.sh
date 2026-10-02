@@ -36,8 +36,24 @@ git merge-base --is-ancestor "${merge_oid}" origin/main ||
 git merge-base --is-ancestor main origin/main ||
   fail "local main cannot be fast-forwarded cleanly to origin/main"
 
-git switch main
-git merge --ff-only origin/main
+git_dir="$(git rev-parse --absolute-git-dir)"
+common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
+if [[ "${git_dir}" != "${common_dir}" ]]; then
+  # The main worktree is the first NUL-delimited record. Never reconstruct paths from .git.
+  IFS= read -r -d '' first_record < <(git worktree list --porcelain -z) || true
+  primary="${first_record#worktree }"
+  [[ "$(git -C "${primary}" branch --show-current)" == "main" ]] ||
+    fail "primary checkout ${primary} must be on main; resolve its branch deliberately"
+  [[ -z "$(git -C "${primary}" status --porcelain)" ]] ||
+    fail "primary checkout ${primary} has staged or working changes; preserve/resolve them before finish"
+  # Fast-forward uses Git's normal index/worktree update, never a raw main ref write.
+  git -C "${primary}" merge --ff-only origin/main
+  git switch --detach "${branch_oid}"
+  printf 'Linked feature worktree retained at %s; archive it through Codex when no longer needed\n' "$(git rev-parse --show-toplevel)"
+else
+  git switch main
+  git merge --ff-only origin/main
+fi
 # A squash-merged branch is not an ancestor of main. GitHub state and both exact OIDs were checked
 # above, so delete the unchanged local ref atomically without using force-delete.
 git update-ref -d "refs/heads/${branch}" "${branch_oid}"

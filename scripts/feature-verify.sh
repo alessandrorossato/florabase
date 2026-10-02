@@ -34,16 +34,22 @@ git show-ref --verify --quiet refs/remotes/origin/main || fail "origin/main is r
 git merge-base --is-ancestor origin/main HEAD ||
   fail "branch does not contain origin/main; rebase or merge deliberately before verification"
 base_sha="$(git merge-base origin/main HEAD)"
+python3 ./scripts/feature-tree-fingerprint.py invalidate
+initial_digest="$(python3 ./scripts/feature-tree-fingerprint.py digest)"
 
 run_stage "feature graph" python3 ./scripts/check-features.py
 run_stage "workflow helpers" make test-workflow-helpers
 run_stage "feature workflow helpers" make test-feature-workflow
 run_stage "preview workflow helpers" make test-preview-workflow
+run_stage "environment workflow helpers" make test-environment-workflow
+run_stage "workflow static checks" make workflow-check
 run_stage "quality" make check
 run_stage "integration" make test-integration
 run_stage "production builds" make build
 run_stage "migration cycle" ./scripts/verify-migration-cycle.sh "${base_sha}"
 run_stage "whitespace errors" check_whitespace
+[[ "$(python3 ./scripts/feature-tree-fingerprint.py digest)" == "${initial_digest}" ]] ||
+  fail "source tree changed during verification; freeze the tree and rerun make feature-verify"
 run_stage "verification receipt" python3 ./scripts/feature-tree-fingerprint.py write --branch "${branch}" --base "${base_sha}"
 
 printf '\nFEATURE_VERIFICATION_PASSED\n'

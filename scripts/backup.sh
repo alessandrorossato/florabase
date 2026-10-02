@@ -17,7 +17,7 @@ cleanup() {
     rm -f "$database_destination" "$attachment_destination"
   fi
   if [[ "$backend_stopped" == true ]]; then
-    docker compose start backend >/dev/null
+    python3 "$(dirname "$0")/workflow_environment.py" prod compose -- start backend >/dev/null
   fi
 }
 trap cleanup EXIT
@@ -29,24 +29,24 @@ for destination in "$database_destination" "$attachment_destination"; do
   fi
 done
 
-docker compose stop backend
+python3 "$(dirname "$0")/workflow_environment.py" prod compose -- stop backend
 backend_stopped=true
-docker compose run --rm --no-deps backend python scripts/attachment_artifacts.py verify
+python3 "$(dirname "$0")/workflow_environment.py" prod compose -- run --rm --no-deps backend python scripts/attachment_artifacts.py verify
 
-docker compose exec -T db sh -c \
+python3 "$(dirname "$0")/workflow_environment.py" prod compose -- exec -T db sh -c \
   'pg_dump --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" --format=custom --no-owner --no-privileges' \
   >"$database_temporary"
-docker compose run --rm --no-deps -T backend \
+python3 "$(dirname "$0")/workflow_environment.py" prod compose -- run --rm --no-deps -T backend \
   python scripts/attachment_artifacts.py archive >"$attachment_temporary"
 
 test -s "$database_temporary"
 test -s "$attachment_temporary"
-docker compose exec -T db pg_restore --list <"$database_temporary" >/dev/null
-docker compose run --rm --no-deps -T backend \
+python3 "$(dirname "$0")/workflow_environment.py" prod compose -- exec -T db pg_restore --list <"$database_temporary" >/dev/null
+python3 "$(dirname "$0")/workflow_environment.py" prod compose -- run --rm --no-deps -T backend \
   python scripts/attachment_artifacts.py validate-archive <"$attachment_temporary"
 mv --no-clobber "$database_temporary" "$database_destination"
 mv --no-clobber "$attachment_temporary" "$attachment_destination"
-docker compose start backend >/dev/null
+python3 "$(dirname "$0")/workflow_environment.py" prod compose -- start backend >/dev/null
 backend_stopped=false
 backup_complete=true
 trap - EXIT

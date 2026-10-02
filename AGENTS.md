@@ -14,9 +14,12 @@ do not pre-build later capabilities.
 6. Run the narrowest meaningful baseline checks; use `make check` before risky or broad changes when
    the full stack is available.
 
-Choose the roadmap increment before creating a branch. Use `make feature-start
-BRANCH=feat/<feature-id>` (or a focused `fix/`, `docs/`, or `ci/` name) to create it from clean,
-fast-forwarded `main`. Implement the smallest coherent change, run focused checks while developing,
+Choose the increment before creating a branch. In an existing Codex-managed worktree use
+`make feature-init`; provide `BRANCH=ci/example` only to attach clean detached HEAD at `origin/main`.
+Never create another feature worktree or switch primary `main` in that workflow. Preserve manual
+`make feature-start BRANCH=feat/<feature-id>` (or focused `fix/`, `docs/`, `ci/`) for clean,
+fast-forwarded `main`. Follow [docs/development-workflow.md](docs/development-workflow.md) for source,
+environment and review-profile boundaries. Implement the smallest coherent change, run focused checks while developing,
 then complete the relevant full verification before marking a feature `verified`.
 
 ## Repository boundaries
@@ -56,15 +59,19 @@ then complete the relevant full verification before marking a feature `verified`
 acceptance criterion, not merely satisfied dependencies.
 
 After meaningful work, update affected documentation and append or consolidate a concise
-`docs/progress.md` milestone with the exact checks and unresolved issues. Review the implementation
-and diff independently, fix ordinary defects, then use `make feature-verify` as the canonical final
-local gate; do not manually repeat its covered verification stages. Review the resulting final diff,
+`docs/progress.md` milestone with the exact checks and unresolved issues. Use the domain/UI/infrastructure review order from the canonical workflow. Infrastructure requires
+real workflow smoke and no graphical product review. Review implementation and diff independently,
+fix ordinary defects, freeze the tree, then use `make feature-verify` as the canonical final
+local gate; do not manually repeat its covered verification stages. Receipt evidence is per-worktree and covers
+dirty/untracked source; code/test/workflow changes invalidate it. A review with no changes needs no
+ceremonial rerun. Review the resulting final diff,
 stage only intentional files, inspect the staged diff, and create the reviewed local commit. When a
 task boundary is `READY_FOR_DELIVERY`, do not push or create a PR: the operator runs deterministic
 `make feature-deliver`. It pushes normally, reuses or creates the PR, and waits for protected squash
 auto-merge without bypassing checks. Never force-push, rewrite shared history, manually force a
 merge, or commit feature work directly to `main`. After delivery reports a merged PR, use `make
-feature-finish` for conservative local cleanup, then use `make dev-upgrade` only when delivery
+feature-finish` for conservative local cleanup (linked finish requires clean primary `main` and
+retains the detached Codex worktree), then use `make dev-upgrade` only when delivery
 reported a migration.
 
 Before finishing, run relevant formatting, lint, typing, tests, integration, API drift, migration,

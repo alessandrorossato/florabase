@@ -101,6 +101,25 @@ class PreviewGitTests(unittest.TestCase):
             preview.resolve_and_prepare_worktree("origin/main")
         self.assertEqual((self.preview_path / "tracked.txt").read_text(), "dirty\n")
 
+    def test_linked_invocation_cannot_select_primary_as_preview(self) -> None:
+        run("git", "switch", "main", cwd=self.repository)
+        linked = self.repository.parent / "linked-feature"
+        run("git", "worktree", "add", "-b", "ci/linked", str(linked), cwd=self.repository)
+        preview = Preview(linked, self.repository)
+        with self.assertRaisesRegex(PreviewError, "both primary and current"):
+            preview.resolve_and_prepare_worktree("origin/main")
+        self.assertEqual(run("git", "branch", "--show-current", cwd=self.repository), "main")
+        self.assertEqual(run("git", "branch", "--show-current", cwd=linked), "ci/linked")
+
+    def test_preview_cannot_update_or_remove_another_branch_worktree(self) -> None:
+        run("git", "worktree", "add", "-b", "ci/other", str(self.preview_path), cwd=self.repository)
+        preview = Preview(self.repository, self.preview_path)
+        with self.assertRaisesRegex(PreviewError, "refusing another checkout"):
+            preview.resolve_and_prepare_worktree("origin/main")
+        with self.assertRaisesRegex(PreviewError, "refusing another checkout"):
+            preview.remove()
+        self.assertEqual(run("git", "branch", "--show-current", cwd=self.preview_path), "ci/other")
+
     def test_invalid_ref_fails_clearly_without_touching_primary(self) -> None:
         primary_branch = run("git", "branch", "--show-current", cwd=self.repository)
         primary_head = run("git", "rev-parse", "HEAD", cwd=self.repository)
@@ -157,6 +176,8 @@ class PreviewIsolationTests(unittest.TestCase):
             command[command.index("--file") + 1], str(self.preview_path / "compose.yaml")
         )
         self.assertNotIn("compose.dev.yaml", " ".join(command))
+        self.assertIn(str(self.preview_path / "compose.preview.yaml"), command)
+        self.assertNotIn(str(self.repository / "compose.preview.yaml"), command)
 
     def test_git_workflow_contains_no_destructive_primary_operations(self) -> None:
         source = (ROOT / "scripts/preview.py").read_text()
@@ -208,7 +229,7 @@ class PreviewIsolationTests(unittest.TestCase):
         )
         self.assertEqual(dev_call[dev_call.index("--project-name") + 1], "florabase")
         self.assertIn(str(self.preview_path / "compose.yaml"), preview_call)
-        self.assertIn(str(self.repository / "compose.dev.yaml"), dev_call)
+        self.assertIn(str(preview_workflow.Repository(self.repository).primary / "compose.dev.yaml"), dev_call)
 
     def test_stop_and_remove_commands_preserve_volume_and_local_changes(self) -> None:
         source = (ROOT / "scripts/preview.py").read_text()
@@ -237,8 +258,9 @@ class PreviewIsolationTests(unittest.TestCase):
         self.assertNotIn("downgrade", migrate_block)
         self.assertIn("self.compose(", bootstrap_block)
         self.assertNotIn("self.dev_compose(", bootstrap_block)
-        self.assertIn("self.dev_compose(", import_block)
-        self.assertIn("self.compose(", import_block)
+        self.assertNotIn("self.dev_compose(", import_block)
+        self.assertNotIn("self.compose(", import_block)
+        self.assertIn("coordinated DB+media", import_block)
         self.assertIn("CONFIRM_REPLACE_PREVIEW=yes", import_block)
         self.assertNotIn("down", import_block)
         self.assertNotIn("downgrade", import_block)
@@ -250,17 +272,11 @@ class PreviewIsolationTests(unittest.TestCase):
                 preview.import_development("", "")
         self.assertEqual(preview.commands.calls, [])
 
-    def test_import_refuses_unmigrated_source_before_replacing_preview(self) -> None:
+    def test_import_refuses_database_only_clone_before_any_commands(self) -> None:
         preview = Preview(self.repository, self.preview_path, RecordingCommands())
-        with (
-            patch.object(preview, "require_worktree"),
-            patch.object(preview, "validate_compose_config"),
-            patch.object(preview, "compose", side_effect=[None, None, "florabase_preview"]),
-            patch.object(preview, "dev_compose", return_value="florabase"),
-            patch.object(preview, "database_revisions", return_value=[]),
-            self.assertRaisesRegex(PreviewError, "no Alembic revision"),
-        ):
+        with patch.object(preview, "require_worktree"), self.assertRaisesRegex(PreviewError, r"coordinated DB\+media"):
             preview.import_development("yes", "florabase_preview")
+        self.assertEqual(preview.commands.calls, [])
 
     def test_success_output_reports_exact_sha_url_and_project(self) -> None:
         preview = Preview(self.repository, self.preview_path, RecordingCommands())
@@ -278,6 +294,7 @@ class PreviewIsolationTests(unittest.TestCase):
             patch.object(preview, "migrate_forward", return_value=["20260908_0020"]),
             patch.object(preview, "wait_for_readiness"),
             patch.object(preview, "owner_exists", return_value=True),
+            patch.object(preview_workflow, "migration_graph", return_value={"20260908_0020": []}),
             patch.object(Path, "is_file", return_value=True),
             contextlib.redirect_stdout(output),
         ):
@@ -344,6 +361,7 @@ class PreviewIsolationTests(unittest.TestCase):
             with (
                 patch.object(preview, "git", side_effect=["e" * 40, "", "e" * 40]),
                 patch.object(preview, "database_revisions", return_value=["20260908_0020"]),
+                patch.object(preview_workflow, "migration_graph", return_value={"20260908_0020": []}),
                 contextlib.redirect_stdout(output),
             ):
                 preview.status()
@@ -357,7 +375,7 @@ class PreviewIsolationTests(unittest.TestCase):
 
     def test_integration_workflow_remains_disposable_and_separate(self) -> None:
         integration = (ROOT / "scripts/test-integration.sh").read_text()
-        self.assertIn('compose_project="florabase-integration"', integration)
+        self.assertIn('compose_project="florabase-integration-', integration)
         self.assertIn("--volumes", integration)
         self.assertNotIn("florabase-preview", integration)
         compose = (ROOT / "compose.integration.yaml").read_text()

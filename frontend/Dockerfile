@@ -2,6 +2,7 @@
 FROM node:24.19.0-bookworm-slim AS dependencies
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
+ENV COREPACK_HOME=/usr/local/share/corepack
 RUN corepack enable
 WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
@@ -17,8 +18,13 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 8080
 
 FROM dependencies AS development
+ENV HOME=/tmp/florabase-frontend-home
 COPY . .
-RUN mkdir -p /app/node_modules/.tmp /app/node_modules/.vite \
-    && chmod 1777 /app/node_modules/.tmp /app/node_modules/.vite
+RUN chown -R node:node /app/node_modules \
+    && chmod -R a+rX /usr/local/share/corepack \
+    && install -m 0755 dev-entrypoint.sh /usr/local/bin/florabase-dev-entrypoint \
+    && install -m 0755 dev-state-init.sh /usr/local/bin/florabase-dev-state-init
+USER node
+ENTRYPOINT ["florabase-dev-entrypoint"]
 EXPOSE 5173
 CMD ["pnpm", "dev"]

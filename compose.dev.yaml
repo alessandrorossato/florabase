@@ -1,19 +1,47 @@
+name: florabase
+
+x-source: &source
+  io.florabase.role: ${FLORABASE_ROLE:-dev}
+  io.florabase.source: ${FLORABASE_SOURCE:-unknown}
+  io.florabase.branch: ${FLORABASE_BRANCH:-unknown}
+  io.florabase.sha: ${FLORABASE_SHA:-unknown}
+  io.florabase.dirty: ${FLORABASE_DIRTY:-unknown}
+
 services:
+  dev-state-init:
+    labels: *source
+    image: ${COMPOSE_PROJECT_NAME:-florabase}-frontend-development
+    build:
+      context: ./frontend
+      target: development
+    user: "0:0"
+    entrypoint: [florabase-dev-state-init]
+    environment:
+      LOCAL_UID: ${LOCAL_UID:-1000}
+      LOCAL_GID: ${LOCAL_GID:-1000}
+    volumes:
+      - frontend_node_modules:/app/node_modules
+      - attachment_data:/state/attachments
+    restart: "no"
+    networks: [internal]
+
   db:
+    labels: *source
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
 
   backend:
-    image: florabase-backend-development
+    labels: *source
+    image: ${COMPOSE_PROJECT_NAME:-florabase}-backend-development
     build:
       target: development
     user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
     environment:
       FLORABASE_ENVIRONMENT: development
-      FLORABASE_CANONICAL_ORIGIN: http://localhost:5173
+      FLORABASE_CANONICAL_ORIGIN: http://localhost:${FRONTEND_PORT:-5173}
       FLORABASE_COOKIE_MODE: loopback-development
       FLORABASE_LOG_FORMAT: text
-      FLORABASE_ATTACHMENT_STORAGE_ROOT: /tmp/florabase-attachments
+      FLORABASE_ATTACHMENT_STORAGE_ROOT: /var/lib/florabase/attachments
       COVERAGE_FILE: /tmp/florabase-coverage
       MYPY_CACHE_DIR: /tmp/florabase-mypy
       PYTEST_ADDOPTS: -o cache_dir=/tmp/florabase-pytest
@@ -27,18 +55,23 @@ services:
       - ./backend/pyproject.toml:/app/pyproject.toml:ro
       - ./backend/requirements.lock:/app/requirements.lock
       - ./backend/requirements-dev.lock:/app/requirements-dev.lock
-    tmpfs:
-      - /tmp/florabase-attachments:uid=${LOCAL_UID:-1000},gid=${LOCAL_GID:-1000},mode=0700
+    depends_on:
+      dev-state-init:
+        condition: service_completed_successfully
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
 
   frontend:
-    image: florabase-frontend-development
+    labels: *source
+    image: ${COMPOSE_PROJECT_NAME:-florabase}-frontend-development
     build:
       target: development
     user: "${LOCAL_UID:-1000}:${LOCAL_GID:-1000}"
     environment:
       BACKEND_PROXY_URL: http://backend:8000
+    depends_on:
+      dev-state-init:
+        condition: service_completed_successfully
     volumes:
       - ./frontend:/app
       - ./backend/openapi.json:/backend/openapi.json:ro
