@@ -297,9 +297,12 @@
       "category": "botany",
       "description": "Botanical profile enrichment",
       "acceptance_criteria": [
-        "External botanical reference facts use the confirmed provider-link foundation and remain visibly source-scoped with retrieval provenance",
-        "Operator-approved import or display decisions preserve manually authored BotanicalProfile content and never silently overwrite it",
-        "The implemented field set, attribution, refresh, removal, and conflict behavior are reviewed against provider terms and data quality before use"
+        "Only reviewed WFO / Flora of China general descriptions and Kew WCVP geographic_area may propose description and origin_distribution respectively; fixed backend bulk retrieval, exact provider-specific source confirmation and deterministic plain-text normalization never modify profile or identity data during retrieval",
+        "Empty fields require explicit Apply, while populated fields require Current vs Proposed review and concrete Replace confirmation; unrelated profile fields and operator-managed structured native ranges remain unchanged",
+        "Typed relational append-only application history retains field, nullable previous value, applied value, provider, dataset, exact record/reference, licence, attribution, retrieval time, release fingerprint and application time/operator where available",
+        "Field-specific current provenance identifies the enrichment application without string comparison; manual edits clear only the edited field association while preserving history, and equivalent current value/source evidence avoids duplicate application rows",
+        "Transactional apply rejects stale destination or proposal/source-version review; refresh, failure, disappearance, cache expiry and source-link changes preserve canonical applied text and historical evidence",
+        "Accessible responsive Profile review exposes proposals, concrete confirmation, current attribution and field-level history with reviewed licence/reference credit; secure retrieval of the exact approved WFO archive is a prerequisite, without TLS bypass or alternative unreviewed source paths"
       ],
       "dependencies": ["BOTANY-002", "PROFILE-002"],
       "priority": "P1",
