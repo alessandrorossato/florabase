@@ -137,11 +137,16 @@ operator reprioritizes them. They are not release-readiness dependencies.
   (for example, 2 directly and 7 including sublocations). The UI polish retains
   existing direct counts and implements no hierarchical aggregation.
 
-- `BOTANY-003` remains `planned`, but does **not** block `0.1.0`. The confirmed exact provider path
-  has not supplied eligible descriptive content under the accepted narrow contract. Source licensing
-  and field-level capability must be adequate before retrieval resumes. Florabase must not use name
-  rematching, arbitrary scraping, unsupported numeric crosswalks, or unreviewed source mixing to
-  force enrichment. Resume only with a reviewed source, content, and provenance contract.
+- `BOTANY-003` remains `planned`, but does **not** block `0.1.0`. The operator approved WFO / Flora
+  of China general descriptions → `description` and Kew WCVP `geographic_area` → `origin_distribution`.
+  Replacement policy 3 requires explicit Apply for empty fields, explicit Replace confirmation for
+  populated fields, retained typed applied-value history and field-specific current attribution.
+  Manual edits clear only the edited field's source association; history remains. Exact provider
+  confirmation and stale-current/stale-proposal protection are required. Implementation is blocked
+  by the approved WFO endpoint omitting its issuing intermediate despite the public root being
+  present in both backend runtimes;
+  resume only after that exact mechanism can be retrieved securely. Source selection is approved,
+  not reopened. No scraping, TLS bypass, assumed identifier crosswalk or broader field import is allowed.
 - `ENRICHMENT-001`/`ENRICHMENT-002` follow a reviewed retrieve → proposed values → source and
   provenance → operator review → selective apply path; manual BotanicalProfile data is never silently
   overwritten. Occurrence-map caching is a later optimization requiring bounded freshness, source
@@ -267,8 +272,9 @@ wait for the separate `ORDER-001` transaction model.
 
 After the implemented collection, geography, supplier, provenance-map, external botanical-data,
 structured native-range, MAP-002 occurrence-density, and ATTACHMENT-003 photo foundations,
-`BOTANY-003` profile enrichment remains separately planned while the approved provider lacks a
-reviewed profile-content contract. `UX-003` is
+`BOTANY-003` profile enrichment remains separately planned with the two-field source/replacement
+contract approved, but secure backend access to the reviewed WFO archive blocked. The complete
+approved scope and access evidence remain in `docs/botany-003-audit.md`. `UX-003` is
 implemented as global stabilization and polish over those feature-specific surfaces. `UX-002` is
 implemented as static local form guidance: concise described field help, accessible expandable
 examples, and focused deep help for complex corrective operations. It adds no onboarding state,

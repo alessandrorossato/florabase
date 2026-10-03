@@ -1,5 +1,130 @@
 # Engineering progress
 
+## 2026-10-02 — BOTANY-003 TLS diagnosis: missing provider intermediate
+
+- Preserved all approved source/replacement findings on the current branch at `cd29de9`. Inspected
+  the pinned Python 3.14.7 slim-bookworm Dockerfile and the unchanged development/runtime images
+  using isolated read-only, non-root, no-mount diagnostic containers. Both already contain Debian
+  `ca-certificates` `20250419~deb12u1`, populated system stores (150 roots) and certifi 2026.07.22
+  (121 roots). Python 3.14.7/OpenSSL 3.0.20 default paths resolve to the system bundle/directory;
+  SSL_CERT_FILE/SSL_CERT_DIR and conventional proxy variables are unset. Host has a newer public
+  system CA package. Full image identities, bundle inventory and trust paths are in audit section 33.
+- Direct SNI/verified OpenSSL diagnostics on host/development/runtime all receive exactly one
+  identical certificate from the exact approved archive host: leaf `*.worldfloraonline.org`, issued
+  by `GeoTrust TLS RSA CA G1`, valid 2026-07-14 through 2027-01-28, SAN matching the archive host.
+  All fail with error 20 at depth 0. DigiCert's official metadata identifies the issuing intermediate's
+  root as DigiCert Global Root G2, already present and valid in all tested system/certifi bundles.
+  The issuing intermediate is omitted from the served chain; no issuer certificate was fetched,
+  installed, embedded or trusted as a workaround.
+- Host Python/system curl and both images' Python system/certifi plus HTTPX default/system probes
+  all reject the chain with verification/hostname checks enabled. Evidence supports case C (observed
+  remote incomplete chain), not a missing CA package, wrong effective CA path or hostname mismatch.
+  No proxy/interception evidence was observed; no independent off-site network audit is claimed.
+- `SOURCE_TLS_PROVIDER_BLOCKED`: WFO must serve its issuing intermediate to restore normal public
+  chain validation. Provider-specific trust augmentation is an option requiring separate explicit
+  approval, not implemented. No standard Florabase trust fix was justified; no rebuild, unrelated
+  dependency change, insecure fallback, alternate source or application implementation occurred.
+  BOTANY-003 remains `planned`; its source/product decision remains APPROVED. GBIF/CoL TLS behavior,
+  operator services/data, branch and source research remain intact.
+- Updated audit, domain-model blocker note, roadmap blocker note and progress. Pinned Prettier,
+  feature graph (85 valid features) and diff checks cover documentation only. No provider-dependent
+  CI check, application/migration/browser checks, canonical gate, staging, commit, push or delivery.
+
+## 2026-10-02 — BOTANY-003 source/replacement approval and implementation access blocker
+
+- Preserved the existing worktree/branch at `cd29de9` and all source-capability research. Recorded
+  the operator's APPROVED decision C: WFO / Flora of China description → `description`; Kew WCVP
+  `geographic_area` → `origin_distribution`; replacement policy 3 requires explicit Apply/confirmed
+  Replace, typed immutable history and field-specific current attribution. Manual edits clear only
+  the edited field's association while retaining history; source confirmation and stale-review
+  checks are mandatory. No additional source/capability or provider-selection reconsideration.
+- Tested the exact reviewed WFO archive securely before adding application code. Isolated read-only,
+  non-root, no-mount containers from the existing QUALITY development and production backend images
+  both used HTTPX 0.28.1/certifi 2026.07.22 with default TLS validation, fixed URL, no redirects and
+  bounded streamed range retrieval. Both exited 1 before an HTTP response with
+  `CERTIFICATE_VERIFY_FAILED: unable to get local issuer certificate`. Host curl independently
+  exited 60 for the same issuer-chain validation failure. Ephemeral probe containers were removed;
+  operator environments/data and trust configuration were not changed.
+- `SOURCE_IMPLEMENTATION_BLOCKED`: the operator required stopping if this exact approved access
+  mechanism cannot be used safely. No TLS bypass, custom trust exception, alternate API/source,
+  browser-download runtime mechanism or partial WCVP-only feature was substituted. Secure backend
+  retrieval of this exact archive must succeed with a validated certificate chain before resuming.
+  Root cause beyond the observed validation error has not been established; the earlier successful
+  browser research and approved content/licensing findings remain intact.
+- Updated audit, feature acceptance criteria, domain-model approved/deferred note, roadmap and
+  progress. BOTANY-003 remains `planned`; no persistence model, route, parser, UI, migration or API
+  artifact was implemented. Pinned Prettier, feature graph and diff checks cover documentation only.
+  Implementation tests/build/browser checks did not run; the prior unrelated baseline failure was
+  not investigated. No canonical gate, staging, commit, push, delivery, merge or finish.
+
+## 2026-10-02 — BOTANY-003 bounded source-capability investigation
+
+- Continued the existing `feat/botany-003-controlled-enrichment` worktree at `cd29de9`, under
+  explicit research-only authorization. Extended `docs/botany-003-audit.md` with the full capability
+  matrix, two actual taxa per source (Acer palmatum and Annona cherimola), access/license evidence,
+  geography feasibility, provenance assessment and exact proposed responsibility boundaries.
+- Retrieved WFO's publicly identified Flora of China Darwin Core Archive and verified exact WFO-ID
+  description/reference joins, English general descriptions, CC BY 4.0/MBG effective metadata and
+  original bibliography/URLs for both taxa. Classified this publication as public structured but
+  weakly documented for consumers; no current supported live content API was established.
+  Normal browser download succeeded; local curl reported issuer-chain validation failure. No TLS
+  bypass or private harvester access occurred. Kept only minimal description excerpts in the report.
+- Retrieved the officially supported Kew WCVP v16 download (extracted 2026-06-04), verified its
+  README CC BY 3.0/citation, generalized distribution strings, native/introduced/extinct/doubtful
+  flags and TDWG level-3 rows for both taxa. Inspected POWO's element-specific contributors/licenses;
+  Annona UPFC uses carry CC BY-NC-SA 3.0, and poison-use/conservation categories are not warnings.
+  The published historical pykew API hostname returned 403; no narrative API contract was inferred.
+- Recommend source option C with non-overlapping fields: WFO's inspected licensed description
+  subset → `description`; WCVP `geographic_area` → `origin_distribution`. Eligibility is conditional
+  on explicit source choice, exact confirmed source IDs, approved snapshot access and durable
+  per-value attribution. Existing GBIF/CoL remains taxonomy/match only. No third provider surveyed.
+- Native ranges remain informational/unmapped: the official TDWG tables demonstrate KOR vs KP/KR,
+  JAP vs political JP, and ECU vs GAL within EC. Florabase's CLDR places have no reviewed crosswalk;
+  do not guess from labels or erase native/introduced distinctions. Cultivation, uses, warnings and
+  uninspected contributors remain deferred. Mutable links/cache alone cannot retain applied-value
+  license/reference/history; a small source-attribution extension is needed, not implemented.
+- `SOURCE_CAPABILITY_DECISION_REQUIRED`. BOTANY-003 remains `planned`. Only the audit/progress
+  documents changed. Pinned Prettier checks, `python3 scripts/check-features.py` (85 valid features)
+  and `git diff --check` passed. No application tests or canonical gate were rerun, and the earlier
+  unchanged frontend baseline failure was not investigated. No code/API/schema/UI/migration changes,
+  staging, commit, push, delivery, merge or finish.
+
+## 2026-10-02 — BOTANY-003 controlled enrichment audit
+
+- Initialized the existing Codex worktree at `cd29de9` through `make feature-init` on
+  `feat/botany-003-controlled-enrichment`. Audited the identity/profile, external adapter/cache,
+  geographic hierarchy/native-range implementation, migrations, APIs, frontend modules, tests and
+  current domain/architecture/roadmap contracts. The primary checkout and DEV were not modified.
+- Recorded the full field matrix and requested handoff topics in `docs/botany-003-audit.md`.
+  The implemented GBIF/CoL XR matcher supplies taxonomy and diagnostics, while BotanicalProfile
+  owns five narrative sections and exact structured native ranges. There are no safe direct or
+  deterministically normalized writable mappings. Taxonomy remains informational; narratives and
+  native-status geography lack an eligible content contract. Official GBIF taxonomy documentation
+  was checked; no new source capability was probed live.
+- `NEEDS_PRODUCT_DECISION`: choose an approved profile-content source with an example linked taxon,
+  retrieval/attribution/licensing contract and field mapping, or explicitly authorize bounded
+  source-capability investigation. No placeholder proposal/apply API, synthetic taxonomy narrative,
+  additional local fields, receipt or migration was added. BOTANY-003 remains `planned`.
+- Baseline checks passed: 45 backend unit tests (`pytest --no-cov` over
+  `test_external_botany_provider.py`, `test_external_botany_service.py`,
+  `test_external_botany_api.py`, `test_botanical_profile_schemas.py`,
+  `test_botanical_profile_service.py` and `test_botanical_native_range.py`); 15 PostgreSQL tests
+  over external-botany API/migration and botanical-profile API/native-range migration suites;
+  and 3 `ExternalBotanicalDataPanel.test.tsx` tests. PostgreSQL ran in isolated
+  `florabase-integration-botany003-b4a3` with tmpfs storage, upgraded to actual code head
+  `20261002_0030`, then its containers/network were removed without deleting volumes.
+  Integration emitted 12 existing Alembic `path_separator` deprecation warnings.
+- The additional unchanged `App.test.tsx --testNamePattern='profile|native.range'` baseline
+  passed 10 cases and failed the directory/profile case at line 816 while locating the
+  `Annona cherimola.*Cherimoya` button. The failure precedes profile interaction; it is not an
+  enrichment regression. The exact case also failed in isolation. No test expectations, timeouts
+  or unrelated UI were changed. Pinned Prettier checks over both changed documents,
+  `python3 scripts/check-features.py` (85 valid features) and `git diff --check` passed.
+- No application code or API artifacts changed, so application lint/typechecking/API drift and
+  production builds were not run. No Feature Review launch, independent implementation review,
+  operator acceptance, canonical `make feature-verify`, staging, commit, push, delivery, merge
+  or finish was performed.
+
 ## 2026-10-02 — DEV upgrade initializer image portability fix
 
 - Confirmed PR #64's upgrade path built only `backend`, then migrated before invoking

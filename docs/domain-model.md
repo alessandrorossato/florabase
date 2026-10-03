@@ -98,6 +98,27 @@ derived from the current Geography hierarchy, so reparenting changes display wit
 relationship. Existing profile origin/distribution text remains independent and is never silently
 overwritten.
 
+### Approved BOTANY-003 contract — not implemented
+
+The operator approved WFO / Flora of China general descriptions for `description` and Kew WCVP
+`geographic_area` for `origin_distribution`; all other profile fields and structured native ranges
+remain excluded. Retrieval must remain advisory, require exact provider-specific source confirmation,
+and never create or edit a profile. Empty destinations require explicit Apply; populated destinations
+require Current vs Proposed review and concrete Replace confirmation.
+
+The approved persistence requirement is typed, append-only applied-value history retaining nullable
+previous value, applied value and exact source/license/reference/release/application evidence. A
+field-specific association with an application distinguishes current imported content from manual
+content. Editing that field clears its association while preserving history; editing unrelated fields
+does not clear it. Mutable retrieval cache and source links cannot replace this durable evidence.
+Apply must reject stale destination state and stale proposals rather than overwrite intervening edits.
+
+These structures and behaviors are not present in the implemented model. Implementation stopped
+because the approved WFO archive endpoint omits its issuing intermediate certificate; both tested
+backend runtimes already contain the required public root but cannot build the chain. No trust
+exception was introduced. The existing operator-authored profile model above remains authoritative. See
+[the approved contract and access evidence](botany-003-audit.md#31-approved-productsource-decision).
+
 ### Supplier
 
 A Supplier is an installation-wide acquisition source such as a seller, nursery, supermarket,
