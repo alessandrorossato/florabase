@@ -485,8 +485,9 @@ function ApplicationShell() {
                 <DashboardScreen />
               ) : route.section === "harvests" ? (
                 <HarvestScreen
-                  key={route.recordId ?? "directory"}
+                  key={route.recordId ?? route.tab ?? "directory"}
                   initialId={route.recordId}
+                  initialTab={route.tab}
                   startCreating={route.action === "create"}
                   sourceType={route.sourceType}
                   sourceId={route.sourceId}

@@ -153,7 +153,10 @@ def test_correction_keeps_event_and_stable_line_ids() -> None:
     event = Event(id=harvest.event_id, kind="harvest", plant_id=harvest.plant_id)
     db = MagicMock()
     db.scalar.side_effect = [harvest, record, event]
-    db.scalars.return_value = [HarvestItem(id=old_id, harvest_id=harvest.id)]
+    db.scalars.side_effect = [
+        [HarvestItem(id=old_id, harvest_id=harvest.id, display_order=0, material_kind="leaf")],
+        [],
+    ]
     result = service.write_harvest(
         db,
         payload(
@@ -209,7 +212,7 @@ def test_aggregate_delete_unlinks_media_and_removes_event() -> None:
     db = MagicMock()
     harvest = Harvest(id=uuid7(), event_id=uuid7())
     event = Event(id=harvest.event_id)
-    db.scalar.side_effect = [harvest, None]
+    db.scalar.side_effect = [harvest, None, None]
     db.get.return_value = event
     service.delete_harvest(db, harvest.id)
     assert [call.args[0] for call in db.delete.call_args_list] == [harvest, event]

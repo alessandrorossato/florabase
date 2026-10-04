@@ -1,5 +1,184 @@
 # Engineering progress
 
+## 2026-10-04 — HARVEST-002 independent QA and canonical verification
+
+- Independently reviewed the complete feature diff, including migration/model constraints, service
+  locking and inventory transitions, Harvest/Location retention integration, APIs, tests, generated
+  OpenAPI/TypeScript declarations and documentation. No material contract gap, production defect or
+  unresolved product decision was found. Inventory remains independent of collected quantity and
+  biological lifecycle; immutable disposition history and tracked source context remain protected.
+- Verified Sol's PlantScreen/App edits synchronize against the real lazy workspace import using
+  `vi.dynamicImportSettled()` inside React `act`. Existing detail/form assertions and API fixtures are
+  preserved, with no mocks, sleeps, retries or timeout increases. The original Plant and PlantGroup
+  deep links, Events preservation, hash switching, Back/Forward and return to the directory passed;
+  PlantGroup also passed alone as a cold first import. The two full affected suites passed **107 tests**.
+- First canonical gate passed: feature graph, workflow checks, Ruff, mypy across **247** backend source
+  files, strict TypeScript, zero-warning ESLint, Prettier, API drift, **578** backend unit tests at
+  **90.14%** coverage, **359** frontend tests across **39** files, **458** PostgreSQL integration tests,
+  production builds and migration upgrade/downgrade/re-upgrade cycle. Final gate is being repeated on
+  this documentation-complete tree so its receipt matches the committed source digest.
+- Browser smoke remained unavailable because the Review frontend/backend were stopped; no browser
+  result is claimed. No production correction was needed.
+
+## 2026-10-04 — Plant route test synchronization
+
+- Investigated Luna's preserved Plant/PlantGroup deep-link blocker before changing any implementation.
+  Reproduced `#/plants/01900000-0000-7000-8000-000000000701` and
+  `#/plant-groups/01900000-0000-7000-8000-000000000702`. Temporary tracing showed correct route parsing
+  (`plants`, requested record ID, `plant`/`group`) and correct PlantScreen props. The real cold lazy
+  PlantScreen import resolved after **1,147 ms**, just after the original **1,000 ms** detail-query
+  deadline; the requested detail and Print label link then appeared and the workspace placeholder
+  disappeared. The next warm case passed. This clarifies the earlier blocker record: the observed
+  failure was test synchronization, not an indefinitely suspended production workspace. All tracing
+  was removed and the instrumented production files restored byte-for-byte.
+- With explicit operator approval, wrapped mocked session restoration and the real dynamic-import
+  completion in React `act` in the two existing Plant deep-link cases. Applied the same synchronization
+  to App's parameterized direct-creation routes after its first cold identity case failed in the
+  combined focused run but resolved correctly in isolation. Existing detail/form assertions, real
+  lazy imports, API fixtures, query/test timeouts and error boundaries remain unchanged. No production
+  file was changed for this handoff, and HARVEST-002 semantics and Luna's existing changes are retained.
+- Added a real hash/history regression covering Plant → PlantGroup switching, `?tab=events`, native
+  Back/Forward events and return to `#/plants`. The test awaits actual hash/history events inside
+  `act`, without sleeps, retries, global test configuration or mocked workspaces.
+- Focused container validation: **126 passed across six files** (`App`, `PlantScreen`,
+  `Propagation002`, App lazy/transition and WorkspaceBoundary). After callback lint corrections,
+  App/PlantScreen again passed **107 tests**; the final event-synchronization adjustment passed both
+  original deep-link regressions plus the history case (**3 passed**), and PlantGroup passed as a
+  separate cold first import (**1 passed**). `pnpm format:check`, strict `pnpm typecheck`,
+  `pnpm lint` with zero warnings and `git diff --check` passed.
+- Optional browser smoke was unavailable: localhost:15174 refused the connection; read-only
+  `make feature-review-status` confirmed Review frontend/backend exited, with the database healthy
+  at revision `20261003_0031`. No Review volumes or credentials changed. No backend suite, canonical
+  `make feature-verify`, staging, commit, push, delivery, merge or primary checkout modification was
+  performed in this handoff. Independent review and final verification remain with Luna.
+
+## 2026-10-03 — HARVEST-002 independent final-review verification
+
+- Completed an independent review of the current feature tree, including the inventory ownership,
+  quantity/state rules, serialized writes, source-context restrictions, Harvest/Event separation,
+  Location projections, authenticated API boundary, generated contracts and operator-reviewed UI.
+  No HARVEST-002 defect or unresolved domain decision was found. Final verification is blocked by
+  an unrelated existing Plant/PlantGroup deep-link test that leaves the workspace on its loading
+  placeholder.
+- Extended the disposable PostgreSQL concurrency matrix to cover simultaneous tracking of the same
+  HarvestItem and competing use-all dispositions. Both serialize on the owner-first locks; duplicate
+  tracking conflicts without a second inventory and the losing use-all conflicts after seeing the
+  depleted balance. Updated existing full-schema integration expectations for the two new inventory
+  tables and the Harvest inventory Location scope.
+- Added unit coverage for inventory API filter forwarding, error translation/rollback and write-route
+  commit/refresh behavior to keep the required backend coverage threshold. Updated older Location UI
+  expectations for the additional storage scope and fifth usage-count row.
+- `make test-integration`: **458 passed, 571 deselected** against a unique disposable PostgreSQL
+  Compose project, including HARVEST inventory and migration tests. The initial run exposed only the
+  stale schema expectations above; the corrected full rerun passed. `git diff --check` and Python
+  compile checks passed. The full frontend suite passed **358 tests across 39 files** after updating
+  the two stale Location assertions. `make feature-verify` passed workflow and quality checks,
+  including backend unit coverage at 90.14%, then failed in the unrelated Plants deep-link frontend
+  test. The test also fails in isolation against the `origin/main` App.tsx and its regression test is
+  preserved. No HARVEST-002 implementation files changed during the final gate attempt. Verification
+  remains incomplete; no commit, push, delivery, merge or primary checkout changes were made.
+
+## 2026-10-03 — HARVEST-002 operator UAT filter and peer-view corrections
+
+- Continued only in `feat/harvest-002-inventory` in the existing `8dfa` Codex worktree.
+  Reused Geography's peer-view button styling with `aria-pressed` and native Tab/Enter/Space
+  behavior; no DetailTabs or dangling tabpanel relationships. `#/harvests` and
+  `#/harvests?tab=stored-material` retain selected view across Back/Forward and refresh.
+- Added the shared searchable ReferencePicker to both directories, default All botanical
+  identities, with an accessible clear action and restored input focus. Choices are exact,
+  deduplicated source identity references. Harvests reuse the existing `botanical_identity_id`
+  API query and preserve the unfiltered choices while narrowed; Stored material filters its
+  existing source projection locally. Identity composes with text/material/source type for
+  Harvests and text/state/material/Location for Stored material. Misleading titles cannot
+  establish membership. Global-empty and filtered-empty messages remain distinct. This UAT
+  correction changed no backend, schema, generated contract or domain relationship.
+- Aligned labels and 44px controls in compact desktop grids, two-column tablet grids and
+  mobile full-width search/identity plus paired small selectors. Browser review of both URLs
+  at **1440×844**, **1024×844** and **390×844** confirmed selected state, keyboard selection and
+  clearing, exact identity/material/source composition, filtered-empty results and no page-wide
+  horizontal overflow. Review initially showed no Harvests; three explicitly labelled synthetic
+  UAT Harvests and tracked lines across two identities were added through existing services,
+  including Plant/PlantGroup sources and an intentionally misleading cross-identity title.
+  No existing Review records or volumes were removed or credentials changed.
+- `make feature-review-up` and `make feature-review-status` passed: frontend/backend/DB healthy,
+  source is this worktree, unchanged HEAD `519b9f0887b445fee84b19ea3ff96023a8573fac`, migration
+  head/current `20261003_0031`, same `florabase-feature-review` DB/media/dependency volume names.
+- Focused baseline **26 passed**. Final frontend **32 passed**: Harvest 9, Stored material 14,
+  API query serialization 1, ReferencePicker 4, native reference interactions 2, plus the two
+  targeted App route/keyboard cases (65 unrelated App cases intentionally skipped). Strict
+  TypeScript, zero-warning ESLint, Prettier and `git diff --check` passed. Initial lint/import
+  cleanup findings were corrected and the affected checks rerun successfully. No backend checks
+  or API generation were needed for this frontend-only correction. Updated only the current UI
+  contract and this milestone; prior implementation evidence remains intact.
+- Operator visual acceptance remains pending. Work remains unstaged and uncommitted; no push,
+  delivery, `make feature-verify`, new feature/worktree or primary checkout changes occurred.
+  Review remains available at `http://localhost:15174`; screenshots remain outside the repository.
+
+## 2026-10-03 — HARVEST-002 implemented for visual review
+
+- Worked only in `/home/alessandro/.codex/worktrees/8dfa/florabase` on
+  `feat/harvest-002-inventory`, attached with `make feature-init` from clean detached
+  `origin/main`/HEAD `519b9f0887b445fee84b19ea3ff96023a8573fac`. HEAD remains unchanged.
+  Primary `main` remains clean. No additional worktree, staging, commit, push, delivery,
+  merge, feature-finish or canonical `make feature-verify` occurred.
+- Added explicit zero/one inventory per historical HarvestItem and owned disposition facts.
+  Positive finite NUMERIC exact/approximate count or mg/g/kg weight and unknown quantity stay
+  independent of collected quantity. Active/depleted, storage Location, current correction,
+  controlled consumed/processed/discarded/gifted/used_for_propagation, partial/use-all and typed
+  immutable before/after snapshots follow [the inventory contract](harvest-inventory.md).
+  Exact partial arithmetic preserves precision beyond 28 digits; approximate remainder requires
+  confirmation; unknown stays unknown; use-all preserves precision and depletes.
+- Harvest → inventory → Location locks refresh current state and serialize competing requests.
+  Restrictive source-context FKs, item-kind/source triggers, unique item ownership, quantity/date/
+  transition/snapshot checks and immutable disposition updates supplement service guards. Harvest
+  correction retains item IDs and stock/history; deletion or tracked-line removal/kind changes
+  conflict. History prevents tracking removal. No biological lifecycle/quantity/Location mutation,
+  source Event, SeedLot conversion, propagation receipt, lineage edge, new media target or global
+  search expansion was added.
+- Inventory reads batch source/identity/Harvest context and storage paths with a history-existence
+  flag; history loads on demand. The existing single recursive Location aggregate includes the
+  fifth canonical inventory assignment type, active excluding depleted and total retaining it.
+  Query evidence covers twelve rows and a deep tree within ten combined statements; the existing
+  Location directory still proves two domain queries. Existing Locations migrate with storage
+  eligibility disabled; scope removal/deletion guards retain assigned depleted material.
+- Revision `20261003_0031` follows `20261002_0030`: no inventory backfill, historical quantity and
+  owned Event retained across upgrade, empty downgrade/re-upgrade passes, populated downgrade
+  refuses before destructive operations. Harvest-only Location scope is also guarded on downgrade.
+  Review database reports the same head. Generated OpenAPI and TypeScript declarations match source.
+- Focused checks: initial Harvest/Location unit baseline **56 passed**; final focused backend
+  **77 passed** (Harvest 44, inventory 21, Location 12); disposable PostgreSQL **47 passed**
+  (inventory 18, migration 1, existing Harvest/Location coverage 28). Real transactions verify
+  7-vs-7 consumption at balance 10, disposition-vs-correction, tracking-vs-Harvest deletion and
+  tracking-vs-material-kind correction. Tests retain genuinely preloaded ORM state, observe a real
+  PostgreSQL lock wait and verify a valid refreshed outcome without arbitrary sleeps. Source and
+  collected-quantity correction preserve stock/history; direct SQL cannot edit disposition facts.
+  Hostile Origin, missing CSRF and unauthenticated access are rejected. Six pre-existing Alembic
+  configuration deprecation warnings remain; no tests/checks/timeouts were weakened.
+- Frontend focused **22 passed** (Stored material 13, Harvest 7, native Reference interactions 2).
+  Backend Ruff and formatting, strict mypy (247 source files), frontend Prettier, zero-warning ESLint,
+  strict TypeScript, `make api-check`, feature graph (86 valid features), production backend runtime
+  image and frontend production build passed. `git diff --check` passed. Focused integration fixtures
+  use unique tmpfs PostgreSQL Compose projects and scoped container/network cleanup without volume
+  deletion. Initial import/fixture-cleanup/test-selector/lint failures were corrected and rerun.
+- Feature Review is healthy at `http://localhost:15174`, project `florabase-feature-review`, with live
+  source from this worktree and isolated review DB/media/dependency volumes. Owner was created through
+  the supported password-stdin bootstrap; credentials/fixture scripts/screenshots stayed outside the
+  repository. Synthetic examples cover untracked Harvests, exact seeds, approximate weight, unknown
+  quantity, retained/depleted material, mixed tracked/untracked lines, dead Plant and completed
+  PlantGroup, long botanical/source names and a five-level storage path.
+- Browser implementation review at **1440×844**, **1024×844** and **390×844** checked directory/detail,
+  tracking below collected amount, Location keyboard selection, each of the five categories, exact
+  partial consumed (8→5 while Collected stays 10), approximate processed (confirmed About 60 g),
+  unknown gifted partial, propagation use-all, discarded use-all, depletion, independent correction
+  after history, never-used removal and retained mobile history. Filter-empty and depleted directory
+  states work. No page-wide horizontal overflow was observed. Named dialogs, labelled quantity
+  controls, visible focus, focus trapping, Escape/launcher restoration and focused server conflicts
+  worked. Active/depleted and quantity precision use text. Mobile dialogs scroll within the viewport.
+- HARVEST-002 is `implemented`, not `verified`. No unresolved implementation defect or new product
+  ambiguity was found. Operator visual acceptance and independent Luna review/final canonical gate
+  remain outstanding by the requested phase boundary. Work is intentionally unstaged/uncommitted:
+  `READY_FOR_VISUAL_REVIEW`.
+
 ## 2026-10-02 — BOTANY-003 TLS diagnosis: missing provider intermediate
 
 - Preserved all approved source/replacement findings on the current branch at `cd29de9`. Inspected
@@ -2138,7 +2317,7 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20261001_0029`; ATTACHMENT-005 and HARVEST-001 are implemented pending visual acceptance.
+- Alembic head: `20261003_0031`; HARVEST-002 is implemented pending visual acceptance and independent QA.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the

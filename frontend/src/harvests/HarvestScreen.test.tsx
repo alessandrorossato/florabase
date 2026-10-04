@@ -21,6 +21,10 @@ vi.mock("./api", async (original) => ({
   saveHarvest: vi.fn(),
   deleteHarvest: vi.fn(),
 }));
+vi.mock("./inventoryApi", async (original) => ({
+  ...(await original<typeof import("./inventoryApi")>()),
+  inventoryList: vi.fn(() => Promise.resolve([])),
+}));
 vi.mock("../plants/api", () => ({
   listPlants: vi.fn(() =>
     Promise.resolve([
@@ -355,4 +359,87 @@ describe("Atomic Harvest form", () => {
     expect(screen.getByRole("alert")).toHaveTextContent("Choose a source");
     expect(api.saveHarvest).not.toHaveBeenCalled();
   });
+});
+
+it("filters exact source identity across Plants and groups and composes search/material/source", async () => {
+  const group: Harvest = {
+    ...harvest,
+    id: "group-harvest",
+    display_title: "Group collection",
+    source: { ...harvest.source, id: "group", type: "plant_group" },
+    items: [{ ...harvest.items[0], material_kind: "seed" }],
+  };
+  const other: Harvest = {
+    ...harvest,
+    id: "other-harvest",
+    display_title: "Coffea arabica misleading title",
+    source: {
+      ...harvest.source,
+      botanical_identity: { id: "identity-2", display_label: "Acer palmatum" },
+    },
+  };
+  const rows = [harvest, group, other];
+  vi.mocked(api.listHarvests).mockImplementation((_signal, identity) =>
+    Promise.resolve(
+      rows.filter(
+        (row) => !identity || row.source.botanical_identity.id === identity,
+      ),
+    ),
+  );
+  const user = userEvent.setup();
+  wrap(<HarvestScreen />);
+  await screen.findByRole("button", { name: /misleading title/ });
+  const picker = screen.getByRole("combobox", { name: "Botanical identity" });
+  expect(picker).toHaveAttribute("placeholder", "All botanical identities");
+  await user.type(picker, "Coffea");
+  await user.keyboard("{Enter}");
+  await waitFor(() => {
+    expect(api.listHarvests).toHaveBeenLastCalledWith(
+      expect.any(AbortSignal),
+      "identity-1",
+    );
+  });
+  expect(
+    screen.queryByRole("button", { name: /misleading title/ }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByText("2 harvests")).toBeVisible();
+  await user.selectOptions(screen.getByLabelText("Material"), "seed");
+  expect(screen.getByText("1 harvest")).toBeVisible();
+  await user.selectOptions(screen.getByLabelText("Source type"), "plant");
+  expect(screen.getByText("No Harvests match these filters.")).toBeVisible();
+  await user.selectOptions(screen.getByLabelText("Source type"), "plant_group");
+  await user.type(screen.getByLabelText("Search Harvests"), "missing");
+  expect(screen.getByText("No Harvests match these filters.")).toBeVisible();
+  await user.clear(screen.getByLabelText("Search Harvests"));
+  expect(screen.getByText("1 harvest")).toBeVisible();
+  await user.click(
+    screen.getByRole("button", { name: "Clear botanical identity filter" }),
+  );
+  const cleared = screen.getByRole("combobox", { name: "Botanical identity" });
+  expect(cleared).toHaveValue("");
+  expect(cleared).toHaveFocus();
+  await user.keyboard("{Escape}");
+  await user.selectOptions(screen.getByLabelText("Material"), "");
+  await user.selectOptions(screen.getByLabelText("Source type"), "");
+  await screen.findByRole("button", { name: /misleading title/ });
+});
+
+it("distinguishes an empty collection from an empty identity result and retains choices", async () => {
+  vi.mocked(api.listHarvests)
+    .mockResolvedValueOnce([harvest])
+    .mockResolvedValue([]);
+  const user = userEvent.setup();
+  const view = wrap(<HarvestScreen />);
+  await screen.findByRole("button", { name: /Coffee — Fruit harvest/ });
+  await user.type(
+    screen.getByRole("combobox", { name: "Botanical identity" }),
+    "Coffea",
+  );
+  await user.keyboard("{Enter}");
+  expect(
+    await screen.findByText("No Harvests match these filters."),
+  ).toBeVisible();
+  view.unmount();
+  wrap(<HarvestScreen />);
+  expect(await screen.findByText(/No Harvests recorded yet/)).toBeVisible();
 });

@@ -132,10 +132,9 @@ operator reprioritizes them. They are not release-readiness dependencies.
   Quick Preview visual, and a consistent absent-image placeholder. Attachment
   role/link semantics and schema remain a separate decision; ATTACHMENT-005 supplies shared
   storage, but adds no Supplier media UI.
-- **Location descendant usage counts** remain a separate functional candidate.
-  Parent usage should distinguish `Direct here` from `Including descendants`
-  (for example, 2 directly and 7 including sublocations). The UI polish retains
-  existing direct counts and implements no hierarchical aggregation.
+- **Location descendant usage counts** are implemented by LOCATION-003. HARVEST-002
+  extends the same direct/inclusive projections to managed harvested material;
+  operator scope eligibility remains explicit.
 
 - `BOTANY-003` remains `planned`, but does **not** block `0.1.0`. The operator approved WFO / Flora
   of China general descriptions → `description` and Kew WCVP `geographic_area` → `origin_distribution`.
@@ -414,9 +413,10 @@ ATTACHMENT-005 establishes reusable assets and exact record links; it does not e
 Each milestone requires a separate bounded increment and product contract before implementation.
 
 1. HARVEST-001 structured harvest records are implemented for operator visual acceptance: explicit
-   sources, ordered materials, quantities, partial dates, owned Events and shared media. Future Harvest
-   material inventory/disposition remains separate: stored remainder, consumed/processed/discarded/
-   gifted material, propagation use, explicit SeedLot conversion and storage Location.
+   sources, ordered materials, quantities, partial dates, owned Events and shared media.
+   HARVEST-002 is the selected P1 pre-1.0 increment for optional stored remainder, Location and
+   consumed/processed/discarded/gifted/propagation-use history. Historical collected quantities stay
+   independent. Explicit harvested seed → SeedLot conversion is a separate future increment.
 2. Supplier imagery using MediaAsset after its separate target/role contract is selected. Supplier
    remains excluded from current media links.
 3. Broader global search, saved views and explicit bulk operations beyond the implemented SEARCH-001

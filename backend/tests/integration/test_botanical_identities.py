@@ -114,6 +114,8 @@ def test_schema_uses_native_types_named_constraints_and_only_one_botanical_table
         "geographic_places",
         "harvests",
         "harvest_items",
+        "harvest_material_dispositions",
+        "harvest_material_inventory",
         "locations",
         "record_media_links",
         "login_throttles",

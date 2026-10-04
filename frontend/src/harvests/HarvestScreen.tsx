@@ -12,10 +12,18 @@ import { TaskDialog } from "../components/TaskDialog";
 import { formatPartialDate } from "../events/eventData";
 import { PhotosSection } from "../photos/PhotosSection";
 import { RecordVisual } from "../photos/RecordVisual";
+import {
+  StoredMaterialSection,
+  StoredMaterialDirectory,
+} from "./StoredMaterial";
+import { BotanicalIdentityFilter } from "./BotanicalIdentityFilter";
+import type { ReferenceChoice } from "../seed-lots/ReferencePicker";
+import { inventoryError } from "./inventoryApi";
 import { HarvestForm } from "./HarvestForm";
 import {
   deleteHarvest,
   getHarvest,
+  identityChoices,
   listHarvests,
   materialSummary,
   materials,
@@ -55,7 +63,7 @@ function Items({ harvest }: { harvest: Harvest }) {
                 ?.label
             }
           </strong>
-          <span>{quantityLabel(item)}</span>
+          <span>Collected: {quantityLabel(item)}</span>
           {item.description && (
             <p className="preserve-lines">{item.description}</p>
           )}
@@ -66,15 +74,18 @@ function Items({ harvest }: { harvest: Harvest }) {
 }
 export function HarvestScreen({
   initialId,
+  initialTab,
   startCreating = false,
   sourceType,
   sourceId,
 }: {
   initialId?: string;
+  initialTab?: string;
   startCreating?: boolean;
   sourceType?: "plant" | "plant_group";
   sourceId?: string;
 }) {
+  const storedMode = !initialId && initialTab === "stored-material";
   const auth = useAuth();
   const headingId = useId();
   const [records, setRecords] = useState<Harvest[] | null>(null);
@@ -91,17 +102,25 @@ export function HarvestScreen({
   const [query, setQuery] = useState("");
   const [material, setMaterial] = useState("");
   const [type, setType] = useState("");
+  const [identity, setIdentity] = useState("");
+  const [identities, setIdentities] = useState<ReferenceChoice[]>([]);
   useEffect(() => {
+    if (storedMode) return;
     const controller = new AbortController();
     const request = initialId
       ? getHarvest(initialId, controller.signal)
-      : listHarvests(controller.signal);
+      : listHarvests(controller.signal, identity);
     void request
       .then((result) => {
         if (controller.signal.aborted) return;
         setError(null);
-        if (Array.isArray(result)) setRecords(result);
-        else setDetail(result);
+        if (Array.isArray(result)) {
+          setRecords(result);
+          if (!identity)
+            setIdentities(
+              identityChoices(result.map((record) => record.source)),
+            );
+        } else setDetail(result);
       })
       .catch((failure: unknown) => {
         if (controller.signal.aborted) return;
@@ -112,9 +131,10 @@ export function HarvestScreen({
     return () => {
       controller.abort();
     };
-  }, [initialId, attempt, auth]);
+  }, [initialId, storedMode, attempt, identity, auth]);
   const filtered = records?.filter(
     (record) =>
+      (!identity || record.source.botanical_identity.id === identity) &&
       (!type || record.source.type === type) &&
       (!material ||
         record.items.some((item) => item.material_kind === material)) &&
@@ -147,7 +167,9 @@ export function HarvestScreen({
         auth.sessionExpired();
       else
         setError(
-          "Could not delete the Harvest. Unlink any media attached directly to its owned Event, then retry.",
+          failure instanceof ApiError && failure.status === 409
+            ? inventoryError(failure)
+            : "Could not delete the Harvest. Unlink any media attached directly to its owned Event, then retry.",
         );
     } finally {
       setPending(false);
@@ -174,6 +196,28 @@ export function HarvestScreen({
           )
         }
       />
+      {!initialId && (
+        <nav className="workspace-view-nav" aria-label="Harvest views">
+          <button
+            type="button"
+            aria-pressed={!storedMode}
+            onClick={() => {
+              window.location.assign("#/harvests");
+            }}
+          >
+            Harvests
+          </button>
+          <button
+            type="button"
+            aria-pressed={storedMode}
+            onClick={() => {
+              window.location.assign("#/harvests?tab=stored-material");
+            }}
+          >
+            Stored material
+          </button>
+        </nav>
+      )}
       {error && (
         <div className="notice notice--error" role="alert">
           <p>{error}</p>
@@ -267,6 +311,7 @@ export function HarvestScreen({
               </a>{" "}
               · <a href="#/events">Event journal</a>
             </p>
+            <StoredMaterialSection harvest={detail} />
             <PhotosSection
               key={detail.id}
               target="harvest"
@@ -283,6 +328,8 @@ export function HarvestScreen({
         ) : (
           !error && <p role="status">Loading Harvest detail…</p>
         )
+      ) : storedMode ? (
+        <StoredMaterialDirectory />
       ) : (
         <>
           <div className="harvest-filters">
@@ -292,6 +339,11 @@ export function HarvestScreen({
               value={query}
               onChange={setQuery}
               placeholder="Source, title or botanical identity"
+            />
+            <BotanicalIdentityFilter
+              choices={identities}
+              value={identity}
+              onChange={setIdentity}
             />
             <div className="field">
               <label htmlFor={`${headingId}-material`}>Material</label>
@@ -335,7 +387,7 @@ export function HarvestScreen({
                 </p>
                 {filtered.length === 0 ? (
                   <p className="empty-state">
-                    {records?.length
+                    {identity || records?.length
                       ? "No Harvests match these filters."
                       : "No Harvests recorded yet. Record material collected from a Plant or Plant group."}
                   </p>

@@ -1277,6 +1277,167 @@
         "title": "DirectOriginKind",
         "type": "string"
       },
+      "DispositionCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "consumed",
+              "processed",
+              "discarded",
+              "gifted",
+              "used_for_propagation"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "partial",
+              "use_all"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "occurred_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HarvestQuantity-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resulting_quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HarvestQuantity-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "kind",
+          "mode"
+        ],
+        "title": "DispositionCreate",
+        "type": "object"
+      },
+      "DispositionResponse": {
+        "properties": {
+          "after": {
+            "$ref": "#/components/schemas/InventorySnapshot"
+          },
+          "before": {
+            "$ref": "#/components/schemas/InventorySnapshot"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "inventory_id": {
+            "format": "uuid",
+            "title": "Inventory Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "consumed",
+              "processed",
+              "discarded",
+              "gifted",
+              "used_for_propagation"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "partial",
+              "use_all"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "occurred_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HarvestQuantity-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "inventory_id",
+          "kind",
+          "mode",
+          "occurred_on",
+          "quantity",
+          "before",
+          "after",
+          "notes",
+          "created_at"
+        ],
+        "title": "DispositionResponse",
+        "type": "object"
+      },
       "EventCreate": {
         "additionalProperties": false,
         "properties": {
@@ -3475,6 +3636,193 @@
         "title": "ImportResultResponse",
         "type": "object"
       },
+      "InventoryLocation": {
+        "properties": {
+          "display_path": {
+            "title": "Display Path",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "display_path"
+        ],
+        "title": "InventoryLocation",
+        "type": "object"
+      },
+      "InventoryResponse": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "description": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Description"
+          },
+          "harvest_id": {
+            "format": "uuid",
+            "title": "Harvest Id",
+            "type": "string"
+          },
+          "harvest_item_id": {
+            "format": "uuid",
+            "title": "Harvest Item Id",
+            "type": "string"
+          },
+          "harvest_title": {
+            "title": "Harvest Title",
+            "type": "string"
+          },
+          "has_dispositions": {
+            "title": "Has Dispositions",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/InventoryLocation"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "material_kind": {
+            "$ref": "#/components/schemas/MaterialKind"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HarvestQuantity-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source": {
+            "$ref": "#/components/schemas/HarvestSource"
+          },
+          "state": {
+            "enum": [
+              "active",
+              "depleted"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "quantity",
+          "id",
+          "harvest_item_id",
+          "harvest_id",
+          "harvest_title",
+          "source",
+          "material_kind",
+          "description",
+          "location",
+          "has_dispositions",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "InventoryResponse",
+        "type": "object"
+      },
+      "InventorySnapshot": {
+        "properties": {
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HarvestQuantity-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "enum": [
+              "active",
+              "depleted"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "quantity"
+        ],
+        "title": "InventorySnapshot",
+        "type": "object"
+      },
+      "InventoryWrite": {
+        "additionalProperties": false,
+        "properties": {
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HarvestQuantity-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "state": {
+            "enum": [
+              "active",
+              "depleted"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "quantity"
+        ],
+        "title": "InventoryWrite",
+        "type": "object"
+      },
       "LineageResponse": {
         "properties": {
           "ancestors": {
@@ -3926,6 +4274,9 @@
       "LocationCollectionUsage": {
         "description": "Per-record counts; plants here excludes PlantGroups, unlike legacy usage.",
         "properties": {
+          "harvest_inventory": {
+            "$ref": "#/components/schemas/LocationUsageCount"
+          },
           "plant_groups": {
             "$ref": "#/components/schemas/LocationUsageCount"
           },
@@ -4138,13 +4489,17 @@
         "enum": [
           "plants",
           "sowings",
-          "seed_lots"
+          "seed_lots",
+          "harvest_inventory"
         ],
         "title": "LocationUsageScope",
         "type": "string"
       },
       "LocationUsageSummary": {
         "properties": {
+          "harvest_inventory": {
+            "$ref": "#/components/schemas/LocationUsageCount"
+          },
           "plants": {
             "$ref": "#/components/schemas/LocationUsageCount"
           },
@@ -13551,6 +13906,460 @@
         "summary": "Retire",
         "tags": [
           "geographic-places"
+        ]
+      }
+    },
+    "/api/v1/harvest-inventory": {
+      "get": {
+        "operationId": "listHarvestInventory",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "harvest_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Harvest Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "active",
+                    "depleted"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "in": "query",
+            "name": "material_kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/MaterialKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Material Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "location_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Location Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/InventoryResponse"
+                  },
+                  "title": "Response Listharvestinventory",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List All",
+        "tags": [
+          "harvest inventory"
+        ]
+      }
+    },
+    "/api/v1/harvest-inventory/{inventory_id}": {
+      "delete": {
+        "operationId": "removeHarvestTracking",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inventory_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inventory Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove",
+        "tags": [
+          "harvest inventory"
+        ]
+      },
+      "get": {
+        "operationId": "getHarvestInventory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inventory_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inventory Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read",
+        "tags": [
+          "harvest inventory"
+        ]
+      },
+      "put": {
+        "operationId": "correctHarvestInventory",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inventory_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inventory Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Correct",
+        "tags": [
+          "harvest inventory"
+        ]
+      }
+    },
+    "/api/v1/harvest-inventory/{inventory_id}/dispositions": {
+      "get": {
+        "operationId": "listHarvestDispositions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inventory_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inventory Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DispositionResponse"
+                  },
+                  "title": "Response Listharvestdispositions",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "History",
+        "tags": [
+          "harvest inventory"
+        ]
+      },
+      "post": {
+        "operationId": "recordHarvestDisposition",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inventory_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inventory Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DispositionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DispositionResponse"
+                  },
+                  "title": "Response Recordharvestdisposition",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Disposition",
+        "tags": [
+          "harvest inventory"
+        ]
+      }
+    },
+    "/api/v1/harvest-items/{item_id}/inventory": {
+      "post": {
+        "operationId": "trackHarvestMaterial",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "item_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Item Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InventoryWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InventoryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create",
+        "tags": [
+          "harvest inventory"
         ]
       }
     },

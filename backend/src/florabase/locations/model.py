@@ -24,7 +24,10 @@ class Location(Base):
             "parent_id IS NULL OR parent_id <> id", name="ck_locations_not_self_parent"
         ),
         CheckConstraint(
-            "supports_plants OR supports_sowings OR supports_seed_lots",
+            (
+                "supports_plants OR supports_sowings OR supports_seed_lots OR "
+                "supports_harvest_inventory"
+            ),
             name="ck_locations_at_least_one_scope",
         ),
     )
@@ -37,6 +40,9 @@ class Location(Base):
     supports_plants: Mapped[bool] = mapped_column(Boolean(), default=True, server_default=true())
     supports_sowings: Mapped[bool] = mapped_column(Boolean(), default=True, server_default=true())
     supports_seed_lots: Mapped[bool] = mapped_column(Boolean(), default=True, server_default=true())
+    supports_harvest_inventory: Mapped[bool] = mapped_column(
+        Boolean(), default=False, server_default="false"
+    )
     retired_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(

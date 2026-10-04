@@ -631,6 +631,24 @@
       "status": "implemented"
     },
     {
+      "id": "HARVEST-002",
+      "category": "harvest",
+      "description": "Manage stored harvested material and explicit disposition history",
+      "acceptance_criteria": [
+        "Explicit opt-in creates at most one current inventory per HarvestItem without backfill or rewriting collected quantities; exact, approximate and unknown current quantities remain independent",
+        "Active/depleted state, optional scope-compatible storage Location and ordinary current-state correction preserve historical Harvest and disposition facts",
+        "Consumed, processed, discarded, gifted and used_for_propagation dispositions atomically retain typed before/after snapshots; exact partial usage derives a positive compatible remainder, approximate usage requires confirmed approximate remainder, unknown stays unknown and explicit use-all depletes",
+        "Fresh owner/inventory locks serialize competing disposition, correction and source-mutation requests; restrictive relational guards retain source context and block deletion or material-kind changes while tracked",
+        "Stored material is a peer Harvest workspace view with distinct collected/remaining labels, focused tracking/disposition/correction forms and retained accessible history across desktop, tablet and mobile",
+        "Inventory directory and direct/descendant-inclusive Location projections use bounded batched queries; depleted inventory is excluded from current active counts and retained in totals",
+        "Authenticated reads and owner/CSRF/exact-Origin mutations use generated authoritative contracts; migration has no backfill and guards populated downgrade while empty downgrade/re-upgrade works",
+        "No source lifecycle or Event effects, lineage edge, SeedLot conversion, propagation record/receipt, new media target, global-search expansion or generic inventory framework is introduced"
+      ],
+      "dependencies": ["HARVEST-001", "LOCATION-003"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
       "id": "GERMINATION-001",
       "category": "sowing",
       "description": "Add dated germination observations and derived statistics",

@@ -50,7 +50,10 @@ function payloadFrom(form: HTMLFormElement): LocationCreate {
     .getAll("usage_scopes")
     .filter(
       (value): value is LocationUsageScope =>
-        value === "plants" || value === "sowings" || value === "seed_lots",
+        value === "plants" ||
+        value === "sowings" ||
+        value === "seed_lots" ||
+        value === "harvest_inventory",
     );
   return {
     name: typeof name === "string" ? name : "",
@@ -63,16 +66,29 @@ const scopeLabels: Record<LocationUsageScope, string> = {
   plants: "Plants",
   sowings: "Sowings",
   seed_lots: "Seed lots",
+  harvest_inventory: "Stored material",
 };
 
-const allScopes: LocationUsageScope[] = ["plants", "sowings", "seed_lots"];
+const allScopes: LocationUsageScope[] = [
+  "plants",
+  "sowings",
+  "seed_lots",
+  "harvest_inventory",
+];
 
-const recordKinds = ["plants", "plant_groups", "sowings", "seed_lots"] as const;
+const recordKinds = [
+  "plants",
+  "plant_groups",
+  "sowings",
+  "seed_lots",
+  "harvest_inventory",
+] as const;
 const recordLabels = {
   plants: "Plants",
   plant_groups: "Plant groups",
   sowings: "Sowings",
   seed_lots: "Seed lots",
+  harvest_inventory: "Stored material",
 };
 
 function CompactUsage({ location }: { location: LocationResponse }) {
@@ -142,6 +158,7 @@ function CollectionUsage({ location }: { location: LocationResponse }) {
         <a href="#/plants">Browse plants and groups</a>
         <a href="#/sowings">Browse sowings</a>
         <a href="#/seeds">Browse seed lots</a>
+        <a href="#/harvests?tab=stored-material">Browse stored material</a>
       </div>
     </section>
   );
@@ -594,7 +611,7 @@ export function LocationScreen({
           title="Locations"
           titleId="locations-title"
           eyebrow="Collection organization"
-          description="Manage where seeds, sowings, plants, and groups are kept."
+          description="Manage where seeds, sowings, plants, groups, and harvested material are kept."
           actions={
             <button
               type="button"
@@ -644,6 +661,7 @@ export function LocationScreen({
                   <option value="seed_lots">Seeds</option>
                   <option value="sowings">Sowings</option>
                   <option value="plants">Plants</option>
+                  <option value="harvest_inventory">Stored material</option>
                 </select>
               </div>
               {directory.status === "loading" && (

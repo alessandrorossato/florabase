@@ -132,14 +132,20 @@ full detail. Existing shared-media upload/link/edit/primary controls are reused.
 Operator acceptance is still required; HARVEST-001 remains `implemented`. This branch is kept unstaged
 and uncommitted. No branch switch, commit, push, delivery, merge or feature-finish is authorized.
 
-## Future pre-1.0 candidate: harvested-material inventory / disposition
+## Managed stored material and future seed conversion
 
-A separate bounded contract may track remaining stored material, consumption, processing, discard,
-gifting, propagation use, explicit conversion into SeedLot and storage Location. Harvested seeds now
-record collection only. An explicit “Add to seed inventory” transition is future work. Shared MediaAsset
-already permits future domain reuse; no stock, consumption, recipes, sales, orders, automatic state
-mutation, custom vocabulary framework, workflow engine, analytics or Harvest-specific QR workflow is
-implemented here.
+HARVEST-002 adds explicit opt-in managed stored remainder, storage Location and retained dispositions.
+HarvestItem.quantity continues to mean originally recorded collected amount; inventory balance means
+remaining now. Harvest corrections retain existing item rows/UUIDs. Tracked material lines cannot be
+omitted, moved to another Harvest or changed to another material kind. Harvest deletion requires
+explicit removal of every eligible never-used inventory; disposition history blocks tracking removal.
+Source/date/label/notes/collected quantity corrections never replay inventory or dispositions.
+See [managed stored material](harvest-inventory.md).
+
+An explicit harvested seed → SeedLot transition remains future work. Disposition
+used_for_propagation records only material leaving stock; it creates no SeedLot, Sowing, lineage or
+receipt. Recipes, transformed products, sales, orders, automatic biological state mutation, generic
+workflow frameworks, analytics and Harvest-specific QR labels remain outside this capability.
 
 ## Exact changed files
 

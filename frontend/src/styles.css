@@ -3632,6 +3632,7 @@ button:disabled {
   max-width: 34rem;
   margin-block: var(--space-4);
 }
+.workspace-view-nav,
 .geography-view-nav,
 .geography-subnav {
   display: flex;
@@ -3639,6 +3640,7 @@ button:disabled {
   gap: var(--space-2);
   margin-block: var(--space-3);
 }
+.workspace-view-nav button,
 .geography-view-nav button,
 .geography-subnav button {
   color: var(--color-leaf);
@@ -3647,6 +3649,7 @@ button:disabled {
   border-bottom: 2px solid transparent;
   border-radius: 0;
 }
+.workspace-view-nav button[aria-pressed="true"],
 .geography-view-nav button[aria-pressed="true"],
 .geography-subnav button[aria-pressed="true"] {
   border-color: var(--color-accent);
@@ -8088,11 +8091,43 @@ button:disabled {
   min-width: 0;
   min-height: 0;
 }
+.harvest-workspace > .workspace-view-nav {
+  flex: none;
+  margin-block: 0 var(--space-3);
+}
 .harvest-filters {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-  margin-block: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 2fr)) repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin-block: 0 var(--space-4);
+  align-items: end;
+}
+.harvest-filters .field,
+.harvest-filters > .directory-search {
+  margin: 0;
+  width: 100%;
+  gap: var(--space-2);
+}
+.harvest-filters > .directory-search {
+  display: grid;
+}
+.harvest-filters .search-control {
+  margin-top: 0;
+}
+.harvest-filters label {
+  font-size: 0.8rem;
+  line-height: 1.4;
+  font-weight: 700;
+  color: var(--color-muted);
+}
+.harvest-filters input,
+.harvest-filters select {
+  height: 2.75rem;
+  font-size: 0.875rem;
+  padding-block: 0.5rem;
+}
+.harvest-filters .search-control input {
+  height: calc(2.75rem - 2px);
 }
 .harvest-directory-layout {
   display: grid;
@@ -8242,4 +8277,80 @@ button:disabled {
 }
 .harvest-line textarea {
   min-height: 2.75rem;
+}
+
+.botanical-identity-filter {
+  position: relative;
+  min-width: 0;
+}
+.botanical-identity-filter .field {
+  margin: 0;
+}
+.botanical-identity-filter:has(button) input {
+  padding-right: 3rem;
+}
+.botanical-identity-filter-clear {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  min-width: 2.75rem;
+  padding-inline: 0.5rem;
+}
+.stored-material-directory .harvest-filters {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.stored-material-directory .harvest-filters .directory-search {
+  grid-column: span 2;
+}
+@media (max-width: 64rem) {
+  .harvest-filters,
+  .stored-material-directory .harvest-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .stored-material-directory .harvest-filters .directory-search {
+    grid-column: auto;
+  }
+  .stored-material-location-filter {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 40rem) {
+  .harvest-filters .directory-search,
+  .stored-material-directory .harvest-filters .directory-search,
+  .harvest-filters .botanical-identity-filter {
+    grid-column: 1 / -1;
+  }
+}
+.stored-material-section,
+.stored-material-directory,
+.inventory-form {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.stored-material-section .harvest-items > li {
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+}
+.inventory-history ol {
+  padding-inline-start: 1.5rem;
+}
+.inventory-history li {
+  display: grid;
+  gap: 0.35rem;
+  padding-block: 0.75rem;
+}
+.inventory-quantity {
+  min-width: 0;
+}
+.stored-material-directory .harvest-directory-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  text-decoration: none;
+}
+@media (max-width: 40rem) {
+  .stored-material-directory .harvest-directory-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .stored-material-section .actions {
+    flex-wrap: wrap;
+  }
 }
