@@ -1,4 +1,5 @@
 import {
+  act,
   cleanup,
   render,
   screen,
@@ -338,6 +339,24 @@ async function chooseReference(
   await user.click(screen.getByRole("button", { name: new RegExp(option) }));
 }
 
+async function navigateHistory(
+  event: "hashchange" | "popstate",
+  navigate: () => void,
+) {
+  await act(async () => {
+    await new Promise<void>((resolve) => {
+      window.addEventListener(
+        event,
+        () => {
+          resolve();
+        },
+        { once: true },
+      );
+      navigate();
+    });
+  });
+}
+
 beforeEach(() => {
   window.history.replaceState(null, "", "#/dashboard");
 });
@@ -353,7 +372,14 @@ test.each(["plant", "plant-group"] as const)(
     const record = kind === "plant" ? plant() : group();
     window.location.hash = `#/${kind === "plant" ? "plants" : "plant-groups"}/${record.id}`;
     mockApi(plantHandler([plant()], [group()]));
-    render(<App />);
+    await act(async () => {
+      render(<App />);
+      await Promise.resolve();
+    });
+    // Let the real cold workspace import finish before querying its detail.
+    await act(async () => {
+      await vi.dynamicImportSettled();
+    });
     expect(
       await screen.findByRole("link", { name: "Print label" }),
     ).toHaveAttribute("href", `#/labels?kind=${kind}&record=${record.id}`);
@@ -370,6 +396,69 @@ test.each(["plant", "plant-group"] as const)(
     ).toBeVisible();
   },
 );
+
+test("Plant and PlantGroup detail hashes retain Events across navigation and browser history", async () => {
+  window.history.replaceState(null, "", `#/plants/${plantId}?tab=events`);
+  mockApi(plantHandler([plant()], [group()]));
+  await act(async () => {
+    render(<App />);
+    await Promise.resolve();
+  });
+  await act(async () => {
+    await vi.dynamicImportSettled();
+  });
+  expect(
+    await screen.findByRole("heading", { name: "Avocado #1" }),
+  ).toBeVisible();
+  expect(screen.getByRole("tab", { name: "Events" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+
+  await navigateHistory("hashchange", () => {
+    window.location.hash = `#/plant-groups/${groupId}?tab=events`;
+  });
+  expect(
+    await screen.findByRole("heading", { name: "Seedlings 2026" }),
+  ).toBeVisible();
+  expect(screen.getByRole("link", { name: "Print label" })).toHaveAttribute(
+    "href",
+    `#/labels?kind=plant-group&record=${groupId}`,
+  );
+  expect(screen.getByRole("tab", { name: "Events" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+
+  await navigateHistory("popstate", () => {
+    window.history.back();
+  });
+  expect(
+    await screen.findByRole("heading", { name: "Avocado #1" }),
+  ).toBeVisible();
+  expect(screen.getByRole("tab", { name: "Events" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+
+  await navigateHistory("popstate", () => {
+    window.history.forward();
+  });
+  expect(
+    await screen.findByRole("heading", { name: "Seedlings 2026" }),
+  ).toBeVisible();
+  expect(screen.getByRole("tab", { name: "Events" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+
+  await navigateHistory("hashchange", () => {
+    window.location.hash = "#/plants";
+  });
+  expect(
+    await screen.findByRole("searchbox", { name: "Search Plants" }),
+  ).toBeVisible();
+});
 
 test("Plants navigation exposes loading, empty, missing-identity, and failure states", async () => {
   mockApi((path) => {

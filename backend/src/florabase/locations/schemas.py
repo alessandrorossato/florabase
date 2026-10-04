@@ -23,6 +23,7 @@ class LocationUsageScope(StrEnum):
     PLANTS = "plants"
     SOWINGS = "sowings"
     SEED_LOTS = "seed_lots"
+    HARVEST_INVENTORY = "harvest_inventory"
 
 
 class LocationWrite(BaseModel):
@@ -54,6 +55,7 @@ class LocationUsageCount(BaseModel):
 
 
 class LocationUsageSummary(BaseModel):
+    harvest_inventory: LocationUsageCount = Field(default_factory=LocationUsageCount)
     plants: LocationUsageCount = Field(default_factory=LocationUsageCount)
     sowings: LocationUsageCount = Field(default_factory=LocationUsageCount)
     seed_lots: LocationUsageCount = Field(default_factory=LocationUsageCount)
@@ -102,6 +104,7 @@ class LocationResponse(BaseModel):
                 (LocationUsageScope.PLANTS, location.supports_plants),
                 (LocationUsageScope.SOWINGS, location.supports_sowings),
                 (LocationUsageScope.SEED_LOTS, location.supports_seed_lots),
+                (LocationUsageScope.HARVEST_INVENTORY, location.supports_harvest_inventory),
             )
             if supported
         ]

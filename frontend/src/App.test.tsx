@@ -1,4 +1,5 @@
 import {
+  act,
   cleanup,
   render,
   screen,
@@ -218,7 +219,14 @@ test.each([
       return jsonResponse([]);
     });
     window.history.replaceState(null, "", `#/${section}?action=create`);
-    render(<App />);
+    await act(async () => {
+      render(<App />);
+      await Promise.resolve();
+    });
+    // Direct routes exercise real lazy workspaces, including a cold import.
+    await act(async () => {
+      await vi.dynamicImportSettled();
+    });
     expect(
       await screen.findByRole("dialog", { name: dialogName }),
     ).toBeInTheDocument();
@@ -2207,7 +2215,7 @@ test("location creation supports roots and the selected create-child shortcut", 
   ).toBeInTheDocument();
   const posts = requests.filter(({ init }) => init?.method === "POST");
   expect(posts).toHaveLength(2);
-  const scopes = ["plants", "sowings", "seed_lots"];
+  const scopes = ["plants", "sowings", "seed_lots", "harvest_inventory"];
   expect(posts[0]?.init?.body).toBe(
     JSON.stringify({ name: "House", usage_scopes: scopes }),
   );
@@ -3013,8 +3021,14 @@ test("Location empty usage avoids repeated zeroes in directory and preview, deta
     within(table)
       .getAllByRole("rowheader")
       .map((cell) => cell.textContent),
-  ).toEqual(["Plants", "Plant groups", "Sowings", "Seed lots"]);
-  expect(within(table).getAllByRole("cell")).toHaveLength(8);
+  ).toEqual([
+    "Plants",
+    "Plant groups",
+    "Sowings",
+    "Seed lots",
+    "Stored material",
+  ]);
+  expect(within(table).getAllByRole("cell")).toHaveLength(10);
   for (const cell of within(table).getAllByRole("cell"))
     expect(cell).toHaveTextContent("0 (0 active)");
 });
@@ -3088,3 +3102,73 @@ test("Deep Location hierarchy retains parent context and the full current path w
   await user.click(screen.getByRole("button", { name: "Expand Level 10" }));
   expect(screen.getByRole("button", { name: /^Level 12/ })).toBeInTheDocument();
 });
+
+test.each([1440, 390])(
+  "Harvest workspace peer views preserve deep links and keyboard navigation at %ipx",
+  async (width) => {
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: width,
+    });
+    window.history.replaceState(null, "", "#/harvests?tab=stored-material");
+    authenticatedThen((path) => {
+      if (path === "/api/v1/harvests" || path === "/api/v1/harvest-inventory")
+        return jsonResponse([]);
+      throw new Error(`unexpected request: ${path}`);
+    });
+    const user = userEvent.setup();
+    const view = render(<App />);
+    const peers = await screen.findByRole("navigation", {
+      name: "Harvest views",
+    });
+    expect(
+      within(peers).getByRole("button", {
+        name: "Stored material",
+        pressed: true,
+      }),
+    ).toBeVisible();
+    const harvests = within(peers).getByRole("button", {
+      name: "Harvests",
+      pressed: false,
+    });
+    expect(harvests).not.toHaveAttribute("aria-controls");
+    expect(within(peers).queryByRole("tab")).not.toBeInTheDocument();
+    harvests.focus();
+    await user.keyboard("{Enter}");
+    await waitFor(() => {
+      expect(window.location.hash).toBe("#/harvests");
+    });
+    expect(await screen.findByLabelText("Search Harvests")).toBeVisible();
+    expect(
+      screen.getByRole("combobox", { name: "Botanical identity" }),
+    ).toBeVisible();
+    const currentPeers = screen.getByRole("navigation", {
+      name: "Harvest views",
+    });
+    within(currentPeers)
+      .getByRole("button", { name: "Harvests", pressed: true })
+      .focus();
+    await user.tab();
+    expect(
+      within(currentPeers).getByRole("button", {
+        name: "Stored material",
+        pressed: false,
+      }),
+    ).toHaveFocus();
+    await user.keyboard(" ");
+    expect(
+      await screen.findByLabelText("Search stored material"),
+    ).toBeVisible();
+    expect(window.location.hash).toBe("#/harvests?tab=stored-material");
+    view.unmount();
+    render(<App />);
+    expect(
+      await screen.findByLabelText("Search stored material"),
+    ).toBeVisible();
+    expect(
+      within(
+        screen.getByRole("navigation", { name: "Harvest views" }),
+      ).getByRole("button", { name: "Stored material", pressed: true }),
+    ).toBeVisible();
+  },
+);

@@ -668,6 +668,77 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/harvest-inventory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List All */
+        get: operations["listHarvestInventory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/harvest-inventory/{inventory_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read */
+        get: operations["getHarvestInventory"];
+        /** Correct */
+        put: operations["correctHarvestInventory"];
+        post?: never;
+        /** Remove */
+        delete: operations["removeHarvestTracking"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/harvest-inventory/{inventory_id}/dispositions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** History */
+        get: operations["listHarvestDispositions"];
+        put?: never;
+        /** Disposition */
+        post: operations["recordHarvestDisposition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/harvest-items/{item_id}/inventory": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create */
+        post: operations["trackHarvestMaterial"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/harvests": {
         parameters: {
             query?: never;
@@ -2155,6 +2226,58 @@ export interface components {
          * @enum {string}
          */
         DirectOriginKind: "purchased" | "gift_exchange" | "collection_produced" | "other" | "unknown";
+        /** DispositionCreate */
+        DispositionCreate: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "consumed" | "processed" | "discarded" | "gifted" | "used_for_propagation";
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "partial" | "use_all";
+            /** Notes */
+            notes?: string | null;
+            occurred_on?: components["schemas"]["PartialDate"] | null;
+            quantity?: components["schemas"]["HarvestQuantity-Input"] | null;
+            resulting_quantity?: components["schemas"]["HarvestQuantity-Input"] | null;
+        };
+        /** DispositionResponse */
+        DispositionResponse: {
+            after: components["schemas"]["InventorySnapshot"];
+            before: components["schemas"]["InventorySnapshot"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Inventory Id
+             * Format: uuid
+             */
+            inventory_id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "consumed" | "processed" | "discarded" | "gifted" | "used_for_propagation";
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "partial" | "use_all";
+            /** Notes */
+            notes: string | null;
+            occurred_on: components["schemas"]["PartialDate"] | null;
+            quantity: components["schemas"]["HarvestQuantity-Output"] | null;
+        };
         /** EventCreate */
         EventCreate: {
             /** Destination Location Id */
@@ -2835,6 +2958,79 @@ export interface components {
             /** Updated */
             updated: number;
         };
+        /** InventoryLocation */
+        InventoryLocation: {
+            /** Display Path */
+            display_path: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+        };
+        /** InventoryResponse */
+        InventoryResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Description */
+            description: string | null;
+            /**
+             * Harvest Id
+             * Format: uuid
+             */
+            harvest_id: string;
+            /**
+             * Harvest Item Id
+             * Format: uuid
+             */
+            harvest_item_id: string;
+            /** Harvest Title */
+            harvest_title: string;
+            /** Has Dispositions */
+            has_dispositions: boolean;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            location: components["schemas"]["InventoryLocation"] | null;
+            material_kind: components["schemas"]["MaterialKind"];
+            quantity: components["schemas"]["HarvestQuantity-Output"] | null;
+            source: components["schemas"]["HarvestSource"];
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "active" | "depleted";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** InventorySnapshot */
+        InventorySnapshot: {
+            quantity: components["schemas"]["HarvestQuantity-Output"] | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "active" | "depleted";
+        };
+        /** InventoryWrite */
+        InventoryWrite: {
+            /** Location Id */
+            location_id?: string | null;
+            quantity: components["schemas"]["HarvestQuantity-Input"] | null;
+            /**
+             * State
+             * @enum {string}
+             */
+            state: "active" | "depleted";
+        };
         /** LineageResponse */
         LineageResponse: {
             /** Ancestors */
@@ -3018,6 +3214,7 @@ export interface components {
          * @description Per-record counts; plants here excludes PlantGroups, unlike legacy usage.
          */
         LocationCollectionUsage: {
+            harvest_inventory?: components["schemas"]["LocationUsageCount"];
             plant_groups?: components["schemas"]["LocationUsageCount"];
             plants?: components["schemas"]["LocationUsageCount"];
             seed_lots?: components["schemas"]["LocationUsageCount"];
@@ -3102,9 +3299,10 @@ export interface components {
          * LocationUsageScope
          * @enum {string}
          */
-        LocationUsageScope: "plants" | "sowings" | "seed_lots";
+        LocationUsageScope: "plants" | "sowings" | "seed_lots" | "harvest_inventory";
         /** LocationUsageSummary */
         LocationUsageSummary: {
+            harvest_inventory?: components["schemas"]["LocationUsageCount"];
             plants?: components["schemas"]["LocationUsageCount"];
             seed_lots?: components["schemas"]["LocationUsageCount"];
             sowings?: components["schemas"]["LocationUsageCount"];
@@ -6765,6 +6963,244 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GeographicPlaceResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listHarvestInventory: {
+        parameters: {
+            query?: {
+                harvest_id?: string | null;
+                state?: ("active" | "depleted") | null;
+                material_kind?: components["schemas"]["MaterialKind"] | null;
+                location_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getHarvestInventory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                inventory_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    correctHarvestInventory: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                inventory_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InventoryWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    removeHarvestTracking: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                inventory_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listHarvestDispositions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                inventory_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DispositionResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recordHarvestDisposition: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                inventory_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DispositionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DispositionResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    trackHarvestMaterial: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                item_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InventoryWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InventoryResponse"];
                 };
             };
             /** @description Validation Error */

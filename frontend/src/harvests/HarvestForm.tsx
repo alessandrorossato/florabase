@@ -1,4 +1,5 @@
 import { useEffect, useId, useRef, useState, type SyntheticEvent } from "react";
+import { inventoryError } from "./inventoryApi";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { FormActions } from "../components/ReferenceUI";
@@ -142,7 +143,9 @@ export function HarvestForm({
         setError(
           typeof index === "number"
             ? `Material line ${String(index + 1)}: ${problem?.msg ?? "check quantity and description"}`
-            : "Could not save the Harvest. Check the source, date and material quantities, then try again.",
+            : failure instanceof ApiError && failure.status === 409
+              ? inventoryError(failure)
+              : "Could not save the Harvest. Check the source, date and material quantities, then try again.",
         );
         if (typeof index === "number" && lines[index])
           focusLine(lines[index].key);

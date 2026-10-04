@@ -149,35 +149,36 @@ A Location is a physical place inside the collection, such as `Greenhouse → Sh
 non-destructive retirement. The API derives display paths, prevents cycles, blocks retirement while
 active descendants exist, and blocks reactivation beneath retired ancestors.
 
-Each Location explicitly enables one or more independent usage scopes: `plants`, `sowings`, and
-`seed_lots`. The `plants` scope covers both Plant and PlantGroup. Scopes do not inherit through the
+Each Location explicitly enables one or more independent usage scopes: `plants`, `sowings`,
+`seed_lots`, and `harvest_inventory`. The `plants` scope covers both Plant and PlantGroup. Scopes do not inherit through the
 physical containment hierarchy. Every assignment is checked by backend domain logic, and a scope
 cannot be removed while any current or historical record still uses it. Assignment selectors show
 only compatible Locations and use the derived path to disambiguate repeated names.
 
 Reparenting moves the subtree without changing collection assignments or scopes. A Location may be
-deleted only when it is a leaf and no Plant, PlantGroup, Sowing, SeedLot, or Event history references
+deleted only when it is a leaf and no Plant, PlantGroup, Sowing, SeedLot, stored Harvest material, or Event history references
 it; retirement remains the non-destructive choice for retained reference data. Renames and moves
 change the current derived path. Florabase does not event-source historical Location names or paths.
 
 Location collection usage distinguishes **Directly here** (current `location_id` equals this
 Location) from **Including sublocations** (this Location plus every descendant at any depth).
-SeedLot, Sowing, Plant and PlantGroup are counted separately as records, never quantities. Both
-scopes retain every lifecycle state in `total`, with only `lifecycle = active` in `active`.
+SeedLot, Sowing, Plant, PlantGroup and managed Harvest material are counted separately as records, never quantities. Both
+scopes retain every state in `total`. `active` includes active biological records and active inventory;
+depleted inventory is excluded.
 Retained historical records count only at their retained current assignment; Events, provenance,
 identity, source records and lineage never supply or infer an assignment. Location eligibility scopes
 do not inherit and never hide material assigned to eligible descendants beneath another scope.
 
 The authenticated Location API preserves legacy `usage` as direct membership, including its combined
 Plant/PlantGroup `plants` count. Additive `direct_usage` and `usage_including_descendants` summaries
-separate `plants`, `plant_groups`, `sowings` and `seed_lots`, each with `active` and `total` counts.
+separate `plants`, `plant_groups`, `sowings`, `seed_lots` and `harvest_inventory`, each with `active` and `total` counts.
 All counts are derived at read time, not persisted. Reparenting immediately changes inclusive usage
 and display paths without editing the records in the moved subtree. Independent roots stay isolated.
 Assignment-scope removal and deletion continue to use direct references and existing child/history
 guards; descendant totals do not change those policies.
 
 The directory and compact preview show nonzero inclusive usage, add the direct count when it differs,
-and show equal leaf counts once. Detail compares both scopes for all four supported record types,
+and show equal leaf counts once. Detail compares both scopes for all five supported record types,
 including explicit zeroes and active counts. Location detail currently links to collection directories;
 it does not list associated records, so LOCATION-003 introduces no record-list scope or default change.
 
@@ -719,3 +720,35 @@ owned Event coherent atomically. Source correction is allowed; referenced source
 restricted. Existing free-form harvest Events remain independent. Neither Harvest nor seed-material
 lines change lifecycle, PlantGroup count, Location or SeedLot inventory. Harvest media and explicit
 primary use the shared library and central safe visual resolver. See [Harvest contract](harvests.md).
+
+### Stored Harvest material (HARVEST-002)
+
+An explicit Track stored material action creates zero or one HarvestMaterialInventory per material
+line. The collected HarvestItem quantity stays historical; the independently confirmed balance means
+remaining now. Existing Harvests receive no inventory. The current row is authoritative: positive exact
+or approximate count/weight (mg/g/kg), or unknown, with `active` state; `depleted` stores no remaining
+quantity and means no material held. Current corrections can reactivate or remeasure without history
+replay. Initial numeric tracking must match a known collected dimension/unit, without conversions;
+exact current quantity cannot exceed a directly comparable exact collected quantity.
+
+Inventory retains item/Harvest/material-kind context using a restrictive composite foreign key.
+BotanicalIdentity/source names and lifecycle derive through Harvest. Source/date/notes/label/collected
+quantity corrections never recalculate stock. Tracked lines retain their UUID and material kind;
+Harvest/line deletion is blocked until eligible never-used tracking is explicitly removed. Any
+disposition permanently blocks ordinary tracking removal. Inactive biological sources remain valid.
+
+HarvestMaterialDisposition records consumed, processed, discarded, gifted or used_for_propagation,
+explicit partial/use-all mode, optional PartialDate, amount when known, immutable typed before/after
+quantity/state, notes and UTC creation time. Exact partial usage requires a compatible exact amount
+strictly smaller than stock and derives a positive remainder without decimal rounding. Approximate
+partial usage requires a compatible operator-confirmed approximate remainder. Unknown stays unknown,
+even when an amount used is recorded. Explicit use-all depletes and preserves prior precision.
+Neither ordinary disposition CRUD nor undo/reversal is exposed; correcting current stock retains facts.
+
+Storage uses the shared Location hierarchy and explicit `harvest_inventory` eligibility scope.
+Existing Locations receive that flag disabled; operators can enable it. Active current counts exclude
+depleted rows, while totals retain them. One set-based query computes direct/inclusive usage. The
+Harvest workspace has a Stored material peer directory and a distinct detail section with focused
+dialogs and on-demand disposition history. No separate media ownership, global-search extension,
+Plant/PlantGroup Event/lifecycle mutation or lineage node exists. Explicit Harvest seed → SeedLot
+conversion remains a separate future feature. See [inventory contract](harvest-inventory.md).

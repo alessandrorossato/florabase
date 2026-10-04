@@ -10,6 +10,7 @@ from florabase.collection_photos.model import RecordMediaLink
 from florabase.collection_photos.primary import primary_summaries
 from florabase.events.model import Event
 from florabase.events.service import EventDomainConflictError, _partial_date_values
+from florabase.harvests.inventory_model import HarvestMaterialInventory
 from florabase.harvests.model import Harvest, HarvestItem
 from florabase.harvests.schemas import (
     HarvestItemResponse,
@@ -88,8 +89,37 @@ def write_harvest(
         raise EventDomainConflictError(
             "invalid_harvest_item", "A material line belongs to another Harvest"
         )
-    # Replace the aggregate lines in one transaction; submitted IDs retain stable identity/order.
-    database.execute(delete(HarvestItem).where(HarvestItem.harvest_id == harvest.id))
+    tracked = (
+        set(
+            database.scalars(
+                select(HarvestMaterialInventory.harvest_item_id).where(
+                    HarvestMaterialInventory.harvest_item_id.in_(old_ids)
+                )
+            )
+        )
+        if old_ids
+        else set()
+    )
+    submitted = {item.id: item for item in payload.items if item.id is not None}
+    for old in old_items:
+        if old.id in tracked and (
+            old.id not in submitted or submitted[old.id].material_kind != old.material_kind
+        ):
+            raise EventDomainConflictError(
+                "harvest_item_has_inventory",
+                "Tracked material lines must retain their identity and material kind. "
+                "Remove never-used tracking explicitly before removing a line; "
+                "disposition history is retained",
+            )
+    # Retain referenced rows. Move existing ordering out of the final range before resequencing.
+    offset = max((item.display_order for item in old_items), default=0) + 101
+    for old in old_items:
+        old.display_order += offset
+    database.flush()
+    for old in old_items:
+        if old.id not in submitted:
+            database.delete(old)
+    database.flush()
     for field in ("plant_id", "plant_group_id", "label", "notes"):
         setattr(harvest, field, getattr(payload, field))
     for field, value in _partial_date_values(payload.occurred_on).items():
@@ -99,27 +129,35 @@ def write_harvest(
     event.notes = payload.notes
     harvest.updated_at = event.updated_at = datetime.now(UTC)
     database.flush()
+    retained = {item.id: item for item in old_items}
     for order, item in enumerate(payload.items):
         quantity = item.quantity
-        database.add(
-            HarvestItem(
-                id=item.id or uuid7(),
-                harvest_id=harvest.id,
-                display_order=order,
-                material_kind=item.material_kind.value,
-                description=item.description,
-                quantity_kind=quantity.kind if quantity else None,
-                quantity_value=quantity.value if quantity else None,
-                quantity_unit=quantity.unit if quantity else None,
-                quantity_is_approximate=quantity.is_approximate if quantity else None,
-            )
-        )
+        line = retained[item.id] if item.id else HarvestItem(id=uuid7(), harvest_id=harvest.id)
+        line.display_order = order
+        line.material_kind = item.material_kind.value
+        line.description = item.description
+        line.quantity_kind = quantity.kind if quantity else None
+        line.quantity_value = quantity.value if quantity else None
+        line.quantity_unit = quantity.unit if quantity else None
+        line.quantity_is_approximate = quantity.is_approximate if quantity else None
+        database.add(line)
     database.flush()
     return harvest
 
 
 def delete_harvest(database: Session, harvest_id: UUID) -> None:
     harvest = require_harvest(database, harvest_id, lock=True)
+    if database.scalar(
+        select(HarvestMaterialInventory.id)
+        .join(HarvestItem, HarvestItem.id == HarvestMaterialInventory.harvest_item_id)
+        .where(HarvestItem.harvest_id == harvest.id)
+        .limit(1)
+    ):
+        raise EventDomainConflictError(
+            "harvest_has_inventory",
+            "Stored material depends on this Harvest. Remove never-used "
+            "tracking explicitly first; material with disposition history must remain retained",
+        )
     # Shared assets remain in the library. CASCADE clears only this target's designation.
     database.execute(delete(RecordMediaLink).where(RecordMediaLink.harvest_id == harvest.id))
     # Ordinary Event media are independent; preserve the established explicit-unlink guard.

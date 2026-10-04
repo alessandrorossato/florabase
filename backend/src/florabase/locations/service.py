@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy.sql import Select
 
 from florabase.events.model import Event
+from florabase.harvests.inventory_model import HarvestMaterialInventory
 from florabase.locations.model import Location
 from florabase.locations.schemas import (
     LocationCollectionUsage,
@@ -64,6 +65,7 @@ def require_location_for_scope(
         LocationUsageScope.PLANTS: location.supports_plants,
         LocationUsageScope.SOWINGS: location.supports_sowings,
         LocationUsageScope.SEED_LOTS: location.supports_seed_lots,
+        LocationUsageScope.HARVEST_INVENTORY: location.supports_harvest_inventory,
     }[scope]
     if supported is False:
         raise LocationIntegrityError(
@@ -74,13 +76,21 @@ def require_location_for_scope(
 
 
 def _grouped_usage(
-    database: Session, model: type[Plant] | type[PlantGroup] | type[Sowing] | type[SeedLot]
+    database: Session,
+    model: type[Plant]
+    | type[PlantGroup]
+    | type[Sowing]
+    | type[SeedLot]
+    | type[HarvestMaterialInventory],
 ) -> dict[UUID, LocationUsageCount]:
     rows = database.execute(
         select(
             model.location_id,
             func.count(),
-            func.count().filter(model.lifecycle == "active"),
+            func.count().filter(
+                getattr(model, "state" if model is HarvestMaterialInventory else "lifecycle")
+                == "active"
+            ),
         )
         .where(model.location_id.is_not(None))
         .group_by(model.location_id)
@@ -97,12 +107,14 @@ def location_usage(database: Session) -> dict[UUID, LocationUsageSummary]:
     groups = _grouped_usage(database, PlantGroup)
     sowings = _grouped_usage(database, Sowing)
     seed_lots = _grouped_usage(database, SeedLot)
-    location_ids = set(plants) | set(groups) | set(sowings) | set(seed_lots)
+    inventory = _grouped_usage(database, HarvestMaterialInventory)
+    location_ids = set(plants) | set(groups) | set(sowings) | set(seed_lots) | set(inventory)
     result: dict[UUID, LocationUsageSummary] = {}
     for location_id in location_ids:
         plant = plants.get(location_id, LocationUsageCount())
         group = groups.get(location_id, LocationUsageCount())
         result[location_id] = LocationUsageSummary(
+            harvest_inventory=inventory.get(location_id, LocationUsageCount()),
             plants=LocationUsageCount(
                 active=plant.active + group.active,
                 total=plant.total + group.total,
@@ -124,6 +136,7 @@ class LocationUsageAggregation:
                 active=self.direct.plants.active + self.direct.plant_groups.active,
                 total=self.direct.plants.total + self.direct.plant_groups.total,
             ),
+            harvest_inventory=self.direct.harvest_inventory,
             sowings=self.direct.sowings,
             seed_lots=self.direct.seed_lots,
         )
@@ -146,7 +159,12 @@ def location_usage_statement() -> Select[tuple[UUID, str, int, int, int, int]]:
                 model.location_id.label("location_id"),
                 literal(kind).label("kind"),
                 func.count().label("total"),
-                func.count().filter(model.lifecycle == "active").label("active"),
+                func.count()
+                .filter(
+                    getattr(model, "state" if model is HarvestMaterialInventory else "lifecycle")
+                    == "active"
+                )
+                .label("active"),
             )
             .where(model.location_id.is_not(None))
             .group_by(model.location_id)
@@ -155,6 +173,7 @@ def location_usage_statement() -> Select[tuple[UUID, str, int, int, int, int]]:
                 ("plant_groups", PlantGroup),
                 ("sowings", Sowing),
                 ("seed_lots", SeedLot),
+                ("harvest_inventory", HarvestMaterialInventory),
             )
         )
     ).cte("location_assignments")
@@ -264,6 +283,7 @@ def create_location(database: Session, payload: LocationCreate) -> Location:
         supports_plants=LocationUsageScope.PLANTS in payload.usage_scopes,
         supports_sowings=LocationUsageScope.SOWINGS in payload.usage_scopes,
         supports_seed_lots=LocationUsageScope.SEED_LOTS in payload.usage_scopes,
+        supports_harvest_inventory=LocationUsageScope.HARVEST_INVENTORY in payload.usage_scopes,
     )
     database.add(location)
     database.flush()
@@ -279,6 +299,11 @@ def update_location(database: Session, location_id: UUID, payload: LocationUpdat
         (LocationUsageScope.PLANTS, location.supports_plants, usage.plants.total),
         (LocationUsageScope.SOWINGS, location.supports_sowings, usage.sowings.total),
         (LocationUsageScope.SEED_LOTS, location.supports_seed_lots, usage.seed_lots.total),
+        (
+            LocationUsageScope.HARVEST_INVENTORY,
+            location.supports_harvest_inventory,
+            usage.harvest_inventory.total,
+        ),
     )
     for scope, previously_supported, count in removals:
         if previously_supported and scope not in payload.usage_scopes and count:
@@ -292,6 +317,9 @@ def update_location(database: Session, location_id: UUID, payload: LocationUpdat
     location.supports_plants = LocationUsageScope.PLANTS in payload.usage_scopes
     location.supports_sowings = LocationUsageScope.SOWINGS in payload.usage_scopes
     location.supports_seed_lots = LocationUsageScope.SEED_LOTS in payload.usage_scopes
+    location.supports_harvest_inventory = (
+        LocationUsageScope.HARVEST_INVENTORY in payload.usage_scopes
+    )
     location.updated_at = datetime.now(UTC)
     database.flush()
     return location
@@ -305,7 +333,12 @@ def delete_location(database: Session, location_id: UUID) -> None:
             "location_has_children", "Move or delete child Locations before deleting this Location"
         )
     usage = location_usage(database).get(location.id, LocationUsageSummary())
-    reference_count = usage.plants.total + usage.sowings.total + usage.seed_lots.total
+    reference_count = (
+        usage.plants.total
+        + usage.sowings.total
+        + usage.seed_lots.total
+        + usage.harvest_inventory.total
+    )
     event_count = database.scalar(
         select(func.count()).select_from(Event).where(Event.destination_location_id == location.id)
     )

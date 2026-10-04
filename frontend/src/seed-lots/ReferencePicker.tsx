@@ -26,6 +26,7 @@ export function ReferencePicker({
   disabled = false,
   createLabel = "Create new",
   help,
+  placeholder,
 }: {
   label: string;
   choices: ReferenceChoice[];
@@ -36,6 +37,7 @@ export function ReferencePicker({
   disabled?: boolean;
   createLabel?: string;
   help?: ReactNode;
+  placeholder?: string;
 }) {
   const inputId = useId();
   const listId = useId();
@@ -109,6 +111,7 @@ export function ReferencePicker({
             ? `${listId}-${matches[activeIndex].id}`
             : undefined
         }
+        placeholder={placeholder}
         autoComplete="off"
         disabled={disabled}
         required={required && !value}

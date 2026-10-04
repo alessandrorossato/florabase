@@ -1,11 +1,20 @@
+import type { ReferenceChoice } from "../seed-lots/ReferencePicker";
 import type { components } from "../api/schema";
 import { requestJson } from "../auth/api";
 export type Harvest = components["schemas"]["HarvestResponse"];
 export type HarvestWrite = components["schemas"]["HarvestWrite"];
 export type HarvestItem = components["schemas"]["HarvestItemWrite"];
 export type MaterialKind = components["schemas"]["MaterialKind"];
-export function listHarvests(signal?: AbortSignal): Promise<Harvest[]> {
-  return requestJson("/api/v1/harvests", { signal });
+export function listHarvests(
+  signal?: AbortSignal,
+  botanicalIdentityId?: string,
+): Promise<Harvest[]> {
+  const query = new URLSearchParams();
+  if (botanicalIdentityId)
+    query.set("botanical_identity_id", botanicalIdentityId);
+  return requestJson(`/api/v1/harvests${query.size ? `?${query}` : ""}`, {
+    signal,
+  });
 }
 export function getHarvest(id: string, signal?: AbortSignal): Promise<Harvest> {
   return requestJson(`/api/v1/harvests/${encodeURIComponent(id)}`, { signal });
@@ -54,4 +63,17 @@ export function materialSummary(harvest: Harvest): string {
         materials.find((material) => material.id === kind)?.label ?? kind,
     )
     .join(" · ");
+}
+
+export function identityChoices(
+  sources: { botanical_identity: { id: string; display_label: string } }[],
+): ReferenceChoice[] {
+  return [
+    ...new Map(
+      sources.map(({ botanical_identity: identity }) => [
+        identity.id,
+        { id: identity.id, label: identity.display_label },
+      ]),
+    ).values(),
+  ].sort((a, b) => a.label.localeCompare(b.label));
 }

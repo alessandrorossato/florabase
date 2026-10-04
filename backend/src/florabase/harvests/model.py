@@ -90,6 +90,9 @@ class HarvestItem(Base):
     __tablename__ = "harvest_items"
     __table_args__ = (
         UniqueConstraint("harvest_id", "display_order", name="uq_harvest_items_order"),
+        UniqueConstraint(
+            "id", "harvest_id", "material_kind", name="uq_harvest_items_inventory_context"
+        ),
         CheckConstraint("display_order >= 0", name="ck_harvest_items_order"),
         CheckConstraint(
             "material_kind IN ('fruit', 'flower', 'leaf', 'root', 'seed', "

@@ -76,7 +76,7 @@ to Plant/PlantGroup, PlantGroup extraction to Plant, and Plant/PlantGroup produc
 collection-produced SeedLot. Events record Plant and PlantGroup history without making the system
 event-sourced; operation receipts support the deliberately bounded reintegration and propagation
 reversals. Shared MediaAsset stores reusable local/external media; RecordMediaLink uses the existing
-five concrete collection-target foreign keys for caption/order. Collection primary and identity cover
+six concrete collection-target foreign keys for caption/order. Collection primary and identity cover
 remain distinct references. Guarded binary storage, shared thumbnails, retained unlinked assets and
 reference-aware deletion are described in [the media contract](media-library.md). This remains a
 bounded capability, without a generic graph, polymorphic collection item or generic event framework.
@@ -86,19 +86,19 @@ acyclic lineage-write enforcement and insertion-time receipt-reference correlati
 the domain relationships. Lineage queries use one recursive walk plus at most four summary batches.
 
 Location usage uses one batched PostgreSQL query for direct and descendant-inclusive counts across
-SeedLot, Sowing, Plant and PlantGroup. A recursive CTE derives distinct `(ancestor, descendant)` pairs,
+SeedLot, Sowing, Plant, PlantGroup and managed Harvest material. A recursive CTE derives distinct `(ancestor, descendant)` pairs,
 including each Location itself. Recursive `UNION` deduplicates pairs and terminates even with malformed
 cycles; the existing hierarchy guards and fail-closed path validation remain authoritative. Each
 record table is grouped by its canonical current `location_id` before joining containment pairs,
 avoiding row multiplication across record types. Conditional sums produce direct counts; full sums
 produce inclusive counts with identical lifecycle rules. Only count rows reach application memory.
-There are no persisted counters, synchronization jobs, or schema/index additions.
+There are no persisted counters or synchronization jobs; HARVEST-002 adds only its current storage FK index.
 
 A Location directory request uses two domain queries regardless of tree size: one Location read for
 hierarchy/display paths and one batched aggregate for all Locations/types. Authentication/session
 queries are separate. Individual Location reads use the same batched strategy plus the existing
 single-record lookup. No Location row issues its own recursive or record-table query. Existing indexes
-on `locations.parent_id` and all four canonical `location_id` columns remain available; planner evidence
+on `locations.parent_id` and canonical `location_id` columns remain available; planner evidence
 and bounded integration query-count checks are recorded in
 [location-descendant-aggregation.md](location-descendant-aggregation.md).
 
@@ -117,7 +117,7 @@ proxy.
 
 ## Deliberately deferred
 
-Supplier/harvest media, saved search views and bulk operations, richer Event payloads,
+Supplier media, saved search views and bulk operations, richer Event payloads,
 analytical dashboards, PWA installability, multi-user collaboration, automatic
 taxonomy reconciliation, provider-backed profile enrichment, and additional external integrations
 remain backlog items. Their storage and service infrastructure will be designed only when a
@@ -134,3 +134,13 @@ PostgreSQL integrity triggers. No event replay or source-state mutation is invol
 shared record-media/primary infrastructure and batched presentation projections, deriving identity
 through its source. Revision 0029 preserves ordinary Events/media and guards populated downgrade.
 See [structured Harvests](harvests.md) for correction, deletion, precision and future inventory scope.
+
+HARVEST-002 extends only the Harvest capability with one optional current inventory per item and
+typed disposition facts. Current writes serialize on Harvest → inventory → storage Location, refreshing
+locked ORM state. Source context uses a restrictive composite item/Harvest/material FK. Disposition
+and current balance commit atomically; history is not replayed and ordinary history CRUD is absent.
+Directory reads join inventory/item and use a correlated history-existence flag, one batched Harvest
+projection and one Location hierarchy read. They never fetch dispositions per directory row. History
+loads only in requested detail. Location adds a grouped inventory arm to its existing single recursive
+aggregation. Revision 0031 creates no inventory and guards populated downgrade. Inventory adds no
+lineage edge, Event effect or media target. See [inventory contract](harvest-inventory.md).

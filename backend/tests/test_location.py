@@ -240,8 +240,11 @@ def test_location_usage_combines_plants_and_groups_and_separates_active() -> Non
         [(location_id, 3, 1)],
         [(location_id, 4, 2)],
         [(location_id, 5, 3)],
+        [(location_id, 2, 1)],
     ]
     usage = location_usage(database)[location_id]
+    assert usage.harvest_inventory.total == 2
+    assert usage.harvest_inventory.active == 1
     assert usage.plants == LocationUsageCount(active=2, total=5)
     assert usage.sowings == LocationUsageCount(active=2, total=4)
     assert usage.seed_lots == LocationUsageCount(active=3, total=5)

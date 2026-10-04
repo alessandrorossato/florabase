@@ -74,6 +74,7 @@ def test_location_schema_constraints_foreign_key_and_same_names(
         "supports_plants",
         "supports_sowings",
         "supports_seed_lots",
+        "supports_harvest_inventory",
         "retired_at",
         "created_at",
         "updated_at",
@@ -82,7 +83,12 @@ def test_location_schema_constraints_foreign_key_and_same_names(
     assert columns["retired_at"]["nullable"] is True
     assert all(
         columns[name]["nullable"] is False
-        for name in ("supports_plants", "supports_sowings", "supports_seed_lots")
+        for name in (
+            "supports_plants",
+            "supports_sowings",
+            "supports_seed_lots",
+            "supports_harvest_inventory",
+        )
     )
     assert "TIMESTAMP" in str(columns["created_at"]["type"])
     assert "user_id" not in columns
