@@ -132,7 +132,7 @@ full detail. Existing shared-media upload/link/edit/primary controls are reused.
 Operator acceptance is still required; HARVEST-001 remains `implemented`. This branch is kept unstaged
 and uncommitted. No branch switch, commit, push, delivery, merge or feature-finish is authorized.
 
-## Managed stored material and future seed conversion
+## Managed stored material and explicit seed conversion
 
 HARVEST-002 adds explicit opt-in managed stored remainder, storage Location and retained dispositions.
 HarvestItem.quantity continues to mean originally recorded collected amount; inventory balance means
@@ -142,7 +142,7 @@ explicit removal of every eligible never-used inventory; disposition history blo
 Source/date/label/notes/collected quantity corrections never replay inventory or dispositions.
 See [managed stored material](harvest-inventory.md).
 
-An explicit harvested seed → SeedLot transition remains future work. Disposition
+The explicit harvested seed → SeedLot transition is implemented separately by HARVEST-003. Disposition
 used_for_propagation records only material leaving stock; it creates no SeedLot, Sowing, lineage or
 receipt. Recipes, transformed products, sales, orders, automatic biological state mutation, generic
 workflow frameworks, analytics and Harvest-specific QR labels remain outside this capability.
@@ -207,3 +207,10 @@ frontend/src/plants/PlantScreen.test.tsx
 frontend/src/plants/PlantScreen.tsx
 frontend/src/styles.css
 ```
+
+## Explicit stored seed conversion
+
+HARVEST-003 adds a separate explicit Create Seed lot action on tracked active seed lines. It
+protects Harvest source reassignment after any retained conversion, including reversed history.
+Safe descriptive/date/collected-quantity corrections still do not replay stock. Conversion creates
+no extra source Event or media link. See [conversion contract](harvest-seed-conversion.md).

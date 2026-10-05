@@ -11,6 +11,7 @@ from florabase.events.api import events_router, plant_groups_events_router, plan
 from florabase.external_botany.api import router as external_botany_router
 from florabase.geographic_places.api import router as geographic_places_router
 from florabase.harvests.api import router as harvests_router
+from florabase.harvests.conversion_api import router as harvest_conversion_router
 from florabase.harvests.inventory_api import router as harvest_inventory_router
 from florabase.import_export.api import router as import_export_router
 from florabase.locations.api import router as locations_router
@@ -31,6 +32,7 @@ api_router.include_router(collection_photos_router)
 api_router.include_router(media_router)
 api_router.include_router(harvests_router)
 api_router.include_router(harvest_inventory_router)
+api_router.include_router(harvest_conversion_router)
 api_router.include_router(botanical_identities_router)
 api_router.include_router(botanical_profiles_router)
 api_router.include_router(external_botany_router)

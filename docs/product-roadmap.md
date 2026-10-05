@@ -4,6 +4,52 @@ Florabase grows through small, dependency-aware increments. This roadmap communi
 [`features.json`](features.json) remains the detailed source for status, dependencies, priority, and
 acceptance criteria.
 
+## Current operator direction — October 2026
+
+This section supersedes the older sequencing below. Historical 0.1.0 planning and RELEASE-001's
+original acceptance contract remain useful records, but RELEASE-001 is not the immediate next
+implementation. Product work continues in the approved sequence before final hardening and the
+1.0.0 stability milestone. Feature statuses remain those in features.json, not inferred from delivery.
+
+Already landed: core lineage integrity audit; LOCATION-003 (`implemented`); ATTACHMENT-005 shared
+Media Library (`implemented`); HARVEST-001 (`implemented`); HARVEST-002 (`verified`); MAP-002
+(`verified`); SEARCH-001 baseline (`implemented`); the UX-004/005/006 visual consistency work
+(`implemented`); and PERF-001 (`verified`). Older selected/next wording below describes its original
+planning period and does not supersede this direction.
+
+The current forward sequence is:
+
+1. HARVEST-003: explicit stored seed inventory → SeedLot, with approved guarded reversal. Retain
+   the reversed SeedLot, original disposition, producer lineage and conversion evidence; restore
+   source snapshots only while safe and dependent work is resolved. Converted origin is protected.
+   This does not add generic HARVEST-002 disposition undo.
+2. Supplier imagery / practical Reference completion using shared Media where justified; no Orders
+   inside Supplier UI.
+3. Collection productivity v2: broader global search, saved filters/views, bulk operations and
+   justified unified operational history.
+4. Orders / Purchases, separate from Supplier and biological/geographic provenance.
+5. Daily-use biological/collection improvements: measurements, justified flowering/fruiting work,
+   germination analysis, viability/aging, seasonal planning, operational history and later reviewed
+   Dashboard attention rules.
+6. Final UI review of concrete surfaces/defects, mobile and accessibility; no new mega-redesign.
+7. Performance re-check after product increments against PERF-001's existing baseline.
+8. Public Docker distribution: GHCR preferred, immutable/versioned images, practical multi-arch,
+   production Compose using published images and explicit upgrade/migration expectations.
+9. Repository presentation/documentation review as a newcomer: README, screenshots, overview,
+   installation, configuration, deployment, upgrades, backup/restore, examples, architecture,
+   terminology, links and stale prose.
+10. Technical finalization/release hardening: dead code/workarounds/fixtures/scripts, dependencies,
+    licensing/security, final CI, clean install, upgrade, complete DB+media restore and release notes.
+11. 1.0.0 stability milestone.
+
+BOTANY-003 stays a parallel `planned` track. Its approved WFO source/product contract is unchanged;
+implementation remains blocked by that endpoint's incomplete public TLS chain. It does not block
+other roadmap work. No source reselection or TLS workaround is introduced.
+
+RELEASE-001 remains the planned historical release-hardening feature, without deletion or
+repurposing of its acceptance criteria. Any change to that feature contract requires a separate
+explicit feature-graph decision.
+
 ## Product principles
 
 - Partial information is normal, and Florabase does not invent precision.
@@ -32,7 +78,7 @@ first distributable pre-1.0 release is planned as `0.1.0`; a future `1.0.0` rema
 milestone after real-world use and compatibility expectations mature. The older **V1 scope** names a
 broader product direction, not the `0.1.0` release boundary.
 
-## Florabase 0.1.0 release boundary
+## Historical Florabase 0.1.0 release boundary
 
 Florabase is ready for `0.1.0` when it can hold and operate a real personal botanical collection
 without the operator reasonably fearing data loss, an unusable core workflow, or an undocumented
@@ -407,14 +453,14 @@ propagation-material hierarchy, a generic graph engine, or multi-user ownership.
 extend concrete workflows without weakening unknown-data, history, authorization, or provenance
 semantics.
 
-## Explicit future pre-1.0 milestones after shared media
+## Historical pre-1.0 milestone planning after shared media
 
 ATTACHMENT-005 establishes reusable assets and exact record links; it does not execute the work below.
 Each milestone requires a separate bounded increment and product contract before implementation.
 
 1. HARVEST-001 structured harvest records are implemented for operator visual acceptance: explicit
    sources, ordered materials, quantities, partial dates, owned Events and shared media.
-   HARVEST-002 is the selected P1 pre-1.0 increment for optional stored remainder, Location and
+   HARVEST-002 was the selected P1 pre-1.0 increment for optional stored remainder, Location and
    consumed/processed/discarded/gifted/propagation-use history. Historical collected quantities stay
    independent. Explicit harvested seed → SeedLot conversion is a separate future increment.
 2. Supplier imagery using MediaAsset after its separate target/role contract is selected. Supplier

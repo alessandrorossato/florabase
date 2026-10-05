@@ -47,7 +47,7 @@ def test_cycle_correction_returns_domain_conflict_before_writing(
 
     if kind == "sowing":
         monkeypatch.setattr(sowing_service, "validate_source_assignment", reject)
-        monkeypatch.setattr(sowing_service, "_require_references", lambda *_args: None)
+        monkeypatch.setattr(sowing_service, "_require_references", lambda *_args, **_kwargs: None)
         item = Sowing(id=item_id, seed_lot_id=source_id, lifecycle="active")
         with pytest.raises(sowing_service.SowingDomainConflictError) as sowing_rejected:
             sowing_service.update_sowing(database, item, SowingUpdate(seed_lot_id=source_id))

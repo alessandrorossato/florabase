@@ -84,8 +84,9 @@ def test_geography_is_loaded_once_at_both_directory_sizes(
                 sql for sql in statements if sql.startswith("SELECT geographic_places.id")
             ]
             assert len(geography_queries) == 1
+            # SeedLot also batches nullable conversion IDs for Harvest cross-navigation.
             # Projection, geography, three site-usage queries and primary designation.
-            assert len(statements) == 6
+            assert len(statements) == (7 if kind == "seed" else 6)
             assert all(
                 item.material_provenance is not None
                 and item.material_provenance.display_path == f"{root.name} → Perf locality"

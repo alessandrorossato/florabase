@@ -1085,7 +1085,9 @@ export function SowingScreen({
     (lot) => lot.lifecycle === "active",
   );
   const inactiveSeedLots = references.seedLots.filter(
-    (lot) => lot.lifecycle !== "active",
+    (lot) =>
+      lot.lifecycle !== "active" &&
+      (lot.lifecycle !== "reversed" || lot.id === selected?.seed_lot_id),
   );
 
   return (

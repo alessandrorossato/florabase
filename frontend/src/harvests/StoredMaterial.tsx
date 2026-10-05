@@ -1,3 +1,6 @@
+import { ConversionDialog } from "./ConversionDialog";
+import { ConversionHistory } from "./ConversionHistory";
+import type { Conversion } from "./conversionApi";
 import { BotanicalIdentityFilter } from "./BotanicalIdentityFilter";
 import { useEffect, useId, useState } from "react";
 import { ApiError } from "../auth/api";
@@ -114,6 +117,8 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
     inventory?: Inventory;
     disposition?: boolean;
   } | null>(null);
+  const [converting, setConverting] = useState<Inventory | null>(null);
+  const [created, setCreated] = useState<Conversion | null>(null);
   const [removing, setRemoving] = useState<Inventory | null>(null);
   const [pending, setPending] = useState(false);
   useEffect(() => {
@@ -180,6 +185,12 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
         </p>
       )}
       {notice && <p role="status">{notice}</p>}
+      {created && (
+        <p role="status">
+          Seed lot created.{" "}
+          <a href={`#/seeds/${created.seed_lot_id}`}>Open Seed lot</a>
+        </p>
+      )}
       {!rows && !error && <p role="status">Loading stored material…</p>}
       {rows && (
         <ol className="harvest-items">
@@ -204,6 +215,27 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
                   <a href={`#/locations/${inventory.location.id}`}>
                     Storage: {inventory.location.display_path}
                   </a>
+                )}
+                {inventory?.state === "active" &&
+                  item.material_kind === "seed" && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setConverting(inventory);
+                      }}
+                    >
+                      Create Seed lot
+                    </button>
+                  )}
+                {inventory?.has_dispositions && (
+                  <ConversionHistory
+                    kind="inventory_id"
+                    id={inventory.id}
+                    refreshKey={inventory.updated_at}
+                    onChanged={() => {
+                      setAttempt((v) => v + 1);
+                    }}
+                  />
                 )}
                 <div className="actions">
                   {!inventory ? (
@@ -265,6 +297,20 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
           })}
         </ol>
       )}
+      {converting && (
+        <ConversionDialog
+          inventory={converting}
+          harvest={harvest}
+          onClose={() => {
+            setConverting(null);
+          }}
+          onSaved={(result) => {
+            setConverting(null);
+            setCreated(result);
+            setAttempt((v) => v + 1);
+          }}
+        />
+      )}
       {editor && (
         <InventoryDialog
           {...editor}
@@ -320,6 +366,8 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
 
 export function StoredMaterialDirectory() {
   const auth = useAuth();
+  const [converting, setConverting] = useState<Inventory | null>(null);
+  const [created, setCreated] = useState<Conversion | null>(null);
   const id = useId();
   const [rows, setRows] = useState<Inventory[] | null>(null);
   const [error, setError] = useState(false);
@@ -369,6 +417,25 @@ export function StoredMaterialDirectory() {
   return (
     <div className="stored-material-directory">
       <h3>Stored material</h3>
+      {created && (
+        <p role="status">
+          Seed lot created.{" "}
+          <a href={`#/seeds/${created.seed_lot_id}`}>Open Seed lot</a>
+        </p>
+      )}
+      {converting && (
+        <ConversionDialog
+          inventory={converting}
+          onClose={() => {
+            setConverting(null);
+          }}
+          onSaved={(result) => {
+            setConverting(null);
+            setCreated(result);
+            setAttempt((v) => v + 1);
+          }}
+        />
+      )}
       <p>
         Current stored remainder from explicitly tracked Harvest material lines.
       </p>
@@ -495,6 +562,17 @@ export function StoredMaterialDirectory() {
                       <small>Open source Harvest</small>
                     </span>
                   </a>
+                  {row.material_kind === "seed" && row.state === "active" && (
+                    <button
+                      type="button"
+                      className="button--secondary"
+                      onClick={() => {
+                        setConverting(row);
+                      }}
+                    >
+                      Create Seed lot
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>

@@ -751,4 +751,13 @@ depleted rows, while totals retain them. One set-based query computes direct/inc
 Harvest workspace has a Stored material peer directory and a distinct detail section with focused
 dialogs and on-demand disposition history. No separate media ownership, global-search extension,
 Plant/PlantGroup Event/lifecycle mutation or lineage node exists. Explicit Harvest seed → SeedLot
-conversion remains a separate future feature. See [inventory contract](harvest-inventory.md).
+conversion is the separate HARVEST-003 capability. See [inventory contract](harvest-inventory.md).
+
+### Harvest seed conversion (HARVEST-003)
+
+Explicit active managed seed stock creates a collection-produced SeedLot through one atomic
+used_for_propagation disposition and typed HarvestSeedLotConversion. Producer/source origin is
+protected; identity remains correctable. Guarded reversal restores captured stock while safe,
+retains all evidence/lineage and keeps the resulting SeedLot historically as `reversed`. This
+lifecycle excludes current holdings and new propagation. Standalone dispositions have no undo.
+See [conversion contract](harvest-seed-conversion.md) for snapshots, dependencies and locks.

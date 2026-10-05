@@ -35,14 +35,23 @@ for path in paths:
         ["git", "show", f"{base}:{path}"], check=True, text=True, stdout=subprocess.PIPE,
     ).stdout
     module = ast.parse(source)
-    values = {
-        node.target.id: ast.literal_eval(node.value)
-        for node in module.body
-        if isinstance(node, ast.AnnAssign)
-        and isinstance(node.target, ast.Name)
-        and node.target.id in {"revision", "down_revision"}
-        and isinstance(node.value, (ast.Constant, ast.Tuple, ast.List))
-    }
+    values: dict[str, object] = {}
+    for node in module.body:
+        if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
+            name, value = node.target.id, node.value
+        elif (
+            isinstance(node, ast.Assign)
+            and len(node.targets) == 1
+            and isinstance(node.targets[0], ast.Name)
+        ):
+            name, value = node.targets[0].id, node.value
+        else:
+            continue
+        if (
+            name in {"revision", "down_revision"}
+            and isinstance(value, (ast.Constant, ast.Tuple, ast.List))
+        ):
+            values[name] = ast.literal_eval(value)
     revision = values.get("revision")
     down_revision = values.get("down_revision")
     if not isinstance(revision, str):

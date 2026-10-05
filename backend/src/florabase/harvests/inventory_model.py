@@ -10,6 +10,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     ForeignKeyConstraint,
+    Integer,
     Numeric,
     SmallInteger,
     String,
@@ -82,6 +83,7 @@ class HarvestMaterialInventory(Base):
     location_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("locations.id", ondelete="RESTRICT"), index=True
     )
+    correction_version: Mapped[int] = mapped_column(Integer(), default=0, server_default="0")
     state: Mapped[str] = mapped_column(String(8))
     quantity_kind: Mapped[str | None] = mapped_column(String(16))
     quantity_value: Mapped[Decimal | None] = mapped_column(Numeric())

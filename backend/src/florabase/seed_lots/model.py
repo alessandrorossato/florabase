@@ -55,6 +55,7 @@ class SeedLotLifecycle(StrEnum):
     EXHAUSTED = "exhausted"
     DISCARDED = "discarded"
     LOST = "lost"
+    REVERSED = "reversed"
 
 
 def _partial_date_constraint(prefix: str) -> CheckConstraint:
@@ -121,7 +122,7 @@ class SeedLot(Base):
             name="ck_seed_lots_quantity",
         ),
         CheckConstraint(
-            "lifecycle IN ('active', 'exhausted', 'discarded', 'lost')",
+            "lifecycle IN ('active', 'exhausted', 'discarded', 'lost', 'reversed')",
             name="ck_seed_lots_lifecycle",
         ),
         CheckConstraint(

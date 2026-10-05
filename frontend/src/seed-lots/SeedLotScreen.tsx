@@ -1,3 +1,4 @@
+import { ConversionHistory } from "../harvests/ConversionHistory";
 import { usePublishRecordIdentities } from "../components/recordPresentation";
 import { useRecordName } from "../components/recordPresentation";
 import { FormSections } from "../components/FormSections";
@@ -127,6 +128,7 @@ const lifecycleLabels: Record<SeedLotLifecycle, string> = {
   exhausted: "Exhausted",
   discarded: "Discarded",
   lost: "Lost",
+  reversed: "Reversed",
 };
 
 function blankForm(): FormState {
@@ -418,11 +420,13 @@ function Detail({
   lot,
   onEdit,
   onPrimaryChanged,
+  onConversionChanged,
   initialTab,
 }: {
   lot: SeedLotResponse;
   onEdit: () => void;
   onPrimaryChanged?: (photo: PrimaryPhoto | null) => void;
+  onConversionChanged?: () => void;
   initialTab?: string;
 }) {
   const recordName = useRecordName();
@@ -540,6 +544,13 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
+          {lot.harvest_conversion_id && (
+            <ConversionHistory
+              kind="seed_lot_id"
+              id={lot.id}
+              onChanged={onConversionChanged}
+            />
+          )}
           <section
             aria-labelledby="seed-overview-inventory"
             className="seed-fact-group"
@@ -962,6 +973,10 @@ export function SeedLotScreen({
     setSave({ status: "saving" });
     try {
       const payload = payloadFrom(form);
+      if (selected?.harvest_conversion_id) {
+        payload.producer_plant_id = selected.producer_plant_id;
+        payload.producer_plant_group_id = selected.producer_plant_group_id;
+      }
       const lot = selected
         ? await updateSeedLot(selected.id, payload, csrfToken)
         : await createSeedLot(payload, csrfToken);
@@ -1412,7 +1427,9 @@ export function SeedLotScreen({
                           <select
                             id="lifecycle"
                             value={form.lifecycle}
-                            disabled={pending}
+                            disabled={
+                              pending || selected?.lifecycle === "reversed"
+                            }
                             onChange={(event) => {
                               const lifecycle = event.currentTarget
                                 .value as SeedLotLifecycle;
@@ -1422,13 +1439,17 @@ export function SeedLotScreen({
                               }));
                             }}
                           >
-                            {Object.entries(lifecycleLabels).map(
-                              ([value, label]) => (
+                            {Object.entries(lifecycleLabels)
+                              .filter(
+                                ([value]) =>
+                                  value !== "reversed" ||
+                                  selected?.lifecycle === "reversed",
+                              )
+                              .map(([value, label]) => (
                                 <option value={value} key={value}>
                                   {label}
                                 </option>
-                              ),
-                            )}
+                              ))}
                           </select>
                           <small>
                             Use Exhausted for an exact known zero quantity.
@@ -1542,7 +1563,10 @@ export function SeedLotScreen({
                           <select
                             id="source-kind"
                             value={form.sourceKind}
-                            disabled={pending}
+                            disabled={
+                              pending ||
+                              Boolean(selected?.harvest_conversion_id)
+                            }
                             onChange={(event) => {
                               const value = event.currentTarget
                                 .value as SeedLotSourceKind;
@@ -1768,6 +1792,20 @@ export function SeedLotScreen({
               <div className="selected-seed">
                 <Detail
                   lot={selected}
+                  onConversionChanged={() => {
+                    void listSeedLots()
+                      .then((lots) => {
+                        setInventory({ status: "ready", lots });
+                      })
+                      .catch((failure: unknown) => {
+                        if (
+                          failure instanceof ApiError &&
+                          failure.status === 401
+                        )
+                          auth.sessionExpired();
+                        else setInventory({ status: "error" });
+                      });
+                  }}
                   initialTab={initialTab}
                   onPrimaryChanged={(photo) => {
                     setInventory((current) =>

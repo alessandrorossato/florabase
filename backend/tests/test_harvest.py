@@ -152,7 +152,7 @@ def test_correction_keeps_event_and_stable_line_ids() -> None:
     harvest = Harvest(id=uuid7(), event_id=uuid7(), plant_id=uuid7())
     event = Event(id=harvest.event_id, kind="harvest", plant_id=harvest.plant_id)
     db = MagicMock()
-    db.scalar.side_effect = [harvest, record, event]
+    db.scalar.side_effect = [harvest, None, record, event]
     db.scalars.side_effect = [
         [HarvestItem(id=old_id, harvest_id=harvest.id, display_order=0, material_kind="leaf")],
         [],
@@ -181,7 +181,9 @@ def test_rejects_foreign_line_ids(existing: bool) -> None:
     db = MagicMock()
     record = source()
     harvest = Harvest(id=uuid7(), event_id=uuid7())
-    db.scalar.side_effect = [harvest, record, Event(id=harvest.event_id)] if existing else [record]
+    db.scalar.side_effect = (
+        [harvest, None, record, Event(id=harvest.event_id)] if existing else [record]
+    )
     db.scalars.return_value = []
     with pytest.raises(EventDomainConflictError, match=r"material line|material lines"):
         service.write_harvest(
@@ -203,7 +205,7 @@ def test_missing_source_and_missing_harvest() -> None:
 def test_missing_owned_event_detected() -> None:
     db = MagicMock()
     harvest = Harvest(id=uuid7(), event_id=uuid7())
-    db.scalar.side_effect = [harvest, source(), None]
+    db.scalar.side_effect = [harvest, None, source(), None]
     with pytest.raises(RuntimeError):
         service.write_harvest(db, payload(), harvest.id)
 

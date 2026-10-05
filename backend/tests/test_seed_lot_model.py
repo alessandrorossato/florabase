@@ -93,4 +93,5 @@ def test_seed_lot_application_defaults_and_vocabularies() -> None:
         "exhausted",
         "discarded",
         "lost",
+        "reversed",
     }

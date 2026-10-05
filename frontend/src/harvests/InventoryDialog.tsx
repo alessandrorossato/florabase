@@ -27,12 +27,14 @@ export function QuantityFields({
   onChange,
   disabled,
   approximateOnly = false,
+  weightUnits = ["mg", "g", "kg"],
 }: {
   label: string;
   value: Quantity | null;
   onChange: (value: Quantity | null) => void;
   disabled: boolean;
   approximateOnly?: boolean;
+  weightUnits?: readonly string[];
 }) {
   const id = useId();
   const precision = value
@@ -113,7 +115,7 @@ export function QuantityFields({
                   });
                 }}
               >
-                {["mg", "g", "kg"].map((unit) => (
+                {weightUnits.map((unit) => (
                   <option key={unit}>{unit}</option>
                 ))}
               </select>

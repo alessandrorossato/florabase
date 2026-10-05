@@ -172,7 +172,11 @@ class SeedLotWrite(BaseModel):
 
 
 class SeedLotCreate(SeedLotWrite):
-    pass
+    @model_validator(mode="after")
+    def reject_reversed_result(self) -> Self:
+        if self.lifecycle == SeedLotLifecycle.REVERSED:
+            raise ValueError("Reversed is assigned only by Harvest conversion reversal")
+        return self
 
 
 class SeedLotUpdate(SeedLotWrite):
@@ -214,6 +218,7 @@ class ProducerPlantGroupSummary(BaseModel):
 
 
 class SeedLotResponse(BaseModel):
+    harvest_conversion_id: UUID | None = None
     id: UUID
     primary_photo: PrimaryPhotoResponse | None = None
     botanical_identity_id: UUID
