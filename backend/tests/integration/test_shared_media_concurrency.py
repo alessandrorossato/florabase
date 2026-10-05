@@ -2,6 +2,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Literal
 from uuid import uuid7
 
 import pytest
@@ -14,21 +15,28 @@ from florabase.collection_photos.model import RecordMediaLink
 from florabase.media import service
 from florabase.media.schemas import ExternalAssetCreate, LinkWrite
 from florabase.plants.model import Plant
+from florabase.suppliers.model import Supplier
 
 pytestmark = pytest.mark.integration
 
 
+@pytest.mark.parametrize("target", ["plant", "supplier"])
 @pytest.mark.parametrize("race", ["delete_then_link", "link_then_delete", "duplicate_link"])
 def test_asset_reference_races_serialize_and_fail_closed(
     database_engine: Engine,
     tmp_path: Path,
     race: str,
+    target: Literal["plant", "supplier"],
 ) -> None:
     with Session(database_engine) as database:
         identity = BotanicalIdentity(scientific_name=f"Media race {uuid7()}")
         database.add(identity)
         database.flush()
-        plant = Plant(botanical_identity_id=identity.id, direct_origin_kind="unknown")
+        plant = (
+            Plant(botanical_identity_id=identity.id, direct_origin_kind="unknown")
+            if target == "plant"
+            else Supplier(name="Race supplier", kind="seller")
+        )
         database.add(plant)
         database.flush()
         asset = service.create_external_asset(
@@ -49,7 +57,7 @@ def test_asset_reference_races_serialize_and_fail_closed(
             locked.state = "pending_delete"
             holder.flush()
         else:
-            service.create_link(holder, "plant", plant_id, asset_id, LinkWrite(), commit=False)
+            service.create_link(holder, target, plant_id, asset_id, LinkWrite(), commit=False)
         with ThreadPoolExecutor(max_workers=1) as executor:
 
             def work() -> str:
@@ -62,7 +70,7 @@ def test_asset_reference_races_serialize_and_fail_closed(
                         if race == "link_then_delete":
                             service.delete_asset(database, AttachmentStorage(tmp_path), asset_id)
                         else:
-                            service.create_link(database, "plant", plant_id, asset_id, LinkWrite())
+                            service.create_link(database, target, plant_id, asset_id, LinkWrite())
                     except service.MediaError as error:
                         return error.code
                     return "unexpected_success"
@@ -110,7 +118,12 @@ def test_asset_reference_races_serialize_and_fail_closed(
                 text("DELETE FROM record_media_links WHERE media_asset_id = :id"), {"id": asset_id}
             )
             connection.execute(text("DELETE FROM media_assets WHERE id = :id"), {"id": asset_id})
-            connection.execute(text("DELETE FROM plants WHERE id = :id"), {"id": plant_id})
+            connection.execute(
+                text(
+                    f"DELETE FROM {'plants' if target == 'plant' else 'suppliers'} WHERE id = :id"
+                ),
+                {"id": plant_id},
+            )
             connection.execute(
                 text("DELETE FROM botanical_identities WHERE id = :id"), {"id": identity_id}
             )

@@ -7,6 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from florabase.collection_photos.schemas import PrimaryPhotoResponse
 from florabase.plants.model import PlantGroupLifecycle, PlantLifecycle
 from florabase.seed_lots.model import SeedLotLifecycle
 from florabase.seed_lots.schemas import PartialDate
@@ -141,6 +142,7 @@ class SupplierUsageCounts(BaseModel):
 
 
 class SupplierListResponse(SupplierResponse):
+    primary_photo: PrimaryPhotoResponse | None = None
     usage_counts: SupplierUsageCounts
 
 
@@ -183,6 +185,7 @@ class SupplierRecentAcquisition(BaseModel):
 
 
 class SupplierDetailResponse(SupplierResponse):
+    primary_photo: PrimaryPhotoResponse | None = None
     usage_counts: SupplierUsageCounts
     seed_lots: list[SupplierSeedLotLink]
     plants: list[SupplierPlantLink]

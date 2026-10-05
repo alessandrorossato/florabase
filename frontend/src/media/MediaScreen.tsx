@@ -19,6 +19,7 @@ import {
   removeLocalCopy,
   unlinkMedia,
   type MediaAsset,
+  type MediaTargetFilter,
   type MediaDetail,
   type MediaLink,
   type MediaPage,
@@ -78,7 +79,7 @@ function Metadata({
         </div>
       )}
       <div>
-        <dt>Collection links</dt>
+        <dt>Record links</dt>
         <dd>
           {asset.collection_link_count === 0
             ? "Unlinked asset"
@@ -131,7 +132,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
   const [query, setQuery] = useState("");
   const [kind, setKind] = useState("");
   const [association, setAssociation] = useState("all");
-  const [target, setTarget] = useState("");
+  const [target, setTarget] = useState<MediaTargetFilter | "">("");
   const [offset, setOffset] = useState(0);
   const [page, setPage] = useState<MediaPage | null>(null);
   const [detail, setDetail] = useState<MediaDetail | null>(null);
@@ -371,15 +372,14 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
               </section>
             )}
             <section className="media-links-section">
-              <h3>Linked collection records</h3>
+              <h3>Linked records</h3>
               <p>
                 Each link has its own caption, display order and primary
                 designation.
               </p>
               {detail.links.length === 0 ? (
                 <p>
-                  No collection links. This asset remains available in the
-                  Gallery.
+                  No record links. This asset remains available in the Gallery.
                 </p>
               ) : (
                 <ul className="media-link-list">
@@ -412,7 +412,8 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                         {(link.target_type === "seed_lot" ||
                           link.target_type === "plant" ||
                           link.target_type === "plant_group" ||
-                          link.target_type === "harvest") && (
+                          link.target_type === "harvest" ||
+                          link.target_type === "supplier") && (
                           <button
                             type="button"
                             className="button--secondary"
@@ -423,7 +424,8 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                                 type !== "seed_lot" &&
                                 type !== "plant" &&
                                 type !== "plant_group" &&
-                                type !== "harvest"
+                                type !== "harvest" &&
+                                type !== "supplier"
                               )
                                 return;
                               void action(
@@ -485,8 +487,8 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                 </ul>
               )}
               <p>
-                Cover references are separate from collection links and also
-                block asset deletion.
+                Cover references are separate from record links and also block
+                asset deletion.
               </p>
             </section>
             <section className="media-delete-section">
@@ -494,7 +496,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
               <p>
                 {detail.can_delete
                   ? "This asset is fully unreferenced. Deleting it permanently removes any stored image and local copy."
-                  : `Deletion blocked: ${String(detail.collection_link_count)} collection link(s) and ${String(detail.cover_reference_count)} cover reference(s) remain. Remove these references first.`}
+                  : `Deletion blocked: ${String(detail.collection_link_count)} record link(s) and ${String(detail.cover_reference_count)} cover reference(s) remain. Remove these references first.`}
               </p>
               <button
                 className="button--danger"
@@ -541,7 +543,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
               </select>
             </div>
             <div className="field">
-              <label htmlFor="media-association">Collection links</label>
+              <label htmlFor="media-association">Record links</label>
               <select
                 id="media-association"
                 value={association}
@@ -556,26 +558,31 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
               </select>
             </div>
             <div className="field">
-              <label htmlFor="media-target-filter">Linked record type</label>
+              <label htmlFor="media-target-filter">Target</label>
               <select
                 id="media-target-filter"
                 value={target}
                 onChange={(event) => {
-                  setTarget(event.target.value);
+                  setTarget(event.target.value as MediaTargetFilter | "");
                   changeFilters();
                 }}
               >
-                <option value="">All record types</option>
+                <option value="">All media</option>
+                <option value="collection">Collection media</option>
                 {mediaTargets.map((type) => (
                   <option key={type.id} value={type.id}>
-                    {type.label}
+                    {type.id === "plant_group"
+                      ? "Plant groups"
+                      : type.id === "seed_lot"
+                        ? "Seed lots"
+                        : `${type.label}s`}
                   </option>
                 ))}
               </select>
             </div>
           </div>
           <p className="field-help">
-            Unlinked means no collection links. An identity cover may still
+            Unlinked means no record links. An identity cover may still
             reference the asset.
           </p>
           {!page && !error && <p role="status">Loading media…</p>}
@@ -605,7 +612,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                       <span>
                         {asset.collection_link_count === 0
                           ? "Unlinked"
-                          : `${String(asset.collection_link_count)} collection links`}
+                          : `${String(asset.collection_link_count)} record links`}
                         {asset.cover_reference_count > 0 &&
                           ` · ${String(asset.cover_reference_count)} cover reference(s)`}
                       </span>
@@ -780,7 +787,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
             {removing === "asset"
               ? "This removes the fully unreferenced media asset from the library. A local original and its thumbnail are permanently deleted."
               : removing === "copy"
-                ? "Remove the saved image from Florabase. The external reference, collection links, primary selections and covers remain."
+                ? "Remove the saved image from Florabase. The external reference, record links, primary selections and covers remain."
                 : `Remove this link from ${removing.target_label}. Its primary designation will be cleared if selected. The asset, other links and cover references remain.`}
           </p>
           {error && (

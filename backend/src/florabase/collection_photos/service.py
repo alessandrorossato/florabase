@@ -37,12 +37,19 @@ from florabase.harvests.model import Harvest
 from florabase.plants.model import Plant, PlantGroup
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import Sowing
+from florabase.suppliers.model import Supplier
 
-TargetType = Literal["seed_lot", "sowing", "plant", "plant_group", "event", "harvest"]
+TargetType = Literal["seed_lot", "sowing", "plant", "plant_group", "event", "harvest", "supplier"]
 TARGET_MODELS: dict[
     str,
     tuple[
-        type[SeedLot] | type[Sowing] | type[Plant] | type[PlantGroup] | type[Event] | type[Harvest],
+        type[SeedLot]
+        | type[Sowing]
+        | type[Plant]
+        | type[PlantGroup]
+        | type[Event]
+        | type[Harvest]
+        | type[Supplier],
         str,
     ],
 ] = {
@@ -52,6 +59,7 @@ TARGET_MODELS: dict[
     "plant_group": (PlantGroup, "plant_group_id"),
     "event": (Event, "event_id"),
     "harvest": (Harvest, "harvest_id"),
+    "supplier": (Supplier, "supplier_id"),
 }
 IDENTITY_COVER_THUMBNAIL_MAX_EDGE = 320
 

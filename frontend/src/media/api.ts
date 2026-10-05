@@ -10,11 +10,12 @@ export type LinkWrite = components["schemas"]["LinkWrite"];
 export type AssetWrite = components["schemas"]["AssetMetadataWrite"];
 export type ExternalWrite = components["schemas"]["ExternalAssetCreate"];
 export type TargetPage = components["schemas"]["TargetPageResponse"];
+export type MediaTargetFilter = PhotoTarget | "collection";
 export interface MediaFilters {
   query?: string;
   kind?: string;
   association?: string;
-  target?: string;
+  target?: MediaTargetFilter | "";
   offset?: number;
 }
 

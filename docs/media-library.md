@@ -2,7 +2,7 @@
 
 Implementation on `feat/shared-media-library`; handoff boundary: **READY_FOR_VISUAL_REVIEW**.
 This document supersedes the ownership/removal portions of the historical ATTACHMENT-003/004
-contracts. No supplier or harvest capability is introduced.
+contracts. Supplier imagery is added by SUPPLIER-003; Harvest remains an explicit shared target.
 
 ## Inspected previous contract
 
@@ -20,8 +20,8 @@ keys, authenticated files and fixed 320px WebP responses already existed.
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `MediaAsset`                  | UUIDv7, local/external kind, one unique protected Attachment for a local original or optional external snapshot, canonical HTTPS image/source metadata, fetched_at, title, attribution/licence, optional dimensions, state, UTC timestamps |
 | `Attachment`                  | Original key, filename, validated MIME, byte size, SHA-256, binary deletion state and creation timestamp; backend-only original file                                                                                                       |
-| `RecordMediaLink`             | Asset ID, exactly one of the SeedLot/Sowing/Plant/PlantGroup/Event/Harvest target foreign keys, per-record caption, nonnegative display order, UTC timestamps                                                                              |
-| `CollectionPrimaryPhoto`      | Exact SeedLot/Plant/PlantGroup/Harvest and selected local/external link ID; independent for each target                                                                                                                                    |
+| `RecordMediaLink`             | Asset ID, exactly one of the SeedLot/Sowing/Plant/PlantGroup/Event/Harvest/Supplier target foreign keys, per-record caption, nonnegative display order, UTC timestamps                                                                     |
+| `CollectionPrimaryPhoto`      | Exact SeedLot/Plant/PlantGroup/Harvest/Supplier and selected local/external link ID; independent for each target                                                                                                                           |
 | `BotanicalIdentityCoverImage` | One exact identity, asset ID and matching source kind; a separate active reference                                                                                                                                                         |
 
 The old local/external Python photo names are compatibility views over one link table. Asset fields
@@ -29,16 +29,16 @@ are forwarded to the associated asset; they are not copied into each relationshi
 immutable: reassociation requires unlink plus a new link. Composite foreign keys enforce asset kind
 and exact primary target; a trigger also verifies the primary source kind. Per-target unique
 constraints prevent duplicate `(asset, target)` links. Target deletion remains restrictive; Event's
-existing delete action is blocked until its collection links are removed.
+existing delete action is blocked until its record links are removed.
 
 Primary is explicit. No upload, link, unlink or cover mutation guesses a selection or replacement.
 The same asset can be primary for A and secondary for B. Unlinking A clears only A's designation.
 Sowing and Event remain photo targets without a primary API. BotanicalIdentity remains excluded from
-RecordMediaLink and uses its separate cover; Supplier and other target types are excluded.
+RecordMediaLink and uses its separate cover; Supplier is an ordinary explicit media target.
 
 ### Retention and guarded deletion
 
-Unlinked means **zero collection RecordMediaLinks**. Fully unreferenced means zero collection links
+Unlinked means **zero RecordMediaLinks**. Fully unreferenced means zero record links
 **and zero BotanicalIdentity cover references**. Both local and external assets may remain unlinked
 indefinitely. A cover-only asset is unlinked, valid in the Gallery, and ineligible for deletion.
 
@@ -93,8 +93,8 @@ these intentional removal semantics. OpenAPI and generated TypeScript declaratio
 ## User workflows and privacy
 
 Open **Collection → Media**. Browse 24 assets at a time; search title, original filename or
-attribution, and filter source, collection-link state or linked record type. Cards show source,
-collection count and separate cover count. Desktop selection opens compact Quick Preview; opening
+attribution, and filter source, record-link state or linked record type. Cards show source,
+record count and separate cover count. Desktop selection opens compact Quick Preview; opening
 details shows the preview, technical/source metadata, links, captions, order and primary state.
 Narrow screens open details directly. Detail supports editing shared metadata, linking one supported
 record at a time, editing its context/order, selecting/clearing primary where eligible and unlinking.
@@ -332,5 +332,40 @@ frontend/src/styles.css
 
 HARVEST-001 extends supported record targets with Harvest and its independent explicit primary.
 Harvest unlink/deletion retains MediaAssets; owned journal Events resolve Harvest imagery through
-the aggregate relationship without duplicate media links. Supplier remains a separate future target.
+the aggregate relationship without duplicate media links. SUPPLIER-003 subsequently adds Supplier
+as a separate explicit target, described below.
 See [Harvest media contract](harvests.md).
+
+## Supplier media — SUPPLIER-003
+
+Supplier has zero or many ordinary RecordMediaLinks and at most one explicit primary representative.
+The designation belongs to the exact Supplier context, with independent state for every other linked
+record. Upload/link never guesses primary. Unlink clears only that designation and retains the asset,
+its bytes and other links. Supplier retirement retains links; there is no Supplier hard-delete API.
+Restrictive foreign keys require explicit unlink before direct SQL deletion. No logo role, category,
+SupplierAttachment or acquisition semantics are added. No imagery inherits through Supplier, SeedLot,
+Sowing, Plant/PlantGroup, BotanicalIdentity or Dashboard.
+
+Media Target offers All media, Collection media, Suppliers, Seed lots, Sowings, Plants, Plant groups,
+Events and Harvests. `target=collection` means an EXISTS link to seed_lot, sowing, plant, plant_group,
+event or harvest; `target=supplier` means an EXISTS Supplier link. No title/filename guessing occurs.
+Supplier-only media is excluded from Collection. A shared Supplier + Plant asset appears once in both
+filters. These predicates compose with query, kind and association, and use the same deterministic
+created_at/id pagination and unique-asset total in two SELECTs. The existing API field
+`collection_link_count` now counts all RecordMediaLinks, including Supplier; UI labels it Record links
+for compatibility. Linked/unlinked likewise considers every supported record target.
+
+Supplier choices use two bounded SELECTs with literal name search and stable name/id ordering.
+Supplier list counts and primary summaries use at most four SELECTs (list plus the existing three-query
+primary helper), regardless of directory size; an external-only primary directory uses three.
+Directory and Quick Preview use protected thumbnails only. Detail reuses shared Photos plus media
+detail actions for metadata and Save/Refresh/Remove local copy. Reference-only external primaries show
+a neutral placeholder until explicit Preview once; saved copies use authenticated thumbnails. All
+existing authentication, owner mutation, CSRF/Origin, attribution/licence and fetch safety apply.
+
+Revision `20261005_0033`, parent `20261004_0032`, adds nullable Supplier FKs, exact-target checks,
+duplicate-link/primary uniqueness and exact link/primary composite FKs. It updates the immutable-link
+guard for current targets; no assets, files or pre-existing links change and there is no backfill.
+Downgrade checks both Supplier links and designations before any DDL and refuses populated history.
+Explicit unlink retains MediaAssets; after Supplier state is empty downgrade/re-upgrade preserves
+existing collection links. See [handoff and acceptance evidence](supplier-003-handoff.md).

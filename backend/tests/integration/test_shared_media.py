@@ -87,7 +87,7 @@ def test_shared_external_links_independent_primary_order_caption_and_retention(
             ("First plant", 4, True),
             ("Second plant", 9, False),
         ]
-        with pytest.raises(service.MediaError, match="2 collection"):
+        with pytest.raises(service.MediaError, match="2 record"):
             service.delete_asset(database, storage, asset_id)
         database.rollback()
         # The outer fixture transaction remains valid after the deliberately refused delete.
@@ -270,16 +270,29 @@ def test_gallery_and_primary_summaries_remain_batched(database_connection: Conne
             event.remove(database_connection, "before_cursor_execute", record)
 
 
+@pytest.mark.parametrize("target", ["plant", "supplier"])
 def test_media_http_auth_csrf_validation_and_reference_guards(
     attachment_browser: tuple[tuple[str, str], AttachmentStorage],  # noqa: F811
     database_connection: Connection,
+    target: str,
 ) -> None:
     from .test_attachment_api import request
 
     browser, _storage = attachment_browser
     with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
         a, b, _identity = fixture(database)
-        plant_ids = [a.id, b.id]
+        if target == "supplier":
+            from florabase.suppliers.model import Supplier
+
+            suppliers = [
+                Supplier(name="HTTP supplier A", kind="nursery"),
+                Supplier(name="HTTP supplier B", kind="seller"),
+            ]
+            database.add_all(suppliers)
+            database.flush()
+            plant_ids = [supplier.id for supplier in suppliers]
+        else:
+            plant_ids = [a.id, b.id]
         database.commit()
     payload = {
         "image_url": "https://images.example.test/image.jpg",
@@ -287,7 +300,7 @@ def test_media_http_auth_csrf_validation_and_reference_guards(
         "attribution": "Author",
     }
     assert request("GET", "/api/v1/media-assets").status_code == 401
-    assert request("GET", "/api/v1/media-targets/plant").status_code == 401
+    assert request("GET", f"/api/v1/media-targets/{target}").status_code == 401
     assert (
         request("POST", "/api/v1/media-assets/external", browser=browser, body=payload).status_code
         == 403
@@ -321,7 +334,7 @@ def test_media_http_auth_csrf_validation_and_reference_guards(
     )
     links = []
     for plant_id in plant_ids:
-        link_endpoint = f"/api/v1/collection-records/plant/{plant_id}/media-links"
+        link_endpoint = f"/api/v1/collection-records/{target}/{plant_id}/media-links"
         value = {"media_asset_id": asset_id, "caption": "Context", "display_order": 4}
         assert request("POST", link_endpoint, browser=browser, body=value).status_code == 403
         linked = request("POST", link_endpoint, browser=browser, mutation_headers=True, body=value)
@@ -336,7 +349,7 @@ def test_media_http_auth_csrf_validation_and_reference_guards(
     assert (
         request(
             "POST",
-            f"/api/v1/collection-records/supplier/{plant_ids[0]}/media-links",
+            f"/api/v1/collection-records/logo/{plant_ids[0]}/media-links",
             browser=browser,
             mutation_headers=True,
             body={"media_asset_id": asset_id},
@@ -346,7 +359,7 @@ def test_media_http_auth_csrf_validation_and_reference_guards(
     assert request("DELETE", endpoint, browser=browser).status_code == 403
     blocked = request("DELETE", endpoint, browser=browser, mutation_headers=True)
     assert blocked.status_code == 409
-    assert "2 collection link" in blocked.json()["detail"]["message"]
+    assert "2 record link" in blocked.json()["detail"]["message"]
     for link_id in links:
         link_endpoint = f"/api/v1/media-links/{link_id}"
         assert (

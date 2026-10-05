@@ -3237,7 +3237,7 @@ export interface components {
              * Target Type
              * @enum {string}
              */
-            target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest";
+            target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier";
             /** Target Url */
             target_url: string;
             /**
@@ -4936,6 +4936,7 @@ export interface components {
             plant_groups: components["schemas"]["SupplierPlantGroupLink"][];
             /** Plants */
             plants: components["schemas"]["SupplierPlantLink"][];
+            primary_photo?: components["schemas"]["PrimaryPhotoResponse"] | null;
             /** Recent Acquisitions */
             recent_acquisitions: components["schemas"]["SupplierRecentAcquisition"][];
             /** Retired At */
@@ -4977,6 +4978,7 @@ export interface components {
             notes: string | null;
             /** Phone */
             phone: string | null;
+            primary_photo?: components["schemas"]["PrimaryPhotoResponse"] | null;
             /** Retired At */
             retired_at: string | null;
             /**
@@ -6496,7 +6498,7 @@ export interface operations {
                 "X-CSRF-Token"?: string | null;
             };
             path: {
-                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest";
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier";
                 target_id: string;
             };
             cookie?: never;
@@ -6532,7 +6534,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest";
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier";
                 target_id: string;
             };
             cookie?: never;
@@ -6566,7 +6568,7 @@ export interface operations {
                 "X-CSRF-Token"?: string | null;
             };
             path: {
-                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest";
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier";
                 target_id: string;
             };
             cookie?: never;
@@ -6604,7 +6606,7 @@ export interface operations {
                 "X-CSRF-Token"?: string | null;
             };
             path: {
-                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest";
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier";
                 target_id: string;
             };
             cookie?: never;
@@ -6640,7 +6642,7 @@ export interface operations {
             query?: never;
             header?: never;
             path: {
-                target_type: "seed_lot" | "plant" | "plant_group" | "harvest";
+                target_type: "seed_lot" | "plant" | "plant_group" | "harvest" | "supplier";
                 target_id: string;
             };
             cookie?: never;
@@ -6674,7 +6676,7 @@ export interface operations {
                 "X-CSRF-Token"?: string | null;
             };
             path: {
-                target_type: "seed_lot" | "plant" | "plant_group" | "harvest";
+                target_type: "seed_lot" | "plant" | "plant_group" | "harvest" | "supplier";
                 target_id: string;
             };
             cookie?: never;
@@ -6712,7 +6714,7 @@ export interface operations {
                 "X-CSRF-Token"?: string | null;
             };
             path: {
-                target_type: "seed_lot" | "plant" | "plant_group" | "harvest";
+                target_type: "seed_lot" | "plant" | "plant_group" | "harvest" | "supplier";
                 target_id: string;
             };
             cookie?: never;
@@ -8083,7 +8085,7 @@ export interface operations {
                 query?: string;
                 kind?: ("local" | "external") | null;
                 association?: "all" | "linked" | "unlinked";
-                target?: ("seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest") | null;
+                target?: ("collection" | "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier") | null;
                 limit?: number;
                 offset?: number;
             };
@@ -8491,7 +8493,7 @@ export interface operations {
             };
             header?: never;
             path: {
-                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest";
+                target_type: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "harvest" | "supplier";
             };
             cookie?: never;
         };

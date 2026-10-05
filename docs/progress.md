@@ -1,5 +1,59 @@
 # Engineering progress
 
+## 2026-10-05 — SUPPLIER-003 shared Supplier imagery and Reference completion
+
+- Implemented only in the current 73d8 Codex worktree, attached through `make feature-init` as
+  `feat/supplier-003-media` at merged HARVEST-003 base `4dbf6cf` (#69). Supplier is an ordinary
+  typed shared-media target with multiple reusable local/external assets and one optional explicit
+  primary. Concrete restrictive FKs, exact-target/duplicate/primary constraints and the existing
+  immutable-link guard protect membership. Revision `20261005_0033` follows `20261004_0032`,
+  has no backfill or binary mutation, cycles empty state and refuses populated downgrade before DDL.
+- Supplier directory, Quick Preview and detail reuse protected thumbnails/neutral placeholders;
+  the new Photos tab reuses shared upload/reference/link/caption/order/primary/unlink controls.
+  Fixed direct-detail editing to use its loaded Supplier. Media Library Target now offers All,
+  Collection media, Suppliers and every existing collection target. EXISTS filtering composes with
+  search/kind/association and deterministic pagination, returns unique assets and uses two SELECTs.
+  Collection media is exactly an explicit SeedLot/Sowing/Plant/PlantGroup/Event/Harvest link;
+  Supplier-only assets are excluded and Supplier + Plant assets appear in both. Supplier choices
+  use two SELECTs; mixed directory primary summaries use at most four, exercised with 30 Suppliers.
+- Shared assets and each exact primary remain independent. Unlink clears the exact primary and
+  retains assets/other links/covers; zero record links plus zero identity covers still gates deletion.
+  Acquisition/lineage never inherits imagery. External disclosure/copy safety and protected reads,
+  owner mutations, CSRF and exact Origin remain shared. No logo role/category, second media system,
+  Orders, global Search v2 or botanical work was added.
+- QUALITY focused backend Supplier/media/primary/copy pytest `--no-cov`: **59 passed**. The final
+  disposable tmpfs PostgreSQL matrix passed **42 tests** across Supplier media/migration, shared
+  media/races/primary races, Supplier API, external copies and shared-media migration preservation.
+  Eighteen existing Alembic path_separator deprecation warnings remain. Cleaned only task-owned
+  project `florabase-supplier003-20261005` without volume deletion; retained Feature Review.
+- Focused SupplierScreen/MediaScreen/PhotosSection Vitest: **27 passed across 3 files**; existing App
+  Supplier/UX-005 regressions passed **8 tests** (59 unrelated cases skipped) after actual lazy-render readiness and
+  representative-image accessible-name selector corrections. Ruff format,
+  Ruff check, strict mypy (**256 files**), zero-warning ESLint, strict TypeScript, generated contracts
+  from `make api-generate`, `make api-check`, **89-feature** graph and both production image builds
+  passed. Final diff audit and `git diff --check` passed. The independent canonical gate is pending.
+- Corrected ordinary new-test selectors/types/lint. Existing full-row migration preservation now
+  includes the new null Supplier column; retention assertions use the truthful Record links wording.
+  An initial frontend command accidentally launched the full suite, exhausted host RAM/swap and was
+  interrupted by stopping only its own test container. It is not passing evidence. Focused reruns
+  used direct Vitest path selection; no validation, thresholds, timeouts or assertions were weakened.
+- With explicit operator authorization, removed the prior fbb6-owned Review only through its supported
+  helper and created current Review. `make feature-review-up` and `make feature-review-status` show
+  healthy isolated services, 73d8 live source binds and code/database revision 0033 at localhost:15174.
+  Synthetic A–G Supplier/media examples and screenshots stay outside repository source. Actual browser
+  checks cover Supplier directory/Quick Preview/Photos and primary replacement at 1440×844, detail at
+  1024×844, and directory/detail/external dialog focus/escape at 390×844 with no horizontal overflow.
+  Reference-only external primary stays unloaded. The browser later disconnected and reported no
+  available browser despite healthy Review; this agent did not complete the full Media Library matrix
+  or a successful external fetch from example.test.
+- The operator subsequently reported manual product UAT passed on 2026-10-05. Independent review
+  found no production defect; focused tests above independently cover the acceptance criteria.
+  SUPPLIER-003 is P1 **verified**. The canonical frozen-tree gate supplies its final delivery receipt.
+  The new operator-approved next step is **PREVIEW-001**, added as planned P1 infrastructure;
+  Collection productivity v2 follows it. BOTANY-003's approved WFO TLS blocker and historical
+  RELEASE-001 planning remain unchanged. See [full handoff](supplier-003-handoff.md) for the
+  contract and evidence. Primary checkout is untouched.
+
 ## 2026-10-04 — HARVEST-003 explicit SeedLot conversion and guarded reversal
 
 - Continued only in the existing fbb6 Codex worktree, attached through `make feature-init` as
@@ -67,17 +121,17 @@
   On October 5 the retained Review frontend/backend were found stopped; `make feature-review-up`
   restarted the isolated services without state removal and confirmed all healthy at revision 0032.
   - All changes remain unstaged/uncommitted. No extra worktree, primary checkout source change,
-  commit, push, PR, delivery, merge or feature-finish. Operator UAT/visual acceptance and Luna's
-  independent review/matrix are complete. The first canonical attempt stopped after 588 passing unit
-  tests because coverage was 88.78% against the unchanged 90% threshold. Added independent unit
-  coverage for creation, exact use-all conflict and kg guard, reversal eligibility/restoration,
-  conversion history projection and API paths. Final canonical `make feature-verify` passed on
-  October 5: backend 595 passed at 90.00%, frontend 368 passed across 40 files, PostgreSQL
-  integration 500 passed, API drift and workflow checks passed, and production images built. The
-  disposable migration cycle passed from 20261003_0031 through 20261004_0032, back and forward again.
-  The gate exposed a migration-cycle helper that missed normal unannotated Alembic assignments; it
-  now supports both forms and all 37 workflow-helper tests pass. The per-worktree verified receipt
-  matches this tree. The reviewed local commit remains pending.
+    commit, push, PR, delivery, merge or feature-finish. Operator UAT/visual acceptance and Luna's
+    independent review/matrix are complete. The first canonical attempt stopped after 588 passing unit
+    tests because coverage was 88.78% against the unchanged 90% threshold. Added independent unit
+    coverage for creation, exact use-all conflict and kg guard, reversal eligibility/restoration,
+    conversion history projection and API paths. Final canonical `make feature-verify` passed on
+    October 5: backend 595 passed at 90.00%, frontend 368 passed across 40 files, PostgreSQL
+    integration 500 passed, API drift and workflow checks passed, and production images built. The
+    disposable migration cycle passed from 20261003_0031 through 20261004_0032, back and forward again.
+    The gate exposed a migration-cycle helper that missed normal unannotated Alembic assignments; it
+    now supports both forms and all 37 workflow-helper tests pass. The per-worktree verified receipt
+    matches this tree. The reviewed local commit remains pending.
 
 ## 2026-10-04 — HARVEST-002 independent QA and canonical verification
 

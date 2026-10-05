@@ -17,30 +17,39 @@ Media Library (`implemented`); HARVEST-001 (`implemented`); HARVEST-002 (`verifi
 (`implemented`); and PERF-001 (`verified`). Older selected/next wording below describes its original
 planning period and does not supersede this direction.
 
-The current forward sequence is:
+HARVEST-003 is landed and `verified`. SUPPLIER-003 Supplier imagery / practical Reference
+completion is independently verified after operator visual UAT passed. It uses explicit shared-media
+links and primary selection, without new roles or Orders; canonical verification and delivery remain.
+The **next milestone is PREVIEW-001**, an isolated persistent operator UAT Preview built on the existing
+environment boundaries.
+
+The approved sequence, retaining completed steps for context, is:
 
 1. HARVEST-003: explicit stored seed inventory → SeedLot, with approved guarded reversal. Retain
    the reversed SeedLot, original disposition, producer lineage and conversion evidence; restore
    source snapshots only while safe and dependent work is resolved. Converted origin is protected.
    This does not add generic HARVEST-002 disposition undo.
-2. Supplier imagery / practical Reference completion using shared Media where justified; no Orders
-   inside Supplier UI.
-3. Collection productivity v2: broader global search, saved filters/views, bulk operations and
+2. SUPPLIER-003 Supplier imagery / practical Reference completion uses shared
+   MediaAsset/RecordMediaLink and link-based Collection/Supplier filters; operator UAT and
+   independent review passed, with delivery through the canonical repository workflow.
+3. PREVIEW-001: persistent isolated operator UAT Preview with a reusable synthetic dataset,
+   idempotent seeding and explicit guarded reset; distinct from developer DEV and production.
+4. Collection productivity v2: broader global search, saved filters/views, bulk operations and
    justified unified operational history.
-4. Orders / Purchases, separate from Supplier and biological/geographic provenance.
-5. Daily-use biological/collection improvements: measurements, justified flowering/fruiting work,
+5. Orders / Purchases, separate from Supplier and biological/geographic provenance.
+6. Daily-use biological/collection improvements: measurements, justified flowering/fruiting work,
    germination analysis, viability/aging, seasonal planning, operational history and later reviewed
    Dashboard attention rules.
-6. Final UI review of concrete surfaces/defects, mobile and accessibility; no new mega-redesign.
-7. Performance re-check after product increments against PERF-001's existing baseline.
-8. Public Docker distribution: GHCR preferred, immutable/versioned images, practical multi-arch,
+7. Final UI review of concrete surfaces/defects, mobile and accessibility; no new mega-redesign.
+8. Performance re-check after product increments against PERF-001's existing baseline.
+9. Public Docker distribution: GHCR preferred, immutable/versioned images, practical multi-arch,
    production Compose using published images and explicit upgrade/migration expectations.
-9. Repository presentation/documentation review as a newcomer: README, screenshots, overview,
-   installation, configuration, deployment, upgrades, backup/restore, examples, architecture,
-   terminology, links and stale prose.
-10. Technical finalization/release hardening: dead code/workarounds/fixtures/scripts, dependencies,
+10. Repository presentation/documentation review as a newcomer: README, screenshots, overview,
+    installation, configuration, deployment, upgrades, backup/restore, examples, architecture,
+    terminology, links and stale prose.
+11. Technical finalization/release hardening: dead code/workarounds/fixtures/scripts, dependencies,
     licensing/security, final CI, clean install, upgrade, complete DB+media restore and release notes.
-11. 1.0.0 stability milestone.
+12. 1.0.0 stability milestone.
 
 BOTANY-003 stays a parallel `planned` track. Its approved WFO source/product contract is unchanged;
 implementation remains blocked by that endpoint's incomplete public TLS chain. It does not block
@@ -173,11 +182,14 @@ operator reprioritizes them. They are not release-readiness dependencies.
 
 ### Post-0.1.0 by default
 
-- **Supplier directory imagery / supplier logo or image support** is an explicit
-  post-release candidate: an optional Supplier logo/image, compact directory and
-  Quick Preview visual, and a consistent absent-image placeholder. Attachment
-  role/link semantics and schema remain a separate decision; ATTACHMENT-005 supplies shared
-  storage, but adds no Supplier media UI.
+- **PREVIEW-001** is a planned P1 infrastructure increment to provide persistent, isolated
+  operator Preview/UAT with Preview-only credentials, a reusable synthetic dataset, idempotent
+  seeding and explicit guarded reset. It follows SUPPLIER-003 and precedes Collection productivity v2.
+- **Supplier directory imagery** is implemented by SUPPLIER-003 under the approved shared-media
+  target contract; operator visual UAT passed and independent verification is complete. Multiple media
+  and one explicit primary support directory, Quick Preview and shared detail management; link-based
+  Collection/Supplier filters keep Supplier-only imagery out of collection browsing. No logo role,
+  asset category or Orders are added.
 - **Location descendant usage counts** are implemented by LOCATION-003. HARVEST-002
   extends the same direct/inclusive projections to managed harvested material;
   operator scope eligibility remains explicit.
@@ -463,8 +475,8 @@ Each milestone requires a separate bounded increment and product contract before
    HARVEST-002 was the selected P1 pre-1.0 increment for optional stored remainder, Location and
    consumed/processed/discarded/gifted/propagation-use history. Historical collected quantities stay
    independent. Explicit harvested seed → SeedLot conversion is a separate future increment.
-2. Supplier imagery using MediaAsset after its separate target/role contract is selected. Supplier
-   remains excluded from current media links.
+2. Supplier imagery was subsequently implemented as SUPPLIER-003 with normal explicit media
+   links and one representative primary. No logo role or asset category was introduced.
 3. Broader global search, saved views and explicit bulk operations beyond the implemented SEARCH-001
    baseline; preserve deterministic search and destructive-operation boundaries.
 4. Further botanical enrichment and distribution maps beyond existing provider links and occurrence

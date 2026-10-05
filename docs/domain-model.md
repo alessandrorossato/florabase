@@ -612,18 +612,26 @@ regenerable 320px WebP derivative. Gallery assets may have no links. Record uplo
 link atomically. Captions and nonnegative display order belong to each link; source, attribution,
 licence and optional dimensions belong to the asset. No automatic binary deduplication is performed.
 
-RecordMediaLink supports exactly SeedLot, Sowing, Plant, PlantGroup, Event and Harvest through concrete
+RecordMediaLink supports exactly SeedLot, Sowing, Plant, PlantGroup, Event, Harvest and Supplier through concrete
 foreign keys, one target per link and a unique asset/target pair. Target identity is immutable.
 Event hard deletion is blocked while links remain; the existing lifecycle rules of other targets
-are unchanged. Supplier has no media target; Harvest uses shared links and explicit primary selection. BotanicalIdentity uses a distinct cover
+are unchanged. Supplier has shared links and an explicit representative primary; Harvest uses the
+same shared links and primary selection. BotanicalIdentity uses a distinct cover
 reference, excluded from RecordMediaLink.
 
-CollectionPrimaryPhoto remains an explicit designation for SeedLot, Plant, PlantGroup and Harvest,
+CollectionPrimaryPhoto remains an explicit designation for SeedLot, Plant, PlantGroup, Harvest and Supplier,
 referencing a link on that exact target. Unlink clears only that link's primary, retains the asset
 and never guesses a replacement. Each record can independently designate the same shared asset.
 Safe batched summaries retain local primary, eligible local identity-cover fallback, then placeholder;
 external primaries with saved snapshots use protected local thumbnails; reference-only primaries
 remain unloaded until explicit Preview once in Photos or media detail.
+
+Supplier media never inherits through acquisition or lineage: its primary applies only to that Supplier.
+Collection media means assets with at least one explicit SeedLot/Sowing/Plant/PlantGroup/Event/Harvest
+link. Suppliers means at least one Supplier link. Shared Supplier + Plant media appears in both;
+Supplier-only media never appears in a Plant gallery or Collection media. MediaAsset remains global
+and reusable, with no Supplier category or persistent role. Supplier has retirement/reactivation,
+no ordinary hard-delete API; restrictive media FKs also guard direct SQL deletion.
 
 BotanicalIdentityCoverImage keeps one current cover per identity, backed by a MediaAsset. It is an
 active reference independent of collection links. Cover replacement/removal retains the former

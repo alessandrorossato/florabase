@@ -6,7 +6,11 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from florabase.collection_photos.schemas import normalize_text, validate_https_url
 
-MediaTarget = Literal["seed_lot", "sowing", "plant", "plant_group", "event", "harvest"]
+MediaTarget = Literal["seed_lot", "sowing", "plant", "plant_group", "event", "harvest", "supplier"]
+
+MediaTargetFilter = Literal[
+    "collection", "seed_lot", "sowing", "plant", "plant_group", "event", "harvest", "supplier"
+]
 
 
 class AssetMetadataWrite(BaseModel):

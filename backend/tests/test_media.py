@@ -284,7 +284,7 @@ def test_delete_guards_both_reference_types(
     database, storage = MagicMock(), MagicMock()
     monkeypatch.setattr(service, "require_asset", lambda *_args, **_kwargs: row)
     monkeypatch.setattr(service, "reference_counts", lambda *_args: (links, covers))
-    with pytest.raises(service.MediaError, match=f"{links} collection link"):
+    with pytest.raises(service.MediaError, match=f"{links} record link"):
         service.delete_asset(database, storage, row.id)
     database.delete.assert_not_called()
     storage.delete_file.assert_not_called()
@@ -533,3 +533,23 @@ def test_target_picker_is_paged_searchable_and_uses_explicit_target_types(target
         "Named target"
         in service.target_choices(database, cast(MediaTarget, target), "", 20, 0).items[0].label
     )
+
+
+def test_supplier_typed_target_labels_and_urls() -> None:
+    from pydantic import TypeAdapter, ValidationError
+
+    from florabase.media.schemas import MediaTarget, MediaTargetFilter
+    from florabase.suppliers.model import Supplier
+
+    assert TypeAdapter(MediaTarget).validate_python("supplier") == "supplier"
+    assert TypeAdapter(MediaTargetFilter).validate_python("collection") == "collection"
+    for invalid in ("logo", "category", "anything", "collection"):
+        with pytest.raises(ValidationError):
+            TypeAdapter(MediaTarget).validate_python(invalid)
+    with pytest.raises(ValidationError):
+        TypeAdapter(MediaTargetFilter).validate_python("anything")
+    supplier = Supplier(id=uuid7(), name="Garden nursery", kind="nursery")
+    link = RecordMediaLink(supplier_id=supplier.id)
+    assert service.target_of(link) == ("supplier", supplier.id)
+    assert service.target_label(supplier, "supplier") == "Garden nursery"
+    assert service.target_url("supplier", supplier.id) == f"#/suppliers/{supplier.id}"

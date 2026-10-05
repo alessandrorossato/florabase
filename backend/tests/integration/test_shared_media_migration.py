@@ -167,7 +167,7 @@ def test_upgrade_preserves_originals_links_primary_covers_and_standalone(
             )
             assert connection.execute(
                 text("SELECT * FROM collection_primary_photos")
-            ).mappings().one() == {**original_primary, "harvest_id": None}
+            ).mappings().one() == {**original_primary, "harvest_id": None, "supplier_id": None}
             links = (
                 connection.execute(
                     text(
