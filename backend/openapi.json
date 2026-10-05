@@ -1165,6 +1165,230 @@
         "title": "BotanicalProfileResponse",
         "type": "object"
       },
+      "ConversionCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "botanical_identity_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Botanical Identity Id"
+          },
+          "expected_viability_until": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Location Id"
+          },
+          "mode": {
+            "enum": [
+              "partial",
+              "use_all"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "notes": {
+            "anyOf": [
+              {
+                "maxLength": 20000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Notes"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeedQuantity-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "resulting_quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HarvestQuantity-Input"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "ConversionCreate",
+        "type": "object"
+      },
+      "ConversionEligibility": {
+        "properties": {
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "safe",
+              "blocked"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "reasons"
+        ],
+        "title": "ConversionEligibility",
+        "type": "object"
+      },
+      "ConversionResponse": {
+        "properties": {
+          "after": {
+            "$ref": "#/components/schemas/InventorySnapshot"
+          },
+          "before": {
+            "$ref": "#/components/schemas/InventorySnapshot"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "disposition_id": {
+            "format": "uuid",
+            "title": "Disposition Id",
+            "type": "string"
+          },
+          "harvest_id": {
+            "format": "uuid",
+            "title": "Harvest Id",
+            "type": "string"
+          },
+          "harvest_item_id": {
+            "format": "uuid",
+            "title": "Harvest Item Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "inventory_id": {
+            "format": "uuid",
+            "title": "Inventory Id",
+            "type": "string"
+          },
+          "quantity": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SeedQuantity-Output"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reversed_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reversed At"
+          },
+          "seed_lot_id": {
+            "format": "uuid",
+            "title": "Seed Lot Id",
+            "type": "string"
+          },
+          "seed_lot_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed Lot Label"
+          },
+          "status": {
+            "enum": [
+              "applied",
+              "reversed"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "inventory_id",
+          "harvest_id",
+          "harvest_item_id",
+          "disposition_id",
+          "seed_lot_id",
+          "seed_lot_label",
+          "status",
+          "quantity",
+          "before",
+          "after",
+          "created_at",
+          "reversed_at"
+        ],
+        "title": "ConversionResponse",
+        "type": "object"
+      },
       "CoverReferenceResponse": {
         "properties": {
           "botanical_identity_id": {
@@ -7896,7 +8120,8 @@
           "active",
           "exhausted",
           "discarded",
-          "lost"
+          "lost",
+          "reversed"
         ],
         "title": "SeedLotLifecycle",
         "type": "string"
@@ -7975,6 +8200,18 @@
                 "type": "null"
               }
             ]
+          },
+          "harvest_conversion_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Harvest Conversion Id"
           },
           "harvest_date": {
             "anyOf": [
@@ -14176,6 +14413,75 @@
         ]
       }
     },
+    "/api/v1/harvest-inventory/{inventory_id}/create-seed-lot": {
+      "post": {
+        "operationId": "createSeedLotFromHarvest",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "inventory_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Inventory Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create",
+        "tags": [
+          "Harvest seed conversions"
+        ]
+      }
+    },
     "/api/v1/harvest-inventory/{inventory_id}/dispositions": {
       "get": {
         "operationId": "listHarvestDispositions",
@@ -14360,6 +14666,179 @@
         "summary": "Create",
         "tags": [
           "harvest inventory"
+        ]
+      }
+    },
+    "/api/v1/harvest-seed-conversions": {
+      "get": {
+        "operationId": "listHarvestSeedConversions",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "inventory_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Inventory Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "seed_lot_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Seed Lot Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ConversionResponse"
+                  },
+                  "title": "Response Listharvestseedconversions",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List All",
+        "tags": [
+          "Harvest seed conversions"
+        ]
+      }
+    },
+    "/api/v1/harvest-seed-conversions/{conversion_id}/reversal": {
+      "get": {
+        "operationId": "getHarvestSeedConversionReversal",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversion_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversion Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionEligibility"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Eligibility",
+        "tags": [
+          "Harvest seed conversions"
+        ]
+      }
+    },
+    "/api/v1/harvest-seed-conversions/{conversion_id}/reverse": {
+      "post": {
+        "operationId": "reverseHarvestSeedConversion",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversion_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversion Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reverse",
+        "tags": [
+          "Harvest seed conversions"
         ]
       }
     },

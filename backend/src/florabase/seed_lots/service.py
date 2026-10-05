@@ -173,6 +173,11 @@ def _write_values(payload: SeedLotCreate | SeedLotUpdate) -> dict[str, object]:
 
 
 def create_seed_lot(database: Session, payload: SeedLotCreate) -> SeedLot:
+    if payload.lifecycle.value == "reversed":
+        raise SeedLotDomainConflictError(
+            "reversed_lifecycle_immutable",
+            "Reversed lifecycle is assigned only by conversion reversal",
+        )
     lock_lineage_writes(database)
     _lock_new_producers(database, payload)
     _require_references(database, payload)
@@ -188,6 +193,27 @@ def create_seed_lot(database: Session, payload: SeedLotCreate) -> SeedLot:
 def update_seed_lot(database: Session, seed_lot: SeedLot, payload: SeedLotUpdate) -> SeedLot:
     lock_lineage_writes(database)
     database.refresh(seed_lot, with_for_update=True)
+    from florabase.harvests.conversion_model import HarvestSeedLotConversion
+
+    converted = database.scalar(
+        select(HarvestSeedLotConversion.id).where(
+            HarvestSeedLotConversion.seed_lot_id == seed_lot.id
+        )
+    )
+    if converted and (
+        payload.source_kind.value,
+        payload.producer_plant_id,
+        payload.producer_plant_group_id,
+    ) != (seed_lot.source_kind, seed_lot.producer_plant_id, seed_lot.producer_plant_group_id):
+        raise SeedLotDomainConflictError(
+            "harvest_conversion_origin_immutable",
+            "Production origin from harvested seeds cannot be changed",
+        )
+    if (seed_lot.lifecycle == "reversed") != (payload.lifecycle.value == "reversed"):
+        raise SeedLotDomainConflictError(
+            "reversed_lifecycle_immutable",
+            "Reversed lifecycle is assigned only by conversion reversal and cannot be changed",
+        )
     _lock_new_producers(database, payload, seed_lot)
     _require_references(database, payload)
     validate_producer_assignment(
@@ -300,6 +326,16 @@ def _quantity(seed_lot: SeedLot) -> SeedQuantity | None:
 
 
 def responses(database: Session, projections: list[SeedLotProjection]) -> list[SeedLotResponse]:
+    from florabase.harvests.conversion_model import HarvestSeedLotConversion
+
+    conversion_by_lot: dict[UUID, UUID] = {}
+    if projections:
+        for lot_id, conversion_id in database.execute(
+            select(HarvestSeedLotConversion.seed_lot_id, HarvestSeedLotConversion.id).where(
+                HarvestSeedLotConversion.seed_lot_id.in_([item.seed_lot.id for item in projections])
+            )
+        ):
+            conversion_by_lot[lot_id] = conversion_id
     primary_by_id = primary_summaries(
         database, "seed_lot", [item.seed_lot.id for item in projections]
     )
@@ -332,6 +368,7 @@ def responses(database: Session, projections: list[SeedLotProjection]) -> list[S
         result.append(
             SeedLotResponse(
                 id=seed_lot.id,
+                harvest_conversion_id=conversion_by_lot.get(seed_lot.id),
                 primary_photo=primary_by_id.get(seed_lot.id),
                 botanical_identity_id=seed_lot.botanical_identity_id,
                 botanical_identity=BotanicalIdentitySummary(

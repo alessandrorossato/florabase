@@ -135,3 +135,11 @@ scope would disappear. The guard runs before destructive changes under table loc
 HARVEST-002 is verified. Independent final QA and canonical verification are recorded in
 [engineering progress](progress.md). Browser smoke for this final QA was unavailable because the
 Review frontend/backend were stopped; no browser result is claimed for this phase.
+
+## HARVEST-003 boundary
+
+Active tracked seeds may explicitly create one ordinary SeedLot per conversion. Its
+used_for_propagation disposition stays immutable; typed conversion history and cross-links explain
+the result. Guarded Undo Seed lot creation may restore before-state and retain a reversed lot,
+without exposing general disposition reversal. A source correction counter protects against
+intervening stock corrections. See [conversion contract](harvest-seed-conversion.md).

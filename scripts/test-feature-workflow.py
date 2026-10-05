@@ -57,8 +57,10 @@ class VerifyHelperTests(unittest.TestCase):
                 }
             )
         )
+        # Real Alembic revisions use ordinary assignments; the migration-cycle
+        # verifier must also accept annotated declarations used by some fixtures.
         (self.seed / "backend/alembic/versions/0001_base.py").write_text(
-            'revision: str = "0001"\ndown_revision: str | None = None\n'
+            'revision = "0001"\ndown_revision = None\n'
         )
         self.shell("git", "-C", str(self.seed), "add", ".")
         self.shell("git", "-C", str(self.seed), "commit", "-m", "base")
@@ -143,7 +145,7 @@ class VerifyHelperTests(unittest.TestCase):
         self.shell("git", "-C", str(primary), "worktree", "add", "-b", "fix/worktree-receipt", str(linked))
         shutil.copytree(primary / "scripts", linked / "scripts")
         migration = linked / "backend/alembic/versions/0002_dirty.py"
-        migration.write_text('revision: str = "0002"\ndown_revision: str = "0001"\n')
+        migration.write_text('revision = "0002"\ndown_revision = "0001"\n')
         (linked / "symlink.txt").symlink_to("backend/alembic/versions/0002_dirty.py")
         self.work = linked
         self.assertTrue((linked / ".git").is_file())

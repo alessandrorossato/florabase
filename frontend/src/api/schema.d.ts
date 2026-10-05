@@ -704,6 +704,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/harvest-inventory/{inventory_id}/create-seed-lot": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create */
+        post: operations["createSeedLotFromHarvest"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/harvest-inventory/{inventory_id}/dispositions": {
         parameters: {
             query?: never;
@@ -733,6 +750,57 @@ export interface paths {
         put?: never;
         /** Create */
         post: operations["trackHarvestMaterial"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/harvest-seed-conversions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List All */
+        get: operations["listHarvestSeedConversions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/harvest-seed-conversions/{conversion_id}/reversal": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Eligibility */
+        get: operations["getHarvestSeedConversionReversal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/harvest-seed-conversions/{conversion_id}/reverse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reverse */
+        post: operations["reverseHarvestSeedConversion"];
         delete?: never;
         options?: never;
         head?: never;
@@ -2177,6 +2245,85 @@ export interface components {
             uses: string | null;
             /** Warnings */
             warnings: string | null;
+        };
+        /** ConversionCreate */
+        ConversionCreate: {
+            /** Botanical Identity Id */
+            botanical_identity_id?: string | null;
+            expected_viability_until?: components["schemas"]["PartialDate"] | null;
+            /** Label */
+            label?: string | null;
+            /** Location Id */
+            location_id?: string | null;
+            /**
+             * Mode
+             * @enum {string}
+             */
+            mode: "partial" | "use_all";
+            /** Notes */
+            notes?: string | null;
+            quantity?: components["schemas"]["SeedQuantity-Input"] | null;
+            resulting_quantity?: components["schemas"]["HarvestQuantity-Input"] | null;
+        };
+        /** ConversionEligibility */
+        ConversionEligibility: {
+            /** Reasons */
+            reasons: string[];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "safe" | "blocked";
+        };
+        /** ConversionResponse */
+        ConversionResponse: {
+            after: components["schemas"]["InventorySnapshot"];
+            before: components["schemas"]["InventorySnapshot"];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Disposition Id
+             * Format: uuid
+             */
+            disposition_id: string;
+            /**
+             * Harvest Id
+             * Format: uuid
+             */
+            harvest_id: string;
+            /**
+             * Harvest Item Id
+             * Format: uuid
+             */
+            harvest_item_id: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Inventory Id
+             * Format: uuid
+             */
+            inventory_id: string;
+            quantity: components["schemas"]["SeedQuantity-Output"] | null;
+            /** Reversed At */
+            reversed_at: string | null;
+            /**
+             * Seed Lot Id
+             * Format: uuid
+             */
+            seed_lot_id: string;
+            /** Seed Lot Label */
+            seed_lot_label: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "applied" | "reversed";
         };
         /** CoverReferenceResponse */
         CoverReferenceResponse: {
@@ -4290,7 +4437,7 @@ export interface components {
          * SeedLotLifecycle
          * @enum {string}
          */
-        SeedLotLifecycle: "active" | "exhausted" | "discarded" | "lost";
+        SeedLotLifecycle: "active" | "exhausted" | "discarded" | "lost" | "reversed";
         /** SeedLotLineageNode */
         SeedLotLineageNode: {
             botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
@@ -4323,6 +4470,8 @@ export interface components {
              */
             created_at: string;
             expected_viability_until: components["schemas"]["PartialDate"] | null;
+            /** Harvest Conversion Id */
+            harvest_conversion_id?: string | null;
             harvest_date: components["schemas"]["PartialDate"] | null;
             /**
              * Id
@@ -7109,6 +7258,43 @@ export interface operations {
             };
         };
     };
+    createSeedLotFromHarvest: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                inventory_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConversionCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     listHarvestDispositions: {
         parameters: {
             query?: never;
@@ -7201,6 +7387,102 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["InventoryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listHarvestSeedConversions: {
+        parameters: {
+            query?: {
+                inventory_id?: string | null;
+                seed_lot_id?: string | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversionResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getHarvestSeedConversionReversal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                conversion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversionEligibility"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reverseHarvestSeedConversion: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                conversion_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConversionResponse"];
                 };
             };
             /** @description Validation Error */

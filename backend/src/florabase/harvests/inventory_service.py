@@ -115,6 +115,8 @@ def locked_inventory(database: Session, inventory_id: UUID) -> Inventory:
 def correct(database: Session, inventory_id: UUID, payload: InventoryWrite) -> Inventory:
     inventory = locked_inventory(database, inventory_id)
     require_location_for_scope(database, payload.location_id, LocationUsageScope.HARVEST_INVENTORY)
+    if inventory.state != payload.state or quantity(inventory) != payload.quantity:
+        inventory.correction_version += 1
     inventory.state, inventory.location_id = payload.state, payload.location_id
     set_quantity(inventory, payload.quantity)
     inventory.updated_at = utc_now()

@@ -49,6 +49,25 @@ def write_harvest(
     database: Session, payload: HarvestWrite, harvest_id: UUID | None = None
 ) -> Harvest:
     harvest = require_harvest(database, harvest_id, lock=True) if harvest_id else None
+    if harvest and (harvest.plant_id, harvest.plant_group_id) != (
+        payload.plant_id,
+        payload.plant_group_id,
+    ):
+        from florabase.harvests.conversion_model import HarvestSeedLotConversion
+
+        if database.scalar(
+            select(HarvestSeedLotConversion.id)
+            .join(
+                HarvestMaterialInventory,
+                HarvestMaterialInventory.id == HarvestSeedLotConversion.inventory_id,
+            )
+            .where(HarvestMaterialInventory.harvest_id == harvest.id)
+            .limit(1)
+        ):
+            raise EventDomainConflictError(
+                "harvest_conversion_source_immutable",
+                "Harvest source is protected by retained Seed lot conversions",
+            )
     model = Plant if payload.plant_id else PlantGroup
     source_id = payload.plant_id or payload.plant_group_id
     source = database.scalar(select(model).where(model.id == source_id).with_for_update())

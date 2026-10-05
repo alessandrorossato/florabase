@@ -58,11 +58,15 @@ class SowingProjection:
 
 
 def _require_references(
-    database: Session, payload: SowingCreate | SowingUpdate
+    database: Session, payload: SowingCreate | SowingUpdate, *, allow_historical: bool = False
 ) -> tuple[SeedLot, Location | None]:
     seed_lot = database.get(SeedLot, payload.seed_lot_id)
     if seed_lot is None:
         raise SowingReferenceNotFoundError("seed_lot_not_found", "SeedLot not found")
+    if seed_lot.lifecycle == "reversed" and not allow_historical:
+        raise SowingDomainConflictError(
+            "seed_lot_reversed", "A reversed Seed lot cannot create new Sowings"
+        )
     try:
         location = require_location_for_scope(
             database, payload.location_id, LocationUsageScope.SOWINGS
@@ -149,7 +153,12 @@ def update_sowing(database: Session, sowing: Sowing, payload: SowingUpdate) -> S
                 "observations_exceed_seeds",
                 "Observed germinations exceed the new exact seed count sown",
             )
-    _require_references(database, payload)
+    _require_references(
+        database,
+        payload,
+        allow_historical=sowing.lifecycle == "reversed"
+        and payload.seed_lot_id == sowing.seed_lot_id,
+    )
     try:
         validate_source_assignment(
             database, ("sowing", sowing.id), ("seed_lot", payload.seed_lot_id)

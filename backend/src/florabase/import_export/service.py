@@ -141,7 +141,7 @@ def enum_values(kind: str, key: str) -> list[str] | None:
     values = [member.value for member in enum_type]
     if key == "lifecycle" and kind == "plants":
         return [value for value in values if value not in {"reversed", "reintegrated"}]
-    if key == "lifecycle" and kind == "plant-groups":
+    if key == "lifecycle" and kind in {"plant-groups", "seed-lots"}:
         return [value for value in values if value != "reversed"]
     return values
 

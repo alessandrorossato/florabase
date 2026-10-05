@@ -1204,6 +1204,28 @@
       "dependencies": ["SECURITY-002", "TRANSFER-001"],
       "priority": "P3",
       "status": "planned"
+    },
+    {
+      "id": "HARVEST-003",
+      "category": "harvest",
+      "description": "Create explicit SeedLots from managed harvested seed material",
+      "acceptance_criteria": [
+        "Explicit seed-only conversion requires active managed HARVEST-002 inventory and can create multiple physical SeedLots from one stock without inferred conversions or backfill",
+        "One transaction accounts for source stock through used_for_propagation, creates the SeedLot and retains a typed unique conversion with source and result snapshots",
+        "The exact Plant or PlantGroup producer uses canonical collection_produced lineage and existing cycle protection; BotanicalIdentity remains independently correctable",
+        "Exact, approximate and unknown quantities preserve operator knowledge, PartialDate harvest occurrence and independent target Location without source Event or media effects",
+        "Guarded reversal retains conversion, disposition, SeedLot and producer lineage, restores source before-state only while compatible, and excludes reversed SeedLots from current use",
+        "Deterministic locks, PostgreSQL concurrency tests and origin/correction/dependency guards prevent stale restoration, overuse and falsified conversion history",
+        "Responsive creation/undo workflows expose eligibility, conflicts and Harvest-to-SeedLot cross-navigation; focused migration, API, static and frontend checks have evidence"
+      ],
+      "dependencies": [
+        "HARVEST-002",
+        "LINEAGE-002",
+        "SEED-003",
+        "PROPAGATION-003"
+      ],
+      "priority": "P1",
+      "status": "verified"
     }
   ]
 }

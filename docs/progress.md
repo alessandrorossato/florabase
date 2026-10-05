@@ -1,5 +1,84 @@
 # Engineering progress
 
+## 2026-10-04 — HARVEST-003 explicit SeedLot conversion and guarded reversal
+
+- Continued only in the existing fbb6 Codex worktree, attached through `make feature-init` as
+  `feat/harvest-003-seedlot-conversion` at merged HARVEST-002 base `c351971` (#67). The original
+  product gate was resolved by the operator's approved B guarded-reversal contract. Added narrow
+  typed conversion persistence, explicit active tracked seed-only creation, atomic stock/disposition/
+  SeedLot accounting, canonical exact producer lineage and on-demand cross-links. Source identity
+  defaults independently correctable target identity; PartialDate occurrence and explicit target
+  Location preserve known facts without acquisition/provenance/Event/media/Sowing inference.
+- Undo retains the original immutable disposition, conversion and resulting SeedLot as `reversed`,
+  restoring typed source before quantity/state only under captured after-state/correction-version
+  compatibility and resolved dependency rules. Converted producer/source and Harvest source are
+  protected; later standalone dispositions still have no generic reversal. Reversed lots remain in
+  history/totals/Location evidence and cannot reactivate or supply new Sowings. Safe descriptive,
+  identity and Location corrections remain possible. Revision `20261004_0032` installs restrictive
+  FKs, unique result/disposition links, typed quantity/coherence/origin guards and guarded downgrade.
+- Added HARVEST-003 and promoted it to `verified` after accepted UAT and independent review, without
+  changing other feature contracts/statuses.
+  Reconciled the roadmap's current direction and actual landed graph statuses, retaining historical
+  0.1.0/RELEASE-001 planning. Recorded the approved forward sequence through 1.0.0 and BOTANY-003's
+  parallel approved-WFO incomplete-TLS-chain blocker without workaround or reselection. See
+  [contract](harvest-seed-conversion.md) and [full Sol handoff](harvest-003-handoff.md).
+- Focused QUALITY backend pytest `--no-cov`: **129 passed** across Harvest, inventory, conversion,
+  SeedLot model/schema, lineage and import/export service files; SeedLot service/API **6 passed**;
+  ordinary Sowing service **4 passed**. Focused Vitest Conversion/SeedLotScreen/SowingScreen:
+  **48 passed**; the added identity/target-Location choice brought Conversion to **8 passed**,
+  and final eligibility-request failure coverage brought it to **9 passed**, for **50 unique focused
+  cases**. Final audit fixed an eligibility error appearing behind Undo: the dialog now shows the
+  failure and keeps confirmation disabled. Final focused Conversion rerun: **9 passed**.
+- Task-owned disposable PostgreSQL tmpfs project `florabase-harvest003-20261004` ran the current
+  backend through `compose.integration.yaml` plus an untracked `/tmp` source override. Fresh focused
+  matrix: **160 passed** across CSV API, conversion/migration, inventory/migration, SeedLot API,
+  lineage API/integrity and propagation reversal. Final conversion/migration rerun after boundary/
+  correction tests and SQL readability cleanup: **42 passed**. Twelve deterministic transaction/
+  observed-lock-wait race cases cover overuse, duplicate use-all, source correction/Harvest/real
+  lineage mutation and Undo vs disposition/conversion/use/duplicate Undo/correction, without sleeps.
+  Migration cycles preserve a pre-existing ordinary lot/inventory without conversion backfill and
+  reject populated downgrade. Existing Alembic path_separator deprecation warnings remain unchanged.
+- An early reused test DB retained pre-cleanup race reference fixtures and caused four existing
+  empty-DB CSV assertions to fail. Added complete fixture-reference cleanup and reran on fresh tmpfs:
+  all passed. New-test enum fixture/selector/type/lint failures were fixed without weakening existing
+  assertions, validation, configuration or timeouts.
+- Ruff, Python format check, strict mypy (**254 source files**), Prettier, zero-warning ESLint,
+  strict TypeScript, `make api-check`, the **87-feature** graph, production backend/frontend image
+  builds and `git diff --check` passed. Generated contracts came from `make api-generate`.
+  After resumption, final production builds, mypy over **132 application source files**, Python
+  formatting (**289 files**) and Prettier passed again on the current tree.
+  The final modal error-state fix passed strict TypeScript, zero-warning ESLint, Prettier and
+  both production image builds on October 5.
+- Feature Review was initially blocked by 8dfa ownership. With explicit operator approval, removed
+  only that prior Review through its owning `feature-review-remove`; current `feature-review-up`
+  and `feature-review-status` report fbb6 live binds, isolated DB/media/dependencies, healthy services
+  and revision 0032 at localhost:15174. Actual browser smoke completed exact Plant partial transfer,
+  changed target Location, dates, cross-links and lineage at **1440×844**, then a second exact use-all
+  packet, depleted source and retained two conversions at **1024×844**. Browser reconnection resolved
+  the interrupted mobile smoke: **390×844** blocked older Undo with useful reasons and disabled
+  confirmation, restored focus on Cancel, then safely reversed the newest packet and restored exactly
+  20 items. The reversed lot retained Harvest links and Plant lineage with no Start sowing action.
+  PlantGroup approximate stock produced an exact 35 g packet with explicitly confirmed approximate
+  65 g remainder; unknown group stock produced a measured 20 g packet while remainder stayed unknown.
+  Non-seed/depleted rows had no conversion action. Mobile dialogs had no horizontal overflow and
+  native quantity controls passed keyboard selection. All representative A–L cases are covered
+  across the three requested sizes. Operator acceptance is accepted. Review synthetic data,
+  credentials and screenshots are outside the diff; viewport override reset; DEV was unused.
+  On October 5 the retained Review frontend/backend were found stopped; `make feature-review-up`
+  restarted the isolated services without state removal and confirmed all healthy at revision 0032.
+  - All changes remain unstaged/uncommitted. No extra worktree, primary checkout source change,
+  commit, push, PR, delivery, merge or feature-finish. Operator UAT/visual acceptance and Luna's
+  independent review/matrix are complete. The first canonical attempt stopped after 588 passing unit
+  tests because coverage was 88.78% against the unchanged 90% threshold. Added independent unit
+  coverage for creation, exact use-all conflict and kg guard, reversal eligibility/restoration,
+  conversion history projection and API paths. Final canonical `make feature-verify` passed on
+  October 5: backend 595 passed at 90.00%, frontend 368 passed across 40 files, PostgreSQL
+  integration 500 passed, API drift and workflow checks passed, and production images built. The
+  disposable migration cycle passed from 20261003_0031 through 20261004_0032, back and forward again.
+  The gate exposed a migration-cycle helper that missed normal unannotated Alembic assignments; it
+  now supports both forms and all 37 workflow-helper tests pass. The per-worktree verified receipt
+  matches this tree. The reviewed local commit remains pending.
+
 ## 2026-10-04 — HARVEST-002 independent QA and canonical verification
 
 - Independently reviewed the complete feature diff, including migration/model constraints, service
