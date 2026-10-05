@@ -8,6 +8,7 @@ from sqlalchemy.sql.selectable import ScalarSelect
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
+from florabase.collection_photos.primary import primary_summaries
 from florabase.plants.model import Plant, PlantGroup
 from florabase.seed_lots.model import SeedLot
 from florabase.seed_lots.schemas import PartialDate
@@ -100,9 +101,12 @@ def get_supplier(database: Session, supplier_id: UUID) -> Supplier | None:
 
 
 def list_suppliers(database: Session) -> list[SupplierListResponse]:
+    rows = database.execute(_list_statement()).tuples().all()
+    photos = primary_summaries(database, "supplier", [row[0].id for row in rows])
     return [
         SupplierListResponse(
             **SupplierResponse.from_model(supplier).model_dump(),
+            primary_photo=photos.get(supplier.id),
             usage_counts=_usage_counts(
                 (
                     seed_active,
@@ -122,7 +126,7 @@ def list_suppliers(database: Session) -> list[SupplierListResponse]:
             plant_total,
             group_active,
             group_total,
-        ) in database.execute(_list_statement()).tuples()
+        ) in rows
     ]
 
 
@@ -272,6 +276,7 @@ def get_supplier_detail(database: Session, supplier: Supplier) -> SupplierDetail
         )
     )
     return SupplierDetailResponse(
+        primary_photo=primary_summaries(database, "supplier", [supplier.id]).get(supplier.id),
         **SupplierResponse.from_model(supplier).model_dump(),
         usage_counts=_usage_counts(tuple(count_row)),
         seed_lots=seed_lots,

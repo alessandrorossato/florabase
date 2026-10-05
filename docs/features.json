@@ -88,6 +88,21 @@
       "status": "implemented"
     },
     {
+      "id": "PREVIEW-001",
+      "category": "infrastructure",
+      "description": "Provide an isolated persistent operator Preview for UAT",
+      "acceptance_criteria": [
+        "Operator Preview uses an explicitly identified source and isolated persistent database/media resources distinct from DEV and production; health, code/database migration state, stop/start persistence and environment identity are observable",
+        "A Preview-only preview/preview account and synthetic reusable dataset are created through the guarded Preview environment; the credentials and fixture data cannot bootstrap, authenticate to, or leak into DEV or production",
+        "Preview seeding is deterministic and idempotent, while Preview reset is an explicit separately guarded operation that identifies and affects Preview data only",
+        "Simple preview-up, preview-stop, preview-status, preview-seed and preview-reset commands follow existing workflow source/configuration boundaries and never run implicitly during startup",
+        "Real isolated Compose smoke covers first startup, repeat seed, explicit reset, restart persistence, health and before/after proof that DEV and production state are unchanged"
+      ],
+      "dependencies": ["CI-003"],
+      "priority": "P1",
+      "status": "planned"
+    },
+    {
       "id": "RELEASE-001",
       "category": "operations",
       "description": "Harden and validate the first distributable Florabase 0.1.0 release",
@@ -1047,6 +1062,23 @@
       ],
       "dependencies": ["SUPPLIER-001", "SEED-004"],
       "priority": "P2",
+      "status": "verified"
+    },
+    {
+      "id": "SUPPLIER-003",
+      "category": "supplier",
+      "description": "Add Supplier media using the shared Media Library and target-aware filtering",
+      "acceptance_criteria": [
+        "Supplier is an explicit concrete RecordMediaLink target with multiple reusable local/external assets and at most one independent primary",
+        "Supplier directory, Quick Preview and detail use batched representative imagery and shared media management with protected thumbnails and neutral absence",
+        "Media Library All, Collection media, Suppliers and individual collection target filters compose with search, kind, association and deterministic server pagination without duplicate assets",
+        "Collection media includes only assets explicitly linked to seed_lot, sowing, plant, plant_group, event or harvest; Supplier-only assets are excluded while Supplier plus Plant assets appear in both contexts",
+        "Supplier imagery never propagates through acquisition, lineage, BotanicalIdentity covers or Dashboard, and adds no Orders or persistent media roles/categories",
+        "Existing auth, CSRF, Origin, external disclosure, saved-copy, attribution, retention and deletion guards remain intact",
+        "Supplier target constraints, primary uniqueness, concurrency, bounded queries and history-preserving upgrade/downgrade behavior have focused coverage"
+      ],
+      "dependencies": ["SUPPLIER-002", "ATTACHMENT-005"],
+      "priority": "P1",
       "status": "verified"
     },
     {

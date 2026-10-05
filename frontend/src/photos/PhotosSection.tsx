@@ -222,7 +222,8 @@ export function PhotosSection({
     target === "seed_lot" ||
     target === "plant" ||
     target === "plant_group" ||
-    target === "harvest";
+    target === "harvest" ||
+    target === "supplier";
 
   useEffect(() => {
     const controller = new AbortController();
@@ -434,7 +435,9 @@ export function PhotosSection({
     <section className="photos-section" aria-labelledby={headingId}>
       <div className="photos-heading">
         <div>
-          <p className="eyebrow">Collection evidence</p>
+          <p className="eyebrow">
+            {target === "supplier" ? "Supplier imagery" : "Collection evidence"}
+          </p>
           <h4 id={headingId}>Photos</h4>
         </div>
         <div className="actions">

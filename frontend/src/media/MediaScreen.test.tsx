@@ -158,10 +158,7 @@ test("Gallery distinguishes source and references, uses thumbnails and filters/p
   expect(
     screen.getByRole("link", { name: "Open media details" }),
   ).toHaveAttribute("href", `#/media/${assetId}`);
-  await user.selectOptions(
-    screen.getByLabelText("Collection links"),
-    "unlinked",
-  );
+  await user.selectOptions(screen.getByLabelText("Record links"), "unlinked");
   await waitFor(() => {
     expect(fetch).toHaveBeenLastCalledWith(
       expect.stringContaining("association=unlinked"),
@@ -180,7 +177,7 @@ test("Gallery distinguishes source and references, uses thumbnails and filters/p
   ).toBe(true);
 });
 
-test("cover-only asset cannot be deleted and cover reference is separate from collection links", async () => {
+test("cover-only asset cannot be deleted and cover reference is separate from record links", async () => {
   vi.spyOn(globalThis, "fetch").mockResolvedValue(
     json(
       detail({
@@ -202,127 +199,132 @@ test("cover-only asset cannot be deleted and cover reference is separate from co
   expect(
     screen.getByRole("button", { name: "Delete media asset" }),
   ).toBeDisabled();
-  expect(screen.getByText(/Deletion blocked: 0 collection link/)).toBeVisible();
+  expect(screen.getByText(/Deletion blocked: 0 record link/)).toBeVisible();
   expect(screen.getByRole("link", { name: "Garden species" })).toHaveAttribute(
     "href",
     `#/identities/${recordId}`,
   );
-  expect(
-    screen.getByText(/No collection links. This asset remains/),
-  ).toBeVisible();
+  expect(screen.getByText(/No record links. This asset remains/)).toBeVisible();
 });
 
-test("detail edits link context, selects primary and unlinks only the chosen record", async () => {
-  let value = detail({
-    collection_link_count: 2,
-    can_delete: false,
-    links: [
-      link(),
-      link({
-        id: recordId,
-        target_label: "Plant B",
-        target_id: linkId,
-        caption: "Second plant",
-      }),
-    ],
-  });
-  const fetch = vi
-    .spyOn(globalThis, "fetch")
-    .mockImplementation((input, init) => {
-      const url = requestUrl(input);
-      if (init?.method === "PATCH") {
-        value.links[0] = {
-          ...value.links[0],
-          caption: "Changed caption",
-          display_order: 7,
-        };
-        return Promise.resolve(json(value.links[0]));
-      }
-      if (init?.method === "PUT") {
-        value.links[0].is_primary = true;
-        return Promise.resolve(
-          json({
-            kind: "local",
-            photo_id: linkId,
-            thumbnail_url: asset().thumbnail_url,
-          }),
-        );
-      }
-      if (init?.method === "DELETE") {
-        value = {
-          ...value,
-          collection_link_count: 1,
-          links: value.links.slice(1),
-        };
-        return Promise.resolve(new Response(null, { status: 204 }));
-      }
-      if (url.includes("media-assets")) return Promise.resolve(json(value));
-      throw new Error(url);
+test.each(["plant", "supplier"] as const)(
+  "detail edits %s link context, selects primary and unlinks only the chosen record",
+  async (target) => {
+    let value = detail({
+      collection_link_count: 2,
+      can_delete: false,
+      links: [
+        link({ target_type: target }),
+        link({
+          id: recordId,
+          target_label: "Plant B",
+          target_id: linkId,
+          caption: "Second plant",
+        }),
+      ],
     });
-  const user = userEvent.setup();
-  mount(<MediaScreen initialId={assetId} />);
-  await screen.findByText("In the garden");
-  await user.click(
-    screen.getAllByRole("button", { name: "Edit link details" })[0],
-  );
-  const editor = screen.getByRole("dialog", {
-    name: "Edit record link details",
-  });
-  await user.clear(within(editor).getByLabelText("Caption for this record"));
-  await user.type(
-    within(editor).getByLabelText("Caption for this record"),
-    "Changed caption",
-  );
-  await user.clear(
-    within(editor).getByLabelText("Display order for this record"),
-  );
-  await user.type(
-    within(editor).getByLabelText("Display order for this record"),
-    "7",
-  );
-  await user.click(
-    within(editor).getByRole("button", { name: "Save link details" }),
-  );
-  await screen.findByText("Changed caption");
-  expect(fetch).toHaveBeenCalledWith(
-    `/api/v1/media-links/${linkId}`,
-    expect.objectContaining({
-      method: "PATCH",
-      body: JSON.stringify({ caption: "Changed caption", display_order: 7 }),
-    }),
-  );
-  await user.click(
-    screen.getAllByRole("button", { name: "Set as primary" })[0],
-  );
-  await screen.findByRole("button", { name: "Clear primary" });
-  await user.click(
-    screen.getAllByRole("button", { name: "Unlink from this record" })[0],
-  );
-  const confirmation = screen.getByRole("dialog", {
-    name: "Unlink from this record?",
-  });
-  expect(
-    within(confirmation).getByText(
-      /asset, other links and cover references remain/,
-    ),
-  ).toBeVisible();
-  await user.click(
-    within(confirmation).getByRole("button", {
-      name: "Unlink from this record",
-    }),
-  );
-  await screen.findByText(
-    "Record link removed. Media retained in the library.",
-  );
-  expect(screen.getByRole("link", { name: "Plant B" })).toBeVisible();
-  expect(
-    screen.queryByRole("link", { name: "Plant A" }),
-  ).not.toBeInTheDocument();
-  expect(fetch).not.toHaveBeenCalledWith(
-    `/api/v1/media-assets/${assetId}`,
-    expect.objectContaining({ method: "DELETE" }),
-  );
-});
+    const fetch = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation((input, init) => {
+        const url = requestUrl(input);
+        if (init?.method === "PATCH") {
+          value.links[0] = {
+            ...value.links[0],
+            caption: "Changed caption",
+            display_order: 7,
+          };
+          return Promise.resolve(json(value.links[0]));
+        }
+        if (init?.method === "PUT") {
+          value.links[0].is_primary = true;
+          return Promise.resolve(
+            json({
+              kind: "local",
+              photo_id: linkId,
+              thumbnail_url: asset().thumbnail_url,
+            }),
+          );
+        }
+        if (init?.method === "DELETE") {
+          value = {
+            ...value,
+            collection_link_count: 1,
+            links: value.links.slice(1),
+          };
+          return Promise.resolve(new Response(null, { status: 204 }));
+        }
+        if (url.includes("media-assets")) return Promise.resolve(json(value));
+        throw new Error(url);
+      });
+    const user = userEvent.setup();
+    mount(<MediaScreen initialId={assetId} />);
+    await screen.findByText("In the garden");
+    await user.click(
+      screen.getAllByRole("button", { name: "Edit link details" })[0],
+    );
+    const editor = screen.getByRole("dialog", {
+      name: "Edit record link details",
+    });
+    await user.clear(within(editor).getByLabelText("Caption for this record"));
+    await user.type(
+      within(editor).getByLabelText("Caption for this record"),
+      "Changed caption",
+    );
+    await user.clear(
+      within(editor).getByLabelText("Display order for this record"),
+    );
+    await user.type(
+      within(editor).getByLabelText("Display order for this record"),
+      "7",
+    );
+    await user.click(
+      within(editor).getByRole("button", { name: "Save link details" }),
+    );
+    await screen.findByText("Changed caption");
+    expect(fetch).toHaveBeenCalledWith(
+      `/api/v1/media-links/${linkId}`,
+      expect.objectContaining({
+        method: "PATCH",
+        body: JSON.stringify({ caption: "Changed caption", display_order: 7 }),
+      }),
+    );
+    await user.click(
+      screen.getAllByRole("button", { name: "Set as primary" })[0],
+    );
+    await screen.findByRole("button", { name: "Clear primary" });
+    expect(fetch).toHaveBeenCalledWith(
+      `/api/v1/collection-records/${target}/${recordId}/primary-photo`,
+      expect.objectContaining({ method: "PUT" }),
+    );
+    await user.click(
+      screen.getAllByRole("button", { name: "Unlink from this record" })[0],
+    );
+    const confirmation = screen.getByRole("dialog", {
+      name: "Unlink from this record?",
+    });
+    expect(
+      within(confirmation).getByText(
+        /asset, other links and cover references remain/,
+      ),
+    ).toBeVisible();
+    await user.click(
+      within(confirmation).getByRole("button", {
+        name: "Unlink from this record",
+      }),
+    );
+    await screen.findByText(
+      "Record link removed. Media retained in the library.",
+    );
+    expect(screen.getByRole("link", { name: "Plant B" })).toBeVisible();
+    expect(
+      screen.queryByRole("link", { name: "Plant A" }),
+    ).not.toBeInTheDocument();
+    expect(fetch).not.toHaveBeenCalledWith(
+      `/api/v1/media-assets/${assetId}`,
+      expect.objectContaining({ method: "DELETE" }),
+    );
+  },
+);
 
 test("Gallery uploads an unlinked original and keeps failure input recoverable", async () => {
   let saved = false;
@@ -438,9 +440,7 @@ test("detail linker supports one-record-at-a-time selection without unsupported 
   const user = userEvent.setup();
   mount(<MediaLinker asset={asset()} onClose={vi.fn()} onLinked={onLinked} />);
   await user.click(await screen.findByRole("radio", { name: "Plant A" }));
-  expect(
-    screen.queryByRole("option", { name: "Supplier" }),
-  ).not.toBeInTheDocument();
+  expect(screen.getByRole("option", { name: "Supplier" })).toBeInTheDocument();
   expect(
     screen.queryByRole("option", { name: "BotanicalIdentity" }),
   ).not.toBeInTheDocument();
@@ -571,7 +571,7 @@ test("external detail explicitly saves, refreshes and removes the persistent loc
   const dialog = screen.getByRole("dialog", { name: "Remove local copy?" });
   expect(
     within(dialog).getByText(
-      /collection links, primary selections and covers remain/,
+      /record links, primary selections and covers remain/,
     ),
   ).toBeVisible();
   await user.click(
@@ -651,4 +651,132 @@ test("Gallery and Quick Preview use only the protected snapshot of an external a
   expect(
     screen.getAllByText("External reference · local copy saved"),
   ).toHaveLength(2);
+});
+
+test("Target presets compose with source/search/pagination and keep explicit shared contexts", async () => {
+  const onlySupplier = asset({
+    title: "Supplier only",
+    collection_link_count: 1,
+  });
+  const shared = asset({
+    id: recordId,
+    title: "Shared Supplier + Plant",
+    collection_link_count: 3,
+  });
+  const onlyPlant = asset({
+    id: linkId,
+    title: "Plant only",
+    collection_link_count: 1,
+  });
+  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    const params = new URL(requestUrl(input), "http://localhost").searchParams;
+    const target = params.get("target");
+    const items =
+      target === "supplier"
+        ? [onlySupplier, shared]
+        : target === "collection" || target === "plant"
+          ? [shared, onlyPlant]
+          : target
+            ? []
+            : [onlySupplier, shared, onlyPlant];
+    return Promise.resolve(json(page(items, items.length)));
+  });
+  const user = userEvent.setup();
+  mount(<MediaScreen />);
+  await screen.findByRole("button", { name: /Supplier only/ });
+  const filter = screen.getByRole("combobox", { name: "Target" });
+  expect(
+    within(filter).getByRole("option", { name: "Suppliers" }),
+  ).toBeInTheDocument();
+  await user.selectOptions(filter, "collection");
+  await screen.findByRole("button", { name: /Plant only/ });
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("button", { name: /Supplier only/ }),
+    ).not.toBeInTheDocument();
+  });
+  expect(
+    screen.getByRole("button", { name: /Shared Supplier \+ Plant/ }),
+  ).toBeInTheDocument();
+  await user.selectOptions(filter, "supplier");
+  await screen.findByRole("button", { name: /Supplier only/ });
+  expect(
+    screen.queryByRole("button", { name: /Plant only/ }),
+  ).not.toBeInTheDocument();
+  await user.selectOptions(filter, "plant");
+  await screen.findByRole("button", { name: /Plant only/ });
+  expect(
+    screen.queryByRole("button", { name: /Supplier only/ }),
+  ).not.toBeInTheDocument();
+  await user.selectOptions(filter, "seed_lot");
+  await screen.findByText(/No matching media/);
+  await user.selectOptions(filter, "");
+  await screen.findByRole("button", { name: /Supplier only/ });
+  await user.selectOptions(filter, "supplier");
+  fireEvent.change(screen.getByRole("searchbox"), {
+    target: { value: "Shared" },
+  });
+  await user.selectOptions(
+    screen.getByRole("combobox", { name: "Source" }),
+    "external",
+  );
+  await waitFor(() => {
+    expect(
+      fetch.mock.calls.some(([input]) => {
+        const p = new URL(requestUrl(input), "http://localhost").searchParams;
+        return (
+          p.get("query") === "Shared" &&
+          p.get("target") === "supplier" &&
+          p.get("kind") === "external" &&
+          p.get("offset") === "0"
+        );
+      }),
+    ).toBe(true);
+  });
+});
+
+test("Supplier is available in bounded Link to record choices", async () => {
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation((input, init) => {
+      const path = requestUrl(input);
+      if (init?.method === "POST")
+        return Promise.resolve(
+          json(
+            link({
+              target_type: "supplier",
+              target_label: "Review nursery",
+              target_url: `#/suppliers/${recordId}`,
+            }),
+          ),
+        );
+      return Promise.resolve(
+        json({
+          items: path.includes("/supplier")
+            ? [{ id: recordId, label: "Review nursery" }]
+            : [],
+          total: path.includes("/supplier") ? 1 : 0,
+          limit: 20,
+          offset: 0,
+        }),
+      );
+    });
+  const linked = vi.fn();
+  const user = userEvent.setup();
+  mount(<MediaLinker asset={asset()} onClose={vi.fn()} onLinked={linked} />);
+  await user.selectOptions(
+    screen.getByRole("combobox", { name: "Record type" }),
+    "supplier",
+  );
+  await user.click(
+    await screen.findByRole("radio", { name: "Review nursery" }),
+  );
+  await user.click(screen.getByRole("button", { name: "Link media" }));
+  await waitFor(() => {
+    expect(linked).toHaveBeenCalled();
+  });
+  expect(fetch).toHaveBeenCalledWith(
+    `/api/v1/collection-records/supplier/${recordId}/media-links`,
+    expect.objectContaining({ method: "POST" }),
+  );
 });

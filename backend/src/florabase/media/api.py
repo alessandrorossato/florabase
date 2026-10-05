@@ -40,6 +40,7 @@ from florabase.media.schemas import (
     LinkResponse,
     LinkWrite,
     MediaTarget,
+    MediaTargetFilter,
     TargetPageResponse,
 )
 
@@ -73,7 +74,7 @@ def list_media(
     query: str = Query(default="", max_length=200),
     kind: Literal["local", "external"] | None = None,
     association: Literal["all", "linked", "unlinked"] = "all",
-    target: MediaTarget | None = None,
+    target: MediaTargetFilter | None = None,
     limit: int = Query(default=24, ge=1, le=100),
     offset: int = Query(default=0, ge=0),
 ) -> AssetPageResponse:

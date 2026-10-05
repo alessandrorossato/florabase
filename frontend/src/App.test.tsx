@@ -1593,7 +1593,7 @@ test("primary navigation switches accessibly to the empty supplier directory", a
     screen.getByRole("button", { name: "Botanical identities" }),
   );
   expect(
-    screen.getByRole("heading", { name: "Botanical identities" }),
+    await screen.findByRole("heading", { name: "Botanical identities" }),
   ).toBeInTheDocument();
 });
 
@@ -2799,7 +2799,9 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
   );
 
   await user.click(await screen.findByRole("button", { name: "Locations" }));
-  const newLocation = screen.getByRole("button", { name: "New location" });
+  const newLocation = await screen.findByRole("button", {
+    name: "New location",
+  });
   await user.click(newLocation);
   await user.keyboard("{Tab}");
   expect(
@@ -2838,7 +2840,7 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
   await user.keyboard("{Escape}");
   expect(newSupplier).toHaveFocus();
   await user.click(
-    await screen.findByRole("button", { name: /^Rare Palm Seeds/i }),
+    await screen.findByRole("button", { name: /Rare Palm Seeds/i }),
   );
   await user.click(screen.getByRole("link", { name: "Open details" }));
   const editSupplier = await screen.findByRole("button", {

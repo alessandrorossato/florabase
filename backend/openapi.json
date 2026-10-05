@@ -4203,7 +4203,8 @@
               "plant",
               "plant_group",
               "event",
-              "harvest"
+              "harvest",
+              "supplier"
             ],
             "title": "Target Type",
             "type": "string"
@@ -10066,6 +10067,16 @@
             "title": "Plants",
             "type": "array"
           },
+          "primary_photo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrimaryPhotoResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "recent_acquisitions": {
             "items": {
               "$ref": "#/components/schemas/SupplierRecentAcquisition"
@@ -10195,6 +10206,16 @@
               }
             ],
             "title": "Phone"
+          },
+          "primary_photo": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PrimaryPhotoResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "retired_at": {
             "anyOf": [
@@ -13003,7 +13024,8 @@
                 "plant",
                 "plant_group",
                 "event",
-                "harvest"
+                "harvest",
+                "supplier"
               ],
               "title": "Target Type",
               "type": "string"
@@ -13089,7 +13111,8 @@
                 "plant",
                 "plant_group",
                 "event",
-                "harvest"
+                "harvest",
+                "supplier"
               ],
               "title": "Target Type",
               "type": "string"
@@ -13167,7 +13190,8 @@
                 "plant",
                 "plant_group",
                 "event",
-                "harvest"
+                "harvest",
+                "supplier"
               ],
               "title": "Target Type",
               "type": "string"
@@ -13253,7 +13277,8 @@
                 "plant",
                 "plant_group",
                 "event",
-                "harvest"
+                "harvest",
+                "supplier"
               ],
               "title": "Target Type",
               "type": "string"
@@ -13337,7 +13362,8 @@
                 "seed_lot",
                 "plant",
                 "plant_group",
-                "harvest"
+                "harvest",
+                "supplier"
               ],
               "title": "Target Type",
               "type": "string"
@@ -13402,7 +13428,8 @@
                 "seed_lot",
                 "plant",
                 "plant_group",
-                "harvest"
+                "harvest",
+                "supplier"
               ],
               "title": "Target Type",
               "type": "string"
@@ -13466,7 +13493,8 @@
                 "seed_lot",
                 "plant",
                 "plant_group",
-                "harvest"
+                "harvest",
+                "supplier"
               ],
               "title": "Target Type",
               "type": "string"
@@ -15942,12 +15970,14 @@
               "anyOf": [
                 {
                   "enum": [
+                    "collection",
                     "seed_lot",
                     "sowing",
                     "plant",
                     "plant_group",
                     "event",
-                    "harvest"
+                    "harvest",
+                    "supplier"
                   ],
                   "type": "string"
                 },
@@ -16654,7 +16684,8 @@
                 "plant",
                 "plant_group",
                 "event",
-                "harvest"
+                "harvest",
+                "supplier"
               ],
               "title": "Target Type",
               "type": "string"

@@ -7,6 +7,8 @@ import {
   type SyntheticEvent,
 } from "react";
 
+import { PhotosSection } from "../photos/PhotosSection";
+import { RecordVisual } from "../photos/RecordVisual";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
@@ -127,10 +129,11 @@ function SupplierHub({
   initialTab?: string;
 }) {
   const [tab, setTab] = useState(
-    initialTab && ["overview", "material"].includes(initialTab)
+    initialTab && ["overview", "material", "photos"].includes(initialTab)
       ? initialTab
       : "overview",
   );
+  const [primaryPhoto, setPrimaryPhoto] = useState(supplier.primary_photo);
   const counts = supplier.usage_counts;
   const linkedTotal = counts.direct_records_total;
   return (
@@ -148,6 +151,13 @@ function SupplierHub({
         eyebrow="Supplier"
         title={supplier.name}
         secondary={kindLabels[supplier.kind]}
+        visual={
+          <RecordVisual
+            kind="supplier"
+            label={supplier.name}
+            photo={primaryPhoto}
+          />
+        }
         status={
           <span
             className={`lifecycle-badge lifecycle-badge--${supplier.retired_at ? "retired" : "active"}`}
@@ -201,6 +211,7 @@ function SupplierHub({
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
+          { id: "photos", label: "Photos" },
           { id: "material", label: `Linked material (${String(linkedTotal)})` },
         ]}
         selected={tab}
@@ -213,6 +224,22 @@ function SupplierHub({
           );
         }}
       />
+      {tab === "photos" && (
+        <div
+          id="panel-photos"
+          className="detail-tab-panel"
+          role="tabpanel"
+          aria-labelledby="tab-photos"
+        >
+          <PhotosSection
+            target="supplier"
+            targetId={supplier.id}
+            targetLabel={supplier.name}
+            primaryPhoto={primaryPhoto}
+            onPrimaryChanged={setPrimaryPhoto}
+          />
+        </div>
+      )}
       {tab === "overview" && (
         <div
           id="panel-overview"
@@ -762,10 +789,12 @@ export function SupplierScreen({
 
   function submitUpdate(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
-    if (!selected || pending) return;
+    const current =
+      initialId && detail.status === "ready" ? detail.supplier : selected;
+    if (!current || pending) return;
     const payload: SupplierUpdate = payloadFrom(event.currentTarget);
     void apply(
-      () => updateSupplier(selected.id, payload, csrfToken),
+      () => updateSupplier(current.id, payload, csrfToken),
       (supplier) => `${supplier.name} was updated.`,
     );
   }
@@ -920,7 +949,7 @@ export function SupplierScreen({
                   <li key={supplier.id}>
                     <button
                       type="button"
-                      className="identity-list-item"
+                      className="identity-list-item supplier-list-item"
                       aria-pressed={selectedId === supplier.id}
                       onClick={() => {
                         setSelectedId(supplier.id);
@@ -930,19 +959,27 @@ export function SupplierScreen({
                         setSave({ status: "idle" });
                       }}
                     >
-                      <span>
-                        {supplier.name}{" "}
-                        {supplier.retired_at && (
-                          <span className="record-state">Retired</span>
-                        )}
+                      <RecordVisual
+                        kind="supplier"
+                        label={supplier.name}
+                        photo={supplier.primary_photo}
+                        compact
+                      />
+                      <span className="supplier-list-copy">
+                        <span>
+                          {supplier.name}{" "}
+                          {supplier.retired_at && (
+                            <span className="record-state">Retired</span>
+                          )}
+                        </span>
+                        <small>
+                          {kindLabels[supplier.kind]}
+                          {` · ${String(supplier.usage_counts.direct_records_total)} direct records`}
+                          {supplier.usage_counts.direct_records_active > 0
+                            ? ` · ${String(supplier.usage_counts.direct_records_active)} current`
+                            : ""}
+                        </small>
                       </span>
-                      <small>
-                        {kindLabels[supplier.kind]}
-                        {` · ${String(supplier.usage_counts.direct_records_total)} direct records`}
-                        {supplier.usage_counts.direct_records_active > 0
-                          ? ` · ${String(supplier.usage_counts.direct_records_active)} current`
-                          : ""}
-                      </small>
                     </button>
                   </li>
                 ))}
@@ -1015,6 +1052,11 @@ export function SupplierScreen({
         <QuickPreview>
           {selected ? (
             <>
+              <RecordVisual
+                kind="supplier"
+                label={selected.name}
+                photo={selected.primary_photo}
+              />
               <h3>{selected.name}</h3>
               <p>
                 {kindLabels[selected.kind]} ·{" "}

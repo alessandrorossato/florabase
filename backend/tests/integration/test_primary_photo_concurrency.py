@@ -2,6 +2,7 @@ import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from typing import Literal
 from uuid import uuid7
 
 import pytest
@@ -19,29 +20,35 @@ from florabase.collection_photos.primary import clear_photo_primary, set_primary
 from florabase.collection_photos.schemas import PrimaryPhotoResponse, PrimaryPhotoSelection
 from florabase.plants.model import Plant
 from florabase.provenance_sites.model import ProvenanceSite  # noqa: F401
+from florabase.suppliers.model import Supplier
 
 pytestmark = pytest.mark.integration
 
 
+@pytest.mark.parametrize("target", ["plant", "supplier"])
 def test_replacement_waits_for_concurrent_primary_photo_deletion(
-    database_engine: Engine, tmp_path: Path
+    database_engine: Engine, tmp_path: Path, target: Literal["plant", "supplier"]
 ) -> None:
     storage = AttachmentStorage(tmp_path)
     with Session(database_engine) as database:
         identity = BotanicalIdentity(scientific_name=f"Primary race {uuid7()}")
         database.add(identity)
         database.flush()
-        plant = Plant(botanical_identity_id=identity.id, direct_origin_kind="unknown")
+        plant = (
+            Plant(botanical_identity_id=identity.id, direct_origin_kind="unknown")
+            if target == "plant"
+            else Supplier(name="Primary race supplier", kind="seller")
+        )
         database.add(plant)
         database.flush()
         old_reference = ExternalImageReference(
-            plant_id=plant.id,
+            **{f"{target}_id": plant.id},
             image_url="https://images.example.test/old.jpg",
             source_url="https://example.test/old",
             attribution="Old photo",
         )
         next_reference = ExternalImageReference(
-            plant_id=plant.id,
+            **{f"{target}_id": plant.id},
             image_url="https://images.example.test/new.jpg",
             source_url="https://example.test/new",
             attribution="New photo",
@@ -49,7 +56,9 @@ def test_replacement_waits_for_concurrent_primary_photo_deletion(
         database.add_all([old_reference, next_reference])
         database.flush()
         database.add(
-            CollectionPrimaryPhoto(plant_id=plant.id, external_image_reference_id=old_reference.id)
+            CollectionPrimaryPhoto(
+                **{f"{target}_id": plant.id}, external_image_reference_id=old_reference.id
+            )
         )
         database.commit()
         identity_id = identity.id
@@ -85,7 +94,7 @@ def test_replacement_waits_for_concurrent_primary_photo_deletion(
                     result = set_primary(
                         database,
                         storage,
-                        "plant",
+                        target,
                         plant_id,
                         PrimaryPhotoSelection(kind="external", photo_id=next_reference_id),
                     )
@@ -114,14 +123,16 @@ def test_replacement_waits_for_concurrent_primary_photo_deletion(
 
     with Session(database_engine) as database:
         designation = database.scalar(
-            select(CollectionPrimaryPhoto).where(CollectionPrimaryPhoto.plant_id == plant_id)
+            select(CollectionPrimaryPhoto).where(
+                getattr(CollectionPrimaryPhoto, f"{target}_id") == plant_id
+            )
         )
         assert designation is not None
         assert designation.external_image_reference_id == next_reference_id
         assert database.get(ExternalImageReference, old_reference_id) is None
         database.delete(designation)
         remaining_reference = database.get(ExternalImageReference, next_reference_id)
-        remaining_plant = database.get(Plant, plant_id)
+        remaining_plant = database.get(Plant if target == "plant" else Supplier, plant_id)
         remaining_identity = database.get(BotanicalIdentity, identity_id)
         assert remaining_reference is not None
         assert remaining_plant is not None

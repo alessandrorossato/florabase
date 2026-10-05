@@ -96,6 +96,13 @@ def test_supplier_payload_rejects_invalid_values(field: str, value: str) -> None
         SupplierCreate.model_validate(values)
 
 
+@pytest.mark.parametrize("field", ["website", "email", "phone", "notes"])
+def test_supplier_payload_rejects_non_string_optional_values(field: str) -> None:
+    values = {"name": "Source", "kind": "other", field: 42}
+    with pytest.raises(ValidationError):
+        SupplierCreate.model_validate(values)
+
+
 def test_supplier_response_reads_model() -> None:
     item = supplier(email="hello@example.com")
     response = SupplierResponse.from_model(item)
@@ -115,7 +122,7 @@ def test_supplier_service_create_get_list_update_and_lifecycle() -> None:
     database.get.return_value = created
     assert get_supplier(database, created.id) is created
     listed = [supplier(name="Alpha"), supplier(name="Beta")]
-    database.execute.return_value.tuples.return_value = [
+    database.execute.return_value.tuples.return_value.all.return_value = [
         (listed[0], 1, 2, 3, 4, 5, 6),
         (listed[1], 0, 0, 0, 0, 0, 0),
     ]

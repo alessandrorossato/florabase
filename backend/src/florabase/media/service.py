@@ -34,9 +34,11 @@ from florabase.media.schemas import (
     LinkResponse,
     LinkWrite,
     MediaTarget,
+    MediaTargetFilter,
     TargetChoiceResponse,
     TargetPageResponse,
 )
+from florabase.suppliers.model import Supplier
 
 
 class IdentifiedRecord(Protocol):
@@ -141,7 +143,7 @@ def list_assets(
     query: str = "",
     kind: Literal["local", "external"] | None = None,
     association: Literal["all", "linked", "unlinked"] = "all",
-    target: MediaTarget | None = None,
+    target: MediaTargetFilter | None = None,
     limit: int = 24,
     offset: int = 0,
 ) -> AssetPageResponse:
@@ -185,7 +187,21 @@ def list_assets(
             select(RecordMediaLink.id)
             .where(
                 RecordMediaLink.media_asset_id == MediaAsset.id,
-                getattr(RecordMediaLink, TARGET_MODELS[target][1]).is_not(None),
+                or_(
+                    *[
+                        getattr(RecordMediaLink, column).is_not(None)
+                        for column in (
+                            "seed_lot_id",
+                            "sowing_id",
+                            "plant_id",
+                            "plant_group_id",
+                            "event_id",
+                            "harvest_id",
+                        )
+                    ]
+                )
+                if target == "collection"
+                else getattr(RecordMediaLink, TARGET_MODELS[target][1]).is_not(None),
             )
             .exists()
         )
@@ -230,6 +246,8 @@ def target_of(link: RecordMediaLink) -> tuple[MediaTarget, UUID]:
 
 
 def target_label(record: object, target: MediaTarget, *, include_id: bool = True) -> str:
+    if target == "supplier":
+        return cast(Supplier, record).name
     label = (
         getattr(record, "display_title", None)
         if target == "harvest"
@@ -253,6 +271,7 @@ def target_url(target: MediaTarget, target_id: UUID) -> str:
         "plant_group": "plant-groups",
         "event": "events",
         "harvest": "harvests",
+        "supplier": "suppliers",
     }
     return f"#/{routes[target]}/{target_id}"
 
@@ -560,7 +579,7 @@ def delete_asset(database: Session, storage: AttachmentStorage, asset_id: UUID) 
     if links or covers:
         raise MediaError(
             "media_asset_referenced",
-            f"Cannot delete this media asset: {links} collection link(s) and "
+            f"Cannot delete this media asset: {links} record link(s) and "
             f"{covers} BotanicalIdentity cover reference(s) remain. "
             "Unlink or remove those references first.",
         )
@@ -616,6 +635,31 @@ def target_choices(
     from florabase.plants.model import Plant, PlantGroup
     from florabase.seed_lots.model import SeedLot
     from florabase.sowings.model import Sowing
+
+    if target == "supplier":
+        suppliers = select(Supplier)
+        if query.strip():
+            needle = (
+                "%"
+                + query.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+                + "%"
+            )
+            suppliers = suppliers.where(Supplier.name.ilike(needle, escape="\\"))
+        total = int(database.scalar(select(func.count()).select_from(suppliers.subquery())) or 0)
+        supplier_rows = database.scalars(
+            suppliers.order_by(func.lower(Supplier.name), Supplier.id).limit(limit).offset(offset)
+        ).all()
+        return TargetPageResponse(
+            items=[
+                TargetChoiceResponse(
+                    id=row.id, label=row.name + (" · Retired" if row.retired_at else "")
+                )
+                for row in supplier_rows
+            ],
+            total=total,
+            limit=limit,
+            offset=offset,
+        )
 
     identity_id: ColumnElement[UUID] | InstrumentedAttribute[UUID]
     model, _ = TARGET_MODELS[target]

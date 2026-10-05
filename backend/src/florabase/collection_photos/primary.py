@@ -20,13 +20,17 @@ from florabase.collection_photos.service import CollectionPhotoError
 from florabase.harvests.model import Harvest
 from florabase.plants.model import Plant, PlantGroup
 from florabase.seed_lots.model import SeedLot
+from florabase.suppliers.model import Supplier
 
-PrimaryTarget = Literal["seed_lot", "plant", "plant_group", "harvest"]
-TARGETS: dict[str, tuple[type[SeedLot] | type[Plant] | type[PlantGroup] | type[Harvest], str]] = {
+PrimaryTarget = Literal["seed_lot", "plant", "plant_group", "harvest", "supplier"]
+TARGETS: dict[
+    str, tuple[type[SeedLot] | type[Plant] | type[PlantGroup] | type[Harvest] | type[Supplier], str]
+] = {
     "seed_lot": (SeedLot, "seed_lot_id"),
     "plant": (Plant, "plant_id"),
     "plant_group": (PlantGroup, "plant_group_id"),
     "harvest": (Harvest, "harvest_id"),
+    "supplier": (Supplier, "supplier_id"),
 }
 
 
