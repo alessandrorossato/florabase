@@ -482,3 +482,227 @@ test("a slower response for an old query cannot replace the current results", as
     screen.getByRole("link", { name: /Current result/ }),
   ).toBeInTheDocument();
 });
+
+test("Harvest and Media URL kinds render compact groups and page together without images", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    "#/dashboard?q=summer&kind=harvest&kind=media_asset",
+  );
+  const calls = setup((path) => {
+    const params = new URL(path, "https://florabase.test").searchParams;
+    const offset = Number(params.get("offset"));
+    return json({
+      query: "summer",
+      total: 3,
+      offset,
+      limit: 1,
+      groups: [
+        {
+          kind: "harvest",
+          total: 1,
+          items: offset
+            ? []
+            : [
+                {
+                  kind: "harvest",
+                  id,
+                  title: "Summer basket",
+                  context: "Plant: North plant · 2026 · Leaves",
+                  href: `#/harvests/${id}`,
+                },
+              ],
+        },
+        {
+          kind: "media_asset",
+          total: 2,
+          items: [
+            {
+              kind: "media_asset",
+              id: offset ? `${id.slice(0, -1)}2` : id,
+              title: offset ? "Summer remote image" : "Summer local image",
+              context: offset ? "External image" : "Local image",
+              href: `#/media/${offset ? `${id.slice(0, -1)}2` : id}`,
+            },
+          ],
+        },
+      ],
+    });
+  });
+  const user = userEvent.setup();
+  render(<App />);
+  const result = await screen.findByRole("region", { name: "Search results" });
+  expect(
+    await within(result).findByRole("link", { name: /Summer basket/ }),
+  ).toHaveAttribute("href", `#/harvests/${id}`);
+  expect(
+    within(result).getByRole("link", { name: /Summer local image/ }),
+  ).toHaveAttribute("href", `#/media/${id}`);
+  expect(
+    within(result)
+      .getAllByRole("heading", { level: 4 })
+      .map((h) => h.textContent),
+  ).toEqual(["Collection", "Media"]);
+  expect(
+    within(result).getByText("Harvest · Plant: North plant · 2026 · Leaves"),
+  ).toBeInTheDocument();
+  expect(within(result).queryAllByRole("img")).toHaveLength(0);
+  await user.click(screen.getByRole("button", { name: "Show more results" }));
+  expect(
+    await within(result).findByRole("link", { name: /Summer remote image/ }),
+  ).toBeInTheDocument();
+  expect(within(result).getAllByRole("link")).toHaveLength(3);
+  expect(
+    calls
+      .filter((p) => p.startsWith("/api/v1/search?"))
+      .every((p) => p.includes("kind=harvest&kind=media_asset")),
+  ).toBe(true);
+  expect(calls.some((p) => /thumbnail|\/content|https:\/\//.test(p))).toBe(
+    false,
+  );
+});
+
+test("Harvest kind offers occurrence year and restores mixed kinds through browser history", async () => {
+  const calls = setup(() =>
+    json({ query: "", total: 0, offset: 0, limit: 20, groups: [] }),
+  );
+  const user = userEvent.setup();
+  render(<App />);
+  await screen.findByRole("heading", { name: "Collection snapshot" });
+  await user.click(screen.getByRole("button", { name: "Filters" }));
+  const panel = screen.getByRole("region", { name: "Search filters" });
+  await user.click(within(panel).getByRole("checkbox", { name: "Harvests" }));
+  const year = within(panel).getByRole("spinbutton", { name: "Occurred year" });
+  await user.type(year, "2026");
+  expect(
+    within(panel).queryByRole("combobox", { name: /lifecycle/ }),
+  ).toBeNull();
+  expect(
+    within(panel).queryByRole("combobox", { name: "Event kind" }),
+  ).toBeNull();
+  await waitFor(() => {
+    expect(
+      calls.some((p) => p.includes("kind=harvest") && p.includes("year=2026")),
+    ).toBe(true);
+  });
+  expect(
+    await screen.findByText("No records match this search and its filters."),
+  ).toBeInTheDocument();
+  await user.click(within(panel).getByRole("checkbox", { name: "Media" }));
+  expect(window.location.hash).toContain("kind=harvest&kind=media_asset");
+  expect(window.location.hash).not.toContain("year=");
+  window.history.back();
+  await waitFor(() => {
+    expect(
+      within(panel).getByRole("spinbutton", { name: "Occurred year" }),
+    ).toHaveValue(2026);
+    expect(
+      within(panel).getByRole("checkbox", { name: "Media" }),
+    ).not.toBeChecked();
+  });
+  expect(
+    within(panel).getByRole("checkbox", { name: "Media" }),
+  ).not.toBeChecked();
+  window.history.forward();
+  await waitFor(() => {
+    expect(
+      within(panel).getByRole("checkbox", { name: "Media" }),
+    ).toBeChecked();
+  });
+  // Escape returns keyboard focus to the existing filter toggle.
+  within(panel).getByRole("checkbox", { name: "Media" }).focus();
+  await user.keyboard("{Escape}");
+  expect(screen.getByRole("button", { name: "Filters (2)" })).toHaveFocus();
+});
+
+test("a Media search hit opens its exact asset and browser history restores search", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    "#/dashboard?q=remote&kind=media_asset",
+  );
+  const mediaDetail = {
+    id,
+    kind: "external",
+    title: "Remote illustration",
+    attribution: "Author",
+    licence_label: null,
+    licence_url: null,
+    image_url: "https://example.invalid/image.png",
+    source_url: "https://example.invalid/source",
+    original_filename: null,
+    media_type: null,
+    byte_size: null,
+    width: null,
+    height: null,
+    fetched_at: null,
+    local_copy_cleanup_pending: false,
+    deletion_pending: false,
+    content_url: null,
+    thumbnail_url: null,
+    collection_link_count: 0,
+    cover_reference_count: 0,
+    can_delete: true,
+    created_at: "2026-10-06T00:00:00Z",
+    updated_at: "2026-10-06T00:00:00Z",
+    links: [],
+    covers: [],
+  };
+  const calls = setup((path) =>
+    path === `/api/v1/media-assets/${id}`
+      ? json(mediaDetail)
+      : json({
+          query: "remote",
+          total: 1,
+          offset: 0,
+          limit: 20,
+          groups: [
+            {
+              kind: "media_asset",
+              total: 1,
+              items: [
+                {
+                  kind: "media_asset",
+                  id,
+                  title: "Remote illustration",
+                  context: "External image",
+                  href: `#/media/${id}`,
+                },
+              ],
+            },
+          ],
+        }),
+  );
+  const user = userEvent.setup();
+  const view = render(<App />);
+  await user.click(
+    await screen.findByRole("link", { name: /Remote illustration/ }),
+  );
+  expect(
+    await screen.findByRole("heading", { name: "Remote illustration" }),
+  ).toBeInTheDocument();
+  expect(window.location.hash).toBe(`#/media/${id}`);
+  expect(calls).toContain(`/api/v1/media-assets/${id}`);
+  expect(calls.some((path) => path.startsWith("https://example.invalid"))).toBe(
+    false,
+  );
+  // Remounting on the exact URL models refresh, without losing the asset selection.
+  view.unmount();
+  render(<App />);
+  expect(
+    await screen.findByRole("heading", { name: "Remote illustration" }),
+  ).toBeInTheDocument();
+  window.history.back();
+  expect(
+    await screen.findByRole("region", { name: "Search results" }),
+  ).toBeInTheDocument();
+  await waitFor(() => {
+    expect(
+      screen.getByRole("searchbox", { name: "Search your collection" }),
+    ).toHaveValue("remote");
+  });
+  window.history.forward();
+  expect(
+    await screen.findByRole("heading", { name: "Remote illustration" }),
+  ).toBeInTheDocument();
+});

@@ -4,6 +4,9 @@
 from __future__ import annotations
 
 import copy
+import json
+import subprocess
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -67,6 +70,193 @@ class UATTests(unittest.TestCase):
         up.assert_called_once()
         seed.assert_called_once()
 
+    def test_remove_confirmation_refuses_before_inspection_or_mutation(self) -> None:
+        for token in ("", "wrong", "florabase", "florabase-preview", "florabase-prod"):
+            with (
+                self.subTest(token=token),
+                patch.object(self.preview, "retirement_resources") as guard,
+                patch("uat_preview.run") as run,
+            ):
+                with self.assertRaisesRegex(WorkflowError, "CONFIRM_REMOVE_UAT_PREVIEW"):
+                    self.preview.remove(token)
+                guard.assert_not_called()
+                run.assert_not_called()
+
+    def test_older_owner_can_invoke_corrected_makefile_without_changing_directory(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="uat-old-owner-") as directory:
+            result = subprocess.run(
+                [
+                    "make",
+                    "--no-print-directory",
+                    "-n",
+                    "-f",
+                    str(ROOT / "Makefile"),
+                    "uat-preview-remove",
+                    f"CONFIRM_REMOVE_UAT_PREVIEW={UAT_PROJECT}",
+                ],
+                cwd=directory,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        self.assertEqual(
+            result.stdout.strip(), f'python3 "{ROOT / "scripts/uat_preview.py"}" remove'
+        )
+
+    def test_retirement_allows_detached_owner_without_initializing_git(self) -> None:
+        repo = self.preview.repository
+        # GitHub Actions checks out a primary tree. Model this test's old UAT
+        # owner as a linked worktree, without requiring a real worktree on disk.
+        with (
+            patch.object(repo, "primary", ROOT.parent),
+            patch.object(repo, "common", ROOT / ".git-common"),
+            patch.object(repo, "metadata", ROOT / ".git-worktrees" / "uat-owner"),
+            patch.object(repo, "initialize") as initialize,
+        ):
+            self.preview.require_context(retiring=True)
+        initialize.assert_not_called()
+        with (
+            patch.object(repo, "primary", ROOT.parent),
+            patch.object(repo, "common", ROOT / ".git-common"),
+            patch.object(repo, "metadata", ROOT / ".git-worktrees" / "uat-owner"),
+            patch.object(repo, "source", ROOT.parent),
+        ):
+            with self.assertRaisesRegex(WorkflowError, "linked feature worktree"):
+                self.preview.require_context(retiring=True)
+
+    def test_retirement_refuses_unrelated_repository_without_docker_actions(self) -> None:
+        repo = self.preview.repository
+        with (
+            patch.object(repo, "primary", ROOT.parent),
+            patch.object(repo, "common", ROOT / ".git-common"),
+            patch.object(repo, "metadata", ROOT / ".git-worktrees" / "uat-owner"),
+            patch.object(repo, "git", return_value="https://github.com/example/other"),
+            patch("uat_preview.run") as run,
+        ):
+            with self.assertRaisesRegex(WorkflowError, "expected Florabase repository"):
+                self.preview.remove(UAT_PROJECT)
+            run.assert_not_called()
+
+    def test_remove_nonowner_refuses_before_stopping_any_writer(self) -> None:
+        repo = self.preview.repository
+        with (
+            patch.object(repo, "primary", ROOT.parent),
+            patch.object(repo, "common", ROOT / ".git-common"),
+            patch.object(repo, "metadata", ROOT / ".git-worktrees" / "uat-owner"),
+            patch.object(self.preview, "validate"),
+            patch.object(self.preview, "require_owner", side_effect=WorkflowError("foreign owner")),
+            patch("uat_preview.run") as run,
+        ):
+            with self.assertRaisesRegex(WorkflowError, "foreign owner"):
+                self.preview.remove(UAT_PROJECT)
+            run.assert_not_called()
+
+    def test_remove_stops_writers_rechecks_then_deletes_only_scoped_resources(self) -> None:
+        volumes = [
+            {"Name": f"{UAT_PROJECT}_{key}"}
+            for key in sorted(("postgres_data", "attachment_data", "frontend_node_modules"))
+        ]
+        before = (["uat-container"], volumes, ["uat-network"])
+        events = []
+        with (
+            patch.object(
+                self.preview,
+                "retirement_resources",
+                side_effect=[before, before, ([], volumes, ["uat-network"]), ([], volumes, [])],
+            ) as guard,
+            patch.object(self.preview, "containers", return_value=[]),
+            patch("uat_preview.run", side_effect=lambda command: events.append(command)),
+            patch.object(self.preview, "up") as up,
+            patch.object(self.preview, "seed") as seed,
+            patch.object(self.preview, "compose") as compose,
+        ):
+            self.preview.remove(UAT_PROJECT)
+        self.assertEqual(guard.call_count, 4)
+        self.assertEqual(
+            events,
+            [
+                ["docker", "container", "stop", "uat-container"],
+                ["docker", "container", "rm", "uat-container"],
+                ["docker", "network", "rm", "uat-network"],
+                *[["docker", "volume", "rm", item["Name"]] for item in volumes],
+            ],
+        )
+        up.assert_not_called()
+        seed.assert_not_called()
+        compose.assert_not_called()
+
+    def test_remove_refuses_resources_changed_after_stop(self) -> None:
+        with (
+            patch.object(
+                self.preview,
+                "retirement_resources",
+                side_effect=[(["uat-container"], [], []), (["replacement"], [], [])],
+            ),
+            patch("uat_preview.run") as run,
+        ):
+            with self.assertRaisesRegex(WorkflowError, "changed during retirement"):
+                self.preview.remove(UAT_PROJECT)
+        run.assert_called_once_with(["docker", "container", "stop", "uat-container"])
+
+    def test_remove_refuses_writer_restarted_after_stop(self) -> None:
+        with (
+            patch.object(
+                self.preview, "retirement_resources", return_value=(["uat-container"], [], [])
+            ),
+            patch.object(self.preview, "containers", return_value=[{"State": {"Running": True}}]),
+            patch("uat_preview.run") as run,
+        ):
+            with self.assertRaisesRegex(WorkflowError, "still running"):
+                self.preview.remove(UAT_PROJECT)
+        run.assert_called_once_with(["docker", "container", "stop", "uat-container"])
+
+    def test_retirement_rejects_wrong_network_and_foreign_endpoints(self) -> None:
+        valid = {
+            "Name": f"{UAT_PROJECT}_internal",
+            "Id": "network-id",
+            "Containers": {},
+            "Labels": {
+                "com.docker.compose.project": UAT_PROJECT,
+                "com.docker.compose.network": "internal",
+            },
+        }
+        invalid = []
+        for key, value in (
+            ("Name", "florabase_internal"),
+            ("Containers", {"foreign-container": {}}),
+        ):
+            network = copy.deepcopy(valid)
+            network[key] = value
+            invalid.append(network)
+        for key in ("com.docker.compose.project", "com.docker.compose.network"):
+            network = copy.deepcopy(valid)
+            network["Labels"][key] = "foreign"
+            invalid.append(network)
+        for network in invalid:
+            with (
+                self.subTest(network=network),
+                patch.object(self.preview, "require_identity"),
+                patch.object(self.preview, "containers", return_value=[]),
+                patch.object(self.preview, "resource_volumes", return_value=[]),
+                patch("uat_preview.run", side_effect=["network-id", json.dumps([network])]),
+            ):
+                with self.assertRaisesRegex(WorkflowError, "network identity"):
+                    self.preview.retirement_resources()
+
+    def test_retirement_rejects_foreign_volume_writer(self) -> None:
+        with (
+            patch.object(self.preview, "require_identity"),
+            patch.object(self.preview, "containers", return_value=[]),
+            patch.object(
+                self.preview,
+                "resource_volumes",
+                return_value=[{"Name": f"{UAT_PROJECT}_postgres_data"}],
+            ),
+            patch("uat_preview.run", side_effect=["", "foreign-container"]),
+        ):
+            with self.assertRaisesRegex(WorkflowError, "foreign container user"):
+                self.preview.retirement_resources()
+
     def test_seed_cannot_mutate_when_host_identity_is_wrong(self) -> None:
         with (
             patch.object(self.preview, "require_identity", side_effect=WorkflowError("wrong DB")),
@@ -102,6 +292,8 @@ class UATTests(unittest.TestCase):
             ):
                 with self.assertRaisesRegex(WorkflowError, "volume identity"):
                     self.preview.reset(UAT_PROJECT)
+                with self.assertRaisesRegex(WorkflowError, "volume identity"):
+                    self.preview.remove(UAT_PROJECT)
                 compose.assert_not_called()
 
     def test_container_guard_refuses_foreign_role_before_seed(self) -> None:
@@ -123,6 +315,8 @@ class UATTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(WorkflowError, "container identity"):
                 self.preview.seed()
+            with self.assertRaisesRegex(WorkflowError, "container identity"):
+                self.preview.remove(UAT_PROJECT)
             compose.assert_not_called()
 
     def test_stop_preserves_volumes_and_source(self) -> None:
@@ -148,6 +342,8 @@ class UATTests(unittest.TestCase):
         with (
             patch.object(self.preview.repository, "initialize"),
             patch.object(self.preview.repository, "source", ROOT / "linked-fixture"),
+            patch.object(self.preview.repository, "common", ROOT / ".git-common"),
+            patch.object(self.preview.repository, "metadata", ROOT / ".git-worktrees" / "fixture"),
         ):
             self.preview.project = "florabase"
             with self.assertRaisesRegex(WorkflowError, "unexpected UAT project"):

@@ -11,6 +11,7 @@ from PIL import Image
 from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, contains_eager
+from sqlalchemy.sql.elements import ColumnElement
 
 from florabase.attachments.model import Attachment, AttachmentState
 from florabase.attachments.storage import AttachmentStorage, AttachmentStorageError
@@ -137,6 +138,16 @@ def read_asset(database: Session, asset_id: UUID) -> AssetResponse:
     return asset_response(asset, attachment, *reference_counts(database, asset_id))
 
 
+def asset_text_match(query: str) -> ColumnElement[bool]:
+    """Direct library metadata only; callers join the asset's own Attachment."""
+    needle = "%" + query.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+    return or_(
+        MediaAsset.title.ilike(needle, escape="\\"),
+        MediaAsset.attribution.ilike(needle, escape="\\"),
+        Attachment.original_filename.ilike(needle, escape="\\"),
+    )
+
+
 def list_assets(
     database: Session,
     *,
@@ -162,17 +173,7 @@ def list_assets(
     )
     filters = []
     if query.strip():
-        # Literal substring search, not user-controlled SQL LIKE wildcard syntax.
-        needle = (
-            "%" + query.strip().replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
-        )
-        filters.append(
-            or_(
-                MediaAsset.title.ilike(needle, escape="\\"),
-                MediaAsset.attribution.ilike(needle, escape="\\"),
-                Attachment.original_filename.ilike(needle, escape="\\"),
-            )
-        )
+        filters.append(asset_text_match(query))
     if kind:
         filters.append(MediaAsset.kind == kind)
     has_links = (
@@ -628,7 +629,6 @@ def target_choices(
     from sqlalchemy import String
     from sqlalchemy import cast as sql_cast
     from sqlalchemy.orm import InstrumentedAttribute
-    from sqlalchemy.sql.elements import ColumnElement
 
     from florabase.events.model import Event
     from florabase.harvests.model import Harvest

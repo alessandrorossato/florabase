@@ -769,3 +769,17 @@ protected; identity remains correctable. Guarded reversal restores captured stoc
 retains all evidence/lineage and keeps the resulting SeedLot historically as `reversed`. This
 lifecycle excludes current holdings and new propagation. Standalone dispositions have no undo.
 See [conversion contract](harvest-seed-conversion.md) for snapshots, dependencies and locks.
+
+## Global search coverage (SEARCH-002)
+
+Dashboard global search exposes Harvest and MediaAsset as separate typed hits alongside SEARCH-001.
+Harvest identity derives from its exact Plant/PlantGroup source and year derives from its occurrence
+PartialDate. Label/current derived title, source identity names, notes and material kind/description
+are searchable; current source Location, lifecycle, Supplier or provenance never become Harvest
+relationships. Multiple material lines produce one hit. Harvest and its owned Event may independently
+match; history is not suppressed.
+
+MediaAsset search reuses the Library's direct title, original filename and attribution predicate.
+Links, primary designations and identity covers do not infer text matches or duplicate results.
+Search is compact text navigation to existing authenticated Harvest and exact Media details, with
+no image/external fetching. See [search semantics](search.md). No persistence or migration is added.

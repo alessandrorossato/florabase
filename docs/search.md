@@ -13,7 +13,7 @@ case-insensitive literal substring matching; `%` and `_` are treated as text. Re
 kind sort by case-insensitive title and stable ID. This is deterministic text search, with no fuzzy,
 taxonomic, semantic, or AI interpretation.
 
-Groups remain distinct: Collection includes SeedLot, Sowing, Plant, PlantGroup, and Event; Botany
+Groups remain distinct: Collection includes SeedLot, Sowing, Plant, PlantGroup, Harvest, and Event; Media includes MediaAsset; Botany
 includes BotanicalIdentity and operator-authored BotanicalProfile reference knowledge; Reference
 includes Supplier, Location, GeographicPlace, and ProvenanceSite. Profile matches open the identity's
 Reference tab. Event matches open the target's Events tab. No notes or contact details are copied
@@ -42,3 +42,40 @@ explicit product choice. No new database table, index, or migration was added.
 
 Dashboard Quick actions open the current Add seed lot, Add plant, Add plant group, and Import / Export
 workflows. Start sowing stays on a chosen SeedLot's authoritative propagation path.
+
+## SEARCH-002 — Harvest and Media coverage
+
+SEARCH-002 is implemented; operator UAT has passed and independent verification is underway. Collection places
+Harvests between Plant groups and Events; the dedicated Media category follows Collection, before
+Botany and Reference. Repeated `kind=harvest` and `kind=media_asset` compose with all existing kinds.
+Results remain compact text links without thumbnails, binary requests or external-image loading.
+
+Harvest text matches its optional label, current derived display title, exact Plant/PlantGroup source
+label, source identity scientific/common/cultivar names, Harvest notes, and each material kind or
+human material label and description. Distinct materials follow the directory's item order and
+bounded title summary. Notes/descriptions are searchable but never copied into snippets. Context
+contains bounded identity/source labels, source type, the recorded partial date and material summary.
+`identity_id` uses only that exact source's identity; `year` with `kind=harvest` uses only the occurrence
+PartialDate year, including year-only/month-only dates. Unknown dates do not match. No created/updated
+or acquisition timestamp supplies a year. Source lifecycle, current Location, Supplier and direct or
+ancestor provenance are neither Harvest text nor structured relationships. Those structured filters
+exclude Harvest. Harvest has no lifecycle; `event_kind` still requires Event and is not a Harvest
+filter. A structured Harvest and its owned Event can independently match, with distinct typed routes.
+
+Media text shares the Media Library predicate: title, the asset's own Attachment original filename
+(including a saved external copy), and attribution, with literal escaping. Licence, source/image URLs,
+record-link captions, linked-record labels, primary targets and botanical cover targets do not confer
+matches. Collection relationship/year/lifecycle/Event filters exclude Media. Title falls back to
+original filename then “External image reference”, matching the Library. Context is Local image or
+External image and at most 160 attribution characters; storage keys, paths, URLs and binary metadata
+are absent. `#/media/<uuid>` reuses the existing exact Library detail, supports refresh/back/forward,
+rejects malformed UUIDs before requesting data, and reports deleted/missing assets with a Media return
+link. Detail retains its existing explicit remote-image opt-in policy.
+
+Material matching uses correlated EXISTS; an ordered aggregate provides one material summary per
+Harvest. Source/identity joins are one-to-one through the exact source. Media joins only its own
+Attachment, with no reference joins. Counts and pages use the same typed projection, sorted by lower
+case title then UUID. Each kind adds exactly two SQL statements, independent of item/link/result
+count. Existing text path lookups add two shared statements: mixed Harvest/Media text search uses six;
+unrestricted text search uses at most 28 for all 13 kinds. Blank unfiltered queries use none. No schema,
+index, search engine, cache, saved view, bulk operation or generic history is introduced.

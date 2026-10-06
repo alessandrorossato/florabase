@@ -30,11 +30,26 @@ class UATPreview(Environment):
         # UAT has fixed local configuration, never reads workstation secrets.
         self.env_source = Path("/dev/null")
 
-    def require_context(self) -> None:
-        if self.repository.source == self.repository.primary:
+    def require_context(self, *, retiring: bool = False) -> None:
+        if (
+            self.repository.source == self.repository.primary
+            or self.repository.metadata == self.repository.common
+        ):
             raise WorkflowError("UAT Preview requires the current linked feature worktree")
-        with contextlib.redirect_stdout(io.StringIO()):
-            self.repository.initialize()
+        # A delivered owner may be detached or behind main. Retirement never changes Git.
+        if retiring:
+            origin = self.repository.git("remote", "get-url", "origin")
+            normalized = re.sub(
+                r"^(?:git@github\.com:|ssh://git@github\.com/)", "https://github.com/", origin
+            )
+            if (
+                normalized.rstrip("/").removesuffix(".git")
+                != "https://github.com/alessandrorossato/florabase"
+            ):
+                raise WorkflowError("origin is not the expected Florabase repository")
+        else:
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.repository.initialize()
         if not re.fullmatch(r"florabase-uat-preview(?:-smoke-[0-9a-f]{12})?", self.project):
             raise WorkflowError("unexpected UAT project; refused")
 
@@ -48,8 +63,8 @@ class UATPreview(Environment):
             for name in names
         ]
 
-    def require_identity(self, *, running: bool = False) -> None:
-        self.require_context()
+    def require_identity(self, *, running: bool = False, retiring: bool = False) -> None:
+        self.require_context(retiring=retiring)
         self.validate()
         self.require_owner()
         for volume in self.resource_volumes():
@@ -199,10 +214,66 @@ class UATPreview(Environment):
 
     def stop(self, *, remove: bool = False, confirm: str = "") -> None:
         if remove:
-            raise WorkflowError("use guarded uat-preview-reset")
+            raise WorkflowError("use guarded uat-preview-remove or uat-preview-reset")
         self.require_identity()
         self.compose("down", "--remove-orphans")
         print("UAT Preview stopped; database, media and dependencies preserved")
+
+    def retirement_resources(self) -> tuple[list[str], list[dict[str, Any]], list[str]]:
+        self.require_identity(retiring=True)
+        containers = [item["Id"] for item in self.containers()]
+        volumes = self.resource_volumes()
+        networks: list[str] = []
+        names = run(
+            ["docker", "network", "ls", "-q", "--filter", f"name=^{self.project}_"],
+            capture=True,
+        ).splitlines()
+        for name in names:
+            network = json.loads(run(["docker", "network", "inspect", name], capture=True))[0]
+            labels = network.get("Labels") or {}
+            if (
+                network["Name"] != f"{self.project}_internal"
+                or labels.get("com.docker.compose.project") != self.project
+                or labels.get("com.docker.compose.network") != "internal"
+                or not set(network.get("Containers") or {}).issubset(containers)
+            ):
+                raise WorkflowError("ambiguous UAT retirement network identity; refused")
+            networks.append(network["Id"])
+        for volume in volumes:
+            users = run(
+                ["docker", "ps", "-aq", "--no-trunc", "--filter", f"volume={volume['Name']}"],
+                capture=True,
+            ).splitlines()
+            if not set(users).issubset(containers):
+                raise WorkflowError("UAT volume has a foreign container user; refused")
+        return sorted(containers), sorted(volumes, key=lambda item: item["Name"]), sorted(networks)
+
+    def remove(self, confirm: str) -> None:
+        if confirm != self.project:
+            raise WorkflowError(
+                f"remove deletes ONLY UAT state; set CONFIRM_REMOVE_UAT_PREVIEW={self.project}"
+            )
+        containers, volumes, networks = self.retirement_resources()
+        print("Retiring UAT owned by: " + str(self.source))
+        print("Removing ONLY volumes: " + ", ".join(item["Name"] for item in volumes))
+        # Stop every proved UAT writer before removing any container, network or volume.
+        if containers:
+            run(["docker", "container", "stop", *containers])
+        if self.retirement_resources() != (containers, volumes, networks):
+            raise WorkflowError("UAT resources changed during retirement; refused")
+        if any(item["State"].get("Running") for item in self.containers()):
+            raise WorkflowError("UAT writers are still running; refused")
+        if containers:
+            run(["docker", "container", "rm", *containers])
+        if self.retirement_resources() != ([], volumes, networks):
+            raise WorkflowError("UAT resources changed after stopping writers; refused")
+        for network in networks:
+            run(["docker", "network", "rm", network])
+        if self.retirement_resources() != ([], volumes, []):
+            raise WorkflowError("UAT resources changed before volume removal; refused")
+        for volume in volumes:
+            run(["docker", "volume", "rm", volume["Name"]])
+        print("UAT Preview removed; next feature worktree can run up and seed fresh UAT")
 
     def reset(self, confirm: str) -> None:
         if confirm != self.project:
@@ -224,12 +295,14 @@ class UATPreview(Environment):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["up", "seed", "status", "stop", "reset"])
+    parser.add_argument("action", choices=["up", "seed", "status", "stop", "reset", "remove"])
     args = parser.parse_args()
     try:
         preview = UATPreview(Repository(Path.cwd()))
         if args.action == "reset":
             preview.reset(os.environ.get("CONFIRM_RESET_UAT_PREVIEW", ""))
+        elif args.action == "remove":
+            preview.remove(os.environ.get("CONFIRM_REMOVE_UAT_PREVIEW", ""))
         else:
             getattr(preview, args.action)()
     except (WorkflowError, ValueError, KeyError) as error:

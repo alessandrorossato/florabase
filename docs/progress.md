@@ -1,5 +1,81 @@
 # Engineering progress
 
+## 2026-10-06 — PREVIEW-001 ownership retirement regression required by SEARCH-002 UAT
+
+- Delivered UAT lacked retirement: stop kept ownership and reset recreated it under the old owner.
+  Added guarded `make uat-preview-remove CONFIRM_REMOVE_UAT_PREVIEW=florabase-uat-preview`, isolated
+  from SEARCH-002 application code. It requires the owning linked source, including a delivered
+  detached owner, and performs only read-only Git validation. Missing/wrong token, non-owner,
+  ambiguous container/volume/network identity and foreign volume writers/network endpoints refuse.
+- Removal proves exact resource/source identity, stops UAT writers, rechecks identities, then removes
+  only scoped UAT containers/internal network and the individually named postgres/media/dependency
+  volumes. No generic `down -v`, rebuild, reseed, Git/source edit or other environment operation.
+  Stop/reset semantics remain distinct; workflow and PREVIEW-001 handoff now document old-owner
+  removal followed by next-feature up/seed/status, including invocation from a pre-command owner.
+- Regression checks: **19 UAT helper tests**, **29 environment helper tests**, workflow Ruff
+  format/lint and strict mypy passed. Real disposable Compose smoke
+  `florabase-uat-preview-smoke-2e4782f118e6` passed **18 PostgreSQL fixture tests**, its established
+  seed/auth/persistence/reset/ahead-refusal checks and old-owner remove → new linked fixture source
+  up → empty auth → fresh seed/IDs/media/ownership → real login. Supported removal cleaned fixture
+  resources; operator environment/data and primary snapshots remained unchanged.
+- With explicit operator authorization, ran the corrected Makefile's removal target from owning
+  `80b3`: four containers, one network and exactly the three allowed volumes were proved and retired.
+  No manual Docker deletion or relabeling. Live missing-confirmation/non-owner checks refused.
+  Standard `9f48` up, seed and status then passed. DEV/Stable Preview/Feature Review/production
+  resource/data digests and old/primary Git identities matched before/after. Operator acceptance has
+  passed; independent QA and the canonical gate are underway.
+
+## 2026-10-06 — SEARCH-002 global Harvest and Media coverage
+
+- Implemented only in attached `9f48` worktree on `feat/search-002-global-coverage`, PREVIEW-001
+  base/unchanged HEAD `0c36a404eedb89531447581d3769867e44d35490`. Added typed Harvest/Media kinds,
+  exact authenticated routes, generated contracts, Collection → Media → Botany → Reference groups,
+  existing kind controls and Harvest occurrence-year filtering.
+- Harvest uses its current authoritative title/source/identity, notes and material text; only exact
+  source identity and true occurrence year apply. No Location/Supplier/provenance/lifecycle/Event-kind
+  inference. Media shares Library title/original-filename/attribution matching and title fallback,
+  with safe context and UUID/missing-target handling on the existing exact detail route. Search
+  loads no images and contacts no external host. EXISTS/grouped materials and unique Attachment
+  joins preserve one result per record and fixed query bounds: six SELECTs for mixed new-kind text
+  search at three or 51 matches; 28 for all 13 kinds. Independent final review added saved external-
+  copy filename coverage; the full supported integration wrapper then passed **550 tests**, including
+  40 SEARCH-002 cases.
+- Focused backend **100 passed**; the earlier focused disposable PostgreSQL matrix **69 passed**, including all
+  eleven old kinds, partial dates, forbidden filters, deduplication, auth, paging and query bounds;
+  frontend DashboardSearch/MediaScreen/HarvestScreen/lazy routing **36 passed**. Ruff/mypy (257 files),
+  generated API preparation, zero-warning ESLint, strict TypeScript, 90-feature graph, production
+  frontend Vite/backend runtime builds, changed-file Prettier checks and `make api-check` passed.
+  Ordinary test fixtures/readiness/lint issues were corrected without weakening tests, rules or
+  thresholds. Disposable integration resources were cleaned without operator deletion.
+- SEARCH-002 operator acceptance and independent verification have passed. Canonical `make feature-verify`
+  passed on this tree: graph (90 valid), UAT/environment/workflow helpers (19/29/37 passed), Ruff,
+  Prettier, strict mypy (257 files), strict TypeScript and ESLint, backend unit tests (613 passed,
+  90.13% coverage), frontend tests (382 passed across 41 files), API drift, PostgreSQL integration
+  (550 passed, 160 warnings), production images, migration-cycle check (no new revisions), whitespace
+  and tree receipt. The cold lazy Botanical Identity route test now waits 3 seconds for its unchanged
+  result assertion; an isolated diagnostic showed the cold Vite import resolves in about 2 seconds,
+  while all 11 UX-004 tests pass in the full suite. No UX-004 production behavior changed.
+  SEARCH-002 is **verified**. Saved filters/views
+  are next; bulk operations and justified history remain deferred. Orders and the BOTANY-003 WFO TLS
+  blocker are unchanged. No migration/index/search infrastructure or later productivity work added.
+- The PREVIEW-001 retirement correction above enabled supported `80b3` → `9f48` UAT. Up/seed/status
+  passed; DB/backend/frontend are healthy at `localhost:15174`, code/DB head `20261005_0033`, fixture
+  v1 initialized (31 baseline records), and real `preview / preview` browser login succeeded.
+- Independent `make smoke-uat-preview` passed on unique disposable project
+  `florabase-uat-preview-smoke-e92b8aceebfa`, including 18 fixture tests and old-owner retirement →
+  new linked source up → fresh seed/login → guarded cleanup. The operator UAT remains healthy.
+- Actual browser review at 1440×844, 1024×844 and 390×844 passed result/filter fit with no horizontal
+  overflow, exact Harvest/Media navigation, Media refresh/back/forward/missing-target state, external
+  opt-in remaining unloaded, source/filename/year searches, empty/clear and Escape focus restoration.
+  Final diff review reproduced an uppercase UUID Media link stuck in Loading; case normalization,
+  a dedicated regression and repeated real UAT/frontend checks resolved it. Search results contain
+  no images. Review artifacts are outside Git. Implementation is
+  operator acceptance passed; independent final review and canonical verification passed. See
+  [handoff](search-002-handoff.md) for exact semantics, checks, regression isolation and searches.
+  At independent-review handoff, primary was clean on `main` and the index was empty; the reviewed
+  branch then proceeds through the repository's single-commit protected delivery and conservative
+  finish workflow.
+
 ## 2026-10-05 — PREVIEW-001 persistent dirty-feature operator UAT
 
 - Implemented only in the attached 80b3 Codex worktree, `feat/preview-001-uat`, at SUPPLIER-003

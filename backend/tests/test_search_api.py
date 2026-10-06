@@ -75,3 +75,37 @@ def test_search_api_rejects_lifecycle_outside_the_kind_vocabulary() -> None:
             kind=[SearchKind.PLANT],
             lifecycle="not-a-plant-lifecycle",
         )
+
+
+@pytest.mark.parametrize(
+    ("kinds", "year"),
+    [
+        ([SearchKind.HARVEST], 2026),
+        ([SearchKind.MEDIA_ASSET], None),
+        ([SearchKind.PLANT, SearchKind.HARVEST, SearchKind.MEDIA_ASSET], None),
+    ],
+)
+def test_search_api_accepts_new_typed_kinds(
+    monkeypatch: pytest.MonkeyPatch, kinds: list[SearchKind], year: int | None
+) -> None:
+    def capture(
+        _database: Session, query: str, filters: SearchFilters, *, offset: int, limit: int
+    ) -> SearchResponse:
+        assert filters.kinds == tuple(kinds)
+        assert filters.year == year
+        return SearchResponse(query=query, total=0, offset=offset, limit=limit, groups=[])
+
+    monkeypatch.setattr(search_api, "search", capture)
+    search_api.read_search(
+        cast(AuthenticatedActor, None), cast(Session, None), kind=kinds, year=year
+    )
+
+
+def test_harvest_lifecycle_is_rejected_without_indexing_lifecycle_vocabulary() -> None:
+    with pytest.raises(HTTPException, match="Harvests have no lifecycle"):
+        search_api.read_search(
+            cast(AuthenticatedActor, None),
+            cast(Session, None),
+            kind=[SearchKind.HARVEST],
+            lifecycle="active",
+        )

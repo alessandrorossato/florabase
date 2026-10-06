@@ -95,8 +95,8 @@
         "Operator UAT Preview uses the current dirty/untracked feature worktree through Feature Review isolation primitives, with persistent DB/media/dependencies distinct from DEV, Stable Preview and production; source, health, database/code migration state and fixture identity are observable",
         "A UAT-only preview/preview owner and bounded synthetic collection are created explicitly through host resource, runtime, origin and actual database identity guards; normal production/DEV/Stable Preview startup and authentication remain unchanged",
         "Versioned UUIDv7 fixture identities make repeated seed idempotent and preserve operator edits; interrupted, missing or incompatible baselines refuse with guarded reset instructions, without matching mutable names or adding production domain fields",
-        "Simple uat-preview-up, uat-preview-stop, uat-preview-status, uat-preview-seed and uat-preview-reset commands remain distinct from existing Stable Preview commands; startup never seeds, stop/start preserves state, and reset deletes only individually validated UAT resources with exact confirmation",
-        "Real uniquely isolated Compose smoke covers fresh/empty startup, real owner login, runtime guard refusals, repeat seed, fixture/media/lineage relationships, operator edits, DB/media/dependency persistence, forward migrations and ahead refusal, reset and before/after unchanged operator environments; operator UAT and independent canonical verification complete acceptance"
+        "Simple uat-preview-up, uat-preview-stop, uat-preview-status, uat-preview-seed, uat-preview-reset and uat-preview-remove commands remain distinct from existing Stable Preview commands; startup never seeds, stop/start preserves state, and reset deletes only individually validated UAT resources with exact confirmation; owning-worktree removal stops writers and retires only exact UAT containers/network/volumes without rebuilding or editing Git/source, so the next feature starts and seeds fresh state",
+        "Real uniquely isolated Compose smoke covers fresh/empty startup, real owner login, runtime guard refusals, repeat seed, fixture/media/lineage relationships, operator edits, DB/media/dependency persistence, forward migrations and ahead refusal, reset, old-owner removal followed by new-feature fresh startup/seed/login and before/after unchanged operator environments; operator UAT and independent canonical verification complete acceptance"
       ],
       "dependencies": ["CI-003"],
       "priority": "P1",
@@ -790,6 +790,24 @@
       "dependencies": ["PROFILE-002", "SEED-004", "PLANT-003", "EVENT-002"],
       "priority": "P2",
       "status": "implemented"
+    },
+    {
+      "id": "SEARCH-002",
+      "category": "search",
+      "description": "Complete global search coverage for Harvests and Media",
+      "acceptance_criteria": [
+        "Authenticated Dashboard global search includes typed Harvest and Media kinds with stable IDs and exact detail routes",
+        "Harvest text matches explicit label, derived source title, exact source identity names, notes and material kind/description without Location, Supplier or provenance inference",
+        "Harvest identity and occurrence PartialDate year filters apply; unrelated relationships, lifecycle and Event kind do not apply",
+        "Media text reuses direct Library title, original filename and attribution semantics without linked-record or cover inference",
+        "Mixed kinds retain deterministic groups, exact totals and bounded pagination; multiple HarvestItems or media references never duplicate hits",
+        "Search loads no images or external resources and query counts stay bounded independently of result count",
+        "Exact Media navigation validates UUIDs and handles missing assets safely across refresh and browser history",
+        "Existing SEARCH-001 kinds remain covered; saved views, bulk operations and generic history remain deferred"
+      ],
+      "dependencies": ["SEARCH-001", "HARVEST-001", "ATTACHMENT-005"],
+      "priority": "P1",
+      "status": "verified"
     },
     {
       "id": "DASHBOARD-001",

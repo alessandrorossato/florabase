@@ -1,6 +1,7 @@
 # PREVIEW-001 independent review and delivery handoff
 
-Operator UAT has passed. Independent review found no production/workflow defect, a fresh isolated
+Operator UAT passed at delivery. The later ownership-retirement regression and correction are
+documented below. At delivery, independent review found no production/workflow defect; a fresh isolated
 Compose acceptance smoke passed, and `make feature-verify` passed on the reviewed source tree. PREVIEW-001
 is verified. Reviewed commit, protected delivery and finish are authorized follow-up steps. Next product milestone: **Collection productivity v2**.
 BOTANY-003 and historical RELEASE-001 planning remain unchanged.
@@ -161,3 +162,24 @@ persistent volumes remain intact.
 The operator approved the UAT result. Independent review confirms the adversarial coverage and smoke;
 no additional tests were needed. Canonical verification passed. The single reviewed commit, protected
 delivery and finish remain the authorized next steps.
+
+## 2026-10-06 — ownership retirement regression discovered during SEARCH-002
+
+Delivered PREVIEW-001 rejected cross-worktree adoption correctly but lacked a supported way to
+retire retained ownership: stop preserved it, and reset immediately recreated it. Consecutive
+feature worktrees therefore could not start persistent UAT. SEARCH-002 includes only the narrow
+workflow correction needed to restore that transition, separate from global search behavior.
+
+`make uat-preview-remove CONFIRM_REMOVE_UAT_PREVIEW=florabase-uat-preview` runs from the owning
+linked checkout, including a delivered detached owner. It validates exact resource/source identity,
+refuses foreign volume users/network endpoints, stops writers, rechecks resources and individually
+removes only the three UAT volumes plus the proved UAT containers/internal network. It does not
+recreate anything or change Git/source/other environments. The next active feature runs up, seed
+and status for a fresh baseline. Wrong confirmation and non-owners refuse. See the canonical
+[transition instructions](development-workflow.md#uat-preview-and-operator-acceptance), including
+how an older owner invokes the corrected Makefile without changing that owner's source.
+
+Regression evidence and the actual `80b3` → `9f48` transition are recorded in the
+[SEARCH-002 handoff](search-002-handoff.md). The disposable real Compose smoke now also covers
+old-owner remove → new linked source up → fresh owner/media/fixture IDs → successful login,
+while asserting all operator environments and primary Git identity remain unchanged.

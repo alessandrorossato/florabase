@@ -780,3 +780,75 @@ test("Supplier is available in bounded Link to record choices", async () => {
     expect.objectContaining({ method: "POST" }),
   );
 });
+
+test("exact media detail reports a missing asset with a safe return link", async () => {
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValue(
+      json({ detail: { message: "Media asset not found" } }, 404),
+    );
+  mount(<MediaScreen initialId={assetId} />);
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "This media asset was deleted or could not be found",
+  );
+  expect(screen.getByRole("link", { name: "Media" })).toHaveAttribute(
+    "href",
+    "#/media",
+  );
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(screen.queryByRole("img")).toBeNull();
+});
+
+test("exact media detail accepts case-insensitive UUID spelling", async () => {
+  const lowerId = "01900000-0000-7000-8000-000000000abc";
+  const upperId = lowerId.toUpperCase();
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValue(json(detail({ id: lowerId })));
+  mount(<MediaScreen initialId={upperId} />);
+  expect(
+    await screen.findByRole("heading", { name: "Garden image" }),
+  ).toBeVisible();
+  expect(fetch).toHaveBeenCalledTimes(1);
+  expect(requestUrl(fetch.mock.calls[0]?.[0] ?? "")).toBe(
+    `/api/v1/media-assets/${upperId}`,
+  );
+});
+
+test("invalid media deep link is rejected before an API request", async () => {
+  const fetch = vi.spyOn(globalThis, "fetch");
+  mount(<MediaScreen initialId="not-a-uuid" />);
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "This media link has an invalid ID",
+  );
+  expect(fetch).not.toHaveBeenCalled();
+});
+
+test("changing the exact media target cancels a stale detail response", async () => {
+  let finishFirst: ((response: Response) => void) | undefined;
+  vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    if (requestUrl(input).endsWith(assetId))
+      return new Promise<Response>((resolve) => {
+        finishFirst = resolve;
+      });
+    return Promise.resolve(
+      json(detail({ id: recordId, title: "Second target" })),
+    );
+  });
+  const view = mount(<MediaScreen initialId={assetId} />);
+  await waitFor(() => {
+    expect(finishFirst).toBeDefined();
+  });
+  view.rerender(
+    <AuthContext.Provider value={auth}>
+      <MediaScreen initialId={recordId} />
+    </AuthContext.Provider>,
+  );
+  expect(
+    await screen.findByRole("heading", { name: "Second target" }),
+  ).toBeInTheDocument();
+  finishFirst?.(json(detail({ title: "Stale target" })));
+  await waitFor(() => {
+    expect(screen.queryByRole("heading", { name: "Stale target" })).toBeNull();
+  });
+});

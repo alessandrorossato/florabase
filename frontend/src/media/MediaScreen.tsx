@@ -135,10 +135,10 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
   const [target, setTarget] = useState<MediaTargetFilter | "">("");
   const [offset, setOffset] = useState(0);
   const [page, setPage] = useState<MediaPage | null>(null);
-  const [detail, setDetail] = useState<MediaDetail | null>(null);
+  const [loadedDetail, setDetail] = useState<MediaDetail | null>(null);
   const [selected, setSelected] = useState<MediaAsset | null>(null);
   const [attempt, setAttempt] = useState(0);
-  const [error, setError] = useState<string | null>(null);
+  const [requestError, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [editor, setEditor] = useState<"new" | MediaAsset | null>(null);
   const [linking, setLinking] = useState(false);
@@ -147,7 +147,20 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
   );
   const [editingLink, setEditingLink] = useState<MediaLink | null>(null);
   const [pending, setPending] = useState(false);
+  const validId =
+    !initialId ||
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+      initialId,
+    );
+  const detail =
+    loadedDetail?.id.toLowerCase() === initialId?.toLowerCase()
+      ? loadedDetail
+      : null;
+  const error = validId
+    ? requestError
+    : "This media link has an invalid ID. Return to Media to choose an asset.";
   useEffect(() => {
+    if (!validId) return;
     const controller = new AbortController();
     if (initialId) {
       void getMedia(initialId, controller.signal)
@@ -175,9 +188,23 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
     function failureHandler(failure: unknown) {
       if (failure instanceof ApiError && failure.status === 401)
         auth.sessionExpired();
+      else if (failure instanceof ApiError && failure.status === 404)
+        setError(
+          "This media asset was deleted or could not be found. Return to Media to choose another asset.",
+        );
       else setError(mediaError(failure));
     }
-  }, [initialId, query, kind, association, target, offset, attempt, auth]);
+  }, [
+    initialId,
+    validId,
+    query,
+    kind,
+    association,
+    target,
+    offset,
+    attempt,
+    auth,
+  ]);
   const token =
     auth.state.status === "authenticated" ? auth.state.csrfToken : "";
   function refresh(message: string) {

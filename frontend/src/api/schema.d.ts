@@ -4385,7 +4385,7 @@ export interface components {
          * SearchKind
          * @enum {string}
          */
-        SearchKind: "seed_lot" | "sowing" | "plant" | "plant_group" | "event" | "botanical_identity" | "botanical_profile" | "supplier" | "location" | "geographic_place" | "provenance_site";
+        SearchKind: "seed_lot" | "sowing" | "plant" | "plant_group" | "harvest" | "event" | "media_asset" | "botanical_identity" | "botanical_profile" | "supplier" | "location" | "geographic_place" | "provenance_site";
         /** SearchResponse */
         SearchResponse: {
             /** Groups */

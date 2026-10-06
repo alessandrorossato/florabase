@@ -6,7 +6,9 @@ from __future__ import annotations
 import hashlib
 import http.cookiejar
 import json
+import shutil
 import socket
+import tempfile
 import uuid
 from pathlib import Path
 from typing import Any, cast
@@ -141,12 +143,7 @@ print(json.dumps({'counts':counts,'manifest':manifest,'media':files},sort_keys=T
         return cast(dict[str, Any], json.loads(self.python(program)))
 
     def cleanup(self) -> None:
-        self.require_identity()
-        volumes = self.resource_volumes()
-        self.compose("down", "--remove-orphans")
-        self.require_identity()
-        for volume in volumes:
-            run(["docker", "volume", "rm", volume["Name"]])
+        self.remove(self.project)
 
 
 def login(preview: SmokeUAT, *, expected: int = 200) -> None:
@@ -164,6 +161,105 @@ def login(preview: SmokeUAT, *, expected: int = 200) -> None:
             require(response.status == 200, "normal session can read private collection")
     except HTTPError as error:
         require(error.code == expected, f"login unexpectedly returned {error.code}")
+
+
+def ownership_transition(preview: SmokeUAT, previous: dict[str, Any]) -> None:
+    """Real old-owner removal -> new linked-source up/seed on the same disposable project."""
+    with tempfile.TemporaryDirectory(prefix="florabase-uat-transition-") as directory:
+        primary = Path(directory) / "primary"
+        source = Path(directory) / "next-feature"
+        primary.mkdir()
+        run(["git", "-C", str(primary), "init", "--initial-branch=main"], capture=True)
+        run(
+            [
+                "git",
+                "-C",
+                str(primary),
+                "-c",
+                "user.name=UAT Test",
+                "-c",
+                "user.email=uat@example.invalid",
+                "commit",
+                "--allow-empty",
+                "-m",
+                "UAT fixture",
+            ],
+            capture=True,
+        )
+        run(
+            [
+                "git",
+                "-C",
+                str(primary),
+                "remote",
+                "add",
+                "origin",
+                "https://github.com/alessandrorossato/florabase.git",
+            ]
+        )
+        run(["git", "-C", str(primary), "update-ref", "refs/remotes/origin/main", "HEAD"])
+        run(
+            ["git", "-C", str(primary), "worktree", "add", "-b", "feat/next-uat", str(source)],
+            capture=True,
+        )
+        # Copy only Git-listed source, including dirty/untracked work; never .env or caches.
+        for name in preview.repository.git(
+            "ls-files", "--cached", "--others", "--exclude-standard", "-z"
+        ).split("\0"):
+            if not name or ".env" in Path(name).parts or ".git" in Path(name).parts:
+                continue
+            original = preview.source / name
+            if original.is_file() and not original.is_symlink():
+                target = source / name
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(original, target)
+        next_preview = SmokeUAT(Repository(source))
+        next_preview.project = preview.project
+        next_preview.url = preview.url
+        for action in (next_preview.up, lambda: next_preview.remove(next_preview.project)):
+            try:
+                action()
+            except WorkflowError as error:
+                require("belongs to" in str(error), "non-owner must refuse before retirement")
+            else:
+                raise WorkflowError("UAT smoke: next source adopted old UAT")
+        require(preview.state() == previous, "non-owner refusals preserve old state")
+        preview.remove(preview.project)
+        require(not preview.containers() and not preview.resource_volumes(), "old owner retired")
+        try:
+            next_preview.up()
+            login(next_preview, expected=401)
+            next_preview.seed()
+            fresh = next_preview.state()
+            require(
+                fresh["counts"]["users"] == 1 and fresh["counts"]["suppliers"] == 2,
+                "new source freshly seeds owner and baseline",
+            )
+            require(len(fresh["media"]) == 1, "new source freshly seeds media")
+            require(
+                fresh["manifest"]["records"] != previous["manifest"]["records"],
+                "new source gets fresh fixture IDs",
+            )
+            require(
+                all(
+                    (item["Labels"] or {}).get("io.florabase.source") == str(source)
+                    for item in next_preview.resource_volumes()
+                ),
+                "new volume ownership",
+            )
+            marker = json.loads(
+                next_preview.python(
+                    "from pathlib import Path; print(Path('/var/lib/florabase/attachments/.uat-identity.json').read_text())"
+                )
+            )
+            require(marker["source"] == str(source), "new media marker ownership")
+            login(next_preview)
+            next_preview.status()
+        finally:
+            next_preview.cleanup()
+        require(
+            not next_preview.containers() and not next_preview.resource_volumes(), "new UAT retired"
+        )
 
 
 def main() -> None:
@@ -215,6 +311,7 @@ def main() -> None:
         # Model/service relationship evidence and one ordinary operator edit/new record.
         preview.python("""
 import json
+import shutil
 from pathlib import Path
 from uuid import UUID
 from sqlalchemy import select
@@ -309,8 +406,9 @@ with Session(get_engine()) as db:
             operator_snapshot(repo) == before,
             "DEV/Review/Stable Preview/PROD/operator UAT and primary unchanged",
         )
+        ownership_transition(preview, reset)
         print(
-            "REAL UAT COMPOSE SMOKE PASSED: first startup/empty auth; dirty untracked source; real Argon2/session login; runtime guard tests; fixture relationships; triple seed/operator edits; DB/media/dependency stop-start persistence; ahead refusal; guarded reset/owner/media rebuild; unchanged operator environments"
+            "REAL UAT COMPOSE SMOKE PASSED: first startup/empty auth; dirty untracked source; real Argon2/session login; runtime guard tests; fixture relationships; triple seed/operator edits; DB/media/dependency stop-start persistence; ahead refusal; guarded reset/owner/media rebuild; old-owner remove/new linked-source up/fresh seed/login; unchanged operator environments"
         )
     except Exception:
         preview.compose("logs", "--no-color", "--tail", "80", "frontend", "backend")

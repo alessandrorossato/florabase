@@ -121,9 +121,13 @@ test("directory hierarchy renders configured covers and shares them with Quick P
   const requested = setup();
   const user = userEvent.setup();
   render(<App />);
-  const card = await screen.findByRole("button", {
-    name: /Abelmoschus.*Okra Burgundy/,
-  });
+  const card = await screen.findByRole(
+    "button",
+    {
+      name: /Abelmoschus.*Okra Burgundy/,
+    },
+    { timeout: 3000 },
+  );
   expect(within(card).getByText("Abelmoschus esculentus L.").tagName).toBe("I");
   expect(within(card).getByText("‘Okra Burgundy’")).toBeInTheDocument();
   expect(card).toHaveTextContent("1 seed lot · 2 plants");

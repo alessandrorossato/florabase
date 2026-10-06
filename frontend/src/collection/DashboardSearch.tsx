@@ -26,6 +26,8 @@ const labels: Record<SearchKind, string> = {
   sowing: "Sowings",
   plant: "Plants",
   plant_group: "Plant groups",
+  harvest: "Harvests",
+  media_asset: "Media",
   event: "Events",
   botanical_identity: "Botanical identities",
   botanical_profile: "Reference knowledge",
@@ -39,6 +41,8 @@ const singular: Record<SearchKind, string> = {
   sowing: "Sowing",
   plant: "Plant",
   plant_group: "Plant group",
+  harvest: "Harvest",
+  media_asset: "Media",
   event: "Event",
   botanical_identity: "Botanical identity",
   botanical_profile: "Reference knowledge",
@@ -50,8 +54,9 @@ const singular: Record<SearchKind, string> = {
 const categories: { title: string; kinds: SearchKind[] }[] = [
   {
     title: "Collection",
-    kinds: ["seed_lot", "sowing", "plant", "plant_group", "event"],
+    kinds: ["seed_lot", "sowing", "plant", "plant_group", "harvest", "event"],
   },
+  { title: "Media", kinds: ["media_asset"] },
   { title: "Botany", kinds: ["botanical_identity", "botanical_profile"] },
   {
     title: "Reference",
@@ -440,7 +445,9 @@ export function useDashboardSearch() {
             <p className="field-hint">
               Collection filters below apply to recorded relationships. Location
               includes descendants; geographic provenance matches the exact
-              recorded place or site.
+              recorded place or site. Harvests use only their exact source's
+              botanical identity and occurrence year. Media uses direct metadata
+              only.
             </p>
             {references.status === "idle" || references.status === "loading" ? (
               <p role="status">Loading filter choices…</p>
@@ -550,6 +557,7 @@ export function useDashboardSearch() {
                   "sowing",
                   "plant",
                   "plant_group",
+                  "harvest",
                   "event",
                 ].includes(singleKind) && (
                   <div className="field">
@@ -558,7 +566,7 @@ export function useDashboardSearch() {
                         ? "Acquisition"
                         : singleKind === "sowing"
                           ? "Sowing"
-                          : singleKind === "event"
+                          : singleKind === "event" || singleKind === "harvest"
                             ? "Occurred"
                             : "Collection entry"}{" "}
                       year

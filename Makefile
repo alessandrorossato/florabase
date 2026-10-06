@@ -8,7 +8,7 @@ REF ?= origin/main
 PREVIEW_PATH ?=
 LOGIN ?= owner
 
-.PHONY: uat-preview-up uat-preview-status uat-preview-seed uat-preview-stop uat-preview-reset test-uat-preview smoke-uat-preview smoke-dev-upgrade smoke-dev-recovery dev-bootstrap-owner workflow-check feature-init dev-up dev-status dev-stop feature-review-up feature-review-status feature-review-stop feature-review-remove feature-review-bootstrap-owner test-environment-workflow smoke-environment-workflow help setup up dev down logs build test test-backend test-integration test-frontend lint format format-check typecheck check ci migrate dev-upgrade migration backup restore health api-generate api-check dependency-update preview preview-status preview-stop preview-bootstrap-owner preview-import-dev preview-remove feature-start feature-verify feature-deliver feature-finish test-workflow-helpers test-feature-workflow test-preview-workflow
+.PHONY: uat-preview-remove uat-preview-up uat-preview-status uat-preview-seed uat-preview-stop uat-preview-reset test-uat-preview smoke-uat-preview smoke-dev-upgrade smoke-dev-recovery dev-bootstrap-owner workflow-check feature-init dev-up dev-status dev-stop feature-review-up feature-review-status feature-review-stop feature-review-remove feature-review-bootstrap-owner test-environment-workflow smoke-environment-workflow help setup up dev down logs build test test-backend test-integration test-frontend lint format format-check typecheck check ci migrate dev-upgrade migration backup restore health api-generate api-check dependency-update preview preview-status preview-stop preview-bootstrap-owner preview-import-dev preview-remove feature-start feature-verify feature-deliver feature-finish test-workflow-helpers test-feature-workflow test-preview-workflow
 
 help:
 	@awk 'BEGIN {FS = ":.*## "; print "Florabase commands:"} /^[a-zA-Z_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -198,12 +198,17 @@ uat-preview-seed: ## Explicitly create standard UAT-only owner and synthetic bas
 uat-preview-stop: ## Stop UAT Preview, preserving database/media/dependencies
 	@python3 ./scripts/uat_preview.py stop
 
+UAT_RETIREMENT_HELPER := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))scripts/uat_preview.py
+uat-preview-remove: export CONFIRM_REMOVE_UAT_PREVIEW := $(CONFIRM_REMOVE_UAT_PREVIEW)
+uat-preview-remove: ## Retire ONLY owning UAT state; CONFIRM_REMOVE_UAT_PREVIEW=florabase-uat-preview
+	@python3 "$(UAT_RETIREMENT_HELPER)" remove
+
 uat-preview-reset: export CONFIRM_RESET_UAT_PREVIEW := $(CONFIRM_RESET_UAT_PREVIEW)
 uat-preview-reset: ## Recreate ONLY UAT state; CONFIRM_RESET_UAT_PREVIEW=florabase-uat-preview
 	@python3 ./scripts/uat_preview.py reset
 
-test-uat-preview: ## Test UAT workflow identity, reset and fixture isolation
+test-uat-preview: ## Test UAT workflow identity, retirement, reset and fixture isolation
 	@python3 ./scripts/test-uat-preview.py
 
-smoke-uat-preview: ## Prove UAT seed/auth/reset/persistence on unique disposable Compose state
+smoke-uat-preview: ## Prove UAT seed/auth/reset/persistence/ownership transition on disposable Compose state
 	@python3 ./scripts/smoke-uat-preview.py
