@@ -342,6 +342,8 @@ class UATTests(unittest.TestCase):
         with (
             patch.object(self.preview.repository, "initialize"),
             patch.object(self.preview.repository, "source", ROOT / "linked-fixture"),
+            patch.object(self.preview.repository, "common", ROOT / ".git-common"),
+            patch.object(self.preview.repository, "metadata", ROOT / ".git-worktrees" / "fixture"),
         ):
             self.preview.project = "florabase"
             with self.assertRaisesRegex(WorkflowError, "unexpected UAT project"):
