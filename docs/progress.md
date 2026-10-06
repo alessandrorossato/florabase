@@ -1,5 +1,91 @@
 # Engineering progress
 
+## 2026-10-06 — VIEW-001 independent review and final verification
+
+- Independent review covered owner isolation, typed/canonical state contracts, stale references and
+  future-version management, Origin/CSRF/session boundaries, single-query bounded listings, migration
+  safety, all thirteen frontend adapters, ordinary URL/history behavior and accessible directory chrome.
+  No production behavior defect was found. Operator UAT had passed at 1440×844, 1024×844 and
+  390×844, including keyboard order, visible focus, named controls/groups and overflow checks.
+- The first canonical run exposed 89.88% backend coverage versus the existing 90% policy. Added
+  focused Saved View service/API unit tests; the complete backend unit suite then passed **690 tests at
+  90.36%**. Its PostgreSQL run passed **562 tests** and exposed one stale pre-VIEW-001 schema inventory
+  assertion; updated that table inventory to include the new `saved_views` migration table.
+- Complete frontend Vitest passed **436 tests in 43 files**; Prettier, zero-warning ESLint, strict
+  TypeScript, Ruff and strict mypy passed. The final canonical gate is rerunning the corrected frozen
+  tree, including full isolated PostgreSQL integration/migration, API drift and production builds.
+- VIEW-001 is marked **verified** on the basis of accepted operator scenarios and independent review;
+  the final tree-specific canonical receipt is produced by the in-progress gate. No implementation
+  semantics or verification thresholds were weakened.
+
+## 2026-10-06 — VIEW-001 final operator UAT directory chrome polish
+
+- Visually hid redundant peer directory headings, search captions and operational lifecycle captions
+  with the existing `sr-only` convention. Explicit search labels, named directory regions and native
+  fieldset legends remain accessible. Meaningful section/filter headings and detail/form hierarchy
+  are preserved; DirectorySearch opt-in leaves picker/linker/contextual searches unchanged.
+- Kept heading/subtitle → Saved Views → search → filters → results. Plants' desktop lifecycle
+  buttons align with Record type without stretching. This follow-up changes no routes, search/filter
+  behavior, Saved View state, API or domain semantics.
+- Fresh review covered twelve supported directories plus the Provenance sites variant at
+  **1440×844, 1024×844 and 390×844**: **78 collapsed/expanded bounds checks** found no horizontal
+  overflow; **39 keyboard checks** retained named search/first-filter order and visible focus.
+  Search-to-Active and Save dialog focus/trap/Escape passed at each size; mobile management-dialog
+  cancellation returned focus to each exact trigger. Accessibility snapshots preserve label/group names.
+- Focused frontend regressions: **225 passed in 13 files** after an **11-test baseline**. Final
+  whole-frontend Prettier, zero-warning ESLint, strict TypeScript and production Vite build passed.
+  Evidence and retained headings are recorded in [the updated handoff](view-001-handoff.md).
+- UAT services remain healthy with existing operator data preserved. The source is unstaged and
+  uncommitted; VIEW-001 remains **implemented**, awaiting visual review and Luna's canonical gate.
+
+## 2026-10-06 — VIEW-001 operator UAT placement correction
+
+- Moved Saved Views out of the Plants search/filter grid into its own row below the directory
+  heading and above search. Applied the same placement to SeedLots and Sowings; Stored material
+  now places the row below its explanatory subtitle. Other supported directories already use this
+  arrangement. Saved Views does not shrink as a child of bounded directory flex layouts.
+- Cross-surface review also caught the Saved Stored material route using an incorrect tab value.
+  Its adapter and history guard now use the existing `tab=stored-material`; normal UI Save/Open and
+  refresh retained the exact query/state. Added an App-level regression against the actual peer view.
+- Browser review covered all 13 supported surfaces at **1440×844, 1024×844 and 390×844**:
+  39 document/panel bounds checks found no horizontal overflow, with directory controls separated
+  from ordinary filters. Checked empty lists, expanded long names, wrapped actions, keyboard
+  Save/Saved views/search order, modal focus trap, Escape return, and Rename/Update/Delete cancellation.
+  Screenshots and measurements stay outside Git in `/tmp/florabase-view001-layout-review`.
+- Focused post-layout directory/UI tests: **90 passed**. Saved View adapter/UI and Stored material
+  tests after the route correction: **67 passed**. Targeted App open/refresh and keyboard peer-view
+  checks: **3 passed** (the Saved Views UI cases overlap between focused runs).
+- Final affected-file Prettier and zero-warning ESLint, strict TypeScript and production Vite build
+  passed. UAT status reports this worktree, healthy frontend/backend/DB, revision 0034 and fixture v1
+  with existing edits preserved. `git diff --check` passed; the index remains empty and primary clean.
+- VIEW-001 remains **implemented**, with no staging, commit, canonical gate or delivery in this phase.
+
+## 2026-10-06 — VIEW-001 Saved operator views implementation
+
+- Implemented owner-private PostgreSQL SavedView persistence, revision `20261006_0034`, typed v1
+  state for all thirteen audited existing search/directory surfaces, canonical ordinary URLs and
+  compact Save/Open/Rename/Update-current/Delete controls with Dashboard access.
+- State excludes pagination and transient interaction state. Exact stale UUIDs remain filters;
+  incompatible stored versions remain manageable without silent interpretation. Existing search
+  matching and default directory predicates are preserved. Lists use one bounded owner-scoped
+  query per page, without executing views or materializing results.
+- Focused backend/state/search checks: **84 passed**. Real isolated PostgreSQL checks: **61 passed**,
+  covering JSONB/UUIDv7/UTC, naming, second-user isolation, mutation protections, bounded listing,
+  stale/future state, populated downgrade refusal and empty downgrade/re-upgrade, plus SEARCH-002
+  and current-head migration regressions. Ruff format/lint and strict mypy passed; production
+  backend runtime build passed. Final frozen frontend suite: **435 passed in 43 files**;
+  zero-warning ESLint, strict TypeScript, production frontend build and Prettier passed.
+  Generated API drift, feature graph (91 features) and `git diff --check` passed. Complete browser evidence is in
+  [the implementation handoff](view-001-handoff.md).
+- Supported guarded retirement proved prior UAT owner `9f48` before retiring only its resources;
+  this branch prepares fresh synthetic UAT through normal up/seed/status. Fixture v1 is unchanged.
+- Initial browser flows passed at 1440×844 before the browser connection disappeared. The operator
+  UAT correction above completes the reference and responsive visual/overflow review; UAT remains healthy.
+- VIEW-001 is **implemented**, awaiting operator visual/product UAT and independent architecture/QA
+  and canonical verification. No feature-verify, staging, commit or delivery in this phase.
+  Collection productivity v2 remains open: bulk operations next, then justified unified history,
+  then Orders/Purchases. BOTANY-003's existing blocker is unchanged.
+
 ## 2026-10-06 — PREVIEW-001 ownership retirement regression required by SEARCH-002 UAT
 
 - Delivered UAT lacked retirement: stop kept ownership and reset recreated it under the old owner.

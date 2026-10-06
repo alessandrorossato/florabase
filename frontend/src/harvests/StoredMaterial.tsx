@@ -1,3 +1,5 @@
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { ConversionDialog } from "./ConversionDialog";
 import { ConversionHistory } from "./ConversionHistory";
 import type { Conversion } from "./conversionApi";
@@ -372,11 +374,27 @@ export function StoredMaterialDirectory() {
   const [rows, setRows] = useState<Inventory[] | null>(null);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
-  const [query, setQuery] = useState("");
-  const [state, setState] = useState("active");
-  const [material, setMaterial] = useState("");
-  const [location, setLocation] = useState("");
-  const [identity, setIdentity] = useState("");
+  const view = useDirectoryView("stored_material");
+  const query = view.state.q;
+  const setQuery = (value: string) => {
+    view.update("q", value);
+  };
+  const material = view.state.material;
+  const setMaterial = (value: string) => {
+    view.update("material", value);
+  };
+  const location = view.state.location_id;
+  const setLocation = (value: string) => {
+    view.update("location_id", value);
+  };
+  const identity = view.state.identity_id;
+  const setIdentity = (value: string) => {
+    view.update("identity_id", value);
+  };
+  const state = view.state.state === "all" ? "" : view.state.state;
+  const setState = (value: string) => {
+    view.update("state", value || "all");
+  };
   useEffect(() => {
     const controller = new AbortController();
     void inventoryList(controller.signal)
@@ -439,8 +457,10 @@ export function StoredMaterialDirectory() {
       <p>
         Current stored remainder from explicitly tracked Harvest material lines.
       </p>
+      <SavedViews surface="stored_material" state={view.savedState} />
       <div className="harvest-filters">
         <DirectorySearch
+          hideLabel
           id={`${id}-search`}
           label="Search stored material"
           placeholder="Harvest, source or botanical identity"
@@ -493,6 +513,11 @@ export function StoredMaterialDirectory() {
             }}
           >
             <option value="">All Locations</option>
+            {location && !locations.some((item) => item.id === location) && (
+              <option value={location}>
+                Unavailable Location · {location}
+              </option>
+            )}
             {locations.map((l) => (
               <option key={l.id} value={l.id}>
                 {l.display_path}

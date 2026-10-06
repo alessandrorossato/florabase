@@ -25,6 +25,7 @@ from florabase.harvests.model import Harvest, HarvestItem
 from florabase.locations.model import Location
 from florabase.plants.model import Plant, PlantGroup
 from florabase.provenance_sites.model import ProvenanceSite
+from florabase.saved_views.model import SavedView
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import GerminationObservation, Sowing
 from florabase.suppliers.model import Supplier
@@ -59,6 +60,7 @@ assert Plant.__table__.metadata is target_metadata
 assert PlantGroup.__table__.metadata is target_metadata
 assert Event.__table__.metadata is target_metadata
 assert HarvestSeedLotConversion.__table__.metadata is target_metadata
+assert SavedView.__table__.metadata is target_metadata
 assert Harvest.__table__.metadata is target_metadata
 assert HarvestItem.__table__.metadata is target_metadata
 assert HarvestMaterialInventory.__table__.metadata is target_metadata

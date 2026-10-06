@@ -19,6 +19,7 @@ from florabase.media.api import router as media_router
 from florabase.plants.api import plant_groups_router, plants_router
 from florabase.propagation.api import router as propagation_router
 from florabase.provenance_sites.api import router as provenance_sites_router
+from florabase.saved_views.api import router as saved_views_router
 from florabase.search.api import router as search_router
 from florabase.seed_lots.api import router as seed_lots_router
 from florabase.sowings.api import router as sowings_router
@@ -52,3 +53,5 @@ api_router.include_router(plant_groups_events_router)
 api_router.include_router(events_router)
 
 api_router.include_router(propagation_router)
+
+api_router.include_router(saved_views_router)

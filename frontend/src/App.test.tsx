@@ -3105,6 +3105,53 @@ test("Deep Location hierarchy retains parent context and the full current path w
   expect(screen.getByRole("button", { name: /^Level 12/ })).toBeInTheDocument();
 });
 
+test("Saved Stored material view opens the actual peer directory and survives refresh", async () => {
+  window.history.replaceState(null, "", "#/harvests?tab=stored-material");
+  authenticatedThen((path) => {
+    if (path.startsWith("/api/v1/harvest-inventory")) return jsonResponse([]);
+    if (path === "/api/v1/saved-views?surface=stored_material")
+      return jsonResponse([
+        {
+          id: "01900000-0000-7000-8000-000000000099",
+          name: "Coffee storage",
+          surface: "stored_material",
+          state_version: 1,
+          state: { q: "coffee", state: "all" },
+          compatibility: "supported",
+          created_at: "2026-10-06T00:00:00Z",
+          updated_at: "2026-10-06T00:00:00Z",
+        },
+      ]);
+    throw new Error(`unexpected request: ${path}`);
+  });
+  const user = userEvent.setup();
+  const view = render(<App />);
+  // This focused test starts with the Harvest workspace's cold lazy import.
+  await screen.findByLabelText("Search stored material", {}, { timeout: 5000 });
+  await user.click(await screen.findByRole("button", { name: "Saved views" }));
+  await user.click(
+    await screen.findByRole("button", { name: "Open Coffee storage" }),
+  );
+  expect(await screen.findByLabelText("Search stored material")).toHaveValue(
+    "coffee",
+  );
+  expect(window.location.hash).toBe(
+    "#/harvests?tab=stored-material&q=coffee&state=all",
+  );
+  expect(
+    within(screen.getByRole("navigation", { name: "Harvest views" })).getByRole(
+      "button",
+      { name: "Stored material", pressed: true },
+    ),
+  ).toBeVisible();
+  expect(screen.queryByLabelText("Search Harvests")).not.toBeInTheDocument();
+  view.unmount();
+  render(<App />);
+  expect(await screen.findByLabelText("Search stored material")).toHaveValue(
+    "coffee",
+  );
+});
+
 test.each([1440, 390])(
   "Harvest workspace peer views preserve deep links and keyboard navigation at %ipx",
   async (width) => {

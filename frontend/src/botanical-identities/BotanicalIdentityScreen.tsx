@@ -1,3 +1,5 @@
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { FormSections } from "../components/FormSections";
 import { usePublishRecordIdentities } from "../components/recordPresentation";
 import {
@@ -1050,7 +1052,14 @@ export function BotanicalIdentityScreen({
   const [selected, setSelected] = useState<BotanicalIdentityResponse | null>(
     null,
   );
-  const [filter, setFilter] = useState("");
+  const view = useDirectoryView("botanical_identities", () => {
+    setSelected(null);
+  });
+  const filter = view.state.q;
+  const setFilter = (value: string) => {
+    view.update("q", value);
+  };
+
   const directoryRef = useRef<HTMLUListElement>(null);
   const previousDetail = useRef(initialId);
   useEffect(() => {
@@ -1351,8 +1360,15 @@ export function BotanicalIdentityScreen({
             aria-labelledby="identity-directory-title"
             className="identity-directory"
           >
-            <h3 id="identity-directory-title">Identity directory</h3>
+            <h3 className="sr-only" id="identity-directory-title">
+              Identity directory
+            </h3>
+            <SavedViews
+              surface="botanical_identities"
+              state={view.savedState}
+            />
             <DirectorySearch
+              hideLabel
               id="identity-filter"
               label="Search botanical identities"
               placeholder="Search names and cultivars"

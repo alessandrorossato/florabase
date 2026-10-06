@@ -783,3 +783,13 @@ MediaAsset search reuses the Library's direct title, original filename and attri
 Links, primary designations and identity covers do not infer text matches or duplicate results.
 Search is compact text navigation to existing authenticated Harvest and exact Media details, with
 no image/external fetching. See [search semantics](search.md). No persistence or migration is added.
+
+## Saved operator views
+
+VIEW-001 adds owner-private `SavedView` records with UUIDv7 identity, User owner, trimmed Unicode
+name (120 characters), finite surface, explicit state version 1, validated canonical JSONB state and
+UTC creation/update timestamps. Names are case-insensitively unique per owner and surface. These
+are shortcuts to existing live queries, with no saved results, record ownership changes or new
+filters. Exact stale filter UUIDs remain present; unsupported versions stay manageable without
+being silently reinterpreted. Rename changes only the name, Update with current view explicitly
+replaces state, and deletion removes only the shortcut. See [surface contracts](saved-views.md).

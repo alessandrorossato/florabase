@@ -4047,6 +4047,7 @@
         "title": "InventoryWrite",
         "type": "object"
       },
+      "JsonValue": {},
       "LineageResponse": {
         "properties": {
           "ancestors": {
@@ -7832,6 +7833,161 @@
           "message"
         ],
         "title": "ReversalReason",
+        "type": "object"
+      },
+      "SavedViewCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "state": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "title": "State",
+            "type": "object"
+          },
+          "state_version": {
+            "title": "State Version",
+            "type": "integer"
+          },
+          "surface": {
+            "$ref": "#/components/schemas/SavedViewSurface"
+          }
+        },
+        "required": [
+          "name",
+          "surface",
+          "state_version",
+          "state"
+        ],
+        "title": "SavedViewCreate",
+        "type": "object"
+      },
+      "SavedViewResponse": {
+        "properties": {
+          "compatibility": {
+            "enum": [
+              "supported",
+              "unsupported_version",
+              "invalid_state"
+            ],
+            "title": "Compatibility",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "state": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "title": "State",
+            "type": "object"
+          },
+          "state_version": {
+            "title": "State Version",
+            "type": "integer"
+          },
+          "surface": {
+            "$ref": "#/components/schemas/SavedViewSurface"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "surface",
+          "state_version",
+          "state",
+          "created_at",
+          "updated_at",
+          "compatibility"
+        ],
+        "title": "SavedViewResponse",
+        "type": "object"
+      },
+      "SavedViewSurface": {
+        "enum": [
+          "global_search",
+          "seed_lots",
+          "sowings",
+          "plants",
+          "harvests",
+          "stored_material",
+          "events",
+          "media",
+          "botanical_identities",
+          "suppliers",
+          "locations",
+          "geography",
+          "provenance_map"
+        ],
+        "title": "SavedViewSurface",
+        "type": "string"
+      },
+      "SavedViewUpdate": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "state": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "$ref": "#/components/schemas/JsonValue"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State"
+          },
+          "state_version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "State Version"
+          }
+        },
+        "title": "SavedViewUpdate",
         "type": "object"
       },
       "SearchGroup": {
@@ -18278,6 +18434,247 @@
         "summary": "Readiness",
         "tags": [
           "system"
+        ]
+      }
+    },
+    "/api/v1/saved-views": {
+      "get": {
+        "operationId": "listSavedViews",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "surface",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/SavedViewSurface"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Surface"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/SavedViewResponse"
+                  },
+                  "title": "Response Listsavedviews",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List All",
+        "tags": [
+          "saved-views"
+        ]
+      },
+      "post": {
+        "operationId": "createSavedView",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavedViewCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedViewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create",
+        "tags": [
+          "saved-views"
+        ]
+      }
+    },
+    "/api/v1/saved-views/{view_id}": {
+      "delete": {
+        "operationId": "deleteSavedView",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "view_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "View Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete",
+        "tags": [
+          "saved-views"
+        ]
+      },
+      "patch": {
+        "operationId": "updateSavedView",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "view_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "View Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavedViewUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SavedViewResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update",
+        "tags": [
+          "saved-views"
         ]
       }
     },

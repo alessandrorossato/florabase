@@ -1556,6 +1556,42 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/saved-views": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List All */
+        get: operations["listSavedViews"];
+        put?: never;
+        /** Create */
+        post: operations["createSavedView"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/saved-views/{view_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete */
+        delete: operations["deleteSavedView"];
+        options?: never;
+        head?: never;
+        /** Update */
+        patch: operations["updateSavedView"];
+        trace?: never;
+    };
     "/api/v1/search": {
         parameters: {
             query?: never;
@@ -3178,6 +3214,7 @@ export interface components {
              */
             state: "active" | "depleted";
         };
+        JsonValue: unknown;
         /** LineageResponse */
         LineageResponse: {
             /** Ancestors */
@@ -4357,6 +4394,66 @@ export interface components {
             entity_type?: ("seed_lot" | "sowing" | "plant" | "plant_group") | null;
             /** Message */
             message: string;
+        };
+        /** SavedViewCreate */
+        SavedViewCreate: {
+            /** Name */
+            name: string;
+            /** State */
+            state: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** State Version */
+            state_version: number;
+            surface: components["schemas"]["SavedViewSurface"];
+        };
+        /** SavedViewResponse */
+        SavedViewResponse: {
+            /**
+             * Compatibility
+             * @enum {string}
+             */
+            compatibility: "supported" | "unsupported_version" | "invalid_state";
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** State */
+            state: {
+                [key: string]: components["schemas"]["JsonValue"];
+            };
+            /** State Version */
+            state_version: number;
+            surface: components["schemas"]["SavedViewSurface"];
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /**
+         * SavedViewSurface
+         * @enum {string}
+         */
+        SavedViewSurface: "global_search" | "seed_lots" | "sowings" | "plants" | "harvests" | "stored_material" | "events" | "media" | "botanical_identities" | "suppliers" | "locations" | "geography" | "provenance_map";
+        /** SavedViewUpdate */
+        SavedViewUpdate: {
+            /** Name */
+            name?: string | null;
+            /** State */
+            state?: {
+                [key: string]: components["schemas"]["JsonValue"];
+            } | null;
+            /** State Version */
+            state_version?: number | null;
         };
         /** SearchGroup */
         SearchGroup: {
@@ -9468,6 +9565,141 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    listSavedViews: {
+        parameters: {
+            query?: {
+                surface?: components["schemas"]["SavedViewSurface"] | null;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedViewResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createSavedView: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavedViewCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedViewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteSavedView: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                view_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateSavedView: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                view_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavedViewUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavedViewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

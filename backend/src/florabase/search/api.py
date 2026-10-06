@@ -8,7 +8,7 @@ from florabase.auth.dependencies import AuthenticatedActor, require_authenticate
 from florabase.db.session import get_database_session
 from florabase.events.model import EventKind
 from florabase.search.schemas import SearchKind, SearchResponse
-from florabase.search.service import SearchFilters, search
+from florabase.search.service import SearchFilters, search, validate_filters
 
 router = APIRouter(prefix="/search", tags=["collection"])
 
@@ -31,25 +31,6 @@ def read_search(
     limit: Annotated[int, Query(ge=1, le=50)] = 20,
 ) -> SearchResponse:
     kinds = tuple(dict.fromkeys(kind or []))
-    if (lifecycle or year is not None) and (
-        len(kinds) != 1
-        or kinds[0]
-        not in {
-            SearchKind.SEED_LOT,
-            SearchKind.SOWING,
-            SearchKind.PLANT,
-            SearchKind.PLANT_GROUP,
-            SearchKind.EVENT,
-            SearchKind.HARVEST,
-        }
-    ):
-        raise HTTPException(422, "Lifecycle and year require one collection record type")
-    if lifecycle and kinds[0] == SearchKind.HARVEST:
-        raise HTTPException(422, "Harvests have no lifecycle states")
-    if lifecycle and kinds[0] == SearchKind.EVENT:
-        raise HTTPException(422, "Events have kinds, not lifecycle states")
-    if event_kind and kinds != (SearchKind.EVENT,):
-        raise HTTPException(422, "Event kind requires the Event record type")
     filters = SearchFilters(
         kinds=kinds,
         identity_id=identity_id,
@@ -61,6 +42,8 @@ def read_search(
         event_kind=event_kind,
         year=year,
     )
-    if lifecycle and not filters.valid_lifecycle():
-        raise HTTPException(422, "Lifecycle does not apply to this record type")
+    try:
+        validate_filters(filters)
+    except ValueError as exc:
+        raise HTTPException(422, str(exc)) from exc
     return search(database, q.strip(), filters, offset=offset, limit=limit)

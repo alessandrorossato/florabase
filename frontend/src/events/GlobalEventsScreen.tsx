@@ -1,3 +1,5 @@
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { useEffect, useMemo, useState } from "react";
 
 import { ApiError } from "../auth/api";
@@ -16,7 +18,12 @@ type State =
 export function GlobalEventsScreen() {
   const auth = useAuth();
   const [state, setState] = useState<State>({ status: "loading" });
-  const [filter, setFilter] = useState<EventFilter>("all");
+  const view = useDirectoryView("events");
+  const filter = view.state.category;
+  const setFilter = (value: EventFilter) => {
+    view.update("category", value);
+  };
+
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
@@ -73,6 +80,7 @@ export function GlobalEventsScreen() {
       )}
       {state.status === "ready" && (
         <>
+          <SavedViews surface="events" state={view.savedState} />
           <EventFilters selected={filter} onSelect={setFilter} />
           {state.events.length === 0 ? (
             <div className="empty-state">

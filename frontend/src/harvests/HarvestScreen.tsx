@@ -1,3 +1,5 @@
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { useEffect, useId, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -99,10 +101,26 @@ export function HarvestScreen({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
-  const [query, setQuery] = useState("");
-  const [material, setMaterial] = useState("");
-  const [type, setType] = useState("");
-  const [identity, setIdentity] = useState("");
+  const view = useDirectoryView("harvests", () => {
+    setSelectedId(null);
+  });
+  const query = view.state.q;
+  const setQuery = (value: string) => {
+    view.update("q", value);
+  };
+  const material = view.state.material;
+  const setMaterial = (value: string) => {
+    view.update("material", value);
+  };
+  const type = view.state.source_type;
+  const setType = (value: string) => {
+    view.update("source_type", value);
+  };
+  const identity = view.state.identity_id;
+  const setIdentity = (value: string) => {
+    view.update("identity_id", value);
+  };
+
   const [identities, setIdentities] = useState<ReferenceChoice[]>([]);
   useEffect(() => {
     if (storedMode) return;
@@ -332,8 +350,10 @@ export function HarvestScreen({
         <StoredMaterialDirectory />
       ) : (
         <>
+          <SavedViews surface="harvests" state={view.savedState} />
           <div className="harvest-filters">
             <DirectorySearch
+              hideLabel
               id={`${headingId}-search`}
               label="Search Harvests"
               value={query}

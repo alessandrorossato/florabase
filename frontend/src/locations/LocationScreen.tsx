@@ -1,3 +1,5 @@
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
 import {
   useEffect,
   useMemo,
@@ -393,10 +395,18 @@ export function LocationScreen({
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [attempt, setAttempt] = useState(0);
   const [editing, setEditing] = useState(false);
-  const [query, setQuery] = useState("");
-  const [scopeFilter, setScopeFilter] = useState<LocationUsageScope | "all">(
-    "all",
-  );
+  const view = useDirectoryView("locations", () => {
+    setSelectedId(null);
+  });
+  const query = view.state.q;
+  const setQuery = (value: string) => {
+    view.update("q", value);
+  };
+  const scopeFilter = view.state.scope;
+  const setScopeFilter = (value: LocationUsageScope | "all") => {
+    view.update("scope", value);
+  };
+
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [filterExpansion, setFilterExpansion] = useState<{
     key: string;
@@ -638,8 +648,12 @@ export function LocationScreen({
               aria-labelledby="location-directory-title"
               className="identity-directory"
             >
-              <h3 id="location-directory-title">Location directory</h3>
+              <h3 className="sr-only" id="location-directory-title">
+                Location directory
+              </h3>
+              <SavedViews surface="locations" state={view.savedState} />
               <DirectorySearch
+                hideLabel
                 id="location-search"
                 label="Search locations"
                 placeholder="Name or path"

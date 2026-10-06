@@ -1,3 +1,5 @@
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { sowingFormPanels } from "./SowingFormFields";
 import { RecordVisual } from "../photos/RecordVisual";
 import { useRecordName } from "../components/recordPresentation";
@@ -737,12 +739,21 @@ export function SowingScreen({
   const [selectedId, setSelectedId] = useState<string | null>(
     initialId ?? null,
   );
-  const [filter, setFilter] = useState<"active" | "completed" | "all">(
-    "active",
-  );
-  const [search, setSearch] = useState("");
-  const [editing, setEditing] = useState(false);
   const [mobileDetail, setMobileDetail] = useState(Boolean(initialId));
+  const view = useDirectoryView("sowings", () => {
+    setSelectedId(null);
+    setMobileDetail(false);
+  });
+  const filter = view.state.lifecycle;
+  const setFilter = (value: "active" | "completed" | "all") => {
+    view.update("lifecycle", value);
+  };
+  const search = view.state.q;
+  const setSearch = (value: string) => {
+    view.update("q", value);
+  };
+
+  const [editing, setEditing] = useState(false);
   const lastRouteId = useRef(initialId);
   useEffect(() => {
     if (lastRouteId.current === initialId) return;
@@ -1143,9 +1154,13 @@ export function SowingScreen({
           className="seed-master sowing-master"
           aria-labelledby="sowing-list-title"
         >
-          <h3 id="sowing-list-title">Sowing collection</h3>
+          <h3 className="sr-only" id="sowing-list-title">
+            Sowing collection
+          </h3>
+          <SavedViews surface="sowings" state={view.savedState} />
           <div className="seed-controls">
             <DirectorySearch
+              hideLabel
               id="sowing-search"
               label="Search Sowings"
               placeholder="Search sowings, seed lots or location"
@@ -1153,7 +1168,7 @@ export function SowingScreen({
               onChange={setSearch}
             />
             <fieldset className="lifecycle-filter">
-              <legend>Show Sowings</legend>
+              <legend className="sr-only">Show Sowings</legend>
               {(["active", "completed", "all"] as const).map((item) => (
                 <button
                   key={item}

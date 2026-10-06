@@ -1,3 +1,5 @@
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
 import {
   PlantEssentialsFields,
   PlantEntryDateField,
@@ -801,16 +803,30 @@ export function PlantScreen({
   );
   const routedKey = initialId ? `${initialKind}:${initialId}` : null;
   const lastRoutedKey = useRef(routedKey);
-  const [lifecycleFilter, setLifecycleFilter] = useState<
-    "active" | "history" | "all"
-  >("active");
-  const [typeFilter, setTypeFilter] = useState<"all" | RecordKind>(
-    initialTypeFilter,
+  const [mobileDetail, setMobileDetail] = useState(Boolean(initialId));
+  const view = useDirectoryView(
+    "plants",
+    () => {
+      setSelectedKey(null);
+      setMobileDetail(false);
+    },
+    { type: initialTypeFilter },
   );
-  const [search, setSearch] = useState("");
+  const lifecycleFilter = view.state.lifecycle;
+  const setLifecycleFilter = (value: "active" | "history" | "all") => {
+    view.update("lifecycle", value);
+  };
+  const typeFilter = view.state.type;
+  const setTypeFilter = (value: "all" | RecordKind) => {
+    view.update("type", value);
+  };
+  const search = view.state.q;
+  const setSearch = (value: string) => {
+    view.update("q", value);
+  };
+
   const [editing, setEditing] = useState(false);
   const [creationKind, setCreationKind] = useState<RecordKind | null>(null);
-  const [mobileDetail, setMobileDetail] = useState(Boolean(initialId));
   const [form, setForm] = useState<FormState>(blankForm);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [extractionSource, setExtractionSource] =
@@ -1628,13 +1644,17 @@ export function PlantScreen({
           aria-labelledby="plant-list-title"
         >
           <div className="plant-directory-heading">
-            <h3 id="plant-list-title">Plants collection</h3>
+            <h3 className="sr-only" id="plant-list-title">
+              Plants collection
+            </h3>
             <span role="status" aria-label="Matching records">
               {visible.length} {visible.length === 1 ? "record" : "records"}
             </span>
           </div>
+          <SavedViews surface="plants" state={view.savedState} />
           <div className="seed-controls">
             <DirectorySearch
+              hideLabel
               id="plant-search"
               label="Search Plants"
               placeholder="Search records, identity or location"
@@ -1642,7 +1662,7 @@ export function PlantScreen({
               onChange={setSearch}
             />
             <fieldset className="lifecycle-filter">
-              <legend>Lifecycle</legend>
+              <legend className="sr-only">Lifecycle</legend>
               {(["active", "history", "all"] as const).map((item) => (
                 <button
                   key={item}

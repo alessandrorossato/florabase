@@ -111,6 +111,7 @@ function wrap(child: React.ReactNode) {
   );
 }
 beforeEach(() => {
+  window.history.replaceState(null, "", "#/harvests?tab=stored-material");
   vi.mocked(api.inventoryList).mockResolvedValue([]);
   vi.mocked(api.saveInventory).mockResolvedValue(inventory);
   vi.mocked(api.recordDisposition).mockResolvedValue([]);

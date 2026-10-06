@@ -397,13 +397,7 @@
         "PostgreSQL constraints preserve optionality, declared date precision, quantity kind, and non-destructive lifecycle states",
         "Upgrade, downgrade, and database invariants are integration-tested without introducing Sowing or Plant tables"
       ],
-      "dependencies": [
-        "SEED-001",
-        "DATABASE-001",
-        "SUPPLIER-001",
-        "LOCATION-001",
-        "GEOGRAPHY-001"
-      ],
+      "dependencies": ["SEED-001", "DATABASE-001", "SUPPLIER-001", "LOCATION-001", "GEOGRAPHY-001"],
       "priority": "P1",
       "status": "verified"
     },
@@ -635,13 +629,7 @@
         "PostgreSQL enforces source, item, owned Event and primary-link integrity; guarded migration, rollback, retention, permissions, bounded queries, tests, rendered review and canonical verification have recorded evidence",
         "Future harvested-material inventory/disposition and explicit conversion to SeedLot remain documented pre-1.0 follow-ups"
       ],
-      "dependencies": [
-        "PLANT-001",
-        "PLANT-002",
-        "EVENT-003",
-        "ATTACHMENT-005",
-        "UX-006"
-      ],
+      "dependencies": ["PLANT-001", "PLANT-002", "EVENT-003", "ATTACHMENT-005", "UX-006"],
       "priority": "P1",
       "status": "implemented"
     },
@@ -737,12 +725,7 @@
         "Establishment into Plants or PlantGroups preserves lineage without using Sowing",
         "No generic propagation-material base table is introduced without demonstrated need"
       ],
-      "dependencies": [
-        "PLANT-003",
-        "SUPPLIER-001",
-        "LOCATION-001",
-        "LINEAGE-001"
-      ],
+      "dependencies": ["PLANT-003", "SUPPLIER-001", "LOCATION-001", "LINEAGE-001"],
       "priority": "P2",
       "status": "planned"
     },
@@ -755,12 +738,7 @@
         "Rooting or establishment into Plants or PlantGroups preserves known parent-Plant lineage without using Sowing",
         "The implementation follows concrete cutting workflows rather than speculative inheritance"
       ],
-      "dependencies": [
-        "PLANT-003",
-        "SUPPLIER-001",
-        "LOCATION-001",
-        "LINEAGE-002"
-      ],
+      "dependencies": ["PLANT-003", "SUPPLIER-001", "LOCATION-001", "LINEAGE-002"],
       "priority": "P2",
       "status": "planned"
     },
@@ -806,6 +784,22 @@
         "Existing SEARCH-001 kinds remain covered; saved views, bulk operations and generic history remain deferred"
       ],
       "dependencies": ["SEARCH-001", "HARVEST-001", "ATTACHMENT-005"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "VIEW-001",
+      "category": "search",
+      "description": "Persist owner-private Saved operator views for existing search and directory controls",
+      "acceptance_criteria": [
+        "Authenticated owner-private PostgreSQL SavedViews use UUIDv7, bounded normalized Unicode names, case-insensitive owner/surface uniqueness, UTC timestamps and an explicit state version",
+        "Finite surface contracts validate and canonicalize existing Global Search and directory state, reject unknown/transient keys and empty defaults, and retain exact stale UUID filters without new matching semantics",
+        "Owner-scoped list/create/rename/replace-state/delete APIs use normal Origin/CSRF/session protections and preserve safe management of unknown stored versions",
+        "Compact supported-surface controls and Dashboard access open ordinary canonical filter URLs with live results, offset zero, refresh/history safety and no implicit persistence after manual edits",
+        "Focused backend, real PostgreSQL/migration, frontend adapter/product/regression, generated API/static/build checks support operator UAT and independent final verification",
+        "No materialized results, arbitrary route or executable state, browser-local persistence, default views, sharing, bulk operations or unified history are introduced"
+      ],
+      "dependencies": ["SEARCH-002"],
       "priority": "P1",
       "status": "verified"
     },
@@ -962,13 +956,7 @@
         "Geography provides accessible stored-data search and a coordinate-bearing Provenance-site map without geocoding or inferred coordinates, while the separate collection provenance map becomes a map-first collection-record workspace with its existing semantics intact",
         "Desktop and mobile layouts preserve hierarchy, map and list parity, accessible controls, lazy map loading and operator workflows while replacing permanent forms and unnecessary card chrome with explicit create and edit interactions"
       ],
-      "dependencies": [
-        "UX-004",
-        "SUPPLIER-002",
-        "LOCATION-002",
-        "GEOGRAPHY-003",
-        "MAP-001"
-      ],
+      "dependencies": ["UX-004", "SUPPLIER-002", "LOCATION-002", "GEOGRAPHY-003", "MAP-001"],
       "priority": "P1",
       "status": "implemented"
     },
@@ -981,14 +969,7 @@
         "Propagation, transfer, extraction, reintegration, reversal, Events, Photos and Lineage retain their authoritative domain boundaries while presenting clearer action hierarchy, history and responsive workflows",
         "Dashboard and collection-wide Events use the refreshed visual vocabulary as compact collection-summary and chronological-history surfaces with accessible desktop and mobile behavior, without inventing reminders, care rules, primary record photos or new domain semantics"
       ],
-      "dependencies": [
-        "UX-005",
-        "UX-003",
-        "PROPAGATION-003",
-        "PLANT-006",
-        "EVENT-002",
-        "ATTACHMENT-003"
-      ],
+      "dependencies": ["UX-005", "UX-003", "PROPAGATION-003", "PLANT-006", "EVENT-002", "ATTACHMENT-003"],
       "priority": "P1",
       "status": "implemented"
     },
@@ -1015,13 +996,7 @@
         "Location directory, compact Quick Preview and detail communicate descendant content with explicit scope labels, accessible controls and responsive wrapping without duplicating equal leaf counts in compact surfaces",
         "Deep trees, siblings, independent roots, empty branches, lifecycle inclusion, source non-inference and immediate reparenting results have integration coverage while assignment and deletion guards retain their semantics"
       ],
-      "dependencies": [
-        "LOCATION-001",
-        "LOCATION-002",
-        "SEED-003",
-        "SOWING-002",
-        "PLANT-002"
-      ],
+      "dependencies": ["LOCATION-001", "LOCATION-002", "SEED-003", "SOWING-002", "PLANT-002"],
       "priority": "P2",
       "status": "implemented"
     },
@@ -1268,12 +1243,7 @@
         "Deterministic locks, PostgreSQL concurrency tests and origin/correction/dependency guards prevent stale restoration, overuse and falsified conversion history",
         "Responsive creation/undo workflows expose eligibility, conflicts and Harvest-to-SeedLot cross-navigation; focused migration, API, static and frontend checks have evidence"
       ],
-      "dependencies": [
-        "HARVEST-002",
-        "LINEAGE-002",
-        "SEED-003",
-        "PROPAGATION-003"
-      ],
+      "dependencies": ["HARVEST-002", "LINEAGE-002", "SEED-003", "PROPAGATION-003"],
       "priority": "P1",
       "status": "verified"
     }

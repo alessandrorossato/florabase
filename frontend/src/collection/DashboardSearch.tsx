@@ -1,3 +1,4 @@
+import { saveSearchState } from "../saved-views/state";
 import { useEffect, useRef, useState } from "react";
 
 import { ApiError } from "../auth/api";
@@ -13,6 +14,8 @@ import {
 import { listSuppliers } from "../suppliers/api";
 import {
   activeSearch,
+  lifecycles,
+  eventKinds,
   getSearch,
   readSearchState,
   searchHash,
@@ -62,45 +65,6 @@ const categories: { title: string; kinds: SearchKind[] }[] = [
     title: "Reference",
     kinds: ["supplier", "location", "geographic_place", "provenance_site"],
   },
-];
-const lifecycles: Partial<Record<SearchKind, string[]>> = {
-  seed_lot: ["active", "exhausted", "discarded", "lost"],
-  sowing: ["active", "reversed", "completed", "failed", "abandoned"],
-  plant: [
-    "active",
-    "reversed",
-    "reintegrated",
-    "transferred",
-    "dead",
-    "lost",
-    "discarded",
-  ],
-  plant_group: [
-    "active",
-    "reversed",
-    "transferred",
-    "completed",
-    "dead",
-    "lost",
-    "discarded",
-  ],
-};
-const eventKinds = [
-  "observation",
-  "movement",
-  "repotting",
-  "flowering",
-  "fruiting",
-  "pruning",
-  "treatment",
-  "harvest",
-  "extraction",
-  "reintegration",
-  "transfer",
-  "death",
-  "loss",
-  "discarded",
-  "other",
 ];
 
 interface References {
@@ -357,6 +321,7 @@ export function useDashboardSearch() {
 
   return {
     active,
+    savedState: saveSearchState(state),
     header: (
       <div className="dashboard-search-controls">
         <div className="field dashboard-search-field">
