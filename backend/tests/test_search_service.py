@@ -1,8 +1,10 @@
+from collections.abc import Callable
 from types import SimpleNamespace
 from typing import cast
 from uuid import UUID
 
 import pytest
+from sqlalchemy.engine import Dialect
 from sqlalchemy.orm import Session
 
 import florabase.search.service as search_service
@@ -136,3 +138,52 @@ def test_search_reference_records_are_suppressed_by_collection_only_filters() ->
         SearchFilters(kinds=(SearchKind.BOTANICAL_IDENTITY,), identity_id=RECORD_ID),
     )
     assert result.groups == []
+
+
+@pytest.mark.parametrize("kind", [SearchKind.HARVEST, SearchKind.MEDIA_ASSET])
+def test_new_kinds_have_exact_detail_routes(kind: SearchKind) -> None:
+    result = search_service.search(_database(), "", SearchFilters(kinds=(kind,)))
+    hit = result.groups[0].items[0]
+    route = "harvests" if kind == SearchKind.HARVEST else "media"
+    assert hit.href == f"#/{route}/{RECORD_ID}"
+    assert hit.kind == kind
+
+
+@pytest.mark.parametrize(
+    "filters",
+    [
+        SearchFilters(location_id=RECORD_ID),
+        SearchFilters(supplier_id=RECORD_ID),
+        SearchFilters(provenance_place_id=RECORD_ID),
+        SearchFilters(provenance_site_id=RECORD_ID),
+        SearchFilters(lifecycle="active"),
+        SearchFilters(event_kind=EventKind.HARVEST),
+    ],
+)
+def test_new_kinds_do_not_infer_inapplicable_relationships(
+    filters: SearchFilters, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from dataclasses import replace
+
+    monkeypatch.setattr(search_service, "list_locations", lambda _database: [])
+    result = search_service.search(
+        _database(), "", replace(filters, kinds=(SearchKind.HARVEST, SearchKind.MEDIA_ASSET))
+    )
+    assert result.total == 0
+
+
+def test_harvest_sql_matches_materials_with_exists_and_literal_text() -> None:
+    from sqlalchemy.dialects.postgresql.psycopg import PGDialect_psycopg
+
+    statement = search_service._harvest_statement(
+        "%_", SearchFilters(identity_id=RECORD_ID, year=2026)
+    ).compile(dialect=cast(Callable[[], Dialect], PGDialect_psycopg)())
+    sql = str(statement)
+    assert "EXISTS" in sql
+    assert "harvest_items.description ILIKE" in sql
+    assert "harvests.notes ILIKE" in sql
+    assert "harvests.occurred_on_year =" in sql
+    assert "botanical_identities.id =" in sql
+    assert "location" not in sql
+    assert "supplier" not in sql
+    assert "/%/_" in statement.params.values()

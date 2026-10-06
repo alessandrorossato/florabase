@@ -179,8 +179,40 @@ then removes only the individually identified `florabase-uat-preview_postgres_da
 It recreates health, owner and fixtures in one command. It never uses `down -v`, deletes a source
 worktree or touches DEV/Stable Preview/production. A failed rebuild is actionable and may leave UAT
 stopped or unseeded; rerun `up` and explicit `seed` after resolving the failure. Never delete a volume
-manually to bypass identity refusal. A different worktree cannot adopt persisted UAT resources; run
-status/stop/reset from the owning worktree. Cross-worktree state transfer remains outside this increment.
+manually to bypass identity refusal. A different worktree cannot adopt persisted UAT resources.
+
+Before moving UAT to the next feature, deliberately retire the old synthetic state from its owning
+linked worktree (including a delivered, detached owner):
+
+```bash
+# In the old owning worktree: discards its UAT collection, edits, media and dependencies.
+make uat-preview-remove CONFIRM_REMOVE_UAT_PREVIEW=florabase-uat-preview
+# In the next active feature worktree:
+make uat-preview-up
+make uat-preview-seed
+make uat-preview-status
+```
+
+Removal validates the exact project, source labels, source mounts, service settings, all three
+named volumes and the scoped internal network. Foreign container users of a volume or network,
+missing/wrong confirmation and non-owning sources refuse before stopping anything. It stops UAT
+writers, rechecks identities, removes only proved UAT containers/network and individually removes
+the three volumes above. It never uses `down -v`, rebuilds, seeds, edits Git/source or changes
+DEV/Stable Preview/Feature Review/production. A partial failure reports an error; resolve it and
+rerun removal from the same owner. Stop preserves ownership; reset rebuilds under the same owner;
+remove releases ownership for a fresh baseline. Cross-worktree state transfer is still excluded.
+
+If an old owner predates this command, invoke the corrected Makefile **while keeping that old
+worktree as the current directory**. The removal target resolves its helper from that Makefile,
+while ownership and Compose sources resolve from the invoking checkout:
+
+```bash
+# Example: run from /home/alessandro/.codex/worktrees/80b3/florabase
+make -f /home/alessandro/.codex/worktrees/9f48/florabase/Makefile uat-preview-remove \
+  CONFIRM_REMOVE_UAT_PREVIEW=florabase-uat-preview
+```
+
+No source copying, branch switching, ownership-label changes or manual Docker deletion is needed.
 
 The browser has no additional environment badge; CLI/status identity and Preview-prefixed fixture
 labels provide the distinction without changing the application shell.

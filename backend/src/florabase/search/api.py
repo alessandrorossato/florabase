@@ -40,9 +40,12 @@ def read_search(
             SearchKind.PLANT,
             SearchKind.PLANT_GROUP,
             SearchKind.EVENT,
+            SearchKind.HARVEST,
         }
     ):
         raise HTTPException(422, "Lifecycle and year require one collection record type")
+    if lifecycle and kinds[0] == SearchKind.HARVEST:
+        raise HTTPException(422, "Harvests have no lifecycle states")
     if lifecycle and kinds[0] == SearchKind.EVENT:
         raise HTTPException(422, "Events have kinds, not lifecycle states")
     if event_kind and kinds != (SearchKind.EVENT,):

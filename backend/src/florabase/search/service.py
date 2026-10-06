@@ -2,18 +2,24 @@ from dataclasses import dataclass
 from typing import Any, cast
 from uuid import UUID
 
-from sqlalchemy import Select, case, func, literal, or_, select
+from sqlalchemy import Select, String, case, func, literal, or_, select
+from sqlalchemy.dialects.postgresql import aggregate_order_by
 from sqlalchemy.orm import Session, aliased
 
+from florabase.attachments.model import Attachment
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_profiles.model import BotanicalProfile
+from florabase.collection_photos.model import MediaAsset
 from florabase.events.model import Event, EventKind
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.service import display_path as geographic_path
 from florabase.geographic_places.service import list_geographic_places
+from florabase.harvests.model import Harvest, HarvestItem
+from florabase.harvests.service import MATERIAL_LABELS
 from florabase.locations.model import Location
 from florabase.locations.service import display_path as location_path
 from florabase.locations.service import list_locations
+from florabase.media.service import asset_text_match
 from florabase.plants.model import (
     Plant,
     PlantGroup,
@@ -110,6 +116,8 @@ def _branch(
             SearchKind.SOWING: f"#/sowings/{record_id}",
             SearchKind.PLANT: f"#/plants/{record_id}",
             SearchKind.PLANT_GROUP: f"#/plant-groups/{record_id}",
+            SearchKind.HARVEST: f"#/harvests/{record_id}",
+            SearchKind.MEDIA_ASSET: f"#/media/{record_id}",
             SearchKind.EVENT: (
                 f"#/plants/{route_id}?tab=events"
                 if route_kind == "plant"
@@ -132,6 +140,128 @@ def _branch(
             )
         )
     return SearchGroup(kind=kind, total=total, items=items)
+
+
+def _harvest_statement(query: str, filters: SearchFilters) -> Select[Any]:
+    # Match the directory title's distinct material order, including its two-kind bound.
+    distinct_materials = (
+        select(
+            HarvestItem.harvest_id,
+            HarvestItem.material_kind,
+            func.min(HarvestItem.display_order).label("position"),
+        )
+        .group_by(HarvestItem.harvest_id, HarvestItem.material_kind)
+        .subquery()
+    )
+    ranked_materials = select(
+        distinct_materials.c.harvest_id,
+        case(MATERIAL_LABELS, value=distinct_materials.c.material_kind).label("label"),
+        func.row_number()
+        .over(partition_by=distinct_materials.c.harvest_id, order_by=distinct_materials.c.position)
+        .label("rank"),
+    ).subquery()
+    materials = (
+        select(
+            ranked_materials.c.harvest_id,
+            func.concat(
+                func.string_agg(
+                    case((ranked_materials.c.rank <= 2, ranked_materials.c.label)),
+                    aggregate_order_by(literal(" + "), ranked_materials.c.rank),
+                ),
+                case((func.count() > 2, " + more"), else_=""),
+            ).label("summary"),
+        )
+        .group_by(ranked_materials.c.harvest_id)
+        .subquery()
+    )
+    source_name = func.coalesce(
+        Plant.label,
+        PlantGroup.label,
+        BotanicalIdentity.common_name,
+        BotanicalIdentity.cultivar_name,
+        BotanicalIdentity.scientific_name,
+    )
+    title = func.coalesce(
+        Harvest.label, func.concat(source_name, " — ", materials.c.summary, " harvest")
+    )
+    # Unknown/month/year dates retain their recorded precision in the compact context.
+    date = func.concat(
+        Harvest.occurred_on_year,
+        case(
+            (
+                Harvest.occurred_on_month.is_not(None),
+                func.concat("-", func.lpad(func.cast(Harvest.occurred_on_month, String), 2, "0")),
+            ),
+            else_="",
+        ),
+        case(
+            (
+                Harvest.occurred_on_day.is_not(None),
+                func.concat("-", func.lpad(func.cast(Harvest.occurred_on_day, String), 2, "0")),
+            ),
+            else_="",
+        ),
+    )
+    statement = (
+        select(
+            Harvest.id.label("id"),
+            title.label("title"),
+            func.concat_ws(
+                " · ",
+                func.left(_identity_label(BotanicalIdentity), 160),
+                func.concat(
+                    case((Harvest.plant_id.is_not(None), "Plant: "), else_="Plant group: "),
+                    func.left(source_name, 120),
+                ),
+                func.nullif(date, ""),
+                materials.c.summary,
+            ).label("context"),
+            Harvest.id.label("route_id"),
+            literal("").label("route_kind"),
+        )
+        .select_from(Harvest)
+        .outerjoin(Plant, Plant.id == Harvest.plant_id)
+        .outerjoin(PlantGroup, PlantGroup.id == Harvest.plant_group_id)
+        .join(
+            BotanicalIdentity,
+            or_(
+                BotanicalIdentity.id == Plant.botanical_identity_id,
+                BotanicalIdentity.id == PlantGroup.botanical_identity_id,
+            ),
+        )
+        .join(materials, materials.c.harvest_id == Harvest.id)
+    )
+    if query:
+        statement = statement.where(
+            or_(
+                _matches(
+                    query,
+                    title,
+                    Harvest.notes,
+                    Plant.label,
+                    PlantGroup.label,
+                    BotanicalIdentity.scientific_name,
+                    BotanicalIdentity.common_name,
+                    BotanicalIdentity.cultivar_name,
+                ),
+                select(HarvestItem.id)
+                .where(
+                    HarvestItem.harvest_id == Harvest.id,
+                    _matches(
+                        query,
+                        HarvestItem.material_kind,
+                        HarvestItem.description,
+                        case(MATERIAL_LABELS, value=HarvestItem.material_kind),
+                    ),
+                )
+                .exists(),
+            )
+        )
+    if filters.identity_id:
+        statement = statement.where(BotanicalIdentity.id == filters.identity_id)
+    if filters.year is not None:
+        statement = statement.where(Harvest.occurred_on_year == filters.year)
+    return statement
 
 
 def search(
@@ -306,6 +436,16 @@ def search(
         or filters.provenance_place_id
         or filters.provenance_site_id
         or filters.lifecycle
+        or filters.event_kind
+    ) and (not filters.kinds or SearchKind.HARVEST in filters.kinds):
+        add(SearchKind.HARVEST, _harvest_statement(query, filters))
+
+    if not (
+        filters.location_id
+        or filters.supplier_id
+        or filters.provenance_place_id
+        or filters.provenance_site_id
+        or filters.lifecycle
     ) and (not filters.kinds or SearchKind.EVENT in filters.kinds):
         plant = aliased(Plant)
         group = aliased(PlantGroup)
@@ -356,6 +496,24 @@ def search(
         if filters.year is not None:
             statement = statement.where(Event.occurred_on_year == filters.year)
         add(SearchKind.EVENT, statement)
+
+    if not filters.collection_only():
+        statement = select(
+            MediaAsset.id.label("id"),
+            func.coalesce(
+                MediaAsset.title, Attachment.original_filename, "External image reference"
+            ).label("title"),
+            func.concat_ws(
+                " · ",
+                case((MediaAsset.kind == "local", "Local image"), else_="External image"),
+                func.left(MediaAsset.attribution, 160),
+            ).label("context"),
+            MediaAsset.id.label("route_id"),
+            literal("").label("route_kind"),
+        ).outerjoin(Attachment, Attachment.id == MediaAsset.attachment_id)
+        if query:
+            statement = statement.where(asset_text_match(query))
+        add(SearchKind.MEDIA_ASSET, statement)
 
     if not filters.collection_only():
         statement = select(

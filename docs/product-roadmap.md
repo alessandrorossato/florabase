@@ -35,8 +35,9 @@ The approved sequence, retaining completed steps for context, is:
    independent review passed, with delivery through the canonical repository workflow.
 3. PREVIEW-001: persistent isolated operator UAT Preview with a reusable synthetic dataset,
    idempotent seeding and explicit guarded reset; distinct from developer DEV and production.
-4. Collection productivity v2: broader global search, saved filters/views, bulk operations and
-   justified unified operational history.
+4. Collection productivity v2: **SEARCH-002 is verified**. It completes global Harvest/Media
+   coverage. Saved filters/views come next,
+   followed by bulk operations and justified unified operational history. The milestone remains open.
 5. Orders / Purchases, separate from Supplier and biological/geographic provenance.
 6. Daily-use biological/collection improvements: measurements, justified flowering/fruiting work,
    germination analysis, viability/aging, seasonal planning, operational history and later reviewed
