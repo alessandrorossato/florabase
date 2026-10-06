@@ -104,18 +104,33 @@ class UATTests(unittest.TestCase):
         )
 
     def test_retirement_allows_detached_owner_without_initializing_git(self) -> None:
-        with patch.object(self.preview.repository, "initialize") as initialize:
+        repo = self.preview.repository
+        # GitHub Actions checks out a primary tree. Model this test's old UAT
+        # owner as a linked worktree, without requiring a real worktree on disk.
+        with (
+            patch.object(repo, "primary", ROOT.parent),
+            patch.object(repo, "common", ROOT / ".git-common"),
+            patch.object(repo, "metadata", ROOT / ".git-worktrees" / "uat-owner"),
+            patch.object(repo, "initialize") as initialize,
+        ):
             self.preview.require_context(retiring=True)
         initialize.assert_not_called()
-        with patch.object(self.preview.repository, "source", self.preview.repository.primary):
+        with (
+            patch.object(repo, "primary", ROOT.parent),
+            patch.object(repo, "common", ROOT / ".git-common"),
+            patch.object(repo, "metadata", ROOT / ".git-worktrees" / "uat-owner"),
+            patch.object(repo, "source", ROOT.parent),
+        ):
             with self.assertRaisesRegex(WorkflowError, "linked feature worktree"):
                 self.preview.require_context(retiring=True)
 
     def test_retirement_refuses_unrelated_repository_without_docker_actions(self) -> None:
+        repo = self.preview.repository
         with (
-            patch.object(
-                self.preview.repository, "git", return_value="https://github.com/example/other"
-            ),
+            patch.object(repo, "primary", ROOT.parent),
+            patch.object(repo, "common", ROOT / ".git-common"),
+            patch.object(repo, "metadata", ROOT / ".git-worktrees" / "uat-owner"),
+            patch.object(repo, "git", return_value="https://github.com/example/other"),
             patch("uat_preview.run") as run,
         ):
             with self.assertRaisesRegex(WorkflowError, "expected Florabase repository"):
@@ -123,7 +138,11 @@ class UATTests(unittest.TestCase):
             run.assert_not_called()
 
     def test_remove_nonowner_refuses_before_stopping_any_writer(self) -> None:
+        repo = self.preview.repository
         with (
+            patch.object(repo, "primary", ROOT.parent),
+            patch.object(repo, "common", ROOT / ".git-common"),
+            patch.object(repo, "metadata", ROOT / ".git-worktrees" / "uat-owner"),
             patch.object(self.preview, "validate"),
             patch.object(self.preview, "require_owner", side_effect=WorkflowError("foreign owner")),
             patch("uat_preview.run") as run,
