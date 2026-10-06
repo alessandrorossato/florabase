@@ -10,6 +10,7 @@ import { useAuth } from "./auth/context";
 import { LoginForm } from "./auth/LoginForm";
 import { WorkspaceBoundary } from "./components/WorkspaceBoundary";
 import { loadWorkspaceChunk } from "./components/workspaceChunk";
+import { isFreshDirectoryNavigation } from "./components/recordNavigation";
 
 const HarvestScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
@@ -296,8 +297,13 @@ function ApplicationShell() {
   const formChanged = useRef(false);
 
   useEffect(() => {
-    const update = () => {
-      setRoute(currentRoute());
+    const update = (event: Event) => {
+      const next = currentRoute();
+      setRoute(next);
+      // Explicit directory opens start fresh; detail/history transitions retain
+      // their existing focus and interaction behavior.
+      if (isFreshDirectoryNavigation(event))
+        setNavigationReset((value) => value + 1);
     };
     window.addEventListener("hashchange", update);
     window.addEventListener("popstate", update);

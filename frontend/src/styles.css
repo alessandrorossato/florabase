@@ -3122,6 +3122,9 @@ button:disabled {
   font-weight: 700;
   color: var(--color-muted);
 }
+.directory-search > .sr-only + .search-control {
+  margin-top: 0;
+}
 .search-control {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -6262,6 +6265,7 @@ button:disabled {
   gap: 1rem;
 }
 .plant-directory-heading > span {
+  margin-inline-start: auto;
   color: var(--color-muted);
   font-size: 0.78rem;
 }
@@ -6481,6 +6485,7 @@ button:disabled {
     grid-column: 1 / -1;
   }
   .plants-workspace .lifecycle-filter {
+    align-self: end;
     margin: 0;
     flex-wrap: wrap;
   }
@@ -8366,4 +8371,56 @@ button:disabled {
   gap: 0.2rem;
   min-width: 0;
   overflow-wrap: anywhere;
+}
+
+/* Named shortcuts stay compact in each existing directory. */
+.saved-views {
+  flex: none;
+  min-width: 0;
+  margin-block: 0.75rem;
+}
+.saved-views__controls,
+.saved-views__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+.saved-views__panel {
+  border: 1px solid var(--border, #cad7cd);
+  border-radius: 0.75rem;
+  padding: 0.85rem;
+  margin-top: 0.5rem;
+  background: var(--surface, #fff);
+}
+.saved-views__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+  max-height: 24rem;
+  overflow-y: auto;
+}
+.saved-views__list > li {
+  padding-block: 0.5rem;
+  border-bottom: 1px solid var(--border, #cad7cd);
+  min-width: 0;
+}
+.saved-views__name {
+  display: grid;
+  gap: 0.2rem;
+  margin-bottom: 0.4rem;
+  overflow-wrap: anywhere;
+}
+.saved-views__actions button {
+  min-height: 44px;
+}
+@media (max-width: 600px) {
+  .saved-views__actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .saved-views__actions button {
+    white-space: normal;
+  }
 }

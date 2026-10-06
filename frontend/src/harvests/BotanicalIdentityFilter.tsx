@@ -24,7 +24,17 @@ export function BotanicalIdentityFilter({
         key={reset}
         label="Botanical identity"
         placeholder="All botanical identities"
-        choices={choices}
+        choices={
+          value && !choices.some((choice) => choice.id === value)
+            ? [
+                ...choices,
+                {
+                  id: value,
+                  label: `Unavailable botanical identity · ${value}`,
+                },
+              ]
+            : choices
+        }
         value={value}
         onChange={onChange}
       />

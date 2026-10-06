@@ -17,7 +17,7 @@ export interface SearchState {
   year: string;
 }
 
-const kinds: SearchKind[] = [
+export const searchKinds: SearchKind[] = [
   "seed_lot",
   "sowing",
   "plant",
@@ -33,14 +33,16 @@ const kinds: SearchKind[] = [
   "provenance_site",
 ];
 
-export function readSearchState(): SearchState {
-  const query = window.location.hash.split("?", 2)[1] ?? "";
+export function readSearchState(hash = window.location.hash): SearchState {
+  const query = hash.split("?", 2)[1] ?? "";
   const params = new URLSearchParams(query);
   return {
     q: params.get("q") ?? "",
     kinds: params
       .getAll("kind")
-      .filter((kind): kind is SearchKind => kinds.includes(kind as SearchKind)),
+      .filter((kind): kind is SearchKind =>
+        searchKinds.includes(kind as SearchKind),
+      ),
     identityId: params.get("identity_id") ?? "",
     lifecycle: params.get("lifecycle") ?? "",
     locationId: params.get("location_id") ?? "",
@@ -70,15 +72,19 @@ export function activeSearch(state: SearchState): boolean {
 export function searchParams(state: SearchState): URLSearchParams {
   const params = new URLSearchParams();
   if (state.q.trim()) params.set("q", state.q.trim());
-  for (const kind of state.kinds) params.append("kind", kind);
-  if (state.identityId) params.set("identity_id", state.identityId);
+  for (const kind of searchKinds.filter((kind) => state.kinds.includes(kind)))
+    params.append("kind", kind);
+  if (state.identityId)
+    params.set("identity_id", state.identityId.toLowerCase());
   if (state.lifecycle) params.set("lifecycle", state.lifecycle);
-  if (state.locationId) params.set("location_id", state.locationId);
-  if (state.supplierId) params.set("supplier_id", state.supplierId);
+  if (state.locationId)
+    params.set("location_id", state.locationId.toLowerCase());
+  if (state.supplierId)
+    params.set("supplier_id", state.supplierId.toLowerCase());
   if (state.provenancePlaceId)
-    params.set("provenance_place_id", state.provenancePlaceId);
+    params.set("provenance_place_id", state.provenancePlaceId.toLowerCase());
   if (state.provenanceSiteId)
-    params.set("provenance_site_id", state.provenanceSiteId);
+    params.set("provenance_site_id", state.provenanceSiteId.toLowerCase());
   if (state.eventKind) params.set("event_kind", state.eventKind);
   if (state.year) params.set("year", state.year);
   return params;
@@ -100,3 +106,43 @@ export function getSearch(
     signal,
   });
 }
+
+export const lifecycles: Partial<Record<SearchKind, string[]>> = {
+  seed_lot: ["active", "exhausted", "discarded", "lost"],
+  sowing: ["active", "reversed", "completed", "failed", "abandoned"],
+  plant: [
+    "active",
+    "reversed",
+    "reintegrated",
+    "transferred",
+    "dead",
+    "lost",
+    "discarded",
+  ],
+  plant_group: [
+    "active",
+    "reversed",
+    "transferred",
+    "completed",
+    "dead",
+    "lost",
+    "discarded",
+  ],
+};
+export const eventKinds = [
+  "observation",
+  "movement",
+  "repotting",
+  "flowering",
+  "fruiting",
+  "pruning",
+  "treatment",
+  "harvest",
+  "extraction",
+  "reintegration",
+  "transfer",
+  "death",
+  "loss",
+  "discarded",
+  "other",
+];

@@ -1,4 +1,7 @@
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -196,10 +199,26 @@ export function GeographyScreen({
   const [selectedId, setSelectedId] = useState<string | null>(
     initialPlaceId ?? null,
   );
-  const [filter, setFilter] = useState("");
-  const [mode, setMode] = useState<"places" | "sites" | "map">(
-    initialSiteId ? "sites" : "places",
+  const view = useDirectoryView(
+    "geography",
+    () => {
+      setSelectedId(null);
+    },
+    { mode: initialSiteId ? "sites" : "places" },
   );
+  const filter = view.state.q;
+  const setFilter = (value: string) => {
+    view.update("q", value);
+  };
+  const mode = view.state.mode;
+  const updateView = view.update;
+  const setMode = useCallback(
+    (value: "places" | "sites" | "map") => {
+      updateView("mode", value);
+    },
+    [updateView],
+  );
+
   const [createName, setCreateName] = useState("");
   const [createParentId, setCreateParentId] = useState("");
   const [createType, setCreateType] = useState<
@@ -233,7 +252,7 @@ export function GeographyScreen({
     setCreateParentId("");
     setSave({ status: "idle" });
     openCreation();
-  }, [directory.status, openCreation, startCreating]);
+  }, [directory.status, openCreation, setMode, startCreating]);
   const pending = save.status === "saving";
 
   useEffect(() => {
@@ -446,7 +465,11 @@ export function GeographyScreen({
           )
         }
       />
+      {!initialSiteId && !initialPlaceId && (
+        <SavedViews surface="geography" state={view.savedState} />
+      )}
       <DirectorySearch
+        hideLabel={!initialSiteId && !initialPlaceId}
         id="geography-filter"
         label={mode === "places" ? "Search places" : "Search provenance sites"}
         placeholder={mode === "places" ? "Place or path" : "Provenance site"}
@@ -491,7 +514,9 @@ export function GeographyScreen({
                 aria-labelledby="geography-directory-title"
                 className="identity-directory"
               >
-                <h3 id="geography-directory-title">Geography directory</h3>
+                <h3 className="sr-only" id="geography-directory-title">
+                  Geography directory
+                </h3>
                 {directory.status === "loading" && (
                   <p className="notice">Loading geography…</p>
                 )}

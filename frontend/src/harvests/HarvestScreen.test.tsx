@@ -144,6 +144,7 @@ afterEach(() => {
   cleanup();
 });
 beforeEach(() => {
+  window.history.replaceState(null, "", "#/harvests");
   vi.clearAllMocks();
   vi.mocked(api.listHarvests).mockResolvedValue([harvest]);
   vi.mocked(api.getHarvest).mockResolvedValue(harvest);

@@ -1,3 +1,4 @@
+import { SavedViews } from "../saved-views/SavedViews";
 import { useEffect, useState } from "react";
 
 import { ApiError } from "../auth/api";
@@ -221,6 +222,11 @@ export function DashboardScreen() {
         </div>
         {search.header}
       </header>
+      <SavedViews
+        surface="global_search"
+        state={search.savedState}
+        allSurfaces
+      />
       {search.content}
       {!search.active && <DashboardOverview />}
     </section>

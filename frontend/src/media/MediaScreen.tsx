@@ -1,3 +1,5 @@
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { useEffect, useId, useState, type SyntheticEvent } from "react";
 import { useAuth } from "../auth/context";
 import { ApiError } from "../auth/api";
@@ -129,14 +131,32 @@ function Metadata({
 export function MediaScreen({ initialId }: { initialId?: string }) {
   const auth = useAuth();
   const headingId = useId();
-  const [query, setQuery] = useState("");
-  const [kind, setKind] = useState("");
-  const [association, setAssociation] = useState("all");
-  const [target, setTarget] = useState<MediaTargetFilter | "">("");
   const [offset, setOffset] = useState(0);
   const [page, setPage] = useState<MediaPage | null>(null);
-  const [loadedDetail, setDetail] = useState<MediaDetail | null>(null);
   const [selected, setSelected] = useState<MediaAsset | null>(null);
+  const view = useDirectoryView("media", () => {
+    setOffset(0);
+    setPage(null);
+    setSelected(null);
+  });
+  const query = view.state.q;
+  const setQuery = (value: string) => {
+    view.update("q", value);
+  };
+  const kind = view.state.kind;
+  const setKind = (value: string) => {
+    view.update("kind", value);
+  };
+  const association = view.state.association;
+  const setAssociation = (value: string) => {
+    view.update("association", value);
+  };
+  const target = view.state.target;
+  const setTarget = (value: MediaTargetFilter | "") => {
+    view.update("target", value);
+  };
+
+  const [loadedDetail, setDetail] = useState<MediaDetail | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [requestError, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -543,8 +563,10 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
         )
       ) : (
         <>
+          <SavedViews surface="media" state={view.savedState} />
           <div className="media-filters">
             <DirectorySearch
+              hideLabel
               id="media-search"
               label="Search media"
               placeholder="Title, filename or attribution"

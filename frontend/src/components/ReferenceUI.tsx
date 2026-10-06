@@ -42,6 +42,7 @@ export function DirectorySearch({
   onChange,
   disabled = false,
   className = "",
+  hideLabel = false,
 }: {
   id: string;
   label: string;
@@ -50,10 +51,13 @@ export function DirectorySearch({
   onChange: (value: string) => void;
   disabled?: boolean;
   className?: string;
+  hideLabel?: boolean;
 }) {
   return (
     <div className={`field directory-search ${className}`.trim()}>
-      <label htmlFor={id}>{label}</label>
+      <label className={hideLabel ? "sr-only" : undefined} htmlFor={id}>
+        {label}
+      </label>
       <div className="search-control">
         <span aria-hidden="true">⌕</span>
         <input

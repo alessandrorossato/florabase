@@ -84,6 +84,32 @@ class SearchFilters:
         return self.lifecycle in {item.value for item in lifecycle_types[self.kinds[0]]}
 
 
+def validate_filters(filters: SearchFilters) -> None:
+    """The existing SEARCH-002 combination rules, shared by requests and saved state."""
+    kinds = filters.kinds
+    if (filters.lifecycle or filters.year is not None) and (
+        len(kinds) != 1
+        or kinds[0]
+        not in {
+            SearchKind.SEED_LOT,
+            SearchKind.SOWING,
+            SearchKind.PLANT,
+            SearchKind.PLANT_GROUP,
+            SearchKind.EVENT,
+            SearchKind.HARVEST,
+        }
+    ):
+        raise ValueError("Lifecycle and year require one collection record type")
+    if filters.lifecycle and kinds[0] == SearchKind.HARVEST:
+        raise ValueError("Harvests have no lifecycle states")
+    if filters.lifecycle and kinds[0] == SearchKind.EVENT:
+        raise ValueError("Events have kinds, not lifecycle states")
+    if filters.event_kind and kinds != (SearchKind.EVENT,):
+        raise ValueError("Event kind requires the Event record type")
+    if filters.lifecycle and not filters.valid_lifecycle():
+        raise ValueError("Lifecycle does not apply to this record type")
+
+
 def _matches(query: str, *columns: Any) -> Any:
     return or_(*(column.icontains(query, autoescape=True) for column in columns))
 

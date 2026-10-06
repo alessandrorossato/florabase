@@ -326,7 +326,9 @@ export function ProvenanceSiteManager({
           }
         >
           <div className="site-directory-column">
-            <h4>{mode === "map" ? "Mapped sites" : "Site directory"}</h4>
+            <h4 className={mode === "map" ? undefined : "sr-only"}>
+              {mode === "map" ? "Mapped sites" : "Site directory"}
+            </h4>
             <ul className="identity-list">
               {listed.map((site) => (
                 <li key={site.id}>

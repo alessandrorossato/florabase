@@ -121,6 +121,7 @@ def test_schema_uses_native_types_named_constraints_and_only_one_botanical_table
         "record_media_links",
         "login_throttles",
         "operation_receipts",
+        "saved_views",
         "plant_groups",
         "plants",
         "provenance_sites",

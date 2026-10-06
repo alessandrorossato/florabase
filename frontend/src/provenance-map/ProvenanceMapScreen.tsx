@@ -1,3 +1,5 @@
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { useEffect, useMemo, useState } from "react";
 
 import { ApiError } from "../auth/api";
@@ -16,12 +18,6 @@ type MapState =
   | { status: "loading" }
   | { status: "ready"; dataset: ProvenanceMapResponse }
   | { status: "error" };
-
-const initialFilters: MapFilters = {
-  seedLots: true,
-  plants: true,
-  identityQuery: "",
-};
 
 const lifecycleLabels: Record<string, string> = {
   active: "Active",
@@ -114,8 +110,26 @@ export function ProvenanceMapScreen() {
   const auth = useAuth();
   const [state, setState] = useState<MapState>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
-  const [filters, setFilters] = useState<MapFilters>(initialFilters);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const view = useDirectoryView("provenance_map", () => {
+    setSelectedId(null);
+  });
+  const filters = useMemo<MapFilters>(
+    () => ({
+      seedLots: view.state.seed_lots,
+      plants: view.state.plants,
+      identityQuery: view.state.q,
+    }),
+    [view.state],
+  );
+  function setFilters(change: (current: MapFilters) => MapFilters) {
+    const next = change(filters);
+    view.replace({
+      q: next.identityQuery,
+      seed_lots: next.seedLots,
+      plants: next.plants,
+    });
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -160,6 +174,7 @@ export function ProvenanceMapScreen() {
         }
       />
 
+      <SavedViews surface="provenance_map" state={view.savedState} />
       {state.status === "loading" && (
         <p aria-live="polite">Loading provenance map…</p>
       )}
@@ -249,7 +264,7 @@ export function ProvenanceMapScreen() {
               <button
                 type="button"
                 onClick={() => {
-                  setFilters(initialFilters);
+                  view.replace({ q: "", seed_lots: true, plants: true });
                 }}
               >
                 Clear filters

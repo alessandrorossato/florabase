@@ -79,3 +79,11 @@ case title then UUID. Each kind adds exactly two SQL statements, independent of 
 count. Existing text path lookups add two shared statements: mixed Harvest/Media text search uses six;
 unrestricted text search uses at most 28 for all 13 kinds. Blank unfiltered queries use none. No schema,
 index, search engine, cache, saved view, bulk operation or generic history is introduced.
+
+## Saved operator views
+
+VIEW-001 lets the signed-in operator persist meaningful Global Search state in PostgreSQL. Open
+uses the same canonical `#/dashboard?...` parser/serializer and live SEARCH-002 query, with offset
+zero. Exact UUID filters survive missing references. Manual filter edits do not update a Saved View;
+Update with current view is explicit. Dashboard also opens views from supported directories.
+See [Saved Views contracts](saved-views.md).

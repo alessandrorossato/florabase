@@ -1,3 +1,5 @@
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { ConversionHistory } from "../harvests/ConversionHistory";
 import { usePublishRecordIdentities } from "../components/recordPresentation";
 import { useRecordName } from "../components/recordPresentation";
@@ -742,13 +744,24 @@ export function SeedLotScreen({
   const [references, setReferences] = useState<References | null>(null);
   usePublishRecordIdentities(references?.identities);
   const [attempt, setAttempt] = useState(0);
-  const [filter, setFilter] = useState<"active" | "history" | "all">("active");
-  const [search, setSearch] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(
     initialId ?? null,
   );
-  const [editing, setEditing] = useState(false);
   const [detailOpen, setDetailOpen] = useState(Boolean(initialId));
+  const view = useDirectoryView("seed_lots", () => {
+    setSelectedId(null);
+    setDetailOpen(false);
+  });
+  const filter = view.state.lifecycle;
+  const setFilter = (value: "active" | "history" | "all") => {
+    view.update("lifecycle", value);
+  };
+  const search = view.state.q;
+  const setSearch = (value: string) => {
+    view.update("q", value);
+  };
+
+  const [editing, setEditing] = useState(false);
   const lastRouteId = useRef(initialId);
   useEffect(() => {
     if (lastRouteId.current === initialId) return;
@@ -1187,9 +1200,13 @@ export function SeedLotScreen({
         className={`seed-master-detail operational-layout${detailOpen || editing ? " is-detail-view" : ""}`}
       >
         <section className="seed-master" aria-labelledby="seed-inventory-title">
-          <h3 id="seed-inventory-title">Seed lot inventory</h3>
+          <h3 className="sr-only" id="seed-inventory-title">
+            Seed lot inventory
+          </h3>
+          <SavedViews surface="seed_lots" state={view.savedState} />
           <div className="seed-controls">
             <DirectorySearch
+              hideLabel
               id="seed-search"
               label="Search seed inventory"
               placeholder="Search lots, identity or location"
@@ -1197,7 +1214,7 @@ export function SeedLotScreen({
               onChange={setSearch}
             />
             <fieldset className="lifecycle-filter">
-              <legend>Show lots</legend>
+              <legend className="sr-only">Show lots</legend>
               {(["active", "history", "all"] as const).map((item) => (
                 <button
                   type="button"

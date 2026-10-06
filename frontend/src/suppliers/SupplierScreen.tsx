@@ -1,3 +1,5 @@
+import { SavedViews } from "../saved-views/SavedViews";
+import { useDirectoryView } from "../saved-views/useDirectoryView";
 import {
   useEffect,
   useMemo,
@@ -642,7 +644,14 @@ export function SupplierScreen({
     initialId ? { status: "loading" } : { status: "idle" },
   );
   const [detailRefresh, setDetailRefresh] = useState(0);
-  const [filter, setFilter] = useState("");
+  const view = useDirectoryView("suppliers", () => {
+    setSelectedId(null);
+  });
+  const filter = view.state.q;
+  const setFilter = (value: string) => {
+    view.update("q", value);
+  };
+
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [attempt, setAttempt] = useState(0);
   const [editing, setEditing] = useState(initialTab === "edit");
@@ -903,8 +912,12 @@ export function SupplierScreen({
             aria-labelledby="supplier-directory-title"
             className="identity-directory supplier-directory"
           >
-            <h3 id="supplier-directory-title">Supplier directory</h3>
+            <h3 className="sr-only" id="supplier-directory-title">
+              Supplier directory
+            </h3>
+            <SavedViews surface="suppliers" state={view.savedState} />
             <DirectorySearch
+              hideLabel
               id="supplier-filter"
               label="Filter suppliers"
               placeholder="Search supplier names"
