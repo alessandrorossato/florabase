@@ -8,7 +8,7 @@ REF ?= origin/main
 PREVIEW_PATH ?=
 LOGIN ?= owner
 
-.PHONY: smoke-dev-upgrade smoke-dev-recovery dev-bootstrap-owner workflow-check feature-init dev-up dev-status dev-stop feature-review-up feature-review-status feature-review-stop feature-review-remove feature-review-bootstrap-owner test-environment-workflow smoke-environment-workflow help setup up dev down logs build test test-backend test-integration test-frontend lint format format-check typecheck check ci migrate dev-upgrade migration backup restore health api-generate api-check dependency-update preview preview-status preview-stop preview-bootstrap-owner preview-import-dev preview-remove feature-start feature-verify feature-deliver feature-finish test-workflow-helpers test-feature-workflow test-preview-workflow
+.PHONY: uat-preview-up uat-preview-status uat-preview-seed uat-preview-stop uat-preview-reset test-uat-preview smoke-uat-preview smoke-dev-upgrade smoke-dev-recovery dev-bootstrap-owner workflow-check feature-init dev-up dev-status dev-stop feature-review-up feature-review-status feature-review-stop feature-review-remove feature-review-bootstrap-owner test-environment-workflow smoke-environment-workflow help setup up dev down logs build test test-backend test-integration test-frontend lint format format-check typecheck check ci migrate dev-upgrade migration backup restore health api-generate api-check dependency-update preview preview-status preview-stop preview-bootstrap-owner preview-import-dev preview-remove feature-start feature-verify feature-deliver feature-finish test-workflow-helpers test-feature-workflow test-preview-workflow
 
 help:
 	@awk 'BEGIN {FS = ":.*## "; print "Florabase commands:"} /^[a-zA-Z_-]+:.*## / {printf "  %-18s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -79,7 +79,7 @@ api-check: ## Verify generated API artifacts are current
 
 check: format-check lint typecheck test api-check ## Run the main non-destructive verification suite
 
-ci: test-workflow-helpers test-feature-workflow test-preview-workflow test-environment-workflow workflow-check check test-integration build ## Run the complete local equivalent of pull-request CI
+ci: test-workflow-helpers test-feature-workflow test-preview-workflow test-environment-workflow test-uat-preview workflow-check check test-integration build ## Run the complete local equivalent of pull-request CI
 
 migrate: ## Apply all pending database migrations explicitly
 	$(COMPOSE) run --rm backend alembic upgrade head
@@ -180,6 +180,30 @@ smoke-dev-upgrade: ## Prove upgrade image freshness/retry on unique disposable s
 	@python3 ./scripts/smoke-dev-upgrade.py
 
 workflow-check: ## Lint, format-check and strictly type-check the new environment helpers
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff check --no-cache --isolated --select E4,E7,E9,F,I,B,UP /workflow/workflow_environment.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff format --no-cache --check /workflow/workflow_environment.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend mypy --strict --follow-imports=skip /workflow/workflow_environment.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff check --no-cache --isolated --select E4,E7,E9,F,I,B,UP /workflow/workflow_environment.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_preview.py /workflow/test-uat-preview.py /workflow/smoke-uat-preview.py /workflow/uat_fixture.py /workflow/test-uat-fixture.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff format --no-cache --check /workflow/workflow_environment.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_preview.py /workflow/test-uat-preview.py /workflow/smoke-uat-preview.py /workflow/uat_fixture.py /workflow/test-uat-fixture.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend mypy --strict --follow-imports=skip /workflow/workflow_environment.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_preview.py /workflow/smoke-uat-preview.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" -e MYPYPATH=/app/src:/workflow backend mypy --strict --follow-imports=skip /workflow/uat_fixture.py
+
+
+uat-preview-up: ## Start/rebuild UAT Preview from this feature worktree; preserve data
+	@python3 ./scripts/uat_preview.py up
+
+uat-preview-status: ## Show UAT Preview source, health, migrations and fixture state
+	@python3 ./scripts/uat_preview.py status
+
+uat-preview-seed: ## Explicitly create standard UAT-only owner and synthetic baseline
+	@python3 ./scripts/uat_preview.py seed
+
+uat-preview-stop: ## Stop UAT Preview, preserving database/media/dependencies
+	@python3 ./scripts/uat_preview.py stop
+
+uat-preview-reset: export CONFIRM_RESET_UAT_PREVIEW := $(CONFIRM_RESET_UAT_PREVIEW)
+uat-preview-reset: ## Recreate ONLY UAT state; CONFIRM_RESET_UAT_PREVIEW=florabase-uat-preview
+	@python3 ./scripts/uat_preview.py reset
+
+test-uat-preview: ## Test UAT workflow identity, reset and fixture isolation
+	@python3 ./scripts/test-uat-preview.py
+
+smoke-uat-preview: ## Prove UAT seed/auth/reset/persistence on unique disposable Compose state
+	@python3 ./scripts/smoke-uat-preview.py

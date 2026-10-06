@@ -5,8 +5,10 @@ Feature Review, Stable Preview, integration/CI, production, review order and ver
 
 For a new primary checkout, run `make setup`, `make dev-up`, then `make dev-upgrade` and
 `make dev-bootstrap-owner LOGIN=owner`. DEV always selects the primary checkout. Use `make feature-init`
-and `make feature-review-up` inside a Codex-managed feature worktree to inspect dirty source at
-`http://localhost:15174`; stable `origin/main` remains independently available through `make preview`
+and `make uat-preview-up`, then explicit `make uat-preview-seed`, inside a Codex-managed feature
+worktree to inspect dirty source with synthetic UAT-only `preview / preview` at
+`http://localhost:15174`. `feature-review-*` remains the engineering/manual-owner alternative on
+that same port; stop it from its owning worktree first. Stable `origin/main` remains independently available through `make preview`
 at `http://localhost:15173`. No copied or symlinked `.env` is required.
 
 ## Resource measurements

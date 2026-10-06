@@ -42,6 +42,7 @@ run_stage "workflow helpers" make test-workflow-helpers
 run_stage "feature workflow helpers" make test-feature-workflow
 run_stage "preview workflow helpers" make test-preview-workflow
 run_stage "environment workflow helpers" make test-environment-workflow
+run_stage "UAT Preview helpers" make test-uat-preview
 run_stage "workflow static checks" make workflow-check
 run_stage "quality" make check
 run_stage "integration" make test-integration

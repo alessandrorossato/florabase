@@ -92,15 +92,15 @@
       "category": "infrastructure",
       "description": "Provide an isolated persistent operator Preview for UAT",
       "acceptance_criteria": [
-        "Operator Preview uses an explicitly identified source and isolated persistent database/media resources distinct from DEV and production; health, code/database migration state, stop/start persistence and environment identity are observable",
-        "A Preview-only preview/preview account and synthetic reusable dataset are created through the guarded Preview environment; the credentials and fixture data cannot bootstrap, authenticate to, or leak into DEV or production",
-        "Preview seeding is deterministic and idempotent, while Preview reset is an explicit separately guarded operation that identifies and affects Preview data only",
-        "Simple preview-up, preview-stop, preview-status, preview-seed and preview-reset commands follow existing workflow source/configuration boundaries and never run implicitly during startup",
-        "Real isolated Compose smoke covers first startup, repeat seed, explicit reset, restart persistence, health and before/after proof that DEV and production state are unchanged"
+        "Operator UAT Preview uses the current dirty/untracked feature worktree through Feature Review isolation primitives, with persistent DB/media/dependencies distinct from DEV, Stable Preview and production; source, health, database/code migration state and fixture identity are observable",
+        "A UAT-only preview/preview owner and bounded synthetic collection are created explicitly through host resource, runtime, origin and actual database identity guards; normal production/DEV/Stable Preview startup and authentication remain unchanged",
+        "Versioned UUIDv7 fixture identities make repeated seed idempotent and preserve operator edits; interrupted, missing or incompatible baselines refuse with guarded reset instructions, without matching mutable names or adding production domain fields",
+        "Simple uat-preview-up, uat-preview-stop, uat-preview-status, uat-preview-seed and uat-preview-reset commands remain distinct from existing Stable Preview commands; startup never seeds, stop/start preserves state, and reset deletes only individually validated UAT resources with exact confirmation",
+        "Real uniquely isolated Compose smoke covers fresh/empty startup, real owner login, runtime guard refusals, repeat seed, fixture/media/lineage relationships, operator edits, DB/media/dependency persistence, forward migrations and ahead refusal, reset and before/after unchanged operator environments; operator UAT and independent canonical verification complete acceptance"
       ],
       "dependencies": ["CI-003"],
       "priority": "P1",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "RELEASE-001",

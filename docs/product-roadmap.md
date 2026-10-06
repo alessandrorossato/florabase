@@ -19,9 +19,10 @@ planning period and does not supersede this direction.
 
 HARVEST-003 is landed and `verified`. SUPPLIER-003 Supplier imagery / practical Reference
 completion is independently verified after operator visual UAT passed. It uses explicit shared-media
-links and primary selection, without new roles or Orders; canonical verification and delivery remain.
-The **next milestone is PREVIEW-001**, an isolated persistent operator UAT Preview built on the existing
-environment boundaries.
+links and primary selection, without new roles or Orders; delivered through PR #70.
+**PREVIEW-001 is verified**, with operator UAT passed and independent canonical verification
+complete. It uses the current dirty feature worktree and isolated persistent synthetic state through
+Feature Review primitives. The **next product milestone remains Collection productivity v2**.
 
 The approved sequence, retaining completed steps for context, is:
 
@@ -182,8 +183,9 @@ operator reprioritizes them. They are not release-readiness dependencies.
 
 ### Post-0.1.0 by default
 
-- **PREVIEW-001** is a planned P1 infrastructure increment to provide persistent, isolated
-  operator Preview/UAT with Preview-only credentials, a reusable synthetic dataset, idempotent
+- **PREVIEW-001** is a verified P1 infrastructure increment with operator UAT passed and independent
+  verification complete. It provides persistent, isolated operator Preview/UAT with Preview-only
+  credentials, a reusable synthetic dataset, idempotent
   seeding and explicit guarded reset. It follows SUPPLIER-003 and precedes Collection productivity v2.
 - **Supplier directory imagery** is implemented by SUPPLIER-003 under the approved shared-media
   target contract; operator visual UAT passed and independent verification is complete. Multiple media

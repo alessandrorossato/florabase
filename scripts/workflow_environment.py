@@ -19,6 +19,7 @@ from urllib.parse import unquote, urlsplit
 
 DEV_PROJECT = "florabase"  # Preserve existing operator volumes; never silently rename them.
 REVIEW_PROJECT = "florabase-feature-review"
+UAT_PROJECT = "florabase-uat-preview"
 PORTS = {"dev": "5173", "review": "15174", "preview": "15173"}
 BRANCH_PATTERN = re.compile(r"^(feat|fix|docs|ci)/[a-z0-9][a-z0-9._-]*$")
 MEDIA_ROOT = "/var/lib/florabase/attachments"
@@ -260,10 +261,11 @@ class Environment:
         self.project = {
             "dev": DEV_PROJECT,
             "review": REVIEW_PROJECT,
+            "uat": UAT_PROJECT,
             "quality": f"florabase-quality-{suffix}",
             "prod": "florabase-prod",
         }[role]
-        self.url = f"http://localhost:{PORTS.get(role, '8080')}"
+        self.url = f"http://localhost:{PORTS.get('review' if role == 'uat' else role, '8080')}"
         self.env_source = self.repo.env_file() if role in {"dev", "prod"} else repository.env_file()
 
     def environment(self) -> dict[str, str]:
@@ -276,19 +278,25 @@ class Environment:
         env.update({f"FLORABASE_{key.upper()}": value for key, value in identity.items()})
         env["COMPOSE_PROJECT_NAME"] = self.project
         env["FLORABASE_ROLE"] = self.role
-        if self.role in {"dev", "review", "quality"}:
+        if self.role in {"dev", "review", "uat", "quality"}:
             # Shell values override .env and Compose's defaults, including stale 1000:1000
             # settings. Runtime users and dev-state-init receive the same numeric identity.
             env.update(local_identity(env))
-        if self.role in {"review", "quality"}:
-            database = "florabase_review" if self.role == "review" else "florabase_quality"
+        if self.role in {"review", "uat", "quality"}:
+            database = {
+                "review": "florabase_review",
+                "uat": "florabase_uat",
+                "quality": "florabase_quality",
+            }[self.role]
             env.update(
                 {
                     "POSTGRES_DB": database,
                     "POSTGRES_USER": database,
                     "POSTGRES_PASSWORD": "local-isolated-only-password",
                     "FLORABASE_DATABASE_URL": f"postgresql+psycopg://{database}:local-isolated-only-password@db:5432/{database}",
-                    "FRONTEND_PORT": PORTS.get(self.role, "5173"),
+                    "FRONTEND_PORT": PORTS.get(
+                        "review" if self.role == "uat" else self.role, "5173"
+                    ),
                     "FLORABASE_CORS_ORIGINS": "[]",
                 }
             )
@@ -298,8 +306,10 @@ class Environment:
         files = ["compose.yaml"]
         if self.role != "prod":
             files.append("compose.dev.yaml")
-        if self.role == "review":
+        if self.role in {"review", "uat"}:
             files.append("compose.review.yaml")
+        if self.role == "uat":
+            files.append("compose.uat.yaml")
         return [
             "docker",
             "compose",
@@ -318,11 +328,20 @@ class Environment:
 
     def containers(self) -> list[dict[str, Any]]:
         ids = run(
-            ["docker", "ps", "-aq", "--filter", f"label=com.docker.compose.project={self.project}"],
+            [
+                "docker",
+                "ps",
+                "-aq",
+                "--filter",
+                f"label=com.docker.compose.project={self.project}",
+            ],
             capture=True,
         ).splitlines()
         return (
-            cast(list[dict[str, Any]], json.loads(run(["docker", "inspect", *ids], capture=True)))
+            cast(
+                list[dict[str, Any]],
+                json.loads(run(["docker", "inspect", *ids], capture=True)),
+            )
             if ids
             else []
         )
@@ -348,7 +367,7 @@ class Environment:
                         else "stop/remove it from that checkout before using " + str(self.source)
                     )
                 )
-        if self.role == "review":
+        if self.role in {"review", "uat"}:
             names = run(
                 [
                     "docker",
@@ -566,20 +585,21 @@ class Environment:
         for service in ("backend", "frontend"):
             if Path(services[service]["build"]["context"]).resolve() != self.source / service:
                 raise WorkflowError(f"wrong {service} source context")
-        if self.role == "review":
+        if self.role in {"review", "uat"}:
             if services["db"].get("ports") or services["backend"].get("ports"):
                 raise WorkflowError("review database/backend must remain internal")
             ports = services["frontend"].get("ports", [])
             if (
                 len(ports) != 1
                 or ports[0].get("host_ip") != "127.0.0.1"
-                or str(ports[0].get("published")) != PORTS["review"]
+                or str(ports[0].get("published"))
+                != (str(urlsplit(self.url).port) if self.role == "uat" else PORTS["review"])
             ):
                 raise WorkflowError("review must publish only localhost:15174")
             db = services["db"]["environment"]
             backend = services["backend"]["environment"]
             if (
-                db.get("POSTGRES_DB") != "florabase_review"
+                db.get("POSTGRES_DB") != self.environment()["POSTGRES_DB"]
                 or backend.get("FLORABASE_DATABASE_URL")
                 != self.environment()["FLORABASE_DATABASE_URL"]
             ):
@@ -695,14 +715,14 @@ class Environment:
             self.compose("up", "-d", "--wait", "--wait-timeout", "120", "db")
 
     def up(self) -> None:
-        if self.role == "review":
+        if self.role in {"review", "uat"}:
             self.repository.initialize()
         self.validate(require_durable_dev=self.role == "dev")
         self.require_owner(allow_stopped_dev=self.role == "dev")
         self.require_durable_legacy_media()
         self.compose("build")
         self.start_database()
-        if self.role == "review":
+        if self.role in {"review", "uat"}:
             self.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")
             self.upgrade()
         else:
@@ -835,7 +855,12 @@ def main() -> int:
             if env.role in {"review", "dev"}:
                 env.validate()
                 env.require_owner()
-                if env.role == "dev" and command[0] in {"up", "down", "stop", "restart"}:
+                if env.role == "dev" and command[0] in {
+                    "up",
+                    "down",
+                    "stop",
+                    "restart",
+                }:
                     env.require_durable_legacy_media()
             if env.role == "quality" and command[:1] == ["run"] and "frontend" in command:
                 env.prepare_initializer()
@@ -849,7 +874,8 @@ def main() -> int:
             env.upgrade_state()
         elif args.action in {"stop", "remove"}:
             env.stop(
-                remove=args.action == "remove", confirm=os.environ.get("CONFIRM_REMOVE_REVIEW", "")
+                remove=args.action == "remove",
+                confirm=os.environ.get("CONFIRM_REMOVE_REVIEW", ""),
             )
         else:
             raise WorkflowError(f"unsupported action: {args.action}")

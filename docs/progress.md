@@ -1,5 +1,71 @@
 # Engineering progress
 
+## 2026-10-05 — PREVIEW-001 persistent dirty-feature operator UAT
+
+- Implemented only in the attached 80b3 Codex worktree, `feat/preview-001-uat`, at SUPPLIER-003
+  base/HEAD `bd7904316445f41570aadb827d680c24ba082900` (#70). UAT reuses Feature Review's source,
+  build, non-root initializer, migration and persistence helpers with independent `florabase-uat-preview`
+  DB/media/dependency volumes and network. It uses current tracked/untracked dirty source at loopback
+  15174; Stable Preview's ref/worktree commands, DEV/primary source and production remain distinct.
+- Added five `uat-preview-*` operator commands. Up never seeds; explicit guarded seed creates the
+  UAT-only public `preview / preview` owner through normal owner/Argon2 machinery and a bounded
+  version-1 basil/lavender/aloe collection. Normal password validation, login, sessions, Origin and
+  CSRF remain unchanged. The fixture CLI is mounted explicitly, absent from production images.
+  Host project/source/network/actual mount/volume/container checks and runtime origin/cookie/resource
+  marker/current-database/user checks fail closed before seed/reset can target another environment.
+- A media-volume manifest records 31 service-created UUIDv7 identities without production domain
+  fields. Repeated seed preserves ordinary operator edits and adds no duplicate owner/media/link.
+  Interrupted, missing or incompatible baselines require guarded reset rather than guessed repair.
+  The synthetic collection covers Supplier media/absence, Location hierarchy, geography/provenance,
+  varied SeedLots, active/historical Sowings, direct/derived Plants/group, explicit lineage,
+  observations, Harvest, generated local PNG and offline external metadata. Reset requires
+  `CONFIRM_RESET_UAT_PREVIEW=florabase-uat-preview`, validates exact resources, deletes DB/media/
+  dependencies individually (never `down -v`), then rebuilds health and explicitly seeds.
+- Focused checks: Stable Preview **19**, environment **29**, feature workflow **37**, UAT helper **9**
+  tests passed. Real disposable UAT pytest **18 passed** covers runtime/DB/environment guard refusal,
+  unchanged normal bootstrap password validation, interrupted/version/missing records and media.
+  `make workflow-check` passed Ruff, formatting and strict helper/fixture mypy; final harness/test
+  formatting/lint and strict three-module harness typing passed after the diagnostic/CI portability
+  corrections. `bash -n` for the changed
+  verification script, feature graph (**89 valid**), Make help and `git diff --check` passed.
+- Full real Compose smoke passed on UUID-scoped `florabase-uat-preview-smoke-d84c2ca17471`: empty
+  startup/auth; untracked current-source migration; real Argon2/session login/private collection;
+  fixture lineage/Harvest/shared-media/primary relationships; triple seed preserving operator text
+  and an operator-only record; DB/owner/media/dependency stop/start persistence; DB-ahead refusal
+  without downgrade; rejected reset confirmations; complete reset/removal of operator data and
+  recreated owner/media; repeat seed after reset. Before/after primary Git, operator container/volume
+  metadata and running DB data checksums matched for DEV, Feature Review, Stable Preview, production
+  and operator UAT. Only proven disposable resources were cleaned. DEV has no `preview` account.
+  One fresh attempt failed frontend startup health with host load 25.98 and full swap; the final
+  serial rerun passed unchanged health deadlines. No tests or timeouts were weakened.
+- PREVIEW-001 remains **implemented** pending its canonical verification receipt;
+  next product milestone remains **Collection productivity v2**. BOTANY-003's blocker and historical
+  RELEASE-001 planning remain unchanged. No schema/domain/API or graphical shell change was made.
+  Primary is clean on main; this feature stays unstaged/uncommitted. `make feature-verify`, staging,
+  commit, push, delivery, merge and finish were not run. See [handoff](preview-001-handoff.md).
+- Operator UAT passed; the healthy environment remains running at `http://localhost:15174`, seeded explicitly with
+  `preview / preview`; DB current/code head are `20261005_0033`. Browser login and seeded Seeds,
+  Suppliers, Sowings and Plants were inspected at 1440×844, 1024×844 and 390×844 without horizontal
+  overflow. Mobile Dashboard, Supplier Photos and keyboard activation of Supplier detail also passed
+  spot checks. To free the existing Review port,
+  Feature Review was stopped from its owning 73d8 source after the isolated smoke; all three Review
+  volumes were retained. DEV, Stable Preview, production and primary remain unchanged.
+
+## 2026-10-05 — PREVIEW-001 independent review
+
+- Operator reported product UAT passed. Independently reviewed the complete tracked and untracked
+  PREVIEW-001 diff, host/runtime guards, normal authentication boundaries, fixture service invariants,
+  persistence/reset scope, migration refusal, CI wiring, feature graph and operator documentation.
+  No production/workflow defect or out-of-scope domain change was found; no tests were added because
+  the existing independent runtime tests and real disposable smoke cover the reviewed contracts.
+- Independently reran `make smoke-uat-preview` on fresh disposable project
+  `florabase-uat-preview-smoke-901ac5363b53`. Eighteen PostgreSQL fixture/guard tests passed; the
+  smoke confirmed dirty/untracked source, normal Argon2/session login, runtime refusals, triple seed,
+  edit preservation, stop/start DB/media/dependency persistence, ahead-of-code refusal, guarded reset
+  and recreation, and unchanged DEV/Feature Review/Stable Preview/production/operator UAT snapshots.
+  Exact disposable resources were cleaned; operator UAT remains running. `git diff --check`, feature
+  graph (89 valid), and `make help` passed. Canonical verification is the next step.
+
 ## 2026-10-05 — SUPPLIER-003 shared Supplier imagery and Reference completion
 
 - Implemented only in the current 73d8 Codex worktree, attached through `make feature-init` as
@@ -2477,3 +2543,14 @@ implementation detail.
   identity-cover history, automatic or
   provider image discovery, PWA behavior,
   offline/synchronization behavior, generic graphs, and multi-user collaboration.
+
+## 2026-10-05 — PREVIEW-001 independent final verification
+
+- `make feature-verify` passed on the complete reviewed tree: feature graph and workflow guards, Ruff,
+  Prettier, strict mypy (256 application files), TypeScript, backend tests (600 passed, 90.01%
+  coverage), frontend tests (375 passed across 41 files), API drift, PostgreSQL integration, production
+  backend/frontend image builds, migration-cycle checks (no new Alembic revisions), whitespace and
+  verification receipt.
+- PREVIEW-001 is **verified** in `docs/features.json`; roadmap and handoff reflect operator UAT and
+  independent verification complete. The receipt was recorded for this exact working tree.
+- Commit, protected delivery, merge and conservative worktree finish remain the authorized next steps.

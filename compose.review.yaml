@@ -2,7 +2,7 @@
 name: florabase-feature-review
 
 x-source: &source
-  io.florabase.role: review
+  io.florabase.role: ${FLORABASE_ROLE:-review}
   io.florabase.source: ${FLORABASE_SOURCE:?Source worktree is required}
   io.florabase.branch: ${FLORABASE_BRANCH:?Source branch is required}
   io.florabase.sha: ${FLORABASE_SHA:?Source SHA is required}

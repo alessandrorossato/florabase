@@ -4,14 +4,15 @@ This is the canonical environment and feature lifecycle contract. Codex manages 
 Florabase validates feature context and runs environments from explicit source trees. It does not
 create a second feature worktree or move the primary checkout off `main`.
 
-| Environment      | Source                                                      | Compose files                          | Project                                  | Browser                    | State                                                         |
-| ---------------- | ----------------------------------------------------------- | -------------------------------------- | ---------------------------------------- | -------------------------- | ------------------------------------------------------------- |
-| DEV              | Primary checkout discovered through Git                     | `compose.yaml` + `compose.dev.yaml`    | `florabase`                              | `http://localhost:5173`    | Persistent DB, media, dependencies                            |
-| Feature Review   | Current feature worktree, including dirty/untracked files   | baseline + DEV + `compose.review.yaml` | `florabase-feature-review`               | `http://localhost:15174`   | Persistent, isolated DB/media/dependencies                    |
-| Stable Preview   | Clean detached checkout of fetched `origin/main` by default | baseline + `compose.preview.yaml`      | `florabase-preview`                      | `http://localhost:15173`   | Persistent isolated DB/media, immutable frontend dependencies |
-| Quality checks   | Current feature worktree                                    | baseline + DEV                         | `florabase-quality-<metadata-path-hash>` | None started               | Isolated dependency/media volumes, no live DB required        |
-| Integration / CI | Current source / CI checkout                                | `compose.integration.yaml`             | `florabase-integration-<random-run-id>`  | None                       | Ephemeral PostgreSQL tmpfs and test state                     |
-| Production       | Selected deployable source/artifact                         | `compose.yaml`                         | `florabase-prod`                         | Proxy port 8080 by default | Persistent DB/media                                           |
+| Environment      | Source                                                      | Compose files                                | Project                                  | Browser                    | State                                                         |
+| ---------------- | ----------------------------------------------------------- | -------------------------------------------- | ---------------------------------------- | -------------------------- | ------------------------------------------------------------- |
+| DEV              | Primary checkout discovered through Git                     | `compose.yaml` + `compose.dev.yaml`          | `florabase`                              | `http://localhost:5173`    | Persistent DB, media, dependencies                            |
+| Feature Review   | Current feature worktree, including dirty/untracked files   | baseline + DEV + `compose.review.yaml`       | `florabase-feature-review`               | `http://localhost:15174`   | Persistent, isolated DB/media/dependencies                    |
+| UAT Preview      | Current feature worktree, including dirty/untracked files   | baseline + DEV + Review + `compose.uat.yaml` | `florabase-uat-preview`                  | `http://localhost:15174`   | Persistent isolated synthetic DB/media/dependencies           |
+| Stable Preview   | Clean detached checkout of fetched `origin/main` by default | baseline + `compose.preview.yaml`            | `florabase-preview`                      | `http://localhost:15173`   | Persistent isolated DB/media, immutable frontend dependencies |
+| Quality checks   | Current feature worktree                                    | baseline + DEV                               | `florabase-quality-<metadata-path-hash>` | None started               | Isolated dependency/media volumes, no live DB required        |
+| Integration / CI | Current source / CI checkout                                | `compose.integration.yaml`                   | `florabase-integration-<random-run-id>`  | None                       | Ephemeral PostgreSQL tmpfs and test state                     |
+| Production       | Selected deployable source/artifact                         | `compose.yaml`                               | `florabase-prod`                         | Proxy port 8080 by default | Persistent DB/media                                           |
 
 DEV deliberately retains the legacy explicit project name `florabase`. Renaming it to
 `florabase-dev` would silently select an empty database instead of the operator's existing data.
@@ -123,6 +124,67 @@ startup; attempting startup against the older tmpfs override is refused.
 
 This recovery preserves state in place. It is not a backup: retain coordinated DB/media snapshots
 before production-like upgrades, and do not treat a database-only dump as complete recovery.
+
+## Operator environments
+
+Use **DEV** for coding/debugging with developer data, **UAT Preview** for accepting the current
+feature with synthetic data, and **production** for real collection data. **Stable Preview** is the
+engineering snapshot of an explicit stable Git ref; its `preview*` commands are unchanged.
+
+## UAT Preview and operator acceptance
+
+```bash
+make uat-preview-up
+make uat-preview-seed          # Explicit first-use seed; UAT-only preview / preview
+make uat-preview-status
+# Open http://localhost:15174
+make uat-preview-stop
+make uat-preview-up            # Same owner, collection, operator edits and media
+# Destructive return to the canonical synthetic baseline:
+make uat-preview-reset CONFIRM_RESET_UAT_PREVIEW=florabase-uat-preview
+```
+
+UAT extends Feature Review's existing dirty-source runtime, migration checks and persistence helpers.
+It has its own project, `florabase_uat` database, DB/media/dependency volumes and network, and resolves
+no `.env` secrets. It uses the same established loopback port 15174: Feature Review and UAT Preview
+are alternative consumers of that port. Stop an existing Feature Review **from its owning worktree**
+before starting UAT; stop retains its independent data. Stable Preview remains at 15173 and DEV at 5173. No automatic takeover, reset or copy of another environment occurs.
+
+Startup builds the current worktree including untracked source, upgrades forward only and waits for
+health. Source bindings remain live. Startup never creates an owner or synthetic records. Seeding is
+explicit and network independent. UAT's public `preview / preview` credential is synthetic fixture
+state, **UAT PREVIEW ONLY**; production defaults and normal owner password validation are unchanged.
+The seed helper is mounted explicitly by the host workflow and is absent from production images.
+Before seeding, host guards check source/context, project, containers, origin, network, actual volume
+mounts and Docker ownership. Runtime guards also check development cookie policy, UAT mode,
+DB URL/user, a validated resource marker and `current_database()/current_user`.
+
+Fixture version 1 is a small basil/lavender/aloe collection with Suppliers, a Location hierarchy,
+synthetic provenance, varied SeedLots, active/historical Sowings, direct/derived Plants, a PlantGroup,
+observations, a Harvest and shared local/primary/external media. Local PNG content is generated through
+the normal upload service. External `example.invalid` metadata requires no fetch and deliberately
+exercises the remote-image failure state. No provider enrichment is claimed.
+
+The seed manifest lives outside production domain models in the UAT media volume and records service
+created UUIDv7 identities. Repeating seed validates existing identities and binary integrity, leaves
+all operator text/quantity/primary edits alone, and creates no duplicates. It does not recreate a
+baseline object intentionally deleted by an operator: missing/partial/version-incompatible baseline
+state refuses with an explicit reset instruction. Interrupted initial seeding remains marked
+`building`; normal seed never guesses which unrecorded rows belong to fixtures. Reset is the sole
+workflow for returning to a canonical baseline.
+
+Reset requires the exact project token, validates every target resource before stopping writers,
+then removes only the individually identified `florabase-uat-preview_postgres_data`,
+`florabase-uat-preview_attachment_data` and `florabase-uat-preview_frontend_node_modules` volumes.
+It recreates health, owner and fixtures in one command. It never uses `down -v`, deletes a source
+worktree or touches DEV/Stable Preview/production. A failed rebuild is actionable and may leave UAT
+stopped or unseeded; rerun `up` and explicit `seed` after resolving the failure. Never delete a volume
+manually to bypass identity refusal. A different worktree cannot adopt persisted UAT resources; run
+status/stop/reset from the owning worktree. Cross-worktree state transfer remains outside this increment.
+
+The browser has no additional environment badge; CLI/status identity and Preview-prefixed fixture
+labels provide the distinction without changing the application shell.
+See [PREVIEW-001 handoff](preview-001-handoff.md) for checks and operator scenarios.
 
 ## Feature Review and browser acceptance
 
