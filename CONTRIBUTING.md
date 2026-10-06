@@ -12,7 +12,8 @@ Florabase is developed as small, dependency-aware increments. Start with the
    names. Linked initialization never creates another worktree or switches primary `main`.
 2. Keep the change within one backlog increment and state what is intentionally out of scope.
 3. Run focused checks and use the change's domain, UI or infrastructure review profile. Inspect dirty
-   source with `make feature-review-up`; Stable Preview remains separate. Independently review fixes, then
+   source with `make uat-preview-up` and explicit `make uat-preview-seed` (UAT-only `preview / preview`);
+   `feature-review-up` remains the manual-owner alternative on the same port. Stable Preview remains separate. Independently review fixes, then
    run `make feature-verify` as the one canonical final local gate. It covers the complete local
    pull-request equivalent without duplicating expensive suites.
 4. Inspect the final diff, update tests and documentation, and create a reviewed local commit. Only
