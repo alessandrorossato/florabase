@@ -239,18 +239,26 @@ const desktopGroups: {
       { id: "sowings", label: "Sowings" },
       { id: "plants", label: "Plants" },
       { id: "harvests", label: "Harvests" },
-      { id: "events", label: "Events" },
-      { id: "map", label: "Provenance map" },
       { id: "media", label: "Media" },
+    ],
+  },
+  {
+    label: "Activity",
+    items: [{ id: "events", label: "Events" }],
+  },
+  {
+    label: "Places",
+    items: [
+      { id: "locations", label: "Locations" },
+      { id: "geography", label: "Geography" },
+      { id: "map", label: "Provenance map" },
     ],
   },
   {
     label: "Reference",
     items: [
       { id: "identities", label: "Botanical identities" },
-      { id: "locations", label: "Locations" },
       { id: "suppliers", label: "Suppliers" },
-      { id: "geography", label: "Geography" },
     ],
   },
   {

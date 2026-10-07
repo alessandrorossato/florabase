@@ -481,11 +481,16 @@ provenance or turn BotanicalProfile text into an observation. URL query paramete
 and structured filter state. [Search and filter semantics](search.md) define exact applicability,
 location scope, partial-year behavior, and result paging. Local directory search remains available.
 
-Desktop navigation groups Dashboard, the Seeds/Sowings/Plants/Events collection workflows in
-lifecycle order,
-Botanical identities, and Location/Supplier/GeographicPlace reference data in a persistent sidebar.
-Mobile exposes Home, Seeds, Sowings, Plants, and More in a fixed bottom navigation; More leads with
-Events and reaches the same secondary identity, map, and reference destinations.
+Desktop navigation uses these macroareas, in order: **Overview** (Dashboard), **Collection**
+(Seeds, Sowings, Plants, Harvests, Media), **Activity** (Events), **Places** (Locations, Geography,
+Provenance map), **Reference** (Botanical identities, Suppliers), and **Tools** (Import / Export,
+Labels). Page-level eyebrows use the owning macroarea; record/detail/form captions retain their
+own meanings. Routes, titles and descriptions are unchanged. Mobile keeps Home, Seeds, Sowings,
+Plants and More, with remaining destinations in the same conceptual order.
+
+Activity contains recorded historical Events. It anticipates later reviewed unified operational
+history and the SCHEDULE-001 candidate without treating recorded facts as planned tasks. Future
+schedule → completion → historical Event semantics remain undecided; a calendar is a presentation.
 
 BotanicalIdentity is a botanical/reference and collection hub with Overview, Reference, Seeds,
 Sowings, Plants, and Events tabs. The Reference tab contains operator-authored profile/native-range
@@ -793,3 +798,17 @@ are shortcuts to existing live queries, with no saved results, record ownership 
 filters. Exact stale filter UUIDs remain present; unsupported versions stay manageable without
 being silently reinterpreted. Rename changes only the name, Update with current view explicitly
 replaces state, and deletion removes only the shortcut. See [surface contracts](saved-views.md).
+
+## Safe explicit bulk Location moves (BULK-001)
+
+[Bulk operations](bulk-operations.md) documents the audited support matrix. Active SeedLots,
+Sowings, Plants, PlantGroups and managed Stored material can move to one existing scope-compatible
+Location through an explicit server preview and atomic revalidated apply. The bounded selection
+contains exact typed IDs, never an expanded filter, and is transient outside Saved Views.
+`updated_at` preconditions on every record and the target prevent stale overwrites; any conflict
+changes zero records. No-op records keep their timestamp/history. SeedLot/Sowing assignment reuses
+ordinary editing primitives without changing origins, balances or lifecycle. Inventory location-only
+correction preserves its owner-first locks, disposition history and correction version. Plants and
+groups use authoritative Movement Event creation with an unknown occurrence date and one Event per
+changed record. Historical Harvest occurrences, inactive records, Event destinations, geography,
+reference and media are not bulk-movable. There is no migration or unified operational history.

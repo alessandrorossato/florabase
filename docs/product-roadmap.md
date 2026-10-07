@@ -37,8 +37,10 @@ The approved sequence, retaining completed steps for context, is:
    idempotent seeding and explicit guarded reset; distinct from developer DEV and production.
 4. Collection productivity v2: **SEARCH-002 is verified**. It completes global Harvest/Media
    coverage. **VIEW-001 is verified** after operator UAT and independent verification. Saved operator
-   views persist existing filters in PostgreSQL; bulk operations come next,
-   followed by justified unified operational history. The milestone remains open.
+   views persist existing filters in PostgreSQL. **BULK-001 is verified** after operator UAT and
+   independent canonical verification: explicit selection and atomic Location moves for active
+   SeedLots, Sowings, Plants, PlantGroups and managed Stored material. Justified unified operational
+   history remains next. The milestone remains open.
 5. Orders / Purchases, separate from Supplier and biological/geographic provenance.
 6. Daily-use biological/collection improvements: measurements, justified flowering/fruiting work,
    germination analysis, viability/aging, seasonal planning, operational history and later reviewed
@@ -61,6 +63,16 @@ other roadmap work. No source reselection or TLS workaround is introduced.
 RELEASE-001 remains the planned historical release-hardening feature, without deletion or
 repurposing of its acceptance criteria. Any change to that feature contract requires a separate
 explicit feature-graph decision.
+
+## Later Activity candidate
+
+**SCHEDULE-001 — Scheduled collection events** is a later product candidate, not an implemented
+or in-progress capability. It would let the operator explicitly schedule dated future collection
+activities and expose upcoming/calendar-oriented navigation. Existing Events remain historical
+recorded occurrences. The exact reviewed relationship between a scheduled activity, its completion
+and a historical Event remains open for that future contract; calendar UI would be a presentation,
+not the domain entity. BULK-001's Activity navigation group does not implement scheduling or history
+unification. Orders/Purchases follow Collection productivity v2; BOTANY-003 is unchanged.
 
 ## Product principles
 

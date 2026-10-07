@@ -387,6 +387,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/bulk/location/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply */
+        post: operations["applyBulkLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/bulk/location/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview */
+        post: operations["previewBulkLocation"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/collection-photos/external/{reference_id}": {
         parameters: {
             query?: never;
@@ -2281,6 +2315,124 @@ export interface components {
             uses: string | null;
             /** Warnings */
             warnings: string | null;
+        };
+        /** BulkLocationApplyRequest */
+        BulkLocationApplyRequest: {
+            /**
+             * Expected Target Updated At
+             * Format: date-time
+             */
+            expected_target_updated_at: string;
+            /** Records */
+            records: components["schemas"]["BulkPrecondition"][];
+            /**
+             * Target Location Id
+             * Format: uuid
+             */
+            target_location_id: string;
+        };
+        /** BulkLocationPreview */
+        BulkLocationPreview: {
+            /** Can Apply */
+            can_apply: boolean;
+            /** Move Count */
+            move_count: number;
+            /** Rows */
+            rows: components["schemas"]["BulkLocationRow"][];
+            /** Selected Count */
+            selected_count: number;
+            /** Target Location */
+            target_location: string;
+            /**
+             * Target Location Id
+             * Format: uuid
+             */
+            target_location_id: string;
+            /**
+             * Target Updated At
+             * Format: date-time
+             */
+            target_updated_at: string;
+            /** Unchanged Count */
+            unchanged_count: number;
+        };
+        /** BulkLocationPreviewRequest */
+        BulkLocationPreviewRequest: {
+            /** Records */
+            records: components["schemas"]["BulkReference"][];
+            /**
+             * Target Location Id
+             * Format: uuid
+             */
+            target_location_id: string;
+        };
+        /** BulkLocationResult */
+        BulkLocationResult: {
+            /** Moved Count */
+            moved_count: number;
+            /** Unchanged Count */
+            unchanged_count: number;
+        };
+        /** BulkLocationRow */
+        BulkLocationRow: {
+            /** Code */
+            code?: string | null;
+            /** Current Location */
+            current_location: string | null;
+            /** Current Location Id */
+            current_location_id: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "seed_lot" | "sowing" | "plant" | "plant_group" | "harvest_inventory";
+            /** Label */
+            label: string;
+            /** Message */
+            message?: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "move" | "unchanged" | "conflict";
+            /** Updated At */
+            updated_at: string | null;
+        };
+        /** BulkPrecondition */
+        BulkPrecondition: {
+            /**
+             * Expected Updated At
+             * Format: date-time
+             */
+            expected_updated_at: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "seed_lot" | "sowing" | "plant" | "plant_group" | "harvest_inventory";
+        };
+        /** BulkReference */
+        BulkReference: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "seed_lot" | "sowing" | "plant" | "plant_group" | "harvest_inventory";
         };
         /** ConversionCreate */
         ConversionCreate: {
@@ -6407,6 +6559,76 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    applyBulkLocation: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkLocationApplyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkLocationResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    previewBulkLocation: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkLocationPreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkLocationPreview"];
+                };
             };
             /** @description Validation Error */
             422: {

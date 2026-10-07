@@ -403,16 +403,16 @@ it("filters exact source identity across Plants and groups and composes search/m
   expect(
     screen.queryByRole("button", { name: /misleading title/ }),
   ).not.toBeInTheDocument();
-  expect(screen.getByText("2 harvests")).toBeVisible();
+  expect(screen.getByText("2 records")).toBeVisible();
   await user.selectOptions(screen.getByLabelText("Material"), "seed");
-  expect(screen.getByText("1 harvest")).toBeVisible();
+  expect(screen.getByText("1 record")).toBeVisible();
   await user.selectOptions(screen.getByLabelText("Source type"), "plant");
   expect(screen.getByText("No Harvests match these filters.")).toBeVisible();
   await user.selectOptions(screen.getByLabelText("Source type"), "plant_group");
   await user.type(screen.getByLabelText("Search Harvests"), "missing");
   expect(screen.getByText("No Harvests match these filters.")).toBeVisible();
   await user.clear(screen.getByLabelText("Search Harvests"));
-  expect(screen.getByText("1 harvest")).toBeVisible();
+  expect(screen.getByText("1 record")).toBeVisible();
   await user.click(
     screen.getByRole("button", { name: "Clear botanical identity filter" }),
   );
@@ -443,4 +443,13 @@ it("distinguishes an empty collection from an empty identity result and retains 
   view.unmount();
   wrap(<HarvestScreen />);
   expect(await screen.findByText(/No Harvests recorded yet/)).toBeVisible();
+});
+
+it("BULK-001 does not expose multi-selection for historical Harvest occurrences", async () => {
+  wrap(<HarvestScreen />);
+  await screen.findByRole("button", { name: /Coffee — Fruit harvest/ });
+  expect(
+    screen.queryByRole("button", { name: "Select" }),
+  ).not.toBeInTheDocument();
+  expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
 });

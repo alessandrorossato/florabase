@@ -120,3 +120,7 @@ Screenshots are saved under
 
 Work remains unstaged and uncommitted on the requested branch. No branch switch, push, delivery,
 merge, commit or feature-finish is part of this handoff.
+
+## BULK-001 interaction
+
+BULK-001 moves active current collection records to a concrete existing scope-compatible Location. Updated-at preconditions include the target, and normal scope/deletion guards remain authoritative. Usage projections reflect the new direct assignments without changing containment or geographic provenance. See [bulk operations](bulk-operations.md).

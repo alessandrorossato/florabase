@@ -1090,3 +1090,32 @@ test("propagation paths distinguish direct results from retained extracted indiv
     }),
   ).toHaveTextContent("reversed");
 });
+
+test("BULK-001 Sowing selection excludes completed records and resets with filters", async () => {
+  mockApi(
+    sowingHandler([
+      sowing(),
+      sowing({
+        id: "completed",
+        label: "Completed tray",
+        lifecycle: "completed",
+      }),
+    ]),
+  );
+  const user = await openSowings();
+  await user.click(screen.getByRole("button", { name: "All" }));
+  await user.click(screen.getByRole("button", { name: "Select" }));
+  await user.click(screen.getByRole("button", { name: "Select visible" }));
+  expect(screen.getByText("1 selected")).toBeVisible();
+  expect(
+    screen.getByRole("checkbox", { name: /Completed tray/ }),
+  ).toBeDisabled();
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    "2 records",
+  );
+  await user.click(screen.getByRole("button", { name: "Active" }));
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    "1 record",
+  );
+  expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+});

@@ -19,8 +19,14 @@ from florabase.harvests.inventory_schemas import (
 from florabase.harvests.model import HarvestItem
 from florabase.harvests.schemas import HarvestQuantity
 from florabase.harvests.service import list_harvests, require_harvest
+from florabase.locations.model import Location
 from florabase.locations.schemas import LocationUsageScope
-from florabase.locations.service import display_path, list_locations, require_location_for_scope
+from florabase.locations.service import (
+    display_path,
+    list_locations,
+    require_location_for_scope,
+    validate_location_scope,
+)
 
 
 def conflict(code: str, message: str) -> EventDomainConflictError:
@@ -112,14 +118,24 @@ def locked_inventory(database: Session, inventory_id: UUID) -> Inventory:
     return inventory
 
 
+def assign_location(inventory: Inventory, location: Location | None) -> None:
+    """Location-only correction preserves balance, state, history and correction version."""
+    if location is not None:
+        validate_location_scope(location, LocationUsageScope.HARVEST_INVENTORY)
+    inventory.location_id = location.id if location else None
+    inventory.updated_at = utc_now()
+
+
 def correct(database: Session, inventory_id: UUID, payload: InventoryWrite) -> Inventory:
     inventory = locked_inventory(database, inventory_id)
-    require_location_for_scope(database, payload.location_id, LocationUsageScope.HARVEST_INVENTORY)
+    location = require_location_for_scope(
+        database, payload.location_id, LocationUsageScope.HARVEST_INVENTORY
+    )
     if inventory.state != payload.state or quantity(inventory) != payload.quantity:
         inventory.correction_version += 1
-    inventory.state, inventory.location_id = payload.state, payload.location_id
+    inventory.state = payload.state
     set_quantity(inventory, payload.quantity)
-    inventory.updated_at = utc_now()
+    assign_location(inventory, location)
     database.flush()
     return inventory
 

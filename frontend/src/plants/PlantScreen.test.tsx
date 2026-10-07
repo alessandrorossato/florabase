@@ -321,12 +321,16 @@ async function openPlants(waitForReady = true) {
   const user = userEvent.setup();
   render(<App />);
   await user.click(await screen.findByRole("button", { name: "Plants" }));
-  if (waitForReady)
+  if (waitForReady) {
     await screen.findByRole(
       "heading",
       { name: "Plants", level: 2 },
       { timeout: 10_000 },
     );
+    await waitFor(() => {
+      expect(screen.queryByText("Loading Plants…")).not.toBeInTheDocument();
+    });
+  }
   return user;
 }
 
@@ -473,7 +477,7 @@ test("Plants navigation exposes loading, empty, missing-identity, and failure st
       return json([]);
     return undefined;
   });
-  await openPlants();
+  await openPlants(false);
   expect(screen.getByRole("status")).toHaveTextContent("Loading Plants");
 
   cleanup();
@@ -2436,4 +2440,34 @@ test("Plant detail and correction share a clear record header and identity conte
     /Record\s*Avocado #1\s*Botanical identity\s*Persea americana/,
   );
   expect(screen.getByLabelText("Label (optional)")).toHaveValue("Avocado #1");
+});
+
+test("BULK-001 mixed Plant and Group directory selection retains concrete kind", async () => {
+  mockApi(
+    plantHandler(
+      [plant()],
+      [
+        group({
+          lifecycle: "active",
+          quantity: { value: 12, is_approximate: false },
+        }),
+      ],
+    ),
+  );
+  const user = await openPlants();
+  await user.click(screen.getByRole("button", { name: "Select" }));
+  await user.click(screen.getByRole("button", { name: "Select visible" }));
+  expect(screen.getByText("2 selected")).toBeVisible();
+  const controls = screen.getAllByRole("checkbox");
+  expect(controls).toHaveLength(2);
+  expect(controls[0]).toHaveAccessibleName(/Select (Plant|Plant group)/);
+  expect(controls[1]).toHaveAccessibleName(/Select (Plant|Plant group)/);
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    "2 records",
+  );
+  await user.click(screen.getByRole("button", { name: "Groups" }));
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    "1 record",
+  );
+  expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
 });

@@ -1,3 +1,4 @@
+import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { useEffect, useId, useState } from "react";
@@ -196,7 +197,7 @@ export function HarvestScreen({
   return (
     <section className="harvest-workspace" aria-labelledby={headingId}>
       <WorkspaceIntro
-        eyebrow="Collection history"
+        eyebrow="Collection"
         title="Harvests"
         titleId={headingId}
         description="Record material collected from Plants and Plant groups."
@@ -401,10 +402,7 @@ export function HarvestScreen({
           {filtered && (
             <div className="harvest-directory-layout">
               <div className="harvest-directory-results">
-                <p className="directory-summary">
-                  {filtered.length}{" "}
-                  {filtered.length === 1 ? "harvest" : "harvests"}
-                </p>
+                <DirectoryResults count={filtered.length} />
                 {filtered.length === 0 ? (
                   <p className="empty-state">
                     {identity || records?.length

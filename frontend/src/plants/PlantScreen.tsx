@@ -1,3 +1,6 @@
+import { DirectoryResults } from "../components/DirectoryResults";
+import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
+import { useBulkSelection } from "../bulk/useBulkSelection";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import {
@@ -762,7 +765,7 @@ function Detail({
 }
 
 const plantPage = {
-  eyebrow: "Living collection",
+  eyebrow: "Collection",
   title: "Plants",
   titleId: "plants-title",
   description:
@@ -1094,6 +1097,17 @@ export function PlantScreen({
     });
   }, [lifecycleFilter, records, references, search, typeFilter]);
 
+  const bulkChoices = visible.map((record) => ({
+    kind:
+      record.kind === "plant" ? ("plant" as const) : ("plant_group" as const),
+    id: record.value.id,
+    label: `${record.kind === "plant" ? "Plant" : "Plant group"} · ${recordName(record.value, record.value.botanical_identity.display_label)}`,
+    eligible: record.value.lifecycle === "active",
+  }));
+  const bulk = useBulkSelection(
+    JSON.stringify(view.state) + String(initialId) + String(editing),
+    bulkChoices,
+  );
   if (!references && collection.status === "loading")
     return (
       <section
@@ -1647,11 +1661,22 @@ export function PlantScreen({
             <h3 className="sr-only" id="plant-list-title">
               Plants collection
             </h3>
-            <span role="status" aria-label="Matching records">
-              {visible.length} {visible.length === 1 ? "record" : "records"}
-            </span>
           </div>
-          <SavedViews surface="plants" state={view.savedState} />
+          <SavedViews
+            surface="plants"
+            state={view.savedState}
+            utilityActions={
+              <BulkSelect
+                selection={bulk}
+                visible={bulkChoices}
+                onStart={() => {
+                  setSelectedKey(null);
+                  setMobileDetail(false);
+                  setDetail({ status: "idle" });
+                }}
+              />
+            }
+          />
           <div className="seed-controls">
             <DirectorySearch
               hideLabel
@@ -1700,6 +1725,19 @@ export function PlantScreen({
               ))}
             </fieldset>
           </div>
+          <BulkToolbar
+            selection={bulk}
+            visible={bulkChoices}
+            onSuccess={() => {
+              setSelectedKey(null);
+              setMobileDetail(false);
+              setDetail({ status: "idle" });
+              setAttempt((value) => value + 1);
+            }}
+          />
+          {collection.status === "ready" && (
+            <DirectoryResults count={visible.length} />
+          )}
           {records.length === 0 ? (
             <div className="profile-empty">
               <h4>No Plants recorded yet</h4>
@@ -1716,15 +1754,32 @@ export function PlantScreen({
               aria-label="Plants collection"
               tabIndex={0}
             >
-              {visible.map((record) => {
+              {visible.map((record, bulkIndex) => {
                 const value = record.value;
                 return (
-                  <li key={recordKey(record)}>
+                  <li
+                    key={recordKey(record)}
+                    className={bulk.active ? "bulk-selection-row" : undefined}
+                    data-selected={
+                      bulk.checked({
+                        kind: record.kind === "plant" ? "plant" : "plant_group",
+                        id: value.id,
+                      }) || undefined
+                    }
+                  >
+                    <BulkCheckbox
+                      selection={bulk}
+                      choice={bulkChoices[bulkIndex]}
+                    />
                     <button
                       type="button"
                       className="seed-row plant-row"
                       aria-pressed={selectedKey === recordKey(record)}
                       onClick={(event) => {
+                        if (bulk.active) {
+                          bulk.toggle(bulkChoices[bulkIndex]);
+                          return;
+                        }
                         selectRecord(record, event.currentTarget);
                       }}
                     >

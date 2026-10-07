@@ -146,6 +146,9 @@ test("Gallery distinguishes source and references, uses thumbnails and filters/p
   const user = userEvent.setup();
   mount(<MediaScreen />);
   await screen.findByRole("button", { name: /Garden image/ });
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    "2 of 30 records",
+  );
   expect(screen.getByRole("img", { name: "Garden image" })).toHaveAttribute(
     "src",
     `/api/v1/media-assets/${assetId}/thumbnail`,
@@ -165,6 +168,7 @@ test("Gallery distinguishes source and references, uses thumbnails and filters/p
       expect.anything(),
     );
   });
+  expect(await screen.findByText("1 of 30 records")).toBeVisible();
   await user.click(screen.getByRole("button", { name: "Next media" }));
   await waitFor(() => {
     expect(fetch).toHaveBeenLastCalledWith(
@@ -172,6 +176,7 @@ test("Gallery distinguishes source and references, uses thumbnails and filters/p
       expect.anything(),
     );
   });
+  expect(await screen.findByText("1 of 30 records")).toBeVisible();
   expect(
     fetch.mock.calls.every(([input]) => requestUrl(input).startsWith("/api/")),
   ).toBe(true);

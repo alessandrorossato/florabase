@@ -207,7 +207,7 @@ it("exposes creation only on tracked active seed material", async () => {
       await userEvent
         .setup()
         .selectOptions(screen.getByLabelText("State"), "depleted");
-    await screen.findByText("1 tracked material line");
+    await screen.findByText("1 record");
     expect(
       screen.queryByRole("button", { name: "Create Seed lot" }),
     ).not.toBeInTheDocument();

@@ -1,3 +1,6 @@
+import { DirectoryResults } from "../components/DirectoryResults";
+import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
+import { useBulkSelection } from "../bulk/useBulkSelection";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { sowingFormPanels } from "./SowingFormFields";
@@ -711,7 +714,7 @@ function extractedStages(
 }
 
 const sowingPage = {
-  eyebrow: "Propagation",
+  eyebrow: "Collection",
   title: "Sowings",
   titleId: "sowings-title",
   description: "Track sowing attempts, germination, outcomes, and descendants.",
@@ -877,6 +880,16 @@ export function SowingScreen({
     });
   }, [filter, search, sowings]);
 
+  const bulkChoices = visible.map((sowing) => ({
+    kind: "sowing" as const,
+    id: sowing.id,
+    label: `Sowing · ${recordName(sowing, "Unlabelled sowing")}`,
+    eligible: sowing.lifecycle === "active",
+  }));
+  const bulk = useBulkSelection(
+    JSON.stringify(view.state) + String(initialId) + String(editing),
+    bulkChoices,
+  );
   if (!references && collection.status === "loading") {
     return (
       <section
@@ -1157,7 +1170,21 @@ export function SowingScreen({
           <h3 className="sr-only" id="sowing-list-title">
             Sowing collection
           </h3>
-          <SavedViews surface="sowings" state={view.savedState} />
+          <SavedViews
+            surface="sowings"
+            state={view.savedState}
+            utilityActions={
+              <BulkSelect
+                selection={bulk}
+                visible={bulkChoices}
+                onStart={() => {
+                  setSelectedId(null);
+                  setMobileDetail(false);
+                  setDetail({ status: "idle" });
+                }}
+              />
+            }
+          />
           <div className="seed-controls">
             <DirectorySearch
               hideLabel
@@ -1187,6 +1214,19 @@ export function SowingScreen({
               ))}
             </fieldset>
           </div>
+          <BulkToolbar
+            selection={bulk}
+            visible={bulkChoices}
+            onSuccess={() => {
+              setSelectedId(null);
+              setMobileDetail(false);
+              setDetail({ status: "idle" });
+              setAttempt((value) => value + 1);
+            }}
+          />
+          {collection.status === "ready" && (
+            <DirectoryResults count={visible.length} />
+          )}
           {sowings.length === 0 ? (
             <div className="profile-empty">
               <h4>No Sowings recorded yet</h4>
@@ -1204,13 +1244,27 @@ export function SowingScreen({
               aria-label="Sowing collection"
               tabIndex={0}
             >
-              {visible.map((sowing) => (
-                <li key={sowing.id}>
+              {visible.map((sowing, bulkIndex) => (
+                <li
+                  key={sowing.id}
+                  className={bulk.active ? "bulk-selection-row" : undefined}
+                  data-selected={
+                    bulk.checked({ kind: "sowing", id: sowing.id }) || undefined
+                  }
+                >
+                  <BulkCheckbox
+                    selection={bulk}
+                    choice={bulkChoices[bulkIndex]}
+                  />
                   <button
                     type="button"
                     className="seed-row sowing-row"
                     aria-pressed={selectedId === sowing.id}
                     onClick={(event) => {
+                      if (bulk.active) {
+                        bulk.toggle(bulkChoices[bulkIndex]);
+                        return;
+                      }
                       selectSowing(sowing.id, event.currentTarget);
                     }}
                   >

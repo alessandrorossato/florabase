@@ -397,7 +397,13 @@
         "PostgreSQL constraints preserve optionality, declared date precision, quantity kind, and non-destructive lifecycle states",
         "Upgrade, downgrade, and database invariants are integration-tested without introducing Sowing or Plant tables"
       ],
-      "dependencies": ["SEED-001", "DATABASE-001", "SUPPLIER-001", "LOCATION-001", "GEOGRAPHY-001"],
+      "dependencies": [
+        "SEED-001",
+        "DATABASE-001",
+        "SUPPLIER-001",
+        "LOCATION-001",
+        "GEOGRAPHY-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -629,7 +635,13 @@
         "PostgreSQL enforces source, item, owned Event and primary-link integrity; guarded migration, rollback, retention, permissions, bounded queries, tests, rendered review and canonical verification have recorded evidence",
         "Future harvested-material inventory/disposition and explicit conversion to SeedLot remain documented pre-1.0 follow-ups"
       ],
-      "dependencies": ["PLANT-001", "PLANT-002", "EVENT-003", "ATTACHMENT-005", "UX-006"],
+      "dependencies": [
+        "PLANT-001",
+        "PLANT-002",
+        "EVENT-003",
+        "ATTACHMENT-005",
+        "UX-006"
+      ],
       "priority": "P1",
       "status": "implemented"
     },
@@ -725,7 +737,12 @@
         "Establishment into Plants or PlantGroups preserves lineage without using Sowing",
         "No generic propagation-material base table is introduced without demonstrated need"
       ],
-      "dependencies": ["PLANT-003", "SUPPLIER-001", "LOCATION-001", "LINEAGE-001"],
+      "dependencies": [
+        "PLANT-003",
+        "SUPPLIER-001",
+        "LOCATION-001",
+        "LINEAGE-001"
+      ],
       "priority": "P2",
       "status": "planned"
     },
@@ -738,7 +755,12 @@
         "Rooting or establishment into Plants or PlantGroups preserves known parent-Plant lineage without using Sowing",
         "The implementation follows concrete cutting workflows rather than speculative inheritance"
       ],
-      "dependencies": ["PLANT-003", "SUPPLIER-001", "LOCATION-001", "LINEAGE-002"],
+      "dependencies": [
+        "PLANT-003",
+        "SUPPLIER-001",
+        "LOCATION-001",
+        "LINEAGE-002"
+      ],
       "priority": "P2",
       "status": "planned"
     },
@@ -800,6 +822,30 @@
         "No materialized results, arbitrary route or executable state, browser-local persistence, default views, sharing, bulk operations or unified history are introduced"
       ],
       "dependencies": ["SEARCH-002"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
+      "id": "BULK-001",
+      "category": "collection",
+      "description": "Add explicit multi-selection and safe bulk Location moves for supported current collection records",
+      "acceptance_criteria": [
+        "Active SeedLots, Sowings, Plants, PlantGroups and managed Stored material expose bounded transient explicit typed-ID selection with no query expansion or Saved View persistence",
+        "Authenticated Origin and CSRF protected preview validates every reference and existing scope-compatible Location, reports human labels, current and target Locations, no-ops and conflicts, and requires explicit confirmation",
+        "Apply locks and refreshes all selected records and target, revalidates UTC updated-at preconditions and domain eligibility, and commits all changes atomically or changes none",
+        "Domain-owned location assignment primitives preserve SeedLot and Sowing lineage and quantity and Stored material state, balance, correction version and dispositions; Plant and PlantGroup moves retain individual authoritative Movement Events",
+        "Responsive keyboard-accessible selection, toolbar and preview/apply dialog clear on navigation, filter or Saved View changes, refresh directory and Quick Preview state after success, and truthfully handle no-op and stale failures",
+        "Approved Overview, Collection, Activity, Places, Reference and Tools navigation groups and matching page eyebrows preserve all routes, page titles, descriptions and historical Event semantics",
+        "Focused backend, PostgreSQL atomicity and domain regressions, frontend selection and shell tests, generated API, static and production build checks prepare UAT; no migration, generic bulk framework, jobs, unified history or other bulk mutation is introduced"
+      ],
+      "dependencies": [
+        "VIEW-001",
+        "LOCATION-001",
+        "SEED-001",
+        "SOWING-001",
+        "EVENT-001",
+        "HARVEST-002"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -956,7 +1002,13 @@
         "Geography provides accessible stored-data search and a coordinate-bearing Provenance-site map without geocoding or inferred coordinates, while the separate collection provenance map becomes a map-first collection-record workspace with its existing semantics intact",
         "Desktop and mobile layouts preserve hierarchy, map and list parity, accessible controls, lazy map loading and operator workflows while replacing permanent forms and unnecessary card chrome with explicit create and edit interactions"
       ],
-      "dependencies": ["UX-004", "SUPPLIER-002", "LOCATION-002", "GEOGRAPHY-003", "MAP-001"],
+      "dependencies": [
+        "UX-004",
+        "SUPPLIER-002",
+        "LOCATION-002",
+        "GEOGRAPHY-003",
+        "MAP-001"
+      ],
       "priority": "P1",
       "status": "implemented"
     },
@@ -969,7 +1021,14 @@
         "Propagation, transfer, extraction, reintegration, reversal, Events, Photos and Lineage retain their authoritative domain boundaries while presenting clearer action hierarchy, history and responsive workflows",
         "Dashboard and collection-wide Events use the refreshed visual vocabulary as compact collection-summary and chronological-history surfaces with accessible desktop and mobile behavior, without inventing reminders, care rules, primary record photos or new domain semantics"
       ],
-      "dependencies": ["UX-005", "UX-003", "PROPAGATION-003", "PLANT-006", "EVENT-002", "ATTACHMENT-003"],
+      "dependencies": [
+        "UX-005",
+        "UX-003",
+        "PROPAGATION-003",
+        "PLANT-006",
+        "EVENT-002",
+        "ATTACHMENT-003"
+      ],
       "priority": "P1",
       "status": "implemented"
     },
@@ -996,7 +1055,13 @@
         "Location directory, compact Quick Preview and detail communicate descendant content with explicit scope labels, accessible controls and responsive wrapping without duplicating equal leaf counts in compact surfaces",
         "Deep trees, siblings, independent roots, empty branches, lifecycle inclusion, source non-inference and immediate reparenting results have integration coverage while assignment and deletion guards retain their semantics"
       ],
-      "dependencies": ["LOCATION-001", "LOCATION-002", "SEED-003", "SOWING-002", "PLANT-002"],
+      "dependencies": [
+        "LOCATION-001",
+        "LOCATION-002",
+        "SEED-003",
+        "SOWING-002",
+        "PLANT-002"
+      ],
       "priority": "P2",
       "status": "implemented"
     },
@@ -1243,7 +1308,12 @@
         "Deterministic locks, PostgreSQL concurrency tests and origin/correction/dependency guards prevent stale restoration, overuse and falsified conversion history",
         "Responsive creation/undo workflows expose eligibility, conflicts and Harvest-to-SeedLot cross-navigation; focused migration, API, static and frontend checks have evidence"
       ],
-      "dependencies": ["HARVEST-002", "LINEAGE-002", "SEED-003", "PROPAGATION-003"],
+      "dependencies": [
+        "HARVEST-002",
+        "LINEAGE-002",
+        "SEED-003",
+        "PROPAGATION-003"
+      ],
       "priority": "P1",
       "status": "verified"
     }

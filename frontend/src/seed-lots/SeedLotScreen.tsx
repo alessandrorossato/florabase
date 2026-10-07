@@ -1,3 +1,6 @@
+import { DirectoryResults } from "../components/DirectoryResults";
+import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
+import { useBulkSelection } from "../bulk/useBulkSelection";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { ConversionHistory } from "../harvests/ConversionHistory";
@@ -718,7 +721,7 @@ function Detail({
 }
 
 const seedPage = {
-  eyebrow: "Collection inventory",
+  eyebrow: "Collection",
   title: "Seeds",
   titleId: "seeds-title",
   description: "Track seed lots from acquisition through sowing and history.",
@@ -867,6 +870,16 @@ export function SeedLotScreen({
     });
   }, [filter, lots, search]);
 
+  const bulkChoices = visible.map((lot) => ({
+    kind: "seed_lot" as const,
+    id: lot.id,
+    label: `Seed Lot · ${recordName(lot, "Unlabelled seed lot")}`,
+    eligible: lot.lifecycle === "active",
+  }));
+  const bulk = useBulkSelection(
+    JSON.stringify(view.state) + String(initialId) + String(editing),
+    bulkChoices,
+  );
   if (!references && inventory.status === "loading") {
     return (
       <section
@@ -1203,7 +1216,20 @@ export function SeedLotScreen({
           <h3 className="sr-only" id="seed-inventory-title">
             Seed lot inventory
           </h3>
-          <SavedViews surface="seed_lots" state={view.savedState} />
+          <SavedViews
+            surface="seed_lots"
+            state={view.savedState}
+            utilityActions={
+              <BulkSelect
+                selection={bulk}
+                visible={bulkChoices}
+                onStart={() => {
+                  setSelectedId(null);
+                  setDetailOpen(false);
+                }}
+              />
+            }
+          />
           <div className="seed-controls">
             <DirectorySearch
               hideLabel
@@ -1233,6 +1259,18 @@ export function SeedLotScreen({
               ))}
             </fieldset>
           </div>
+          <BulkToolbar
+            selection={bulk}
+            visible={bulkChoices}
+            onSuccess={() => {
+              setSelectedId(null);
+              setDetailOpen(false);
+              setAttempt((value) => value + 1);
+            }}
+          />
+          {inventory.status === "ready" && (
+            <DirectoryResults count={visible.length} />
+          )}
           {lots.length === 0 ? (
             <div className="empty-state">
               <h3>No seeds recorded yet</h3>
@@ -1251,13 +1289,27 @@ export function SeedLotScreen({
             </div>
           ) : (
             <ul className="seed-list" aria-label="Seed inventory" tabIndex={0}>
-              {visible.map((lot) => (
-                <li key={lot.id}>
+              {visible.map((lot, bulkIndex) => (
+                <li
+                  key={lot.id}
+                  className={bulk.active ? "bulk-selection-row" : undefined}
+                  data-selected={
+                    bulk.checked({ kind: "seed_lot", id: lot.id }) || undefined
+                  }
+                >
+                  <BulkCheckbox
+                    selection={bulk}
+                    choice={bulkChoices[bulkIndex]}
+                  />
                   <button
                     type="button"
                     className="seed-row"
                     aria-pressed={selectedId === lot.id}
                     onClick={() => {
+                      if (bulk.active) {
+                        bulk.toggle(bulkChoices[bulkIndex]);
+                        return;
+                      }
                       if (creationExpanded)
                         closeCreation({ returnFocus: false });
                       setSelectedId(lot.id);

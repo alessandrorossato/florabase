@@ -129,7 +129,7 @@ export function LabelsScreen({
     <section className="labels-workspace" aria-labelledby="labels-heading">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Collection tools</p>
+          <p className="eyebrow">Tools</p>
           <h2 id="labels-heading">Labels</h2>
           <p>Prepare printable 50 × 30 mm QR labels for collection records.</p>
         </div>

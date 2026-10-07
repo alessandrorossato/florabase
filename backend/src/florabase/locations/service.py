@@ -61,6 +61,12 @@ def require_location_for_scope(
     location = database.get(Location, location_id, with_for_update=True, populate_existing=True)
     if location is None:
         raise LocationNotFoundError
+    validate_location_scope(location, scope)
+    return location
+
+
+def validate_location_scope(location: Location, scope: LocationUsageScope) -> None:
+    """Share normal assignment eligibility with bounded move previews and domain primitives."""
     supported = {
         LocationUsageScope.PLANTS: location.supports_plants,
         LocationUsageScope.SOWINGS: location.supports_sowings,
@@ -72,7 +78,6 @@ def require_location_for_scope(
             "location_scope_not_supported",
             f"Location does not support {scope.value.replace('_', ' ')} assignments",
         )
-    return location
 
 
 def _grouped_usage(
