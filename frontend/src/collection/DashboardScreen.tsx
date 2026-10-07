@@ -216,7 +216,7 @@ export function DashboardScreen() {
     >
       <header className="page-header">
         <div>
-          <p className="eyebrow">Collection overview</p>
+          <p className="eyebrow">Overview</p>
           <h2 id="dashboard-title">Dashboard</h2>
           <p>See what is in your collection and what happened recently.</p>
         </div>

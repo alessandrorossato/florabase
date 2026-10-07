@@ -1,3 +1,4 @@
+import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import {
@@ -889,7 +890,7 @@ export function SupplierScreen({
       <PageHeader
         title="Suppliers"
         titleId="suppliers-title"
-        eyebrow="Collection sources"
+        eyebrow="Reference"
         description="Manage the sources from which collection material was directly acquired."
         actions={
           <button
@@ -925,6 +926,9 @@ export function SupplierScreen({
               onChange={setFilter}
               disabled={directory.status !== "ready" || suppliers.length === 0}
             />
+            {directory.status === "ready" && (
+              <DirectoryResults count={visible.length} />
+            )}
             {directory.status === "loading" && (
               <p aria-live="polite" className="notice">
                 Loading suppliers…

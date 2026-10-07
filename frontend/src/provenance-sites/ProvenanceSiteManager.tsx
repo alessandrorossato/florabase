@@ -1,3 +1,4 @@
+import { DirectoryResults } from "../components/DirectoryResults";
 import { CoordinateFields } from "./CoordinateFields";
 import { FormSections } from "../components/FormSections";
 import { firstValidationField } from "../components/formValidation";
@@ -284,6 +285,9 @@ export function ProvenanceSiteManager({
           </button>
         </div>
       )}
+      {!loading && !loadError && !initialSiteId && listed.length === 0 && (
+        <DirectoryResults count={0} />
+      )}
       {!loading && !loadError && sites.length === 0 && (
         <p className="empty-state">No provenance sites recorded.</p>
       )}
@@ -329,6 +333,7 @@ export function ProvenanceSiteManager({
             <h4 className={mode === "map" ? undefined : "sr-only"}>
               {mode === "map" ? "Mapped sites" : "Site directory"}
             </h4>
+            {!initialSiteId && <DirectoryResults count={listed.length} />}
             <ul className="identity-list">
               {listed.map((site) => (
                 <li key={site.id}>

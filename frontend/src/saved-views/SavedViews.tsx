@@ -1,4 +1,11 @@
-import { useEffect, useId, useRef, useState, type SyntheticEvent } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+  type SyntheticEvent,
+} from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { TaskDialog } from "../components/TaskDialog";
@@ -25,10 +32,12 @@ export function SavedViews({
   surface,
   state,
   allSurfaces = false,
+  utilityActions,
 }: {
   surface: Surface;
   state: SavedState | null;
   allSurfaces?: boolean;
+  utilityActions?: ReactNode;
 }) {
   const auth = useAuth();
   const panelId = useId();
@@ -197,6 +206,7 @@ export function SavedViews({
         >
           Saved views{allSurfaces ? " · all surfaces" : ""}
         </button>
+        {utilityActions}
       </div>
       {notice && (
         <p role="status" className="field-help">

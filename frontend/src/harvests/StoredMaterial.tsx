@@ -1,3 +1,6 @@
+import { DirectoryResults } from "../components/DirectoryResults";
+import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
+import { useBulkSelection } from "../bulk/useBulkSelection";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { ConversionDialog } from "./ConversionDialog";
@@ -425,6 +428,13 @@ export function StoredMaterialDirectory() {
         .toLocaleLowerCase()
         .includes(query.trim().toLocaleLowerCase()),
   );
+  const bulkChoices = (filtered ?? []).map((row) => ({
+    kind: "harvest_inventory" as const,
+    id: row.id,
+    label: `Stored ${row.material_kind} · ${row.harvest_title} · ${row.source.botanical_identity.display_label}`,
+    eligible: row.state === "active",
+  }));
+  const bulk = useBulkSelection(JSON.stringify(view.state), bulkChoices);
   const locations = [
     ...new Map(
       rows?.flatMap((row) =>
@@ -457,7 +467,11 @@ export function StoredMaterialDirectory() {
       <p>
         Current stored remainder from explicitly tracked Harvest material lines.
       </p>
-      <SavedViews surface="stored_material" state={view.savedState} />
+      <SavedViews
+        surface="stored_material"
+        state={view.savedState}
+        utilityActions={<BulkSelect selection={bulk} visible={bulkChoices} />}
+      />
       <div className="harvest-filters">
         <DirectorySearch
           hideLabel
@@ -526,6 +540,14 @@ export function StoredMaterialDirectory() {
           </select>
         </div>
       </div>
+      <BulkToolbar
+        selection={bulk}
+        visible={bulkChoices}
+        onSuccess={() => {
+          setConverting(null);
+          setAttempt((value) => value + 1);
+        }}
+      />
       {error && (
         <p role="alert">
           Could not load stored material.{" "}
@@ -542,10 +564,7 @@ export function StoredMaterialDirectory() {
       {!rows && !error && <p role="status">Loading stored material…</p>}
       {filtered && (
         <>
-          <p className="directory-summary">
-            {filtered.length} tracked material{" "}
-            {filtered.length === 1 ? "line" : "lines"}
-          </p>
+          <DirectoryResults count={filtered.length} />
           {!filtered.length ? (
             <p className="empty-state">
               {rows?.length
@@ -557,10 +576,27 @@ export function StoredMaterialDirectory() {
               className="harvest-directory"
               aria-label="Stored material directory"
             >
-              {filtered.map((row) => (
-                <li key={row.id}>
+              {filtered.map((row, bulkIndex) => (
+                <li
+                  key={row.id}
+                  className={bulk.active ? "bulk-selection-row" : undefined}
+                  data-selected={
+                    bulk.checked({ kind: "harvest_inventory", id: row.id }) ||
+                    undefined
+                  }
+                >
+                  <BulkCheckbox
+                    selection={bulk}
+                    choice={bulkChoices[bulkIndex]}
+                  />
                   <a
                     className="harvest-directory-row"
+                    onClick={(event) => {
+                      if (bulk.active) {
+                        event.preventDefault();
+                        bulk.toggle(bulkChoices[bulkIndex]);
+                      }
+                    }}
                     href={`#/harvests/${row.harvest_id}`}
                   >
                     <span className="harvest-row-content">
@@ -587,17 +623,19 @@ export function StoredMaterialDirectory() {
                       <small>Open source Harvest</small>
                     </span>
                   </a>
-                  {row.material_kind === "seed" && row.state === "active" && (
-                    <button
-                      type="button"
-                      className="button--secondary"
-                      onClick={() => {
-                        setConverting(row);
-                      }}
-                    >
-                      Create Seed lot
-                    </button>
-                  )}
+                  {!bulk.active &&
+                    row.material_kind === "seed" &&
+                    row.state === "active" && (
+                      <button
+                        type="button"
+                        className="button--secondary"
+                        onClick={() => {
+                          setConverting(row);
+                        }}
+                      >
+                        Create Seed lot
+                      </button>
+                    )}
                 </li>
               ))}
             </ul>

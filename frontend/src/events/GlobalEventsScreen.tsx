@@ -1,3 +1,4 @@
+import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { useEffect, useMemo, useState } from "react";
@@ -52,7 +53,7 @@ export function GlobalEventsScreen() {
   return (
     <section aria-labelledby="global-events-title" className="workspace">
       <WorkspaceIntro
-        eyebrow="Collection activity"
+        eyebrow="Activity"
         title="Events"
         titleId="global-events-title"
         description="Browse cultivation and lifecycle activity across your collection."
@@ -82,6 +83,7 @@ export function GlobalEventsScreen() {
         <>
           <SavedViews surface="events" state={view.savedState} />
           <EventFilters selected={filter} onSelect={setFilter} />
+          <DirectoryResults count={visible.length} />
           {state.events.length === 0 ? (
             <div className="empty-state">
               <p>No Events have been recorded yet.</p>

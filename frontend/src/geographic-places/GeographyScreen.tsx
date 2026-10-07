@@ -1,3 +1,4 @@
+import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import {
@@ -436,7 +437,7 @@ export function GeographyScreen({
       <PageHeader
         title="Geography"
         titleId="geography-title"
-        eyebrow="Geographic reference"
+        eyebrow="Places"
         description="Manage named places and precise collection provenance sites."
         actions={
           mode === "places" ? (
@@ -517,6 +518,9 @@ export function GeographyScreen({
                 <h3 className="sr-only" id="geography-directory-title">
                   Geography directory
                 </h3>
+                {directory.status === "ready" && !initialPlaceId && (
+                  <DirectoryResults count={matches.length} />
+                )}
                 {directory.status === "loading" && (
                   <p className="notice">Loading geography…</p>
                 )}

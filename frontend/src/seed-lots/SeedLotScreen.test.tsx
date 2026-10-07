@@ -1395,3 +1395,134 @@ test("desktop selection offers a compact preview before opening SeedLot detail",
     screen.getByRole("button", { name: "← Back to seed lots" }),
   ).toBeInTheDocument();
 });
+
+test("BULK-001 seed selection is transient, visible-only and reset by search", async () => {
+  mockApi(
+    directoryHandler([lot(), lot({ id: "second", label: "Second packet" })]),
+  );
+  const user = await openSeeds();
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    "2 records",
+  );
+  expect(screen.getByRole("button", { name: "Select" }).parentElement).toBe(
+    screen.getByRole("button", { name: "Saved views" }).parentElement,
+  );
+  expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Select" }));
+  await user.click(screen.getByRole("button", { name: "Select visible" }));
+  expect(screen.getByText("2 selected")).toBeVisible();
+  expect(
+    screen.getByRole("checkbox", { name: /Select Seed Lot.*Blue packet/i }),
+  ).toBeChecked();
+  await user.type(
+    screen.getByRole("searchbox", { name: "Search seed inventory" }),
+    "Blue",
+  );
+  expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    "1 record",
+  );
+  expect(screen.getByRole("button", { name: "Select" })).toBeEnabled();
+});
+
+test("BULK-001 successful move refreshes the directory, clears preview and retains filters", async () => {
+  const target = {
+    ...location,
+    id: "01900000-0000-7000-8000-000000000999",
+    display_path: "Greenhouse → New bench",
+    usage_scopes: ["seed_lots"],
+  };
+  const rows = [
+    lot(),
+    lot({
+      id: "01900000-0000-7000-8000-000000000502",
+      label: "Blue second packet",
+      location_id: target.id,
+      location: { id: target.id, display_path: target.display_path },
+    }),
+  ];
+  let reads = 0;
+  mockApi(
+    directoryHandler(rows, (path, init) => {
+      if (path === "/api/v1/seed-lots" && !init?.method) {
+        reads += 1;
+        return json(rows);
+      }
+      if (path === "/api/v1/locations") return json([target]);
+      if (path === "/api/v1/bulk/location/preview") {
+        const payload = JSON.parse(requestBody(init)) as {
+          records: { kind: string; id: string }[];
+        };
+        expect(payload.records).toEqual(
+          rows.map((row) => ({ kind: "seed_lot", id: row.id })),
+        );
+        return json({
+          target_location_id: target.id,
+          target_location: target.display_path,
+          target_updated_at: target.updated_at,
+          selected_count: 2,
+          move_count: 1,
+          unchanged_count: 1,
+          can_apply: true,
+          rows: rows.map((row, index) => ({
+            kind: "seed_lot",
+            id: row.id,
+            label: row.label,
+            current_location_id: row.location_id,
+            current_location: row.location.display_path,
+            updated_at: row.updated_at,
+            status: index ? "unchanged" : "move",
+            code: null,
+            message: null,
+          })),
+        });
+      }
+      if (path === "/api/v1/bulk/location/apply") {
+        rows[0] = lot({
+          location_id: target.id,
+          location: { id: target.id, display_path: target.display_path },
+        });
+        return json({ moved_count: 1, unchanged_count: 1 });
+      }
+      return undefined;
+    }),
+  );
+  const user = await openSeeds();
+  await user.type(
+    screen.getByRole("searchbox", { name: "Search seed inventory" }),
+    "Blue",
+  );
+  const hash = window.location.hash;
+  await user.click(screen.getByRole("button", { name: "Select" }));
+  await user.click(screen.getByRole("button", { name: "Select visible" }));
+  await user.click(screen.getByRole("button", { name: "Move to location" }));
+  const dialog = screen.getByRole("dialog", { name: "Move to location" });
+  await user.click(
+    await within(dialog).findByRole("combobox", { name: "Target Location" }),
+  );
+  await user.click(
+    within(dialog).getByRole("button", { name: target.display_path }),
+  );
+  await user.click(
+    within(dialog).getByRole("button", { name: "Preview move" }),
+  );
+  await user.click(
+    await within(dialog).findByRole("button", { name: "Apply move (1)" }),
+  );
+  await waitFor(() => {
+    expect(reads).toBeGreaterThan(1);
+  });
+  expect(await screen.findByText("1 moved · 1 already there.")).toBeVisible();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("complementary", { name: "Quick preview" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("searchbox", { name: "Search seed inventory" }),
+  ).toHaveValue("Blue");
+  expect(window.location.hash).toBe(hash);
+  expect(
+    screen.getByRole("button", { name: /Blue packet.*New bench/s }),
+  ).toBeVisible();
+});

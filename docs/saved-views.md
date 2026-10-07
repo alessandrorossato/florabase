@@ -118,6 +118,11 @@ existing data. Downgrade refuses before DDL while any Saved Views remain, follow
 populated-history safety conventions; after explicit deletion it removes only this persistence.
 Database backup/restore naturally includes Saved Views.
 
-Collection productivity v2 remains open. Bulk operations are next, then justified unified
-operational history, then Orders/Purchases. Sharing, favorites, defaults, execution history,
+Collection productivity v2 remains open. BULK-001 operator UAT and independent final verification
+passed. Justified unified operational history follows bulk moves, then Orders/Purchases. Sharing,
+favorites, defaults, execution history,
 notifications, materialized results, browser-local persistence and BOTANY-003 work remain deferred.
+
+## BULK-001 interaction
+
+BULK-001 selection mode, typed selected IDs, target and move preview are transient local interaction state. They never enter a Saved View or URL. Opening any Saved View, including the identical current view, clears selection; changing filters, rendered membership or navigating also clears it. See [bulk operations](bulk-operations.md).

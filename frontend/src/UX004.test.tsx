@@ -108,6 +108,18 @@ function setup(hash = "#/identities", mobile = false) {
       path.endsWith("/geographic-places")
     )
       return Promise.resolve(json([]));
+    if (
+      [
+        "/api/v1/plants",
+        "/api/v1/plant-groups",
+        "/api/v1/seed-lots",
+        "/api/v1/sowings",
+        "/api/v1/suppliers",
+        "/api/v1/locations",
+        "/api/v1/provenance-sites",
+      ].includes(path)
+    )
+      return Promise.resolve(json([]));
     throw new Error(`Unexpected request ${path}`);
   });
   return requested;
@@ -290,6 +302,10 @@ test("Reference stays lazy and exposes one read-first module at a time", async (
   expect(
     screen.getByRole("link", { name: "Add seed lot" }),
   ).toBeInTheDocument();
+  expect(screen.getByRole("link", { name: "Add plant" })).toHaveAttribute(
+    "href",
+    `#/plants?action=create&identity=${identity.id}&kind=plant`,
+  );
   expect(
     requested.some((path) => /profile|external-taxon|occurrence/.test(path)),
   ).toBe(false);
@@ -472,4 +488,40 @@ test("edit validation stays linked to the field and retains contextual help", as
     /without implying.*lineage.*Scientific name cannot be blank/,
   );
   expect(screen.getByRole("button", { name: "Save changes" })).toBeEnabled();
+});
+
+test("Identity Quick Preview Add plant opens the normal direct Plant form with identity prefilled", async () => {
+  setup();
+  const user = userEvent.setup();
+  render(<App />);
+  await user.click(
+    await screen.findByRole("button", { name: /Abelmoschus.*Okra Burgundy/ }),
+  );
+  const action = within(
+    screen.getByRole("complementary", { name: "Quick preview" }),
+  ).getByRole("link", { name: "Add plant" });
+  expect(action).toHaveAttribute(
+    "href",
+    `#/plants?action=create&identity=${identity.id}&kind=plant`,
+  );
+  await user.click(action);
+  expect(
+    await screen.findByRole("combobox", { name: /Botanical identity/ }),
+  ).toHaveValue(identity.display_label);
+  expect(window.location.hash).toBe(
+    `#/plants?action=create&identity=${identity.id}&kind=plant`,
+  );
+  expect(
+    screen.queryByRole("button", { name: "Record Plant group" }),
+  ).not.toBeInTheDocument();
+  expect(
+    vi
+      .mocked(fetch)
+      .mock.calls.filter(
+        ([input]) =>
+          typeof input === "string" &&
+          (input === "/api/v1/plants" || input === "/api/v1/plant-groups"),
+      )
+      .every(([, init]) => !init?.method || init.method === "GET"),
+  ).toBe(true);
 });

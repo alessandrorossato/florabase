@@ -23,6 +23,7 @@ from florabase.locations.service import (
     display_path,
     list_locations,
     require_location_for_scope,
+    validate_location_scope,
 )
 from florabase.seed_lots.model import SeedLot
 from florabase.seed_lots.schemas import PartialDate
@@ -114,6 +115,14 @@ def create_sowing(database: Session, payload: SowingCreate) -> Sowing:
     return sowing
 
 
+def assign_location(sowing: Sowing, location: Location | None) -> None:
+    """Assign a scope-validated Location without altering origin, quantity or lifecycle."""
+    if location is not None:
+        validate_location_scope(location, LocationUsageScope.SOWINGS)
+    sowing.location_id = location.id if location else None
+    sowing.updated_at = datetime.now(UTC)
+
+
 def update_sowing(database: Session, sowing: Sowing, payload: SowingUpdate) -> Sowing:
     lock_lineage_writes(database)
     database.refresh(sowing, with_for_update=True)
@@ -153,7 +162,7 @@ def update_sowing(database: Session, sowing: Sowing, payload: SowingUpdate) -> S
                 "observations_exceed_seeds",
                 "Observed germinations exceed the new exact seed count sown",
             )
-    _require_references(
+    _, location = _require_references(
         database,
         payload,
         allow_historical=sowing.lifecycle == "reversed"
@@ -166,8 +175,9 @@ def update_sowing(database: Session, sowing: Sowing, payload: SowingUpdate) -> S
     except LineageCycleError as error:
         raise SowingDomainConflictError(error.code, error.message) from error
     for field, value in _write_values(payload).items():
-        setattr(sowing, field, value)
-    sowing.updated_at = datetime.now(UTC)
+        if field != "location_id":
+            setattr(sowing, field, value)
+    assign_location(sowing, location)
     database.flush()
     return sowing
 

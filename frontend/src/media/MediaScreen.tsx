@@ -1,3 +1,4 @@
+import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { useEffect, useId, useState, type SyntheticEvent } from "react";
@@ -291,7 +292,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
         </>
       ) : (
         <WorkspaceIntro
-          eyebrow="Shared media library"
+          eyebrow="Collection"
           title="Media"
           titleId={headingId}
           description="One image, many records. Unlinked assets stay available for future use."
@@ -638,6 +639,10 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
           {page && (
             <div className="media-directory-layout">
               <div className="media-directory-results">
+                <DirectoryResults
+                  count={page.items.length}
+                  total={page.total}
+                />
                 <div className="media-grid" aria-label="Media assets">
                   {page.items.map((asset) => (
                     <button

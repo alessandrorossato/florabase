@@ -1165,6 +1165,295 @@
         "title": "BotanicalProfileResponse",
         "type": "object"
       },
+      "BulkLocationApplyRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_target_updated_at": {
+            "format": "date-time",
+            "title": "Expected Target Updated At",
+            "type": "string"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/BulkPrecondition"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Records",
+            "type": "array"
+          },
+          "target_location_id": {
+            "format": "uuid",
+            "title": "Target Location Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "records",
+          "target_location_id",
+          "expected_target_updated_at"
+        ],
+        "title": "BulkLocationApplyRequest",
+        "type": "object"
+      },
+      "BulkLocationPreview": {
+        "properties": {
+          "can_apply": {
+            "title": "Can Apply",
+            "type": "boolean"
+          },
+          "move_count": {
+            "title": "Move Count",
+            "type": "integer"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/BulkLocationRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "selected_count": {
+            "title": "Selected Count",
+            "type": "integer"
+          },
+          "target_location": {
+            "title": "Target Location",
+            "type": "string"
+          },
+          "target_location_id": {
+            "format": "uuid",
+            "title": "Target Location Id",
+            "type": "string"
+          },
+          "target_updated_at": {
+            "format": "date-time",
+            "title": "Target Updated At",
+            "type": "string"
+          },
+          "unchanged_count": {
+            "title": "Unchanged Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "target_location_id",
+          "target_location",
+          "target_updated_at",
+          "selected_count",
+          "move_count",
+          "unchanged_count",
+          "can_apply",
+          "rows"
+        ],
+        "title": "BulkLocationPreview",
+        "type": "object"
+      },
+      "BulkLocationPreviewRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/BulkReference"
+            },
+            "maxItems": 100,
+            "minItems": 1,
+            "title": "Records",
+            "type": "array"
+          },
+          "target_location_id": {
+            "format": "uuid",
+            "title": "Target Location Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "records",
+          "target_location_id"
+        ],
+        "title": "BulkLocationPreviewRequest",
+        "type": "object"
+      },
+      "BulkLocationResult": {
+        "properties": {
+          "moved_count": {
+            "title": "Moved Count",
+            "type": "integer"
+          },
+          "unchanged_count": {
+            "title": "Unchanged Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "moved_count",
+          "unchanged_count"
+        ],
+        "title": "BulkLocationResult",
+        "type": "object"
+      },
+      "BulkLocationRow": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "current_location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Location"
+          },
+          "current_location_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Current Location Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "seed_lot",
+              "sowing",
+              "plant",
+              "plant_group",
+              "harvest_inventory"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "status": {
+            "enum": [
+              "move",
+              "unchanged",
+              "conflict"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "label",
+          "current_location_id",
+          "current_location",
+          "updated_at",
+          "status"
+        ],
+        "title": "BulkLocationRow",
+        "type": "object"
+      },
+      "BulkPrecondition": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_updated_at": {
+            "format": "date-time",
+            "title": "Expected Updated At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "seed_lot",
+              "sowing",
+              "plant",
+              "plant_group",
+              "harvest_inventory"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "expected_updated_at"
+        ],
+        "title": "BulkPrecondition",
+        "type": "object"
+      },
+      "BulkReference": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "seed_lot",
+              "sowing",
+              "plant",
+              "plant_group",
+              "harvest_inventory"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id"
+        ],
+        "title": "BulkReference",
+        "type": "object"
+      },
       "ConversionCreate": {
         "additionalProperties": false,
         "properties": {
@@ -12871,6 +13160,124 @@
         "summary": "Remove Native Range",
         "tags": [
           "botanical profiles"
+        ]
+      }
+    },
+    "/api/v1/bulk/location/apply": {
+      "post": {
+        "operationId": "applyBulkLocation",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkLocationApplyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkLocationResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apply",
+        "tags": [
+          "bulk location"
+        ]
+      }
+    },
+    "/api/v1/bulk/location/preview": {
+      "post": {
+        "operationId": "previewBulkLocation",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkLocationPreviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkLocationPreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Preview",
+        "tags": [
+          "bulk location"
         ]
       }
     },

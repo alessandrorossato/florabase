@@ -3221,3 +3221,136 @@ test.each([1440, 390])(
     ).toBeVisible();
   },
 );
+
+test("BULK-001 sidebar macroareas and mobile More retain every destination and route", async () => {
+  window.history.replaceState(null, "", "#/dashboard");
+  mockFetch((path) => {
+    if (path.endsWith("/session")) return jsonResponse(session);
+    if (path.endsWith("/csrf")) return jsonResponse({ csrf_token: "csrf" });
+    if (path.endsWith("/health")) return jsonResponse({ status: "ok" });
+    if (path.startsWith("/api/v1/media-assets?"))
+      return jsonResponse({ items: [], total: 0, limit: 24, offset: 0 });
+    if (path === "/api/v1/provenance-sites/map")
+      return jsonResponse({
+        sites: [],
+        coordinate_less_sites: 0,
+        total_provenance_sites: 0,
+      });
+    if (path === "/api/v1/dashboard")
+      return jsonResponse({
+        counts: {
+          active_seed_lots: 0,
+          active_sowings: 0,
+          active_plants: 0,
+          active_plant_groups: 0,
+        },
+        recent_events: [],
+      });
+    return jsonResponse([]);
+  });
+  const user = userEvent.setup();
+  render(<App />);
+  const sidebar = await screen.findByRole("complementary", {
+    name: "Application sidebar",
+  });
+  const nav = within(sidebar).getByRole("navigation", {
+    name: "Primary navigation",
+  });
+  expect(
+    within(nav)
+      .getAllByRole("region")
+      .map((group) => group.getAttribute("aria-label")),
+  ).toEqual([
+    "Overview",
+    "Collection",
+    "Activity",
+    "Places",
+    "Reference",
+    "Tools",
+  ]);
+  const destinations = [
+    "Dashboard",
+    "Seeds",
+    "Sowings",
+    "Plants",
+    "Harvests",
+    "Media",
+    "Events",
+    "Locations",
+    "Geography",
+    "Provenance map",
+    "Botanical identities",
+    "Suppliers",
+    "Import / Export",
+    "Labels",
+  ];
+  expect(
+    within(nav)
+      .getAllByRole("button")
+      .map((button) => button.textContent),
+  ).toEqual(destinations);
+  expect(
+    within(nav).getByRole("button", { name: "Dashboard" }),
+  ).toHaveAttribute("aria-current", "page");
+  await user.click(
+    within(
+      screen.getByRole("navigation", { name: "Mobile primary navigation" }),
+    ).getByRole("button", { name: "More" }),
+  );
+  expect(
+    within(screen.getByRole("navigation", { name: "More navigation" }))
+      .getAllByRole("button")
+      .map((button) => button.textContent),
+  ).toEqual(destinations.slice(4));
+  const routes = [
+    "dashboard",
+    "seeds",
+    "sowings",
+    "plants",
+    "harvests",
+    "media",
+    "events",
+    "locations",
+    "geography",
+    "map",
+    "identities",
+    "suppliers",
+    "import-export",
+    "labels",
+  ];
+  const categories = [
+    "Overview",
+    "Collection",
+    "Collection",
+    "Collection",
+    "Collection",
+    "Collection",
+    "Activity",
+    "Places",
+    "Places",
+    "Places",
+    "Reference",
+    "Reference",
+    "Tools",
+    "Tools",
+  ];
+  for (const [index, destination] of destinations.entries()) {
+    await user.click(within(nav).getByRole("button", { name: destination }));
+    await waitFor(() => {
+      expect(window.location.hash).toBe(`#/${routes[index]}`);
+    });
+    expect(
+      within(nav).getByRole("button", { name: destination }),
+    ).toHaveAttribute("aria-current", "page");
+    const heading = await screen.findByRole("heading", {
+      name: destination,
+      level: 2,
+    });
+    expect(
+      heading.closest("header")?.querySelector(".eyebrow"),
+    ).toHaveTextContent(categories[index]);
+    expect(
+      screen.getByRole("heading", { name: "Florabase", level: 1 }),
+    ).toBeVisible();
+  }
+});

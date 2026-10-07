@@ -1,3 +1,4 @@
+import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import {
@@ -620,7 +621,7 @@ export function LocationScreen({
         <PageHeader
           title="Locations"
           titleId="locations-title"
-          eyebrow="Collection organization"
+          eyebrow="Places"
           description="Manage where seeds, sowings, plants, groups, and harvested material are kept."
           actions={
             <button
@@ -678,6 +679,9 @@ export function LocationScreen({
                   <option value="harvest_inventory">Stored material</option>
                 </select>
               </div>
+              {directory.status === "ready" && (
+                <DirectoryResults count={matching.length} />
+              )}
               {directory.status === "loading" && (
                 <p aria-live="polite" className="notice">
                   Loading locations…

@@ -1,3 +1,4 @@
+import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { FormSections } from "../components/FormSections";
@@ -235,6 +236,12 @@ function IdentityDetails({
         href={`#/seeds?action=create&identity=${identity.id}`}
       >
         Add seed lot
+      </a>
+      <a
+        className="button-link button--secondary"
+        href={`#/plants?action=create&identity=${identity.id}&kind=plant`}
+      >
+        Add plant
       </a>
       <button ref={editTrigger} type="button" onClick={openIdentityEditor}>
         Edit botanical identity
@@ -1327,7 +1334,7 @@ export function BotanicalIdentityScreen({
       <PageHeader
         title="Botanical identities"
         titleId="botanical-identities-title"
-        eyebrow="Botanical reference"
+        eyebrow="Reference"
         description="Manage the botanical identities that connect collection records and reference data."
         actions={
           <button
@@ -1379,6 +1386,9 @@ export function BotanicalIdentityScreen({
                 directory.identities.length === 0
               }
             />
+            {directory.status === "ready" && (
+              <DirectoryResults count={filteredIdentities.length} />
+            )}
             {directory.status === "loading" && (
               <p aria-live="polite" className="notice">
                 Loading botanical identities…
@@ -1662,6 +1672,12 @@ export function BotanicalIdentityScreen({
                     href={`#/seeds?action=create&identity=${selected.id}`}
                   >
                     Add seed lot
+                  </a>
+                  <a
+                    className="button-link button--secondary"
+                    href={`#/plants?action=create&identity=${selected.id}&kind=plant`}
+                  >
+                    Add plant
                   </a>
                 </div>
               </div>

@@ -1,5 +1,76 @@
 # Engineering progress
 
+## 2026-10-07 — BULK-001 independent final verification
+
+- Operator UAT passed for the scoped multi-select and atomic Location moves. The reviewed scope
+  includes five typed active collection kinds, transient selection, authoritative per-kind domain
+  effects, current server preview, stale-state refusal, keyboard-accessible controls, responsive
+  navigation and truthful directory counts. No schema migration is part of the increment.
+- Independent review found no production or workflow defect across the full diff, domain effects,
+  selection/Saved Views boundaries, API/auth/CSRF, concurrency and atomicity, query bounds,
+  accessibility, navigation, result counts, generated contracts and documentation.
+- `make feature-verify` passed: backend **735 passed** at **90.54%** coverage; frontend **462 passed
+  across 46 files**; PostgreSQL integration **582 passed**; strict mypy (**274 files**), strict
+  TypeScript, Ruff, Prettier, zero-warning ESLint, generated API drift, production builds, no-migration
+  cycle, whitespace and working-tree receipt all passed. The feature graph validates **92 features**.
+- The gate's initial run found a stale Sowing test stub returning `None` after the reference helper
+  gained a tuple return for Location assignment. Only that test double was corrected; the focused
+  lineage suite passed (**4 tests**) and the full gate then passed. BULK-001 is now `verified` in the
+  graph. Documentation changes require a final receipt refresh before commit.
+
+## 2026-10-07 — BULK-001 operator UAT refinements
+
+- Moved Select into the Saved Views utility row and made active selection compact, with one primary
+  Move action and lightweight Select visible / Clear selection / Done controls. Enlarged the typed
+  Location chooser/dialog; safe opt-in backdrop/Escape dismissal restores Move focus, while pending
+  Apply remains guarded. Target changes still invalidate preview and disable Apply.
+- Added Botanical Identity Add plant shortcuts in Quick Preview and detail, reusing normal identity-
+  prefilled Plant creation. Added shared quiet result metadata across Collection, Places and Reference
+  lists using existing filtered responses and authoritative Media totals; no count queries/domain
+  changes/migration. Existing map companion lists count matching sites; bare maps/details/forms do not.
+- Focused frontend checks: **266 tests in 17 files passed**. Whole-frontend Prettier, zero-warning
+  ESLint, strict TypeScript and production Vite build passed; `git diff --check` clean. Backend
+  semantics are unchanged from the implementation evidence; no canonical gate was run.
+- Browser review covered **1440×844, 1024×844 and 390×844**: utility/selection controls, searchable
+  chooser, preview invalidation, backdrop/inside clicks, keyboard focus/trap/return, truthful list
+  counts and Identity action/navigation/prefill. No horizontal overflow or new persistent UAT record
+  edits. Supported UAT restart preserved fixture v1, 31 baseline records and prior operator edits.
+- Operator visual acceptance passed; Luna is now performing independent final review and canonical
+  verification. Everything remains unstaged and uncommitted until the verified-tree delivery phase.
+  Details and count-source audit: [BULK-001 handoff](bulk-001-handoff.md).
+
+## 2026-10-06 — BULK-001 implementation and UAT handoff
+
+- Added bounded explicit typed selection and server Preview → Apply Location moves for active
+  SeedLots, Sowings, Plants, PlantGroups and managed Stored material. Reuses owning assignment
+  primitives and per-record Movement Events; revalidates all record/target versions under locks,
+  including no-ops, and rolls back the entire batch on conflict. No migration, selection persistence,
+  query expansion, generic bulk framework or additional bulk action.
+- Selection clears on filter/search, directory/task navigation and identical Saved View reopening.
+  Accessible toolbar/dialog supports keyboard focus, no-op/conflict feedback, directory refresh and
+  filter retention. Historical Harvest remains excluded. Approved macroareas and page eyebrows
+  preserve routes, titles, descriptions and mobile destination access.
+- Focused checks: **172 backend unit/domain tests**, **195 real PostgreSQL integration tests**,
+  **242 frontend tests in 10 files**. Ruff, strict mypy (**274 files**), Prettier, zero-warning ESLint,
+  strict TypeScript, both generated API drift checks, frontend/backend production builds and the
+  **92-feature graph** and `git diff --check` passed. PostgreSQL tests cover atomic rollback, stale record/target changes,
+  all five kinds and 100-row query bounds. No verification threshold was weakened.
+- UAT Preview ownership moved from c5e8 through the supported guarded retirement and b647 startup,
+  seed/status workflow. Fixture v1/code and 31 baseline records are preserved. Normal synthetic UAT
+  exercises added moves, one explicitly unknown-quantity tracked inventory and a filtered Saved View;
+  DEV/Stable Preview/Feature Review/production are untouched. Services are healthy at
+  `http://localhost:15174` with `preview / preview`.
+- Browser review covered **1440×844, 1024×844 and 390×844**, supported selection/preview surfaces,
+  keyboard focus/trap/Escape, no-op handling, wrapping/bounds, Saved View reset and Movement history.
+  Two-tab stale testing encountered a CSRF refusal before mutation; domain stale/atomic safety is
+  proven in PostgreSQL, while that browser scenario remains for operator review. Automatic approval
+  review rejected an extra direct fixture mutation; it was not executed or bypassed.
+- At the time of this implementation handoff, BULK-001 remained `implemented` pending operator UAT
+  and independent review/canonical gate.
+  Unified operational history remains next, Orders/Purchases later, BOTANY-003 unchanged and blocked;
+  SCHEDULE-001 is only a later candidate. Source is unstaged/uncommitted; no `feature-verify`, delivery,
+  merge, finish or DEV upgrade. See [the handoff](bulk-001-handoff.md).
+
 ## 2026-10-06 — VIEW-001 independent review and final verification
 
 - Independent review covered owner isolation, typed/canonical state contracts, stale references and

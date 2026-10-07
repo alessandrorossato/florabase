@@ -166,9 +166,7 @@ test("synchronizes accessible marker and list selection and exposes navigation a
     longitude: "98.921600",
   };
   renderMap(dataset({ total_provenance_sites: 2, sites: [site, second] }));
-  expect(
-    await screen.findByText("2 mapped provenance sites"),
-  ).toBeInTheDocument();
+  expect(await screen.findByText("2 records")).toBeInTheDocument();
   const user = userEvent.setup();
   const companion = screen.getByRole("complementary", {
     name: "Mapped provenance sites",
@@ -225,7 +223,7 @@ test("synchronizes accessible marker and list selection and exposes navigation a
 test("filters marker details and reports a filter-empty state", async () => {
   renderMap(dataset());
   const user = userEvent.setup();
-  await screen.findByText("1 mapped provenance sites");
+  await screen.findByText("1 record");
   await user.click(
     screen.getByRole("button", {
       name: /Monte Pellegrino collection ridge.*3 linked/,
@@ -245,10 +243,9 @@ test("filters marker details and reports a filter-empty state", async () => {
       name: "No provenance sites match the current filters",
     }),
   ).toBeInTheDocument();
+  expect(screen.getByText("0 records")).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Clear filters" }));
-  expect(
-    await screen.findByText("1 mapped provenance sites"),
-  ).toBeInTheDocument();
+  expect(await screen.findByText("1 record")).toBeInTheDocument();
 });
 
 test("distinguishes no-site and no-coordinate empty states", async () => {

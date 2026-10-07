@@ -5,10 +5,14 @@ export function TaskDialog({
   title,
   onClose,
   children,
+  className,
+  dismissOnBackdrop = false,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  className?: string;
+  dismissOnBackdrop?: boolean;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
@@ -35,8 +39,19 @@ export function TaskDialog({
   return (
     <dialog
       aria-label={title}
-      className="task-dialog"
+      className={`task-dialog${className ? ` ${className}` : ""}`}
       ref={dialog}
+      onClick={(event) => {
+        if (!dismissOnBackdrop || event.target !== event.currentTarget) return;
+        const bounds = event.currentTarget.getBoundingClientRect();
+        if (
+          event.clientX < bounds.left ||
+          event.clientX > bounds.right ||
+          event.clientY < bounds.top ||
+          event.clientY > bounds.bottom
+        )
+          onClose();
+      }}
       onCancel={(event) => {
         event.preventDefault();
         onClose();

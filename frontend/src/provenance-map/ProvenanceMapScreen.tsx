@@ -1,3 +1,4 @@
+import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import { useEffect, useMemo, useState } from "react";
@@ -163,7 +164,7 @@ export function ProvenanceMapScreen() {
       aria-labelledby="provenance-map-title"
     >
       <WorkspaceIntro
-        eyebrow="Collection origins"
+        eyebrow="Places"
         title="Provenance map"
         titleId="provenance-map-title"
         description="Explore precise provenance sites linked to collection records."
@@ -260,6 +261,7 @@ export function ProvenanceMapScreen() {
           </fieldset>
           {visibleSites.length === 0 ? (
             <div className="empty-state" aria-live="polite">
+              <DirectoryResults count={0} />
               <h3>No provenance sites match the current filters</h3>
               <button
                 type="button"
@@ -290,8 +292,9 @@ export function ProvenanceMapScreen() {
                   className="map-companion"
                   aria-label="Mapped provenance sites"
                 >
-                  <h3>{visibleSites.length} mapped provenance sites</h3>
+                  <h3>Mapped provenance sites</h3>
                   <p>Select a site to inspect directly linked records.</p>
+                  <DirectoryResults count={visibleSites.length} />
                   <ul className="map-site-list">
                     {visibleSites.map((site) => (
                       <li key={site.id}>

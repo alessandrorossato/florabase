@@ -143,3 +143,7 @@ used_for_propagation disposition stays immutable; typed conversion history and c
 the result. Guarded Undo Seed lot creation may restore before-state and retain a reversed lot,
 without exposing general disposition reversal. A source correction counter protects against
 intervening stock corrections. See [conversion contract](harvest-seed-conversion.md).
+
+## BULK-001 interaction
+
+BULK-001 supports active managed Stored material in its directory only. Location-only moves reuse the correction assignment primitive and owner-first locks, preserve balance/state/dispositions and correction_version, and never change the source Harvest or Plant. Depleted stock and historical Harvest occurrences are excluded. See [bulk operations](bulk-operations.md).

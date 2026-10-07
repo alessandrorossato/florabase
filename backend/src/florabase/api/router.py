@@ -5,6 +5,7 @@ from florabase.attachments.api import router as attachments_router
 from florabase.auth.api import router as auth_router
 from florabase.botanical_identities.api import router as botanical_identities_router
 from florabase.botanical_profiles.api import router as botanical_profiles_router
+from florabase.bulk.api import router as bulk_router
 from florabase.collection_photos.api import router as collection_photos_router
 from florabase.collection_views.api import router as collection_views_router
 from florabase.events.api import events_router, plant_groups_events_router, plants_events_router
@@ -55,3 +56,5 @@ api_router.include_router(events_router)
 api_router.include_router(propagation_router)
 
 api_router.include_router(saved_views_router)
+
+api_router.include_router(bulk_router)

@@ -339,7 +339,7 @@ it("directory defaults to active and retained depleted state remains reachable",
     { ...inventory, id: "depleted", state: "depleted", quantity: null },
   ]);
   wrap(<StoredMaterialDirectory />);
-  expect(await screen.findByText("1 tracked material line")).toBeVisible();
+  expect(await screen.findByText("1 record")).toBeVisible();
   expect(
     screen.getByRole("link", { name: /Open source Harvest/ }),
   ).toHaveAttribute("href", "#/harvests/harvest");
@@ -401,7 +401,7 @@ it("filters stored material by exact source identity with state, material, Locat
   ]);
   const user = userEvent.setup();
   wrap(<StoredMaterialDirectory />);
-  await screen.findByText("2 tracked material lines");
+  await screen.findByText("2 records");
   await user.type(
     screen.getByRole("combobox", { name: "Botanical identity" }),
     "Coffea",
@@ -410,7 +410,7 @@ it("filters stored material by exact source identity with state, material, Locat
   expect(
     screen.queryByText("Coffea arabica misleading title"),
   ).not.toBeInTheDocument();
-  expect(screen.getByText("1 tracked material line")).toBeVisible();
+  expect(screen.getByText("1 record")).toBeVisible();
   await user.selectOptions(screen.getByLabelText("Material"), "fruit");
   expect(
     screen.getByText("No stored material matches these filters."),
@@ -426,10 +426,31 @@ it("filters stored material by exact source identity with state, material, Locat
   ).toBeVisible();
   await user.clear(screen.getByLabelText("Search stored material"));
   await user.selectOptions(screen.getByLabelText("State"), "");
-  expect(screen.getByText("2 tracked material lines")).toBeVisible();
+  expect(screen.getByText("2 records")).toBeVisible();
   await user.click(
     screen.getByRole("button", { name: "Clear botanical identity filter" }),
   );
-  expect(screen.getByText("3 tracked material lines")).toBeVisible();
+  expect(screen.getByText("3 records")).toBeVisible();
   expect(api.inventoryList).toHaveBeenCalledTimes(1);
+});
+
+it("BULK-001 selects only active Stored material and clears on search", async () => {
+  vi.mocked(api.inventoryList).mockResolvedValue([
+    inventory,
+    { ...inventory, id: "depleted", state: "depleted", quantity: null },
+  ]);
+  wrap(<StoredMaterialDirectory />);
+  const user = userEvent.setup();
+  await screen.findByText("1 record");
+  await user.click(screen.getByRole("button", { name: "Select" }));
+  await user.click(screen.getByRole("button", { name: "Select visible" }));
+  expect(screen.getByText("1 selected")).toBeVisible();
+  expect(
+    screen.getByRole("checkbox", { name: /Select Stored seed/ }),
+  ).toBeChecked();
+  await user.type(
+    screen.getByRole("searchbox", { name: /Search stored material/i }),
+    "Coffee",
+  );
+  expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
 });

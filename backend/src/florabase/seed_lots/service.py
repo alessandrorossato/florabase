@@ -21,6 +21,7 @@ from florabase.locations.service import (
     LocationNotFoundError,
     list_locations,
     require_location_for_scope,
+    validate_location_scope,
 )
 from florabase.locations.service import display_path as location_display_path
 from florabase.plants.model import Plant, PlantGroup
@@ -190,6 +191,14 @@ def create_seed_lot(database: Session, payload: SeedLotCreate) -> SeedLot:
     return seed_lot
 
 
+def assign_location(seed_lot: SeedLot, location: Location | None) -> None:
+    """Assign a scope-validated Location without altering origin, quantity or lifecycle."""
+    if location is not None:
+        validate_location_scope(location, LocationUsageScope.SEED_LOTS)
+    seed_lot.location_id = location.id if location else None
+    seed_lot.updated_at = datetime.now(UTC)
+
+
 def update_seed_lot(database: Session, seed_lot: SeedLot, payload: SeedLotUpdate) -> SeedLot:
     lock_lineage_writes(database)
     database.refresh(seed_lot, with_for_update=True)
@@ -215,13 +224,14 @@ def update_seed_lot(database: Session, seed_lot: SeedLot, payload: SeedLotUpdate
             "Reversed lifecycle is assigned only by conversion reversal and cannot be changed",
         )
     _lock_new_producers(database, payload, seed_lot)
-    _require_references(database, payload)
+    location = _require_references(database, payload)[4]
     validate_producer_assignment(
         database, seed_lot.id, payload.producer_plant_id, payload.producer_plant_group_id
     )
     for field, value in _write_values(payload).items():
-        setattr(seed_lot, field, value)
-    seed_lot.updated_at = datetime.now(UTC)
+        if field != "location_id":
+            setattr(seed_lot, field, value)
+    assign_location(seed_lot, location)
     database.flush()
     return seed_lot
 
