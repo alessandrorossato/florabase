@@ -159,12 +159,16 @@ Before seeding, host guards check source/context, project, containers, origin, n
 mounts and Docker ownership. Runtime guards also check development cookie policy, UAT mode,
 DB URL/user, a validated resource marker and `current_database()/current_user`.
 
-Fixture version 2 is a small basil/lavender/aloe collection with Suppliers, a Location hierarchy,
+Fixture version 3 is a small basil/lavender/aloe collection with Suppliers, a Location hierarchy,
 synthetic provenance, varied SeedLots, active/historical Sowings, direct/derived Plants, a PlantGroup,
 observations, a Harvest and shared local/primary/external media. ORDER-001 adds an exact-date EUR
 purchase with two separate basil packets and a month-only purchase with unknown Supplier/price. Local PNG content is generated through
 the normal upload service. External `example.invalid` metadata requires no fetch and deliberately
-exercises the remote-image failure state. No provider enrichment is claimed.
+exercises the remote-image failure state. EXPLORE-001 adds a Historical-only exhausted radish packet,
+a reference-only Viola identity, and an offline-confirmed basil taxon link (`48GBK`) verified through
+the existing CoL XR provider on 2026-10-08. Lavender is Current non-living; basil/aloe are Living.
+The snapshot is taxonomy metadata only: seeding makes no provider request and never fabricates
+occurrence evidence or profile enrichment.
 
 The seed manifest lives outside production domain models in the UAT media volume and records service
 created UUIDv7 identities. Repeating seed validates existing identities and binary integrity, leaves

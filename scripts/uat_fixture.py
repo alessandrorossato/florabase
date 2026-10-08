@@ -1,4 +1,4 @@
-"""PREVIEW-001 fixture v2. Mounted explicitly by the guarded host UAT workflow only."""
+"""PREVIEW-001 fixture v3. Mounted explicitly by the guarded host UAT workflow only."""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from typing import Any, TypeVar, cast
 from urllib.parse import urlsplit
 from uuid import UUID
 
+import httpx
 from fastapi import UploadFile
 from PIL import Image, ImageDraw
 from sqlalchemy import select, text
@@ -41,6 +42,9 @@ from florabase.db.session import get_engine
 from florabase.events import service as events
 from florabase.events.model import Event
 from florabase.events.schemas import EventCreate
+from florabase.external_botany.model import ExternalTaxonLink
+from florabase.external_botany.provider import GbifBotanicalProvider
+from florabase.external_botany.service import confirm_link
 from florabase.geographic_places import service as places
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.schemas import GeographicPlaceCreate
@@ -71,9 +75,10 @@ from florabase.suppliers import service as suppliers
 from florabase.suppliers.model import Supplier
 from florabase.suppliers.schemas import SupplierCreate
 
-VERSION = 2
+VERSION = 3
 NOTE = "Synthetic UAT Preview data; no real collection or provenance claims."
 MODELS: dict[str, type[Base]] = {
+    "external_taxon": ExternalTaxonLink,
     "owner": User,
     "identity": BotanicalIdentity,
     "supplier": Supplier,
@@ -179,6 +184,10 @@ def validate_manifest(database: Session, root: Path, manifest: dict[str, Any]) -
         "identity:Ocimum basilicum",
         "identity:Lavandula angustifolia",
         "identity:Aloe vera",
+        "identity:Raphanus sativus",
+        "identity:Viola tricolor",
+        "seed:historical",
+        "external_taxon:basil",
         "supplier:nursery",
         "supplier:exchange",
         "order:exact",
@@ -293,6 +302,83 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
             ("Aloe vera", "Aloe"),
         ]
     ]
+    # Exact CoL XR usage verified through the existing provider on 2026-10-08.
+    # Offline confirmation keeps synthetic seeding network independent.
+    # Only taxonomy/link metadata is seeded; occurrence evidence is never fabricated.
+    basil_snapshot = {
+        "usage": {
+            "key": "48GBK",
+            "name": "Ocimum basilicum L.",
+            "canonicalName": "Ocimum basilicum",
+            "authorship": "L.",
+            "rank": "SPECIES",
+            "status": "ACCEPTED",
+        },
+        "classification": [
+            {"name": "Plantae", "rank": "KINGDOM"},
+            {"name": "Lamiaceae", "rank": "FAMILY"},
+            {"name": "Ocimum", "rank": "GENUS"},
+        ],
+        "diagnostics": {"matchType": "EXACT", "confidence": 98},
+    }
+
+    def offline_taxon(request: httpx.Request) -> httpx.Response:
+        if (
+            request.url.host != "api.gbif.org"
+            or request.url.path != "/v2/species/match"
+            or request.url.params.get("scientificName") != "Ocimum basilicum L."
+        ):
+            raise FixtureError("Unexpected synthetic taxon request")
+        return httpx.Response(200, json=basil_snapshot)
+
+    remember(
+        "external_taxon:basil",
+        asyncio.run(
+            confirm_link(
+                database,
+                GbifBotanicalProvider(get_settings(), transport=httpx.MockTransport(offline_taxon)),
+                identity[0].id,
+                "48GBK",
+                "Ocimum basilicum L.",
+                86400,
+            )
+        ),
+    )
+    historical = remember(
+        "identity:Raphanus sativus",
+        identities.create_botanical_identity(
+            database,
+            BotanicalIdentityCreate(
+                scientific_name="Raphanus sativus",
+                cultivar_name="Preview long cultivar for responsive historical collection review",
+                common_name="Preview — Historical radish",
+            ),
+        ),
+    )
+    remember(
+        "seed:historical",
+        seeds.create_seed_lot(
+            database,
+            SeedLotCreate.model_validate(
+                {
+                    "botanical_identity_id": historical.id,
+                    "label": "Preview — Exhausted radish packet",
+                    "lifecycle": "exhausted",
+                    "source_kind": "unknown",
+                    "notes": NOTE,
+                }
+            ),
+        ),
+    )
+    remember(
+        "identity:Viola tricolor",
+        identities.create_botanical_identity(
+            database,
+            BotanicalIdentityCreate(
+                scientific_name="Viola tricolor", common_name="Preview — Reference only"
+            ),
+        ),
+    )
     seller = remember(
         "supplier:nursery",
         suppliers.create_supplier(

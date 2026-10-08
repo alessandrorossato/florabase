@@ -9,6 +9,7 @@ from florabase.bulk.api import router as bulk_router
 from florabase.collection_photos.api import router as collection_photos_router
 from florabase.collection_views.api import router as collection_views_router
 from florabase.events.api import events_router, plant_groups_events_router, plants_events_router
+from florabase.explore.api import router as explore_router
 from florabase.external_botany.api import router as external_botany_router
 from florabase.geographic_places.api import router as geographic_places_router
 from florabase.harvests.api import router as harvests_router
@@ -64,3 +65,5 @@ api_router.include_router(bulk_router)
 api_router.include_router(history_router)
 
 api_router.include_router(orders_router)
+
+api_router.include_router(explore_router)

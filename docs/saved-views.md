@@ -23,6 +23,7 @@ which remains distinct from a reusable view.
 | `stored_material`      | Stored Harvest material     | `q`, `state` (`active`, `depleted`, `all`), `material`, `identity_id`, `location_id`                                                                            | `tab=stored-material` only | `active`, all materials/identities/Locations |
 | `events`               | Global Journal              | `category` (`all`, `observations`, `cultivation`, `status`)                                                                                                     | No                         | `all`                                        |
 | `media`                | Media Library               | `q`, `kind` (`local`, `external`), `association` (`all`, `linked`, `unlinked`), `target` (existing Collection/record types, including Supplier)                 | Exact detail only          | All kinds/associations/targets               |
+| `species_distribution` | Species distribution | `q`, `scope` (`all`, `living`, `current`, `historical`), `identity` (UUID) | Yes, stable workspace selection | All represented, no selection |
 | `botanical_identities` | BotanicalIdentity directory | `q`                                                                                                                                                             | No                         | Empty text                                   |
 | `orders`               | Orders directory            | `q`, `supplier_id`                                                                                                                                              | Yes, ORDER-001             | Empty text, all Suppliers                    |
 | `suppliers`            | Supplier directory          | `q`                                                                                                                                                             | No                         | Empty text                                   |
@@ -31,9 +32,10 @@ which remains distinct from a reusable view.
 | `provenance_map`       | Collection origins          | `q` (existing identity text), `seed_lots`, `plants` (booleans)                                                                                                  | No                         | Both record classes enabled                  |
 
 No targeted directory was artificially excluded. Detail tabs, reference/profile editors, native
-range and external-occurrence views, label sheets, imports, and operation wizards are intentionally
-unsupported: their state is record/context selection, form input, or an explicit external-data
-operation, rather than a reusable directory dataset. No additional filtering capability is introduced.
+range and identity-context external-occurrence views, label sheets, imports, and operation wizards
+are intentionally unsupported: their state is record/context selection, form input, or an explicit external-data
+operation, rather than a reusable directory dataset. Species distribution is a first-class
+collection-aware workspace; its selection is deliberate stable state, while provider-loaded state and map internals are never persisted.
 Geography's stored-coordinate Map mode remains its existing internal site view; collection-provenance
 map controls remain separate. Map center, zoom, selected marker and popup are never saved.
 
@@ -57,10 +59,11 @@ Back/Forward use the ordinary parsers; changing controls updates their ordinary 
 values in a manually entered directory URL fall back to that control's default. Persisted state is
 validated strictly; unknown or invalid saved keys never open as a broader view.
 
-Pagination, loaded count, selection, detail/Quick Preview, creation/editing action, dialog/form state,
-errors, loading, toasts, tree expansion, focus, scrolling and browser history position are excluded.
+Pagination, loaded count, transient directory selection, detail/Quick Preview, creation/editing action,
+dialog/form state, errors, loading, toasts, tree expansion, focus, scrolling and browser history position are excluded.
 Opening starts at offset zero and closes transient selection on the directory. The URL has no
-pagination or selected-record coupling. Manual changes never mutate a stored Saved View.
+pagination; Species distribution includes its deliberate selected-identity workspace state.
+Manual changes never mutate a stored Saved View.
 
 ## Persistence, privacy and compatibility
 
@@ -145,3 +148,14 @@ The global `events` surface is displayed as **Journal** and continues to open `#
 same category values. Sidebar collapsed groups are a separate browser presentation preference,
 never Saved View state. History's empty category set is visibly **All activity**; category chips and
 year clearing preserve the existing History v1 state and page-one opening behavior.
+
+## Species distribution integration
+
+EXPLORE-001 adds `species_distribution`, v1, using stable `q`, `scope` and optional `identity` only.
+Opening (including reopening the same selection) resets directory pagination and external-loaded state.
+Missing/no-longer-represented identities retain their UUID with a clear message; an identity outside
+scope shows an explicit mismatch and no map Load until the operator changes scope or selection.
+Search may exclude the selected row without substituting it. View management remains usable.
+Migration `20261008_0037` extends only the surface constraint; downgrade locks writers and safely
+refuses while distribution views exist, preserving other surfaces on compatible downgrade/re-upgrade.
+See [Species distribution](species-distribution.md).

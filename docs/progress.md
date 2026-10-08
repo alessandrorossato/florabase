@@ -1,5 +1,56 @@
 # Engineering progress
 
+## 2026-10-08 — EXPLORE-001 independent verification
+
+- Independent final review found no production behavior defect. Collection projections, exact provider
+  link use, query/paging bounds, Saved View/URL restore behavior, migration downgrade protection and
+  the no-inference/no-persistence boundaries matched the accepted contract and passed operator UAT.
+- Canonical `make feature-verify` passed on the reviewed tree: **797 backend unit tests** at **90.06%
+  coverage**, **508 frontend tests**, **662 isolated PostgreSQL integration tests**, feature graph
+  (**94 valid**), workflow helpers and static policy, Ruff/Prettier/ESLint, strict mypy (**299 files**),
+  strict TypeScript, API drift, both production image builds, migration cycle
+  `0036 → 0037 → 0036 → 0037`, whitespace checks and a working-tree verification receipt.
+- Disposable PostgreSQL integration and migration-cycle resources were cleaned by their workflows.
+  Existing Alembic path-separator deprecation warnings remain. Operator UAT had already passed; no
+  product code changed after acceptance.
+- EXPLORE-001 is `verified`; this tree is ready for its reviewed local commit, protected delivery and
+  `feature-finish`. Migration `0037` means successful delivery must be followed by `make dev-upgrade`.
+  Next after delivery: separate **EXPLORE-002 — Native ranges**; SCHEDULE-001 remains future and
+  BOTANY-003 remains blocked/unchanged.
+
+## 2026-10-08 — EXPLORE-001 implementation and UAT handoff
+
+- Added authenticated bounded collection-aware identity discovery and Species distribution under
+  Explore. Exact SeedLot/Plant/PlantGroup, Sowing → SeedLot and managed inventory → Harvest → source
+  relationships define All represented, Living, Current and Historical. Historical excludes identities
+  with any current representation; terminal/reversed/reintegrated evidence is retained. Grouped SQL
+  yields unique identities and two SELECTs for totals/page, with literal search and deterministic paging.
+- Reused MAP-002 unchanged for deliberate one-identity occurrence loading, quality policy, density,
+  attribution and privacy. Discovery/selection/Saved Views perform no provider requests. No occurrence
+  persistence, scientific-name rematching, native-range inference or Collection origins change.
+- Added canonical local URL/v1 Saved View state with explicit stale/missing selection and same-view
+  page-one/unloaded-map reset. Migration `20261008_0037` extends only the surface constraint and
+  safely refuses populated downgrade under a writer lock; compatible cycles preserve existing views.
+- Initial focused verification: **115 backend unit**, **35 isolated PostgreSQL**, **130 frontend** tests and
+  **20 guarded fixture** tests passed. Ruff/backend formatting (**339 files**), strict mypy (**299
+  files**), focused workflow-script policy/typing, frontend Prettier/ESLint/strict TypeScript,
+  `make api-generate`, `make api-check`, feature graph (**94 valid**), both production runtime image
+  builds, frontend Vite build and `git diff --check` passed. Existing Alembic path-separator warnings
+  remain. Canonical `make feature-verify` was deliberately not run.
+- After explicit operator approval, retired the old owning UAT with its guarded command and started
+  this worktree's preview. Healthy source/schema `0037`, fixture v3 (**38 records**), repeated seed
+  idempotence and baseline guards verified. Living basil/aloe, Current non-living lavender, Historical
+  long-cultivar radish and excluded reference-only Viola support UAT; basil has the reviewed real
+  CoL XR `48GBK` link, seeded offline through existing confirmation with no fabricated occurrences.
+- Operator UAT passed. Independent route inspection confirmed the four expected identities, one locally
+  occurrence-ready link and reference-only exclusion. A narrow viewport inspection showed vertical flow
+  and wrapping of the long cultivar; automated tests cover explicit map load and error/zero states. No
+  screenshot files saved. Preview:
+  **http://localhost:15174/#/species-distribution**, **preview / preview**.
+- EXPLORE-001 was `implemented` pending the independent review recorded above. EXPLORE-002 Native ranges is the preferred next separate increment;
+  SCHEDULE-001 remains future and BOTANY-003 blocked/unchanged. See [handoff](explore-001-handoff.md)
+  and [contract/lifecycle matrix](species-distribution.md). Primary checkout is clean at the base SHA.
+
 ## 2026-10-08 — ORDER-001 independent final verification
 
 - Independent review found no Order, acquisition reconciliation, migration, security, or navigation

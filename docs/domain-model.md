@@ -76,6 +76,25 @@ GBIF and contributing publishers are attributed, and underlying records retain t
 dataset-specific licences and attribution requirements rather than receiving a Florabase-wide
 licence.
 
+EXPLORE-001 reuses this exact component and provider path from the collection-aware
+[Species distribution workspace](species-distribution.md); discovery remains local until explicit Load.
+
+### Collection-aware Species distribution
+
+EXPLORE-001 derives represented identities from exact SeedLot/Plant/PlantGroup identity links,
+Sowing → SeedLot and managed inventory → Harvest → source relationships. Living means active Plants
+or PlantGroups. Current additionally includes active SeedLots, Sowings and active stored material
+(including unknown remainder). Historical means retained evidence with no Current representation.
+Terminal, reversed and reintegrated records remain evidence only; unmanaged Harvest quantities do
+not confer inventory. Reference-only identities are excluded, and one identity appears once.
+The [full lifecycle matrix and endpoint contract](species-distribution.md) are authoritative.
+
+The authenticated bounded projection is local and never calls a provider. Selection and private
+Saved Views restore local state, while the shared MAP-002 component waits for explicit Load.
+Occurrence-ready means an existing confirmed GBIF link, never a promise of actual records. No
+collection-domain or occurrence persistence is introduced. Native ranges and Collection origins
+keep their independent evidence and semantics.
+
 ### BotanicalProfile
 
 A BotanicalProfile is optional general reference knowledge for exactly one BotanicalIdentity. Its
@@ -500,10 +519,11 @@ Desktop navigation uses these macroareas, in order: **Overview** (Dashboard), **
 Collection origins retains `#/map` and Saved View surface `provenance_map`. Mobile More retains every
 destination. Unknown old Places/Reference collapse preferences are ignored; active groups expand.
 
-Collection origins describes where actual collection material is recorded as coming from. Future
+Collection origins describes where actual collection material is recorded as coming from.
 Species distribution describes where a species is observed/distributed; Native range describes where
 it is considered biologically native/original. Neither is inferred from collection provenance,
-Supplier or current Location. EXPLORE-001/002 remain future candidates.
+Supplier or current Location. EXPLORE-001 adds the separate collection-aware Species distribution
+workspace; EXPLORE-002 Native ranges remains future work.
 
 Activity contains the focused Event Journal and the read-only unified operational History
 projection. SCHEDULE-001 remains a later candidate, without treating recorded facts as planned tasks. Future

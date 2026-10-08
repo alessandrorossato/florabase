@@ -34,7 +34,7 @@ export function OccurrenceMapPanel({
   link,
 }: {
   identityId: string;
-  link: ExternalTaxonLinkResponse | null;
+  link: Pick<ExternalTaxonLinkResponse, "provider" | "external_id"> | null;
 }) {
   const [state, setState] = useState<OccurrenceState>({ status: "idle" });
 

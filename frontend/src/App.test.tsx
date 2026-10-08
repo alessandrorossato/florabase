@@ -3257,6 +3257,14 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
         },
         recent_events: [],
       });
+    if (path.startsWith("/api/v1/explore/species-distribution/identities"))
+      return jsonResponse({
+        items: [],
+        total: 0,
+        occurrence_ready: 0,
+        offset: 0,
+        limit: 50,
+      });
     return jsonResponse([]);
   });
   const user = userEvent.setup();
@@ -3292,6 +3300,7 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "Journal",
     "History",
     "Botanical identities",
+    "Species distribution",
     "Media",
     "Geography",
     "Collection origins",
@@ -3329,6 +3338,7 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "events",
     "history",
     "identities",
+    "species-distribution",
     "media",
     "geography",
     "map",
@@ -3346,6 +3356,7 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "Collection",
     "Activity",
     "Activity",
+    "Explore",
     "Explore",
     "Explore",
     "Explore",

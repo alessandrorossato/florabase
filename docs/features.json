@@ -1124,6 +1124,20 @@
       "status": "implemented"
     },
     {
+      "id": "EXPLORE-001",
+      "category": "explore",
+      "description": "Collection-aware Species distribution workspace over existing MAP-002 occurrence evidence",
+      "acceptance_criteria": [
+        "Authenticated bounded local discovery derives unique represented BotanicalIdentities through exact collection relationships with documented All represented, Living, Current and Historical lifecycle/inventory scopes, literal search, deterministic pagination, truthful local counts and constant query count",
+        "The accessible responsive Explore workspace maps one deliberately selected identity through the existing MAP-002 component and authenticated exact-link provider path, with explicit external loading and readable readiness, missing-link, zero-record, quality, attribution, privacy and failure states",
+        "Canonical URLs and private v1 species_distribution Saved Views restore local scope, search and selected identity at page one while external evidence stays unloaded; stale/missing selection remains explicit and manageable",
+        "No occurrence persistence, name rematching, multi-species aggregation, native-range inference or Collection origins semantic changes are introduced; the only migration extends the SavedView surface constraint with a data-preserving refusal on incompatible downgrade"
+      ],
+      "dependencies": ["MAP-002", "VIEW-001", "SEED-001", "SOWING-001", "PLANT-001", "HARVEST-002"],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
       "id": "MAP-002",
       "category": "map",
       "description": "Botanical distribution and occurrence map",

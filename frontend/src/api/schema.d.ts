@@ -614,6 +614,40 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/explore/species-distribution/identities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List All */
+        get: operations["listRepresentedIdentities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/explore/species-distribution/identities/{identity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read */
+        get: operations["getRepresentedIdentity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/exports/{kind}.csv": {
         parameters: {
             query?: never;
@@ -4930,6 +4964,55 @@ export interface components {
             /** Message */
             message: string;
         };
+        /** RepresentedIdentity */
+        RepresentedIdentity: {
+            /** Common Name */
+            common_name: string | null;
+            /** Cultivar Name */
+            cultivar_name: string | null;
+            /** Current Records */
+            current_records: number;
+            /** Display Label */
+            display_label: string;
+            /** External Taxon Id */
+            external_taxon_id: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Living Records */
+            living_records: number;
+            /** Matches Scope */
+            matches_scope: boolean;
+            /**
+             * Occurrence Eligibility
+             * @enum {string}
+             */
+            occurrence_eligibility: "available" | "not_linked" | "incompatible";
+            /**
+             * Representation
+             * @enum {string}
+             */
+            representation: "living" | "current" | "historical";
+            /** Retained Records */
+            retained_records: number;
+            /** Scientific Name */
+            scientific_name: string;
+        };
+        /** RepresentedIdentityPage */
+        RepresentedIdentityPage: {
+            /** Items */
+            items: components["schemas"]["RepresentedIdentity"][];
+            /** Limit */
+            limit: number;
+            /** Occurrence Ready */
+            occurrence_ready: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /** ResultingPlantSummary */
         ResultingPlantSummary: {
             botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
@@ -5019,7 +5102,7 @@ export interface components {
          * SavedViewSurface
          * @enum {string}
          */
-        SavedViewSurface: "global_search" | "seed_lots" | "sowings" | "plants" | "harvests" | "stored_material" | "events" | "history" | "media" | "botanical_identities" | "suppliers" | "orders" | "locations" | "geography" | "provenance_map";
+        SavedViewSurface: "global_search" | "seed_lots" | "sowings" | "plants" | "harvests" | "stored_material" | "events" | "history" | "media" | "botanical_identities" | "suppliers" | "orders" | "locations" | "geography" | "species_distribution" | "provenance_map";
         /** SavedViewUpdate */
         SavedViewUpdate: {
             /** Name */
@@ -7616,6 +7699,73 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listRepresentedIdentities: {
+        parameters: {
+            query?: {
+                q?: string;
+                scope?: "all" | "living" | "current" | "historical";
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepresentedIdentityPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getRepresentedIdentity: {
+        parameters: {
+            query?: {
+                scope?: "all" | "living" | "current" | "historical";
+            };
+            header?: never;
+            path: {
+                identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RepresentedIdentity"];
+                };
             };
             /** @description Validation Error */
             422: {
