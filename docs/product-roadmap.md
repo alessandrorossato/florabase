@@ -45,11 +45,12 @@ The approved sequence, retaining completed steps for context, is:
 5. **ORDER-001 is verified** after operator UAT and independent canonical verification. Orders /
    Purchases is separate from Supplier, physical SeedLot and biological/geographic provenance. The approved
    Collection/Activity/Explore/Sourcing navigation is included; no History category is added.
-   The next planned product directions are **EXPLORE-001 — Species distribution**, collection-aware
-   occurrence/distribution evidence using a separately reviewed provider contract, and
-   **EXPLORE-002 — Native ranges**, reviewed native/origin regional or polygon knowledge. They are
-   separate future candidates; detailed dependencies/contracts await selection. The operator chooses
-   the exact next increment after Order acceptance. **SCHEDULE-001** remains future Activity work.
+   **EXPLORE-001 — Species distribution is verified** after operator UAT and independent canonical
+   verification: collection-aware All represented / Living / Current / Historical identity discovery,
+   one explicit-load MAP-002 occurrence map and private Saved Views. See [contract](species-distribution.md).
+   After protected delivery, the preferred next product increment is **EXPLORE-002 — Native ranges**:
+   separately reviewed structured native-region/polygon presentation, with no geometry or aggregation
+   policy selected yet. **SCHEDULE-001** remains future Activity work. BOTANY-003 remains blocked.
    Collection origins is the existing material-provenance map, distinct from both botanical concepts.
 6. Daily-use biological/collection improvements: measurements, justified flowering/fruiting work,
    germination analysis, viability/aging, seasonal planning, operational history and later reviewed

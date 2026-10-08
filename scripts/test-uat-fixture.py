@@ -141,3 +141,35 @@ def test_purchase_fixture_preserves_two_physical_lots_and_partial_unknown_knowle
         )
         assert partial.ordered_on_precision == "month" and partial.ordered_on_day is None
         assert partial.total_price is partial.currency is partial.supplier_id is None
+
+
+def test_species_distribution_fixture_scopes_and_truthful_link() -> None:
+    from uuid import UUID
+
+    from florabase.explore.service import list_identities
+    from florabase.external_botany.model import ExternalTaxonLink
+
+    with Session(get_engine()) as database:
+        root = require_identity(get_settings(), database)
+        manifest = read_manifest(root)
+        assert manifest is not None
+        records = manifest["records"]
+        all_ids = {row.id for row in list_identities(database).items}
+        assert UUID(records["identity:Viola tricolor"]) not in all_ids
+        assert len(all_ids) == 4
+        assert {row.scientific_name for row in list_identities(database, scope="living").items} == {
+            "Ocimum basilicum",
+            "Aloe vera",
+        }
+        assert {
+            row.scientific_name for row in list_identities(database, scope="current").items
+        } == {"Ocimum basilicum", "Aloe vera", "Lavandula angustifolia"}
+        assert (
+            list_identities(database, scope="historical").items[0].scientific_name
+            == "Raphanus sativus"
+        )
+        link = database.get(ExternalTaxonLink, UUID(records["external_taxon:basil"]))
+        assert link is not None
+        assert link.external_id == "48GBK"
+        assert link.scientific_name == "Ocimum basilicum L."
+        assert list_identities(database).occurrence_ready == 1

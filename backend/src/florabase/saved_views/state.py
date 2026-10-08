@@ -6,6 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, StrictBool, field_validator
 
+from florabase.explore.schemas import RepresentationScope
 from florabase.harvests.model import MaterialKind
 from florabase.history.schemas import HistoryCategory, HistorySubjectKind
 from florabase.locations.schemas import LocationUsageScope
@@ -28,12 +29,18 @@ class SavedViewSurface(StrEnum):
     ORDERS = "orders"
     LOCATIONS = "locations"
     GEOGRAPHY = "geography"
+    SPECIES_DISTRIBUTION = "species_distribution"
     PROVENANCE_MAP = "provenance_map"
 
 
 class TextState(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
     q: str = Field(default="", max_length=200)
+
+
+class SpeciesDistributionState(TextState):
+    scope: RepresentationScope = "all"
+    identity: UUID | None = None
 
 
 class SeedLotState(TextState):
@@ -102,6 +109,7 @@ class ProvenanceMapState(TextState):
 
 
 STATE_MODELS: dict[SavedViewSurface, type[BaseModel]] = {
+    SavedViewSurface.SPECIES_DISTRIBUTION: SpeciesDistributionState,
     SavedViewSurface.GLOBAL_SEARCH: SearchViewState,
     SavedViewSurface.SEED_LOTS: SeedLotState,
     SavedViewSurface.SOWINGS: SowingState,

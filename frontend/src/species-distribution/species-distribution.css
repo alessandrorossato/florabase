@@ -1,0 +1,51 @@
+.distribution-scopes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block: 1rem;
+}
+.distribution-workspace {
+  display: grid;
+  grid-template-columns: minmax(15rem, 0.7fr) minmax(0, 1.3fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+.distribution-browser,
+.distribution-selected {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.distribution-identities {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+}
+.distribution-choice {
+  width: 100%;
+  display: grid;
+  gap: 0.4rem;
+  text-align: left;
+  white-space: normal;
+}
+.distribution-choice[aria-pressed="true"] {
+  outline: 2px solid currentColor;
+  outline-offset: -2px;
+}
+.distribution-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+}
+.distribution-selected {
+  padding: 1rem;
+  border: 1px solid var(--color-border, #d6dfd3);
+  border-radius: 0.75rem;
+}
+@media (max-width: 850px) {
+  .distribution-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

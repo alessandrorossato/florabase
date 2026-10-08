@@ -687,13 +687,22 @@ function IdentityDetails({
                       />
                     )}
                     {referenceModule === "occurrences" && (
-                      <ExternalBotanicalDataPanel
-                        key={`occurrences-${identity.id}`}
-                        csrfToken={csrfToken}
-                        identityId={identity.id}
-                        scientificName={identity.scientific_name}
-                        view="occurrences"
-                      />
+                      <>
+                        <p>
+                          <a
+                            href={`#/species-distribution?identity=${identity.id}`}
+                          >
+                            View in Species distribution
+                          </a>
+                        </p>
+                        <ExternalBotanicalDataPanel
+                          key={`occurrences-${identity.id}`}
+                          csrfToken={csrfToken}
+                          identityId={identity.id}
+                          scientificName={identity.scientific_name}
+                          view="occurrences"
+                        />
+                      </>
                     )}
                   </div>
                 </section>

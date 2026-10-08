@@ -9049,6 +9049,145 @@
         "title": "ReintegrationReason",
         "type": "object"
       },
+      "RepresentedIdentity": {
+        "properties": {
+          "common_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Common Name"
+          },
+          "cultivar_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cultivar Name"
+          },
+          "current_records": {
+            "minimum": 0.0,
+            "title": "Current Records",
+            "type": "integer"
+          },
+          "display_label": {
+            "title": "Display Label",
+            "type": "string"
+          },
+          "external_taxon_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "External Taxon Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "living_records": {
+            "minimum": 0.0,
+            "title": "Living Records",
+            "type": "integer"
+          },
+          "matches_scope": {
+            "title": "Matches Scope",
+            "type": "boolean"
+          },
+          "occurrence_eligibility": {
+            "enum": [
+              "available",
+              "not_linked",
+              "incompatible"
+            ],
+            "title": "Occurrence Eligibility",
+            "type": "string"
+          },
+          "representation": {
+            "enum": [
+              "living",
+              "current",
+              "historical"
+            ],
+            "title": "Representation",
+            "type": "string"
+          },
+          "retained_records": {
+            "minimum": 1.0,
+            "title": "Retained Records",
+            "type": "integer"
+          },
+          "scientific_name": {
+            "title": "Scientific Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "display_label",
+          "scientific_name",
+          "cultivar_name",
+          "common_name",
+          "representation",
+          "retained_records",
+          "current_records",
+          "living_records",
+          "occurrence_eligibility",
+          "external_taxon_id",
+          "matches_scope"
+        ],
+        "title": "RepresentedIdentity",
+        "type": "object"
+      },
+      "RepresentedIdentityPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/RepresentedIdentity"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "occurrence_ready": {
+            "title": "Occurrence Ready",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "occurrence_ready",
+          "offset",
+          "limit"
+        ],
+        "title": "RepresentedIdentityPage",
+        "type": "object"
+      },
       "ResultingPlantSummary": {
         "properties": {
           "botanical_identity": {
@@ -9299,6 +9438,7 @@
           "orders",
           "locations",
           "geography",
+          "species_distribution",
           "provenance_map"
         ],
         "title": "SavedViewSurface",
@@ -15450,6 +15590,149 @@
         "summary": "Update One Event",
         "tags": [
           "events"
+        ]
+      }
+    },
+    "/api/v1/explore/species-distribution/identities": {
+      "get": {
+        "operationId": "listRepresentedIdentities",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "living",
+                "current",
+                "historical"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepresentedIdentityPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List All",
+        "tags": [
+          "explore"
+        ]
+      }
+    },
+    "/api/v1/explore/species-distribution/identities/{identity_id}": {
+      "get": {
+        "operationId": "getRepresentedIdentity",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "living",
+                "current",
+                "historical"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RepresentedIdentity"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read",
+        "tags": [
+          "explore"
         ]
       }
     },

@@ -26,6 +26,14 @@ const MediaScreen = lazy(() =>
   }),
 );
 
+const SpeciesDistributionScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module =
+      await import("./species-distribution/SpeciesDistributionScreen");
+    return { default: module.SpeciesDistributionScreen };
+  }),
+);
+
 const BotanicalIdentityScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module =
@@ -152,6 +160,7 @@ type Section =
   | "harvests"
   | "events"
   | "history"
+  | "species-distribution"
   | "map"
   | "identities"
   | "suppliers"
@@ -223,6 +232,7 @@ function currentRoute(): Route {
     "harvests",
     "events",
     "history",
+    "species-distribution",
     "map",
     "identities",
     "suppliers",
@@ -272,6 +282,7 @@ const desktopGroups: {
     label: "Explore",
     items: [
       { id: "identities", label: "Botanical identities" },
+      { id: "species-distribution", label: "Species distribution" },
       { id: "media", label: "Media" },
       { id: "geography", label: "Geography" },
       { id: "map", label: "Collection origins" },
@@ -635,6 +646,8 @@ function ApplicationShell() {
                 <HistoryScreen />
               ) : route.section === "events" ? (
                 <GlobalEventsScreen />
+              ) : route.section === "species-distribution" ? (
+                <SpeciesDistributionScreen />
               ) : route.section === "map" ? (
                 <Suspense
                   fallback={

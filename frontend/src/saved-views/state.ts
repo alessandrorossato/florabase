@@ -54,6 +54,11 @@ export interface DirectoryStates {
       | "harvest"
       | "supplier";
   };
+  species_distribution: {
+    q: string;
+    scope: "all" | "living" | "current" | "historical";
+    identity: string;
+  };
   botanical_identities: { q: string };
   suppliers: { q: string };
   orders: { q: string; supplier_id: string };
@@ -75,6 +80,7 @@ export const surfaceLabels: Record<Surface, string> = {
   events: "Journal",
   history: "History",
   media: "Media Library",
+  species_distribution: "Species distribution",
   botanical_identities: "Botanical identities",
   suppliers: "Suppliers",
   orders: "Orders",
@@ -90,6 +96,7 @@ export const directoryRoutes: Record<DirectorySurface, string> = {
   stored_material: "harvests?tab=stored-material",
   events: "events",
   media: "media",
+  species_distribution: "species-distribution",
   botanical_identities: "identities",
   suppliers: "suppliers",
   orders: "orders",
@@ -111,6 +118,7 @@ export const defaults: DirectoryStates = {
   },
   events: { category: "all" },
   media: { q: "", kind: "", association: "all", target: "" },
+  species_distribution: { q: "", scope: "all", identity: "" },
   botanical_identities: { q: "" },
   suppliers: { q: "" },
   orders: { q: "", supplier_id: "" },
@@ -132,6 +140,7 @@ const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const choices: Partial<
   Record<DirectorySurface, Record<string, readonly string[]>>
 > = {
+  species_distribution: { scope: ["all", "living", "current", "historical"] },
   seed_lots: { lifecycle: ["active", "history", "all"] },
   sowings: { lifecycle: ["active", "completed", "all"] },
   plants: {
@@ -173,7 +182,10 @@ function fieldValue(
     return typeof value === "string" && Array.from(value.trim()).length <= 200
       ? value.trim()
       : null;
-  if (key.endsWith("_id"))
+  if (
+    key.endsWith("_id") ||
+    (surface === "species_distribution" && key === "identity")
+  )
     return typeof value === "string" && (!value || uuid.test(value))
       ? value.toLowerCase()
       : null;
