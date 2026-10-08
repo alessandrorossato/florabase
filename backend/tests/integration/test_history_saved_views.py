@@ -98,7 +98,7 @@ def test_history_surface_upgrade_preserves_views_and_refuses_populated_downgrade
             )
             assert (
                 connection.scalar(text("SELECT version_num FROM alembic_version"))
-                == "20261007_0035"
+                == "20261008_0036"
             )
             connection.execute(text("DELETE FROM saved_views WHERE id=:id"), {"id": history})
         command.downgrade(config, "20261006_0034")

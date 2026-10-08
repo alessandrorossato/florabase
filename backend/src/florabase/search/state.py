@@ -14,7 +14,7 @@ class SearchViewState(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     q: str = Field(default="", max_length=120)
-    kind: list[SearchKind] = Field(default_factory=list, max_length=13)
+    kind: list[SearchKind] = Field(default_factory=list, max_length=14)
     identity_id: UUID | None = None
     lifecycle: str = Field(default="", max_length=32)
     location_id: UUID | None = None

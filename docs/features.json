@@ -700,7 +700,7 @@
       ],
       "dependencies": ["SUPPLIER-001", "SEED-003"],
       "priority": "P2",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "EVENT-003",

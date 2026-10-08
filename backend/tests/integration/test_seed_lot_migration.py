@@ -138,6 +138,7 @@ def test_seed_lot_schema_minimal_defaults_uuid7_and_duplicate_lots(
         "producer_plant_id",
         "producer_plant_group_id",
         "supplier_id",
+        "order_id",
         "material_provenance_place_id",
         "provenance_site_id",
         "acquisition_date_precision",

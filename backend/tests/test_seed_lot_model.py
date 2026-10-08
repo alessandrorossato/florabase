@@ -24,6 +24,7 @@ def test_seed_lot_mapping_has_only_the_persistence_contract() -> None:
         "source_detail",
         "producer_plant_id",
         "producer_plant_group_id",
+        "order_id",
         "supplier_id",
         "material_provenance_place_id",
         "provenance_site_id",
@@ -59,7 +60,7 @@ def test_seed_lot_mapping_has_only_the_persistence_contract() -> None:
     assert updated_type.timezone is True
     assert not any(
         name in SeedLot.__table__.columns
-        for name in ("sowing_id", "order_id", "parent_seed_lot_id", "lineage_edge_id")
+        for name in ("sowing_id", "parent_seed_lot_id", "lineage_edge_id")
     )
 
 

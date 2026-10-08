@@ -1,5 +1,97 @@
 # Engineering progress
 
+## 2026-10-08 — ORDER-001 independent final verification
+
+- Independent review found no Order, acquisition reconciliation, migration, security, or navigation
+  behavior defect. The full canonical `make feature-verify` passed on the reviewed tree: feature graph
+  (93 valid), workflow guards, Ruff/Prettier/lint/strict typing, **787 backend unit tests** (90.01%
+  coverage), **503 frontend tests**, generated API drift, **645 PostgreSQL integration tests**,
+  production backend/frontend builds, migration cycle `0035 → 0036 → 0035 → 0036`, whitespace checks
+  and a working-tree verification receipt.
+- The first frontend run exposed an obsolete UX-001 test expectation for the navigation group formerly
+  called “Reference.” Production navigation correctly uses the approved “Explore” and “Sourcing” groups;
+  only the stale test assertion was updated. The full gate passed after that test-only correction.
+- ORDER-001 is now `verified` after operator UAT and independent review. Changes remain unstaged and
+  uncommitted; protected delivery and local finish are the next authorized steps.
+
+## 2026-10-08 — ORDER-001 purchase-context UAT refinement
+
+- Replaced isolated Order selection with one authoritative purchase-context preview/resolve service
+  used by SeedLot → Order, Order → existing lot and Order → new lot. Selection is read-only;
+  existing Apply atomically saves reviewed acquisition fields/link while preserving independent
+  material fields and other form drafts. Both Order/SeedLot versions are checked under consistent
+  locks; stale refusal applies nothing. Creation revalidates confirmed fields and Order version.
+- Purchased kinds stay exact; Unknown proposes Purchased. Incompatible known sources require a valid
+  explicit saved correction. Blank Supplier proposes fill; known mismatch requires confirmation,
+  including conflicts hidden by an unsaved Supplier draft. Unknown Order Supplier preserves known
+  lot Supplier. Order Supplier edit refuses linked-lot contradictions without automatic synchronization.
+- Acquisition is vertical with exact read-only Order/transaction information and Supplier-aware bounded
+  search plus explicit Show all. Origin stays separate; Order total is never a lot price. Optional
+  Order-date copy is unchecked by default, preserves PartialDate precision and never overwrites a
+  differing receipt date silently. Unlink retains confirmed Source/Supplier/date values.
+- Final backend regressions: **52 passed**; whole Ruff/format and strict mypy (**292 files**) pass.
+  Real disposable PostgreSQL: **645 passed**, including **27 new reconciliation tests**; its helper
+  cleaned only its own resources. OpenAPI drift and both production runtime image builds pass.
+  Frontend: **50 passed across 4 focused files**; whole ESLint, strict TypeScript, Prettier and
+  generated API drift pass. Feature graph: **93 valid**; no additional migration.
+- Guardedly resumed owned UAT without resetting data. Fixture v2's **34 baseline records** and operator
+  edits remain intact; four labelled synthetic extra lots support blank/Unknown, matching Supplier,
+  conflicting Supplier/differing year and confirmed month-only date-copy scenarios. Browser checks at
+  **1440×844, 1024×844 and 390×844** verified proposals, Cancel/Escape, reverse Apply and refresh,
+  transaction price distinction, new-lot precision, unlink retention and no horizontal overflow.
+  No screenshots were taken and viewport was reset. Preview: **http://localhost:15174/#/orders**,
+  credentials **preview / preview**; see [handoff](order-001-handoff.md) for exact examples/evidence.
+- At this historical UAT handoff, ORDER-001 remained `implemented`; its independent review and
+  canonical verification were still pending.
+
+## 2026-10-08 — ORDER-001 implementation and visual handoff
+
+- Implemented explicit purchase transactions with optional Supplier, precision-preserving Order
+  date, normalized non-unique reference, exact non-negative decimal total/paired currency and notes.
+  Purchased/purchased-fruit SeedLots may explicitly link/unlink/relink one Order; known Suppliers
+  must agree on both edit paths. Order row locks serialize these checks. Referenced deletion is
+  refused; no backfill, automatic lots, quantity/lifecycle/date/origin/Location or lineage effects.
+- Added bounded authenticated REST/directory/detail and compact create/edit dialogs, authoritative
+  counts, exact Supplier/SeedLot navigation and normal SeedLot creation with only purchase context
+  prefilled. Orders Saved Views restore canonical filters at page one. Direct Order Global Search
+  joins Suppliers under Sourcing without linked-botany matching or expanding History.
+- Applied the approved IA: Collection includes Locations; Explore contains Botanical identities,
+  Media, Geography and Collection origins; Sourcing contains Suppliers/Orders. Page eyebrows,
+  keyboard disclosures, active-group expansion and mobile reachability follow that mapping.
+  Collection origins retains `#/map` and internal `provenance_map`; its copy describes recorded
+  collection material origins. EXPLORE-001 Species distribution and EXPLORE-002 Native ranges remain
+  roadmap-only candidates; SCHEDULE-001 stays future Activity work and BOTANY-003 is unchanged.
+- Migration `20261008_0036` adds Orders, restrictive nullable SeedLot links, money/date/source checks,
+  justified indexes and the Saved View surface. It preserves old lots and refuses downgrade with
+  Orders or Orders Saved Views. Real PostgreSQL: **618 passed**, including **21 Order integration
+  tests**; standalone disposable migration cycle **0035 → 0036 → 0035 → 0036 passed**. Six old
+  schema/head expectations were corrected after the initial integration run; the fresh full run passed.
+- Focused backend regressions: **178 passed**. Whole backend Ruff/format and strict mypy (**288
+  files**), generated OpenAPI/TypeScript drift, feature graph (**93 valid**) and production backend
+  runtime build passed. Focused frontend regressions: **187 passed across 11 files** (182 in the ten
+  unaffected final-run files, then all five in the corrected Supplier suite). Whole-frontend ESLint,
+  strict TypeScript and Prettier plus targeted lint on final edits passed. SeedLot tests now preload
+  their screen; Supplier photo actions await their own controls. Existing assertions/timeouts and
+  dedicated lazy-loading tests remain intact. Frontend production build evidence is in the handoff.
+  Changed UAT scripts pass canonical workflow Ruff/format and strict fixture mypy;
+  `make test-uat-preview` and real read-only fixture/guard tests each passed **19 tests**. No policy or
+  timeout was weakened.
+- Guardedly retired the prior ed24-owned UAT through its supported remove command, then started,
+  explicitly seeded twice and checked this worktree's UAT. Services are healthy at revision 0036;
+  fixture v2 has **34 baseline synthetic records**, including two independent Basil packets in one
+  EUR purchase and a month-only purchase with unknown Supplier/price. Operator edits and extras are
+  retained on re-seed. DEV, Stable Preview, Feature Review and production were not operated.
+- Browser interaction/DOM/layout checks at **1440×844, 1024×844 and 390×844** covered Orders, forms,
+  exact money/date/unknown knowledge, long references, linked lots, Supplier/SeedLot context, Add seed
+  lot prefill, Saved Views, Global Search, sidebar keyboard/active expansion, mobile More and Collection
+  origins vocabulary. Inspected views had no horizontal overflow. A development reference-load
+  interruption recovered through Retry. No screenshots were taken; temporary viewport was reset.
+  UAT is ready at **http://localhost:15174/#/orders**, credentials **preview / preview**. Operator
+  visual/product acceptance remains pending.
+- ORDER-001 is `implemented`. All work remains unstaged/uncommitted; no canonical feature gate,
+  push, delivery, merge or finish. Luna owns independent review, verification and reviewed commit
+  after operator UAT. See [implementation handoff](order-001-handoff.md) and [Order contract](orders.md).
+
 ## 2026-10-08 — HISTORY-001 independently verified
 
 - Operator UAT passed, including the accepted Activity/navigation refinement. The independent review

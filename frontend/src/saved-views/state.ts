@@ -56,6 +56,7 @@ export interface DirectoryStates {
   };
   botanical_identities: { q: string };
   suppliers: { q: string };
+  orders: { q: string; supplier_id: string };
   locations: {
     q: string;
     scope: "all" | "plants" | "sowings" | "seed_lots" | "harvest_inventory";
@@ -76,9 +77,10 @@ export const surfaceLabels: Record<Surface, string> = {
   media: "Media Library",
   botanical_identities: "Botanical identities",
   suppliers: "Suppliers",
+  orders: "Orders",
   locations: "Locations",
   geography: "Geography",
-  provenance_map: "Provenance map",
+  provenance_map: "Collection origins",
 };
 export const directoryRoutes: Record<DirectorySurface, string> = {
   seed_lots: "seeds",
@@ -90,6 +92,7 @@ export const directoryRoutes: Record<DirectorySurface, string> = {
   media: "media",
   botanical_identities: "identities",
   suppliers: "suppliers",
+  orders: "orders",
   locations: "locations",
   geography: "geography",
   provenance_map: "map",
@@ -110,6 +113,7 @@ export const defaults: DirectoryStates = {
   media: { q: "", kind: "", association: "all", target: "" },
   botanical_identities: { q: "" },
   suppliers: { q: "" },
+  orders: { q: "", supplier_id: "" },
   locations: { q: "", scope: "all" },
   geography: { q: "", mode: "places" },
   provenance_map: { q: "", seed_lots: true, plants: true },

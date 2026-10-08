@@ -127,6 +127,7 @@ class SeedLotWrite(BaseModel):
     source_detail: str | None = Field(default=None, max_length=255)
     producer_plant_id: UUID | None = None
     producer_plant_group_id: UUID | None = None
+    order_id: UUID | None = None
     supplier_id: UUID | None = None
     material_provenance_place_id: UUID | None = None
     provenance_site_id: UUID | None = None
@@ -217,7 +218,15 @@ class ProducerPlantGroupSummary(BaseModel):
     botanical_identity: BotanicalIdentitySummary
 
 
+class OrderSummary(BaseModel):
+    id: UUID
+    order_reference: str | None
+    ordered_on: PartialDate | None
+
+
 class SeedLotResponse(BaseModel):
+    order_id: UUID | None = None
+    order: OrderSummary | None = None
     harvest_conversion_id: UUID | None = None
     id: UUID
     primary_photo: PrimaryPhotoResponse | None = None

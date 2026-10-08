@@ -24,6 +24,7 @@ from florabase.locations.service import (
     validate_location_scope,
 )
 from florabase.locations.service import display_path as location_display_path
+from florabase.orders.model import Order
 from florabase.plants.model import Plant, PlantGroup
 from florabase.provenance_sites.model import ProvenanceSite
 from florabase.provenance_sites.schemas import ProvenanceSiteSummary
@@ -33,6 +34,7 @@ from florabase.seed_lots.schemas import (
     BotanicalIdentitySummary,
     GeographicPlaceSummary,
     LocationSummary,
+    OrderSummary,
     PartialDate,
     ProducerPlantGroupSummary,
     ProducerPlantSummary,
@@ -87,6 +89,29 @@ def _require_references(
         raise SeedLotReferenceNotFoundError(
             "botanical_identity_not_found", "Botanical identity not found"
         )
+    if payload.order_id is not None:
+        order = database.scalar(
+            select(Order)
+            .where(Order.id == payload.order_id)
+            .with_for_update()
+            .execution_options(populate_existing=True)
+        )
+        if order is None:
+            raise SeedLotReferenceNotFoundError("order_not_found", "Order not found")
+        if payload.source_kind.value not in {"purchased", "purchased_fruit"}:
+            raise SeedLotDomainConflictError(
+                "order_source_conflict",
+                "Only purchased or purchased-fruit SeedLots can link to an Order",
+            )
+        if (
+            order.supplier_id is not None
+            and payload.supplier_id is not None
+            and order.supplier_id != payload.supplier_id
+        ):
+            raise SeedLotDomainConflictError(
+                "order_supplier_conflict",
+                "SeedLot Supplier must match the Order Supplier when both are known",
+            )
     supplier = database.get(Supplier, payload.supplier_id) if payload.supplier_id else None
     if payload.supplier_id is not None and supplier is None:
         raise SeedLotReferenceNotFoundError("supplier_not_found", "Supplier not found")
@@ -158,6 +183,7 @@ def _write_values(payload: SeedLotCreate | SeedLotUpdate) -> dict[str, object]:
         "producer_plant_id": payload.producer_plant_id,
         "producer_plant_group_id": payload.producer_plant_group_id,
         "supplier_id": payload.supplier_id,
+        "order_id": payload.order_id,
         "material_provenance_place_id": payload.material_provenance_place_id,
         "provenance_site_id": payload.provenance_site_id,
         "location_id": payload.location_id,
@@ -346,6 +372,17 @@ def responses(database: Session, projections: list[SeedLotProjection]) -> list[S
             )
         ):
             conversion_by_lot[lot_id] = conversion_id
+    from florabase.orders.service import ordered_on
+
+    order_ids = {item.seed_lot.order_id for item in projections if item.seed_lot.order_id}
+    orders = (
+        {
+            order.id: order
+            for order in database.scalars(select(Order).where(Order.id.in_(order_ids)))
+        }
+        if order_ids
+        else {}
+    )
     primary_by_id = primary_summaries(
         database, "seed_lot", [item.seed_lot.id for item in projections]
     )
@@ -419,6 +456,14 @@ def responses(database: Session, projections: list[SeedLotProjection]) -> list[S
                     if item.producer_plant_group and item.producer_plant_group_identity
                     else None
                 ),
+                order_id=seed_lot.order_id,
+                order=OrderSummary(
+                    id=orders[seed_lot.order_id].id,
+                    order_reference=orders[seed_lot.order_id].order_reference,
+                    ordered_on=ordered_on(orders[seed_lot.order_id]),
+                )
+                if seed_lot.order_id in orders
+                else None,
                 supplier_id=seed_lot.supplier_id,
                 supplier=(
                     SupplierSummary(id=item.supplier.id, name=item.supplier.name)

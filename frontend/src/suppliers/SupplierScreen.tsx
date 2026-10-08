@@ -303,6 +303,13 @@ function SupplierHub({
                   <p className="record-empty">No contact details recorded.</p>
                 )}
             </section>
+            <section className="record-section" aria-label="Supplier Orders">
+              <h4>Orders</h4>
+              <p>Purchase transactions recorded for this Supplier.</p>
+              <a href={`#/orders?supplier_id=${supplier.id}`}>
+                View Orders for this Supplier
+              </a>
+            </section>
             <section
               className="record-section"
               aria-labelledby="recent-acquisitions-title"
@@ -890,7 +897,7 @@ export function SupplierScreen({
       <PageHeader
         title="Suppliers"
         titleId="suppliers-title"
-        eyebrow="Reference"
+        eyebrow="Sourcing"
         description="Manage the sources from which collection material was directly acquired."
         actions={
           <button

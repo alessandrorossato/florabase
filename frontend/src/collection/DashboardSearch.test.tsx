@@ -706,3 +706,42 @@ test("a Media search hit opens its exact asset and browser history restores sear
     await screen.findByRole("heading", { name: "Remote illustration" }),
   ).toBeInTheDocument();
 });
+
+test("Orders and Suppliers share Sourcing search with exact Order deep links", async () => {
+  setup((path) => {
+    if (path.startsWith("/api/v1/search?"))
+      return json({
+        query: "PO-1",
+        total: 1,
+        offset: 0,
+        limit: 20,
+        groups: [
+          {
+            kind: "order",
+            total: 1,
+            items: [
+              {
+                kind: "order",
+                id,
+                title: "PO-1",
+                context: "2026-10 · Nursery · EUR 42.50",
+                href: `#/orders/${id}`,
+              },
+            ],
+          },
+        ],
+      });
+    return json({});
+  });
+  render(<App />);
+  const input = await screen.findByRole("searchbox", {
+    name: "Search your collection",
+  });
+  await userEvent.type(input, "PO-1");
+  const result = await screen.findByRole("link", { name: /PO-1/ });
+  expect(result).toHaveAttribute("href", `#/orders/${id}`);
+  expect(
+    screen.getByRole("heading", { name: "Sourcing", level: 4 }),
+  ).toBeVisible();
+  expect(result).toHaveTextContent("2026-10 · Nursery · EUR 42.50");
+});

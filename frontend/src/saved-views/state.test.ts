@@ -60,6 +60,11 @@ const cases: [DirectorySurface, SavedState, string][] = [
   ["botanical_identities", { q: "Ocimum" }, "#/identities?q=Ocimum"],
   ["suppliers", { q: "店" }, "#/suppliers?q=%E5%BA%97"],
   [
+    "orders",
+    { q: "PO", supplier_id: missing },
+    `#/orders?q=PO&supplier_id=${missing.toLowerCase()}`,
+  ],
+  [
     "locations",
     { q: "shelf", scope: "seed_lots" },
     "#/locations?q=shelf&scope=seed_lots",

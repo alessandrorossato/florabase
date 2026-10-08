@@ -506,7 +506,7 @@ def test_equal_titles_sort_by_uuid_and_all_kind_queries_stay_bounded(
         event.listen(database_connection, "before_cursor_execute", capture)
         try:
             result = search(db, "same title", SearchFilters())
-            assert len(statements) == 28
+            assert len(statements) == 30
             assert _ids(result, SearchKind.MEDIA_ASSET) == sorted(
                 [coverage_records["local"], coverage_records["external"]]
             )

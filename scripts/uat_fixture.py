@@ -1,4 +1,4 @@
-"""PREVIEW-001 fixture v1. Mounted explicitly by the guarded host UAT workflow only."""
+"""PREVIEW-001 fixture v2. Mounted explicitly by the guarded host UAT workflow only."""
 
 from __future__ import annotations
 
@@ -52,6 +52,9 @@ from florabase.locations.model import Location
 from florabase.locations.schemas import LocationCreate
 from florabase.media import service as media
 from florabase.media.schemas import AssetMetadataWrite, ExternalAssetCreate, LinkWrite
+from florabase.orders import service as orders
+from florabase.orders.model import Order
+from florabase.orders.schemas import OrderCreate
 from florabase.plants import service as plants
 from florabase.plants.model import Plant, PlantGroup
 from florabase.plants.schemas import PlantCreate, PlantGroupCreate
@@ -68,12 +71,13 @@ from florabase.suppliers import service as suppliers
 from florabase.suppliers.model import Supplier
 from florabase.suppliers.schemas import SupplierCreate
 
-VERSION = 1
+VERSION = 2
 NOTE = "Synthetic UAT Preview data; no real collection or provenance claims."
 MODELS: dict[str, type[Base]] = {
     "owner": User,
     "identity": BotanicalIdentity,
     "supplier": Supplier,
+    "order": Order,
     "location": Location,
     "place": GeographicPlace,
     "site": ProvenanceSite,
@@ -177,6 +181,9 @@ def validate_manifest(database: Session, root: Path, manifest: dict[str, Any]) -
         "identity:Aloe vera",
         "supplier:nursery",
         "supplier:exchange",
+        "order:exact",
+        "order:partial",
+        "seed:3",
         "location:root",
         "location:Indoor seed shelf",
         "location:Greenhouse bench",
@@ -338,6 +345,35 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
             ),
         ),
     )
+    purchase = remember(
+        "order:exact",
+        orders.create_order(
+            database,
+            OrderCreate.model_validate(
+                {
+                    "supplier_id": seller.id,
+                    "ordered_on": {"precision": "day", "year": 2026, "month": 10, "day": 8},
+                    "order_reference": "Preview — PO-2026-001",
+                    "total_price": "42.50",
+                    "currency": "EUR",
+                    "notes": NOTE,
+                }
+            ),
+        ),
+    )
+    remember(
+        "order:partial",
+        orders.create_order(
+            database,
+            OrderCreate.model_validate(
+                {
+                    "ordered_on": {"precision": "month", "year": 2026, "month": 9},
+                    "order_reference": "Preview — Historical purchase",
+                    "notes": NOTE,
+                }
+            ),
+        ),
+    )
     lots = [
         remember(
             f"seed:{i}",
@@ -353,6 +389,7 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
                         ][i],
                         "source_kind": ["purchased", "gift_exchange", "unknown"][i],
                         "supplier_id": [seller.id, exchange.id, None][i],
+                        "order_id": purchase.id if i == 0 else None,
                         "location_id": indoor.id,
                         "quantity": {
                             "kind": "seed_count",
@@ -369,6 +406,24 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
         )
         for i in range(3)
     ]
+    remember(
+        "seed:3",
+        seeds.create_seed_lot(
+            database,
+            SeedLotCreate.model_validate(
+                {
+                    "botanical_identity_id": identity[0].id,
+                    "label": "Preview — Basil second physical packet",
+                    "source_kind": "purchased",
+                    "supplier_id": seller.id,
+                    "order_id": purchase.id,
+                    "location_id": indoor.id,
+                    "notes": NOTE,
+                }
+            ),
+        ),
+    )
+
     sowing = remember(
         "sowing:basil",
         sowings.create_sowing(

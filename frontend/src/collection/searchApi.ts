@@ -28,6 +28,7 @@ export const searchKinds: SearchKind[] = [
   "botanical_identity",
   "botanical_profile",
   "supplier",
+  "order",
   "location",
   "geographic_place",
   "provenance_site",

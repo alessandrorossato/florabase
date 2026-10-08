@@ -437,7 +437,7 @@ export function GeographyScreen({
       <PageHeader
         title="Geography"
         titleId="geography-title"
-        eyebrow="Places"
+        eyebrow="Explore"
         description="Manage named places and precise collection provenance sites."
         actions={
           mode === "places" ? (

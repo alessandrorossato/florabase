@@ -70,6 +70,7 @@ const fieldLabels: Record<string, string> = {
   expected_viability_until: "Expected viability",
   source_detail: "Source detail",
   supplier_id: "Supplier",
+  order_id: "Purchase Order",
   material_provenance_place_id: "Material provenance",
   provenance_site_id: "ProvenanceSite",
   location_id: "Storage location",
@@ -77,6 +78,28 @@ const fieldLabels: Record<string, string> = {
   quantity: "Quantity",
   lifecycle: "Lifecycle",
 };
+
+export function seedLotOrderError(error: ApiError): string | undefined {
+  if (
+    ![404, 409].includes(error.status) ||
+    !isRecord(error.body) ||
+    !isRecord(error.body.detail)
+  )
+    return undefined;
+  switch (error.body.detail.code) {
+    case "stale_purchase_context":
+    case "purchase_context_changed":
+      return "The Order or reviewed acquisition context changed. Review purchase context again before creating this SeedLot.";
+    case "order_not_found":
+      return "The selected Order no longer exists. Choose another Order or clear the link.";
+    case "order_source_conflict":
+      return "Only purchased or purchased-fruit seed lots can link to an Order. Check the source or clear the Order link.";
+    case "order_supplier_conflict":
+      return "The seed lot Supplier must match the Order Supplier when both are known. Check the Supplier or choose another Order.";
+    default:
+      return undefined;
+  }
+}
 
 export function seedLotValidationMessages(error: ApiError): string[] {
   if (!isRecord(error.body) || !Array.isArray(error.body.detail))

@@ -1,3 +1,13 @@
+import { PurchaseContextDialog } from "../orders/PurchaseContext";
+import {
+  applyPurchase,
+  previewPurchase,
+  createPurchaseLot,
+  type AcquisitionContext,
+  type PurchaseApply,
+} from "../orders/purchaseApi";
+import { OrderPicker } from "../orders/OrderPicker";
+import { getOrder, type OrderDetail } from "../orders/api";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
 import { useBulkSelection } from "../bulk/useBulkSelection";
@@ -71,6 +81,7 @@ import {
 import {
   createSeedLot,
   listSeedLots,
+  seedLotOrderError,
   seedLotValidationMessages,
   updateSeedLot,
   type PartialDate,
@@ -109,6 +120,7 @@ interface FormState {
   sourceKind: SeedLotSourceKind;
   sourceDetail: string;
   supplierId: string;
+  orderId: string;
   locationId: string;
   materialProvenancePlaceId: string;
   provenanceSiteId: string;
@@ -146,6 +158,7 @@ function blankForm(): FormState {
     sourceKind: "unknown",
     sourceDetail: "",
     supplierId: "",
+    orderId: "",
     locationId: "",
     materialProvenancePlaceId: "",
     provenanceSiteId: "",
@@ -168,6 +181,7 @@ function formFrom(lot: SeedLotResponse): FormState {
     sourceKind: lot.source_kind,
     sourceDetail: lot.source_detail ?? "",
     supplierId: lot.supplier_id ?? "",
+    orderId: lot.order_id ?? "",
     locationId: lot.location_id ?? "",
     materialProvenancePlaceId: lot.material_provenance_place_id ?? "",
     provenanceSiteId: lot.provenance_site_id ?? "",
@@ -196,6 +210,7 @@ function payloadFrom(form: FormState): SeedLotCreate {
     source_detail:
       form.sourceKind === "other" ? form.sourceDetail || null : null,
     supplier_id: form.supplierId || null,
+    order_id: form.orderId || null,
     location_id: form.locationId || null,
     material_provenance_place_id: form.materialProvenancePlaceId || null,
     provenance_site_id: form.provenanceSiteId || null,
@@ -556,6 +571,21 @@ function Detail({
               onChanged={onConversionChanged}
             />
           )}
+          {lot.order && (
+            <section
+              className="seed-fact-group"
+              aria-label="Purchase transaction"
+            >
+              <h4>Purchase Order</h4>
+              <a href={`#/orders/${lot.order.id}`}>
+                {lot.order.order_reference ?? "Purchase order"}
+              </a>
+              <p className="field-help">
+                Transaction context; acquisition date and material origin remain
+                recorded separately below.
+              </p>
+            </section>
+          )}
           <section
             aria-labelledby="seed-overview-inventory"
             className="seed-fact-group"
@@ -731,11 +761,13 @@ export function SeedLotScreen({
   initialId,
   initialTab,
   initialIdentityId,
+  initialOrderId,
   startCreating = false,
 }: {
   initialId?: string;
   initialTab?: string;
   initialIdentityId?: string;
+  initialOrderId?: string;
   startCreating?: boolean;
 } = {}) {
   const recordName = useRecordName();
@@ -788,6 +820,51 @@ export function SeedLotScreen({
   const feedback = useRef<HTMLDivElement>(null);
   const contextTrigger = useRef<HTMLElement | null>(null);
   const contextualCreationStarted = useRef(false);
+  const [candidateOrderId, setCandidateOrderId] = useState("");
+  const [purchaseConfirmation, setPurchaseConfirmation] =
+    useState<PurchaseApply | null>(null);
+  const [creationPurchaseContext, setCreationPurchaseContext] =
+    useState<AcquisitionContext | null>(null);
+  const creationCsrf =
+    "csrfToken" in auth.state ? auth.state.csrfToken : undefined;
+  const [orderContext, setOrderContext] = useState<OrderDetail | null>(null);
+  const [orderContextError, setOrderContextError] = useState(false);
+  useEffect(() => {
+    if (!initialOrderId || !startCreating || !creationCsrf) return;
+    const controller = new AbortController();
+    getOrder(initialOrderId, 0, controller.signal)
+      .then(async (order) => {
+        const review = await previewPurchase(
+          initialOrderId,
+          {},
+          controller.signal,
+        );
+        if (controller.signal.aborted) return;
+        const result = await applyPurchase(
+          initialOrderId,
+          {
+            context: review.current,
+            expected_order_updated_at: review.order.updated_at,
+            use_order_supplier: true,
+            use_order_date: false,
+          },
+          creationCsrf,
+          controller.signal,
+        );
+        // applyPurchase carries the same AbortSignal through the draft-only request.
+        controller.signal.throwIfAborted();
+        setOrderContext(order);
+        setCreationPurchaseContext(result.context);
+        setPurchaseConfirmation(result.confirmation);
+        setOrderContextError(false);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) setOrderContextError(true);
+      });
+    return () => {
+      controller.abort();
+    };
+  }, [initialOrderId, startCreating, attempt, creationCsrf]);
   const {
     expanded: creationExpanded,
     triggerRef: creationTriggerRef,
@@ -798,7 +875,12 @@ export function SeedLotScreen({
   } = useCreationDisclosure();
 
   useEffect(() => {
-    if (!startCreating || !references || contextualCreationStarted.current)
+    if (
+      !startCreating ||
+      !references ||
+      (initialOrderId && (!orderContext || !creationPurchaseContext)) ||
+      contextualCreationStarted.current
+    )
       return;
     contextualCreationStarted.current = true;
     setSelectedId(null);
@@ -807,10 +889,26 @@ export function SeedLotScreen({
     setForm({
       ...blankForm(),
       botanicalIdentityId: initialIdentityId ?? "",
+      ...(creationPurchaseContext
+        ? {
+            orderId: creationPurchaseContext.order_id ?? "",
+            supplierId: creationPurchaseContext.supplier_id ?? "",
+            sourceKind: creationPurchaseContext.source_kind,
+            acquisitionDate: creationPurchaseContext.acquisition_date ?? null,
+          }
+        : {}),
     });
     setSave({ status: "idle" });
     openCreation();
-  }, [initialIdentityId, openCreation, references, startCreating]);
+  }, [
+    initialIdentityId,
+    initialOrderId,
+    orderContext,
+    creationPurchaseContext,
+    openCreation,
+    references,
+    startCreating,
+  ]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -925,6 +1023,8 @@ export function SeedLotScreen({
   const pending = save.status === "saving";
 
   function startCreate() {
+    setPurchaseConfirmation(null);
+    setCandidateOrderId("");
     setSelectedId(null);
     setEditing(true);
     setDetailOpen(true);
@@ -933,6 +1033,8 @@ export function SeedLotScreen({
     openCreation();
   }
   function startEdit(lot: SeedLotResponse) {
+    setPurchaseConfirmation(null);
+    setCandidateOrderId("");
     if (creationExpanded) closeCreation({ returnFocus: false });
     setSelectedId(lot.id);
     setEditing(true);
@@ -995,6 +1097,17 @@ export function SeedLotScreen({
       setSave({ status: "error", messages: errors });
       return;
     }
+    if (!selected && form.orderId && !purchaseConfirmation) {
+      setCandidateOrderId(form.orderId);
+      setSave({
+        status: "error",
+        field: "order_id",
+        messages: [
+          "Review purchase context before creating this linked SeedLot.",
+        ],
+      });
+      return;
+    }
     const wasCreating = !selected;
     setSave({ status: "saving" });
     try {
@@ -1005,7 +1118,14 @@ export function SeedLotScreen({
       }
       const lot = selected
         ? await updateSeedLot(selected.id, payload, csrfToken)
-        : await createSeedLot(payload, csrfToken);
+        : form.orderId && purchaseConfirmation
+          ? await createPurchaseLot(
+              form.orderId,
+              payload,
+              purchaseConfirmation,
+              csrfToken,
+            )
+          : await createSeedLot(payload, csrfToken);
       await refreshLots(lot);
       setEditing(false);
       setDetailOpen(true);
@@ -1018,6 +1138,8 @@ export function SeedLotScreen({
       });
       if (wasCreating) setRecordRoute(`#/seeds/${lot.id}`);
     } catch (error: unknown) {
+      const orderError =
+        error instanceof ApiError ? seedLotOrderError(error) : undefined;
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();
       else if (error instanceof ApiError && error.status === 422) {
@@ -1026,7 +1148,9 @@ export function SeedLotScreen({
           messages: seedLotValidationMessages(error),
           field: firstValidationField(error),
         });
-      } else if (error instanceof ApiError && error.status === 403)
+      } else if (orderError)
+        setSave({ status: "error", messages: [orderError], field: "order_id" });
+      else if (error instanceof ApiError && error.status === 403)
         setSave({
           status: "error",
           messages: [
@@ -1209,6 +1333,23 @@ export function SeedLotScreen({
           )
         }
       />
+      {orderContextError && (
+        <div role="alert" className="notice notice--error">
+          <p>Could not load the Order context. No seed lot has been created.</p>
+          <button
+            type="button"
+            onClick={() => {
+              setAttempt((value) => value + 1);
+            }}
+          >
+            Retry Order context
+          </button>
+        </div>
+      )}
+      {initialOrderId &&
+        startCreating &&
+        !orderContext &&
+        !orderContextError && <p role="status">Loading Order context…</p>}
       <div
         className={`seed-master-detail operational-layout${detailOpen || editing ? " is-detail-view" : ""}`}
       >
@@ -1406,6 +1547,7 @@ export function SeedLotScreen({
                 disabled={pending}
                 error={save.status === "error" ? save : undefined}
                 errorFields={[
+                  { match: /order/i, selector: "#seed-order" },
                   {
                     match: /location|storage/i,
                     selector: '[data-form-panel="inventory"] [role="combobox"]',
@@ -1637,6 +1779,7 @@ export function SeedLotScreen({
                               Boolean(selected?.harvest_conversion_id)
                             }
                             onChange={(event) => {
+                              setPurchaseConfirmation(null);
                               const value = event.currentTarget
                                 .value as SeedLotSourceKind;
                               setForm((current) => ({
@@ -1676,6 +1819,36 @@ export function SeedLotScreen({
                             />
                           </div>
                         )}
+                        <OrderPicker
+                          value={form.orderId}
+                          supplierId={form.supplierId}
+                          refreshKey={
+                            purchaseConfirmation?.expected_order_updated_at
+                          }
+                          disabled={pending}
+                          onChange={(id) => {
+                            if (id) setCandidateOrderId(id);
+                            else {
+                              setForm((current) => ({
+                                ...current,
+                                orderId: "",
+                              }));
+                              setPurchaseConfirmation(null);
+                            }
+                          }}
+                        />
+                        {form.orderId && (
+                          <button
+                            type="button"
+                            className="button--secondary"
+                            disabled={pending}
+                            onClick={() => {
+                              setCandidateOrderId(form.orderId);
+                            }}
+                          >
+                            Review purchase context / use Order date
+                          </button>
+                        )}
                         <ReferencePicker
                           label="Supplier (optional)"
                           help="Who or what supplied this material; a Supplier does not establish its biological origin."
@@ -1691,6 +1864,7 @@ export function SeedLotScreen({
                               ...current,
                               supplierId: id,
                             }));
+                            setPurchaseConfirmation(null);
                           }}
                           onCreate={(query) => {
                             openContext("supplier", query);
@@ -1707,6 +1881,7 @@ export function SeedLotScreen({
                                 ...current,
                                 acquisitionDate: value,
                               }));
+                              setPurchaseConfirmation(null);
                             }}
                             disabled={pending}
                           />
@@ -1918,6 +2093,56 @@ export function SeedLotScreen({
           )}
         </section>
       </div>
+      {candidateOrderId && (
+        <PurchaseContextDialog
+          orderId={candidateOrderId}
+          seedLotId={selected?.id}
+          seedLotLabel={
+            selected?.label ?? selected?.botanical_identity.display_label
+          }
+          expectedSeedVersion={selected?.updated_at}
+          context={{
+            source_kind: form.sourceKind,
+            supplier_id: form.supplierId || null,
+            acquisition_date: form.acquisitionDate,
+            order_id: form.orderId || null,
+          }}
+          csrf={csrfToken}
+          onCancel={() => {
+            setCandidateOrderId("");
+          }}
+          onApplied={(result) => {
+            setForm((current) => ({
+              ...current,
+              orderId: result.context.order_id ?? "",
+              sourceKind: result.context.source_kind,
+              supplierId: result.context.supplier_id ?? "",
+              acquisitionDate: result.context.acquisition_date ?? null,
+            }));
+            setPurchaseConfirmation(result.confirmation);
+            if (result.seed_lot) {
+              const authoritative = result.seed_lot;
+              setInventory((current) =>
+                current.status === "ready"
+                  ? {
+                      ...current,
+                      lots: current.lots.map((lot) =>
+                        lot.id === authoritative.id ? authoritative : lot,
+                      ),
+                    }
+                  : current,
+              );
+            }
+            setSave({
+              status: "success",
+              message: result.seed_lot
+                ? "Reviewed acquisition fields were saved. Other form drafts remain unsaved."
+                : "Purchase context applied to this draft. Create the SeedLot to save it.",
+            });
+            setCandidateOrderId("");
+          }}
+        />
+      )}
       {context && (
         <ContextDialog
           title={

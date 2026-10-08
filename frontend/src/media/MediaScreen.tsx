@@ -292,7 +292,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
         </>
       ) : (
         <WorkspaceIntro
-          eyebrow="Collection"
+          eyebrow="Explore"
           title="Media"
           titleId={headingId}
           description="One image, many records. Unlinked assets stay available for future use."

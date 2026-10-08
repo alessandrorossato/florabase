@@ -1,0 +1,90 @@
+.order-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: end;
+}
+.order-list {
+  list-style: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+.order-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border, #d8e1d9);
+}
+.order-list li > div {
+  min-width: 0;
+}
+.order-list a,
+.order-list strong {
+  font-weight: 600;
+}
+.order-list span {
+  display: block;
+  color: var(--text-muted, #526259);
+  margin-top: 0.3rem;
+  font-size: 0.9rem;
+}
+.order-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+.order-facts dt {
+  font-size: 0.85rem;
+  color: var(--text-muted, #526259);
+}
+.order-facts dd {
+  margin: 0.25rem 0 0;
+}
+.orders-page :is(a, dd, p, strong) {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  .order-controls,
+  .order-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .order-list li {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.seed-form [data-form-panel="acquisition"]:not([hidden]) {
+  grid-template-columns: minmax(0, 1fr);
+}
+.order-transaction {
+  min-width: 0;
+  padding: 1rem;
+  border: 1px solid var(--border, #d8e1d9);
+  border-radius: 0.6rem;
+}
+.order-transaction :is(a, dd, p),
+.purchase-changes dd {
+  overflow-wrap: anywhere;
+}
+.order-transaction dl,
+.purchase-changes {
+  display: grid;
+  gap: 0.75rem;
+}
+.order-transaction dd,
+.purchase-changes dd {
+  margin: 0.25rem 0 0;
+}
+.order-transaction h4 {
+  margin-top: 0;
+}
+.purchase-changes dt {
+  font-weight: 600;
+}
+
+.purchase-target {
+  overflow-wrap: anywhere;
+}

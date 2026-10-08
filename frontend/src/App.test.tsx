@@ -449,9 +449,9 @@ test("desktop navigation hides and reopens without remounting the workspace", as
   });
   const shell = sidebar.parentElement;
   const workspace = screen.getByRole("region", { name: "Workspace content" });
-  const reference = within(sidebar).getByRole("region", { name: "Reference" });
+  const explore = within(sidebar).getByRole("region", { name: "Explore" });
   expect(
-    within(reference).getByRole("button", { name: "Botanical identities" }),
+    within(explore).getByRole("button", { name: "Botanical identities" }),
   ).toBeInTheDocument();
   expect(
     within(sidebar).queryByRole("region", { name: "Botany" }),
@@ -3229,12 +3229,14 @@ test.each([1440, 390])(
   },
 );
 
-test("Activity sidebar macroareas and mobile More retain every destination and route", async () => {
+test("Sourcing and Explore sidebar macroareas and mobile More retain every destination and route", async () => {
   window.history.replaceState(null, "", "#/dashboard");
   mockFetch((path) => {
     if (path.endsWith("/session")) return jsonResponse(session);
     if (path.endsWith("/csrf")) return jsonResponse({ csrf_token: "csrf" });
     if (path.endsWith("/health")) return jsonResponse({ status: "ok" });
+    if (path.startsWith("/api/v1/orders?"))
+      return jsonResponse({ items: [], total: 0, offset: 0, limit: 50 });
     if (path.startsWith("/api/v1/history?"))
       return jsonResponse({ items: [], total: 0, offset: 0, limit: 50 });
     if (path.startsWith("/api/v1/media-assets?"))
@@ -3273,8 +3275,8 @@ test("Activity sidebar macroareas and mobile More retain every destination and r
     "Overview",
     "Collection",
     "Activity",
-    "Places",
-    "Reference",
+    "Explore",
+    "Sourcing",
     "Tools",
   ]);
   expect(within(nav).getAllByRole("button", { expanded: true })).toHaveLength(
@@ -3286,14 +3288,15 @@ test("Activity sidebar macroareas and mobile More retain every destination and r
     "Sowings",
     "Plants",
     "Harvests",
-    "Media",
+    "Locations",
     "Journal",
     "History",
-    "Locations",
-    "Geography",
-    "Provenance map",
     "Botanical identities",
+    "Media",
+    "Geography",
+    "Collection origins",
     "Suppliers",
+    "Orders",
     "Import / Export",
     "Labels",
   ];
@@ -3322,14 +3325,15 @@ test("Activity sidebar macroareas and mobile More retain every destination and r
     "sowings",
     "plants",
     "harvests",
-    "media",
+    "locations",
     "events",
     "history",
-    "locations",
+    "identities",
+    "media",
     "geography",
     "map",
-    "identities",
     "suppliers",
+    "orders",
     "import-export",
     "labels",
   ];
@@ -3342,11 +3346,12 @@ test("Activity sidebar macroareas and mobile More retain every destination and r
     "Collection",
     "Activity",
     "Activity",
-    "Places",
-    "Places",
-    "Places",
-    "Reference",
-    "Reference",
+    "Explore",
+    "Explore",
+    "Explore",
+    "Explore",
+    "Sourcing",
+    "Sourcing",
     "Tools",
     "Tools",
   ];
@@ -3375,12 +3380,14 @@ test("sidebar disclosures support keyboard, persist preferences and expand activ
   window.history.replaceState(null, "", "#/history");
   localStorage.setItem(
     "florabase.sidebar.collapsed-groups.v1",
-    JSON.stringify(["Activity", "Places"]),
+    JSON.stringify(["Activity", "Explore", "Places", "Reference"]),
   );
   mockFetch((path) => {
     if (path.endsWith("/session")) return jsonResponse(session);
     if (path.endsWith("/csrf")) return jsonResponse({ csrf_token: "csrf" });
     if (path.endsWith("/health")) return jsonResponse({ status: "ok" });
+    if (path.startsWith("/api/v1/orders?"))
+      return jsonResponse({ items: [], total: 0, offset: 0, limit: 50 });
     if (path.startsWith("/api/v1/history?"))
       return jsonResponse({ items: [], total: 0, offset: 0, limit: 50 });
     return jsonResponse([]);
@@ -3398,12 +3405,12 @@ test("sidebar disclosures support keyboard, persist preferences and expand activ
     "aria-current",
     "page",
   );
-  expect(within(nav).getByRole("button", { name: "Places" })).toHaveAttribute(
+  expect(within(nav).getByRole("button", { name: "Explore" })).toHaveAttribute(
     "aria-expanded",
     "false",
   );
   expect(
-    within(nav).queryByRole("button", { name: "Locations" }),
+    within(nav).queryByRole("button", { name: "Geography" }),
   ).not.toBeInTheDocument();
   const collection = within(nav).getByRole("button", { name: "Collection" });
   collection.focus();
@@ -3417,7 +3424,7 @@ test("sidebar disclosures support keyboard, persist preferences and expand activ
     JSON.parse(
       localStorage.getItem("florabase.sidebar.collapsed-groups.v1") ?? "[]",
     ),
-  ).toEqual(["Places", "Collection"]);
+  ).toEqual(["Explore", "Collection"]);
   view.unmount();
   view = render(<App />);
   nav = await screen.findByRole("navigation", { name: "Primary navigation" });

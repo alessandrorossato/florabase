@@ -164,10 +164,10 @@ export function ProvenanceMapScreen() {
       aria-labelledby="provenance-map-title"
     >
       <WorkspaceIntro
-        eyebrow="Places"
-        title="Provenance map"
+        eyebrow="Explore"
+        title="Collection origins"
         titleId="provenance-map-title"
-        description="Explore precise provenance sites linked to collection records."
+        description="See where material in this collection is recorded as coming from, through its linked provenance sites."
         actions={
           <a className="button-link button--secondary" href="#/geography">
             Manage provenance sites
@@ -177,11 +177,11 @@ export function ProvenanceMapScreen() {
 
       <SavedViews surface="provenance_map" state={view.savedState} />
       {state.status === "loading" && (
-        <p aria-live="polite">Loading provenance map…</p>
+        <p aria-live="polite">Loading collection origins…</p>
       )}
       {state.status === "error" && (
         <div className="notice notice--error" role="alert">
-          <p>Florabase could not load the collection provenance map.</p>
+          <p>Florabase could not load collection origins.</p>
           <button
             type="button"
             onClick={() => {

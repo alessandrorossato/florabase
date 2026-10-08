@@ -18,6 +18,7 @@ from florabase.history.api import router as history_router
 from florabase.import_export.api import router as import_export_router
 from florabase.locations.api import router as locations_router
 from florabase.media.api import router as media_router
+from florabase.orders.api import router as orders_router
 from florabase.plants.api import plant_groups_router, plants_router
 from florabase.propagation.api import router as propagation_router
 from florabase.provenance_sites.api import router as provenance_sites_router
@@ -61,3 +62,5 @@ api_router.include_router(saved_views_router)
 api_router.include_router(bulk_router)
 
 api_router.include_router(history_router)
+
+api_router.include_router(orders_router)

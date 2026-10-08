@@ -108,3 +108,36 @@ def test_missing_binary_media_fails_with_explicit_reset_instruction() -> None:
         with patch("uat_fixture.Path.is_file", return_value=False):
             with pytest.raises(FixtureError, match="media content is missing"):
                 validate_manifest(database, root, manifest)
+
+
+def test_purchase_fixture_preserves_two_physical_lots_and_partial_unknown_knowledge() -> None:
+    from decimal import Decimal
+    from uuid import UUID
+
+    from florabase.orders.model import Order
+    from florabase.seed_lots.model import SeedLot
+
+    with Session(get_engine()) as database:
+        root = require_identity(get_settings(), database)
+        manifest = read_manifest(root)
+        assert manifest is not None
+        records = manifest["records"]
+        purchase = database.get(Order, UUID(records["order:exact"]))
+        partial = database.get(Order, UUID(records["order:partial"]))
+        packet_a = database.get(SeedLot, UUID(records["seed:0"]))
+        packet_b = database.get(SeedLot, UUID(records["seed:3"]))
+        assert purchase is not None and partial is not None
+        assert packet_a is not None and packet_b is not None
+        assert purchase.total_price == Decimal("42.50") and purchase.currency == "EUR"
+        assert purchase.ordered_on_precision == "day" and purchase.ordered_on_day == 8
+        assert packet_a.id != packet_b.id
+        assert packet_a.botanical_identity_id == packet_b.botanical_identity_id
+        assert packet_a.order_id == packet_b.order_id == purchase.id
+        assert packet_a.supplier_id == packet_b.supplier_id == purchase.supplier_id
+        assert packet_a.quantity_value == 48 and packet_b.quantity_value is None
+        assert packet_a.acquisition_date_year is packet_b.acquisition_date_year is None
+        assert (
+            packet_a.material_provenance_place_id is packet_b.material_provenance_place_id is None
+        )
+        assert partial.ordered_on_precision == "month" and partial.ordered_on_day is None
+        assert partial.total_price is partial.currency is partial.supplier_id is None

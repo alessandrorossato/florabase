@@ -297,11 +297,9 @@ test("announces loading and recovers from a map request failure", async () => {
       <ProvenanceMapScreen />
     </AuthContext.Provider>,
   );
-  expect(screen.getByText("Loading provenance map…")).toBeInTheDocument();
+  expect(screen.getByText("Loading collection origins…")).toBeInTheDocument();
   expect(
-    await screen.findByText(
-      "Florabase could not load the collection provenance map.",
-    ),
+    await screen.findByText("Florabase could not load collection origins."),
   ).toBeInTheDocument();
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: "Retry" }));
