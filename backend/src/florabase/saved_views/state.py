@@ -25,6 +25,7 @@ class SavedViewSurface(StrEnum):
     MEDIA = "media"
     BOTANICAL_IDENTITIES = "botanical_identities"
     SUPPLIERS = "suppliers"
+    ORDERS = "orders"
     LOCATIONS = "locations"
     GEOGRAPHY = "geography"
     PROVENANCE_MAP = "provenance_map"
@@ -83,6 +84,10 @@ class MediaState(TextState):
     target: MediaTargetFilter | None = None
 
 
+class OrderState(TextState):
+    supplier_id: UUID | None = None
+
+
 class LocationState(TextState):
     scope: LocationUsageScope | Literal["all"] = "all"
 
@@ -108,6 +113,7 @@ STATE_MODELS: dict[SavedViewSurface, type[BaseModel]] = {
     SavedViewSurface.MEDIA: MediaState,
     SavedViewSurface.BOTANICAL_IDENTITIES: TextState,
     SavedViewSurface.SUPPLIERS: TextState,
+    SavedViewSurface.ORDERS: OrderState,
     SavedViewSurface.LOCATIONS: LocationState,
     SavedViewSurface.GEOGRAPHY: GeographyState,
     SavedViewSurface.PROVENANCE_MAP: ProvenanceMapState,

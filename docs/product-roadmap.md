@@ -22,7 +22,7 @@ completion is independently verified after operator visual UAT passed. It uses e
 links and primary selection, without new roles or Orders; delivered through PR #70.
 **PREVIEW-001 is verified**, with operator UAT passed and independent canonical verification
 complete. It uses the current dirty feature worktree and isolated persistent synthetic state through
-Feature Review primitives. The **next product milestone remains Collection productivity v2**.
+Feature Review primitives. Collection productivity v2 is complete.
 
 The approved sequence, retaining completed steps for context, is:
 
@@ -42,7 +42,15 @@ The approved sequence, retaining completed steps for context, is:
    SeedLots, Sowings, Plants, PlantGroups and managed Stored material. Justified unified operational
    history is verified as **HISTORY-001** after operator UAT and independent canonical verification.
    Protected delivery completes Collection productivity v2; Orders / Purchases follows.
-5. Orders / Purchases, separate from Supplier and biological/geographic provenance.
+5. **ORDER-001 is verified** after operator UAT and independent canonical verification. Orders /
+   Purchases is separate from Supplier, physical SeedLot and biological/geographic provenance. The approved
+   Collection/Activity/Explore/Sourcing navigation is included; no History category is added.
+   The next planned product directions are **EXPLORE-001 — Species distribution**, collection-aware
+   occurrence/distribution evidence using a separately reviewed provider contract, and
+   **EXPLORE-002 — Native ranges**, reviewed native/origin regional or polygon knowledge. They are
+   separate future candidates; detailed dependencies/contracts await selection. The operator chooses
+   the exact next increment after Order acceptance. **SCHEDULE-001** remains future Activity work.
+   Collection origins is the existing material-provenance map, distinct from both botanical concepts.
 6. Daily-use biological/collection improvements: measurements, justified flowering/fruiting work,
    germination analysis, viability/aging, seasonal planning, operational history and later reviewed
    Dashboard attention rules.
@@ -193,8 +201,10 @@ freezes for `0.1.0`.
 | `ORDER-001`       | Purchase transaction tracking, with Order distinct from Supplier and SeedLot.                                                                                                                                  |
 | `DASHBOARD-001`   | Defined analytical statistics after richer data, including `GERMINATION-001`; distinct from the existing UX dashboard summary.                                                                                 |
 
-`PWA-001`, `LINEAGE-003`, `ORDER-001`, and `DASHBOARD-001` are post-0.1.0 by default unless the
-operator reprioritizes them. They are not release-readiness dependencies.
+`PWA-001`, `LINEAGE-003`, and `DASHBOARD-001` are post-0.1.0 by default unless the operator
+reprioritizes them. ORDER-001 was reprioritized and verified after operator UAT and independent
+canonical verification; its reviewed delivery remains in progress. See [engineering progress](progress.md).
+These candidates are not release-readiness dependencies.
 
 ### Post-0.1.0 by default
 
@@ -341,8 +351,8 @@ Location concept while adding usage-scoped Seeds, Sowings, and Plants views plus
 collapsible hierarchy. `SUPPLIER-002` adds a focused Supplier hub with explicit direct-reference
 counts, linked SeedLots and directly acquired Plants/PlantGroups, BotanicalIdentity context, and
 precision-preserving recent acquisition summaries. Propagated or extracted descendants do not
-inherit Supplier, retained historical records do not become active holdings, and financial totals
-wait for the separate `ORDER-001` transaction model.
+inherit Supplier and retained historical records do not become active holdings. Transaction totals
+belong to the separate `ORDER-001` model; Supplier links to its Orders without financial analytics.
 
 After the implemented collection, geography, supplier, provenance-map, external botanical-data,
 structured native-range, MAP-002 occurrence-density, and ATTACHMENT-003 photo foundations,

@@ -397,7 +397,7 @@ with Session(get_engine()) as db:
             reset["counts"]["users"] == 1 and len(reset["media"]) == 1,
             "reset recreates owner and media",
         )
-        require(reset["manifest"]["version"] == 1, "fixture version")
+        require(reset["manifest"]["version"] == 2, "fixture version")
         login(preview)
         reset = preview.state()
         preview.seed()

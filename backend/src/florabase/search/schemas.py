@@ -15,6 +15,7 @@ class SearchKind(StrEnum):
     BOTANICAL_IDENTITY = "botanical_identity"
     BOTANICAL_PROFILE = "botanical_profile"
     SUPPLIER = "supplier"
+    ORDER = "order"
     LOCATION = "location"
     GEOGRAPHIC_PLACE = "geographic_place"
     PROVENANCE_SITE = "provenance_site"

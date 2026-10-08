@@ -139,8 +139,9 @@ Recent acquisitions merge the existing SeedLot acquisition date and direct Plant
 collection-entry date, preserve their year/month/day precision, omit undated records from the
 recency claim, and use record type and stable UUID as deterministic ties. Undated records remain in
 the linked-material sections. Supplier retirement preserves every relationship and there is no
-Supplier hard-delete workflow. Orders, invoices, spending, prices, currencies, and other financial
-analytics remain deferred to an explicit transaction model.
+Supplier hard-delete workflow. The compact Orders section links to the exact Supplier-filtered
+purchase directory. Transaction date/reference/price belong to [Order](orders.md); Supplier material
+counts and recency retain their existing meaning, without spending analytics.
 
 ### Location
 
@@ -239,7 +240,7 @@ botanical lookup.
 
 A SeedLot is one physically managed packet, bag, or lot of seeds. Identical packets remain separate
 records. BotanicalIdentity is required; label, Supplier, material provenance, collection Location,
-notes, and dates are optional.
+notes, dates, and a purchase Order link are optional.
 
 Acquisition, harvest, and expected-viability dates retain year, month, or day precision. Quantity may
 be an exact or approximate whole seed count or weight in grams/milligrams. Unknown quantity is valid;
@@ -250,6 +251,17 @@ Source kind is purchased, purchased fruit, self-collected, collection-produced, 
 other, or unknown. Only `other` accepts short source detail. A collection-produced lot may identify
 one Plant or one PlantGroup producer; the producer is optional because historical knowledge can be
 unknown. Non-collection-produced lots cannot carry a producer.
+
+Only purchased or purchased-fruit lots may explicitly link one [Order](orders.md). When both
+Supplier IDs are known they must match; null knowledge remains absent. Acquisition edit supports
+link/unlink/relink through the shared purchase-context preview also used from Order detail. Unknown
+source proposes Purchased; known compatible sources retain their exact kind, and incompatible sources require
+an explicit saved correction. Known Supplier replacement requires confirmation; unknown Order Supplier
+preserves lot knowledge. Acquisition date may be copied with explicit confirmation, retaining its
+PartialDate precision; purchase date and receipt date remain distinct. Order total is read-only
+transaction context, never a lot price. Unlink retains all confirmed acquisition values.
+Creating from Order prefills only purchase context, leaving identity, quantity, harvest date,
+provenance and Location for explicit entry, and acquisition date as an optional confirmed copy. Separate physical packets always remain separate records.
 
 ### Sowing
 
@@ -476,17 +488,22 @@ and PlantGroups are excluded from the active counts while remaining in historica
 aggregation.
 
 The Dashboard also hosts authenticated global collection search. Typed, bounded server results
-separate Collection, Botany, and Reference records; stored relationship matches do not infer
+separate Collection, Botany, Reference, and Sourcing records; stored relationship matches do not infer
 provenance or turn BotanicalProfile text into an observation. URL query parameters retain search
 and structured filter state. [Search and filter semantics](search.md) define exact applicability,
 location scope, partial-year behavior, and result paging. Local directory search remains available.
 
 Desktop navigation uses these macroareas, in order: **Overview** (Dashboard), **Collection**
-(Seeds, Sowings, Plants, Harvests, Media), **Activity** (Journal, History), **Places** (Locations, Geography,
-Provenance map), **Reference** (Botanical identities, Suppliers), and **Tools** (Import / Export,
-Labels). Page-level eyebrows use the owning macroarea; record/detail/form captions retain their
-own meanings. Event routes are retained; the global Event page is titled Journal. Mobile keeps Home,
-Seeds, Sowings, Plants and More, with remaining destinations in the same conceptual order.
+(Seeds, Sowings, Plants, Harvests, Locations), **Activity** (Journal, History), **Explore**
+(Botanical identities, Media, Geography, Collection origins), **Sourcing** (Suppliers, Orders), and
+**Tools** (Import / Export, Labels). Page-level eyebrows follow the macroarea. Routes are unchanged;
+Collection origins retains `#/map` and Saved View surface `provenance_map`. Mobile More retains every
+destination. Unknown old Places/Reference collapse preferences are ignored; active groups expand.
+
+Collection origins describes where actual collection material is recorded as coming from. Future
+Species distribution describes where a species is observed/distributed; Native range describes where
+it is considered biologically native/original. Neither is inferred from collection provenance,
+Supplier or current Location. EXPLORE-001/002 remain future candidates.
 
 Activity contains the focused Event Journal and the read-only unified operational History
 projection. SCHEDULE-001 remains a later candidate, without treating recorded facts as planned tasks. Future
@@ -547,8 +564,8 @@ Event relationships without conflating BotanicalIdentity aggregation with record
 
 Location presentation scopes the one shared Location hierarchy by its Seeds, Sowings, or Plants
 usage without splitting Location into separate domain entities. Supplier detail summarizes only
-explicitly connected records and does not imply spending or price totals before an Order model
-exists. Finer-grained geography remains compatible with carefully scoped custom/local
+explicitly connected material and links separately to its Orders. It does not aggregate spending
+or combine currencies. Finer-grained geography remains compatible with carefully scoped custom/local
 GeographicPlace nodes, while a canonical global city dataset is not part of the current or
 first-release model.
 
@@ -675,7 +692,7 @@ product workflows preserve historical rows rather than hard-deleting them.
 
 ## Deferred capabilities
 
-Richer structured Event payloads, Orders, other propagation
+Richer structured Event payloads, Order lines/general purchasing, other propagation
 material, analytical dashboards, PWA installability, enrichment,
 taxonomy reconciliation, deeper Supplier analytics, reminders, weather, and multi-user ownership
 remain planned. `docs/features.json` is the detailed source for dependencies and acceptance criteria.
@@ -831,3 +848,21 @@ stock, Supplier, provenance and updated_at never manufacture missing history. On
 filters, counts and globally paginates normalized candidates with joined labels and bounded typed
 references. History v1 Saved Views persist filters; migration 0035 extends only their surface
 constraint and refuses populated History-view downgrade. See [operational history](operational-history.md).
+
+### Purchase Orders (ORDER-001)
+
+[Orders](orders.md) records a purchase transaction separately from Supplier and physical SeedLot.
+UUIDv7/UTC records have optional Supplier, PartialDate `ordered_on`, non-unique normalized reference,
+exact non-negative Numeric total with a paired uppercase currency, and bounded notes. Zero is known
+zero; null is unknown. Amounts travel as decimal strings without rounding, allocation or FX.
+
+SeedLots may explicitly link one Order only for purchased/purchased-fruit sources. Known Supplier
+IDs must agree on both edit paths; null knowledge remains absent. Order row locks serialize these
+checks. Both link directions and new-lot creation use one purchase reconciliation contract. Apply
+checks Order/SeedLot versions and atomically confirms source, Supplier and optional precision-preserving
+date copy; stale conflicts apply nothing. Linked lots remain physically independent with no changes
+to quantities, lifecycle, material origin, Location or lineage. Unlink does not roll back confirmed
+acquisition facts. Order total remains read-only transaction context, without per-lot pricing. Retired Suppliers retain existing links;
+referenced Orders cannot be deleted. Migration 0036 preserves existing unlinked lots and refuses a
+populated downgrade. Orders adds bounded REST/detail/directory, Saved Views and direct Global Search;
+it does not expand History or purchasing to Plants/general inventory.

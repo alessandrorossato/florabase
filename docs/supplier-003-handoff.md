@@ -172,3 +172,9 @@ remains available at the URL above.
 
 Operator UAT subsequently passed. This handoff is superseded by the independent review and delivery
 record here and in `docs/progress.md`.
+
+## Subsequent ORDER-001 integration
+
+Suppliers now lives under Sourcing. Supplier detail links to its exact filtered Orders directory;
+transactions and totals belong to Orders, while existing Supplier/source/provenance/media semantics
+remain unchanged. Retired Suppliers retain historical Order links. See [Orders](orders.md).

@@ -35,6 +35,7 @@ const labels: Record<SearchKind, string> = {
   botanical_identity: "Botanical identities",
   botanical_profile: "Reference knowledge",
   supplier: "Suppliers",
+  order: "Orders",
   location: "Locations",
   geographic_place: "Geographic places",
   provenance_site: "Provenance sites",
@@ -50,6 +51,7 @@ const singular: Record<SearchKind, string> = {
   botanical_identity: "Botanical identity",
   botanical_profile: "Reference knowledge",
   supplier: "Supplier",
+  order: "Order",
   location: "Location",
   geographic_place: "Geographic place",
   provenance_site: "Provenance site",
@@ -61,9 +63,10 @@ const categories: { title: string; kinds: SearchKind[] }[] = [
   },
   { title: "Media", kinds: ["media_asset"] },
   { title: "Botany", kinds: ["botanical_identity", "botanical_profile"] },
+  { title: "Sourcing", kinds: ["supplier", "order"] },
   {
     title: "Reference",
-    kinds: ["supplier", "location", "geographic_place", "provenance_site"],
+    kinds: ["location", "geographic_place", "provenance_site"],
   },
 ];
 

@@ -621,7 +621,7 @@ export function LocationScreen({
         <PageHeader
           title="Locations"
           titleId="locations-title"
-          eyebrow="Places"
+          eyebrow="Collection"
           description="Manage where seeds, sowings, plants, groups, and harvested material are kept."
           actions={
             <button

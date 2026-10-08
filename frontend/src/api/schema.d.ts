@@ -1241,6 +1241,111 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/orders": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List All */
+        get: operations["listOrders"];
+        put?: never;
+        /** Create */
+        post: operations["createOrder"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read */
+        get: operations["getOrder"];
+        put?: never;
+        post?: never;
+        /** Delete */
+        delete: operations["deleteOrder"];
+        options?: never;
+        head?: never;
+        /** Update */
+        patch: operations["updateOrder"];
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}/purchase-context/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply Purchase */
+        post: operations["applyPurchaseContext"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}/purchase-context/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview Purchase */
+        post: operations["previewPurchaseContext"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}/seed-lot-choices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Purchase Choices */
+        get: operations["listPurchaseSeedChoices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/orders/{order_id}/seed-lots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Create Purchase Lot */
+        post: operations["createPurchaseSeedLot"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/plant-groups": {
         parameters: {
             query?: never;
@@ -1977,6 +2082,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AcquisitionContext */
+        AcquisitionContext: {
+            acquisition_date?: components["schemas"]["PartialDate"] | null;
+            /** Order Id */
+            order_id?: string | null;
+            /** @default unknown */
+            source_kind: components["schemas"]["SeedLotSourceKind"];
+            /** Supplier Id */
+            supplier_id?: string | null;
+        };
         /** AssetDetailResponse */
         AssetDetailResponse: {
             /** Attribution */
@@ -3809,6 +3924,128 @@ export interface components {
             /** Occurrence Status */
             occurrence_status: string;
         };
+        /** OrderCreate */
+        OrderCreate: {
+            /** Currency */
+            currency?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Order Reference */
+            order_reference?: string | null;
+            ordered_on?: components["schemas"]["PartialDate"] | null;
+            /** Supplier Id */
+            supplier_id?: string | null;
+            /** Total Price */
+            total_price?: string | null;
+        };
+        /** OrderDetailResponse */
+        OrderDetailResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Notes */
+            notes?: string | null;
+            /** Order Reference */
+            order_reference?: string | null;
+            ordered_on?: components["schemas"]["PartialDate"] | null;
+            /** Seed Lot Count */
+            seed_lot_count: number;
+            /** Seed Lots */
+            seed_lots: components["schemas"]["SupplierSeedLotLink"][];
+            /** Seed Lots Limit */
+            seed_lots_limit: number;
+            /** Seed Lots Offset */
+            seed_lots_offset: number;
+            /** Seed Lots Total */
+            seed_lots_total: number;
+            supplier: components["schemas"]["SupplierSummary"] | null;
+            /** Supplier Id */
+            supplier_id?: string | null;
+            /** Total Price */
+            total_price?: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** OrderPage */
+        OrderPage: {
+            /** Items */
+            items: components["schemas"]["OrderResponse"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
+        /** OrderResponse */
+        OrderResponse: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Currency */
+            currency?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Notes */
+            notes?: string | null;
+            /** Order Reference */
+            order_reference?: string | null;
+            ordered_on?: components["schemas"]["PartialDate"] | null;
+            /** Seed Lot Count */
+            seed_lot_count: number;
+            supplier: components["schemas"]["SupplierSummary"] | null;
+            /** Supplier Id */
+            supplier_id?: string | null;
+            /** Total Price */
+            total_price?: string | null;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+        };
+        /** OrderSummary */
+        OrderSummary: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Order Reference */
+            order_reference: string | null;
+            ordered_on: components["schemas"]["PartialDate"] | null;
+        };
+        /** OrderUpdate */
+        OrderUpdate: {
+            /** Currency */
+            currency?: string | null;
+            /** Notes */
+            notes?: string | null;
+            /** Order Reference */
+            order_reference?: string | null;
+            ordered_on?: components["schemas"]["PartialDate"] | null;
+            /** Supplier Id */
+            supplier_id?: string | null;
+            /** Total Price */
+            total_price?: string | null;
+        };
         /** OriginatingPlantGroupSummary */
         OriginatingPlantGroupSummary: {
             botanical_identity: components["schemas"]["BotanicalIdentitySummary"];
@@ -4586,6 +4823,101 @@ export interface components {
              */
             seed_lots: number;
         };
+        /** PurchaseApplyRequest */
+        PurchaseApplyRequest: {
+            context: components["schemas"]["AcquisitionContext"];
+            /**
+             * Expected Order Updated At
+             * Format: date-time
+             */
+            expected_order_updated_at: string;
+            /** Expected Seed Lot Updated At */
+            expected_seed_lot_updated_at?: string | null;
+            /** Seed Lot Id */
+            seed_lot_id?: string | null;
+            /**
+             * Use Order Date
+             * @default false
+             */
+            use_order_date: boolean;
+            /**
+             * Use Order Supplier
+             * @default false
+             */
+            use_order_supplier: boolean;
+        };
+        /** PurchasePreview */
+        PurchasePreview: {
+            /** Can Apply */
+            can_apply: boolean;
+            /** Conflict */
+            conflict: string | null;
+            current: components["schemas"]["AcquisitionContext"];
+            current_supplier: components["schemas"]["SupplierSummary"] | null;
+            /**
+             * Date Action
+             * @enum {string}
+             */
+            date_action: "keep" | "copy" | "replace";
+            order: components["schemas"]["OrderResponse"];
+            proposed_source: components["schemas"]["SeedLotSourceKind"];
+            /** Seed Lot Id */
+            seed_lot_id: string | null;
+            /** Seed Lot Updated At */
+            seed_lot_updated_at: string | null;
+            stored?: components["schemas"]["AcquisitionContext"] | null;
+            stored_supplier?: components["schemas"]["SupplierSummary"] | null;
+            /**
+             * Supplier Action
+             * @enum {string}
+             */
+            supplier_action: "keep" | "fill" | "replace";
+        };
+        /** PurchasePreviewRequest */
+        PurchasePreviewRequest: {
+            context?: components["schemas"]["AcquisitionContext"] | null;
+            /** Expected Seed Lot Updated At */
+            expected_seed_lot_updated_at?: string | null;
+            /** Seed Lot Id */
+            seed_lot_id?: string | null;
+        };
+        /** PurchaseResolution */
+        PurchaseResolution: {
+            confirmation: components["schemas"]["PurchaseApplyRequest"];
+            context: components["schemas"]["AcquisitionContext"];
+            order: components["schemas"]["OrderResponse"];
+            seed_lot: components["schemas"]["SeedLotResponse"] | null;
+        };
+        /** PurchaseSeedChoice */
+        PurchaseSeedChoice: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Label */
+            label: string;
+            /** Order Id */
+            order_id: string | null;
+            source_kind: components["schemas"]["SeedLotSourceKind"];
+            supplier: components["schemas"]["SupplierSummary"] | null;
+        };
+        /** PurchaseSeedLotCreate */
+        PurchaseSeedLotCreate: {
+            confirmation: components["schemas"]["PurchaseApplyRequest"];
+            seed_lot: components["schemas"]["SeedLotCreate"];
+        };
+        /** PurchaseSeedPage */
+        PurchaseSeedPage: {
+            /** Items */
+            items: components["schemas"]["PurchaseSeedChoice"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /**
          * ReintegrationEligibilityStatus
          * @enum {string}
@@ -4687,7 +5019,7 @@ export interface components {
          * SavedViewSurface
          * @enum {string}
          */
-        SavedViewSurface: "global_search" | "seed_lots" | "sowings" | "plants" | "harvests" | "stored_material" | "events" | "history" | "media" | "botanical_identities" | "suppliers" | "locations" | "geography" | "provenance_map";
+        SavedViewSurface: "global_search" | "seed_lots" | "sowings" | "plants" | "harvests" | "stored_material" | "events" | "history" | "media" | "botanical_identities" | "suppliers" | "orders" | "locations" | "geography" | "provenance_map";
         /** SavedViewUpdate */
         SavedViewUpdate: {
             /** Name */
@@ -4726,7 +5058,7 @@ export interface components {
          * SearchKind
          * @enum {string}
          */
-        SearchKind: "seed_lot" | "sowing" | "plant" | "plant_group" | "harvest" | "event" | "media_asset" | "botanical_identity" | "botanical_profile" | "supplier" | "location" | "geographic_place" | "provenance_site";
+        SearchKind: "seed_lot" | "sowing" | "plant" | "plant_group" | "harvest" | "event" | "media_asset" | "botanical_identity" | "botanical_profile" | "supplier" | "order" | "location" | "geographic_place" | "provenance_site";
         /** SearchResponse */
         SearchResponse: {
             /** Groups */
@@ -4760,6 +5092,8 @@ export interface components {
             material_provenance_place_id?: string | null;
             /** Notes */
             notes?: string | null;
+            /** Order Id */
+            order_id?: string | null;
             /** Producer Plant Group Id */
             producer_plant_group_id?: string | null;
             /** Producer Plant Id */
@@ -4830,6 +5164,9 @@ export interface components {
             material_provenance_place_id: string | null;
             /** Notes */
             notes: string | null;
+            order?: components["schemas"]["OrderSummary"] | null;
+            /** Order Id */
+            order_id?: string | null;
             primary_photo?: components["schemas"]["PrimaryPhotoResponse"] | null;
             producer_plant: components["schemas"]["ProducerPlantSummary"] | null;
             producer_plant_group: components["schemas"]["ProducerPlantGroupSummary"] | null;
@@ -4889,6 +5226,8 @@ export interface components {
             material_provenance_place_id?: string | null;
             /** Notes */
             notes?: string | null;
+            /** Order Id */
+            order_id?: string | null;
             /** Producer Plant Group Id */
             producer_plant_group_id?: string | null;
             /** Producer Plant Id */
@@ -8952,6 +9291,321 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TargetPageResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listOrders: {
+        parameters: {
+            query?: {
+                q?: string;
+                supplier_id?: string | null;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createOrder: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getOrder: {
+        parameters: {
+            query?: {
+                seed_lots_offset?: number;
+                seed_lots_limit?: number;
+            };
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderDetailResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    deleteOrder: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateOrder: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OrderUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OrderResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    applyPurchaseContext: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseApplyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseResolution"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    previewPurchaseContext: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchasePreviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchasePreview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listPurchaseSeedChoices: {
+        parameters: {
+            query?: {
+                q?: string;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PurchaseSeedPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createPurchaseSeedLot: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                order_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PurchaseSeedLotCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeedLotResponse"];
                 };
             };
             /** @description Validation Error */

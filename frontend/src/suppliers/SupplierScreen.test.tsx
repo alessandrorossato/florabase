@@ -207,7 +207,7 @@ test("Supplier detail shares Photos actions and updates/clears its representativ
     screen.getByRole("button", { name: "Link existing media" }),
   ).toBeInTheDocument();
   await user.click(
-    screen.getByRole("button", {
+    await screen.findByRole("button", {
       name: "Remove primary designation from Representative",
     }),
   );
@@ -217,7 +217,9 @@ test("Supplier detail shares Photos actions and updates/clears its representativ
     ).not.toBeInTheDocument();
   });
   await user.click(
-    screen.getByRole("button", { name: "Set Representative as primary" }),
+    await screen.findByRole("button", {
+      name: "Set Representative as primary",
+    }),
   );
   await screen.findByRole("img", { name: "Primary photo for Review nursery" });
   const primaryCall = fetch.mock.calls.find(
@@ -272,4 +274,24 @@ test("Supplier detail edit uses the loaded detail while directory is empty", asy
       expect.objectContaining({ method: "PUT" }),
     );
   });
+});
+
+test("Supplier details link to exact filtered purchase Orders", async () => {
+  vi.spyOn(globalThis, "fetch").mockImplementation((input) =>
+    Promise.resolve(
+      requestUrl(input) === "/api/v1/suppliers"
+        ? json([supplier])
+        : json({
+            ...supplier,
+            seed_lots: [],
+            plants: [],
+            plant_groups: [],
+            recent_acquisitions: [],
+          }),
+    ),
+  );
+  mount({ initialId: id });
+  expect(
+    await screen.findByRole("link", { name: "View Orders for this Supplier" }),
+  ).toHaveAttribute("href", `#/orders?supplier_id=${id}`);
 });

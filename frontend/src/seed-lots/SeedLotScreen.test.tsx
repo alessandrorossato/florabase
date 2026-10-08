@@ -10,6 +10,8 @@ import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { App } from "../App";
 import type { GeographicPlaceResponse } from "../geographic-places/api";
+// These cases exercise SeedLot interactions; App.lazy.test.tsx owns chunk loading.
+import "./SeedLotScreen";
 
 const identity = {
   id: "01900000-0000-7000-8000-000000000101",
@@ -152,6 +154,8 @@ function directoryHandler(seedLots: unknown[], custom?: Handler): Handler {
       const result = custom(path, init);
       if (result !== undefined) return result;
     }
+    if (path.startsWith("/api/v1/orders?"))
+      return json({ items: [], total: 0, offset: 0, limit: 50 });
     if (
       path === "/api/v1/botanical-identities" &&
       (!init?.method || init.method === "GET")
@@ -1537,4 +1541,288 @@ test("BULK-001 successful move refreshes the directory, clears preview and retai
   expect(
     screen.getByRole("button", { name: /Blue packet.*New bench/s }),
   ).toBeVisible();
+});
+
+const purchaseOrder = {
+  id: "01900000-0000-7000-8000-000000000951",
+  supplier_id: supplier.id,
+  supplier: { id: supplier.id, name: supplier.name },
+  order_reference: "PO-SEEDS",
+  ordered_on: { precision: "year", year: 2026 },
+  total_price: "18.00",
+  currency: "EUR",
+  seed_lot_count: 0,
+  notes: null,
+  created_at: supplier.created_at,
+  updated_at: supplier.updated_at,
+  seed_lots: [],
+  seed_lots_total: 0,
+  seed_lots_offset: 0,
+  seed_lots_limit: 50,
+};
+
+test.each([
+  [409, "order_supplier_conflict", "Supplier must match the Order Supplier"],
+  [409, "order_source_conflict", "Only purchased or purchased-fruit"],
+  [404, "order_not_found", "selected Order no longer exists"],
+])(
+  "Order refusal %s %s reveals Acquisition and preserves the SeedLot draft",
+  async (status, code, message) => {
+    const linked = lot({ order_id: purchaseOrder.id });
+    mockApi(
+      directoryHandler([linked], (path, init) => {
+        if (path.includes("/api/v1/seed-lots/") && init?.method === "PUT")
+          return json({ detail: { code, message: "Domain conflict" } }, status);
+        if (path.startsWith(`/api/v1/orders/${purchaseOrder.id}`))
+          return json(purchaseOrder);
+        if (path.startsWith("/api/v1/orders?"))
+          return json({
+            items: [purchaseOrder],
+            total: 1,
+            offset: 0,
+            limit: 50,
+          });
+      }),
+    );
+    window.history.replaceState(null, "", `#/seeds/${linked.id}`);
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(
+      await screen.findByRole("button", { name: "Edit seed lot" }),
+    );
+    await user.clear(screen.getByLabelText("Lot label (optional)"));
+    await user.type(
+      screen.getByLabelText("Lot label (optional)"),
+      "Retained draft",
+    );
+    await user.click(screen.getByRole("tab", { name: "Seed details" }));
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent(message);
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Acquisition" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
+    });
+    expect(
+      screen.getByLabelText("Order", { selector: "select" }),
+    ).toHaveFocus();
+    expect(screen.getByLabelText("Order", { selector: "select" })).toHaveValue(
+      purchaseOrder.id,
+    );
+    expect(screen.getByLabelText("Lot label (optional)")).toHaveValue(
+      "Retained draft",
+    );
+  },
+);
+
+test("create from Order prefills only truthful purchase context in the normal SeedLot form", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    `#/seeds?action=create&order=${purchaseOrder.id}`,
+  );
+  mockApi(
+    directoryHandler([], (path) => {
+      if (path.endsWith("/purchase-context/preview"))
+        return json({
+          order: purchaseOrder,
+          current: {
+            source_kind: "unknown",
+            supplier_id: null,
+            order_id: null,
+            acquisition_date: null,
+          },
+          seed_lot_id: null,
+          seed_lot_updated_at: null,
+          proposed_source: "purchased",
+          supplier_action: "fill",
+          date_action: "copy",
+          can_apply: true,
+          conflict: null,
+        });
+      if (path.endsWith("/purchase-context/apply"))
+        return json({
+          order: purchaseOrder,
+          context: {
+            source_kind: "purchased",
+            supplier_id: supplier.id,
+            order_id: purchaseOrder.id,
+            acquisition_date: null,
+          },
+          confirmation: {
+            context: { source_kind: "unknown" },
+            expected_order_updated_at: purchaseOrder.updated_at,
+            use_order_supplier: true,
+            use_order_date: false,
+          },
+          seed_lot: null,
+        });
+      if (path.startsWith(`/api/v1/orders/${purchaseOrder.id}`))
+        return json(purchaseOrder);
+      if (path.startsWith("/api/v1/orders?"))
+        return json({ items: [purchaseOrder], total: 1, offset: 0, limit: 50 });
+    }),
+  );
+  const user = userEvent.setup();
+  render(<App />);
+  expect(
+    await screen.findByRole("combobox", { name: "Botanical identity" }),
+  ).toHaveValue("");
+  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
+  expect(screen.getByLabelText("Source")).toHaveValue("purchased");
+  expect(
+    screen.getByRole("combobox", { name: "Supplier (optional)" }),
+  ).toHaveValue(supplier.name);
+  expect(
+    await screen.findByLabelText("Order", { selector: "select" }),
+  ).toHaveValue(purchaseOrder.id);
+  expect(
+    screen.getByRole("group", { name: "Acquisition date" }),
+  ).toHaveTextContent("Unknown");
+  await user.click(screen.getByRole("tab", { name: "Origin" }));
+  expect(
+    screen.getByRole("combobox", { name: "Material provenance (optional)" }),
+  ).toHaveValue("");
+});
+
+test("SeedLot detail keeps Order, Supplier, acquisition, provenance and Location separate", async () => {
+  const linked = lot({
+    order_id: purchaseOrder.id,
+    order: {
+      id: purchaseOrder.id,
+      order_reference: "PO-SEEDS",
+      ordered_on: purchaseOrder.ordered_on,
+    },
+  });
+  mockApi(directoryHandler([linked]));
+  window.history.replaceState(null, "", `#/seeds/${linked.id}`);
+  render(<App />);
+  expect(await screen.findByRole("link", { name: "PO-SEEDS" })).toHaveAttribute(
+    "href",
+    `#/orders/${purchaseOrder.id}`,
+  );
+  expect(
+    screen.getAllByRole("link", { name: supplier.name }).length,
+  ).toBeGreaterThan(0);
+  expect(screen.getAllByText(place.display_path).length).toBeGreaterThan(0);
+  expect(screen.getAllByText(location.display_path).length).toBeGreaterThan(0);
+});
+
+test("SeedLot selection previews without mutating; Apply updates acquisition only and preserves other drafts", async () => {
+  const existing = lot({
+    source_kind: "unknown",
+    supplier_id: null,
+    supplier: null,
+    order_id: null,
+    order: null,
+    acquisition_date: null,
+  });
+  const authoritative = {
+    ...existing,
+    source_kind: "purchased",
+    supplier_id: supplier.id,
+    supplier: purchaseOrder.supplier,
+    order_id: purchaseOrder.id,
+    order: {
+      id: purchaseOrder.id,
+      order_reference: purchaseOrder.order_reference,
+      ordered_on: purchaseOrder.ordered_on,
+    },
+    updated_at: "2026-10-08T10:00:00Z",
+  };
+  let applies = 0;
+  mockApi(
+    directoryHandler([existing], (path, init) => {
+      if (path.endsWith("/purchase-context/preview"))
+        return json({
+          order: purchaseOrder,
+          seed_lot_id: existing.id,
+          seed_lot_updated_at: existing.updated_at,
+          current: {
+            source_kind: "unknown",
+            supplier_id: null,
+            order_id: null,
+            acquisition_date: null,
+          },
+          current_supplier: null,
+          proposed_source: "purchased",
+          supplier_action: "fill",
+          date_action: "copy",
+          can_apply: true,
+          conflict: null,
+        });
+      if (path.endsWith("/purchase-context/apply")) {
+        applies++;
+        return json({
+          order: purchaseOrder,
+          context: {
+            source_kind: "purchased",
+            supplier_id: supplier.id,
+            order_id: purchaseOrder.id,
+            acquisition_date: null,
+          },
+          confirmation: JSON.parse(requestBody(init)) as unknown,
+          seed_lot: authoritative,
+        });
+      }
+      if (path.startsWith(`/api/v1/orders/${purchaseOrder.id}`))
+        return json(purchaseOrder);
+      if (path.startsWith("/api/v1/orders?"))
+        return json({ items: [purchaseOrder], total: 1, offset: 0, limit: 50 });
+    }),
+  );
+  window.history.replaceState(null, "", `#/seeds/${existing.id}`);
+  const user = userEvent.setup();
+  render(<App />);
+  await user.click(
+    await screen.findByRole("button", { name: "Edit seed lot" }),
+  );
+  await user.clear(screen.getByLabelText("Lot label (optional)"));
+  await user.type(
+    screen.getByLabelText("Lot label (optional)"),
+    "Unsaved identity draft",
+  );
+  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
+  await screen.findByRole("option", { name: /PO-SEEDS/ });
+  await user.selectOptions(
+    screen.getByLabelText("Order", { selector: "select" }),
+    purchaseOrder.id,
+  );
+  const purchaseDialog = await screen.findByRole("dialog", {
+    name: "Review purchase context",
+  });
+  expect(applies).toBe(0);
+  expect(screen.getByLabelText("Source")).toHaveValue("unknown");
+  await user.click(
+    within(purchaseDialog).getByRole("button", { name: "Cancel" }),
+  );
+  expect(screen.getByLabelText("Order", { selector: "select" })).toHaveValue(
+    "",
+  );
+  expect(applies).toBe(0);
+  await user.selectOptions(
+    screen.getByLabelText("Order", { selector: "select" }),
+    purchaseOrder.id,
+  );
+  await user.click(
+    await screen.findByRole("button", { name: "Apply purchase context" }),
+  );
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("dialog", { name: "Review purchase context" }),
+    ).not.toBeInTheDocument();
+  });
+  expect(applies).toBe(1);
+  expect(screen.getByLabelText("Source")).toHaveValue("purchased");
+  expect(screen.getByLabelText("Order", { selector: "select" })).toHaveValue(
+    purchaseOrder.id,
+  );
+  expect(
+    screen.getByRole("group", { name: "Acquisition date" }),
+  ).toHaveTextContent("Unknown");
+  await user.click(screen.getByRole("tab", { name: "Essentials" }));
+  expect(screen.getByLabelText("Lot label (optional)")).toHaveValue(
+    "Unsaved identity draft",
+  );
 });

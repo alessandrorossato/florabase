@@ -124,6 +124,13 @@ const SupplierScreen = lazy(() =>
   }),
 );
 
+const OrderScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./orders/OrderScreen");
+    return { default: module.OrderScreen };
+  }),
+);
+
 const ProvenanceMapScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./provenance-map/ProvenanceMapScreen");
@@ -148,6 +155,7 @@ type Section =
   | "map"
   | "identities"
   | "suppliers"
+  | "orders"
   | "locations"
   | "geography"
   | "import-export"
@@ -162,6 +170,7 @@ interface Route {
   tab?: string;
   action?: string;
   identityId?: string;
+  orderId?: string;
   sourceType?: "plant" | "plant_group";
   sourceId?: string;
   seedLotId?: string;
@@ -191,6 +200,7 @@ function currentRoute(): Route {
       params.get("sourceType") === "plant_group" ? "plant_group" : "plant",
     sourceId: params.get("source") ?? undefined,
     identityId,
+    orderId: params.get("order") ?? undefined,
     seedLotId,
     sowingId,
     creationKind: kind === "plant" || kind === "group" ? kind : undefined,
@@ -216,6 +226,7 @@ function currentRoute(): Route {
     "map",
     "identities",
     "suppliers",
+    "orders",
     "locations",
     "geography",
     "import-export",
@@ -247,7 +258,7 @@ const desktopGroups: {
       { id: "sowings", label: "Sowings" },
       { id: "plants", label: "Plants" },
       { id: "harvests", label: "Harvests" },
-      { id: "media", label: "Media" },
+      { id: "locations", label: "Locations" },
     ],
   },
   {
@@ -258,18 +269,19 @@ const desktopGroups: {
     ],
   },
   {
-    label: "Places",
+    label: "Explore",
     items: [
-      { id: "locations", label: "Locations" },
+      { id: "identities", label: "Botanical identities" },
+      { id: "media", label: "Media" },
       { id: "geography", label: "Geography" },
-      { id: "map", label: "Provenance map" },
+      { id: "map", label: "Collection origins" },
     ],
   },
   {
-    label: "Reference",
+    label: "Sourcing",
     items: [
-      { id: "identities", label: "Botanical identities" },
       { id: "suppliers", label: "Suppliers" },
+      { id: "orders", label: "Orders" },
     ],
   },
   {
@@ -585,6 +597,11 @@ function ApplicationShell() {
                   sourceType={route.sourceType}
                   sourceId={route.sourceId}
                 />
+              ) : route.section === "orders" ? (
+                <OrderScreen
+                  key={route.recordId ?? "directory"}
+                  initialId={route.recordId}
+                />
               ) : route.section === "media" ? (
                 <MediaScreen
                   key={route.recordId ?? "directory"}
@@ -595,6 +612,7 @@ function ApplicationShell() {
                   initialId={route.recordId}
                   initialTab={route.tab}
                   initialIdentityId={route.identityId}
+                  initialOrderId={route.orderId}
                   startCreating={route.action === "create"}
                 />
               ) : route.section === "sowings" ? (
@@ -619,7 +637,9 @@ function ApplicationShell() {
                 <GlobalEventsScreen />
               ) : route.section === "map" ? (
                 <Suspense
-                  fallback={<p aria-live="polite">Loading provenance map…</p>}
+                  fallback={
+                    <p aria-live="polite">Loading collection origins…</p>
+                  }
                 >
                   <ProvenanceMapScreen />
                 </Suspense>

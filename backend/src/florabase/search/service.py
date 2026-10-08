@@ -20,6 +20,7 @@ from florabase.locations.model import Location
 from florabase.locations.service import display_path as location_path
 from florabase.locations.service import list_locations
 from florabase.media.service import asset_text_match
+from florabase.orders.model import Order
 from florabase.plants.model import (
     Plant,
     PlantGroup,
@@ -152,6 +153,7 @@ def _branch(
             SearchKind.BOTANICAL_IDENTITY: f"#/identities/{record_id}",
             SearchKind.BOTANICAL_PROFILE: f"#/identities/{record_id}?tab=reference",
             SearchKind.SUPPLIER: f"#/suppliers/{record_id}",
+            SearchKind.ORDER: f"#/orders/{record_id}",
             SearchKind.LOCATION: f"#/locations/{record_id}",
             SearchKind.GEOGRAPHIC_PLACE: f"#/geography?place={record_id}",
             SearchKind.PROVENANCE_SITE: f"#/geography/{record_id}",
@@ -632,6 +634,39 @@ def search(
                 )
             )
         add(SearchKind.PROVENANCE_SITE, statement)
+
+    # Orders have only direct transaction metadata; collection filters never infer links.
+    if not filters.collection_only():
+        order_supplier = aliased(Supplier)
+        date_text = case(
+            (Order.ordered_on_year.is_(None), "Date unknown"),
+            else_=func.concat_ws(
+                "-", Order.ordered_on_year, Order.ordered_on_month, Order.ordered_on_day
+            ),
+        )
+        statement = select(
+            Order.id.label("id"),
+            func.coalesce(Order.order_reference, "Purchase order").label("title"),
+            func.concat_ws(
+                " · ",
+                date_text,
+                func.coalesce(order_supplier.name, "Supplier unknown"),
+                case(
+                    (
+                        Order.total_price.is_not(None),
+                        func.concat(Order.currency, " ", Order.total_price),
+                    ),
+                    else_=None,
+                ),
+            ).label("context"),
+            Order.id.label("route_id"),
+            literal("").label("route_kind"),
+        ).outerjoin(order_supplier, order_supplier.id == Order.supplier_id)
+        if query:
+            statement = statement.where(
+                _matches(query, Order.order_reference, order_supplier.name, Order.notes)
+            )
+        add(SearchKind.ORDER, statement)
 
     return SearchResponse(
         query=query,

@@ -159,9 +159,10 @@ Before seeding, host guards check source/context, project, containers, origin, n
 mounts and Docker ownership. Runtime guards also check development cookie policy, UAT mode,
 DB URL/user, a validated resource marker and `current_database()/current_user`.
 
-Fixture version 1 is a small basil/lavender/aloe collection with Suppliers, a Location hierarchy,
+Fixture version 2 is a small basil/lavender/aloe collection with Suppliers, a Location hierarchy,
 synthetic provenance, varied SeedLots, active/historical Sowings, direct/derived Plants, a PlantGroup,
-observations, a Harvest and shared local/primary/external media. Local PNG content is generated through
+observations, a Harvest and shared local/primary/external media. ORDER-001 adds an exact-date EUR
+purchase with two separate basil packets and a month-only purchase with unknown Supplier/price. Local PNG content is generated through
 the normal upload service. External `example.invalid` metadata requires no fetch and deliberately
 exercises the remote-image failure state. No provider enrichment is claimed.
 

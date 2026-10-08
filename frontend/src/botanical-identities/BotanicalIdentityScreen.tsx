@@ -1334,7 +1334,7 @@ export function BotanicalIdentityScreen({
       <PageHeader
         title="Botanical identities"
         titleId="botanical-identities-title"
-        eyebrow="Reference"
+        eyebrow="Explore"
         description="Manage the botanical identities that connect collection records and reference data."
         actions={
           <button

@@ -105,6 +105,10 @@ class SeedLot(Base):
             "(producer_plant_id IS NULL AND producer_plant_group_id IS NULL)",
             name="ck_seed_lots_producer_source_kind",
         ),
+        CheckConstraint(
+            "order_id IS NULL OR source_kind IN ('purchased', 'purchased_fruit')",
+            name="ck_seed_lots_order_source",
+        ),
         _partial_date_constraint("acquisition_date"),
         _partial_date_constraint("harvest_date"),
         _partial_date_constraint("expected_viability_until"),
@@ -145,6 +149,9 @@ class SeedLot(Base):
     )
     producer_plant_group_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("plant_groups.id", ondelete="RESTRICT"), nullable=True, index=True
+    )
+    order_id: Mapped[UUID | None] = mapped_column(
+        Uuid(), ForeignKey("orders.id", ondelete="RESTRICT"), nullable=True, index=True
     )
     supplier_id: Mapped[UUID | None] = mapped_column(
         Uuid(), ForeignKey("suppliers.id", ondelete="RESTRICT"), nullable=True, index=True

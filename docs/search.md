@@ -15,7 +15,7 @@ taxonomic, semantic, or AI interpretation.
 
 Groups remain distinct: Collection includes SeedLot, Sowing, Plant, PlantGroup, Harvest, and Event; Media includes MediaAsset; Botany
 includes BotanicalIdentity and operator-authored BotanicalProfile reference knowledge; Reference
-includes Supplier, Location, GeographicPlace, and ProvenanceSite. Profile matches open the identity's
+includes Location, GeographicPlace, and ProvenanceSite; Sourcing includes Supplier and Order. Profile matches open the identity's
 Reference tab. Event matches open the target's Events tab. No notes or contact details are copied
 into snippets. The group count is exact; each response contains at most 20 items per kind by default
 (`limit` up to 50). `offset` pages every kind consistently. The UI shows each group's loaded count
@@ -30,7 +30,7 @@ SeedLot. No lineage, native-range, occurrence, or descendant-provenance inferenc
 
 `kind` accepts repeated record kinds. `identity_id`, `location_id`, `supplier_id`,
 `provenance_place_id`, and `provenance_site_id` constrain applicable collection records; the
-collection-only filters exclude Botany and Reference matches. Location selection includes the exact
+collection-only filters exclude Botany, Reference and Sourcing matches. Location selection includes the exact
 node and descendants through persisted parent links, based on each record's own current Location.
 The provenance filters match only a directly recorded place or site on a SeedLot or directly entered
 Plant/PlantGroup; they do not propagate to Sowings or Events. Supplier also matches a Sowing through
@@ -38,7 +38,7 @@ its required SeedLot. `lifecycle` requires exactly one applicable record kind. `
 Event. `year` requires one collection kind and tests its recorded acquisition, sowing, collection
 entry, or occurrence year respectively; it never fills in an unknown month or day. The interface
 omits a photo filter because local versus external associated-photo semantics deserve a separate
-explicit product choice. No new database table, index, or migration was added.
+explicit product choice. SEARCH-001 added no database table, index, or migration.
 
 Dashboard Quick actions open the current Add seed lot, Add plant, Add plant group, and Import / Export
 workflows. Start sowing stays on a chosen SeedLot's authoritative propagation path.
@@ -77,8 +77,9 @@ Harvest. Source/identity joins are one-to-one through the exact source. Media jo
 Attachment, with no reference joins. Counts and pages use the same typed projection, sorted by lower
 case title then UUID. Each kind adds exactly two SQL statements, independent of item/link/result
 count. Existing text path lookups add two shared statements: mixed Harvest/Media text search uses six;
-unrestricted text search uses at most 28 for all 13 kinds. Blank unfiltered queries use none. No schema,
-index, search engine, cache, saved view, bulk operation or generic history is introduced.
+at the SEARCH-002 boundary unrestricted text search used at most 28 for 13 kinds;
+ORDER-001 extends this to 30 for 14 kinds. Blank unfiltered queries use none. SEARCH-002 introduced no
+schema, index, search engine, cache, saved view, bulk operation or generic history.
 
 ## Saved operator views
 
@@ -87,3 +88,13 @@ uses the same canonical `#/dashboard?...` parser/serializer and live SEARCH-002 
 zero. Exact UUID filters survive missing references. Manual filter edits do not update a Saved View;
 Update with current view is explicit. Dashboard also opens views from supported directories.
 See [Saved Views contracts](saved-views.md).
+
+## Purchase Orders (ORDER-001)
+
+`kind=order` adds direct transaction reference/Supplier/notes matching and exact Order detail links.
+Supplier and Order results are presented together as Sourcing. Case-insensitive literal substring
+matching escapes `%` and `_`; no linked-lot joins or botanical matching multiply results. Context
+retains only known date precision, Supplier and optional exact total/currency. Collection-specific
+structured filters keep their existing meaning and exclude Orders. Count/page queries remain two
+per selected kind; all 14 kinds plus shared paths are bounded to 30 SELECTs. Orders directory offers
+its own exact Supplier filter and Saved Views. See [Orders](orders.md).

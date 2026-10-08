@@ -349,3 +349,12 @@ This includes both preserved earlier work and the final 33–47 pass.
 - `frontend/src/styles.css`
 
 **66 unstaged/untracked files**; no staged changes.
+
+## ORDER-001 navigation update
+
+The current approved sidebar is Overview (Dashboard); Collection (Seeds, Sowings, Plants, Harvests,
+Locations); Activity (Journal, History); Explore (Botanical identities, Media, Geography, Collection
+origins); Sourcing (Suppliers, Orders); Tools (Import / Export, Labels). Page eyebrows follow these
+areas. Desktop disclosure/localStorage and mobile More behavior remain intact. Collection origins
+keeps `#/map`, API/domain provenance names and Saved View `provenance_map`; its copy describes actual
+recorded material origin. No Species distribution, Native range or Schedule destinations are shipped.

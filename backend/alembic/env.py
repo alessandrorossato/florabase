@@ -23,6 +23,7 @@ from florabase.harvests.conversion_model import HarvestSeedLotConversion
 from florabase.harvests.inventory_model import HarvestMaterialDisposition, HarvestMaterialInventory
 from florabase.harvests.model import Harvest, HarvestItem
 from florabase.locations.model import Location
+from florabase.orders.model import Order
 from florabase.plants.model import Plant, PlantGroup
 from florabase.provenance_sites.model import ProvenanceSite
 from florabase.saved_views.model import SavedView
@@ -49,6 +50,7 @@ assert BotanicalProfile.__table__.metadata is target_metadata
 assert BotanicalProfileNativeRange.__table__.metadata is target_metadata
 assert ExternalTaxonLink.__table__.metadata is target_metadata
 assert ExternalProviderCache.__table__.metadata is target_metadata
+assert Order.__table__.metadata is target_metadata
 assert Supplier.__table__.metadata is target_metadata
 assert Location.__table__.metadata is target_metadata
 assert GeographicPlace.__table__.metadata is target_metadata
