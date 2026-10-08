@@ -3,6 +3,7 @@ from uuid import uuid7
 
 import pytest
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import Engine, text
 
 from alembic import command
@@ -47,6 +48,7 @@ def test_distribution_surface_upgrade_preserves_views_and_refuses_populated_down
     database_engine: Engine,
 ) -> None:
     config = Config("alembic.ini")
+    current_head = ScriptDirectory.from_config(config).get_current_head()
     owner, old, history = uuid7(), uuid7(), uuid7()
     command.downgrade(config, "20261008_0036")
     with database_engine.begin() as connection:
@@ -91,8 +93,7 @@ def test_distribution_surface_upgrade_preserves_views_and_refuses_populated_down
                 == 2
             )
             assert (
-                connection.scalar(text("SELECT version_num FROM alembic_version"))
-                == "20261008_0037"
+                connection.scalar(text("SELECT version_num FROM alembic_version")) == current_head
             )
             connection.execute(text("DELETE FROM saved_views WHERE id=:id"), {"id": history})
         command.downgrade(config, "20261008_0036")

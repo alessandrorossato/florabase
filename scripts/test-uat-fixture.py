@@ -156,14 +156,14 @@ def test_species_distribution_fixture_scopes_and_truthful_link() -> None:
         records = manifest["records"]
         all_ids = {row.id for row in list_identities(database).items}
         assert UUID(records["identity:Viola tricolor"]) not in all_ids
-        assert len(all_ids) == 4
+        assert len(all_ids) == 5
         assert {row.scientific_name for row in list_identities(database, scope="living").items} == {
             "Ocimum basilicum",
             "Aloe vera",
         }
         assert {
             row.scientific_name for row in list_identities(database, scope="current").items
-        } == {"Ocimum basilicum", "Aloe vera", "Lavandula angustifolia"}
+        } == {"Ocimum basilicum", "Aloe vera", "Lavandula angustifolia", "Salvia officinalis"}
         assert (
             list_identities(database, scope="historical").items[0].scientific_name
             == "Raphanus sativus"
@@ -173,3 +173,94 @@ def test_species_distribution_fixture_scopes_and_truthful_link() -> None:
         assert link.external_id == "48GBK"
         assert link.scientific_name == "Ocimum basilicum L."
         assert list_identities(database).occurrence_ready == 1
+
+
+def test_native_range_fixture_overlap_disjoint_custom_and_no_range() -> None:
+    from uuid import UUID
+
+    from florabase.explore import native_ranges
+
+    with Session(get_engine()) as database:
+        manifest = read_manifest(require_identity(get_settings(), database))
+        assert manifest is not None
+        records = manifest["records"]
+        overview = native_ranges.overview(database)
+        assert (overview.represented, overview.with_range, overview.without_range) == (5, 4, 1)
+        units = {unit.source_code: unit.identity_count for unit in overview.territories}
+        assert units["BR"] == 1
+        assert units["AR"] == 1
+        assert units["IT"] == 2
+        basil = native_ranges.selected(database, UUID(records["identity:Ocimum basilicum"]))
+        assert basil is not None
+        assert {row.source_code for row in basil.ranges} == {"005", "BR"}
+        aloe = native_ranges.selected(database, UUID(records["identity:Aloe vera"]))
+        assert aloe is not None
+        assert {row.source_code for row in aloe.ranges} == {"IT", "TH"}
+        lavender = native_ranges.selected(
+            database, UUID(records["identity:Lavandula angustifolia"])
+        )
+        assert lavender is not None
+        assert any(row.place_kind == "custom" for row in lavender.ranges)
+        assert {row.source_code for row in lavender.territories} == {"IT"}
+        sage = native_ranges.selected(database, UUID(records["identity:Salvia officinalis"]))
+        assert sage is not None
+        assert sage.total == 0
+
+
+def test_native_range_category_and_selection_fixture() -> None:
+    from uuid import UUID
+
+    from florabase.explore import native_ranges
+    from florabase.explore.schemas import CollectionRecordCategory as Category
+
+    with Session(get_engine()) as database:
+        manifest = read_manifest(require_identity(get_settings(), database))
+        assert manifest is not None
+        ids = [
+            UUID(manifest["records"]["identity:" + name])
+            for name in ("Aloe vera", "Ocimum basilicum", "Lavandula angustifolia")
+        ]
+        selected = native_ranges.selection(database, ids)
+        assert len(selected.identities) == 3
+        assert not selected.missing_ids
+        coverage = {unit.source_code: unit for unit in selected.territories}
+        assert coverage["IT"].identity_count == 2
+        assert coverage["BR"].identity_ids == [ids[1]]
+        plants = native_ranges.list_identities(database, record=[Category.PLANT])
+        assert {item.id for item in plants.items} == set(ids[:2])
+        seeds = native_ranges.list_identities(database, record=[Category.SEED_LOT])
+        both = native_ranges.list_identities(database, record=[Category.PLANT, Category.SEED_LOT])
+        assert {item.id for item in both.items} == {item.id for item in plants.items} | {
+            item.id for item in seeds.items
+        }
+        stored = native_ranges.list_identities(database, record=[Category.STORED_MATERIAL])
+        assert [item.id for item in stored.items] == [ids[1]]
+        assert (
+            native_ranges.list_identities(
+                database, scope="living", record=[Category.SEED_LOT]
+            ).total
+            == 0
+        )
+
+
+def test_additive_stored_fixture_preserves_existing_operator_inventory_and_is_idempotent(
+    tmp_path: Path,
+) -> None:
+    from types import SimpleNamespace
+    from unittest.mock import MagicMock
+    from uuid import uuid7
+
+    from uat_fixture import ensure_stored_material
+
+    inventory = SimpleNamespace(id=uuid7(), state="depleted", quantity_value=None)
+    manifest = {"version": 4, "state": "ready", "records": {"item:basil": str(uuid7())}}
+    database = MagicMock()
+    database.scalar.return_value = inventory
+    with patch("uat_fixture.initialize_inventory") as initialize:
+        ensure_stored_material(database, tmp_path, manifest)
+        ensure_stored_material(database, tmp_path, manifest)
+        initialize.assert_not_called()
+    assert inventory.state == "depleted"
+    assert manifest["records"]["inventory:basil"] == str(inventory.id)
+    assert database.scalar.call_count == 1
+    assert database.commit.call_count == 1

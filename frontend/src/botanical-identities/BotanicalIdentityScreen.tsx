@@ -103,12 +103,15 @@ function IdentityDetails({
   const [tab, setTab] = useState<IdentityTab>(
     initialTab && tabs.includes(initialTab as (typeof tabs)[number])
       ? (initialTab as IdentityTab)
-      : initialTab === "collection"
-        ? "seeds"
-        : "overview",
+      : initialTab === "native-range"
+        ? "reference"
+        : initialTab === "collection"
+          ? "seeds"
+          : "overview",
   );
-  const [referenceModule, setReferenceModule] =
-    useState<ReferenceModule>("profile");
+  const [referenceModule, setReferenceModule] = useState<ReferenceModule>(
+    initialTab === "native-range" ? "native-range" : "profile",
+  );
   const [collection, setCollection] = useState<
     | { status: "idle" }
     | { status: "loading" }

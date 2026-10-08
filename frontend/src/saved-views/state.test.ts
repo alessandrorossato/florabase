@@ -190,3 +190,78 @@ test("stale UUIDs stay exact, UI defaults do not store presentation noise", () =
   );
   expect(readDirectoryState("plants", "#/plants?type=bad").type).toBe("all");
 });
+
+test("Native ranges canonical URL and private state exclude geometry and transient pagination", () => {
+  const state = {
+    q: "  Synthetic  ",
+    scope: "living",
+    mode: "species",
+    identity: missing,
+    withRange: true,
+  };
+  const parsed = directoryState("native_ranges", state);
+  expect(parsed).toEqual({
+    ...state,
+    q: "Synthetic",
+    identity: [missing.toLowerCase()],
+    record: [],
+  });
+  if (!parsed) throw new Error("Expected valid Native ranges state");
+  const saved = saveDirectoryState("native_ranges", parsed);
+  if (!saved) throw new Error("Expected saved Native ranges state");
+  const hash = savedViewHash("native_ranges", 1, saved);
+  expect(hash).toBe(
+    `#/native-ranges?q=Synthetic&scope=living&mode=species&identity=${missing.toLowerCase()}&withRange=true`,
+  );
+  if (!hash) throw new Error("Expected Native ranges hash");
+  expect(readDirectoryState("native_ranges", hash)).toEqual(parsed);
+  for (const key of ["geometry", "hover", "offset", "zoom", "viewport"]) {
+    expect(
+      savedViewHash("native_ranges", 1, { ...state, [key]: 1 }),
+    ).toBeNull();
+  }
+  for (const invalid of [
+    { scope: "bad" },
+    { mode: "map" },
+    { identity: "bad" },
+    { withRange: "true" },
+  ]) {
+    expect(savedViewHash("native_ranges", 1, invalid)).toBeNull();
+  }
+  expect(
+    readDirectoryState(
+      "native_ranges",
+      "#/native-ranges?scope=bad&identity=bad&mode=bad&withRange=bad",
+    ),
+  ).toEqual(defaults.native_ranges);
+});
+
+test("Native selection and record categories are bounded canonical sets with legacy v1 support", () => {
+  const ids = Array.from(
+    { length: 21 },
+    (_, i) => `01900000-0000-7000-8000-${String(i).padStart(12, "0")}`,
+  );
+  const input = {
+    identity: [ids[1].toUpperCase(), ids[0], ids[1]],
+    record: ["plant", "seed_lot", "plant"],
+    mode: "species",
+  };
+  const hash = savedViewHash("native_ranges", 1, input);
+  expect(hash).toBe(
+    `#/native-ranges?mode=species&identity=${ids[0]}&identity=${ids[1]}&record=seed_lot&record=plant`,
+  );
+  expect(readDirectoryState("native_ranges", hash ?? "").identity).toEqual(
+    ids.slice(0, 2),
+  );
+  expect(
+    directoryState("native_ranges", { identity: ids.slice(0, 20) }),
+  ).not.toBeNull();
+  expect(directoryState("native_ranges", { identity: ids })).toBeNull();
+  expect(
+    directoryState("native_ranges", { identity: [ids[0], "bad"] }),
+  ).toBeNull();
+  expect(directoryState("native_ranges", { record: ["event"] })).toBeNull();
+  expect(
+    directoryState("native_ranges", { identity: ids[0] })?.identity,
+  ).toEqual([ids[0]]);
+});

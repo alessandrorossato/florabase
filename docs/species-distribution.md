@@ -2,8 +2,9 @@
 
 Explore occurrence-density evidence for BotanicalIdentities represented in the collection.
 Occurrences describe observed presence; they do not establish native range. Collection origins
-(`#/map`) describes recorded provenance of actual material. EXPLORE-002 Native
-ranges remains a separate future increment; structured BotanicalProfile ranges are unchanged.
+(`#/map`) describes recorded provenance of actual material.
+[EXPLORE-002 Native ranges](native-ranges-explore.md) is the separate structured botanical-reference
+workspace; the shared representation scopes do not mix its evidence with occurrences.
 
 ## Representation contract
 

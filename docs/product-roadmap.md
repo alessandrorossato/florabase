@@ -48,14 +48,25 @@ The approved sequence, retaining completed steps for context, is:
    **EXPLORE-001 — Species distribution is verified** after operator UAT and independent canonical
    verification: collection-aware All represented / Living / Current / Historical identity discovery,
    one explicit-load MAP-002 occurrence map and private Saved Views. See [contract](species-distribution.md).
-   After protected delivery, the preferred next product increment is **EXPLORE-002 — Native ranges**:
-   separately reviewed structured native-region/polygon presentation, with no geometry or aggregation
-   policy selected yet. **SCHEDULE-001** remains future Activity work. BOTANY-003 remains blocked.
+   **EXPLORE-002 — Native ranges** is implemented and functionally accepted by the operator; independent verification is in progress:
+   collection-aware overview and exact selected-species views reuse structured GEOGRAPHY-002 ranges and EXPLORE-001 scopes,
+   with reviewed local geometry, distinct identity coverage and private Saved Views. See
+   [contract](native-ranges-explore.md). The accepted bounded refinement includes explicit multi-species
+   comparison, OR record categories and the Explore Maps label. Its visual treatment is provisionally
+   accepted; the broad cross-application review below remains deferred.
+   Immediately after successful delivery, consider the source-backed structured native-range candidate
+   under existing **ENRICHMENT-001**, before **SCHEDULE-001** unless the operator reprioritises.
+   Kew WCVP/POWO is preferred subject to the separate [source/contract audit](native-range-enrichment-audit.md).
+   ENRICHMENT-001 remains planned; BOTANY-003's blocked text contract is unchanged.
    Collection origins is the existing material-provenance map, distinct from both botanical concepts.
 6. Daily-use biological/collection improvements: measurements, justified flowering/fruiting work,
    germination analysis, viability/aging, seasonal planning, operational history and later reviewed
    Dashboard attention rules.
-7. Final UI review of concrete surfaces/defects, mobile and accessibility; no new mega-redesign.
+7. After the current wave of new pages/features, perform the operator-required broad cross-application
+   product review **before release hardening**: sidebar/menu IA, titles/eyebrows, terminology,
+   duplicate/overlapping workspaces, cross-navigation, forms, filters, map consistency, Saved Views,
+   desktop/tablet/mobile, accessibility, visual hierarchy, loading/error/empty states, dead/obsolete
+   UI and practical end-to-end collection workflows. This is a later checkpoint, not EXPLORE-002 scope.
 8. Performance re-check after product increments against PERF-001's existing baseline.
 9. Public Docker distribution: GHCR preferred, immutable/versioned images, practical multi-arch,
    production Compose using published images and explicit upgrade/migration expectations.

@@ -1138,6 +1138,26 @@
       "status": "verified"
     },
     {
+      "id": "EXPLORE-002",
+      "category": "explore",
+      "description": "Collection-aware Native ranges overview and exact selected-species presentation of existing structured botanical reference knowledge",
+      "acceptance_criteria": [
+        "Authenticated bounded local projections reuse EXPLORE-001 exact All represented, Living, Current and Historical representation/search semantics while retaining identities without a structured native range and excluding reference-only identities",
+        "Collection overview counts distinct represented identities per canonical territory drawing unit after union within each identity; exact broad, precise, disjoint and custom GEOGRAPHY-002 relationships and origin_distribution prose remain unchanged",
+        "A reviewed pinned redistributable lazy-loaded world geometry source maps stable ISO/M49 metadata, preserves explicit broad precision and reports unavailable/custom boundaries in accessible companion lists without name matching, provider calls, occurrence or material-origin inference",
+        "Responsive accessible Explore navigation groups unchanged map destinations under a non-actionable Maps label; explicit checkbox selection of up to 20 identities preserves one-species detail and compares multiple species with distinct per-territory counts and contributing-species lists",
+        "Separate OR filters for SeedLots, Sowings, Plants, PlantGroups and managed Stored material qualify exact category records within the single selected representation scope; directory, overview and selected coverage share search, category, scope and with-range eligibility without replacing excluded or stale selections",
+        "Canonical URL and private v1 native_ranges Saved Views restore only scope, search, mode, a sorted bounded set of up to 20 identity IDs, OR record categories and optional with-range filter; migration 0038 solely extends the SavedView surface constraint and refuses incompatible populated downgrade without data loss"
+      ],
+      "dependencies": [
+        "GEOGRAPHY-002",
+        "EXPLORE-001",
+        "VIEW-001"
+      ],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
       "id": "MAP-002",
       "category": "map",
       "description": "Botanical distribution and occurrence map",
@@ -1209,11 +1229,13 @@
     {
       "id": "ENRICHMENT-001",
       "category": "enrichment",
-      "description": "Add reviewable BotanicalProfile enrichment proposals",
+      "description": "Add reviewable BotanicalProfile enrichment proposals, including a separately reviewed source-backed structured native-range candidate",
       "acceptance_criteria": [
         "Licensing, terms, API availability, attribution, and data quality are reviewed before selecting a source",
         "Proposals retain source, external identifier where appropriate, retrieval time, and field-level provenance",
-        "Operator-authored profile content is never silently overwritten"
+        "Operator-authored profile content is never silently overwritten",
+        "The preferred structured native-range candidate is official Kew WCVP/POWO, subject to exact reviewed taxon matching, a reviewed explicit TDWG-to-GeographicPlace crosswalk, Native versus Introduced handling, retained source/version/retrieval provenance and operator-reviewed add/replace/remove proposals with explicit Apply",
+        "This planned candidate is considered after successful EXPLORE-002 delivery before SCHEDULE-001 unless reprioritized; BOTANY-003 text enrichment remains separate and unchanged"
       ],
       "dependencies": ["PROFILE-002"],
       "priority": "P2",

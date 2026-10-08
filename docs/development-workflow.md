@@ -159,7 +159,7 @@ Before seeding, host guards check source/context, project, containers, origin, n
 mounts and Docker ownership. Runtime guards also check development cookie policy, UAT mode,
 DB URL/user, a validated resource marker and `current_database()/current_user`.
 
-Fixture version 3 is a small basil/lavender/aloe collection with Suppliers, a Location hierarchy,
+Fixture version 4 is a small basil/lavender/aloe collection with Suppliers, a Location hierarchy,
 synthetic provenance, varied SeedLots, active/historical Sowings, direct/derived Plants, a PlantGroup,
 observations, a Harvest and shared local/primary/external media. ORDER-001 adds an exact-date EUR
 purchase with two separate basil packets and a month-only purchase with unknown Supplier/price. Local PNG content is generated through
@@ -168,7 +168,16 @@ exercises the remote-image failure state. EXPLORE-001 adds a Historical-only exh
 a reference-only Viola identity, and an offline-confirmed basil taxon link (`48GBK`) verified through
 the existing CoL XR provider on 2026-10-08. Lavender is Current non-living; basil/aloe are Living.
 The snapshot is taxonomy metadata only: seeding makes no provider request and never fabricates
-occurrence evidence or profile enrichment.
+occurrence evidence or profile enrichment. EXPLORE-002 adds a Current sage packet without
+structured range, synthetic broad+Brazil overlap, disjoint Italy/Thailand, a Historical broad range,
+and a separate custom native area. These are explicitly labelled synthetic reference assertions
+for UAT, not botanical evidence; provenance remains separate. Repeated seed preserves range edits. Its additive v4 refinement extension tracks managed basil
+stored material (42 manifest records). A recognised original v4 manifest is validated before the
+extension; existing operator inventory is adopted without changing its state. No reset is needed.
+The fixture supports multi-species overlap/disjoint comparison and Seeds/Sowings/Plants/Plant groups/
+Stored material category combinations. Native ranges uses explicit selection up to 20 and a separate
+OR category filter; Explore groups its three map destinations under a non-actionable Maps label,
+with Geography outside that subgroup. Mobile retains all destinations.
 
 The seed manifest lives outside production domain models in the UAT media volume and records service
 created UUIDv7 identities. Repeating seed validates existing identities and binary integrity, leaves

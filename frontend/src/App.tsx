@@ -2,7 +2,7 @@ import { SidebarResizeHandle } from "./components/SidebarResizeHandle";
 import { sidebarWidthLimit } from "./components/sidebarWidth";
 import type { CSSProperties } from "react";
 import { RecordPresentationProvider } from "./components/RecordPresentationProvider";
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import { Fragment, lazy, Suspense, useEffect, useRef, useState } from "react";
 
 import type { components } from "./api/schema";
 import { AuthProvider } from "./auth/AuthProvider";
@@ -26,6 +26,12 @@ const MediaScreen = lazy(() =>
   }),
 );
 
+const NativeRangesScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./native-ranges/NativeRangesScreen");
+    return { default: module.NativeRangesScreen };
+  }),
+);
 const SpeciesDistributionScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module =
@@ -161,6 +167,7 @@ type Section =
   | "events"
   | "history"
   | "species-distribution"
+  | "native-ranges"
   | "map"
   | "identities"
   | "suppliers"
@@ -233,6 +240,7 @@ function currentRoute(): Route {
     "events",
     "history",
     "species-distribution",
+    "native-ranges",
     "map",
     "identities",
     "suppliers",
@@ -282,9 +290,10 @@ const desktopGroups: {
     label: "Explore",
     items: [
       { id: "identities", label: "Botanical identities" },
-      { id: "species-distribution", label: "Species distribution" },
       { id: "media", label: "Media" },
       { id: "geography", label: "Geography" },
+      { id: "species-distribution", label: "Species distribution" },
+      { id: "native-ranges", label: "Native ranges" },
       { id: "map", label: "Collection origins" },
     ],
   },
@@ -507,19 +516,23 @@ function ApplicationShell() {
                   hidden={collapsedGroups.includes(group.label)}
                 >
                   {group.items.map((item) => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className="navigation-link"
-                      aria-current={
-                        route.section === item.id ? "page" : undefined
-                      }
-                      onClick={() => {
-                        navigate(item.id);
-                      }}
-                    >
-                      {item.label}
-                    </button>
+                    <Fragment key={item.id}>
+                      {item.id === "species-distribution" && (
+                        <p className="sidebar-subsection">Maps</p>
+                      )}
+                      <button
+                        type="button"
+                        className="navigation-link"
+                        aria-current={
+                          route.section === item.id ? "page" : undefined
+                        }
+                        onClick={() => {
+                          navigate(item.id);
+                        }}
+                      >
+                        {item.label}
+                      </button>
+                    </Fragment>
                   ))}
                 </div>
               </section>
@@ -646,6 +659,8 @@ function ApplicationShell() {
                 <HistoryScreen />
               ) : route.section === "events" ? (
                 <GlobalEventsScreen />
+              ) : route.section === "native-ranges" ? (
+                <NativeRangesScreen />
               ) : route.section === "species-distribution" ? (
                 <SpeciesDistributionScreen />
               ) : route.section === "map" ? (

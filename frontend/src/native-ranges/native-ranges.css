@@ -1,0 +1,217 @@
+.native-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-block: 1rem;
+}
+.native-filters {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.native-filters .directory-search {
+  flex: 1 1 16rem;
+}
+.native-range-only {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  padding-block: 0.75rem;
+}
+.native-range-only input {
+  width: auto;
+}
+.native-workspace {
+  display: grid;
+  grid-template-columns: minmax(15rem, 0.65fr) minmax(0, 1.35fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+.native-browser,
+.native-panel {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.native-panel {
+  padding: 1rem;
+  border: 1px solid var(--color-border, #d6dfd3);
+  border-radius: 0.75rem;
+}
+.native-identities,
+.native-recorded-places {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0;
+  list-style: none;
+}
+.native-identity {
+  display: grid;
+  gap: 0.4rem;
+  width: 100%;
+  text-align: left;
+  white-space: normal;
+}
+.native-representation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  font-size: 0.875rem;
+}
+.native-statistics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+.native-statistics div {
+  border-inline-start: 3px solid #7d9c86;
+  padding-inline-start: 0.6rem;
+}
+.native-statistics dt {
+  font-size: 0.875rem;
+}
+.native-statistics dd {
+  font-size: 1.7rem;
+  font-weight: 650;
+  margin: 0.35rem 0 0;
+}
+.native-map {
+  margin: 1rem 0;
+}
+.native-map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  border: 1px solid #cbd8d0;
+}
+.native-map figcaption {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.native-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+.native-legend span {
+  display: inline-block;
+  width: 5rem;
+  height: 0.65rem;
+  background: linear-gradient(90deg, hsl(151 35% 72%), hsl(151 35% 32%));
+}
+.native-coverage-list ul {
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem 1rem;
+}
+.native-coverage-list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.3rem 0.7rem;
+  border-bottom: 1px solid #e1e7df;
+  padding-block: 0.3rem;
+}
+.native-recorded-places li {
+  display: grid;
+  gap: 0.3rem;
+  padding-block: 0.6rem;
+  border-bottom: 1px solid #e1e7df;
+}
+.native-place-heading {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.native-recorded-places small {
+  color: var(--color-text-muted, #53645b);
+}
+.native-links {
+  margin-block: 1rem;
+}
+.native-pages {
+  margin-block: 1rem;
+}
+@media (max-width: 850px) {
+  .native-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 500px) {
+  .native-statistics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .native-statistics div {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .native-statistics dd {
+    margin: 0;
+  }
+  .native-coverage-list ul {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.native-identity {
+  display: flex;
+  gap: 0.75rem;
+  align-items: start;
+  cursor: pointer;
+}
+.native-identity-content,
+.native-selection-list li {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+.native-category-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-block: 1rem;
+}
+.native-category-filters p {
+  flex-basis: 100%;
+  margin: 0;
+}
+.native-category-filters label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.native-selection-list {
+  padding-inline-start: 1.25rem;
+}
+.native-selection-list li {
+  margin-block: 1rem;
+  overflow-wrap: anywhere;
+}
+.native-contributors {
+  flex-basis: 100%;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.native-identity input,
+.native-category-filters input {
+  width: auto;
+  flex: 0 0 auto;
+}
+.native-identity:has(input:checked) {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+.native-identity {
+  padding: 0.6rem;
+  border: 1px solid var(--color-border, #d6dfd3);
+  border-radius: 0.4rem;
+}

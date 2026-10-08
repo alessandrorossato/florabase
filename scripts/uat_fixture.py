@@ -1,4 +1,4 @@
-"""PREVIEW-001 fixture v3. Mounted explicitly by the guarded host UAT workflow only."""
+"""PREVIEW-001 fixture v4. Mounted explicitly by the guarded host UAT workflow only."""
 
 from __future__ import annotations
 
@@ -33,6 +33,11 @@ from florabase.auth.service import bootstrap_owner
 from florabase.botanical_identities import service as identities
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityCreate
+from florabase.botanical_profiles.schemas import BotanicalProfilePut
+from florabase.botanical_profiles.service import (
+    add_botanical_native_range,
+    put_botanical_profile,
+)
 from florabase.collection_photos import primary
 from florabase.collection_photos.model import MediaAsset, RecordMediaLink
 from florabase.collection_photos.schemas import PrimaryPhotoSelection
@@ -49,6 +54,9 @@ from florabase.geographic_places import service as places
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.schemas import GeographicPlaceCreate
 from florabase.harvests import service as harvests
+from florabase.harvests.inventory_model import HarvestMaterialInventory
+from florabase.harvests.inventory_schemas import InventoryWrite
+from florabase.harvests.inventory_service import track as initialize_inventory
 from florabase.harvests.model import Harvest, HarvestItem
 from florabase.harvests.schemas import HarvestWrite
 from florabase.locations import service as locations
@@ -75,7 +83,7 @@ from florabase.suppliers import service as suppliers
 from florabase.suppliers.model import Supplier
 from florabase.suppliers.schemas import SupplierCreate
 
-VERSION = 3
+VERSION = 4
 NOTE = "Synthetic UAT Preview data; no real collection or provenance claims."
 MODELS: dict[str, type[Base]] = {
     "external_taxon": ExternalTaxonLink,
@@ -93,6 +101,7 @@ MODELS: dict[str, type[Base]] = {
     "event": Event,
     "harvest": Harvest,
     "item": HarvestItem,
+    "inventory": HarvestMaterialInventory,
     "asset": MediaAsset,
     "link": RecordMediaLink,
 }
@@ -186,6 +195,9 @@ def validate_manifest(database: Session, root: Path, manifest: dict[str, Any]) -
         "identity:Aloe vera",
         "identity:Raphanus sativus",
         "identity:Viola tricolor",
+        "identity:Salvia officinalis",
+        "seed:unranged",
+        "place:native",
         "seed:historical",
         "external_taxon:basil",
         "supplier:nursery",
@@ -219,6 +231,9 @@ def validate_manifest(database: Session, root: Path, manifest: dict[str, Any]) -
         "link:seed_lot",
         "link:plant",
     }
+    # Additive EXPLORE-002 fixture extension; original v4 manifests remain readable.
+    if "inventory:basil" in manifest["records"]:
+        expected.add("inventory:basil")
     if set(manifest["records"]) != expected:
         raise FixtureError(
             "Preview fixture baseline has missing records; run guarded uat-preview-reset"
@@ -263,10 +278,28 @@ def image_upload() -> UploadFile:
     )
 
 
+def ensure_stored_material(database: Session, root: Path, manifest: dict[str, Any]) -> None:
+    if "inventory:basil" in manifest["records"]:
+        return
+    item_id = UUID(manifest["records"]["item:basil"])
+    inventory = database.scalar(
+        select(HarvestMaterialInventory).where(HarvestMaterialInventory.harvest_item_id == item_id)
+    )
+    # Preserve any operator-managed inventory already attached to this fixture item.
+    if inventory is None:
+        inventory = initialize_inventory(
+            database, item_id, InventoryWrite(state="active", quantity=None)
+        )
+    database.commit()
+    manifest["records"]["inventory:basil"] = str(inventory.id)
+    write_manifest(root, manifest)
+
+
 def seed(database: Session, root: Path) -> dict[str, Any]:
     existing = read_manifest(root)
     if existing is not None:
         validate_manifest(database, root, existing)
+        ensure_stored_material(database, root, existing)
         return existing
     if (
         database.scalar(select(User.id).limit(1)) is not None
@@ -379,6 +412,60 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
             ),
         ),
     )
+    unranged = remember(
+        "identity:Salvia officinalis",
+        identities.create_botanical_identity(
+            database,
+            BotanicalIdentityCreate(
+                scientific_name="Salvia officinalis", common_name="Preview — No recorded range"
+            ),
+        ),
+    )
+    remember(
+        "seed:unranged",
+        seeds.create_seed_lot(
+            database,
+            SeedLotCreate.model_validate(
+                {
+                    "botanical_identity_id": unranged.id,
+                    "label": "Preview — Sage packet without native-range reference knowledge",
+                    "source_kind": "unknown",
+                    "notes": NOTE,
+                }
+            ),
+        ),
+    )
+    # Synthetic *recorded* assertions for UI acceptance, never botanical evidence or inference.
+    # Kept separate from the existing material-provenance garden and provider snapshot.
+    codes = {row.source_code: row for row in database.scalars(select(GeographicPlace))}
+    custom_range = remember(
+        "place:native",
+        places.create_geographic_place(
+            database,
+            GeographicPlaceCreate(
+                name="Preview uncharted native area with a deliberately long display label",
+                parent_id=codes["BR"].id,
+                place_type="other_named_area",
+            ),
+        ),
+    )
+    for taxon, range_places in (
+        (identity[0], [codes["005"], codes["BR"]]),
+        (identity[2], [codes["IT"], codes["TH"]]),
+        (identity[1], [codes["IT"], custom_range]),
+        (historical, [codes["035"]]),
+    ):
+        put_botanical_profile(
+            database,
+            taxon.id,
+            BotanicalProfilePut(
+                origin_distribution=(
+                    "Synthetic UAT native-range demonstration; not botanical evidence."
+                )
+            ),
+        )
+        for range_place in range_places:
+            add_botanical_native_range(database, taxon.id, range_place.id)
     seller = remember(
         "supplier:nursery",
         suppliers.create_supplier(
@@ -699,6 +786,7 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
             PrimaryPhotoSelection(kind="local", photo_id=link.id),
         )
     database.commit()
+    ensure_stored_material(database, root, manifest)
     manifest["state"] = "ready"
     write_manifest(root, manifest)
     return manifest
