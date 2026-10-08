@@ -850,6 +850,33 @@
       "status": "verified"
     },
     {
+      "id": "HISTORY-001",
+      "category": "collection",
+      "description": "Add a read-only unified operational history over existing authoritative collection activity records",
+      "acceptance_criteria": [
+        "Activity exposes distinct Journal and History destinations with permanent purpose copy, preserving the existing Event domain, events route and Saved View surface",
+        "Authenticated read-only History projects Events, propagation receipts, germination observations, structured Harvests, dispositions and seed conversions without a History or audit persistence table",
+        "Harvest-owned Events, Event-backed receipts and conversion-owned dispositions collapse to one user-visible operation",
+        "PartialDate precision is preserved, Recorded fallback is explicit, and deterministic ordering and timeline-year filtering use the date shown",
+        "Current state, updated_at, Supplier and provenance never fabricate history; Event and Harvest corrections update stable identities and ordinary Event deletion removes its projection",
+        "Retained reversals show supported status, with distinct reversal rows only for persisted reversal instants",
+        "Global SQL pagination, filtered totals, bounded limits and query counts remain correct across mixed-source pages without full-history hydration or N+1 queries",
+        "Typed primary and bounded related references derive exact existing authoritative deep links without stored arbitrary URLs",
+        "History Saved Views persist only validated stable filters, reopen on page one, and use a data-safe surface-constraint migration",
+        "Accessible desktop sidebar disclosures persist browser presentation preferences and reveal the active route; Journal hierarchy and History category chips, year controls, compact semantic timeline, loading/retry/empty states and counts fit desktop, tablet and mobile without changing filters, dates or mutation boundaries"
+      ],
+      "dependencies": [
+        "BULK-001",
+        "VIEW-001",
+        "EVENT-001",
+        "PROPAGATION-003",
+        "GERMINATION-001",
+        "HARVEST-003"
+      ],
+      "priority": "P1",
+      "status": "verified"
+    },
+    {
       "id": "DASHBOARD-001",
       "category": "dashboard",
       "description": "Add collection dashboards and summary statistics",

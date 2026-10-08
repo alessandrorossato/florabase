@@ -21,7 +21,7 @@ which remains distinct from a reusable view.
 | `plants`               | Plants / PlantGroups        | `q`, `lifecycle` (`active`, `history`, `all`), `type` (`all`, `plant`, `group`)                                                                                 | Type only                  | `active`, `all`                              |
 | `harvests`             | Harvest records             | `q`, `material`, `source_type`, `identity_id`                                                                                                                   | No                         | All materials/sources/identities             |
 | `stored_material`      | Stored Harvest material     | `q`, `state` (`active`, `depleted`, `all`), `material`, `identity_id`, `location_id`                                                                            | `tab=stored-material` only | `active`, all materials/identities/Locations |
-| `events`               | Global Event journal        | `category` (`all`, `observations`, `cultivation`, `status`)                                                                                                     | No                         | `all`                                        |
+| `events`               | Global Journal             | `category` (`all`, `observations`, `cultivation`, `status`)                                                                                                     | No                         | `all`                                        |
 | `media`                | Media Library               | `q`, `kind` (`local`, `external`), `association` (`all`, `linked`, `unlinked`), `target` (existing Collection/record types, including Supplier)                 | Exact detail only          | All kinds/associations/targets               |
 | `botanical_identities` | BotanicalIdentity directory | `q`                                                                                                                                                             | No                         | Empty text                                   |
 | `suppliers`            | Supplier directory          | `q`                                                                                                                                                             | No                         | Empty text                                   |
@@ -126,3 +126,21 @@ notifications, materialized results, browser-local persistence and BOTANY-003 wo
 ## BULK-001 interaction
 
 BULK-001 selection mode, typed selected IDs, target and move preview are transient local interaction state. They never enter a Saved View or URL. Opening any Saved View, including the identical current view, clears selection; changing filters, rendered membership or navigating also clears it. See [bulk operations](bulk-operations.md).
+
+## History extension — HISTORY-001
+
+The fourteenth surface, `history`, has an explicit v1 contract: repeated `category` in the stable
+Events / Propagation / Germination / Harvests / Stored material order, optional `subject_kind`, and
+optional integer `year` (1–9999). Empty/default controls are omitted. Example:
+`#/history?category=event&category=harvest&year=2026`. Timeline year follows the date shown, including
+explicit Recorded fallback. Invalid URL values fall back consistently; invalid persisted values,
+unknown keys and transient pagination/selection are rejected. Opening resets to page one even when
+reopening the identical view. Normal rename/update/delete and owner/CSRF protections are reused.
+The original thirteen adapters are unchanged. Migration `20261007_0035` extends only the surface
+check; downgrade preserves other views and refuses until History views are explicitly deleted.
+See [History contract](operational-history.md).
+
+The global `events` surface is displayed as **Journal** and continues to open `#/events` with the
+same category values. Sidebar collapsed groups are a separate browser presentation preference,
+never Saved View state. History's empty category set is visibly **All activity**; category chips and
+year clearing preserve the existing History v1 state and page-one opening behavior.

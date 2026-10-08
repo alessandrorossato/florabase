@@ -1,5 +1,75 @@
 # Engineering progress
 
+## 2026-10-08 — HISTORY-001 independently verified
+
+- Operator UAT passed, including the accepted Activity/navigation refinement. The independent review
+  found no product or workflow defect. It corrected three pre-existing SeedLot test selectors that
+  became ambiguous with the new History destination, and updated two migration-test head assertions
+  for revision `20261007_0035`; the affected focused suite and final complete suites passed.
+- `make feature-verify` passed on this tree: feature graph (93 valid), workflow helper/static checks,
+  formatting, lint and typing, backend tests (**749 passed**), frontend Vitest (**474 passed across
+  48 files**), isolated PostgreSQL integration (**597 passed**), OpenAPI drift, production image
+  builds, migration cycle through `20261007_0035`, whitespace, and a working-tree verification receipt.
+- HISTORY-001 is now `verified` in `docs/features.json`. Collection productivity v2 is complete on
+  protected delivery; Orders / Purchases follows. SCHEDULE-001 remains future work and BOTANY-003 is
+  unchanged. Commit, delivery and finish remain the authorized next steps for this review.
+
+## 2026-10-07 — HISTORY-001 operator-UAT Activity refinement
+
+- Added accessible desktop disclosures for all six sidebar groups, expanded on first use, with
+  browser-only collapsed-group persistence and active-route auto-expansion. Mobile retains its
+  existing compact navigation/More pattern and every destination.
+- Renamed the global Event destination/title and Saved View display label to **Journal**, retaining
+  `#/events`, the `events` surface, Event model/API/kinds and all existing category membership.
+  Permanent Journal/History purpose copy links the two roles; correction/history help stays secondary.
+  Journal rows prioritize date, kind, Plant/Group target, bounded notes and secondary related links.
+- Refined History into a compact chronological rail/list with explicit pressed **All activity** and
+  multi-category chips, compact record/year controls and Clear year. PartialDate/Recorded labels,
+  canonical URLs, page-one Saved Views, projection/dedup/date/query semantics and migration 0035
+  remain unchanged. No scheduling or domain persistence is added; roadmap sequencing stays intact.
+- Checks: **88 backend unit** tests and **123 isolated PostgreSQL** tests passed; **181 frontend**
+  tests across 12 files passed (172 in ten files, final corrected two-file rerun: nine). Whole-frontend
+  zero-warning ESLint, strict TypeScript and Prettier passed; final test edits also passed targeted
+  lint/format and strict type checking. Both API drift checks, backend/frontend production image
+  builds, feature graph (**93 valid**) and `git diff --check` passed. No policy or timeout was weakened.
+- Browser: Journal/History reviewed at **1440×844 and 1024×844**; sidebar keyboard/focus,
+  collapse/refresh persistence and active-group expansion, Saved Views and multi-category/year
+  Apply/Clear URLs checked. At **390×844**, History orientation/filter wrapping, semantic states,
+  timeline DOM and all More destinations had no horizontal overflow. Browser control then became
+  unavailable (empty browser inventory); mobile Journal and scrolled timeline/long-label visual
+  review remain operator items, and the temporary viewport could not be reset. See the handoff.
+- Read-only UAT status confirms live ed24 source, healthy services, revision `20261007_0035`,
+  fixture v1 / 31 baseline records and existing edits preserved. This pass did not reset/reseed UAT
+  or mutate operator records. Everything remains unstaged/uncommitted; no push/delivery or canonical
+  `make feature-verify`. Operator UAT has passed; HISTORY-001 remains `implemented` pending this
+  independent canonical verification and delivery.
+
+## 2026-10-07 — HISTORY-001 implementation and visual handoff
+
+- Implemented the read-only Activity → History projection over existing Events, propagation receipts,
+  germination observations, structured Harvests, material dispositions and seed conversions. Owned
+  backing Events/receipts/dispositions collapse to one operation; corrections retain typed keys.
+  PartialDate precision, explicit Recorded fallback, persisted reversal status/instants and current-state
+  exclusions remain truthful. No History table, audit log, mutation or scheduling capability is added.
+- Added globally ordered SQL pagination/filtered totals in one joined query, typed authoritative links,
+  canonical URL filters and History Saved Views. Migration `20261007_0035` extends only the SavedView
+  surface check and refuses downgrade while History views exist. History uses the established
+  workspace/navigation vocabulary and exact retained inventory focus within Harvest detail.
+- Focused backend unit regressions: **230 passed**; real PostgreSQL regressions: **123 passed**,
+  including source/dedup/date/query bounds and downgrade/re-upgrade safety. Frontend regressions:
+  **161 passed across 9 files** (160 in the main run plus the separate transition test), including
+  complete App navigation. Ruff formatting/lint, strict mypy (**281 files**), whole-frontend
+  zero-warning ESLint, strict TypeScript, Prettier, generated API drift, feature graph (**93 valid**),
+  production backend/frontend image builds and whitespace passed.
+- Browser review covers **1440×844, 1024×844 and 390×844**, keyboard filters, canonical URL,
+  browser Back restoration, separate mobile Events/History navigation and Harvest deep links without
+  horizontal overflow. Supported guarded UAT replacement, startup and fixture-v1 seed succeeded from
+  ed24; DEV, Stable Preview, Feature Review, production and primary checkout were not modified.
+- HISTORY-001 is `implemented`; operator visual UAT has passed and independent review/canonical gate
+  remain for this delivery phase. Collection productivity v2 remains open; Orders/Purchases follows verified delivery.
+  SCHEDULE-001 remains future work and BOTANY-003 is unchanged. No canonical gate, staging, commit,
+  push, delivery, merge or finish was run. See [HISTORY-001 handoff](history-001-handoff.md).
+
 ## 2026-10-07 — BULK-001 independent final verification
 
 - Operator UAT passed for the scoped multi-select and atomic Location moves. The reviewed scope

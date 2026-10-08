@@ -147,3 +147,8 @@ intervening stock corrections. See [conversion contract](harvest-seed-conversion
 ## BULK-001 interaction
 
 BULK-001 supports active managed Stored material in its directory only. Location-only moves reuse the correction assignment primitive and owner-first locks, preserve balance/state/dispositions and correction_version, and never change the source Harvest or Plant. Depleted stock and historical Harvest occurrences are excluded. See [bulk operations](bulk-operations.md).
+
+HISTORY-001 also exposes these recorded facts through the read-only [operational History](operational-history.md).
+Structured Harvests supersede their owned Events there; seed conversions supersede their linked
+dispositions. Current inventory corrections and Location assignments do not fabricate occurrences.
+The existing domain details and action controls remain authoritative.

@@ -4,9 +4,10 @@ from enum import StrEnum
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, JsonValue, StrictBool
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, StrictBool, field_validator
 
 from florabase.harvests.model import MaterialKind
+from florabase.history.schemas import HistoryCategory, HistorySubjectKind
 from florabase.locations.schemas import LocationUsageScope
 from florabase.media.schemas import MediaTargetFilter
 from florabase.search.state import SearchViewState
@@ -20,6 +21,7 @@ class SavedViewSurface(StrEnum):
     HARVESTS = "harvests"
     STORED_MATERIAL = "stored_material"
     EVENTS = "events"
+    HISTORY = "history"
     MEDIA = "media"
     BOTANICAL_IDENTITIES = "botanical_identities"
     SUPPLIERS = "suppliers"
@@ -63,6 +65,18 @@ class EventState(BaseModel):
     category: Literal["all", "observations", "cultivation", "status"] = "all"
 
 
+class HistoryState(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    category: list[HistoryCategory] = Field(default_factory=list, max_length=5)
+    subject_kind: HistorySubjectKind | None = None
+    year: int | None = Field(default=None, ge=1, le=9999, strict=True)
+
+    @field_validator("category")
+    @classmethod
+    def ordered_categories(cls, value: list[HistoryCategory]) -> list[HistoryCategory]:
+        return [item for item in HistoryCategory if item in value]
+
+
 class MediaState(TextState):
     kind: Literal["local", "external"] | None = None
     association: Literal["all", "linked", "unlinked"] = "all"
@@ -90,6 +104,7 @@ STATE_MODELS: dict[SavedViewSurface, type[BaseModel]] = {
     SavedViewSurface.HARVESTS: HarvestState,
     SavedViewSurface.STORED_MATERIAL: StoredMaterialState,
     SavedViewSurface.EVENTS: EventState,
+    SavedViewSurface.HISTORY: HistoryState,
     SavedViewSurface.MEDIA: MediaState,
     SavedViewSurface.BOTANICAL_IDENTITIES: TextState,
     SavedViewSurface.SUPPLIERS: TextState,

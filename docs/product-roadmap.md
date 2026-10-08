@@ -40,7 +40,8 @@ The approved sequence, retaining completed steps for context, is:
    views persist existing filters in PostgreSQL. **BULK-001 is verified** after operator UAT and
    independent canonical verification: explicit selection and atomic Location moves for active
    SeedLots, Sowings, Plants, PlantGroups and managed Stored material. Justified unified operational
-   history remains next. The milestone remains open.
+   history is verified as **HISTORY-001** after operator UAT and independent canonical verification.
+   Protected delivery completes Collection productivity v2; Orders / Purchases follows.
 5. Orders / Purchases, separate from Supplier and biological/geographic provenance.
 6. Daily-use biological/collection improvements: measurements, justified flowering/fruiting work,
    germination analysis, viability/aging, seasonal planning, operational history and later reviewed

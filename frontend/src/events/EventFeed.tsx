@@ -24,7 +24,14 @@ export function EventFilters({
               onSelect(filter);
             }}
           >
-            {filter[0].toUpperCase() + filter.slice(1)}
+            {
+              {
+                all: "All entries",
+                observations: "Observations",
+                cultivation: "Cultivation",
+                status: "Lifecycle",
+              }[filter]
+            }
           </button>
         ),
       )}
@@ -36,15 +43,19 @@ export function EventFeed({
   events,
   compact = false,
   showTargetPhoto = false,
+  journal = false,
 }: {
   events: EventResponse[];
   compact?: boolean;
   showTargetPhoto?: boolean;
+  journal?: boolean;
 }) {
   const recordName = useRecordName();
 
   return (
-    <ol className={`event-feed${compact ? " event-feed--compact" : ""}`}>
+    <ol
+      className={`event-feed${compact ? " event-feed--compact" : ""}${journal ? " journal-feed" : ""}`}
+    >
       {events.map((event) => {
         const type = event.target.type === "plant" ? "Plant" : "Plant group";
         const name = recordName(
@@ -54,6 +65,51 @@ export function EventFeed({
             : "Unlabelled plant group",
         );
         const href = `#/${event.target.type === "plant" ? "plants" : "plant-groups"}/${event.target.id}?tab=events`;
+        const related = (
+          <>
+            <p>
+              {journal && "Botanical identity: "}
+              <a
+                className="event-identity"
+                href={`#/identities/${event.target.botanical_identity.id}?tab=events`}
+              >
+                {event.target.botanical_identity.display_label}
+              </a>
+            </p>
+            {event.destination_location && (
+              <p>Moved to {event.destination_location.display_path}</p>
+            )}
+            {event.recipient && <p>Recipient: {event.recipient}</p>}
+            {event.kind === "extraction" && event.resulting_plant && (
+              <p>
+                1 individual extracted →{" "}
+                <a href={`#/plants/${event.resulting_plant.id}`}>
+                  {recordName(event.resulting_plant, "Unlabelled plant")}
+                </a>
+              </p>
+            )}
+            {event.kind === "reintegration" && event.resulting_plant && (
+              <p>
+                Plant returned to this group →{" "}
+                <a href={`#/plants/${event.resulting_plant.id}`}>
+                  {recordName(event.resulting_plant, "Unlabelled plant")}
+                </a>
+              </p>
+            )}
+            {event.kind === "extraction" &&
+              event.operation_status === "reversed" && (
+                <p className="record-state">Reversed by reintegration</p>
+              )}
+            {event.harvest_id && (
+              <p>
+                <a href={`#/harvests/${event.harvest_id}`}>
+                  {journal ? "Harvest: " : "Structured harvest · "}
+                  {event.harvest_title}
+                </a>
+              </p>
+            )}
+          </>
+        );
         return (
           <li key={event.id}>
             <article>
@@ -79,53 +135,37 @@ export function EventFeed({
                 />
               )}
               <div className="event-feed-heading">
+                {journal && (
+                  <time>
+                    {event.occurred_on
+                      ? formatPartialDate(event.occurred_on)
+                      : `Recorded ${new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(event.created_at))}`}
+                  </time>
+                )}
                 <span className="event-kind">{eventLabels[event.kind]}</span>
-                <time>{formatPartialDate(event.occurred_on)}</time>
+                {!journal && (
+                  <time>{formatPartialDate(event.occurred_on)}</time>
+                )}
               </div>
               <a className="event-target" href={href}>
                 {name}
               </a>
               <span className="record-state">{type}</span>
-              <p>
-                <a
-                  className="event-identity"
-                  href={`#/identities/${event.target.botanical_identity.id}?tab=events`}
-                >
-                  {event.target.botanical_identity.display_label}
-                </a>
-              </p>
-              {event.destination_location && (
-                <p>Moved to {event.destination_location.display_path}</p>
-              )}
-              {event.recipient && <p>Recipient: {event.recipient}</p>}
-              {event.kind === "extraction" && event.resulting_plant && (
-                <p>
-                  1 individual extracted →{" "}
-                  <a href={`#/plants/${event.resulting_plant.id}`}>
-                    {recordName(event.resulting_plant, "Unlabelled plant")}
-                  </a>
+              {journal && event.notes && (
+                <p className="journal-excerpt">
+                  {event.notes.length > 240
+                    ? `${event.notes.slice(0, 240).trimEnd()}…`
+                    : event.notes}
                 </p>
               )}
-              {event.kind === "reintegration" && event.resulting_plant && (
-                <p>
-                  Plant returned to this group →{" "}
-                  <a href={`#/plants/${event.resulting_plant.id}`}>
-                    {recordName(event.resulting_plant, "Unlabelled plant")}
-                  </a>
-                </p>
+              {journal ? (
+                <div className="journal-related">{related}</div>
+              ) : (
+                related
               )}
-              {event.kind === "extraction" &&
-                event.operation_status === "reversed" && (
-                  <p className="record-state">Reversed by reintegration</p>
-                )}
-              {event.harvest_id && (
-                <p>
-                  <a href={`#/harvests/${event.harvest_id}`}>
-                    Structured harvest · {event.harvest_title}
-                  </a>
-                </p>
+              {!journal && event.notes && (
+                <p className="preserve-lines">{event.notes}</p>
               )}
-              {event.notes && <p className="preserve-lines">{event.notes}</p>}
             </article>
           </li>
         );

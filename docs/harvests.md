@@ -71,7 +71,7 @@ searchable source selection, partial date, add/remove material rows, precision/u
 optional label. Controls have row-specific names; keyboard add/remove moves focus to a material control,
 server row errors identify the line, and dialog Escape restores focus. A BotanicalIdentity's Collection
 view includes derived Harvest history/count. Source Events already provide bounded journal filtering;
-Overview is not flooded with another full historical list. Dashboard Recent activity and global Events
+Overview is not flooded with another full historical list. Dashboard Recent activity and global Journal
 link to structured detail. Harvests are absent from Current holdings and analytics.
 
 ## Integrity, queries and migration
@@ -214,3 +214,8 @@ HARVEST-003 adds a separate explicit Create Seed lot action on tracked active se
 protects Harvest source reassignment after any retained conversion, including reversed history.
 Safe descriptive/date/collected-quantity corrections still do not replay stock. Conversion creates
 no extra source Event or media link. See [conversion contract](harvest-seed-conversion.md).
+
+HISTORY-001 also exposes these recorded facts through the read-only [operational History](operational-history.md).
+Structured Harvests supersede their owned Events there; seed conversions supersede their linked
+dispositions. Current inventory corrections and Location assignments do not fabricate occurrences.
+The existing domain details and action controls remain authoritative.

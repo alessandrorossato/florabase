@@ -147,7 +147,7 @@ test("Dashboard keeps its counts, actions, and chronological Event context", asy
   }
   const activity = screen.getByRole("region", { name: "Recent activity" });
   expect(
-    within(activity).getByRole("link", { name: "View all Events" }),
+    within(activity).getByRole("link", { name: "Open Journal" }),
   ).toHaveAttribute("href", "#/events");
   expect(within(activity).getAllByRole("article")).toHaveLength(2);
   expect(within(activity).getAllByText("2024")).toHaveLength(2);

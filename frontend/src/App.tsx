@@ -41,6 +41,12 @@ const DashboardScreen = lazy(() =>
   }),
 );
 
+const HistoryScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./history/HistoryScreen");
+    return { default: module.HistoryScreen };
+  }),
+);
 const GlobalEventsScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./events/GlobalEventsScreen");
@@ -138,6 +144,7 @@ type Section =
   | "plants"
   | "harvests"
   | "events"
+  | "history"
   | "map"
   | "identities"
   | "suppliers"
@@ -205,6 +212,7 @@ function currentRoute(): Route {
     "sowings",
     "harvests",
     "events",
+    "history",
     "map",
     "identities",
     "suppliers",
@@ -244,7 +252,10 @@ const desktopGroups: {
   },
   {
     label: "Activity",
-    items: [{ id: "events", label: "Events" }],
+    items: [
+      { id: "events", label: "Journal" },
+      { id: "history", label: "History" },
+    ],
   },
   {
     label: "Places",
@@ -270,6 +281,33 @@ const desktopGroups: {
   },
 ];
 
+const sidebarPreferenceKey = "florabase.sidebar.collapsed-groups.v1";
+function expandActiveGroup(collapsed: string[], section: Section): string[] {
+  const active = desktopGroups.find((group) =>
+    group.items.some((item) => item.id === section),
+  );
+  return active && collapsed.includes(active.label)
+    ? collapsed.filter((label) => label !== active.label)
+    : collapsed;
+}
+function readCollapsedGroups(section: Section): string[] {
+  try {
+    const stored: unknown = JSON.parse(
+      window.localStorage.getItem(sidebarPreferenceKey) ?? "[]",
+    );
+    return expandActiveGroup(
+      desktopGroups
+        .filter(
+          (group) => Array.isArray(stored) && stored.includes(group.label),
+        )
+        .map((group) => group.label),
+      section,
+    );
+  } catch {
+    return [];
+  }
+}
+
 function WorkspaceLoading() {
   return (
     <div className="workspace-route-loading" role="status">
@@ -285,6 +323,19 @@ function ApplicationShell() {
   const state = auth.state;
   const [health, setHealth] = useState<HealthState>({ status: "loading" });
   const [route, setRoute] = useState<Route>(currentRoute);
+  const [collapsedGroups, setCollapsedGroups] = useState(() =>
+    readCollapsedGroups(route.section),
+  );
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(
+        sidebarPreferenceKey,
+        JSON.stringify(collapsedGroups),
+      );
+    } catch {
+      // Navigation still works when browser preference storage is unavailable.
+    }
+  }, [collapsedGroups]);
   const [moreOpen, setMoreOpen] = useState(false);
   const [navigationReset, setNavigationReset] = useState(0);
   const [navigationVisible, setNavigationVisible] = useState(true);
@@ -308,6 +359,9 @@ function ApplicationShell() {
     const update = (event: Event) => {
       const next = currentRoute();
       setRoute(next);
+      setCollapsedGroups((collapsed) =>
+        expandActiveGroup(collapsed, next.section),
+      );
       // Explicit directory opens start fresh; detail/history transitions retain
       // their existing focus and interaction behavior.
       if (isFreshDirectoryNavigation(event))
@@ -341,6 +395,7 @@ function ApplicationShell() {
       window.history.replaceState(null, "", target);
     else window.history.pushState(null, "", target);
     setRoute({ section });
+    setCollapsedGroups((collapsed) => expandActiveGroup(collapsed, section));
     if (sameDestination) setNavigationReset((value) => value + 1);
     setMoreOpen(false);
     if (window.scrollY > 0) window.scrollTo(0, 0);
@@ -404,22 +459,46 @@ function ApplicationShell() {
           <nav aria-label="Primary navigation">
             {desktopGroups.map((group) => (
               <section key={group.label} aria-label={group.label}>
-                <p>{group.label}</p>
-                {group.items.map((item) => (
+                <h2 className="sidebar-group-heading">
                   <button
-                    key={item.id}
                     type="button"
-                    className="navigation-link"
-                    aria-current={
-                      route.section === item.id ? "page" : undefined
-                    }
+                    className="sidebar-group-toggle"
+                    aria-expanded={!collapsedGroups.includes(group.label)}
+                    aria-controls={`navigation-${group.label.toLowerCase()}`}
                     onClick={() => {
-                      navigate(item.id);
+                      setCollapsedGroups((collapsed) =>
+                        collapsed.includes(group.label)
+                          ? collapsed.filter((label) => label !== group.label)
+                          : [...collapsed, group.label],
+                      );
                     }}
                   >
-                    {item.label}
+                    {group.label}
+                    <span aria-hidden="true">
+                      {collapsedGroups.includes(group.label) ? "▸" : "▾"}
+                    </span>
                   </button>
-                ))}
+                </h2>
+                <div
+                  id={`navigation-${group.label.toLowerCase()}`}
+                  hidden={collapsedGroups.includes(group.label)}
+                >
+                  {group.items.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      className="navigation-link"
+                      aria-current={
+                        route.section === item.id ? "page" : undefined
+                      }
+                      onClick={() => {
+                        navigate(item.id);
+                      }}
+                    >
+                      {item.label}
+                    </button>
+                  ))}
+                </div>
               </section>
             ))}
           </nav>
@@ -534,6 +613,8 @@ function ApplicationShell() {
                   startCreating={route.action === "create"}
                   initialCreationKind={route.creationKind}
                 />
+              ) : route.section === "history" ? (
+                <HistoryScreen />
               ) : route.section === "events" ? (
                 <GlobalEventsScreen />
               ) : route.section === "map" ? (

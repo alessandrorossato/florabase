@@ -314,7 +314,11 @@ test("inventory preserves API ordering and composes active/history/all with usef
   );
   expect(screen.queryByText("Solanum quitoense")).not.toBeInTheDocument();
 
-  await user.click(screen.getByRole("button", { name: "History" }));
+  await user.click(
+    within(
+      screen.getByRole("region", { name: "Seed lot inventory" }),
+    ).getByRole("button", { name: "History" }),
+  );
   expect(screen.getByText("Solanum quitoense")).toBeInTheDocument();
   expect(screen.queryByText("Clitoria ternatea")).not.toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "All" }));
@@ -989,7 +993,11 @@ test("one PUT supports lost to active and exhausted zero to active positive corr
     }),
   );
   const user = await openSeeds();
-  await user.click(await screen.findByRole("button", { name: "History" }));
+  await user.click(
+    within(
+      screen.getByRole("region", { name: "Seed lot inventory" }),
+    ).getByRole("button", { name: "History" }),
+  );
   await user.click(
     await screen.findByRole("button", { name: /Clitoria ternatea/ }),
   );
@@ -1215,7 +1223,11 @@ test("retired current references remain visible in edit while ordinary retired c
     throw new Error(`Unexpected request: ${path} ${init?.method ?? "GET"}`);
   });
   const user = await openSeeds();
-  await user.click(await screen.findByRole("button", { name: "History" }));
+  await user.click(
+    within(
+      screen.getByRole("region", { name: "Seed lot inventory" }),
+    ).getByRole("button", { name: "History" }),
+  );
   await user.click(
     await screen.findByRole("button", { name: /Clitoria ternatea/ }),
   );

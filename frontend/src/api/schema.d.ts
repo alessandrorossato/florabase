@@ -895,6 +895,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read History */
+        get: operations["listHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/imports/examples/{kind}.csv": {
         parameters: {
             query?: never;
@@ -3194,6 +3211,81 @@ export interface components {
             status: string;
         };
         /**
+         * HistoryCategory
+         * @enum {string}
+         */
+        HistoryCategory: "event" | "propagation" | "germination" | "harvest" | "material";
+        /** HistoryEntry */
+        HistoryEntry: {
+            category: components["schemas"]["HistoryCategory"];
+            /** Context */
+            context: string;
+            /**
+             * Date Basis
+             * @enum {string}
+             */
+            date_basis: "occurred" | "recorded";
+            /** Key */
+            key: string;
+            /** Occurred At */
+            occurred_at: string | null;
+            occurred_on: components["schemas"]["PartialDate"] | null;
+            primary: components["schemas"]["HistoryReference"];
+            /**
+             * Recorded At
+             * Format: date-time
+             */
+            recorded_at: string;
+            /** Related */
+            related: components["schemas"]["HistoryReference"][];
+            /**
+             * Source Id
+             * Format: uuid
+             */
+            source_id: string;
+            /**
+             * Source Kind
+             * @enum {string}
+             */
+            source_kind: "event" | "operation_receipt" | "germination" | "harvest" | "disposition" | "conversion";
+            /** Status */
+            status: ("applied" | "reversed") | null;
+            /** Subtype */
+            subtype: string;
+            /** Title */
+            title: string;
+        };
+        /** HistoryReference */
+        HistoryReference: {
+            /** Harvest Id */
+            harvest_id?: string | null;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Kind */
+            kind: components["schemas"]["HistorySubjectKind"] | "location";
+            /** Label */
+            label: string;
+        };
+        /** HistoryResponse */
+        HistoryResponse: {
+            /** Items */
+            items: components["schemas"]["HistoryEntry"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
+        /**
+         * HistorySubjectKind
+         * @enum {string}
+         */
+        HistorySubjectKind: "plant" | "plant_group" | "sowing" | "harvest" | "harvest_inventory" | "seed_lot";
+        /**
          * IdentityCollectionCounts
          * @description Active collection records, never quantities or inferred lineage.
          */
@@ -4595,7 +4687,7 @@ export interface components {
          * SavedViewSurface
          * @enum {string}
          */
-        SavedViewSurface: "global_search" | "seed_lots" | "sowings" | "plants" | "harvests" | "stored_material" | "events" | "media" | "botanical_identities" | "suppliers" | "locations" | "geography" | "provenance_map";
+        SavedViewSurface: "global_search" | "seed_lots" | "sowings" | "plants" | "harvests" | "stored_material" | "events" | "history" | "media" | "botanical_identities" | "suppliers" | "locations" | "geography" | "provenance_map";
         /** SavedViewUpdate */
         SavedViewUpdate: {
             /** Name */
@@ -8003,6 +8095,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    listHistory: {
+        parameters: {
+            query?: {
+                category?: components["schemas"]["HistoryCategory"][] | null;
+                subject_kind?: components["schemas"]["HistorySubjectKind"] | null;
+                year?: number | null;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

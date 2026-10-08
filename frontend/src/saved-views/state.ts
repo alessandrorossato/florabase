@@ -1,3 +1,8 @@
+import {
+  historyHash,
+  parseHistoryState,
+  saveHistoryState,
+} from "../history/state";
 import type { components } from "../api/schema";
 import {
   eventKinds,
@@ -11,7 +16,7 @@ import {
 
 export type Surface = components["schemas"]["SavedViewSurface"];
 export type SavedState = components["schemas"]["SavedViewResponse"]["state"];
-export type DirectorySurface = Exclude<Surface, "global_search">;
+export type DirectorySurface = Exclude<Surface, "global_search" | "history">;
 export interface DirectoryStates {
   seed_lots: { q: string; lifecycle: "active" | "history" | "all" };
   sowings: { q: string; lifecycle: "active" | "completed" | "all" };
@@ -66,7 +71,8 @@ export const surfaceLabels: Record<Surface, string> = {
   plants: "Plants and Plant groups",
   harvests: "Harvests",
   stored_material: "Stored material",
-  events: "Events",
+  events: "Journal",
+  history: "History",
   media: "Media Library",
   botanical_identities: "Botanical identities",
   suppliers: "Suppliers",
@@ -300,6 +306,12 @@ export function savedViewHash(
   state: SavedState,
 ): string | null {
   if (version !== 1) return null;
+  if (surface === "history") {
+    const parsed = parseHistoryState(state);
+    return parsed && Object.keys(saveHistoryState(parsed)).length
+      ? historyHash(parsed)
+      : null;
+  }
   if (surface === "global_search") {
     const params = new URLSearchParams();
     for (const [key, value] of Object.entries(state)) {

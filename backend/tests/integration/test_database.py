@@ -16,7 +16,7 @@ def test_postgresql_18_has_current_migrations(database_connection: Connection) -
     ).scalar_one()
 
     assert int(server_version) // 10000 == 18
-    assert revision == "20261006_0034"
+    assert revision == "20261007_0035"
     assert initialized == "true"
     database_readiness()
 
