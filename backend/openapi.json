@@ -3879,6 +3879,223 @@
         "title": "HealthResponse",
         "type": "object"
       },
+      "HistoryCategory": {
+        "enum": [
+          "event",
+          "propagation",
+          "germination",
+          "harvest",
+          "material"
+        ],
+        "title": "HistoryCategory",
+        "type": "string"
+      },
+      "HistoryEntry": {
+        "properties": {
+          "category": {
+            "$ref": "#/components/schemas/HistoryCategory"
+          },
+          "context": {
+            "title": "Context",
+            "type": "string"
+          },
+          "date_basis": {
+            "enum": [
+              "occurred",
+              "recorded"
+            ],
+            "title": "Date Basis",
+            "type": "string"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "occurred_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occurred At"
+          },
+          "occurred_on": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PartialDate"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "primary": {
+            "$ref": "#/components/schemas/HistoryReference"
+          },
+          "recorded_at": {
+            "format": "date-time",
+            "title": "Recorded At",
+            "type": "string"
+          },
+          "related": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryReference"
+            },
+            "maxItems": 2,
+            "title": "Related",
+            "type": "array"
+          },
+          "source_id": {
+            "format": "uuid",
+            "title": "Source Id",
+            "type": "string"
+          },
+          "source_kind": {
+            "enum": [
+              "event",
+              "operation_receipt",
+              "germination",
+              "harvest",
+              "disposition",
+              "conversion"
+            ],
+            "title": "Source Kind",
+            "type": "string"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "applied",
+                  "reversed"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "subtype": {
+            "title": "Subtype",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "category",
+          "source_kind",
+          "source_id",
+          "subtype",
+          "occurred_on",
+          "occurred_at",
+          "recorded_at",
+          "date_basis",
+          "title",
+          "context",
+          "primary",
+          "related",
+          "status"
+        ],
+        "title": "HistoryEntry",
+        "type": "object"
+      },
+      "HistoryReference": {
+        "properties": {
+          "harvest_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Harvest Id"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HistorySubjectKind"
+              },
+              {
+                "const": "location",
+                "type": "string"
+              }
+            ],
+            "title": "Kind"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "id",
+          "label"
+        ],
+        "title": "HistoryReference",
+        "type": "object"
+      },
+      "HistoryResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryEntry"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "offset",
+          "limit"
+        ],
+        "title": "HistoryResponse",
+        "type": "object"
+      },
+      "HistorySubjectKind": {
+        "enum": [
+          "plant",
+          "plant_group",
+          "sowing",
+          "harvest",
+          "harvest_inventory",
+          "seed_lot"
+        ],
+        "title": "HistorySubjectKind",
+        "type": "string"
+      },
       "IdentityCollectionCounts": {
         "description": "Active collection records, never quantities or inferred lineage.",
         "properties": {
@@ -8224,6 +8441,7 @@
           "harvests",
           "stored_material",
           "events",
+          "history",
           "media",
           "botanical_identities",
           "suppliers",
@@ -15804,6 +16022,116 @@
         "summary": "Health",
         "tags": [
           "system"
+        ]
+      }
+    },
+    "/api/v1/history": {
+      "get": {
+        "operationId": "listHistory",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/HistoryCategory"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subject_kind",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/HistorySubjectKind"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject Kind"
+            }
+          },
+          {
+            "in": "query",
+            "name": "year",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 9999,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Year"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HistoryResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read History",
+        "tags": [
+          "collection"
         ]
       }
     },

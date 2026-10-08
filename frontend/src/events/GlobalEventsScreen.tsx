@@ -54,10 +54,14 @@ export function GlobalEventsScreen() {
     <section aria-labelledby="global-events-title" className="workspace">
       <WorkspaceIntro
         eyebrow="Activity"
-        title="Events"
+        title="Journal"
         titleId="global-events-title"
-        description="Browse cultivation and lifecycle activity across your collection."
+        description="Observations and actions recorded for Plants and Plant groups. Review and correct Event entries through their Plant or Plant group."
       />
+      <p className="activity-orientation">
+        For a read-only timeline across the collection, use{" "}
+        <a href="#/history">History</a>.
+      </p>
       <InfoDisclosure label="How Event corrections affect current state">
         <p>
           Editing or deleting an ordinary Event does not recompute a Plant or
@@ -65,10 +69,10 @@ export function GlobalEventsScreen() {
           operation reversal is a separate contextual action.
         </p>
       </InfoDisclosure>
-      {state.status === "loading" && <p role="status">Loading Events…</p>}
+      {state.status === "loading" && <p role="status">Loading Journal…</p>}
       {state.status === "error" && (
         <div className="notice notice--error" role="alert">
-          <p>Florabase could not load collection Events.</p>
+          <p>Florabase could not load Journal.</p>
           <button
             type="button"
             onClick={() => {
@@ -93,7 +97,7 @@ export function GlobalEventsScreen() {
               No Events match this filter.
             </p>
           ) : (
-            <EventFeed showTargetPhoto events={visible} />
+            <EventFeed journal showTargetPhoto events={visible} />
           )}
         </>
       )}

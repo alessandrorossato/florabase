@@ -89,3 +89,8 @@ before destructive changes under table locks. Focused checks and implementation 
 in [progress](progress.md). Operator UAT/visual acceptance is accepted; independent review found no
 production defect and added unit coverage for creation, eligibility, reversal, history projection and
 API paths. HARVEST-003 is `verified` pending the final canonical receipt and local commit.
+
+HISTORY-001 also exposes these recorded facts through the read-only [operational History](operational-history.md).
+Structured Harvests supersede their owned Events there; seed conversions supersede their linked
+dispositions. Current inventory corrections and Location assignments do not fabricate occurrences.
+The existing domain details and action controls remain authoritative.

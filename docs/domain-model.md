@@ -460,7 +460,7 @@ discarded) filters;
 `other` remains in All.
 Creation explains current-state effects, and correction/deletion explains the non-event-sourced
 boundary. A protected global Event read endpoint uses the same deterministic ordering and includes
-target and BotanicalIdentity summaries. The collection-wide Events page applies the same filters and
+target and BotanicalIdentity summaries. The collection-wide Journal page (`#/events`) applies the same filters and
 links each item to its Plant or PlantGroup Event context. Generic Event creation cannot fabricate an
 extraction; only the authoritative extraction operation creates one and its resulting-Plant link.
 Structured per-kind payloads beyond movement destination, transfer recipient, and the extraction
@@ -482,15 +482,20 @@ and structured filter state. [Search and filter semantics](search.md) define exa
 location scope, partial-year behavior, and result paging. Local directory search remains available.
 
 Desktop navigation uses these macroareas, in order: **Overview** (Dashboard), **Collection**
-(Seeds, Sowings, Plants, Harvests, Media), **Activity** (Events), **Places** (Locations, Geography,
+(Seeds, Sowings, Plants, Harvests, Media), **Activity** (Journal, History), **Places** (Locations, Geography,
 Provenance map), **Reference** (Botanical identities, Suppliers), and **Tools** (Import / Export,
 Labels). Page-level eyebrows use the owning macroarea; record/detail/form captions retain their
-own meanings. Routes, titles and descriptions are unchanged. Mobile keeps Home, Seeds, Sowings,
-Plants and More, with remaining destinations in the same conceptual order.
+own meanings. Event routes are retained; the global Event page is titled Journal. Mobile keeps Home,
+Seeds, Sowings, Plants and More, with remaining destinations in the same conceptual order.
 
-Activity contains recorded historical Events. It anticipates later reviewed unified operational
-history and the SCHEDULE-001 candidate without treating recorded facts as planned tasks. Future
+Activity contains the focused Event Journal and the read-only unified operational History
+projection. SCHEDULE-001 remains a later candidate, without treating recorded facts as planned tasks. Future
 schedule → completion → historical Event semantics remain undecided; a calendar is a presentation.
+
+Desktop macro-groups use accessible disclosures. All start expanded; a browser-only localStorage
+presentation preference remembers collapsed groups. Route activation expands the active group.
+This preference never enters PostgreSQL or Saved Views; mobile keeps its existing More navigation.
+The Journal name changes only the global UI vocabulary, preserving Event/API/route/surface identities.
 
 BotanicalIdentity is a botanical/reference and collection hub with Overview, Reference, Seeds,
 Sowings, Plants, and Events tabs. The Reference tab contains operator-authored profile/native-range
@@ -811,4 +816,18 @@ ordinary editing primitives without changing origins, balances or lifecycle. Inv
 correction preserves its owner-first locks, disposition history and correction version. Plants and
 groups use authoritative Movement Event creation with an unknown occurrence date and one Event per
 changed record. Historical Harvest occurrences, inactive records, Event destinations, geography,
-reference and media are not bulk-movable. There is no migration or unified operational history.
+reference and media are not bulk-movable. BULK-001 adds no migration or history store.
+
+### Unified operational history (HISTORY-001)
+
+History projects existing Events, propagation OperationReceipts without Events, GerminationObservations,
+structured Harvests, material dispositions and seed conversions. It stores no new historical facts.
+Owned Harvest Events, Event-backed receipts and conversion-owned dispositions are suppressed in this
+projection only. Corrections change the same typed entry; deleting an ordinary Event removes it.
+PartialDate remains precise only to its stored level. Durable facts without occurrence dates use an
+explicit Recorded timestamp. Receipt status supports a Reversed badge without inventing a reversal
+time; conversion reversed_at supports a distinct reversal occurrence. Current lifecycle, Location,
+stock, Supplier, provenance and updated_at never manufacture missing history. One SQL statement
+filters, counts and globally paginates normalized candidates with joined labels and bounded typed
+references. History v1 Saved Views persist filters; migration 0035 extends only their surface
+constraint and refuses populated History-view downgrade. See [operational history](operational-history.md).

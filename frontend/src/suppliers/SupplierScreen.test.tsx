@@ -260,6 +260,8 @@ test("Supplier detail edit uses the loaded detail while directory is empty", asy
   const user = userEvent.setup();
   mount({ initialId: id, initialTab: "edit" });
   await screen.findByDisplayValue("Review nursery");
+  await user.click(screen.getByRole("button", { name: "Edit supplier" }));
+  await screen.findByRole("button", { name: "Save supplier" });
   fireEvent.change(screen.getByLabelText("Name"), {
     target: { value: "Corrected nursery" },
   });

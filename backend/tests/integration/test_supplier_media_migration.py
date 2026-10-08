@@ -66,7 +66,7 @@ def test_supplier_media_migration_preserves_existing_media_and_refuses_history(
             with pytest.raises(RuntimeError, match="Supplier media history exists"):
                 command.downgrade(config, "20261004_0032")
             with Session(database_engine) as db:
-                assert db.scalar(text("SELECT version_num FROM alembic_version")) == "20261006_0034"
+                assert db.scalar(text("SELECT version_num FROM alembic_version")) == "20261007_0035"
                 retained = db.get(RecordMediaLink, supplier_link_id)
                 assert retained is not None
                 assert retained.caption == "Retained"

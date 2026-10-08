@@ -186,7 +186,7 @@ function DashboardOverview() {
                   <p className="eyebrow">Across the collection</p>
                   <h3 id="recent-activity-title">Recent activity</h3>
                 </div>
-                <a href="#/events">View all Events</a>
+                <a href="#/events">Open Journal</a>
               </div>
               {state.value.recent_events.length ? (
                 <EventFeed

@@ -328,7 +328,7 @@ export function HarvestScreen({
               >
                 View owned harvest Event in source history
               </a>{" "}
-              · <a href="#/events">Event journal</a>
+              · <a href="#/events">Journal</a>
             </p>
             <StoredMaterialSection harvest={detail} />
             <PhotosSection

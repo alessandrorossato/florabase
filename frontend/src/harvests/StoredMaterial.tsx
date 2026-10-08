@@ -149,6 +149,17 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
       controller.abort();
     };
   }, [harvest.id, harvest.updated_at, attempt, auth]);
+  useEffect(() => {
+    if (!rows) return;
+    const inventoryId = new URLSearchParams(
+      window.location.hash.split("?", 2)[1] ?? "",
+    ).get("inventory");
+    if (!inventoryId || !rows.some((row) => row.id === inventoryId)) return;
+    const item = document.getElementById(`inventory-${inventoryId}`);
+    if (item && typeof item.scrollIntoView === "function")
+      item.scrollIntoView({ block: "center" });
+    item?.focus({ preventScroll: true });
+  }, [rows]);
   async function remove() {
     if (!removing || pending) return;
     setPending(true);
@@ -204,7 +215,11 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
               (row) => row.harvest_item_id === item.id,
             );
             return (
-              <li key={item.id}>
+              <li
+                key={item.id}
+                id={inventory ? `inventory-${inventory.id}` : undefined}
+                tabIndex={-1}
+              >
                 <strong>
                   {materials.find((m) => m.id === item.material_kind)?.label}
                 </strong>

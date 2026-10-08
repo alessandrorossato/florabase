@@ -141,16 +141,16 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
   expect(
     within(
       screen.getByRole("navigation", { name: "More navigation" }),
-    ).getByRole("button", { name: "Events" }),
+    ).getByRole("button", { name: "Journal" }),
   ).toBeInTheDocument();
   await user.click(within(mobile).getByRole("link", { name: "Home" }));
   expect(
     screen.queryByRole("navigation", { name: "More navigation" }),
   ).not.toBeInTheDocument();
 
-  await user.click(within(desktop).getByRole("button", { name: "Events" }));
+  await user.click(within(desktop).getByRole("button", { name: "Journal" }));
   expect(
-    await screen.findByRole("heading", { name: "Events" }),
+    await screen.findByRole("heading", { name: "Journal" }),
   ).toBeInTheDocument();
   await user.click(
     screen.getByRole("button", {
@@ -166,7 +166,7 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
     "href",
     `#/plants/${event.target.id}?tab=events`,
   );
-  await user.click(screen.getByRole("button", { name: "Status" }));
+  await user.click(screen.getByRole("button", { name: "Lifecycle" }));
   expect(screen.getByRole("status")).toHaveTextContent(
     "No Events match this filter.",
   );
@@ -455,6 +455,7 @@ test("Botanical reference deep links use compact context and defer collection wo
   expect(
     screen.getByRole("heading", {
       name: "Reference",
+      level: 3,
     }),
   ).toBeInTheDocument();
   expect(requested).not.toContain(

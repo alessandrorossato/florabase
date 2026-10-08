@@ -582,9 +582,16 @@ test("keyboard login succeeds, clears the password, and stores no token", async 
   expect(
     await screen.findByText("Signed in as Florabase Owner"),
   ).toBeInTheDocument();
-  expect(localStorage.length).toBe(0);
+  expect(localStorage.length).toBe(1);
+  expect(localStorage.key(0)).toBe("florabase.sidebar.collapsed-groups.v1");
+  expect(localStorage.getItem("florabase.sidebar.collapsed-groups.v1")).toBe(
+    "[]",
+  );
   expect(sessionStorage.length).toBe(0);
-  expect(storageWrite).not.toHaveBeenCalled();
+  expect(storageWrite.mock.calls.length).toBeGreaterThan(0);
+  for (const call of storageWrite.mock.calls) {
+    expect(call).toEqual(["florabase.sidebar.collapsed-groups.v1", "[]"]);
+  }
   const loginRequest = requests.find(({ path }) => path.endsWith("/login"));
   expect(loginRequest?.init?.credentials).toBe("same-origin");
   expect(loginRequest?.init?.body).toBe(
@@ -3222,12 +3229,14 @@ test.each([1440, 390])(
   },
 );
 
-test("BULK-001 sidebar macroareas and mobile More retain every destination and route", async () => {
+test("Activity sidebar macroareas and mobile More retain every destination and route", async () => {
   window.history.replaceState(null, "", "#/dashboard");
   mockFetch((path) => {
     if (path.endsWith("/session")) return jsonResponse(session);
     if (path.endsWith("/csrf")) return jsonResponse({ csrf_token: "csrf" });
     if (path.endsWith("/health")) return jsonResponse({ status: "ok" });
+    if (path.startsWith("/api/v1/history?"))
+      return jsonResponse({ items: [], total: 0, offset: 0, limit: 50 });
     if (path.startsWith("/api/v1/media-assets?"))
       return jsonResponse({ items: [], total: 0, limit: 24, offset: 0 });
     if (path === "/api/v1/provenance-sites/map")
@@ -3268,6 +3277,9 @@ test("BULK-001 sidebar macroareas and mobile More retain every destination and r
     "Reference",
     "Tools",
   ]);
+  expect(within(nav).getAllByRole("button", { expanded: true })).toHaveLength(
+    6,
+  );
   const destinations = [
     "Dashboard",
     "Seeds",
@@ -3275,7 +3287,8 @@ test("BULK-001 sidebar macroareas and mobile More retain every destination and r
     "Plants",
     "Harvests",
     "Media",
-    "Events",
+    "Journal",
+    "History",
     "Locations",
     "Geography",
     "Provenance map",
@@ -3287,6 +3300,7 @@ test("BULK-001 sidebar macroareas and mobile More retain every destination and r
   expect(
     within(nav)
       .getAllByRole("button")
+      .filter((button) => button.classList.contains("navigation-link"))
       .map((button) => button.textContent),
   ).toEqual(destinations);
   expect(
@@ -3310,6 +3324,7 @@ test("BULK-001 sidebar macroareas and mobile More retain every destination and r
     "harvests",
     "media",
     "events",
+    "history",
     "locations",
     "geography",
     "map",
@@ -3325,6 +3340,7 @@ test("BULK-001 sidebar macroareas and mobile More retain every destination and r
     "Collection",
     "Collection",
     "Collection",
+    "Activity",
     "Activity",
     "Places",
     "Places",
@@ -3354,3 +3370,104 @@ test("BULK-001 sidebar macroareas and mobile More retain every destination and r
     ).toBeVisible();
   }
 });
+
+test("sidebar disclosures support keyboard, persist preferences and expand activated routes", async () => {
+  window.history.replaceState(null, "", "#/history");
+  localStorage.setItem(
+    "florabase.sidebar.collapsed-groups.v1",
+    JSON.stringify(["Activity", "Places"]),
+  );
+  mockFetch((path) => {
+    if (path.endsWith("/session")) return jsonResponse(session);
+    if (path.endsWith("/csrf")) return jsonResponse({ csrf_token: "csrf" });
+    if (path.endsWith("/health")) return jsonResponse({ status: "ok" });
+    if (path.startsWith("/api/v1/history?"))
+      return jsonResponse({ items: [], total: 0, offset: 0, limit: 50 });
+    return jsonResponse([]);
+  });
+  const user = userEvent.setup();
+  let view = render(<App />);
+  let nav = await screen.findByRole("navigation", {
+    name: "Primary navigation",
+  });
+  expect(within(nav).getByRole("button", { name: "Activity" })).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
+  expect(within(nav).getByRole("button", { name: "History" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  expect(within(nav).getByRole("button", { name: "Places" })).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
+  expect(
+    within(nav).queryByRole("button", { name: "Locations" }),
+  ).not.toBeInTheDocument();
+  const collection = within(nav).getByRole("button", { name: "Collection" });
+  collection.focus();
+  await user.keyboard("{Enter}");
+  expect(collection).toHaveFocus();
+  expect(collection).toHaveAttribute("aria-expanded", "false");
+  expect(
+    within(nav).queryByRole("button", { name: "Seeds" }),
+  ).not.toBeInTheDocument();
+  expect(
+    JSON.parse(
+      localStorage.getItem("florabase.sidebar.collapsed-groups.v1") ?? "[]",
+    ),
+  ).toEqual(["Places", "Collection"]);
+  view.unmount();
+  view = render(<App />);
+  nav = await screen.findByRole("navigation", { name: "Primary navigation" });
+  expect(
+    within(nav).getByRole("button", { name: "Collection" }),
+  ).toHaveAttribute("aria-expanded", "false");
+  await user.click(within(nav).getByRole("button", { name: "Activity" }));
+  expect(
+    within(nav).queryByRole("button", { name: "Journal" }),
+  ).not.toBeInTheDocument();
+  act(() => {
+    window.history.pushState(null, "", "#/events?category=status");
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+  });
+  expect(
+    await screen.findByRole("heading", { name: "Journal", level: 2 }),
+  ).toBeVisible();
+  expect(within(nav).getByRole("button", { name: "Activity" })).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
+  expect(within(nav).getByRole("button", { name: "Journal" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  expect(
+    screen.getByRole("button", { name: "Lifecycle", pressed: true }),
+  ).toBeVisible();
+  await user.click(within(nav).getByRole("button", { name: "Collection" }));
+  expect(within(nav).getByRole("button", { name: "Seeds" })).toBeVisible();
+  view.unmount();
+});
+
+test.each(["invalid JSON", '{"Collection":true}'])(
+  "sidebar tolerates malformed presentation preference %s",
+  async (stored) => {
+    localStorage.setItem("florabase.sidebar.collapsed-groups.v1", stored);
+    mockFetch((path) =>
+      path.endsWith("/session")
+        ? jsonResponse(session)
+        : path.endsWith("/csrf")
+          ? jsonResponse({ csrf_token: "csrf" })
+          : jsonResponse([]),
+    );
+    render(<App />);
+    const nav = await screen.findByRole("navigation", {
+      name: "Primary navigation",
+    });
+    expect(within(nav).getAllByRole("button", { expanded: true })).toHaveLength(
+      6,
+    );
+  },
+);

@@ -121,6 +121,18 @@ afterEach(() => {
   cleanup();
   vi.clearAllMocks();
 });
+it("focuses the exact retained inventory reached from History", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    "#/harvests/harvest?inventory=inventory",
+  );
+  vi.mocked(api.inventoryList).mockResolvedValue([inventory]);
+  wrap(<StoredMaterialSection harvest={harvest} />);
+  await waitFor(() => {
+    expect(document.getElementById("inventory-inventory")).toHaveFocus();
+  });
+});
 it("shows untracked opt-in separately from historical collection", async () => {
   wrap(<StoredMaterialSection harvest={harvest} />);
   expect(await screen.findByText("Not tracked")).toBeVisible();
