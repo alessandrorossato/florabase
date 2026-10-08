@@ -1,5 +1,100 @@
 # Engineering progress
 
+## 2026-10-08 — EXPLORE-002 independent final verification
+
+- Independent review found the implementation aligned with the accepted collection-aware Native
+  ranges contract and operator UAT. No production behavior defect was found. Three integration tests
+  had stale hard-coded expectations for migration `0037`; those test assertions now read Alembic's
+  current head, and their focused rerun passed.
+- Canonical `make feature-verify` passed on the reviewed tree: **804 backend unit tests** at **90.06%
+  coverage**, **528 frontend tests**, **673 PostgreSQL integration tests**, feature graph (**95 valid**),
+  Ruff/Prettier/ESLint, strict mypy (**303 files**), strict
+  TypeScript, API drift, both production image builds, migration cycle `0037 → 0038 → 0037 → 0038`,
+  whitespace checks and a working-tree verification receipt.
+- Migration `0038` is additive and passed its populate/refuse-downgrade and empty-cycle checks.
+  Existing Alembic path-separator deprecation warnings remain. The operator accepted functional UAT;
+  the broad cross-application visual/product review remains deferred before release hardening.
+- EXPLORE-002 is `verified` and ready for its reviewed local commit and protected delivery. Delivery
+  and `feature-finish` are still pending. Because this feature adds migration `0038`, successful
+  delivery must be followed by `make dev-upgrade` on DEV. No production or Stable Preview state was
+  modified.
+
+## 2026-10-08 — EXPLORE-002 bounded operator UAT refinement
+
+- The operator has now **accepted the current functionality for delivery**; broad visual/product
+  review remains explicitly deferred across the application. Added explicit
+  checkbox selection up to **20** identities, Selected species (N), deselection/Remove/View only/Clear,
+  exact one-species detail and multiple-species distinct territory coverage with contributor lists.
+  Per-identity broad/precise overlap counts once. Missing/filter-excluded IDs remain explicit and
+  contribute no coverage; no query-wide selection or arbitrary replacement.
+- Added OR **Collection records** filters for Seeds/Sowings/Plants/Plant groups/Stored material.
+  Status remains single-select; Current qualifies active selected-category records, Living qualifies
+  selected Plant/PlantGroup records, Historical requires retained selected-category evidence and
+  globally no Current representation. Directory/overview/selection share all eligibility filters.
+  New bounded comparison endpoint uses **2 SELECTs**, including twenty-ID requests; existing 2/4/4
+  directory/overview/exact-detail query bounds remain. No domain/provider writes.
+- Canonical repeated-ID/category URL and Saved View v1 sets restore deterministically; singular v1
+  UUID state remains readable. No additional migration beyond **0038**. Desktop Explore now places
+  Botanical identities/Media/Geography before non-actionable **Maps** text and the three unchanged
+  map destinations; mobile remains flat with every destination.
+- Audited official Kew WCVP/POWO sources and the complete **95-feature** graph. Refined existing
+  **planned ENRICHMENT-001** for a separately reviewed structured-native-range candidate immediately
+  after EXPLORE-002 delivery, before SCHEDULE-001 unless reprioritised. Exact reviewed taxon matching,
+  TDWG crosswalk, provenance and operator-reviewed replacement remain future decisions. BOTANY-003
+  stays unchanged. Recorded the later broad cross-application review checkpoint before release hardening.
+- Final focused checks: **97 backend unit**, **39 disposable PostgreSQL**, **152 distinct frontend**
+  tests (151 main-run passes plus corrected route-order test rerun), **23 read-only UAT runtime/fixture**,
+  **19 host guard**; Ruff/format, strict mypy on 6 changed source files, CLI import lint,
+  frontend Prettier/ESLint/strict TypeScript, Vite production build, API generation/drift, feature graph
+  and whitespace passed. Existing 18 Alembic warnings remain. No full canonical gate/receipt is claimed.
+- Task-owned UAT stays healthy at **http://localhost:15174/#/native-ranges**, **preview / preview**,
+  schema **0038**, fixture **v4 / 42**. The explicit additive stored-material extension and repeated
+  seed preserve existing operator edits/inventory; no reset. DOM/accessibility checks at
+  **1440×844, 1024×844, 390×844** confirmed comparison, filter exclusion, one-species links,
+  refresh and mobile IA without horizontal overflow. No screenshots.
+- At this handoff the feature tree remained **unstaged/uncommitted**. The operator has authorized
+  independent review, canonical verification, commit and protected delivery; the final verification
+  evidence is recorded above.
+  See [updated handoff](explore-002-handoff.md) and [source audit](native-range-enrichment-audit.md).
+
+## 2026-10-08 — EXPLORE-002 implementation and UAT handoff
+
+- Added the separate Native ranges Explore workspace with Collection overview and Selected species.
+  Reused GEOGRAPHY-002's exact profile-owned range relationships and EXPLORE-001's representation,
+  lifecycle/inventory scopes and literal search. No occurrence, prose or material-provenance inference.
+  Broad/precise overlaps count distinct identities once per map territory; exact relationship lists
+  retain broad, disjoint, custom and unavailable places without rewriting stored knowledge.
+- Reviewed and pinned Natural Earth 1:110m Admin 0 map units (dataset 5.1.1, repository v5.1.2,
+  public domain). Bundled 179 SVG paths in a separate lazy geometry chunk, **150.83 kB / 60.46 kB
+  gzip**, with exact ISO mapping and canonical M49 descendant drawing primitives. Missing/custom
+  boundaries stay explicit. Raw JSON parse median/p95 **0.56/0.99 ms** in local Node; this does not
+  measure device paint. No runtime geometry/provider fetch or GIS persistence/library was added.
+- Added authenticated bounded directory/overview/selection endpoints with constant **2/4/4 SELECTs**,
+  summary totals independent of pagination and HTML map/count/precision companions. Canonical URL
+  and private v1 Native ranges Saved Views persist stable scope/search/mode/identity/filter only.
+  Migration **0038** solely extends the surface constraint and locks/refuses incompatible downgrade.
+- Focused checks passed: **93 backend unit**, **38 isolated PostgreSQL** and **147 frontend** tests;
+  Ruff/backend formatting (**344 files**), strict mypy (**303 files**), CLI syntax/import checks,
+  geometry reproducibility, frontend Prettier/ESLint/strict TypeScript, `make api-generate`,
+  `make api-check`, feature graph (**95 valid**), both final production image builds and
+  `git diff --check`. After lint corrections, the **60 affected frontend tests** and Vite build
+  passed again; see [handoff](explore-002-handoff.md). Existing 18 Alembic
+  path-separator warnings remain; exhausted default Docker address pools were handled with an
+  isolated subnet in the disposable final PostgreSQL project, which cleaned its own resources.
+- Retired previous `c6cd` UAT through its owning guarded command, started this worktree, corrected
+  an initial malformed fixture call and recovered only the incomplete synthetic preview through
+  guarded reset. UAT is healthy/current at **0038**, fixture **v4 / 41 records**; repeated seed and
+  **21 read-only runtime/fixture checks** plus **19 host guard tests** passed. All 5 / Living 2 /
+  Current 4 / Historical 1, broad+Brazil overlap, disjoint Italy/Thailand, custom and no-range examples
+  are ready at **http://localhost:15174/#/native-ranges**, **preview / preview**.
+- DOM/accessibility inspection covered overview/selection at **1440×844, 1024×844 and 390×844**,
+  wrapping, mobile navigation, native manager link, Saved View dialog and clear-selection focus;
+  no horizontal overflow or screenshot artifacts. Operator visual/product UAT remains pending.
+  EXPLORE-002 is **implemented**, all changes unstaged/uncommitted. Canonical `make feature-verify`,
+  independent review, commit and delivery remain Luna's responsibility. Primary, DEV, Stable Preview
+  and production runtime state were not modified. SCHEDULE-001 remains future; biological daily-use
+  candidates remain next choices and BOTANY-003 stays blocked/unchanged.
+
 ## 2026-10-08 — EXPLORE-001 independent verification
 
 - Independent final review found no production behavior defect. Collection projections, exact provider

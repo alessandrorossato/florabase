@@ -95,6 +95,17 @@ Occurrence-ready means an existing confirmed GBIF link, never a promise of actua
 collection-domain or occurrence persistence is introduced. Native ranges and Collection origins
 keep their independent evidence and semantics.
 
+### Collection-aware Native ranges
+
+EXPLORE-002 reads the existing GEOGRAPHY-002 profile-owned structured relationships for
+identities represented by the exact EXPLORE-001 projection. Collection overview counts distinct
+identities per canonical territory drawing unit after union within each identity. Broad and
+precise overlaps count once on the map, while the exact-place list retains every recorded link.
+Selected species preserves exact paths, disjoint areas, custom/unmapped places and missing-range
+states. Only structured links participate; origin_distribution prose, GBIF occurrences and actual
+material origins are independent. Static Natural Earth boundaries are application presentation
+data, never botanical assertions or persisted inferred descendants. See [Native ranges](native-ranges-explore.md).
+
 ### BotanicalProfile
 
 A BotanicalProfile is optional general reference knowledge for exactly one BotanicalIdentity. Its
@@ -523,7 +534,7 @@ Collection origins describes where actual collection material is recorded as com
 Species distribution describes where a species is observed/distributed; Native range describes where
 it is considered biologically native/original. Neither is inferred from collection provenance,
 Supplier or current Location. EXPLORE-001 adds the separate collection-aware Species distribution
-workspace; EXPLORE-002 Native ranges remains future work.
+workspace; EXPLORE-002 adds the separate recorded Native ranges workspace.
 
 Activity contains the focused Event Journal and the read-only unified operational History
 projection. SCHEDULE-001 remains a later candidate, without treating recorded facts as planned tasks. Future

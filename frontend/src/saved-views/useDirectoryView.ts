@@ -29,8 +29,11 @@ export function useDirectoryView<S extends DirectorySurface>(
         const params = new URLSearchParams(query);
         for (const field of Object.keys(defaults[surface]))
           params.delete(field);
-        for (const [field, fieldValue] of Object.entries(saved))
-          params.set(field, String(fieldValue));
+        for (const [field, fieldValue] of Object.entries(saved)) {
+          if (Array.isArray(fieldValue))
+            for (const item of fieldValue) params.append(field, String(item));
+          else params.set(field, String(fieldValue));
+        }
         const hash = `${path || `#/${directoryRoutes[surface].split("?", 2)[0]}`}${params.size ? `?${params}` : ""}`;
         if (hash !== window.location.hash) {
           if (typing) window.history.replaceState(null, "", hash);

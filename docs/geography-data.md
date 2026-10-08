@@ -54,3 +54,12 @@ nodes.
 The complete upstream repository is not vendored. The committed normalized JSON and license are the
 only runtime inputs. Alembic revision `20260830_0007` seeds them during normal migration without
 internet access; startup and API requests never fetch geography data.
+
+## Native-range presentation geometry
+
+[EXPLORE-002](native-ranges-explore.md) reads the existing hierarchy and native-range relationships.
+Its separately reviewed Natural Earth 1:110m geometry is bundled frontend presentation data.
+ISO alpha-2 codes map to drawing units; M49 areas use canonical descendant territories only for
+rendering. Eight CLDR-only codes remain explicitly unsupported rather than relabelled ISO/M49.
+Custom places retain their exact list entries and never borrow ancestor polygons. This changes
+neither the CLDR snapshot nor GeographicPlace/native-range persistence or authority.

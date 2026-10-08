@@ -4,3 +4,6 @@ node_modules
 coverage
 src/api/schema.d.ts
 pnpm-lock.yaml
+
+# Generated compact, pinned presentation geometry
+src/native-ranges/data/world-110m.json

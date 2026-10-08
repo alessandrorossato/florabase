@@ -614,6 +614,74 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/explore/native-ranges/identities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Native Identities */
+        get: operations["listNativeRangeIdentities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/explore/native-ranges/identities/{identity_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Native Selected */
+        get: operations["getSelectedNativeRanges"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/explore/native-ranges/overview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Native Overview */
+        get: operations["getNativeRangeOverview"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/explore/native-ranges/selection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Native Selection */
+        get: operations["getNativeRangeSelection"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/explore/species-distribution/identities": {
         parameters: {
             query?: never;
@@ -2600,6 +2668,11 @@ export interface components {
              */
             kind: "seed_lot" | "sowing" | "plant" | "plant_group" | "harvest_inventory";
         };
+        /**
+         * CollectionRecordCategory
+         * @enum {string}
+         */
+        CollectionRecordCategory: "seed_lot" | "sowing" | "plant" | "plant_group" | "stored_material";
         /** ConversionCreate */
         ConversionCreate: {
             /** Botanical Identity Id */
@@ -3906,6 +3979,81 @@ export interface components {
          * @enum {string}
          */
         MaterialKind: "fruit" | "flower" | "leaf" | "root" | "seed" | "stem_or_shoot" | "whole_plant" | "other";
+        /** NativeRangeIdentity */
+        NativeRangeIdentity: {
+            /** Common Name */
+            common_name: string | null;
+            /** Cultivar Name */
+            cultivar_name: string | null;
+            /** Current Records */
+            current_records: number;
+            /** Display Label */
+            display_label: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Living Records */
+            living_records: number;
+            /**
+             * Matches Filters
+             * @default true
+             */
+            matches_filters: boolean;
+            /** Matches Scope */
+            matches_scope: boolean;
+            /** Native Range Count */
+            native_range_count: number;
+            /**
+             * Representation
+             * @enum {string}
+             */
+            representation: "living" | "current" | "historical";
+            /** Retained Records */
+            retained_records: number;
+            /** Scientific Name */
+            scientific_name: string;
+        };
+        /** NativeRangeIdentityPage */
+        NativeRangeIdentityPage: {
+            /** Items */
+            items: components["schemas"]["NativeRangeIdentity"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
+        /** NativeRangeOverview */
+        NativeRangeOverview: {
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Places */
+            places: components["schemas"]["RecordedPlaceCoverage"][];
+            /** Places Total */
+            places_total: number;
+            /** Represented */
+            represented: number;
+            /** Territories */
+            territories: components["schemas"]["TerritoryCoverage"][];
+            /** With Range */
+            with_range: number;
+            /** Without Range */
+            without_range: number;
+        };
+        /** NativeRangeSelection */
+        NativeRangeSelection: {
+            /** Identities */
+            identities: components["schemas"]["NativeRangeIdentity"][];
+            /** Missing Ids */
+            missing_ids: string[];
+            /** Territories */
+            territories: components["schemas"]["SelectedTerritoryCoverage"][];
+        };
         /** NoSourceAdjustment */
         NoSourceAdjustment: {
             /**
@@ -4952,6 +5100,50 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** RecordedPlaceCoverage */
+        RecordedPlaceCoverage: {
+            /** Display Path */
+            display_path: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Identity Count */
+            identity_count: number;
+            /** Name */
+            name: string;
+            /**
+             * Place Kind
+             * @enum {string}
+             */
+            place_kind: "canonical" | "custom";
+            /** Source Code */
+            source_code: string | null;
+            /** Source Code Type */
+            source_code_type: string | null;
+        };
+        /** RecordedRangePlace */
+        RecordedRangePlace: {
+            /** Display Path */
+            display_path: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Place Kind
+             * @enum {string}
+             */
+            place_kind: "canonical" | "custom";
+            /** Source Code */
+            source_code: string | null;
+            /** Source Code Type */
+            source_code_type: string | null;
+        };
         /**
          * ReintegrationEligibilityStatus
          * @enum {string}
@@ -5102,7 +5294,7 @@ export interface components {
          * SavedViewSurface
          * @enum {string}
          */
-        SavedViewSurface: "global_search" | "seed_lots" | "sowings" | "plants" | "harvests" | "stored_material" | "events" | "history" | "media" | "botanical_identities" | "suppliers" | "orders" | "locations" | "geography" | "species_distribution" | "provenance_map";
+        SavedViewSurface: "global_search" | "seed_lots" | "sowings" | "plants" | "harvests" | "stored_material" | "events" | "history" | "media" | "botanical_identities" | "suppliers" | "orders" | "locations" | "geography" | "species_distribution" | "native_ranges" | "provenance_map";
         /** SavedViewUpdate */
         SavedViewUpdate: {
             /** Name */
@@ -5356,6 +5548,36 @@ export interface components {
          * @enum {string}
          */
         SeedWeightUnit: "g" | "mg";
+        /** SelectedNativeRanges */
+        SelectedNativeRanges: {
+            identity: components["schemas"]["NativeRangeIdentity"];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Ranges */
+            ranges: components["schemas"]["RecordedRangePlace"][];
+            /** Territories */
+            territories: components["schemas"]["TerritoryCoverage"][];
+            /** Total */
+            total: number;
+        };
+        /** SelectedTerritoryCoverage */
+        SelectedTerritoryCoverage: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Identity Count */
+            identity_count: number;
+            /** Identity Ids */
+            identity_ids: string[];
+            /** Name */
+            name: string;
+            /** Source Code */
+            source_code: string;
+        };
         /** SessionResponse */
         SessionResponse: {
             /** Canonical Origin */
@@ -5962,6 +6184,20 @@ export interface components {
             query: string;
             /** Stale */
             stale: boolean;
+        };
+        /** TerritoryCoverage */
+        TerritoryCoverage: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Identity Count */
+            identity_count: number;
+            /** Name */
+            name: string;
+            /** Source Code */
+            source_code: string;
         };
         /** TransferCreate */
         TransferCreate: {
@@ -7699,6 +7935,151 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listNativeRangeIdentities: {
+        parameters: {
+            query?: {
+                q?: string;
+                scope?: "all" | "living" | "current" | "historical";
+                with_range?: boolean;
+                record?: components["schemas"]["CollectionRecordCategory"][] | null;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NativeRangeIdentityPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getSelectedNativeRanges: {
+        parameters: {
+            query?: {
+                scope?: "all" | "living" | "current" | "historical";
+                q?: string;
+                with_range?: boolean;
+                record?: components["schemas"]["CollectionRecordCategory"][] | null;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SelectedNativeRanges"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getNativeRangeOverview: {
+        parameters: {
+            query?: {
+                q?: string;
+                scope?: "all" | "living" | "current" | "historical";
+                with_range?: boolean;
+                record?: components["schemas"]["CollectionRecordCategory"][] | null;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NativeRangeOverview"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getNativeRangeSelection: {
+        parameters: {
+            query: {
+                identity: string[];
+                scope?: "all" | "living" | "current" | "historical";
+                q?: string;
+                with_range?: boolean;
+                record?: components["schemas"]["CollectionRecordCategory"][] | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NativeRangeSelection"];
+                };
             };
             /** @description Validation Error */
             422: {

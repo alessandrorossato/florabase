@@ -4,6 +4,7 @@ from uuid import uuid7
 
 import pytest
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import Engine, inspect, select, text
 from sqlalchemy.orm import Session
 
@@ -21,6 +22,7 @@ def test_supplier_media_migration_preserves_existing_media_and_refuses_history(
     database_engine: Engine,
 ) -> None:
     config = Config("alembic.ini")
+    current_head = ScriptDirectory.from_config(config).get_current_head()
     command.downgrade(config, "20261004_0032")
     supplier_id = uuid7()
     try:
@@ -66,7 +68,7 @@ def test_supplier_media_migration_preserves_existing_media_and_refuses_history(
             with pytest.raises(RuntimeError, match="Supplier media history exists"):
                 command.downgrade(config, "20261004_0032")
             with Session(database_engine) as db:
-                assert db.scalar(text("SELECT version_num FROM alembic_version")) == "20261008_0037"
+                assert db.scalar(text("SELECT version_num FROM alembic_version")) == current_head
                 retained = db.get(RecordMediaLink, supplier_link_id)
                 assert retained is not None
                 assert retained.caption == "Retained"

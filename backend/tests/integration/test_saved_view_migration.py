@@ -2,6 +2,7 @@ from uuid import uuid7
 
 import pytest
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import Engine, inspect, text
 
 from alembic import command
@@ -13,6 +14,7 @@ def test_saved_view_upgrade_populated_refusal_and_empty_downgrade_reupgrade(
     database_engine: Engine,
 ) -> None:
     config = Config("alembic.ini")
+    current_head = ScriptDirectory.from_config(config).get_current_head()
     owner_id, view_id = uuid7(), uuid7()
     command.downgrade(config, "20261005_0033")
     try:
@@ -46,7 +48,7 @@ def test_saved_view_upgrade_populated_refusal_and_empty_downgrade_reupgrade(
                 )
                 == "basil"
             )
-            assert conn.scalar(text("SELECT version_num FROM alembic_version")) == "20261008_0037"
+            assert conn.scalar(text("SELECT version_num FROM alembic_version")) == current_head
             conn.execute(text("DELETE FROM saved_views WHERE id=:id"), {"id": view_id})
         command.downgrade(config, "20261005_0033")
         with database_engine.connect() as conn:

@@ -287,8 +287,8 @@ def main() -> None:
         baseline = preview.state()
         require(baseline["counts"]["users"] == 1, "one real owner")
         require(
-            baseline["counts"]["botanical_identities"] == 3,
-            "three botanical identities",
+            baseline["counts"]["botanical_identities"] == 6,
+            "six synthetic botanical identities, five represented and one reference-only",
         )
         require(len(baseline["media"]) == 1, "one tiny binary media asset")
         login(preview)
@@ -397,7 +397,7 @@ with Session(get_engine()) as db:
             reset["counts"]["users"] == 1 and len(reset["media"]) == 1,
             "reset recreates owner and media",
         )
-        require(reset["manifest"]["version"] == 3, "fixture version")
+        require(reset["manifest"]["version"] == 4, "fixture version")
         login(preview)
         reset = preview.state()
         preview.seed()

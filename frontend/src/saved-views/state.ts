@@ -17,6 +17,14 @@ import {
 export type Surface = components["schemas"]["SavedViewSurface"];
 export type SavedState = components["schemas"]["SavedViewResponse"]["state"];
 export type DirectorySurface = Exclude<Surface, "global_search" | "history">;
+export const recordCategories = [
+  "seed_lot",
+  "sowing",
+  "plant",
+  "plant_group",
+  "stored_material",
+] as const;
+export type RecordCategory = (typeof recordCategories)[number];
 export interface DirectoryStates {
   seed_lots: { q: string; lifecycle: "active" | "history" | "all" };
   sowings: { q: string; lifecycle: "active" | "completed" | "all" };
@@ -59,6 +67,14 @@ export interface DirectoryStates {
     scope: "all" | "living" | "current" | "historical";
     identity: string;
   };
+  native_ranges: {
+    q: string;
+    scope: "all" | "living" | "current" | "historical";
+    mode: "overview" | "species";
+    identity: string[];
+    record: RecordCategory[];
+    withRange: boolean;
+  };
   botanical_identities: { q: string };
   suppliers: { q: string };
   orders: { q: string; supplier_id: string };
@@ -81,6 +97,7 @@ export const surfaceLabels: Record<Surface, string> = {
   history: "History",
   media: "Media Library",
   species_distribution: "Species distribution",
+  native_ranges: "Native ranges",
   botanical_identities: "Botanical identities",
   suppliers: "Suppliers",
   orders: "Orders",
@@ -97,6 +114,7 @@ export const directoryRoutes: Record<DirectorySurface, string> = {
   events: "events",
   media: "media",
   species_distribution: "species-distribution",
+  native_ranges: "native-ranges",
   botanical_identities: "identities",
   suppliers: "suppliers",
   orders: "orders",
@@ -119,6 +137,14 @@ export const defaults: DirectoryStates = {
   events: { category: "all" },
   media: { q: "", kind: "", association: "all", target: "" },
   species_distribution: { q: "", scope: "all", identity: "" },
+  native_ranges: {
+    q: "",
+    scope: "all",
+    mode: "overview",
+    identity: [],
+    record: [],
+    withRange: false,
+  },
   botanical_identities: { q: "" },
   suppliers: { q: "" },
   orders: { q: "", supplier_id: "" },
@@ -141,6 +167,10 @@ const choices: Partial<
   Record<DirectorySurface, Record<string, readonly string[]>>
 > = {
   species_distribution: { scope: ["all", "living", "current", "historical"] },
+  native_ranges: {
+    scope: ["all", "living", "current", "historical"],
+    mode: ["overview", "species"],
+  },
   seed_lots: { lifecycle: ["active", "history", "all"] },
   sowings: { lifecycle: ["active", "completed", "all"] },
   plants: {
@@ -177,19 +207,45 @@ function fieldValue(
   surface: DirectorySurface,
   key: string,
   value: unknown,
-): string | boolean | null {
+): string | boolean | string[] | null {
+  if (surface === "native_ranges" && (key === "identity" || key === "record")) {
+    const values =
+      key === "identity" && typeof value === "string" ? [value] : value;
+    if (
+      !Array.isArray(values) ||
+      values.some((item) => typeof item !== "string")
+    )
+      return null;
+    const normalized = [
+      ...new Set((values as string[]).map((item) => item.toLowerCase())),
+    ];
+    if (key === "identity")
+      return normalized.length <= 20 &&
+        normalized.every((item) => uuid.test(item))
+        ? normalized.sort()
+        : null;
+    return normalized.every((item) =>
+      recordCategories.includes(item as RecordCategory),
+    )
+      ? recordCategories.filter((item) => normalized.includes(item))
+      : null;
+  }
   if (key === "q")
     return typeof value === "string" && Array.from(value.trim()).length <= 200
       ? value.trim()
       : null;
   if (
     key.endsWith("_id") ||
-    (surface === "species_distribution" && key === "identity")
+    (["species_distribution", "native_ranges"].includes(surface) &&
+      key === "identity")
   )
     return typeof value === "string" && (!value || uuid.test(value))
       ? value.toLowerCase()
       : null;
-  if (surface === "provenance_map")
+  if (
+    surface === "provenance_map" ||
+    (surface === "native_ranges" && key === "withRange")
+  )
     return typeof value === "boolean" ? value : null;
   return typeof value === "string" &&
     ((value === "" &&
@@ -205,7 +261,7 @@ export function directoryState<S extends DirectorySurface>(
   strict = true,
 ): DirectoryStates[S] | null {
   const base = defaults[surface];
-  const result: Record<string, string | boolean> = { ...base };
+  const result: Record<string, string | boolean | string[]> = { ...base };
   for (const [key, value] of Object.entries(input)) {
     if (!(key in base)) {
       if (strict) return null;
@@ -235,8 +291,12 @@ export function readDirectoryState<S extends DirectorySurface>(
   for (const key of Object.keys(defaults[surface])) {
     const value = params.get(key);
     if (value !== null)
-      input[key] =
-        typeof defaults[surface][key as keyof DirectoryStates[S]] === "boolean"
+      input[key] = Array.isArray(
+        defaults[surface][key as keyof DirectoryStates[S]],
+      )
+        ? params.getAll(key)
+        : typeof defaults[surface][key as keyof DirectoryStates[S]] ===
+            "boolean"
           ? value === "false"
             ? false
             : value === "true"
@@ -257,7 +317,8 @@ export function saveDirectoryState<S extends DirectorySurface>(
   for (const [key, value] of Object.entries(parsed)) {
     if (
       value !== defaults[surface][key as keyof DirectoryStates[S]] &&
-      value !== ""
+      value !== "" &&
+      (!Array.isArray(value) || value.length > 0)
     )
       result[key] = value;
   }
@@ -366,7 +427,10 @@ export function savedViewHash(
   if (!canonical || !Object.keys(canonical).length) return null;
   const [route, query = ""] = directoryRoutes[surface].split("?", 2);
   const params = new URLSearchParams(query);
-  for (const [key, value] of Object.entries(canonical))
-    params.set(key, String(value));
+  for (const [key, value] of Object.entries(canonical)) {
+    if (Array.isArray(value))
+      for (const item of value) params.append(key, String(item));
+    else params.set(key, String(value));
+  }
   return `#/${route}${params.size ? `?${params}` : ""}`;
 }

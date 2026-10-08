@@ -1,12 +1,16 @@
 """Bounded local projection; never imports or calls a botanical provider."""
 
+from collections.abc import Sequence
 from uuid import UUID
 
 from sqlalchemy import Row, Select, case, func, literal, or_, select, union_all
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.selectable import Subquery
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.explore.schemas import (
+    CollectionIdentity,
+    CollectionRecordCategory,
     RepresentationScope,
     RepresentedIdentity,
     RepresentedIdentityPage,
@@ -19,23 +23,30 @@ from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import Sowing
 
 
-def projection() -> Select[tuple[BotanicalIdentity, int, int, int, str | None, int]]:
-    records = union_all(
+def collection_records() -> Subquery:
+    return union_all(
         *[
             select(
                 model.botanical_identity_id.label("identity_id"),
+                literal(category).label("category"),
                 case((model.lifecycle == "active", 1), else_=0).label("current"),
                 case((model.lifecycle == "active", 1 if living else 0), else_=0).label("living"),
             )
-            for model, living in ((SeedLot, False), (Plant, True), (PlantGroup, True))
+            for model, living, category in (
+                (SeedLot, False, "seed_lot"),
+                (Plant, True, "plant"),
+                (PlantGroup, True, "plant_group"),
+            )
         ],
         select(
             SeedLot.botanical_identity_id,
+            literal("sowing"),
             case((Sowing.lifecycle == "active", 1), else_=0),
             literal(0),
         ).join(SeedLot, SeedLot.id == Sowing.seed_lot_id),
         select(
             func.coalesce(Plant.botanical_identity_id, PlantGroup.botanical_identity_id),
+            literal("stored_material"),
             case((HarvestMaterialInventory.state == "active", 1), else_=0),
             literal(0),
         )
@@ -44,6 +55,10 @@ def projection() -> Select[tuple[BotanicalIdentity, int, int, int, str | None, i
         .outerjoin(Plant, Plant.id == Harvest.plant_id)
         .outerjoin(PlantGroup, PlantGroup.id == Harvest.plant_group_id),
     ).subquery()
+
+
+def projection() -> Select[tuple[BotanicalIdentity, int, int, int, str | None, int]]:
+    records = collection_records()
     counts = (
         select(
             records.c.identity_id,
@@ -92,10 +107,28 @@ def response(
     row: Row[tuple[BotanicalIdentity, int, int, int, str | None, int]], scope: RepresentationScope
 ) -> RepresentedIdentity:
     identity, retained, current, living, gbif_id, links = row
+    return RepresentedIdentity(
+        **collection_response(identity, retained, current, living, scope).model_dump(),
+        occurrence_eligibility="available"
+        if gbif_id is not None
+        else "incompatible"
+        if links
+        else "not_linked",
+        external_taxon_id=gbif_id,
+    )
+
+
+def collection_response(
+    identity: BotanicalIdentity,
+    retained: int,
+    current: int,
+    living: int,
+    scope: RepresentationScope,
+) -> CollectionIdentity:
     label = identity.scientific_name
     if identity.cultivar_name is not None:
         label += f" \u2018{identity.cultivar_name}\u2019"
-    return RepresentedIdentity(
+    return CollectionIdentity(
         id=identity.id,
         display_label=label,
         scientific_name=identity.scientific_name,
@@ -105,24 +138,15 @@ def response(
         retained_records=retained,
         current_records=current,
         living_records=living,
-        occurrence_eligibility="available"
-        if gbif_id is not None
-        else "incompatible"
-        if links
-        else "not_linked",
-        external_taxon_id=gbif_id,
         matches_scope=_matches(scope, current, living),
     )
 
 
-def list_identities(
-    database: Session,
-    *,
-    q: str = "",
+def filtered_projection(
     scope: RepresentationScope = "all",
-    offset: int = 0,
-    limit: int = 50,
-) -> RepresentedIdentityPage:
+    q: str = "",
+    record: Sequence[CollectionRecordCategory] = (),
+) -> Select[tuple[BotanicalIdentity, int, int, int, str | None, int]]:
     statement = projection()
     columns = statement.selected_columns
     if scope == "living":
@@ -131,6 +155,17 @@ def list_identities(
         statement = statement.where(columns["current"] > 0)
     elif scope == "historical":
         statement = statement.where(columns["current"] == 0)
+    if record:
+        records = collection_records()
+        qualifying = select(records.c.identity_id).where(
+            records.c.identity_id == BotanicalIdentity.id,
+            records.c.category.in_(record),
+        )
+        if scope == "current":
+            qualifying = qualifying.where(records.c.current > 0)
+        elif scope == "living":
+            qualifying = qualifying.where(records.c.living > 0)
+        statement = statement.where(qualifying.exists())
     if q.strip():
         label = func.concat(
             BotanicalIdentity.scientific_name, " \u2018", BotanicalIdentity.cultivar_name, "\u2019"
@@ -148,6 +183,18 @@ def list_identities(
                 ]
             )
         )
+    return statement
+
+
+def list_identities(
+    database: Session,
+    *,
+    q: str = "",
+    scope: RepresentationScope = "all",
+    offset: int = 0,
+    limit: int = 50,
+) -> RepresentedIdentityPage:
+    statement = filtered_projection(scope, q)
     filtered = statement.subquery()
     total, ready = database.execute(
         select(func.count(), func.count(filtered.c.gbif_id)).select_from(filtered)

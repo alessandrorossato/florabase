@@ -1,4 +1,6 @@
 import pytest
+from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import Connection, Engine, text
 
 from florabase.api.health import database_readiness
@@ -16,7 +18,7 @@ def test_postgresql_18_has_current_migrations(database_connection: Connection) -
     ).scalar_one()
 
     assert int(server_version) // 10000 == 18
-    assert revision == "20261008_0037"
+    assert revision == ScriptDirectory.from_config(Config("alembic.ini")).get_current_head()
     assert initialized == "true"
     database_readiness()
 

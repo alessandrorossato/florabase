@@ -6,7 +6,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, StrictBool, field_validator
 
-from florabase.explore.schemas import RepresentationScope
+from florabase.explore.schemas import CollectionRecordCategory, RepresentationScope
 from florabase.harvests.model import MaterialKind
 from florabase.history.schemas import HistoryCategory, HistorySubjectKind
 from florabase.locations.schemas import LocationUsageScope
@@ -30,6 +30,7 @@ class SavedViewSurface(StrEnum):
     LOCATIONS = "locations"
     GEOGRAPHY = "geography"
     SPECIES_DISTRIBUTION = "species_distribution"
+    NATIVE_RANGES = "native_ranges"
     PROVENANCE_MAP = "provenance_map"
 
 
@@ -41,6 +42,32 @@ class TextState(BaseModel):
 class SpeciesDistributionState(TextState):
     scope: RepresentationScope = "all"
     identity: UUID | None = None
+
+
+class NativeRangesState(TextState):
+    scope: RepresentationScope = "all"
+    identity: list[UUID] = Field(default_factory=list, max_length=20)
+    record: list[CollectionRecordCategory] = Field(default_factory=list, max_length=5)
+
+    @field_validator("identity", mode="before")
+    @classmethod
+    def normalize_selection(cls, value: object) -> object:
+        # v1 originally stored one UUID. Keep those views readable without a migration.
+        if isinstance(value, str):
+            value = [value]
+        if isinstance(value, list):
+            return sorted({UUID(str(item)) for item in value}, key=str)
+        return value
+
+    @field_validator("record")
+    @classmethod
+    def normalize_categories(
+        cls, value: list[CollectionRecordCategory]
+    ) -> list[CollectionRecordCategory]:
+        return [category for category in CollectionRecordCategory if category in value]
+
+    mode: Literal["overview", "species"] = "overview"
+    with_range: StrictBool = Field(default=False, alias="withRange")
 
 
 class SeedLotState(TextState):
@@ -110,6 +137,7 @@ class ProvenanceMapState(TextState):
 
 STATE_MODELS: dict[SavedViewSurface, type[BaseModel]] = {
     SavedViewSurface.SPECIES_DISTRIBUTION: SpeciesDistributionState,
+    SavedViewSurface.NATIVE_RANGES: NativeRangesState,
     SavedViewSurface.GLOBAL_SEARCH: SearchViewState,
     SavedViewSurface.SEED_LOTS: SeedLotState,
     SavedViewSurface.SOWINGS: SowingState,
@@ -135,7 +163,7 @@ def canonical_state(
         raise ValueError("Unsupported Saved View state version")
     parsed = STATE_MODELS[surface].model_validate(state)
     normalized: dict[str, JsonValue] = parsed.model_dump(
-        mode="json", exclude_defaults=True, exclude_none=True
+        mode="json", exclude_defaults=True, exclude_none=True, by_alias=True
     )
     if not normalized:
         raise ValueError("Choose a search, filter or view mode before saving")

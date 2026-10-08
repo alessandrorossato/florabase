@@ -3257,6 +3257,19 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
         },
         recent_events: [],
       });
+    if (path.startsWith("/api/v1/explore/native-ranges/identities"))
+      return jsonResponse({ items: [], total: 0, offset: 0, limit: 50 });
+    if (path.startsWith("/api/v1/explore/native-ranges/overview"))
+      return jsonResponse({
+        represented: 0,
+        with_range: 0,
+        without_range: 0,
+        territories: [],
+        places: [],
+        places_total: 0,
+        offset: 0,
+        limit: 50,
+      });
     if (path.startsWith("/api/v1/explore/species-distribution/identities"))
       return jsonResponse({
         items: [],
@@ -3290,6 +3303,10 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
   expect(within(nav).getAllByRole("button", { expanded: true })).toHaveLength(
     6,
   );
+  expect(within(nav).getByText("Maps")).toHaveClass("sidebar-subsection");
+  expect(
+    within(nav).queryByRole("button", { name: "Maps" }),
+  ).not.toBeInTheDocument();
   const destinations = [
     "Dashboard",
     "Seeds",
@@ -3300,9 +3317,10 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "Journal",
     "History",
     "Botanical identities",
-    "Species distribution",
     "Media",
     "Geography",
+    "Species distribution",
+    "Native ranges",
     "Collection origins",
     "Suppliers",
     "Orders",
@@ -3338,9 +3356,10 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "events",
     "history",
     "identities",
-    "species-distribution",
     "media",
     "geography",
+    "species-distribution",
+    "native-ranges",
     "map",
     "suppliers",
     "orders",
@@ -3356,6 +3375,7 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "Collection",
     "Activity",
     "Activity",
+    "Explore",
     "Explore",
     "Explore",
     "Explore",
@@ -3489,3 +3509,26 @@ test.each(["invalid JSON", '{"Collection":true}'])(
     );
   },
 );
+
+test("Native ranges edit link opens the existing native-range Reference module directly", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    `#/identities/${botanicalIdentity.id}?tab=native-range`,
+  );
+  authenticatedDirectoryThen((path) => {
+    if (path === "/api/v1/botanical-identities")
+      return jsonResponse([botanicalIdentity]);
+    return jsonResponse([]);
+  });
+  render(<App />);
+  expect(
+    await screen.findByRole("button", { name: "Manage native range" }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole("tab", { name: "Reference", selected: true }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole("tab", { name: "Native range", selected: true }),
+  ).toBeVisible();
+});

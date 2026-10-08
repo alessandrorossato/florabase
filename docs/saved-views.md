@@ -24,6 +24,7 @@ which remains distinct from a reusable view.
 | `events`               | Global Journal              | `category` (`all`, `observations`, `cultivation`, `status`)                                                                                                     | No                         | `all`                                        |
 | `media`                | Media Library               | `q`, `kind` (`local`, `external`), `association` (`all`, `linked`, `unlinked`), `target` (existing Collection/record types, including Supplier)                 | Exact detail only          | All kinds/associations/targets               |
 | `species_distribution` | Species distribution | `q`, `scope` (`all`, `living`, `current`, `historical`), `identity` (UUID) | Yes, stable workspace selection | All represented, no selection |
+| `native_ranges` | Native ranges workspace | `q`, `scope`, `mode` (`overview`, `species`), `identity` (sorted UUID set, max 20), `record` (OR category set), `withRange` (boolean) | Yes, stable workspace selection | All represented, overview, no selection, with-range filter off |
 | `botanical_identities` | BotanicalIdentity directory | `q`                                                                                                                                                             | No                         | Empty text                                   |
 | `orders`               | Orders directory            | `q`, `supplier_id`                                                                                                                                              | Yes, ORDER-001             | Empty text, all Suppliers                    |
 | `suppliers`            | Supplier directory          | `q`                                                                                                                                                             | No                         | Empty text                                   |
@@ -34,8 +35,8 @@ which remains distinct from a reusable view.
 No targeted directory was artificially excluded. Detail tabs, reference/profile editors, native
 range and identity-context external-occurrence views, label sheets, imports, and operation wizards
 are intentionally unsupported: their state is record/context selection, form input, or an explicit external-data
-operation, rather than a reusable directory dataset. Species distribution is a first-class
-collection-aware workspace; its selection is deliberate stable state, while provider-loaded state and map internals are never persisted.
+operation, rather than a reusable directory dataset. Species distribution and Native ranges are first-class
+collection-aware workspaces; selection is deliberate stable state, while provider-loaded state, native-range geometry and map internals are never persisted.
 Geography's stored-coordinate Map mode remains its existing internal site view; collection-provenance
 map controls remain separate. Map center, zoom, selected marker and popup are never saved.
 
@@ -159,3 +160,12 @@ Search may exclude the selected row without substituting it. View management rem
 Migration `20261008_0037` extends only the surface constraint; downgrade locks writers and safely
 refuses while distribution views exist, preserving other surfaces on compatible downgrade/re-upgrade.
 See [Species distribution](species-distribution.md).
+
+EXPLORE-002 adds the private `native_ranges` v1 adapter with `q`, `scope`, `mode`, selected UUID set
+`identity` (maximum 20), OR category set `record` and strict boolean `withRange`. UUIDs are sorted,
+deduplicated and lowercased; the original singular UUID v1 form remains supported as a one-item set.
+URLs repeat identity/record parameters. Excluded/stale IDs remain explicit and contribute no coverage;
+invalid/oversized sets never substitute or truncate species. No migration beyond 0038 is needed. Opening always resets pagination and rereads local
+structured data, including reopening the same view. Geometry and transient map state are excluded.
+Migration `20261008_0038` extends only the allowed surface constraint and locks/refuses populated
+Native ranges downgrade; compatible downgrade/re-upgrade preserves other views.
