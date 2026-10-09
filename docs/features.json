@@ -312,12 +312,14 @@
       "category": "botany",
       "description": "Botanical profile enrichment",
       "acceptance_criteria": [
-        "Only reviewed WFO / Flora of China general descriptions and Kew WCVP geographic_area may propose description and origin_distribution respectively; fixed backend bulk retrieval, exact provider-specific source confirmation and deterministic plain-text normalization never modify profile or identity data during retrieval",
+        "Only explicitly reviewed source records may propose description: WFO / Flora of China remains blocked pending secure current verification, while Kew SEPASAL / Flora Zambesiaca TaxKey/NoteKey/BiblKey 78/104262/5701, 624/98287/5701 and 1152/98358/5701 are approved under CC BY 4.0; these three records are insufficient coverage for general enrichment. Kew WCVP geographic_area may propose origin_distribution. Fixed backend retrieval and exact provider-specific identity confirmation never modify profile or identity data during retrieval",
         "Empty fields require explicit Apply, while populated fields require Current vs Proposed review and concrete Replace confirmation; unrelated profile fields and operator-managed structured native ranges remain unchanged",
         "Typed relational append-only application history retains field, nullable previous value, applied value, provider, dataset, exact record/reference, licence, attribution, retrieval time, release fingerprint and application time/operator where available",
         "Field-specific current provenance identifies the enrichment application without string comparison; manual edits clear only the edited field association while preserving history, and equivalent current value/source evidence avoids duplicate application rows",
         "Transactional apply rejects stale destination or proposal/source-version review; refresh, failure, disappearance, cache expiry and source-link changes preserve canonical applied text and historical evidence",
-        "Accessible responsive Profile review exposes proposals, concrete confirmation, current attribution and field-level history with reviewed licence/reference credit; secure retrieval of the exact approved WFO archive is a prerequisite, without TLS bypass or alternative unreviewed source paths"
+        "Accessible responsive Profile review exposes proposals, concrete confirmation, current attribution and field-level history with reviewed licence/reference credit; any source outside the exact approved records requires its own source review and secure retrieval, without TLS bypass or unreviewed source paths",
+        "After successful independent identity creation an optional botanical-information review and Skip are available; existing identities support explicit later trusted-source checks without recreation",
+        "Missing optional local sources leave ordinary startup and manual profile editing usable; descriptions and geographic_area text are never fabricated from taxonomy, occurrences, structured native assertions or drawing geometry"
       ],
       "dependencies": ["BOTANY-002", "PROFILE-002"],
       "priority": "P1",
@@ -1133,7 +1135,14 @@
         "Canonical URLs and private v1 species_distribution Saved Views restore local scope, search and selected identity at page one while external evidence stays unloaded; stale/missing selection remains explicit and manageable",
         "No occurrence persistence, name rematching, multi-species aggregation, native-range inference or Collection origins semantic changes are introduced; the only migration extends the SavedView surface constraint with a data-preserving refusal on incompatible downgrade"
       ],
-      "dependencies": ["MAP-002", "VIEW-001", "SEED-001", "SOWING-001", "PLANT-001", "HARVEST-002"],
+      "dependencies": [
+        "MAP-002",
+        "VIEW-001",
+        "SEED-001",
+        "SOWING-001",
+        "PLANT-001",
+        "HARVEST-002"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -1149,11 +1158,7 @@
         "Separate OR filters for SeedLots, Sowings, Plants, PlantGroups and managed Stored material qualify exact category records within the single selected representation scope; directory, overview and selected coverage share search, category, scope and with-range eligibility without replacing excluded or stale selections",
         "Canonical URL and private v1 native_ranges Saved Views restore only scope, search, mode, a sorted bounded set of up to 20 identity IDs, OR record categories and optional with-range filter; migration 0038 solely extends the SavedView surface constraint and refuses incompatible populated downgrade without data loss"
       ],
-      "dependencies": [
-        "GEOGRAPHY-002",
-        "EXPLORE-001",
-        "VIEW-001"
-      ],
+      "dependencies": ["GEOGRAPHY-002", "EXPLORE-001", "VIEW-001"],
       "priority": "P1",
       "status": "verified"
     },
@@ -1379,6 +1384,46 @@
       ],
       "priority": "P1",
       "status": "verified"
+    },
+    {
+      "id": "BOTANY-004",
+      "category": "botany",
+      "description": "Review source-backed cultivation, uses and warnings for existing BotanicalProfile fields",
+      "acceptance_criteria": [
+        "Each implemented field passes a separate exact dataset, license, attribution, semantics, taxon identity, coverage and machine-readable acquisition GO; SEPASAL is a candidate rather than an approved generic note importer",
+        "Source-specific values retain field-level reference provenance and historical context; no synthesized advice, inferred toxicity or implied safety from missing warnings",
+        "Explicit operator review and selective Apply preserve manual content and immutable evidence with stale destination safety; no new profile fields or automatic refresh"
+      ],
+      "dependencies": ["BOTANY-003"],
+      "priority": "P3",
+      "status": "planned"
+    },
+    {
+      "id": "TAXONOMY-003",
+      "category": "taxonomy",
+      "description": "Add an educational collection-aware taxonomic tree",
+      "acceptance_criteria": [
+        "A reviewed pinned authoritative hierarchy and exact confirmed source identities represent collection taxa without automatic BotanicalIdentity reconciliation or name matching",
+        "All represented, Living, Current and Historical reuse established collection semantics; intermediate ranks and distinct identity counts remain explicit",
+        "Family and genus inspection, BotanicalIdentity breadcrumbs and Related in my collection provide accessible responsive navigation with missing source/link states",
+        "Exact parent semantics, accepted/synonym handling, release provenance, snapshot/index footprint and optional category filters are reviewed before implementation; Taxonomy stays distinct from collection Lineage and evolutionary phylogeny"
+      ],
+      "dependencies": ["BOTANY-002", "EXPLORE-001"],
+      "priority": "P2",
+      "status": "planned"
+    },
+    {
+      "id": "PHYLOGENY-001",
+      "category": "phylogeny",
+      "description": "Review a separate educational collection phylogenetic tree",
+      "acceptance_criteria": [
+        "A separately reviewed evolutionary-tree source, license and acquisition contract retains exact tip identity and source/version provenance",
+        "Coverage and evolutionary uncertainty are explicit; taxonomy hierarchy and propagation Lineage do not imply phylogenetic relationships",
+        "Branch lengths, MRCA and synthetic tree semantics require their own product review; no evolutionary inference is added by BOTANY-003 or TAXONOMY-003"
+      ],
+      "dependencies": ["BOTANY-002", "EXPLORE-001"],
+      "priority": "P3",
+      "status": "planned"
     }
   ]
 }

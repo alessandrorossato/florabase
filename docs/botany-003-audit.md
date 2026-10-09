@@ -1,18 +1,25 @@
 # BOTANY-003 controlled enrichment audit
 
-Audit, investigation and implementation access-check date: 2026-10-02.
-Source-capability decision: **APPROVED**. Current outcome: `SOURCE_TLS_PROVIDER_BLOCKED`.
+Latest bounded fallback decision: **2026-10-09**, section 35 below:
+`DESCRIPTION_SOURCE_GO` for three explicitly reviewed Kew SEPASAL / Flora Zambesiaca
+general-description records. Flora of China remains `SOURCE_TLS_PROVIDER_BLOCKED`.
+The two-field product/content contract remains approved; BOTANY-003 remains `planned`,
+with implementation stopped as requested. See [the current handoff](botany-003-handoff.md).
+The [earlier source decision](botanical-profile-enrichment-sources.md) and sections 1–34
+record the preceding investigations; section 35 supersedes their overall description-source blocker
+only for its exact scoped alternative. No other profile field is approved by this fallback review.
 
 Sections 1–21 preserve the initial adapter audit. Sections 22–30 record the subsequently authorized
 source investigation and supersede its request for investigation authorization.
 Sections 31–32 record the operator's approved scope/replacement policy and the failed backend
-access prerequisite. The source choice has not been reopened or discarded.
+access prerequisite. The latest request explicitly permits reviewing an alternative description source.
 Section 33 diagnoses that prerequisite: the observed WFO TLS endpoint omits its issuing intermediate,
 while the required public root is already present in the host and both backend images.
 
-The existing provider adapter supplies taxonomy and match diagnostics, but no content with a safe
-mapping to BotanicalProfile. Implementing selected apply now would require inventing a mapping,
-adding unrequested domain fields, or introducing an unreviewed source. This audit does not claim that
+The initial audit found that the existing provider adapter supplies taxonomy and match diagnostics,
+but no content with a safe mapping to BotanicalProfile. At that point, implementing selected apply
+would have required inventing a mapping, adding unrequested domain fields, or introducing an
+unreviewed source. This audit does not claim that
 GBIF or Catalogue of Life can never supply descriptive content; it establishes the capability of the
 current Florabase adapter/cache contract. No new provider capability was tested live during the initial audit; the subsequent live
 source investigation is recorded below.
@@ -700,3 +707,269 @@ an explicit separately reviewed change to the access/trust contract. Documentati
 formatting, feature registry and whitespace only; no WFO-dependent CI test was added.
 
 `SOURCE_TLS_PROVIDER_BLOCKED`
+
+## 34. Independent re-audit after ENRICHMENT-001 delivery — 2026-10-09
+
+The current worktree is `857e`, branch `feat/botany-003-profile-enrichment`, initialized through
+`make feature-init` from clean detached `345e9f25eed7590c230bdee65c7ff06d34d8304a`, equal to
+cached origin/main. ENRICHMENT-001 is delivered/verified; its four source/proposal/application tables,
+exact WCVP links, local index and range revisions were inspected. They do not implement text
+proposals, text revisions, current field attribution or text application history. In particular,
+the existing local index discards `geographic_area` during construction even though its reviewed
+CSV schema includes it. No completed ENRICHMENT-001 contract was expanded retrospectively.
+
+The official WFO download/provider resources were investigated anew. WFO's publisher-owned
+Zenodo release **2026-06**, published 21 June 2026, offers taxonomy data packages, JSON, SQL,
+family DwCA exports and identifier lookups. The older download-page DOI leads through its newer
+version link to this release. Its metadata establishes taxonomy availability, not a licensed Flora
+of China description export. The official resource-33516 indexed metadata still advertises the
+same Flora of China archive and description/reference import. Direct metadata-page fetches were
+unavailable through the research tool; indexed metadata is labelled as such in the source decision.
+No alternate securely usable official description artifact was established by this investigation.
+
+Fresh host curl, existing development/runtime HTTPX and the newly built current-worktree HTTPX
+all failed verified HTTPS to the exact archive before any HTTP response or source bytes. A new
+OpenSSL SNI/hostname-verified probe showed only the leaf, issuer GeoTrust TLS RSA CA G1, and
+fatal depth-zero error 20. Thus this is a newly reproduced source blocker, not an inherited
+conclusion. No certificate, custom trust path, disabled verification, page scraping, unofficial
+mirror or browser data-acquisition mechanism was introduced. No WFO retrieval timestamp,
+checksum or fresh content/schema approval can be claimed for this run.
+
+WCVP version 15 was independently retrieved securely on this run, with the exact existing pinned
+checksum. A complete scan of all **1,441,152** names rows verified the distinct geographic text
+field and the Acer/Annona/Aloe examples. This is a suitable text candidate, independently of
+structured native assertions. The source decision records a field-level GO; it does not claim
+the combined BOTANY-003 feature is implemented or substitute fabricated description content.
+
+Separate cultivation/uses/warnings discovery found the official static Kew SEPASAL CSV export,
+with dataset-specific CC BY 4.0, source-local TaxKey and bibliographic joins. It is a useful future
+candidate; exact field selection, historical-context semantics and full import validation remain
+unapproved. See [the separate audit](botanical-knowledge-source-audit.md). These fields remain manual.
+
+The full 95-record graph already assigns TAXONOMY-001 to identity reconciliation and TAXONOMY-002
+to synonyms/name history; neither owns collection taxonomy browsing. The new planned collection
+tree therefore uses **TAXONOMY-003**, preserving both existing IDs. PHYLOGENY-001 and BOTANY-004
+record separate future discovery, with no implementation. See [future contract](collection-taxonomy-plan.md).
+
+Focused existing-behavior baseline: **72 backend unit tests passed**. Documentation/graph/whitespace
+checks are recorded in the handoff. No text parser, migration, API, UI, PostgreSQL text-enrichment
+test, build or visual acceptance is claimed. UAT status confirmed the healthy prior `16cc` owner
+and schema 0039; it was preserved because no BOTANY-003 UI exists to review. No canonical gate,
+staging, commit, push, delivery, merge or finish occurred.
+
+## 35. Final bounded official-source fallback — 2026-10-09
+
+**Decision: `DESCRIPTION_SOURCE_GO`, scoped to the three reviewed Kew SEPASAL records below.**
+This is a separate official, licensed description distribution, not an official copy of Flora of
+China. Flora of China itself remains blocked. The operator's latest instruction is investigation
+only: no production code, source provisioning, migration, UI, staging or commit is authorized by
+this decision. BOTANY-003 remains `planned`; no readiness or implementation acceptance is claimed.
+Only this audit and the handoff were updated in this follow-up; the earlier documentation changes
+remain intact and unstaged.
+
+### Exact WFO file-host and resource-metadata checks
+
+The exact archive requested was tested again, without disabling certificate or hostname verification:
+
+```sh
+curl -Iv --proto '=https' --connect-timeout 10 --max-time 25 \
+  https://files.worldfloraonline.org/files/eFloras/Flora_Of_China/Flora_Of_China.zip
+timeout 20 openssl s_client \
+  -connect files.worldfloraonline.org:443 \
+  -servername files.worldfloraonline.org \
+  -verify_hostname files.worldfloraonline.org \
+  -verify_return_error -showcerts </dev/null
+```
+
+Host curl resolved **192.104.39.152**, used the ordinary system CA store and exited **60**:
+unable to get local issuer certificate. No HTTP response/body was received. OpenSSL exited **1**,
+with fatal depth-zero issuer error **20** and only one transmitted certificate: the leaf, issued by
+GeoTrust TLS RSA CA G1, valid 14 July 2026–28 January 2027. The trailing return-code field after the
+aborted handshake is not a successful verification result. The issuing intermediate was not served.
+
+At **2026-10-09T13:05:32.251448Z**, HTTPX 0.28.1 / certifi 2026.07.22 in the freshly built
+worktree backend development image, on the normal quality Compose network
+`florabase-quality-4e6148495d36_internal`, also failed the exact URL with
+`CERTIFICATE_VERIFY_FAILED: unable to get local issuer certificate`, before HTTP headers/body.
+Image SHA-256: `3e2a3a96518411dafe96c5e185547826dbe7b72d11ca47d916f9893d77a56a2b`.
+The probe container used no mounts, read-only root, dropped capabilities, no-new-privileges and
+UID 10001. Default trust was preserved. Host plus normal backend-network reproduction therefore
+establish this file-host failure directly, independently of other WFO hostnames.
+
+Direct verified retrieval of [resource 33516](https://www.worldfloraonline.org/resource/33516)
+also failed with curl **60**, HTTP **000**, TLS verification result **20**, zero bytes. Direct
+research-tool opens of the official www/prod resource pages failed; the in-app browser was unavailable.
+Official indexed material still identifies Flora of China @ efloras.org, a Darwin Core Archive,
+the exact archive URL, description/reference imports and a last harvest of 3 August 2026. Those are
+**indexed indications, not independently retrieved current resource metadata**. The requested
+current import-mode literal, provider/owner, resource-specific license/exception, attribution and
+snapshot cannot be certified from an accessible resource page or archive in this environment.
+The portal's apparent default CC BY 4.0 is not approval of inaccessible individual descriptions.
+No fresh FoC archive, meta.xml, description records, checksum or license review is claimed.
+
+The bounded same-resource official WFO/Zenodo/provider search established no secure official FoC
+copy. This does not assert that none exists. WFO's official 2026-06 Zenodo taxonomy packages remain
+taxonomy, with no demonstrated FoC description replacement. Indexed official
+[Flora of Tropical East Africa metadata](https://www.worldfloraonline.org/resource/33532) advertises
+another description archive at
+`https://files.worldfloraonline.org/files/Kew/FTEA/ftea_dwca.zip`; a separate verified curl HEAD
+to that exact URL also exited 60 at the same file-host chain defect. Its bytes and individual rights
+were not accessible, so it has no description GO here. No third-party mirror, insecure trust
+exception, browser download or POWO scraping was used.
+
+### Official alternative: Kew SEPASAL static CSV export
+
+The [official Kew README](https://sftp.kew.org/pub/data-repositories/sepasal/README.txt) was
+retrieved directly through ordinary verified HTTPS, along with three complete fixed-purpose CSV
+files. Downloads rejected redirects and were bounded to 40 MB per file / 180 seconds total in
+`/tmp/botany003-final-source-audit/`. Nothing was installed into Florabase's source index.
+
+This is the discontinued Survey of Economic Plants for Arid and Semi-Arid Lands database, held by
+Royal Botanic Gardens, Kew. The publisher explicitly distributes its static denormalized data,
+including plant description and literature references. This is not a POWO page extraction.
+
+There is **no published numbered version** in the inspected README. Exact snapshot identity is
+the following four independently pinned artifacts retrieved on 9 October 2026, not a fabricated
+release number. HTTP Last-Modified values are publisher file timestamps, not botanical review dates.
+
+| Artifact / exact URL                                                                                                 |      Bytes | Retrieved UTC               | HTTP Last-Modified      | SHA-256                                                            |
+| -------------------------------------------------------------------------------------------------------------------- | ---------: | --------------------------- | ----------------------- | ------------------------------------------------------------------ |
+| [README.txt](https://sftp.kew.org/pub/data-repositories/sepasal/README.txt)                                          |      4,793 | 2026-10-09T13:06:57.169336Z | 2020-10-14 09:48:00 GMT | `45c13dc80ce5be38d12c5335d1c385ff5c8945de766c4bbfffaf0084bd4108cd` |
+| [sepasal_taxa.csv](https://sftp.kew.org/pub/data-repositories/sepasal/data/sepasal_taxa.csv)                         |  1,443,583 | 2026-10-09T13:06:57.706974Z | 2020-09-23 16:12:04 GMT | `90914f2926b6c4dac8bd290ad60c86c95d8e21fb0e888494f0b4ee9fdd640e4c` |
+| [sepasal_notes_references.csv](https://sftp.kew.org/pub/data-repositories/sepasal/data/sepasal_notes_references.csv) | 30,762,595 | 2026-10-09T13:07:03.610025Z | 2020-09-23 16:12:04 GMT | `5c900968f31382f6afb283aa0dfbb01234f9695576565d4c109a3fadee2a905c` |
+| [sepasal_references.csv](https://sftp.kew.org/pub/data-repositories/sepasal/data/sepasal_references.csv)             |    858,812 | 2026-10-09T13:07:04.138008Z | 2020-09-23 16:12:04 GMT | `674188cfa466bb3b651d4588c013de2ac283b81c531c70ecbc469a9f15c2b37f` |
+
+### Exact inspected schema and deterministic joins
+
+All three CSV files decoded strictly as UTF-8; the complete CSV scan found no missing/extra-column
+rows. Headers, in source order:
+
+```text
+sepasal_taxa.csv:
+TaxKey,FamKey,FamName,GenKey,GenEpi,NamKey,NamSpec,NamSpecAuth,RankText,NamISEpi,NamISAuth,NamAccLink
+
+sepasal_notes_references.csv:
+TaxKey,NoteCatKey,NoteCatText,NoteKey,NoteText,BiblKey,BiblType,BiblType_text,BiblAuth,BiblPublYear,BiblTitle,BiblEd,BiblJournTitle,BiblPublisher,BiblCollation,BiblNote,BiblLang,BiblInternalNote
+
+sepasal_references.csv:
+BiblKey,BiblType,BiblType_text,BiblAuth,BiblPublYear,BiblTitle,BiblEd,BiblJournTitle,BiblPublisher,BiblCollation,BiblNote,BiblLang,BiblInternalNote
+```
+
+The files contain **17,853 name rows / 6,988 distinct TaxKey**, **94,084 note-reference rows** and
+**4,951 reference rows / distinct BiblKey**. Category **9 / BOTANICAL DESCRIPTION** contains
+**183 note-reference rows**, **177 distinct NoteKey**, covering **165 TaxKey**. Every category-9
+TaxKey and BiblKey resolves exactly in the inspected names/reference files; every embedded
+bibliographic field agrees with the corresponding reference-table row. No duplicate
+`(TaxKey, NoteKey, BiblKey)` was found among the two description categories.
+
+Source record identity must include the pinned snapshot plus literal **TaxKey, NoteKey, BiblKey**.
+TaxKey identifies the source taxon, NoteKey the note, and BiblKey the citation; a note may have
+multiple references. Keep reference-specific candidates/evidence distinct; never concatenate
+notes or silently choose a reference. NamKey and NamAccLink are source name context, not Florabase
+identity IDs. The export has no demonstrated WFO/GBIF/WCVP crosswalk. Source-local joins are proven;
+any future Florabase association requires an **explicit reviewed exact SEPASAL TaxKey link**.
+Do not derive it from scientific-name equality, numeric ID coincidence, family, geography or synonyms.
+No such linkage or new ExternalTaxonLink provider is implemented by this investigation.
+
+### Reviewed description eligibility and concrete GO boundary
+
+`NoteText` in category 9 can contain English general botanical prose; the category is not sufficient
+by itself. The following three complete texts were individually read and found to describe their
+own source taxa's habit and morphological organs, with an exact reference to **BiblKey 5701**:
+Flora Zambesiaca website, title Flora Zambesiaca, publisher Royal Botanic Gardens, Kew, Kew, U.K.
+Its supplied year is `.`; retain that unknown value rather than invent a publication date.
+Historical source names below are source labels, not asserted current accepted names.
+
+| Exact TaxKey / NoteKey / BiblKey | Source name label / NamKey                                       | NoteText characters | SHA-256 of exact UTF-8 NoteText                                    |
+| -------------------------------- | ---------------------------------------------------------------- | ------------------: | ------------------------------------------------------------------ |
+| `78 / 104262 / 5701`             | Cleome gynandra L. / `172806`                                    |               1,238 | `e66fd474a20004310bc80564f2ff04c77ef7697289558f3f158c2a5fd0dcf364` |
+| `624 / 98287 / 5701`             | Grewia mollis Juss. / `163387`                                   |               1,777 | `cb3a035d640a63fffd3d46d32737b6955ae3aabab0f916c558538bb92eb4a290` |
+| `1152 / 98358 / 5701`            | Rhoicissus tridentata (source author string retained) / `166871` |               1,294 | `63f4c8cf6abea042eab3ed8ed405a0d602fd06264dd3b84dfdfeb1761d630bea` |
+
+**Only these three exact record/text hashes are approved by this bounded review.** They contain no
+HTML, forbidden control characters, carriage returns or boundary whitespace; all are below the
+canonical 20,000-character section limit. Their language was established by reading the text.
+There is no separate note-language column: **BiblLang describes the cited publication**, not a
+guarantee of NoteText language. It is blank for reference 5701. Do not infer note language from
+BiblLang or silently translate, repair measurements or synthesize prose. Preserve these approved
+texts and all bibliography exactly, with the canonical existing profile normalization only.
+
+The remaining category-9 records are **unapproved**, even though they are machine-readable.
+Of 183 rows, 65 contain unsupported control characters, and 68 have fewer than 150 characters
+(overlapping diagnostics, not mutually exclusive eligibility counts). None contains `<`.
+TaxKey **67 / NoteKey 96660 / BiblKey 5701** has U+0096 embedded in dimensional ranges; do not
+guess an encoding correction. TaxKey **324 / NoteKey 81490 / BiblKey 1415** is a pointer to
+Flora of Iraq, not description prose. TaxKey **1191 / NoteKey 80054 / BiblKey 5054** describes a
+related species, not its own taxon; reject it as general description despite category 9 and English.
+Further source-record approval requires reading the exact text, confirming its taxon scope/language
+and preserving rights/evidence, rather than relaxing these exclusions.
+
+The additional category **10 / DESCRIPTION** has 18,040 reference rows covering 2,265 TaxKey,
+but the inspected examples are fragmented anatomical statements such as separate bark notes.
+They are not approved general-description replacements and must not be concatenated into one.
+No cultivation, use or warning field is approved by this description review.
+
+### License, attribution and rights boundary
+
+The directly retrieved README explicitly licenses **SEPASAL data**, not just a portal footer,
+under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The inspected CSV schemas have
+no record-level rights/license column; the three approved notes and reference 5701 contain no
+contrary rights notice. Approval applies to those texts **as republished in Kew's licensed export**,
+not to images, entire underlying books, linked websites or a different provider's content.
+Do not transfer this license to inaccessible WFO records or unrelated sources.
+
+The [CC BY 4.0 legal code](https://creativecommons.org/licenses/by/4.0/legalcode.en) permits
+reproduction, redistribution and public display of the licensed material, including selected
+stored text in a self-hosted app. Retain the publisher's supplied attribution and license notice,
+the source URL, original bibliography, access timestamp and any change indication; preserve any
+supplied notices and do not imply Kew endorsement or impose additional restrictions on the data.
+This establishes a source-license GO, not a claim about rights in material outside the export.
+
+Publisher's requested citation, with the actual access time supplied:
+
+> Royal Botanic Gardens, Kew (1999). Survey of Economic Plants for Arid and Semi-Arid Lands
+> (SEPASAL) database. Published on http://sftp.kew.org/pub/data-repositories/sepasal/
+> [accessed 9 October 2026; 13:06:57–13:07:04 UTC].
+
+A future field candidate/application must also retain TaxKey/NoteKey/BiblKey, source name context,
+the exact snapshot checksums and Flora Zambesiaca reference 5701, with the CC BY 4.0 link.
+SEPASAL is the distributing dataset; Flora Zambesiaca is the underlying cited flora. Both matter.
+
+### Coverage and bounded secondary-source findings
+
+SEPASAL covers selected useful wild/semi-domesticated plants of tropical/subtropical drylands
+worldwide. It is discontinued and static, with historical name concepts. Its 6,988 taxa are not a
+global flora; 165 taxa with category-9 notes are **candidate coverage**, not 165 approved descriptions.
+This decision supplies exactly **three reviewed descriptions**. Missing source content means
+unavailable knowledge, not botanical absence. No global default, automatic substitution, taxonomic
+update, inferred link or safety/cultivation recommendation follows from this approval.
+
+The official [USDA PLANTS help document](https://plants.usda.gov/DocumentLibrary/Pdf/PLANTS_Help_Document.pdf)
+describes coverage concentrated on North America/U.S. territories with additional economic plants,
+and a data/text reuse permission distinct from image permissions. The downloads route resolved to
+the official USDA web app but did not expose an inspected general-description export. Plant guides
+contain prose, but no exact structured description artifact/schema/snapshot/linkage was established
+in this bounded review. USDA therefore has **no machine-readable description GO here**, and was
+not adopted as a global default. No PDF-to-profile extraction was designed.
+
+Source-per-field/source-per-record remains explicit: WCVP geographic text retains its independently
+reviewed origin_distribution source; Kew SEPASAL supplies only these scoped description candidates;
+WFO taxonomy is not description; cultivation/uses/warnings remain separately unapproved/manual.
+Any future source must carry its own version, taxon identity, license and attribution rather than
+inherit an unrelated provider's license or mapping.
+
+### Investigation verification and stop state
+
+Complete CSV width/count/join/reference consistency scans and exact selected-text hash/control/length
+checks passed against the retrieved bytes. These are temporary source-audit checks, not production
+parser tests. Audit/handoff formatting, feature graph and whitespace checks passed; the eight other
+previously changed documents were hash-compared and preserved. No feature-verify, new application
+tests, database changes, API generation, product build, UAT change or graphical review was performed
+in this follow-up. The earlier 72-test baseline remains earlier evidence, not a new test run.
+
+`DESCRIPTION_SOURCE_GO` resolves the source-capability blocker for this exact narrow alternative.
+**Implementation remains stopped** under the latest request. Before any implementation resumes,
+its source contract must preserve the explicit exact-TaxKey association and three-record eligibility
+boundary; neither the inaccessible Flora of China archive nor unreviewed SEPASAL notes may be
+silently enabled. All text proposals, explicit Apply/Keep/Replace, history, revisions, stale checks,
+creation/later UI and UAT acceptance still require implementation and independent verification.

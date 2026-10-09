@@ -79,9 +79,30 @@ The approved sequence, retaining completed steps for context, is:
     licensing/security, final CI, clean install, upgrade, complete DB+media restore and release notes.
 12. 1.0.0 stability milestone.
 
-BOTANY-003 stays a parallel `planned` track. Its approved WFO source/product contract is unchanged;
-implementation remains blocked by that endpoint's incomplete public TLS chain. It does not block
-other roadmap work. No source reselection or TLS workaround is introduced.
+The next selected product increment is **BOTANY-003 — controlled BotanicalProfile text enrichment**.
+The 2026-10-09 independent [source re-audit](botanical-profile-enrichment-sources.md) reproduced
+secure Flora of China acquisition failure on the host and three backend images. WCVP v15's distinct
+geographic_area text passed source review; a separate Kew SEPASAL review approved three exact Flora
+Zambesiaca description records. Three records are insufficient coverage for general description
+enrichment, so BOTANY-003 remains **planned**. Neither source GO implements product behavior or
+licenses unreviewed records; no TLS exception or global description provider is introduced.
+The [approved text contract](botanical-profile-enrichment.md) retains explicit review, field-level
+Apply/Replace, immutable provenance, stale safety and optional creation-time/later entry points.
+
+After profile enrichment, the operator's next planned direction is **TAXONOMY-003 — collection
+taxonomic tree**. TAXONOMY-001 already owns reconciliation and TAXONOMY-002 name history; their
+contracts remain intact. Reuse All represented / Living / Current / Historical, authoritative
+classification, distinct identity counts, family/genus inspection, identity breadcrumbs and Related
+in my collection. Use **Taxonomy**, keeping collection-record **Lineage** distinct. WFO's official
+static Plant List is the preferred source candidate; parent/rank/synonym/link/version/footprint
+questions remain in the [future contract](collection-taxonomy-plan.md). No taxonomy code is implemented.
+
+**PHYLOGENY-001** separately records later evolutionary-tree discovery; classification is not
+phylogeny. Open Tree of Life may be investigated later, without source GO or tree retrieval now.
+**BOTANY-004** preserves cultivation/uses/warnings enrichment as future source-reviewed work.
+The [separate source audit](botanical-knowledge-source-audit.md) establishes SEPASAL as a credible
+static candidate but does not approve a production field importer. Those sections remain manual.
+ENRICHMENT-002 automatic refresh and the broad application visual review remain deferred.
 
 RELEASE-001 remains the planned historical release-hardening feature, without deletion or
 repurposing of its acceptance criteria. Any change to that feature contract requires a separate
