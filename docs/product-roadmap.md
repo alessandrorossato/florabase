@@ -89,7 +89,7 @@ licenses unreviewed records; no TLS exception or global description provider is 
 The [approved text contract](botanical-profile-enrichment.md) retains explicit review, field-level
 Apply/Replace, immutable provenance, stale safety and optional creation-time/later entry points.
 
-**TAXONOMY-003 — collection taxonomic tree** is implemented for visual/UAT review.
+**TAXONOMY-003 — collection taxonomic tree** is verified and delivered through PR #81.
 The reviewed official WFO Plant List **2026-06**, CC0, provides exact classification parents through
 an optional ignored local index. Operators explicitly inspect and confirm WFO links; source synonyms
 remain advisory, without local renames. Shared All represented / Living / Current / Historical and
@@ -99,8 +99,16 @@ Related in my collection and visible unresolved knowledge. [Contract](collection
 recorded material Lineage. Saved Views are deliberately deferred; stable URL state is supported.
 TAXONOMY-001 reconciliation and TAXONOMY-002 name history retain their separate planned contracts.
 
-**PHYLOGENY-001** separately records later evolutionary-tree discovery; classification is not
-phylogeny. Open Tree of Life may be investigated later, without source GO or tree retrieval now.
+**PHYLOGENY-001** remains **planned** after its 2026-10-09 exact Open Tree source audit ended
+**SOURCE_BLOCKED**. Actual current API and downloaded artifact identify opentree16.1 / OTT
+3.7draft3 with December 2025 completion, contradicting the release page's June text. Archive checksum,
+induced topology, support/conflict annotations and public-name candidate availability were verified;
+the current conditional rights notice, older synthetic-artifact CC0 declaration and mixed/missing
+input-license fields did not establish an exact current synthetic/annotation redistribution boundary.
+No Phylogeny UI, mapping, migration or replacement UAT is implemented. See
+[source decision](phylogeny-001-source.md), [planned contract](collection-phylogeny.md) and
+[blocked handoff](phylogeny-001-handoff.md). Classification, evolution and material Lineage retain
+separate meanings; existing Taxonomy remains usable. Reopen only after the documented source GO.
 **BOTANY-004** preserves cultivation/uses/warnings enrichment as future source-reviewed work.
 The [separate source audit](botanical-knowledge-source-audit.md) establishes SEPASAL as a credible
 static candidate but does not approve a production field importer. Those sections remain manual.

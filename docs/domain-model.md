@@ -193,6 +193,18 @@ separate from recorded collection **Lineage** and planned **PHYLOGENY-001**. TAX
 BOTANY-003/004 remain planned. See [collection taxonomy](collection-taxonomy.md) and
 [exact source decision](taxonomy-003-source.md).
 
+### Collection phylogeny source gate
+
+PHYLOGENY-001 remains planned after the [2026-10-09 source audit](phylogeny-001-source.md).
+Current Open Tree API and actual pinned archive identify opentree16.1 / OTT 3.7draft3, but exact
+current synthetic/annotation data-rights scope did not pass the requested review. No OTT link,
+canonical phylogenetic state, schema, API or local source has been introduced. The
+[planned contract](collection-phylogeny.md) preserves explicit operator-reviewed mapping,
+shared representation/category eligibility, distinct identities, cultivar/species sharing and
+visible unresolved knowledge for later implementation. WFO confirmation never implies OTT mapping.
+Taxonomic classification is not phylogeny, and neither describes recorded material Lineage.
+Synthetic topology is not an evolutionary time estimate; no branch lengths or dates are inferred.
+
 ### Supplier
 
 A Supplier is an installation-wide acquisition source such as a seller, nursery, supermarket,
