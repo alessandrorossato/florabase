@@ -1,5 +1,43 @@
 # Engineering progress
 
+## 2026-10-09 — PHYLOGENY-001 source audit blocked before implementation
+
+- Initialized attached `4aaf` through `make feature-init`, branch
+  `feat/phylogeny-001-collection-tree`, from clean current origin/main `33f5592`.
+  Audited all 98 feature owners/dependencies; existing PHYLOGENY-001 remains planned.
+- Securely inspected actual Open Tree archive/current API: **opentree16.1**, **OTT 3.7draft3**,
+  December 2025 completion rather than the release page's inconsistent June text. Archive
+  **41,608,973 bytes**, SHA-256
+  `c447c83e49f0cf61fa96d9a02c6135b809abf315ad384fdb26b88359a28da12c`.
+  Verified induced-subtree capability, actual public-name candidates, mixed/taxonomy support,
+  conflicts and long unary/ancestral paths; no inferred WFO↔OTT mapping or branch dating.
+- Exact data-rights gate **SOURCE_BLOCKED**: current conditional CC0 terms plus mixed/unlicensed
+  source repository, nine pinned input snapshots (three CC0, one empty, five missing license fields)
+  and no release-specific license did not establish current redistribution scope for the exact
+  synthetic result with required annotations. The producer's positive **2017 synthetic/OTT CC0
+  declaration** is explicitly retained, not ignored; no prohibition on synthetic reuse is claimed.
+  Recorded a precise reopening criterion and minimal derived-content boundary in the
+  [source decision](phylogeny-001-source.md), [planned contract](collection-phylogeny.md) and
+  [blocked handoff](phylogeny-001-handoff.md). No product implementation follows a failed source GO.
+- Focused existing offline baseline: **54 passed**, `--no-cov`, taxonomy source/service/API and
+  Species distribution/Native ranges Explore. Reused installed UAT development image with current
+  source read-only, network disabled and no application/database volumes; no new build under host
+  disk/swap pressure. Feature graph **98 valid**. Pinned Prettier passes all seven changed documents;
+  `git diff --check`, local documentation links and final scope audits pass.
+- Canonical `make feature-verify` passed: repository lint/format/type checks, backend **895 passed**
+  (90.03% coverage), frontend **541 passed**, PostgreSQL integration **699 passed**, generated API
+  drift check, production backend/frontend builds, and migration cycle (**no Alembic revisions
+  added**). It recorded the verified working-tree receipt. Verification reran after this progress
+  correction; no migration or DEV upgrade is applicable.
+- Read-only UAT status confirms actual `748b` owner, frontend/backend/db healthy and migration
+  **0040**; source mismatch correctly refuses takeover from `4aaf`. Existing Taxonomy UAT preserved.
+  No UI, API generation, migration, index, confirmed OTT fixture, PostgreSQL implementation suite,
+  frontend phylogeny tests, performance/render benchmark or visual review claimed. Primary was clean
+  at source-gate stop; no DEV/Stable Preview/production changes or migration step is applicable.
+- TAXONOMY-003 stays verified. TAXONOMY-001/002, BOTANY-003/004 and ENRICHMENT-002 stay planned;
+  SCHEDULE-001 and broad cross-application visual review remain deferred. **SOURCE_BLOCKED**,
+  not READY_FOR_VISUAL_REVIEW. This is audit documentation only; no visual product review applies.
+
 ## 2026-10-09 — TAXONOMY-003 collection-aware classification implemented
 
 - Initialized attached `748b` through `make feature-init`, branch

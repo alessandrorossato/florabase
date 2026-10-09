@@ -1417,7 +1417,7 @@
       "category": "phylogeny",
       "description": "Review a separate educational collection phylogenetic tree",
       "acceptance_criteria": [
-        "A separately reviewed evolutionary-tree source, license and acquisition contract retains exact tip identity and source/version provenance",
+        "A separately reviewed evolutionary-tree source, license and acquisition contract retains exact tip identity and source/version provenance; the 2026-10-09 Open Tree v16.1 audit remains SOURCE_BLOCKED pending the documented exact current synthetic/annotation data-rights boundary",
         "Coverage and evolutionary uncertainty are explicit; taxonomy hierarchy and propagation Lineage do not imply phylogenetic relationships",
         "Branch lengths, MRCA and synthetic tree semantics require their own product review; no evolutionary inference is added by BOTANY-003 or TAXONOMY-003"
       ],
