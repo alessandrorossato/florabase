@@ -82,6 +82,10 @@ from florabase.sowings.schemas import SowingCreate
 from florabase.suppliers import service as suppliers
 from florabase.suppliers.model import Supplier
 from florabase.suppliers.schemas import SupplierCreate
+from florabase.taxonomy import service as taxonomy
+from florabase.taxonomy.schemas import TaxonomyLinkWrite
+from florabase.taxonomy.source import CHECKSUM as WFO_CHECKSUM
+from florabase.taxonomy.source import WfoSource
 
 VERSION = 4
 NOTE = "Synthetic UAT Preview data; no real collection or provenance claims."
@@ -234,6 +238,8 @@ def validate_manifest(database: Session, root: Path, manifest: dict[str, Any]) -
     # Additive EXPLORE-002 fixture extension; original v4 manifests remain readable.
     if "inventory:basil" in manifest["records"]:
         expected.add("inventory:basil")
+    if manifest.get("taxonomy_extension") == 1:
+        expected.update({"identity:Ocimum tenuiflorum", "seed:holy_basil"})
     if set(manifest["records"]) != expected:
         raise FixtureError(
             "Preview fixture baseline has missing records; run guarded uat-preview-reset"
@@ -295,11 +301,68 @@ def ensure_stored_material(database: Session, root: Path, manifest: dict[str, An
     write_manifest(root, manifest)
 
 
+def ensure_taxonomy(database: Session, root: Path, manifest: dict[str, Any]) -> None:
+    """Explicit synthetic UAT link confirmations; repeat seeding preserves operator changes."""
+    if manifest.get("taxonomy_extension") == 1:
+        return
+    source_path = get_settings().wfo_snapshot_path
+    if source_path is None or not source_path.is_file():
+        return
+    source = WfoSource(source_path)
+    source.metadata()  # Corrupt configured sources fail before creating fixture records.
+    ready = manifest["state"] == "ready"
+    manifest["state"] = "building"
+    write_manifest(root, manifest)
+    holy = identities.create_botanical_identity(
+        database,
+        BotanicalIdentityCreate(
+            scientific_name="Ocimum tenuiflorum", common_name="Preview — Holy basil"
+        ),
+    )
+    packet = seeds.create_seed_lot(
+        database,
+        SeedLotCreate(
+            botanical_identity_id=holy.id, label="Preview — Holy basil packet", notes=NOTE
+        ),
+    )
+    manifest["records"]["identity:Ocimum tenuiflorum"] = str(holy.id)
+    manifest["records"]["seed:holy_basil"] = str(packet.id)
+    # Exact accepted IDs and authorships inspected in the approved official 2026-06 archive.
+    # This explicit fixture association is not an automatic production name match/crosswalk.
+    for name, external in (
+        ("Ocimum basilicum", "wfo-0000253230"),
+        ("Ocimum tenuiflorum", "wfo-0000253537"),
+        ("Salvia officinalis", "wfo-0000301765"),
+        ("Aloe vera", "wfo-0000758976"),
+        ("Raphanus sativus", "wfo-0000402430"),
+    ):
+        record = database.get(BotanicalIdentity, UUID(manifest["records"]["identity:" + name]))
+        if record is None:
+            raise FixtureError("Missing taxonomy fixture identity")
+        taxonomy.confirm(
+            database,
+            record.id,
+            TaxonomyLinkWrite(
+                source_taxon_id=external,
+                checksum=WFO_CHECKSUM,
+                expected_version=None,
+                identity_updated_at=record.updated_at,
+            ),
+            source,
+        )
+    database.commit()
+    manifest["taxonomy_extension"] = 1
+    if ready:
+        manifest["state"] = "ready"
+    write_manifest(root, manifest)
+
+
 def seed(database: Session, root: Path) -> dict[str, Any]:
     existing = read_manifest(root)
     if existing is not None:
         validate_manifest(database, root, existing)
         ensure_stored_material(database, root, existing)
+        ensure_taxonomy(database, root, existing)
         return existing
     if (
         database.scalar(select(User.id).limit(1)) is not None
@@ -787,6 +850,7 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
         )
     database.commit()
     ensure_stored_material(database, root, manifest)
+    ensure_taxonomy(database, root, manifest)
     manifest["state"] = "ready"
     write_manifest(root, manifest)
     return manifest

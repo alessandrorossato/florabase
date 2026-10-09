@@ -69,7 +69,7 @@ def test_enrichment_migration_empty_cycle_and_populated_refusal(database_engine:
         with database_engine.begin() as connection:
             assert (
                 connection.scalar(text("SELECT version_num FROM alembic_version"))
-                == "20261009_0039"
+                == "20261009_0040"
             )
             assert (
                 connection.scalar(

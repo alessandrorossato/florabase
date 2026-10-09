@@ -3270,6 +3270,16 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
         offset: 0,
         limit: 50,
       });
+    if (path.startsWith("/api/v1/explore/taxonomy/tree"))
+      return jsonResponse({
+        source_available: false,
+        source: null,
+        message: "Not installed",
+        nodes: [],
+        identities: [],
+        counts: { represented: 0, living: 0, current: 0, historical: 0 },
+        unresolved: 0,
+      });
     if (path.startsWith("/api/v1/explore/species-distribution/identities"))
       return jsonResponse({
         items: [],
@@ -3317,6 +3327,7 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "Journal",
     "History",
     "Botanical identities",
+    "Taxonomy",
     "Media",
     "Geography",
     "Species distribution",
@@ -3356,6 +3367,7 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "events",
     "history",
     "identities",
+    "taxonomy",
     "media",
     "geography",
     "species-distribution",
@@ -3381,6 +3393,7 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "Explore",
     "Explore",
     "Explore",
+    "Explore",
     "Sourcing",
     "Sourcing",
     "Tools",
@@ -3395,7 +3408,7 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
       within(nav).getByRole("button", { name: destination }),
     ).toHaveAttribute("aria-current", "page");
     const heading = await screen.findByRole("heading", {
-      name: destination,
+      name: destination === "Taxonomy" ? "Collection taxonomy" : destination,
       level: 2,
     });
     expect(

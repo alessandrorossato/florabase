@@ -166,10 +166,32 @@ profile model above remains authoritative. See [the approved complete contract](
 
 Cultivation, uses and warnings remain manual pending BOTANY-004's exact field/source GO.
 SEPASAL is an approved source for only those three description records; it is not an imported domain
-source. Future TAXONOMY-003
-represents authoritative classification for collection identities; PHYLOGENY-001 concerns evolutionary
-relationships separately. Neither changes BotanicalIdentity, profile knowledge or recorded collection
-Lineage in BOTANY-003. See [the planned distinctions](collection-taxonomy-plan.md).
+source.
+
+### Collection taxonomy
+
+TAXONOMY-003 adds optional **WfoLink**: one operator-confirmed literal WFO name ID per
+BotanicalIdentity, UUIDv7 relationship version, UTC confirmation timestamp, reviewed source release/
+checksum/license/taxon/full-path evidence and the identity revision observed during confirmation.
+PostgreSQL owns this relationship only; the complete provider taxonomy belongs to an optional
+explicitly provisioned local SQLite reference index. Confirmation/unlink locks the identity and
+compares expected relationship version; confirmation also revalidates identity revision and source.
+Local names, profiles, source-provider links and collection material relationships remain independent.
+
+Official WFO Plant List 2026-06 supplies direct accepted-concept parents. A linked source synonym
+retains its literal identity and advisory accepted concept; no automatic reconciliation or name history
+is implemented. All intermediate source ranks remain in evidence. A collection-pruned projection
+includes only represented linked identities and required ancestors; each identity counts once per
+ancestor. Scope/category eligibility comes from the existing Explore collection projection, including
+Historical's global absence of Current evidence. Unlinked, stale, mismatched-release or unplaceable
+identities remain visible unresolved; source absence/corruption never blocks ordinary workflows.
+
+Explicit future source replacement cannot silently reinterpret reviewed links. A changed release,
+checksum, identity revision or hierarchy requires operator review. Read-only identity breadcrumbs and
+Related in my collection describe classification, without evolutionary-distance claims. Taxonomy is
+separate from recorded collection **Lineage** and planned **PHYLOGENY-001**. TAXONOMY-001/002 and
+BOTANY-003/004 remain planned. See [collection taxonomy](collection-taxonomy.md) and
+[exact source decision](taxonomy-003-source.md).
 
 ### Supplier
 

@@ -358,3 +358,13 @@ origins); Sourcing (Suppliers, Orders); Tools (Import / Export, Labels). Page ey
 areas. Desktop disclosure/localStorage and mobile More behavior remain intact. Collection origins
 keeps `#/map`, API/domain provenance names and Saved View `provenance_map`; its copy describes actual
 recorded material origin. No Species distribution, Native range or Schedule destinations are shipped.
+
+## TAXONOMY-003 navigation update
+
+Explore adds **Taxonomy** (`#/taxonomy`) outside the Maps subgroup, alongside Botanical identities,
+Media and Geography. Maps still contains Collection origins, Species distribution and Native ranges.
+BotanicalIdentity Overview shows a read-only classification breadcrumb/related collection panel;
+Reference → Taxonomy owns explicit source search, inspection, confirmation and unlink.
+Taxonomy is classification; Collection Lineage retains material ancestry. Stable filter/selection URL
+state and stacked mobile tree/detail follow [the current taxonomy contract](collection-taxonomy.md).
+The operator's broad cross-application visual/product review remains a future checkpoint.

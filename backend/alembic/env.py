@@ -36,6 +36,7 @@ from florabase.saved_views.model import SavedView
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import GerminationObservation, Sowing
 from florabase.suppliers.model import Supplier
+from florabase.taxonomy.model import WfoLink
 
 config = context.config
 if config.config_file_name is not None:
@@ -58,6 +59,7 @@ assert all(
     model.__table__.metadata is target_metadata
     for model in (WcvpLink, NativeRangeRevision, NativeRangeProposal, NativeRangeApplication)
 )
+assert WfoLink.__table__.metadata is target_metadata
 assert ExternalTaxonLink.__table__.metadata is target_metadata
 assert ExternalProviderCache.__table__.metadata is target_metadata
 assert Order.__table__.metadata is target_metadata

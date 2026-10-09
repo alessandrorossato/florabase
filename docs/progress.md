@@ -1,5 +1,42 @@
 # Engineering progress
 
+## 2026-10-09 — TAXONOMY-003 collection-aware classification implemented
+
+- Initialized attached `748b` through `make feature-init`, branch
+  `feat/taxonomy-003-collection-tree`, from verified cached origin/main `a8ae74a`.
+  Securely audited the complete official WFO Plant List 2026-06 ColDP archive and publisher
+  exporters before implementation. Classification-only CC0 source GO pins checksum, release,
+  exact parent/synonym semantics and the biological Plantae boundary; no TLS bypass or HTML scraping.
+- Added optional ignored 394 MiB local SQLite hierarchy index and one canonical operator-confirmed
+  WFO relationship per BotanicalIdentity. Explicit local search → inspect → Confirm, stale/version
+  revalidation and unlink preserve local names/profiles/other providers and material Lineage.
+  Migration `20261009_0040` adds only links and refuses populated downgrade.
+- Reused shared EXPLORE-001/002 representation/category projection for collection-pruned paths,
+  distinct identity counts, literal local search, family/genus details, unresolved knowledge,
+  full identity breadcrumbs and taxonomy-only Related in my collection. Responsive keyboard tree,
+  stable URL filter/selected-node state; Saved Views deliberately deferred.
+- Implementation-focused suites passed: **96 offline backend tests**, **58 PostgreSQL tests**
+  (including concurrent confirmation, migration preservation and Explore/provider regressions),
+  **19 UAT workflow tests**, and **104 distinct frontend tests**. Final independent gate results are
+  recorded below and in the [handoff](taxonomy-003-handoff.md).
+- Initial implementation measurements under concurrent image/build load included a 34.48 s first
+  UAT projection and a 6.93 s checksum-only run. Independent post-restart review with no image/build
+  process running rendered the six-identity UAT Taxonomy view in 8.84 s and an immediate page reload
+  in 1.07 s. The host still had load 3.78, 1.9/2 GiB swap used, and 1.1 GB free disk. A separate
+  same-UAT-database measurement returned 6 identities, 23 required nodes, one unresolved identity,
+  13,226 UTF-8 serialized-model bytes, and constant 2 PostgreSQL SELECTs + 3 SQLite statements;
+  first/warm same-process projections took 1.84 s / 22 ms with the index already OS-cached. The
+  34.48 s many-tens-of-seconds delay did not recur, though this was not an unpressured host baseline.
+  A 500-identity synthetic test returns five nodes in 299 ms.
+- Retired old Preview only through actual owner `16cc` guarded remove; current `748b` UAT seeded
+  with 44 manifest records, five exact real WFO links, same-genus/family coverage and unresolved
+  lavender. Repeat seed preserves edits. Initial frontend health deadline during initialization
+  recovered without timeout changes: status reports correct source, 0040, healthy app/db, proxy 200.
+  Functional browser review covered 1440×844, 1024×844 and 390×844, keyboard focus/expansion,
+  node detail, related peers, breadcrumb and advisory source-synonym inspection without overflow.
+- TAXONOMY-003 is **verified**. TAXONOMY-001/002, PHYLOGENY-001, BOTANY-003/004 and ENRICHMENT-002
+  remain planned; broad cross-application visual review stays deferred.
+
 ## 2026-10-09 — BOTANY-003 source re-audit; narrow description source approved
 
 - Initialized the attached `857e` worktree through `make feature-init`, branch
@@ -3166,7 +3203,7 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20261003_0031`; HARVEST-002 is implemented pending visual acceptance and independent QA.
+- Alembic head: `20261009_0040`; TAXONOMY-003 is independently verified and awaits protected delivery.
 - Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
   collection locations; geographic places/material provenance; seed lots; sowings and simple
   germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
@@ -3204,3 +3241,19 @@ implementation detail.
 - PREVIEW-001 is **verified** in `docs/features.json`; roadmap and handoff reflect operator UAT and
   independent verification complete. The receipt was recorded for this exact working tree.
 - Commit, protected delivery, merge and conservative worktree finish remain the authorized next steps.
+
+## 2026-10-09 — TAXONOMY-003 independent verification
+
+- Independent product/source review accepted the collection-aware classification tree and its WFO
+  2026-06 CC0 source contract. Browser review covered desktop, tablet and 390×844 mobile, keyboard
+  navigation, filters, linked/unresolved identities and related classification peers; no fixture link
+  was confirmed or changed. Broad cross-application visual review remains deferred.
+- Canonical `make feature-verify` passed on the final reviewed tree: **895 backend tests, 90.03%
+  coverage; 541 frontend tests across 56 files; 699 PostgreSQL integration tests; 329 strict-mypy
+  files; API drift clean; production backend/frontend builds passed; migration cycle
+  `0039 → 0040 → 0039 → 0040`; whitespace and worktree receipt passed.** Ruff, Prettier, ESLint,
+  TypeScript, feature/workflow helpers and environment checks passed as part of the gate.
+- TAXONOMY-003 is marked **verified** in `docs/features.json`. Source-index checksum and footprint,
+  query counts, cold/warm measurements, UAT evidence and known host-load limits are documented in
+  [the handoff](taxonomy-003-handoff.md). Protected delivery and DEV upgrade are the remaining
+  lifecycle steps; migration 0040 requires the upgrade after merge.

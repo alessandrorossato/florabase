@@ -104,7 +104,7 @@ def test_native_ranges_surface_upgrade_preserves_views_and_refuses_populated_dow
             )
             assert (
                 connection.scalar(text("SELECT version_num FROM alembic_version"))
-                == "20261009_0039"
+                == "20261009_0040"
             )
             connection.execute(text("DELETE FROM saved_views WHERE id=:id"), {"id": history})
         command.downgrade(config, "20261008_0037")

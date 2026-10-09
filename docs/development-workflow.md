@@ -177,7 +177,13 @@ extension; existing operator inventory is adopted without changing its state. No
 The fixture supports multi-species overlap/disjoint comparison and Seeds/Sowings/Plants/Plant groups/
 Stored material category combinations. Native ranges uses explicit selection up to 20 and a separate
 OR category filter; Explore groups its three map destinations under a non-actionable Maps label,
-with Geography outside that subgroup. Mobile retains all destinations.
+with Geography outside that subgroup. TAXONOMY-003 adds Taxonomy (`#/taxonomy`) outside Maps,
+with the optional pinned WFO 2026-06 index/seal in ignored `backend/src/.source-cache/`.
+Its explicit additive fixture extension confirms five real source IDs and adds a Holy basil identity/
+packet (44 manifest records): basil/Holy basil share genus, basil/sage share family, Aloe and radish
+exercise distinct families/higher ancestors; lavender remains unlinked. Repeat seeding preserves
+operator link edits. Interrupted extensions remain `building` and require the guarded reset.
+Mobile retains all destinations. See [taxonomy UAT handoff](taxonomy-003-handoff.md).
 
 The seed manifest lives outside production domain models in the UAT media volume and records service
 created UUIDv7 identities. Repeating seed validates existing identities and binary integrity, leaves

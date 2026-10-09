@@ -4248,6 +4248,57 @@
         "title": "IdentityCollectionCounts",
         "type": "object"
       },
+      "IdentityTaxonomy": {
+        "properties": {
+          "link": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaxonomyLink"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "related": {
+            "items": {
+              "$ref": "#/components/schemas/TaxonomyRelated"
+            },
+            "title": "Related",
+            "type": "array"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WfoMetadata"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_available": {
+            "title": "Source Available",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "source_available"
+        ],
+        "title": "IdentityTaxonomy",
+        "type": "object"
+      },
       "ImportDecisionOption": {
         "properties": {
           "action": {
@@ -13536,6 +13587,401 @@
         "title": "TaxonSearchResponse",
         "type": "object"
       },
+      "TaxonomyCounts": {
+        "properties": {
+          "current": {
+            "default": 0,
+            "title": "Current",
+            "type": "integer"
+          },
+          "historical": {
+            "default": 0,
+            "title": "Historical",
+            "type": "integer"
+          },
+          "living": {
+            "default": 0,
+            "title": "Living",
+            "type": "integer"
+          },
+          "represented": {
+            "default": 0,
+            "title": "Represented",
+            "type": "integer"
+          }
+        },
+        "title": "TaxonomyCounts",
+        "type": "object"
+      },
+      "TaxonomyEvidence": {
+        "additionalProperties": false,
+        "properties": {
+          "classification": {
+            "items": {
+              "$ref": "#/components/schemas/WfoTaxon"
+            },
+            "title": "Classification",
+            "type": "array"
+          },
+          "identity_updated_at": {
+            "format": "date-time",
+            "title": "Identity Updated At",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/WfoMetadata"
+          },
+          "taxon": {
+            "$ref": "#/components/schemas/WfoTaxon"
+          }
+        },
+        "required": [
+          "source",
+          "taxon",
+          "classification",
+          "identity_updated_at"
+        ],
+        "title": "TaxonomyEvidence",
+        "type": "object"
+      },
+      "TaxonomyIdentity": {
+        "properties": {
+          "classification_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Classification Ids",
+            "type": "array"
+          },
+          "common_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Common Name"
+          },
+          "cultivar_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cultivar Name"
+          },
+          "current_records": {
+            "minimum": 0.0,
+            "title": "Current Records",
+            "type": "integer"
+          },
+          "display_label": {
+            "title": "Display Label",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "living_records": {
+            "minimum": 0.0,
+            "title": "Living Records",
+            "type": "integer"
+          },
+          "matches_scope": {
+            "title": "Matches Scope",
+            "type": "boolean"
+          },
+          "representation": {
+            "enum": [
+              "living",
+              "current",
+              "historical"
+            ],
+            "title": "Representation",
+            "type": "string"
+          },
+          "retained_records": {
+            "minimum": 1.0,
+            "title": "Retained Records",
+            "type": "integer"
+          },
+          "scientific_name": {
+            "title": "Scientific Name",
+            "type": "string"
+          },
+          "source_taxon_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Taxon Id"
+          },
+          "synonym_of": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Synonym Of"
+          },
+          "unresolved_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unresolved Reason"
+          }
+        },
+        "required": [
+          "id",
+          "display_label",
+          "scientific_name",
+          "cultivar_name",
+          "common_name",
+          "representation",
+          "retained_records",
+          "current_records",
+          "living_records",
+          "matches_scope"
+        ],
+        "title": "TaxonomyIdentity",
+        "type": "object"
+      },
+      "TaxonomyLink": {
+        "properties": {
+          "confirmed_at": {
+            "format": "date-time",
+            "title": "Confirmed At",
+            "type": "string"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/TaxonomyEvidence"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          },
+          "version": {
+            "format": "uuid",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "version",
+          "evidence",
+          "confirmed_at",
+          "stale"
+        ],
+        "title": "TaxonomyLink",
+        "type": "object"
+      },
+      "TaxonomyLinkWrite": {
+        "additionalProperties": false,
+        "properties": {
+          "checksum": {
+            "maxLength": 64,
+            "minLength": 64,
+            "title": "Checksum",
+            "type": "string"
+          },
+          "expected_version": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expected Version"
+          },
+          "identity_updated_at": {
+            "format": "date-time",
+            "title": "Identity Updated At",
+            "type": "string"
+          },
+          "source_taxon_id": {
+            "pattern": "^wfo-[0-9]{10}$",
+            "title": "Source Taxon Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_taxon_id",
+          "checksum",
+          "expected_version",
+          "identity_updated_at"
+        ],
+        "title": "TaxonomyLinkWrite",
+        "type": "object"
+      },
+      "TaxonomyNode": {
+        "properties": {
+          "counts": {
+            "$ref": "#/components/schemas/TaxonomyCounts"
+          },
+          "identity_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Identity Ids",
+            "type": "array"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Id"
+          },
+          "taxon": {
+            "$ref": "#/components/schemas/WfoTaxon"
+          }
+        },
+        "required": [
+          "taxon",
+          "parent_id",
+          "counts",
+          "identity_ids"
+        ],
+        "title": "TaxonomyNode",
+        "type": "object"
+      },
+      "TaxonomyNodeDetail": {
+        "properties": {
+          "identities": {
+            "items": {
+              "$ref": "#/components/schemas/TaxonomyIdentity"
+            },
+            "title": "Identities",
+            "type": "array"
+          },
+          "node": {
+            "$ref": "#/components/schemas/TaxonomyNode"
+          },
+          "represented_genera": {
+            "items": {
+              "$ref": "#/components/schemas/WfoTaxon"
+            },
+            "title": "Represented Genera",
+            "type": "array"
+          }
+        },
+        "required": [
+          "node",
+          "represented_genera",
+          "identities"
+        ],
+        "title": "TaxonomyNodeDetail",
+        "type": "object"
+      },
+      "TaxonomyRelated": {
+        "properties": {
+          "identity": {
+            "$ref": "#/components/schemas/TaxonomyIdentity"
+          },
+          "relation": {
+            "enum": [
+              "Same source taxon",
+              "Same genus",
+              "Same family",
+              "Same order"
+            ],
+            "title": "Relation",
+            "type": "string"
+          }
+        },
+        "required": [
+          "identity",
+          "relation"
+        ],
+        "title": "TaxonomyRelated",
+        "type": "object"
+      },
+      "TaxonomyTree": {
+        "properties": {
+          "counts": {
+            "$ref": "#/components/schemas/TaxonomyCounts"
+          },
+          "identities": {
+            "items": {
+              "$ref": "#/components/schemas/TaxonomyIdentity"
+            },
+            "title": "Identities",
+            "type": "array"
+          },
+          "message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Message"
+          },
+          "nodes": {
+            "items": {
+              "$ref": "#/components/schemas/TaxonomyNode"
+            },
+            "title": "Nodes",
+            "type": "array"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/WfoMetadata"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "source_available": {
+            "title": "Source Available",
+            "type": "boolean"
+          },
+          "unresolved": {
+            "title": "Unresolved",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "source_available",
+          "identities",
+          "nodes",
+          "counts",
+          "unresolved"
+        ],
+        "title": "TaxonomyTree",
+        "type": "object"
+      },
       "TerritoryCoverage": {
         "properties": {
           "id": {
@@ -13715,6 +14161,140 @@
           "checksum"
         ],
         "title": "WcvpLinkWrite",
+        "type": "object"
+      },
+      "WfoCandidate": {
+        "properties": {
+          "classification": {
+            "items": {
+              "$ref": "#/components/schemas/WfoTaxon"
+            },
+            "title": "Classification",
+            "type": "array"
+          },
+          "taxon": {
+            "$ref": "#/components/schemas/WfoTaxon"
+          }
+        },
+        "required": [
+          "taxon",
+          "classification"
+        ],
+        "title": "WfoCandidate",
+        "type": "object"
+      },
+      "WfoMetadata": {
+        "additionalProperties": false,
+        "properties": {
+          "archive_url": {
+            "default": "https://zenodo.org/api/records/20782718/files/wfo_plantlist_2026-06.zip/content",
+            "title": "Archive Url",
+            "type": "string"
+          },
+          "checksum": {
+            "default": "75f1ad1f371978c9e46f3044152c07ed276fe57be9fb9a15b3621b19cf231987",
+            "title": "Checksum",
+            "type": "string"
+          },
+          "citation": {
+            "default": "World Flora Online (2026). World Flora Online Plant List 2026-06. https://doi.org/10.5281/zenodo.20782718",
+            "title": "Citation",
+            "type": "string"
+          },
+          "format_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Format Version",
+            "type": "integer"
+          },
+          "license": {
+            "default": "https://creativecommons.org/publicdomain/zero/1.0/",
+            "title": "License",
+            "type": "string"
+          },
+          "provider": {
+            "const": "wfo",
+            "default": "wfo",
+            "title": "Provider",
+            "type": "string"
+          },
+          "retrieved_at": {
+            "title": "Retrieved At",
+            "type": "string"
+          },
+          "version": {
+            "default": "2026-06",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "retrieved_at"
+        ],
+        "title": "WfoMetadata",
+        "type": "object"
+      },
+      "WfoTaxon": {
+        "additionalProperties": false,
+        "properties": {
+          "accepted_source_taxon_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accepted Source Taxon Id"
+          },
+          "authorship": {
+            "title": "Authorship",
+            "type": "string"
+          },
+          "parent_source_taxon_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Parent Source Taxon Id"
+          },
+          "rank": {
+            "title": "Rank",
+            "type": "string"
+          },
+          "scientific_name": {
+            "title": "Scientific Name",
+            "type": "string"
+          },
+          "source_taxon_id": {
+            "title": "Source Taxon Id",
+            "type": "string"
+          },
+          "taxonomic_status": {
+            "enum": [
+              "accepted",
+              "synonym",
+              "unplaced"
+            ],
+            "title": "Taxonomic Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_taxon_id",
+          "parent_source_taxon_id",
+          "scientific_name",
+          "authorship",
+          "rank",
+          "taxonomic_status",
+          "accepted_source_taxon_id"
+        ],
+        "title": "WfoTaxon",
         "type": "object"
       }
     }
@@ -15772,6 +16352,283 @@
         ]
       }
     },
+    "/api/v1/botanical-identities/{identity_id}/taxonomy": {
+      "get": {
+        "operationId": "getIdentityTaxonomy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "living",
+                "current",
+                "historical"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "record",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/CollectionRecordCategory"
+                  },
+                  "maxItems": 5,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Record"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityTaxonomy"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read",
+        "tags": [
+          "taxonomy"
+        ]
+      }
+    },
+    "/api/v1/botanical-identities/{identity_id}/taxonomy/candidates": {
+      "get": {
+        "operationId": "searchWfoTaxa",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 2,
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/WfoCandidate"
+                  },
+                  "title": "Response Searchwfotaxa",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Candidates",
+        "tags": [
+          "taxonomy"
+        ]
+      }
+    },
+    "/api/v1/botanical-identities/{identity_id}/taxonomy/link": {
+      "delete": {
+        "operationId": "unlinkWfoTaxon",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Version",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unlink",
+        "tags": [
+          "taxonomy"
+        ]
+      },
+      "put": {
+        "operationId": "confirmWfoTaxon",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identity_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaxonomyLinkWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyLink"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm",
+        "tags": [
+          "taxonomy"
+        ]
+      }
+    },
     "/api/v1/bulk/location/apply": {
       "post": {
         "operationId": "applyBulkLocation",
@@ -17541,6 +18398,175 @@
         "summary": "Read",
         "tags": [
           "explore"
+        ]
+      }
+    },
+    "/api/v1/explore/taxonomy/nodes/{source_taxon_id}": {
+      "get": {
+        "operationId": "getCollectionTaxonomyNode",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "source_taxon_id",
+            "required": true,
+            "schema": {
+              "title": "Source Taxon Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "living",
+                "current",
+                "historical"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "record",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/CollectionRecordCategory"
+                  },
+                  "maxItems": 5,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Record"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyNodeDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Node",
+        "tags": [
+          "taxonomy"
+        ]
+      }
+    },
+    "/api/v1/explore/taxonomy/tree": {
+      "get": {
+        "operationId": "getCollectionTaxonomy",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "living",
+                "current",
+                "historical"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "record",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/CollectionRecordCategory"
+                  },
+                  "maxItems": 5,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Record"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Q",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaxonomyTree"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Tree",
+        "tags": [
+          "taxonomy"
         ]
       }
     },

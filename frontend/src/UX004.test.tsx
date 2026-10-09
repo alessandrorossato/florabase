@@ -322,7 +322,7 @@ test("Reference stays lazy and exposes one read-first module at a time", async (
   expect(document.querySelector(".identity-work-header")).toBeInTheDocument();
   expect(
     screen.getByRole("tablist", { name: "Reference sections" }),
-  ).toHaveTextContent("ProfileNative rangeBotanical sourceOccurrences");
+  ).toHaveTextContent("ProfileNative rangeBotanical sourceTaxonomyOccurrences");
   await screen.findByText("No botanical profile yet.");
   expect(screen.queryByRole("heading", { name: "Native range" })).toBeNull();
   expect(
