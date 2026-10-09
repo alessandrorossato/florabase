@@ -592,7 +592,7 @@ test("Botanical identity edit and guarded deletion stay explicit", async () => {
   );
   expect(
     await screen.findByText(
-      "This botanical identity has collection records or a cover image. Remove those references before deleting it.",
+      "This botanical identity has collection records, a cover image, or retained native-range source evidence and cannot be deleted.",
     ),
   ).toHaveAttribute("role", "alert");
 

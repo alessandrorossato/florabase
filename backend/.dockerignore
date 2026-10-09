@@ -7,3 +7,5 @@ __pycache__
 *.egg-info
 *.py[cod]
 htmlcov
+.source-cache
+**/.source-cache

@@ -205,7 +205,7 @@ function IdentityDetails({
     } catch (error: unknown) {
       setMutationError(
         error instanceof ApiError && error.status === 409
-          ? "This botanical identity has collection records or a cover image. Remove those references before deleting it."
+          ? "This botanical identity has collection records, a cover image, or retained native-range source evidence and cannot be deleted."
           : "Florabase could not delete this botanical identity.",
       );
       setConfirmDelete(false);

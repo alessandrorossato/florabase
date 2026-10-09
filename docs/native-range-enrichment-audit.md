@@ -1,6 +1,6 @@
 # Future structured native-range enrichment: Kew candidate audit
 
-Planning only, audited 2026-10-08. No provider import, taxon link, crosswalk, provenance schema,
+Historical planning audit, 2026-10-08. No provider import, taxon link, crosswalk, provenance schema,
 proposal service or range mutation is implemented by EXPLORE-002.
 
 ## Official Kew evidence
@@ -32,7 +32,7 @@ Trusted provider → exact/reviewed taxon match → native TDWG assertions → r
 TDWG-to-Florabase GeographicPlace crosswalk → proposed changes → operator review → Apply →
 structured BotanicalProfileNativeRange plus retained source provenance.
 
-Four decisions block implementation:
+Four decisions blocked implementation at that planning checkpoint:
 
 1. **Taxon identity:** establish a stable, reviewed WCVP/POWO identifier and accepted-taxon
    relationship. Scientific-name equality, a GBIF/CoL link or a synonym alone cannot authorise import.
@@ -62,3 +62,23 @@ ENRICHMENT-001 remains **planned**. Consider this candidate immediately after su
 EXPLORE-002 delivery, before SCHEDULE-001 unless the operator reprioritises. Provider approval,
 exact scope, crosswalk policy, migration/provenance design and proposal semantics require their
 own reviewed increment; this planning entry authorises no implementation.
+
+
+## 2026-10-09 — exact source approved and narrow increment implemented
+
+ENRICHMENT-001 now implements structured ranges only. The exact official version-15 plain archive
+and its full row schemas were inspected, with DOI/companion metadata confirming CC BY 3.0.
+[Source approval](native-range-enrichment-source-v15.md) records checksum, citation, retrieval,
+licence evidence and row-quality results. The earlier planning statements above are historical.
+
+The [implemented contract](native-range-enrichment.md) resolves taxon review with an explicit
+operator-confirmed WCVP ID, a deliberately small reviewed twelve-unit crosswalk, visible excluded
+splits/partial/unresolved units, unqualified Native assertions only, durable frozen proposals and
+immutable applications. Apply adds only selected mapped ranges and keeps all current ranges.
+Removal/replacement is not supported. Frozen v15 evidence can be applied without the optional
+index after durable link/identity/destination/crosswalk revalidation. This feature does not change
+BOTANY-003's blocked text contract or implement ENRICHMENT-002 automated refresh.
+
+Status is **verified** after operator UAT and the independent canonical gate; see the
+[handoff](enrichment-001-handoff.md). SCHEDULE-001 stays future work and the broad
+cross-application product/visual review remains deferred before release hardening.

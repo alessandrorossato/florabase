@@ -23,6 +23,12 @@ from florabase.harvests.conversion_model import HarvestSeedLotConversion
 from florabase.harvests.inventory_model import HarvestMaterialDisposition, HarvestMaterialInventory
 from florabase.harvests.model import Harvest, HarvestItem
 from florabase.locations.model import Location
+from florabase.native_range_enrichment.model import (
+    NativeRangeApplication,
+    NativeRangeProposal,
+    NativeRangeRevision,
+    WcvpLink,
+)
 from florabase.orders.model import Order
 from florabase.plants.model import Plant, PlantGroup
 from florabase.provenance_sites.model import ProvenanceSite
@@ -48,6 +54,10 @@ assert ExternalImageReference.__table__.metadata is target_metadata
 assert CollectionPrimaryPhoto.__table__.metadata is target_metadata
 assert BotanicalProfile.__table__.metadata is target_metadata
 assert BotanicalProfileNativeRange.__table__.metadata is target_metadata
+assert all(
+    model.__table__.metadata is target_metadata
+    for model in (WcvpLink, NativeRangeRevision, NativeRangeProposal, NativeRangeApplication)
+)
 assert ExternalTaxonLink.__table__.metadata is target_metadata
 assert ExternalProviderCache.__table__.metadata is target_metadata
 assert Order.__table__.metadata is target_metadata

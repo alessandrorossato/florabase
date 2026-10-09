@@ -128,6 +128,17 @@ derived from the current Geography hierarchy, so reparenting changes display wit
 relationship. Existing profile origin/distribution text remains independent and is never silently
 overwritten.
 
+### Reviewable structured range proposals
+
+ENRICHMENT-001 adds separate operator-confirmed WCVP links and frozen source proposals. Its exact
+version-15 Native assertions use a reviewed twelve-unit TDWG crosswalk; introduced, qualified,
+partial and unresolved units remain source context. Only explicit selective Apply adds canonical
+`BotanicalProfileNativeRange` links. Existing ranges and all profile text are kept. Immutable
+application evidence retains original source assertions and mapping decisions independently of
+replaceable source indexes and later manual range edits; it is not collection operational History.
+A monotonic range revision plus locked identity/link/source/geography checks reject stale Apply.
+Applied evidence restricts identity deletion. See [the contract](native-range-enrichment.md).
+
 ### Approved BOTANY-003 contract — not implemented
 
 The operator approved WFO / Flora of China general descriptions for `description` and Kew WCVP

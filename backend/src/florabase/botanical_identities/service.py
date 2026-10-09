@@ -101,7 +101,18 @@ def update_botanical_identity(
 def delete_botanical_identity(database: Session, botanical_identity: BotanicalIdentity) -> None:
     identity_id = botanical_identity.id
     from florabase.collection_photos.model import BotanicalIdentityCoverImage
+    from florabase.native_range_enrichment.model import NativeRangeApplication
 
+    # Serialize deletion with proposal Apply before checking retained references.
+    if (
+        database.scalar(
+            select(BotanicalIdentity.id)
+            .where(BotanicalIdentity.id == identity_id)
+            .with_for_update()
+        )
+        is None
+    ):
+        return
     cover_count = database.scalar(
         select(func.count())
         .select_from(BotanicalIdentityCoverImage)
@@ -110,6 +121,11 @@ def delete_botanical_identity(database: Session, botanical_identity: BotanicalId
     if cover_count:
         raise BotanicalIdentityCoverReferencedError
     references = (
+        database.scalar(
+            select(func.count())
+            .select_from(NativeRangeApplication)
+            .where(NativeRangeApplication.identity_id == identity_id)
+        ),
         database.scalar(
             select(func.count())
             .select_from(SeedLot)

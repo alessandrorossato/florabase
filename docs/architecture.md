@@ -144,3 +144,10 @@ projection and one Location hierarchy read. They never fetch dispositions per di
 loads only in requested detail. Location adds a grouped inventory arm to its existing single recursive
 aggregation. Revision 0031 creates no inventory and guards populated downgrade. Inventory adds no
 lineage edge, Event effect or media target. See [inventory contract](harvest-inventory.md).
+
+
+ENRICHMENT-001 keeps the optional pinned WCVP SQLite index outside canonical PostgreSQL state and
+application startup. Only an explicit standalone provisioning command accesses the fixed official
+archive. Authenticated APIs read bounded local source data; reviewed Apply atomically writes the
+existing profile-range relation and immutable source evidence. Missing source data cannot affect
+app health or operator-authored knowledge. See [the contract](native-range-enrichment.md).
