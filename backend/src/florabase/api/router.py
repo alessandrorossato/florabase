@@ -29,6 +29,7 @@ from florabase.search.api import router as search_router
 from florabase.seed_lots.api import router as seed_lots_router
 from florabase.sowings.api import router as sowings_router
 from florabase.suppliers.api import router as suppliers_router
+from florabase.taxonomy.api import router as taxonomy_router
 
 api_router = APIRouter(prefix="/api/v1")
 api_router.include_router(health_router)
@@ -69,3 +70,5 @@ api_router.include_router(history_router)
 api_router.include_router(orders_router)
 
 api_router.include_router(explore_router)
+
+api_router.include_router(taxonomy_router)

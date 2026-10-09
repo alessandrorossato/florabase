@@ -490,6 +490,58 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/botanical-identities/{identity_id}/taxonomy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read */
+        get: operations["getIdentityTaxonomy"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/botanical-identities/{identity_id}/taxonomy/candidates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Candidates */
+        get: operations["searchWfoTaxa"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/botanical-identities/{identity_id}/taxonomy/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Confirm */
+        put: operations["confirmWfoTaxon"];
+        post?: never;
+        /** Unlink */
+        delete: operations["unlinkWfoTaxon"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/bulk/location/apply": {
         parameters: {
             query?: never;
@@ -811,6 +863,40 @@ export interface paths {
         };
         /** Read */
         get: operations["getRepresentedIdentity"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/explore/taxonomy/nodes/{source_taxon_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Node */
+        get: operations["getCollectionTaxonomyNode"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/explore/taxonomy/tree": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Tree */
+        get: operations["getCollectionTaxonomy"];
         put?: never;
         post?: never;
         delete?: never;
@@ -3648,6 +3734,17 @@ export interface components {
             /** Sowings */
             sowings: number;
         };
+        /** IdentityTaxonomy */
+        IdentityTaxonomy: {
+            link?: components["schemas"]["TaxonomyLink"] | null;
+            /** Message */
+            message?: string | null;
+            /** Related */
+            related?: components["schemas"]["TaxonomyRelated"][];
+            source?: components["schemas"]["WfoMetadata"] | null;
+            /** Source Available */
+            source_available: boolean;
+        };
         /** ImportDecisionOption */
         ImportDecisionOption: {
             /**
@@ -6474,6 +6571,149 @@ export interface components {
             /** Stale */
             stale: boolean;
         };
+        /** TaxonomyCounts */
+        TaxonomyCounts: {
+            /**
+             * Current
+             * @default 0
+             */
+            current: number;
+            /**
+             * Historical
+             * @default 0
+             */
+            historical: number;
+            /**
+             * Living
+             * @default 0
+             */
+            living: number;
+            /**
+             * Represented
+             * @default 0
+             */
+            represented: number;
+        };
+        /** TaxonomyEvidence */
+        TaxonomyEvidence: {
+            /** Classification */
+            classification: components["schemas"]["WfoTaxon"][];
+            /**
+             * Identity Updated At
+             * Format: date-time
+             */
+            identity_updated_at: string;
+            source: components["schemas"]["WfoMetadata"];
+            taxon: components["schemas"]["WfoTaxon"];
+        };
+        /** TaxonomyIdentity */
+        TaxonomyIdentity: {
+            /** Classification Ids */
+            classification_ids?: string[];
+            /** Common Name */
+            common_name: string | null;
+            /** Cultivar Name */
+            cultivar_name: string | null;
+            /** Current Records */
+            current_records: number;
+            /** Display Label */
+            display_label: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Living Records */
+            living_records: number;
+            /** Matches Scope */
+            matches_scope: boolean;
+            /**
+             * Representation
+             * @enum {string}
+             */
+            representation: "living" | "current" | "historical";
+            /** Retained Records */
+            retained_records: number;
+            /** Scientific Name */
+            scientific_name: string;
+            /** Source Taxon Id */
+            source_taxon_id?: string | null;
+            /** Synonym Of */
+            synonym_of?: string | null;
+            /** Unresolved Reason */
+            unresolved_reason?: string | null;
+        };
+        /** TaxonomyLink */
+        TaxonomyLink: {
+            /**
+             * Confirmed At
+             * Format: date-time
+             */
+            confirmed_at: string;
+            evidence: components["schemas"]["TaxonomyEvidence"];
+            /** Stale */
+            stale: boolean;
+            /**
+             * Version
+             * Format: uuid
+             */
+            version: string;
+        };
+        /** TaxonomyLinkWrite */
+        TaxonomyLinkWrite: {
+            /** Checksum */
+            checksum: string;
+            /** Expected Version */
+            expected_version: string | null;
+            /**
+             * Identity Updated At
+             * Format: date-time
+             */
+            identity_updated_at: string;
+            /** Source Taxon Id */
+            source_taxon_id: string;
+        };
+        /** TaxonomyNode */
+        TaxonomyNode: {
+            counts: components["schemas"]["TaxonomyCounts"];
+            /** Identity Ids */
+            identity_ids: string[];
+            /** Parent Id */
+            parent_id: string | null;
+            taxon: components["schemas"]["WfoTaxon"];
+        };
+        /** TaxonomyNodeDetail */
+        TaxonomyNodeDetail: {
+            /** Identities */
+            identities: components["schemas"]["TaxonomyIdentity"][];
+            node: components["schemas"]["TaxonomyNode"];
+            /** Represented Genera */
+            represented_genera: components["schemas"]["WfoTaxon"][];
+        };
+        /** TaxonomyRelated */
+        TaxonomyRelated: {
+            identity: components["schemas"]["TaxonomyIdentity"];
+            /**
+             * Relation
+             * @enum {string}
+             */
+            relation: "Same source taxon" | "Same genus" | "Same family" | "Same order";
+        };
+        /** TaxonomyTree */
+        TaxonomyTree: {
+            counts: components["schemas"]["TaxonomyCounts"];
+            /** Identities */
+            identities: components["schemas"]["TaxonomyIdentity"][];
+            /** Message */
+            message?: string | null;
+            /** Nodes */
+            nodes: components["schemas"]["TaxonomyNode"][];
+            source?: components["schemas"]["WfoMetadata"] | null;
+            /** Source Available */
+            source_available: boolean;
+            /** Unresolved */
+            unresolved: number;
+        };
         /** TerritoryCoverage */
         TerritoryCoverage: {
             /**
@@ -6540,6 +6780,74 @@ export interface components {
             checksum: string;
             /** External Id */
             external_id: string;
+        };
+        /** WfoCandidate */
+        WfoCandidate: {
+            /** Classification */
+            classification: components["schemas"]["WfoTaxon"][];
+            taxon: components["schemas"]["WfoTaxon"];
+        };
+        /** WfoMetadata */
+        WfoMetadata: {
+            /**
+             * Archive Url
+             * @default https://zenodo.org/api/records/20782718/files/wfo_plantlist_2026-06.zip/content
+             */
+            archive_url: string;
+            /**
+             * Checksum
+             * @default 75f1ad1f371978c9e46f3044152c07ed276fe57be9fb9a15b3621b19cf231987
+             */
+            checksum: string;
+            /**
+             * Citation
+             * @default World Flora Online (2026). World Flora Online Plant List 2026-06. https://doi.org/10.5281/zenodo.20782718
+             */
+            citation: string;
+            /**
+             * Format Version
+             * @default 1
+             * @constant
+             */
+            format_version: 1;
+            /**
+             * License
+             * @default https://creativecommons.org/publicdomain/zero/1.0/
+             */
+            license: string;
+            /**
+             * Provider
+             * @default wfo
+             * @constant
+             */
+            provider: "wfo";
+            /** Retrieved At */
+            retrieved_at: string;
+            /**
+             * Version
+             * @default 2026-06
+             */
+            version: string;
+        };
+        /** WfoTaxon */
+        WfoTaxon: {
+            /** Accepted Source Taxon Id */
+            accepted_source_taxon_id: string | null;
+            /** Authorship */
+            authorship: string;
+            /** Parent Source Taxon Id */
+            parent_source_taxon_id: string | null;
+            /** Rank */
+            rank: string;
+            /** Scientific Name */
+            scientific_name: string;
+            /** Source Taxon Id */
+            source_taxon_id: string;
+            /**
+             * Taxonomic Status
+             * @enum {string}
+             */
+            taxonomic_status: "accepted" | "synonym" | "unplaced";
         };
     };
     responses: never;
@@ -7869,6 +8177,144 @@ export interface operations {
             };
         };
     };
+    getIdentityTaxonomy: {
+        parameters: {
+            query?: {
+                scope?: "all" | "living" | "current" | "historical";
+                record?: components["schemas"]["CollectionRecordCategory"][] | null;
+                q?: string;
+            };
+            header?: never;
+            path: {
+                identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IdentityTaxonomy"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    searchWfoTaxa: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path: {
+                identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WfoCandidate"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirmWfoTaxon: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TaxonomyLinkWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyLink"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    unlinkWfoTaxon: {
+        parameters: {
+            query: {
+                version: string;
+            };
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     applyBulkLocation: {
         parameters: {
             query?: never;
@@ -8694,6 +9140,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RepresentedIdentity"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getCollectionTaxonomyNode: {
+        parameters: {
+            query?: {
+                scope?: "all" | "living" | "current" | "historical";
+                record?: components["schemas"]["CollectionRecordCategory"][] | null;
+                q?: string;
+            };
+            header?: never;
+            path: {
+                source_taxon_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyNodeDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getCollectionTaxonomy: {
+        parameters: {
+            query?: {
+                scope?: "all" | "living" | "current" | "historical";
+                record?: components["schemas"]["CollectionRecordCategory"][] | null;
+                q?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TaxonomyTree"];
                 };
             };
             /** @description Validation Error */

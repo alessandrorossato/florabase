@@ -134,6 +134,7 @@ def test_schema_uses_native_types_named_constraints_and_only_one_botanical_table
         "suppliers",
         "users",
         "wcvp_links",
+        "wfo_links",
     }
 
 

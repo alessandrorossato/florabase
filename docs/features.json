@@ -1410,7 +1410,7 @@
       ],
       "dependencies": ["BOTANY-002", "EXPLORE-001"],
       "priority": "P2",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "PHYLOGENY-001",

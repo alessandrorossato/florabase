@@ -89,13 +89,15 @@ licenses unreviewed records; no TLS exception or global description provider is 
 The [approved text contract](botanical-profile-enrichment.md) retains explicit review, field-level
 Apply/Replace, immutable provenance, stale safety and optional creation-time/later entry points.
 
-After profile enrichment, the operator's next planned direction is **TAXONOMY-003 — collection
-taxonomic tree**. TAXONOMY-001 already owns reconciliation and TAXONOMY-002 name history; their
-contracts remain intact. Reuse All represented / Living / Current / Historical, authoritative
-classification, distinct identity counts, family/genus inspection, identity breadcrumbs and Related
-in my collection. Use **Taxonomy**, keeping collection-record **Lineage** distinct. WFO's official
-static Plant List is the preferred source candidate; parent/rank/synonym/link/version/footprint
-questions remain in the [future contract](collection-taxonomy-plan.md). No taxonomy code is implemented.
+**TAXONOMY-003 — collection taxonomic tree** is implemented for visual/UAT review.
+The reviewed official WFO Plant List **2026-06**, CC0, provides exact classification parents through
+an optional ignored local index. Operators explicitly inspect and confirm WFO links; source synonyms
+remain advisory, without local renames. Shared All represented / Living / Current / Historical and
+OR category filters drive distinct identity counts, family/genus details, full identity breadcrumbs,
+Related in my collection and visible unresolved knowledge. [Contract](collection-taxonomy.md),
+[source GO](taxonomy-003-source.md), [handoff](taxonomy-003-handoff.md). Taxonomy stays separate from
+recorded material Lineage. Saved Views are deliberately deferred; stable URL state is supported.
+TAXONOMY-001 reconciliation and TAXONOMY-002 name history retain their separate planned contracts.
 
 **PHYLOGENY-001** separately records later evolutionary-tree discovery; classification is not
 phylogeny. Open Tree of Life may be investigated later, without source GO or tree retrieval now.

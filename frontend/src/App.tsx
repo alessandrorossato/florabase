@@ -26,6 +26,13 @@ const MediaScreen = lazy(() =>
   }),
 );
 
+const TaxonomyScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./taxonomy/TaxonomyScreen");
+    return { default: module.TaxonomyScreen };
+  }),
+);
+
 const NativeRangesScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./native-ranges/NativeRangesScreen");
@@ -168,6 +175,7 @@ type Section =
   | "history"
   | "species-distribution"
   | "native-ranges"
+  | "taxonomy"
   | "map"
   | "identities"
   | "suppliers"
@@ -241,6 +249,7 @@ function currentRoute(): Route {
     "history",
     "species-distribution",
     "native-ranges",
+    "taxonomy",
     "map",
     "identities",
     "suppliers",
@@ -290,6 +299,7 @@ const desktopGroups: {
     label: "Explore",
     items: [
       { id: "identities", label: "Botanical identities" },
+      { id: "taxonomy", label: "Taxonomy" },
       { id: "media", label: "Media" },
       { id: "geography", label: "Geography" },
       { id: "species-distribution", label: "Species distribution" },
@@ -659,6 +669,8 @@ function ApplicationShell() {
                 <HistoryScreen />
               ) : route.section === "events" ? (
                 <GlobalEventsScreen />
+              ) : route.section === "taxonomy" ? (
+                <TaxonomyScreen />
               ) : route.section === "native-ranges" ? (
                 <NativeRangesScreen />
               ) : route.section === "species-distribution" ? (

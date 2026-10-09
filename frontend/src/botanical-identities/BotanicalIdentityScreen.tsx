@@ -43,6 +43,7 @@ import { FieldHelp } from "../components/ContextualHelp";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import { EventFeed } from "../events/EventFeed";
 import { BotanicalIdentityCover } from "../photos/BotanicalIdentityCover";
+import { IdentityTaxonomyPanel } from "../taxonomy/IdentityTaxonomyPanel";
 import { ExternalBotanicalDataPanel } from "./ExternalBotanicalDataPanel";
 import {
   conflictExistingId,
@@ -99,18 +100,23 @@ function IdentityDetails({
   onDeleted: () => Promise<void>;
 }) {
   type IdentityTab = (typeof tabs)[number];
-  type ReferenceModule = "profile" | "native-range" | "source" | "occurrences";
+  type ReferenceModule =
+    "profile" | "native-range" | "source" | "occurrences" | "taxonomy";
   const [tab, setTab] = useState<IdentityTab>(
     initialTab && tabs.includes(initialTab as (typeof tabs)[number])
       ? (initialTab as IdentityTab)
-      : initialTab === "native-range"
+      : initialTab === "native-range" || initialTab === "taxonomy"
         ? "reference"
         : initialTab === "collection"
           ? "seeds"
           : "overview",
   );
   const [referenceModule, setReferenceModule] = useState<ReferenceModule>(
-    initialTab === "native-range" ? "native-range" : "profile",
+    initialTab === "native-range"
+      ? "native-range"
+      : initialTab === "taxonomy"
+        ? "taxonomy"
+        : "profile",
   );
   const [collection, setCollection] = useState<
     | { status: "idle" }
@@ -325,6 +331,15 @@ function IdentityDetails({
           </section>
         )}
         <div className="identity-detail-main">
+          {tab === "overview" && !editing && (
+            <IdentityTaxonomyPanel
+              key={`taxonomy-${identity.id}`}
+              identityId={identity.id}
+              updatedAt={identity.updated_at}
+              summary
+            />
+          )}
+
           {mutationError && (
             <div className="notice notice--error" role="alert">
               {mutationError}
@@ -657,6 +672,7 @@ function IdentityDetails({
                       { id: "profile", label: "Profile" },
                       { id: "native-range", label: "Native range" },
                       { id: "source", label: "Botanical source" },
+                      { id: "taxonomy", label: "Taxonomy" },
                       { id: "occurrences", label: "Occurrences" },
                     ]}
                     selected={referenceModule}
@@ -679,6 +695,13 @@ function IdentityDetails({
                     )}
                     {referenceModule === "native-range" && (
                       <BotanicalNativeRangeManager identityId={identity.id} />
+                    )}
+                    {referenceModule === "taxonomy" && (
+                      <IdentityTaxonomyPanel
+                        key={identity.id}
+                        identityId={identity.id}
+                        updatedAt={identity.updated_at}
+                      />
                     )}
                     {referenceModule === "source" && (
                       <ExternalBotanicalDataPanel

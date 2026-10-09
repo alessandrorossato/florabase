@@ -1,4 +1,9 @@
-# Collection taxonomy tree — planned TAXONOMY-003
+# Collection taxonomy tree — original TAXONOMY-003 plan
+
+Historical planning record. TAXONOMY-003 is now implemented for visual/UAT review; the current
+[contract](collection-taxonomy.md), [source GO](taxonomy-003-source.md) and
+[handoff](taxonomy-003-handoff.md) resolve the questions below. Statements about unavailable code or
+unmeasured artifacts describe the original planning audit, not the current implementation.
 
 The complete feature graph was audited on 2026-10-09. **TAXONOMY-001 already owns assisted identity
 reconciliation**, and TAXONOMY-002 owns synonyms/name history. Neither owns taxonomy browsing.
