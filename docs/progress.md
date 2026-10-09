@@ -1,5 +1,76 @@
 # Engineering progress
 
+## 2026-10-09 — ENRICHMENT-001 independent verification
+
+- Operator UAT and independent domain/UI review passed. The independent final gate initially found
+  one stale integration assertion: a populated downgrade from the new `20261009_0039` head
+  correctly rolls back transactionally at `0039`, but the prior test expected `0038`. Updated the
+  expected current revision; the focused reproduction passed and the full canonical gate then
+  passed on the final tree.
+- `make feature-verify` passed: **95 feature records valid**, **856 backend unit tests** with
+  **90.04% coverage**, **534 frontend tests**, **693 PostgreSQL integration tests**, strict mypy
+  (**317 files**), Ruff/format, Prettier/ESLint, strict TypeScript, OpenAPI drift, production build,
+  migration verification and whitespace checks. A tree-specific verification receipt was recorded.
+- Integration first could not allocate a Docker bridge because 14 unattached
+  `florabase-quality-*` networks had exhausted the default pools. After inspecting their exact
+  Compose labels, IDs, subnets and zero endpoints, only those verified quality orphans were removed
+  explicitly. DEV, UAT Preview, Feature Review, Stable Preview, production and all running-container
+  network assignments were preserved. The fresh integration project allocated and cleaned up its
+  network successfully; the full gate passed without a Docker-pool or memory-pressure failure.
+- ENRICHMENT-001 is **verified** and ready for reviewed local commit and protected delivery. Delivery,
+  conservative finish and the required DEV upgrade for migration `20261009_0039` remain pending.
+  Broad cross-application visual/product review, ENRICHMENT-002 and SCHEDULE-001 remain future work.
+
+## 2026-10-09 — ENRICHMENT-001 structured native-range implementation
+
+- Source GO preceded implementation: exact official **Kew WCVP v15** plain archive, README,
+  complete schemas/rows and release-specific CC BY 3.0/citation were inspected. Retained SHA-256
+  `693e05b31ea6ce724c88ccf38bb964db2f22424b396f7ed1fd04fdb203af7e81` and actual UTC retrieval.
+  Explicit optional provisioning built the complete local **1,441,152-taxon / 1,986,879-assertion**
+  SQLite index. It is ignored/excluded from Git/images; ordinary startup/API/Apply use no provider
+  network. Missing source data preserves canonical ranges, profile editing and durable evidence.
+- Added explicit WCVP taxon review/confirmation, frozen current-versus-proposed range evidence,
+  a versioned twelve-unit literal TDWG/canonical crosswalk, visible excluded partial/split/unresolved
+  units and original Native/Introduced/extinction/doubtful flags. Only explicit selected unqualified
+  Native Apply adds existing `BotanicalProfileNativeRange` links; every current range is kept and
+  no profile text or material origin changes. Removal/replacement is unsupported.
+- Migration **20261009_0039** adds separate source links, monotonic destination revisions, frozen
+  proposals and immutable applications. Locked source/link/identity/geography/destination/crosswalk
+  checks reject stale/repeated Apply atomically, including edit-and-restore. Frozen v15 proposals
+  can apply without the source index. Applied provenance survives manual edits/link changes and
+  blocks identity deletion; deletion serializes with Apply. Empty downgrade preserves canonical
+  ranges/text; any source link/proposal/application refuses populated downgrade.
+- Source review is inside the existing BotanicalIdentity Reference → Native range module, with
+  literal prefix search, exact IDs/accepted context, selective checkboxes, Add/Keep confirmation,
+  immutable history/outcomes, source attribution, explicit retry and focused feedback. Corrected
+  schema-name collisions with Media during generated-type verification and made source reprovision
+  stale state/deletion feedback explicit. Updated the exact database table inventory and mock
+  reference counts for the four intentional new tables; existing assertions remain strict.
+- Final focused checks passed: **75 backend unit**, **81 disposable PostgreSQL integration**,
+  **38 distinct frontend**, **19 host UAT guards**; Ruff/format, strict mypy (**315 files**),
+  Prettier/ESLint/strict TypeScript, OpenAPI generation/drift, Vite production bundle, both production
+  Docker runtime builds, **95-feature graph**, whitespace. Real PostgreSQL covers migration cycle,
+  populated refusal, immutable evidence, stale state, concurrent Apply and Apply/deletion races.
+  Production startup/health also passed with no source index, network disabled and read-only root
+  plus ephemeral attachment tmpfs. Existing six Alembic path-separator deprecation warnings remain.
+  Initial disposable subnet overlap was resolved using a free scoped subnet, with no product change.
+- Guardedly retired the previous UAT through its owner `258f`, then started and explicitly seeded
+  this worktree's **http://localhost:15174**, **preview / preview**, schema **0039**, fixture
+  **v4 / 42 baseline records**. Startup's first health window expired during frontend dependency
+  installation; frontend subsequently became healthy. Exact Aloe smoke added Oman, kept manual
+  Thailand/Italy, refreshed canonical ranges and retrieved a fresh KEEP proposal; its source link
+  and immutable application are retained for operator review. DOM/accessibility checks at
+  **390×844, 1024×844 and 1440×844** showed no horizontal overflow and focused success feedback.
+  No operator acceptance is claimed. No personal collection data or DEV/Stable Preview/production
+  state was changed; primary checkout remains clean.
+- At implementation handoff ENRICHMENT-001 was **implemented**, pending operator product UAT and
+  Luna independent review; the later verification milestone above records its completed status.
+  BOTANY-003's blocked text contract is unchanged; ENRICHMENT-002 automation, SCHEDULE-001 and broad
+  cross-application product/visual review remain future. Tree stays **unstaged/uncommitted**;
+  no canonical feature gate/receipt, commit, push, delivery, merge or finish was performed.
+  [Source audit](native-range-enrichment-source-v15.md), [contract](native-range-enrichment.md)
+  and [handoff](enrichment-001-handoff.md) retain exact evidence and review scenarios.
+
 ## 2026-10-08 — EXPLORE-002 independent final verification
 
 - Independent review found the implementation aligned with the accepted collection-aware Native

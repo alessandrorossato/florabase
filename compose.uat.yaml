@@ -5,3 +5,4 @@ services:
       FLORABASE_WORKFLOW_MODE: uat
       FLORABASE_UAT_PROJECT: ${COMPOSE_PROJECT_NAME:?UAT project required}
       FLORABASE_UAT_SOURCE: ${FLORABASE_SOURCE:?UAT source required}
+      FLORABASE_WCVP_SNAPSHOT_PATH: /app/src/.source-cache/wcvp-v15.sqlite

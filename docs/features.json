@@ -1229,17 +1229,17 @@
     {
       "id": "ENRICHMENT-001",
       "category": "enrichment",
-      "description": "Add reviewable BotanicalProfile enrichment proposals, including a separately reviewed source-backed structured native-range candidate",
+      "description": "Add reviewable Kew WCVP source-backed structured native-range proposals with explicit selective Apply",
       "acceptance_criteria": [
-        "Licensing, terms, API availability, attribution, and data quality are reviewed before selecting a source",
-        "Proposals retain source, external identifier where appropriate, retrieval time, and field-level provenance",
-        "Operator-authored profile content is never silently overwritten",
-        "The preferred structured native-range candidate is official Kew WCVP/POWO, subject to exact reviewed taxon matching, a reviewed explicit TDWG-to-GeographicPlace crosswalk, Native versus Introduced handling, retained source/version/retrieval provenance and operator-reviewed add/replace/remove proposals with explicit Apply",
-        "This planned candidate is considered after successful EXPLORE-002 delivery before SCHEDULE-001 unless reprioritized; BOTANY-003 text enrichment remains separate and unchanged"
+        "The exact official WCVP version 15 archive, checksum, schema, licence, citation and source quality are reviewed and documented before ingestion",
+        "Frozen proposals and immutable applications retain exact confirmed WCVP taxon, source/version/retrieval, original distribution assertions, mapping decisions and crosswalk version",
+        "Operator-authored profile text and existing ranges are never silently overwritten; only explicit selective Apply adds reviewed mapped Native ranges",
+        "An explicit versioned TDWG-to-canonical GeographicPlace crosswalk distinguishes equivalent, partial, unsupported split and unresolved units; Introduced and qualified assertions remain context only",
+        "Apply revalidates identity, link, frozen source, destination revision and crosswalk atomically; missing optional source data leaves startup and canonical ranges usable; BOTANY-003 and automated refresh remain separate"
       ],
       "dependencies": ["PROFILE-002"],
       "priority": "P2",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "ENRICHMENT-002",

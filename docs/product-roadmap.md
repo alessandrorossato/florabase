@@ -48,16 +48,18 @@ The approved sequence, retaining completed steps for context, is:
    **EXPLORE-001 — Species distribution is verified** after operator UAT and independent canonical
    verification: collection-aware All represented / Living / Current / Historical identity discovery,
    one explicit-load MAP-002 occurrence map and private Saved Views. See [contract](species-distribution.md).
-   **EXPLORE-002 — Native ranges** is implemented and functionally accepted by the operator; independent verification is in progress:
+   **EXPLORE-002 — Native ranges** is delivered and verified (PR #78):
    collection-aware overview and exact selected-species views reuse structured GEOGRAPHY-002 ranges and EXPLORE-001 scopes,
    with reviewed local geometry, distinct identity coverage and private Saved Views. See
    [contract](native-ranges-explore.md). The accepted bounded refinement includes explicit multi-species
    comparison, OR record categories and the Explore Maps label. Its visual treatment is provisionally
    accepted; the broad cross-application review below remains deferred.
-   Immediately after successful delivery, consider the source-backed structured native-range candidate
-   under existing **ENRICHMENT-001**, before **SCHEDULE-001** unless the operator reprioritises.
-   Kew WCVP/POWO is preferred subject to the separate [source/contract audit](native-range-enrichment-audit.md).
-   ENRICHMENT-001 remains planned; BOTANY-003's blocked text contract is unchanged.
+   **ENRICHMENT-001** is verified: exact
+   reviewed Kew WCVP v15 taxon links, source-backed structured native-range proposals, a conservative
+   explicit TDWG crosswalk, selective additions and immutable provenance. See
+   [source approval](native-range-enrichment-source-v15.md) and [contract](native-range-enrichment.md).
+   ENRICHMENT-002 automatic refresh and SCHEDULE-001 remain future; BOTANY-003's blocked text
+   contract is unchanged. Broad visual/product review remains the later checkpoint below.
    Collection origins is the existing material-provenance map, distinct from both botanical concepts.
 6. Daily-use biological/collection improvements: measurements, justified flowering/fruiting work,
    germination analysis, viability/aging, seasonal planning, operational history and later reviewed

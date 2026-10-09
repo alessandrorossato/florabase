@@ -387,6 +387,109 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/botanical-identities/{identity_id}/native-range-enrichment/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Confirm */
+        put: operations["confirmWcvpTaxon"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/botanical-identities/{identity_id}/native-range-enrichment/proposals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Proposals */
+        get: operations["listNativeRangeProposals"];
+        put?: never;
+        /** Create Proposal */
+        post: operations["createNativeRangeProposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/botanical-identities/{identity_id}/native-range-enrichment/proposals/{proposal_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read Proposal */
+        get: operations["getNativeRangeProposal"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/botanical-identities/{identity_id}/native-range-enrichment/proposals/{proposal_id}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Apply Proposal */
+        post: operations["applyNativeRangeProposal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/botanical-identities/{identity_id}/native-range-enrichment/source": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Source Status */
+        get: operations["getNativeRangeSource"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/botanical-identities/{identity_id}/native-range-enrichment/taxa": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search Taxa */
+        get: operations["searchWcvpTaxa"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/bulk/location/apply": {
         parameters: {
             query?: never;
@@ -2193,6 +2296,30 @@ export interface components {
             source_kind: components["schemas"]["SeedLotSourceKind"];
             /** Supplier Id */
             supplier_id?: string | null;
+        };
+        /** ApplicationResponse */
+        ApplicationResponse: {
+            /** Added */
+            added: string[];
+            /**
+             * Applied At
+             * Format: date-time
+             */
+            applied_at: string;
+            /** Destination Version */
+            destination_version: number;
+            /** Kept */
+            kept: string[];
+            /**
+             * Proposal Id
+             * Format: uuid
+             */
+            proposal_id: string;
+        };
+        /** ApplyWrite */
+        ApplyWrite: {
+            /** Selected Place Ids */
+            selected_place_ids: string[];
         };
         /** AssetDetailResponse */
         AssetDetailResponse: {
@@ -4835,6 +4962,54 @@ export interface components {
              */
             status: "safe" | "confirmation_required" | "blocked";
         };
+        /** ProposalResponse */
+        ProposalResponse: {
+            application?: components["schemas"]["ApplicationResponse"] | null;
+            /** Applied At */
+            applied_at?: string | null;
+            /** Assertions */
+            assertions: components["schemas"]["SourceAssertion"][];
+            /** Choices */
+            choices: components["schemas"]["RangeChoice"][];
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Crosswalk Version */
+            crosswalk_version: string;
+            /** Current Ids */
+            current_ids: string[];
+            /** Destination Version */
+            destination_version: number;
+            /**
+             * Format Version
+             * @default 1
+             * @constant
+             */
+            format_version: 1;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Identity Snapshot */
+            identity_snapshot: {
+                [key: string]: unknown;
+            };
+            /**
+             * Link Version
+             * Format: uuid
+             */
+            link_version: string;
+            /**
+             * Retrieved At
+             * Format: date-time
+             */
+            retrieved_at: string;
+            source: components["schemas"]["SourceMetadata"];
+            taxon: components["schemas"]["Taxon"];
+        };
         /** ProvenanceMapBotanicalIdentity */
         ProvenanceMapBotanicalIdentity: {
             /** Display Label */
@@ -5099,6 +5274,27 @@ export interface components {
             offset: number;
             /** Total */
             total: number;
+        };
+        /** RangeChoice */
+        RangeChoice: {
+            /** Assertions */
+            assertions?: string[];
+            /**
+             * Change
+             * @enum {string}
+             */
+            change: "ADD" | "KEEP" | "CURRENT-ONLY";
+            /** Code */
+            code: string | null;
+            /** Name */
+            name: string;
+            /** Path */
+            path: string;
+            /**
+             * Place Id
+             * Format: uuid
+             */
+            place_id: string;
         };
         /** RecordedPlaceCoverage */
         RecordedPlaceCoverage: {
@@ -5590,6 +5786,78 @@ export interface components {
             owner: boolean;
             /** User Id */
             user_id: string;
+        };
+        /** SourceAssertion */
+        SourceAssertion: {
+            /** Assertion Id */
+            assertion_id: string;
+            /**
+             * Mapping
+             * @enum {string}
+             */
+            mapping: "equivalent" | "unresolved" | "partial" | "unsupported_split";
+            /** Note */
+            note: string;
+            /** Original */
+            original: {
+                [key: string]: string;
+            };
+            /** Place Ids */
+            place_ids?: string[];
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "native" | "introduced" | "qualified";
+        };
+        /** SourceMetadata */
+        SourceMetadata: {
+            /**
+             * Archive Url
+             * @default https://sftp.kew.org/pub/data-repositories/WCVP/Archive/wcvp_v15.zip
+             */
+            archive_url: string;
+            /**
+             * Checksum
+             * @default 693e05b31ea6ce724c88ccf38bb964db2f22424b396f7ed1fd04fdb203af7e81
+             */
+            checksum: string;
+            /**
+             * Citation
+             * @default Govaerts R (ed.). 2026. WCVP: World Checklist of Vascular Plants. Facilitated by the Royal Botanic Gardens, Kew. [WWW document] URL https://doi.org/10.34885/rvc3-4d77 [accessed 06 Jan 2026].
+             */
+            citation: string;
+            /**
+             * Coverage
+             * @default complete
+             */
+            coverage: string;
+            /**
+             * License
+             * @default https://creativecommons.org/licenses/by/3.0/
+             */
+            license: string;
+            /**
+             * Provider
+             * @default kew_wcvp
+             */
+            provider: string;
+            /** Retrieved At */
+            retrieved_at: string;
+            /**
+             * Version
+             * @default 15
+             */
+            version: string;
+        };
+        /** SourceStatus */
+        SourceStatus: {
+            /** Available */
+            available: boolean;
+            link?: components["schemas"]["WcvpLinkResponse"] | null;
+            /** Message */
+            message?: string | null;
+            source?: components["schemas"]["SourceMetadata"] | null;
         };
         /** SowingCreate */
         SowingCreate: {
@@ -6128,6 +6396,27 @@ export interface components {
             /** Total */
             total: number;
         };
+        /** Taxon */
+        Taxon: {
+            /** Accepted Id */
+            accepted_id: string;
+            /** Accepted Name */
+            accepted_name?: string | null;
+            /** Authorship */
+            authorship: string;
+            /** External Id */
+            external_id: string;
+            /** Name */
+            name: string;
+            /** Powo Id */
+            powo_id: string;
+            /** Rank */
+            rank: string;
+            /** Reviewed */
+            reviewed: string;
+            /** Status */
+            status: string;
+        };
         /** TaxonCandidate */
         TaxonCandidate: {
             /** Accepted External Id */
@@ -6227,6 +6516,30 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** WcvpLinkResponse */
+        WcvpLinkResponse: {
+            /**
+             * Confirmed At
+             * Format: date-time
+             */
+            confirmed_at: string;
+            source: components["schemas"]["SourceMetadata"];
+            /** Stale */
+            stale: boolean;
+            taxon: components["schemas"]["Taxon"];
+            /**
+             * Version
+             * Format: uuid
+             */
+            version: string;
+        };
+        /** WcvpLinkWrite */
+        WcvpLinkWrite: {
+            /** Checksum */
+            checksum: string;
+            /** External Id */
+            external_id: string;
         };
     };
     responses: never;
@@ -7309,6 +7622,241 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    confirmWcvpTaxon: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WcvpLinkWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WcvpLinkResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listNativeRangeProposals: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalResponse"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createNativeRangeProposal: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getNativeRangeProposal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identity_id: string;
+                proposal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProposalResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    applyNativeRangeProposal: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                identity_id: string;
+                proposal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplyWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getNativeRangeSource: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SourceStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    searchWcvpTaxa: {
+        parameters: {
+            query: {
+                q: string;
+            };
+            header?: never;
+            path: {
+                identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Taxon"][];
+                };
             };
             /** @description Validation Error */
             422: {

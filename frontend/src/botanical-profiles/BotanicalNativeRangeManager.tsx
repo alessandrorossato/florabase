@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { FieldHelp, InfoDisclosure } from "../components/ContextualHelp";
+import { NativeRangeEnrichmentPanel } from "./NativeRangeEnrichmentPanel";
 import {
   listGeographicPlaces,
   type GeographicPlaceResponse,
@@ -173,6 +174,14 @@ export function BotanicalNativeRangeManager({
       <div>
         <h4 id="native-range-title">Native range</h4>
       </div>
+      <NativeRangeEnrichmentPanel
+        key={identityId}
+        identityId={identityId}
+        onApplied={() => {
+          setLoad({ status: "loading" });
+          setAttempt((value) => value + 1);
+        }}
+      />
       {load.status === "loading" && <p>Loading native range…</p>}
       {load.status === "error" && (
         <div className="notice notice--error" role="alert">

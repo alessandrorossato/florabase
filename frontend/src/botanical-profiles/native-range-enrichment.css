@@ -1,0 +1,56 @@
+.range-enrichment {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+  margin-top: 1rem;
+}
+.range-enrichment h5 {
+  font-size: 1rem;
+  margin: 0;
+}
+.range-enrichment p {
+  margin: 0;
+}
+.range-enrichment fieldset {
+  min-width: 0;
+}
+.range-enrichment small {
+  display: block;
+}
+.range-enrichment button {
+  justify-self: start;
+}
+.range-enrichment input[type="checkbox"],
+.range-enrichment input[type="radio"] {
+  width: auto;
+  flex: 0 0 auto;
+}
+.range-taxon,
+.range-proposal-list label {
+  display: flex;
+  align-items: start;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+}
+.range-proposal {
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+}
+.range-source,
+.range-checksum,
+.range-taxon span,
+.range-proposal-list {
+  overflow-wrap: anywhere;
+}
+.range-proposal-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+.range-enrichment details > p,
+.range-enrichment details > ul {
+  margin-top: 0.75rem;
+}

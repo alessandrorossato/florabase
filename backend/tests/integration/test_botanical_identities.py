@@ -109,6 +109,9 @@ def test_schema_uses_native_types_named_constraints_and_only_one_botanical_table
         "events",
         "external_provider_cache",
         "media_assets",
+        "native_range_applications",
+        "native_range_proposals",
+        "native_range_revisions",
         "external_taxon_links",
         "germination_observations",
         "geographic_places",
@@ -130,6 +133,7 @@ def test_schema_uses_native_types_named_constraints_and_only_one_botanical_table
         "sowings",
         "suppliers",
         "users",
+        "wcvp_links",
     }
 
 

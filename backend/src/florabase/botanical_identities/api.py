@@ -222,7 +222,8 @@ def delete(
             detail={
                 "code": "botanical_identity_referenced",
                 "message": (
-                    "This botanical identity is used by collection records and cannot be deleted."
+                    "This botanical identity has collection records or retained native-range "
+                    "source applications and cannot be deleted."
                 ),
             },
         ) from error
