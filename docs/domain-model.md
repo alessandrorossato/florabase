@@ -154,11 +154,22 @@ content. Editing that field clears its association while preserving history; edi
 does not clear it. Mutable retrieval cache and source links cannot replace this durable evidence.
 Apply must reject stale destination state and stale proposals rather than overwrite intervening edits.
 
-These structures and behaviors are not present in the implemented model. Implementation stopped
-because the approved WFO archive endpoint omits its issuing intermediate certificate; both tested
-backend runtimes already contain the required public root but cannot build the chain. No trust
-exception was introduced. The existing operator-authored profile model above remains authoritative. See
-[the approved contract and access evidence](botany-003-audit.md#31-approved-productsource-decision).
+These structures and behaviors are not present in the implemented model. A fresh 2026-10-09
+[source re-audit](botanical-profile-enrichment-sources.md) reproduced secure WFO acquisition failure
+on the host, existing backend images and the freshly built worktree backend. The issuing intermediate
+is still absent from the observed served chain. A separate Kew SEPASAL review approved exactly three
+Flora Zambesiaca description records. That narrow source GO is insufficient coverage for general
+description enrichment. WCVP v15 geographic text remains a suitable candidate;
+structured range proposals do not provide text application history or text revision safety.
+No trust exception or placeholder implementation was introduced. The existing operator-authored
+profile model above remains authoritative. See [the approved complete contract](botanical-profile-enrichment.md).
+
+Cultivation, uses and warnings remain manual pending BOTANY-004's exact field/source GO.
+SEPASAL is an approved source for only those three description records; it is not an imported domain
+source. Future TAXONOMY-003
+represents authoritative classification for collection identities; PHYLOGENY-001 concerns evolutionary
+relationships separately. Neither changes BotanicalIdentity, profile knowledge or recorded collection
+Lineage in BOTANY-003. See [the planned distinctions](collection-taxonomy-plan.md).
 
 ### Supplier
 

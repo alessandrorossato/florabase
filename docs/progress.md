@@ -1,5 +1,43 @@
 # Engineering progress
 
+## 2026-10-09 — BOTANY-003 source re-audit; narrow description source approved
+
+- Initialized the attached `857e` worktree through `make feature-init`, branch
+  `feat/botany-003-profile-enrichment`, from clean current cached origin/main `345e9f2`.
+  Audited the complete two-field approved contract and delivered ENRICHMENT-001 implementation.
+  Fresh host curl, existing development/runtime HTTPX and newly built worktree HTTPX rejected the
+  exact official Flora of China archive before HTTP bytes; verified OpenSSL still shows the missing
+  issuing intermediate and fatal error 20. Official static WFO Plant List release 2026-06 is a
+  taxonomy source candidate, not proof of a replacement descriptive-content artifact.
+- Independently retrieved WCVP v15 securely: **89,508,082 bytes**, SHA-256
+  `693e05b31ea6ce724c88ccf38bb964db2f22424b396f7ed1fd04fdb203af7e81`, actual retrieval
+  **2026-10-09T12:32:17.250119Z**. Complete **1,441,152** names-row scan confirms distinct
+  geographic_area prose; source-field GO remains separate from structured ranges. No invented
+  description, range-derived prose, provider ID crosswalk, TLS exception or page scraping.
+- Separate source discovery securely inspected three complete official SEPASAL CSVs: taxa,
+  major-use references and note references. Dataset-specific CC BY 4.0, TaxKey, cultivation/use/
+  toxicity categories and bibliographic joins make this a concrete future candidate for those fields;
+  exact cultivation/use/warning field imports remain unapproved. A later bounded description review
+  approved only three exact SEPASAL / Flora Zambesiaca records under the dataset's CC BY 4.0 license.
+  This does not approve the remaining records or provide broad coverage.
+- Preserved existing TAXONOMY-001 reconciliation and TAXONOMY-002 name-history owners. Added
+  **planned TAXONOMY-003** collection taxonomy browsing, **planned PHYLOGENY-001** separate
+  evolutionary-tree discovery and **planned BOTANY-004** other profile-field source review.
+  Updated roadmap, approved/deferred domain requirements, source decisions and blocked handoff.
+- Focused current baseline passed **72 backend unit tests**, `--no-cov`. Feature graph **98 valid**
+  and `git diff --check` passed. Pinned Prettier 3.9.6 passed for all ten changed documents. No text implementation,
+  migration, generated API, PostgreSQL text/concurrency checks, new frontend tests or visual QA is
+  claimed; these remain pending at the source prerequisite. The quality baseline built its current
+  development image. No canonical `make feature-verify`, staging, commit or delivery.
+- Read-only UAT status confirmed healthy prior owner `16cc` and schema **0039**; source mismatch
+  correctly refuses this worktree's takeover. Preserved that Preview and its review evidence because
+  no BOTANY-003 UI exists. Primary source and DEV/Stable Preview/production state were not changed.
+  BOTANY-003 remains **planned**. Its exact Flora of China source is **SOURCE_BLOCKED**; the three
+  reviewed SEPASAL records are a narrow `DESCRIPTION_SOURCE_GO`, insufficient for general
+  BOTANY-003 implementation. This is not READY_FOR_VISUAL_REVIEW.
+  [Current sources](botanical-profile-enrichment-sources.md), [separate discovery](botanical-knowledge-source-audit.md),
+  [future taxonomy](collection-taxonomy-plan.md), [blocked handoff](botany-003-handoff.md).
+
 ## 2026-10-09 — ENRICHMENT-001 independent verification
 
 - Operator UAT and independent domain/UI review passed. The independent final gate initially found
