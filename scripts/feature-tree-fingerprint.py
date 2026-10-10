@@ -120,7 +120,7 @@ def main() -> None:
         return
 
     if args.command == "write":
-        from verification_gate import validate_execution
+        from verification_gate import migration_result, validate_execution
         from verification_impact import make_plan
 
         execution = json.loads(args.execution.read_text())
@@ -129,6 +129,10 @@ def main() -> None:
         if plan != make_plan(args.base, force_full=full):
             fail("execution plan differs from the current impact policy")
         validate_execution(plan, execution["completed"])
+        if json.dumps(execution["migration"], sort_keys=True) != json.dumps(
+            migration_result(plan, execution["completed"]), sort_keys=True
+        ):
+            fail("migration execution evidence differs from the completed checks")
         receipt = {
             "version": 2,
             "branch": args.branch,
@@ -137,7 +141,7 @@ def main() -> None:
             "verification": plan,
             "completed": execution["completed"],
             "completed_at": datetime.now(UTC).isoformat(),
-            "migration_result": "passed" if plan["migration"] else "not_required",
+            "migration": execution["migration"],
             "build_result": "passed" if plan["builds"] else "not_required",
         }
         receipt_path.parent.mkdir(parents=True, exist_ok=True)
@@ -162,7 +166,7 @@ def main() -> None:
             "HEAD tree differs from verified working tree; commit the verified tree before delivery"
         )
     try:
-        from verification_gate import validate_execution
+        from verification_gate import migration_result, validate_execution
         from verification_impact import make_plan
 
         plan = receipt["verification"]
@@ -173,7 +177,9 @@ def main() -> None:
         completed_at = datetime.fromisoformat(receipt["completed_at"])
         if completed_at.tzinfo is None:
             raise ValueError("missing completion timezone")
-        if receipt["migration_result"] != ("passed" if plan["migration"] else "not_required"):
+        if json.dumps(receipt["migration"], sort_keys=True) != json.dumps(
+            migration_result(plan, receipt["completed"]), sort_keys=True
+        ):
             raise ValueError("incomplete migration result")
         if receipt["build_result"] != ("passed" if plan["builds"] else "not_required"):
             raise ValueError("incomplete production build result")

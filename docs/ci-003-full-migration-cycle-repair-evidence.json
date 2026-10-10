@@ -1,0 +1,459 @@
+{
+  "recorded_at": "2026-10-10T17:57:23.014544+00:00",
+  "scope": "CI-003 FULL migration correction; focused evidence, no canonical repair receipt",
+  "base": "d86c488488575265330c4294d3d6f4bf4293174d",
+  "branch": "fix/ci-003-full-migration-cycle",
+  "before": {
+    "fixture": "/tmp/florabase-ci003-before-jrh0mi41",
+    "base": "d86c488488575265330c4294d3d6f4bf4293174d",
+    "plan": {
+      "version": 1,
+      "base": "d86c488488575265330c4294d3d6f4bf4293174d",
+      "mode": "full",
+      "impact_map_version": 1,
+      "impact_map_digest": "de6505d5a80db85d42fadc78b3a78b7289a92191c9ac3229e2f830e08acb4f81",
+      "changed_paths": ["frontend/pnpm-lock.yaml"],
+      "changed_scopes": [],
+      "affected_scopes": [],
+      "escalation_reasons": ["high-risk path: frontend/pnpm-lock.yaml"],
+      "docs_only": false,
+      "backend": ["ALL"],
+      "integration": ["ALL"],
+      "frontend": ["ALL"],
+      "workflow": [
+        "test-workflow-helpers",
+        "test-feature-workflow",
+        "test-preview-workflow",
+        "test-environment-workflow",
+        "test-uat-preview",
+        "test-verification-impact",
+        "test-workflow-resources",
+        "workflow-check"
+      ],
+      "static": [
+        "feature-graph",
+        "whitespace",
+        "format-check",
+        "lint",
+        "typecheck",
+        "api-check"
+      ],
+      "migration": true,
+      "migration_cycle": false,
+      "builds": ["backend", "frontend"],
+      "remote_ci": "full"
+    },
+    "checks": [
+      {
+        "id": "feature-graph",
+        "command": ["python3", "./scripts/check-features.py"]
+      },
+      {
+        "id": "test-workflow-helpers",
+        "command": ["make", "test-workflow-helpers"]
+      },
+      {
+        "id": "test-feature-workflow",
+        "command": ["make", "test-feature-workflow"]
+      },
+      {
+        "id": "test-preview-workflow",
+        "command": ["make", "test-preview-workflow"]
+      },
+      {
+        "id": "test-environment-workflow",
+        "command": ["make", "test-environment-workflow"]
+      },
+      {
+        "id": "test-uat-preview",
+        "command": ["make", "test-uat-preview"]
+      },
+      {
+        "id": "test-verification-impact",
+        "command": ["make", "test-verification-impact"]
+      },
+      {
+        "id": "test-workflow-resources",
+        "command": ["make", "test-workflow-resources"]
+      },
+      {
+        "id": "workflow-check",
+        "command": ["make", "workflow-check"]
+      },
+      {
+        "id": "quality",
+        "command": ["make", "check"]
+      },
+      {
+        "id": "integration",
+        "command": ["make", "test-integration"]
+      },
+      {
+        "id": "production-builds",
+        "command": ["make", "verify-build", "SERVICES=backend frontend"]
+      },
+      {
+        "id": "migration-cycle",
+        "command": [
+          "./scripts/verify-migration-cycle.sh",
+          "d86c488488575265330c4294d3d6f4bf4293174d"
+        ]
+      },
+      {
+        "id": "whitespace",
+        "command": [
+          "git",
+          "diff",
+          "--check",
+          "d86c488488575265330c4294d3d6f4bf4293174d"
+        ]
+      },
+      {
+        "id": "staged-whitespace",
+        "command": ["git", "diff", "--cached", "--check"]
+      },
+      {
+        "id": "untracked-whitespace",
+        "command": [
+          "python3",
+          "./scripts/verification_gate.py",
+          "--untracked-whitespace"
+        ]
+      }
+    ],
+    "migration_command": [
+      "./scripts/verify-migration-cycle.sh",
+      "d86c488488575265330c4294d3d6f4bf4293174d"
+    ],
+    "returncode": 0,
+    "stdout": "migration verification: no Alembic revisions added\n",
+    "stderr": ""
+  },
+  "real_postgresql_smoke": {
+    "cases": [
+      {
+        "command": [
+          "./scripts/verify-migration-cycle.sh",
+          "c5d3be95e68112ffaa96024d6d9a748d28f8a858",
+          "--force-cycle"
+        ],
+        "evidence": {
+          "cleanup_verified": true,
+          "cycle_executed": true,
+          "result": "passed",
+          "verified_revisions": [
+            "20261009_0041",
+            "20261009_0041",
+            "20261009_0041",
+            "20261009_0041"
+          ]
+        },
+        "plan": {
+          "affected_scopes": [],
+          "backend": ["ALL"],
+          "base": "c5d3be95e68112ffaa96024d6d9a748d28f8a858",
+          "builds": ["backend", "frontend"],
+          "changed_paths": ["frontend/pnpm-lock.yaml"],
+          "changed_scopes": [],
+          "docs_only": false,
+          "escalation_reasons": ["high-risk path: frontend/pnpm-lock.yaml"],
+          "frontend": ["ALL"],
+          "impact_map_digest": "de6505d5a80db85d42fadc78b3a78b7289a92191c9ac3229e2f830e08acb4f81",
+          "impact_map_version": 1,
+          "integration": ["ALL"],
+          "migration": "full-cycle",
+          "mode": "full",
+          "remote_ci": "full",
+          "static": [
+            "feature-graph",
+            "whitespace",
+            "format-check",
+            "lint",
+            "typecheck",
+            "api-check"
+          ],
+          "version": 1,
+          "workflow": [
+            "test-workflow-helpers",
+            "test-feature-workflow",
+            "test-preview-workflow",
+            "test-environment-workflow",
+            "test-uat-preview",
+            "test-verification-impact",
+            "test-workflow-resources",
+            "workflow-check"
+          ]
+        },
+        "project": "florabase-feature-migration-b6dabda0e841",
+        "residuals": 0,
+        "returncode": 0
+      },
+      {
+        "command": [
+          "./scripts/verify-migration-cycle.sh",
+          "c5d3be95e68112ffaa96024d6d9a748d28f8a858",
+          "--force-cycle"
+        ],
+        "evidence": {
+          "cleanup_verified": true,
+          "cycle_executed": true,
+          "result": "passed",
+          "verified_revisions": [
+            "20261009_0041",
+            "20261009_0041",
+            "20261009_0041",
+            "20261009_0041"
+          ]
+        },
+        "plan": {
+          "affected_scopes": [],
+          "backend": ["ALL"],
+          "base": "c5d3be95e68112ffaa96024d6d9a748d28f8a858",
+          "builds": ["backend", "frontend"],
+          "changed_paths": ["frontend/pnpm-lock.yaml"],
+          "changed_scopes": [],
+          "docs_only": false,
+          "escalation_reasons": [
+            "high-risk path: frontend/pnpm-lock.yaml",
+            "operator requested full verification"
+          ],
+          "frontend": ["ALL"],
+          "impact_map_digest": "de6505d5a80db85d42fadc78b3a78b7289a92191c9ac3229e2f830e08acb4f81",
+          "impact_map_version": 1,
+          "integration": ["ALL"],
+          "migration": "full-cycle",
+          "mode": "full",
+          "remote_ci": "full",
+          "static": [
+            "feature-graph",
+            "whitespace",
+            "format-check",
+            "lint",
+            "typecheck",
+            "api-check"
+          ],
+          "version": 1,
+          "workflow": [
+            "test-workflow-helpers",
+            "test-feature-workflow",
+            "test-preview-workflow",
+            "test-environment-workflow",
+            "test-uat-preview",
+            "test-verification-impact",
+            "test-workflow-resources",
+            "workflow-check"
+          ]
+        },
+        "project": "florabase-feature-migration-898d4437f041",
+        "residuals": 0,
+        "returncode": 0
+      },
+      {
+        "command": [
+          "./scripts/verify-migration-cycle.sh",
+          "c5d3be95e68112ffaa96024d6d9a748d28f8a858",
+          "--force-cycle"
+        ],
+        "evidence": {
+          "cleanup_verified": true,
+          "cycle_executed": true,
+          "result": "passed",
+          "verified_revisions": [
+            "20261009_0041",
+            "synthetic_cycle",
+            "20261009_0041",
+            "synthetic_cycle"
+          ]
+        },
+        "plan": {
+          "affected_scopes": [],
+          "backend": ["ALL"],
+          "base": "c5d3be95e68112ffaa96024d6d9a748d28f8a858",
+          "builds": ["backend", "frontend"],
+          "changed_paths": [
+            "backend/alembic/versions/synthetic_cycle.py",
+            "frontend/pnpm-lock.yaml"
+          ],
+          "changed_scopes": [],
+          "docs_only": false,
+          "escalation_reasons": [
+            "high-risk path: backend/alembic/versions/synthetic_cycle.py",
+            "high-risk path: frontend/pnpm-lock.yaml"
+          ],
+          "frontend": ["ALL"],
+          "impact_map_digest": "de6505d5a80db85d42fadc78b3a78b7289a92191c9ac3229e2f830e08acb4f81",
+          "impact_map_version": 1,
+          "integration": ["ALL"],
+          "migration": "full-cycle",
+          "mode": "full",
+          "remote_ci": "full",
+          "static": [
+            "feature-graph",
+            "whitespace",
+            "format-check",
+            "lint",
+            "typecheck",
+            "api-check"
+          ],
+          "version": 1,
+          "workflow": [
+            "test-workflow-helpers",
+            "test-feature-workflow",
+            "test-preview-workflow",
+            "test-environment-workflow",
+            "test-uat-preview",
+            "test-verification-impact",
+            "test-workflow-resources",
+            "workflow-check"
+          ]
+        },
+        "project": "florabase-feature-migration-5c27983c25b1",
+        "residuals": 0,
+        "returncode": 0
+      },
+      {
+        "command": [
+          "./scripts/verify-migration-cycle.sh",
+          "60de5f9ff2c8f4806dd5e4978df9344d0ae35d84",
+          "--force-cycle"
+        ],
+        "evidence": null,
+        "plan": {
+          "affected_scopes": [],
+          "backend": ["ALL"],
+          "base": "60de5f9ff2c8f4806dd5e4978df9344d0ae35d84",
+          "builds": ["backend", "frontend"],
+          "changed_paths": ["frontend/pnpm-lock.yaml"],
+          "changed_scopes": [],
+          "docs_only": false,
+          "escalation_reasons": ["high-risk path: frontend/pnpm-lock.yaml"],
+          "frontend": ["ALL"],
+          "impact_map_digest": "de6505d5a80db85d42fadc78b3a78b7289a92191c9ac3229e2f830e08acb4f81",
+          "impact_map_version": 1,
+          "integration": ["ALL"],
+          "migration": "full-cycle",
+          "mode": "full",
+          "remote_ci": "full",
+          "static": [
+            "feature-graph",
+            "whitespace",
+            "format-check",
+            "lint",
+            "typecheck",
+            "api-check"
+          ],
+          "version": 1,
+          "workflow": [
+            "test-workflow-helpers",
+            "test-feature-workflow",
+            "test-preview-workflow",
+            "test-environment-workflow",
+            "test-uat-preview",
+            "test-verification-impact",
+            "test-workflow-resources",
+            "workflow-check"
+          ]
+        },
+        "project": "florabase-feature-migration-1aef997a8b88",
+        "residuals": 0,
+        "returncode": 1
+      }
+    ],
+    "protected_unchanged": true
+  },
+  "successful_cycle_evidence": [
+    {
+      "cleanup_verified": true,
+      "cycle_executed": true,
+      "result": "passed",
+      "verified_revisions": [
+        "20261009_0041",
+        "20261009_0041",
+        "20261009_0041",
+        "20261009_0041"
+      ]
+    },
+    {
+      "cleanup_verified": true,
+      "cycle_executed": true,
+      "result": "passed",
+      "verified_revisions": [
+        "20261009_0041",
+        "20261009_0041",
+        "20261009_0041",
+        "20261009_0041"
+      ]
+    },
+    {
+      "cleanup_verified": true,
+      "cycle_executed": true,
+      "result": "passed",
+      "verified_revisions": [
+        "20261009_0041",
+        "synthetic_cycle",
+        "20261009_0041",
+        "synthetic_cycle"
+      ]
+    }
+  ],
+  "migration_cleanup": [
+    "RESOURCE_CLEANUP_PASSED project=florabase-feature-migration-b6dabda0e841 removed={\"containers\": 1, \"images\": 1, \"networks\": 1, \"volumes\": 0} residual_containers_networks_volumes=0 retained_images=0 shared_build_cache=retained",
+    "RESOURCE_CLEANUP_PASSED project=florabase-feature-migration-898d4437f041 removed={\"containers\": 1, \"images\": 1, \"networks\": 1, \"volumes\": 0} residual_containers_networks_volumes=0 retained_images=0 shared_build_cache=retained",
+    "RESOURCE_CLEANUP_PASSED project=florabase-feature-migration-5c27983c25b1 removed={\"containers\": 1, \"images\": 1, \"networks\": 1, \"volumes\": 0} residual_containers_networks_volumes=0 retained_images=0 shared_build_cache=retained",
+    "RESOURCE_CLEANUP_PASSED project=florabase-feature-migration-1aef997a8b88 removed={\"containers\": 1, \"images\": 1, \"networks\": 1, \"volumes\": 0} residual_containers_networks_volumes=0 retained_images=0 shared_build_cache=retained"
+  ],
+  "broken_chain": {
+    "feature_diff": ["frontend/pnpm-lock.yaml"],
+    "expected_returncode": 1,
+    "diagnostic": "RuntimeError: synthetic existing-chain failure",
+    "success_evidence_emitted": false,
+    "cleanup_verified": true
+  },
+  "resource_smoke": {
+    "passed": true,
+    "synthetic_container_network_volume_retirement": true,
+    "protected_resource_identities_unchanged": true,
+    "summary": "WORKFLOW_RESOURCE_SMOKE_PASSED: all synthetic containers/networks/volumes retired; real DEV/Review/UAT/Stable/Prod resource identities unchanged"
+  },
+  "focused_checks": {
+    "selector_execution": 19,
+    "feature_receipt_delivery": 41,
+    "resource_migration": 14,
+    "workflow_shell_helpers": "passed",
+    "workflow_ruff": "passed",
+    "workflow_strict_mypy_files": [14, 2],
+    "backend_cycle_helper_ruff_format_strict_mypy": "passed",
+    "bash_syntax": "passed",
+    "feature_graph": 99,
+    "whitespace": "passed",
+    "boolean_evidence_numeric_tampering": "rejected by strict JSON comparison; exercised through delivery preflight"
+  },
+  "execution_limits": {
+    "synthetic_gate_product_quality_integration_build_commands": "simulated in offline orchestration fixtures; exact selected calls asserted",
+    "real_postgresql_migration": "executed on disposable projects",
+    "real_resource_smoke": "executed on synthetic projects; real protected identities compared",
+    "canonical_repair_gate": "not run; Luna owns it",
+    "repair_receipt": "not written",
+    "preexisting_audit_receipt": "read-only verification rejects it: receipt belongs to another branch"
+  },
+  "boundaries": {
+    "staged_files": false,
+    "committed": false,
+    "pushed": false,
+    "delivered": false,
+    "primary": "clean main at exact base",
+    "dependency_versions_changed": false,
+    "product_behavior_changed": false,
+    "remote_ci_changed": false,
+    "CI-003": "verified unchanged",
+    "dependabot_prs": "24/46/68 untouched this task",
+    "dependency_sweep": "paused until repair delivered",
+    "prior_audit_files": "preserved separately; no automatic staging"
+  },
+  "reproduce_focused": [
+    "make test-verification-impact test-feature-workflow test-workflow-resources test-workflow-helpers",
+    "make workflow-check",
+    "make smoke-migration-cycle",
+    "make smoke-workflow-resources"
+  ]
+}

@@ -3443,3 +3443,27 @@ implementation detail.
   query counts, cold/warm measurements, UAT evidence and known host-load limits are documented in
   [the handoff](taxonomy-003-handoff.md). Protected delivery and DEV upgrade are the remaining
   lifecycle steps; migration 0040 requires the upgrade after merge.
+
+## 2026-10-10 — CI-003 FULL migration-cycle repair (review handoff)
+
+- Independently reproduced the dependency-only defect on exact base `d86c488`: FULL selected,
+  migration command lacked `--force-cycle`, and the actual runner returned “no Alembic revisions
+  added” without PostgreSQL. Initialized `fix/ci-003-full-migration-cycle` in the attached worktree;
+  prior dependency-audit files remain preserved and are separate from this repair.
+- Replaced the competing migration booleans with explicit `skip` / `affected-cycle` / `full-cycle`
+  decisions. Every selected cycle uses the existing force mechanism. Automatic and explicit FULL
+  execute identical exhaustive migration semantics; affected docs/frontend/domain skips remain safe.
+- Corrected v2 receipts require four verified PostgreSQL revision states and successful exact
+  disposable cleanup, distinguish required/executed/result from `skipped_by_impact`, and reject
+  incomplete or historical v2 evidence through the existing delivery preflight validator.
+- Focused selector/execution, fixture receipt/delivery, migration/resource and workflow helper checks
+  pass, as do workflow Ruff formatting/lint and strict mypy, backend cycle-helper static checks,
+  shell syntax, feature graph and whitespace checks. Real PostgreSQL smoke covers automatic and
+  explicit FULL without migration differences, nontrivial synthetic downgrade/re-upgrade, and a
+  broken existing migration chain with only a lockfile feature diff. All run-owned resources retire;
+  separate real resource smoke proves volume cleanup and unchanged persistent resource identities.
+- CI-003 remains `verified`; no new feature, product behavior, dependency baseline or remote CI change.
+  Primary main remains clean at `d86c488`. No files staged, no commit/push/delivery; final canonical
+  `make feature-verify` / `make verify-full` deliberately reserved for Luna. Dependency maintenance
+  remains paused until this repair is delivered. See the
+  [repair handoff](ci-003-full-migration-cycle-repair-handoff.md) and its focused evidence.
