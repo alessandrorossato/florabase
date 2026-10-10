@@ -37,6 +37,7 @@ class VerifyHelperTests(unittest.TestCase):
         self.shell("git", "init", "--initial-branch=main", str(self.seed))
         self.shell("git", "-C", str(self.seed), "config", "user.name", "Test")
         self.shell("git", "-C", str(self.seed), "config", "user.email", "test@example.invalid")
+        (self.seed / ".gitignore").write_text("__pycache__/\n*.pyc\n")
         (self.seed / "docs").mkdir()
         (self.seed / "backend/alembic/versions").mkdir(parents=True)
         (self.seed / "docs/features.json").write_text(
@@ -77,6 +78,8 @@ class VerifyHelperTests(unittest.TestCase):
             "feature-tree-fingerprint.py",
             "check-features.py",
             "verify-migration-cycle.sh",
+            "verification_impact.py", "verification_gate.py", "verification-impact.json",
+            "disposable_workflow.py", "workflow_resources.py",
         ):
             shutil.copy2(ROOT / "scripts" / name, scripts / name)
         self.bin = self.root / "bin"
@@ -120,7 +123,7 @@ class VerifyHelperTests(unittest.TestCase):
         result = self.verify()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("FEATURE_VERIFICATION_PASSED", result.stdout)
-        self.assertIn("no Alembic revisions added", result.stdout)
+        self.assertIn("cycling 0001 -> head -> 0001 -> head", result.stdout)
         self.assertTrue((self.work / ".git/info/florabase-feature-verification.json").exists())
         self.assertNotIn("down --volumes", self.log.read_text())
 

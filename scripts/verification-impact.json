@@ -1,0 +1,1942 @@
+{
+  "version": 1,
+  "full_prefixes": [
+    "scripts/",
+    ".github/",
+    "compose",
+    "Makefile",
+    "AGENTS.md",
+    "backend/Dockerfile",
+    "frontend/Dockerfile",
+    "backend/pyproject.toml",
+    "backend/requirements",
+    "backend/alembic/",
+    "backend/alembic.ini",
+    "backend/src/florabase/auth/",
+    "backend/src/florabase/core/",
+    "backend/src/florabase/db/",
+    "backend/src/florabase/api/",
+    "backend/src/florabase/main.py",
+    "backend/src/florabase/__init__.py",
+    "frontend/src/components/",
+    "frontend/src/auth/",
+    "frontend/src/App.tsx",
+    "frontend/src/main.tsx",
+    "frontend/src/styles.css",
+    "frontend/src/test/",
+    "frontend/src/seed-lots/ReferencePicker",
+    "frontend/package",
+    "frontend/pnpm",
+    "frontend/tsconfig",
+    "frontend/vite",
+    "frontend/eslint",
+    "frontend/nginx.conf",
+    "frontend/dev-",
+    ".dockerignore",
+    ".gitignore",
+    ".env",
+    ".prettier",
+    "frontend/.",
+    "backend/.",
+    "scripts/verification-impact.json"
+  ],
+  "documentation_prefixes": ["docs/"],
+  "documentation_paths": ["README.md", "CONTRIBUTING.md", "LICENSE"],
+  "generated_paths": ["backend/openapi.json", "frontend/src/api/schema.d.ts"],
+  "scopes": {
+    "identity": {
+      "backend": [
+        "backend/tests/test_botanical_identity_api.py",
+        "backend/tests/test_botanical_identity_model.py",
+        "backend/tests/test_botanical_identity_schemas.py",
+        "backend/tests/test_botanical_identity_service.py",
+        "backend/tests/test_identity_covers.py"
+      ],
+      "integration": [
+        "backend/tests/integration/test_botanical_identities.py",
+        "backend/tests/integration/test_botanical_identity_api.py",
+        "backend/tests/integration/test_botanical_identity_migration.py"
+      ],
+      "frontend": [
+        "frontend/src/botanical-identities/ExternalBotanicalDataPanel.test.tsx"
+      ],
+      "affects": [
+        "profile-regression",
+        "botany-regression",
+        "seeds-regression",
+        "sowings-regression",
+        "plants-regression",
+        "harvest-regression",
+        "suppliers-regression",
+        "orders-regression",
+        "taxonomy-regression",
+        "explore-regression",
+        "search-regression",
+        "schedule-regression",
+        "lineage-regression",
+        "labels-regression"
+      ]
+    },
+    "profile": {
+      "backend": [
+        "backend/tests/test_botanical_native_range.py",
+        "backend/tests/test_botanical_profile_schemas.py",
+        "backend/tests/test_botanical_profile_service.py"
+      ],
+      "integration": [
+        "backend/tests/integration/test_botanical_native_range_migration.py",
+        "backend/tests/integration/test_botanical_profile_api.py",
+        "backend/tests/integration/test_botanical_profile_migration.py"
+      ],
+      "frontend": [
+        "frontend/src/botanical-profiles/NativeRangeEnrichmentPanel.test.tsx"
+      ],
+      "affects": [
+        "botany-regression",
+        "enrichment-regression",
+        "explore-regression"
+      ]
+    },
+    "botany": {
+      "backend": [
+        "backend/tests/test_external_botany_api.py",
+        "backend/tests/test_external_botany_provider.py",
+        "backend/tests/test_external_botany_service.py"
+      ],
+      "integration": [
+        "backend/tests/integration/test_external_botany_api.py",
+        "backend/tests/integration/test_external_botany_migration.py"
+      ],
+      "frontend": [],
+      "affects": ["taxonomy-regression", "explore-regression"]
+    },
+    "enrichment": {
+      "backend": [
+        "backend/tests/test_native_range_enrichment.py",
+        "backend/tests/test_native_range_enrichment_api.py",
+        "backend/tests/test_native_range_enrichment_service.py"
+      ],
+      "integration": [
+        "backend/tests/integration/test_native_range_enrichment.py",
+        "backend/tests/integration/test_native_range_enrichment_api.py",
+        "backend/tests/integration/test_native_range_enrichment_migration.py"
+      ],
+      "frontend": [],
+      "affects": [
+        "profile-regression",
+        "geography-regression",
+        "explore-regression"
+      ]
+    },
+    "seeds": {
+      "backend": [
+        "backend/tests/test_seed_lot.py",
+        "backend/tests/test_seed_lot_model.py",
+        "backend/tests/test_seed_lot_schemas.py"
+      ],
+      "integration": [
+        "backend/tests/integration/test_seed_lot_api.py",
+        "backend/tests/integration/test_seed_lot_migration.py"
+      ],
+      "frontend": [
+        "frontend/src/seed-lots/ReferencePicker.test.tsx",
+        "frontend/src/seed-lots/SeedLotScreen.test.tsx"
+      ],
+      "affects": [
+        "sowings-regression",
+        "orders-regression",
+        "lineage-regression",
+        "propagation-regression",
+        "schedule-regression",
+        "labels-regression",
+        "search-regression",
+        "bulk-regression",
+        "history-regression"
+      ]
+    },
+    "sowings": {
+      "backend": [
+        "backend/tests/test_germination.py",
+        "backend/tests/test_sowing.py",
+        "backend/tests/test_sowing_model.py",
+        "backend/tests/test_sowing_schemas.py"
+      ],
+      "integration": [
+        "backend/tests/integration/test_germination.py",
+        "backend/tests/integration/test_sowing_api.py",
+        "backend/tests/integration/test_sowing_migration.py"
+      ],
+      "frontend": ["frontend/src/sowings/SowingScreen.test.tsx"],
+      "affects": [
+        "plants-regression",
+        "lineage-regression",
+        "propagation-regression",
+        "schedule-regression",
+        "history-regression",
+        "bulk-regression",
+        "search-regression"
+      ]
+    },
+    "plants": {
+      "backend": [
+        "backend/tests/test_plant.py",
+        "backend/tests/test_plant_model.py",
+        "backend/tests/test_plant_schemas.py"
+      ],
+      "integration": [
+        "backend/tests/integration/test_plant_api.py",
+        "backend/tests/integration/test_plant_extraction_migration.py",
+        "backend/tests/integration/test_plant_migration.py",
+        "backend/tests/integration/test_plant_reintegration_migration.py",
+        "backend/tests/integration/test_plant_transfer_migration.py"
+      ],
+      "frontend": ["frontend/src/plants/PlantScreen.test.tsx"],
+      "affects": [
+        "events-regression",
+        "harvest-regression",
+        "schedule-regression",
+        "lineage-regression",
+        "propagation-regression",
+        "labels-regression",
+        "bulk-regression",
+        "history-regression",
+        "search-regression"
+      ]
+    },
+    "harvest": {
+      "backend": [
+        "backend/tests/test_harvest.py",
+        "backend/tests/test_harvest_inventory.py",
+        "backend/tests/test_harvest_seed_conversion.py"
+      ],
+      "integration": [
+        "backend/tests/integration/test_harvest_inventory.py",
+        "backend/tests/integration/test_harvest_inventory_migration.py",
+        "backend/tests/integration/test_harvest_migration.py",
+        "backend/tests/integration/test_harvest_seed_conversion.py",
+        "backend/tests/integration/test_harvest_seed_conversion_migration.py"
+      ],
+      "frontend": [
+        "frontend/src/harvests/Conversion.test.tsx",
+        "frontend/src/harvests/HarvestScreen.test.tsx",
+        "frontend/src/harvests/StoredMaterial.test.tsx",
+        "frontend/src/harvests/api.test.ts"
+      ],
+      "affects": [
+        "seeds-regression",
+        "media-regression",
+        "history-regression",
+        "locations-regression",
+        "bulk-regression"
+      ]
+    },
+    "events": {
+      "backend": [
+        "backend/tests/test_event.py",
+        "backend/tests/test_event_model.py",
+        "backend/tests/test_event_schemas.py"
+      ],
+      "integration": [
+        "backend/tests/integration/test_event_api.py",
+        "backend/tests/integration/test_event_migration.py"
+      ],
+      "frontend": [
+        "frontend/src/events/EventFeed.test.tsx",
+        "frontend/src/events/EventTargetPhoto.test.tsx",
+        "frontend/src/events/GlobalEventsScreen.test.tsx"
+      ],
+      "affects": ["history-regression", "schedule-regression", "activity"]
+    },
+    "history": {
+      "backend": ["backend/tests/test_history.py"],
+      "integration": [
+        "backend/tests/integration/test_history.py",
+        "backend/tests/integration/test_history_saved_views.py"
+      ],
+      "frontend": ["frontend/src/history/HistoryScreen.test.tsx"],
+      "affects": ["activity", "saved-views-regression"]
+    },
+    "schedule": {
+      "backend": ["backend/tests/test_schedule.py"],
+      "integration": ["backend/tests/integration/test_schedule.py"],
+      "frontend": ["frontend/src/schedule/ScheduleScreen.test.tsx"],
+      "affects": [
+        "events-regression",
+        "activity",
+        "security-regression",
+        "seeds-regression",
+        "sowings-regression",
+        "plants-regression",
+        "locations-regression"
+      ]
+    },
+    "media": {
+      "backend": [
+        "backend/tests/test_collection_photo_api.py",
+        "backend/tests/test_collection_photos.py",
+        "backend/tests/test_media.py",
+        "backend/tests/test_media_copies.py",
+        "backend/tests/test_media_fetch.py",
+        "backend/tests/test_primary_photo.py"
+      ],
+      "integration": [
+        "backend/tests/integration/test_collection_photo_migration.py",
+        "backend/tests/integration/test_external_media_copies.py",
+        "backend/tests/integration/test_primary_photo_api.py",
+        "backend/tests/integration/test_primary_photo_concurrency.py",
+        "backend/tests/integration/test_primary_photo_migration.py",
+        "backend/tests/integration/test_shared_media.py",
+        "backend/tests/integration/test_shared_media_concurrency.py",
+        "backend/tests/integration/test_shared_media_migration.py"
+      ],
+      "frontend": ["frontend/src/media/MediaScreen.test.tsx"],
+      "affects": [
+        "attachments-regression",
+        "plants-regression",
+        "seeds-regression",
+        "sowings-regression",
+        "harvest-regression",
+        "suppliers-regression"
+      ]
+    },
+    "attachments": {
+      "backend": [
+        "backend/tests/test_attachment_api.py",
+        "backend/tests/test_attachment_artifacts.py",
+        "backend/tests/test_attachment_configuration.py",
+        "backend/tests/test_attachment_model.py",
+        "backend/tests/test_attachment_service.py",
+        "backend/tests/test_attachment_storage.py"
+      ],
+      "integration": [
+        "backend/tests/integration/test_attachment_api.py",
+        "backend/tests/integration/test_attachment_migration.py"
+      ],
+      "frontend": [
+        "frontend/src/photos/BotanicalIdentityCover.test.tsx",
+        "frontend/src/photos/PhotosSection.test.tsx",
+        "frontend/src/photos/PrimaryPhotoVisual.test.tsx",
+        "frontend/src/photos/RecordVisual.test.tsx"
+      ],
+      "affects": ["media-regression"]
+    },
+    "geography": {
+      "backend": ["backend/tests/test_geographic_place.py"],
+      "integration": [
+        "backend/tests/integration/test_geographic_place_api.py",
+        "backend/tests/integration/test_geographic_place_migration.py",
+        "backend/tests/integration/test_geography_003_migration.py"
+      ],
+      "frontend": [],
+      "affects": [
+        "profile-regression",
+        "provenance-regression",
+        "enrichment-regression",
+        "explore-regression"
+      ]
+    },
+    "provenance": {
+      "backend": ["backend/tests/test_provenance_site.py"],
+      "integration": ["backend/tests/integration/test_provenance_site_api.py"],
+      "frontend": [
+        "frontend/src/provenance-sites/CoordinateFields.test.tsx",
+        "frontend/src/provenance-sites/ProvenanceSiteManager.test.tsx",
+        "frontend/src/provenance-sites/coordinates.test.ts",
+        "frontend/src/provenance-map/ProvenanceMapScreen.test.tsx"
+      ],
+      "affects": ["seeds-regression", "plants-regression", "explore-regression"]
+    },
+    "explore": {
+      "backend": [
+        "backend/tests/test_native_ranges_explore.py",
+        "backend/tests/test_species_distribution.py"
+      ],
+      "integration": [
+        "backend/tests/integration/test_native_range_views.py",
+        "backend/tests/integration/test_native_ranges_explore.py",
+        "backend/tests/integration/test_species_distribution.py",
+        "backend/tests/integration/test_species_distribution_views.py"
+      ],
+      "frontend": [
+        "frontend/src/species-distribution/SpeciesDistributionScreen.test.tsx",
+        "frontend/src/native-ranges/NativeRangesScreen.test.tsx",
+        "frontend/src/native-ranges/geometry.test.ts"
+      ],
+      "affects": [
+        "collection-views-regression",
+        "botany-regression",
+        "saved-views-regression",
+        "maps-regression"
+      ]
+    },
+    "taxonomy": {
+      "backend": [
+        "backend/tests/test_taxonomy.py",
+        "backend/tests/test_taxonomy_api.py",
+        "backend/tests/test_taxonomy_service.py"
+      ],
+      "integration": [
+        "backend/tests/integration/test_taxonomy.py",
+        "backend/tests/integration/test_taxonomy_migration.py"
+      ],
+      "frontend": ["frontend/src/taxonomy/TaxonomyScreen.test.tsx"],
+      "affects": ["botany", "collection-views", "security-regression"]
+    },
+    "suppliers": {
+      "backend": ["backend/tests/test_supplier.py"],
+      "integration": [
+        "backend/tests/integration/test_supplier_api.py",
+        "backend/tests/integration/test_supplier_media.py",
+        "backend/tests/integration/test_supplier_media_migration.py",
+        "backend/tests/integration/test_supplier_migration.py"
+      ],
+      "frontend": ["frontend/src/suppliers/SupplierScreen.test.tsx"],
+      "affects": ["orders-regression", "seeds-regression", "media-regression"]
+    },
+    "orders": {
+      "backend": [
+        "backend/tests/test_orders.py",
+        "backend/tests/test_purchase_context.py"
+      ],
+      "integration": [
+        "backend/tests/integration/test_orders.py",
+        "backend/tests/integration/test_purchase_context.py"
+      ],
+      "frontend": [
+        "frontend/src/orders/OrderPicker.test.tsx",
+        "frontend/src/orders/OrderScreen.test.tsx",
+        "frontend/src/orders/PurchaseContext.test.tsx"
+      ],
+      "affects": [
+        "suppliers-regression",
+        "seeds-regression",
+        "security-regression"
+      ]
+    },
+    "locations": {
+      "backend": ["backend/tests/test_location.py"],
+      "integration": [
+        "backend/tests/integration/test_location_api.py",
+        "backend/tests/integration/test_location_migration.py"
+      ],
+      "frontend": ["frontend/src/locations/api.test.ts"],
+      "affects": [
+        "seeds-regression",
+        "sowings-regression",
+        "plants-regression",
+        "harvest-regression",
+        "bulk-regression",
+        "schedule-regression"
+      ]
+    },
+    "lineage": {
+      "backend": ["backend/tests/test_lineage.py"],
+      "integration": [
+        "backend/tests/integration/test_lineage_api.py",
+        "backend/tests/integration/test_lineage_integrity.py",
+        "backend/tests/integration/test_lineage_integrity_migration.py",
+        "backend/tests/integration/test_lineage_migration.py"
+      ],
+      "frontend": ["frontend/src/lineage/LineagePanel.test.tsx"],
+      "affects": [
+        "seeds-regression",
+        "sowings-regression",
+        "plants-regression",
+        "propagation-regression",
+        "history-regression"
+      ]
+    },
+    "propagation": {
+      "backend": [
+        "backend/tests/test_propagation.py",
+        "backend/tests/test_propagation_reversal.py",
+        "backend/tests/test_reversal.py"
+      ],
+      "integration": [
+        "backend/tests/integration/test_operation_receipt_migration.py",
+        "backend/tests/integration/test_propagation_api.py",
+        "backend/tests/integration/test_propagation_reversal.py",
+        "backend/tests/integration/test_propagation_reversal_migration.py"
+      ],
+      "frontend": [
+        "frontend/src/propagation/CreationReversal.test.tsx",
+        "frontend/src/propagation/GuidedForms.test.tsx"
+      ],
+      "affects": ["lineage-regression", "history-regression"]
+    },
+    "bulk": {
+      "backend": ["backend/tests/test_bulk_location.py"],
+      "integration": ["backend/tests/integration/test_bulk_location.py"],
+      "frontend": [
+        "frontend/src/bulk/BulkLocation.test.tsx",
+        "frontend/src/bulk/api.test.ts"
+      ],
+      "affects": [
+        "locations-regression",
+        "events-regression",
+        "history-regression",
+        "security-regression"
+      ]
+    },
+    "saved-views": {
+      "backend": [
+        "backend/tests/test_saved_views.py",
+        "backend/tests/test_saved_views_service.py"
+      ],
+      "integration": ["backend/tests/integration/test_saved_view_migration.py"],
+      "frontend": [
+        "frontend/src/saved-views/SavedViews.test.tsx",
+        "frontend/src/saved-views/state.test.ts"
+      ],
+      "affects": [
+        "history-regression",
+        "explore-regression",
+        "seeds-regression",
+        "sowings-regression",
+        "plants-regression",
+        "orders-regression",
+        "harvest-regression"
+      ]
+    },
+    "import-export": {
+      "backend": [
+        "backend/tests/test_import_export.py",
+        "backend/tests/test_import_export_api.py"
+      ],
+      "integration": ["backend/tests/integration/test_import_export_api.py"],
+      "frontend": ["frontend/src/import-export/ImportExportScreen.test.tsx"],
+      "affects": [
+        "seeds-regression",
+        "sowings-regression",
+        "plants-regression",
+        "security-regression"
+      ]
+    },
+    "search": {
+      "backend": [
+        "backend/tests/test_search_api.py",
+        "backend/tests/test_search_service.py"
+      ],
+      "integration": ["backend/tests/integration/test_search.py"],
+      "frontend": ["frontend/src/collection/DashboardSearch.test.tsx"],
+      "affects": [
+        "dashboard-regression",
+        "harvest-regression",
+        "media-regression"
+      ]
+    },
+    "labels": {
+      "backend": [],
+      "integration": [],
+      "frontend": ["frontend/src/labels/LabelsScreen.test.tsx"],
+      "affects": []
+    },
+    "dashboard": {
+      "backend": [],
+      "integration": [],
+      "frontend": ["frontend/src/collection/DashboardSearch.test.tsx"],
+      "affects": ["activity", "schedule-regression", "search-regression"]
+    },
+    "maps": {
+      "backend": [],
+      "integration": [],
+      "frontend": [
+        "frontend/src/occurrence-map/OccurrenceDensityMap.test.tsx",
+        "frontend/src/occurrence-map/OccurrenceMapPanel.test.tsx"
+      ],
+      "affects": ["botany-regression"]
+    },
+    "activity": {
+      "backend": [],
+      "integration": [],
+      "frontend": [
+        "frontend/src/App.lazy.test.tsx",
+        "frontend/src/App.test.tsx",
+        "frontend/src/App.transition.test.tsx"
+      ],
+      "affects": ["security-regression"]
+    },
+    "security-regression": {
+      "backend": [
+        "backend/tests/test_auth_api.py",
+        "backend/tests/test_auth_security.py",
+        "backend/tests/test_auth_service.py"
+      ],
+      "integration": ["backend/tests/integration/test_authentication.py"],
+      "frontend": [],
+      "affects": []
+    },
+    "collection-views": {
+      "backend": ["backend/tests/test_collection_views.py"],
+      "integration": [
+        "backend/tests/integration/test_native_range_views.py",
+        "backend/tests/integration/test_species_distribution.py",
+        "backend/tests/integration/test_species_distribution_views.py"
+      ],
+      "frontend": [],
+      "affects": ["explore-regression", "taxonomy-regression"]
+    },
+    "identity-regression": {
+      "suite_scope": "identity",
+      "affects": []
+    },
+    "profile-regression": {
+      "suite_scope": "profile",
+      "affects": []
+    },
+    "botany-regression": {
+      "suite_scope": "botany",
+      "affects": []
+    },
+    "enrichment-regression": {
+      "suite_scope": "enrichment",
+      "affects": []
+    },
+    "seeds-regression": {
+      "suite_scope": "seeds",
+      "affects": []
+    },
+    "sowings-regression": {
+      "suite_scope": "sowings",
+      "affects": []
+    },
+    "plants-regression": {
+      "suite_scope": "plants",
+      "affects": []
+    },
+    "harvest-regression": {
+      "suite_scope": "harvest",
+      "affects": []
+    },
+    "events-regression": {
+      "suite_scope": "events",
+      "affects": []
+    },
+    "history-regression": {
+      "suite_scope": "history",
+      "affects": []
+    },
+    "schedule-regression": {
+      "suite_scope": "schedule",
+      "affects": []
+    },
+    "media-regression": {
+      "suite_scope": "media",
+      "affects": []
+    },
+    "attachments-regression": {
+      "suite_scope": "attachments",
+      "affects": []
+    },
+    "geography-regression": {
+      "suite_scope": "geography",
+      "affects": []
+    },
+    "provenance-regression": {
+      "suite_scope": "provenance",
+      "affects": []
+    },
+    "explore-regression": {
+      "suite_scope": "explore",
+      "affects": []
+    },
+    "taxonomy-regression": {
+      "suite_scope": "taxonomy",
+      "affects": []
+    },
+    "suppliers-regression": {
+      "suite_scope": "suppliers",
+      "affects": []
+    },
+    "orders-regression": {
+      "suite_scope": "orders",
+      "affects": []
+    },
+    "locations-regression": {
+      "suite_scope": "locations",
+      "affects": []
+    },
+    "lineage-regression": {
+      "suite_scope": "lineage",
+      "affects": []
+    },
+    "propagation-regression": {
+      "suite_scope": "propagation",
+      "affects": []
+    },
+    "bulk-regression": {
+      "suite_scope": "bulk",
+      "affects": []
+    },
+    "saved-views-regression": {
+      "suite_scope": "saved-views",
+      "affects": []
+    },
+    "import-export-regression": {
+      "suite_scope": "import-export",
+      "affects": []
+    },
+    "search-regression": {
+      "suite_scope": "search",
+      "affects": []
+    },
+    "labels-regression": {
+      "suite_scope": "labels",
+      "affects": []
+    },
+    "dashboard-regression": {
+      "suite_scope": "dashboard",
+      "affects": []
+    },
+    "maps-regression": {
+      "suite_scope": "maps",
+      "affects": []
+    },
+    "collection-views-regression": {
+      "suite_scope": "collection-views",
+      "affects": []
+    }
+  },
+  "rules": [
+    {
+      "prefix": "backend/src/florabase/botanical_identities/",
+      "scope": "identity",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/botanical-identities/",
+      "scope": "identity",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_botanical_identity_api.py",
+      "scope": "identity",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_botanical_identity_model.py",
+      "scope": "identity",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_botanical_identity_schemas.py",
+      "scope": "identity",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_botanical_identity_service.py",
+      "scope": "identity",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_identity_covers.py",
+      "scope": "identity",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_botanical_identities.py",
+      "scope": "identity",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_botanical_identity_api.py",
+      "scope": "identity",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_botanical_identity_migration.py",
+      "scope": "identity",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/botanical-identities/ExternalBotanicalDataPanel.test.tsx",
+      "scope": "identity",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/botanical_profiles/",
+      "scope": "profile",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/botanical-profiles/",
+      "scope": "profile",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_botanical_native_range.py",
+      "scope": "profile",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_botanical_profile_schemas.py",
+      "scope": "profile",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_botanical_profile_service.py",
+      "scope": "profile",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_botanical_native_range_migration.py",
+      "scope": "profile",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_botanical_profile_api.py",
+      "scope": "profile",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_botanical_profile_migration.py",
+      "scope": "profile",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/botanical-profiles/NativeRangeEnrichmentPanel.test.tsx",
+      "scope": "profile",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/external_botany/",
+      "scope": "botany",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_external_botany_api.py",
+      "scope": "botany",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_external_botany_provider.py",
+      "scope": "botany",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_external_botany_service.py",
+      "scope": "botany",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_external_botany_api.py",
+      "scope": "botany",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_external_botany_migration.py",
+      "scope": "botany",
+      "layer": "backend"
+    },
+    {
+      "prefix": "backend/src/florabase/native_range_enrichment/",
+      "scope": "enrichment",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_native_range_enrichment.py",
+      "scope": "enrichment",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_native_range_enrichment_api.py",
+      "scope": "enrichment",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_native_range_enrichment_service.py",
+      "scope": "enrichment",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_native_range_enrichment.py",
+      "scope": "enrichment",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_native_range_enrichment_api.py",
+      "scope": "enrichment",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_native_range_enrichment_migration.py",
+      "scope": "enrichment",
+      "layer": "backend"
+    },
+    {
+      "prefix": "backend/src/florabase/seed_lots/",
+      "scope": "seeds",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/seed-lots/",
+      "scope": "seeds",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_seed_lot.py",
+      "scope": "seeds",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_seed_lot_model.py",
+      "scope": "seeds",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_seed_lot_schemas.py",
+      "scope": "seeds",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_seed_lot_api.py",
+      "scope": "seeds",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_seed_lot_migration.py",
+      "scope": "seeds",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/seed-lots/ReferencePicker.test.tsx",
+      "scope": "seeds",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/seed-lots/SeedLotScreen.test.tsx",
+      "scope": "seeds",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/sowings/",
+      "scope": "sowings",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/sowings/",
+      "scope": "sowings",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_germination.py",
+      "scope": "sowings",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_sowing.py",
+      "scope": "sowings",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_sowing_model.py",
+      "scope": "sowings",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_sowing_schemas.py",
+      "scope": "sowings",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_germination.py",
+      "scope": "sowings",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_sowing_api.py",
+      "scope": "sowings",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_sowing_migration.py",
+      "scope": "sowings",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/sowings/SowingScreen.test.tsx",
+      "scope": "sowings",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/plants/",
+      "scope": "plants",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/plants/",
+      "scope": "plants",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_plant.py",
+      "scope": "plants",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_plant_model.py",
+      "scope": "plants",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_plant_schemas.py",
+      "scope": "plants",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_plant_api.py",
+      "scope": "plants",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_plant_extraction_migration.py",
+      "scope": "plants",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_plant_migration.py",
+      "scope": "plants",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_plant_reintegration_migration.py",
+      "scope": "plants",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_plant_transfer_migration.py",
+      "scope": "plants",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/plants/PlantScreen.test.tsx",
+      "scope": "plants",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/harvests/",
+      "scope": "harvest",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/harvests/",
+      "scope": "harvest",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_harvest.py",
+      "scope": "harvest",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_harvest_inventory.py",
+      "scope": "harvest",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_harvest_seed_conversion.py",
+      "scope": "harvest",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_harvest_inventory.py",
+      "scope": "harvest",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_harvest_inventory_migration.py",
+      "scope": "harvest",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_harvest_migration.py",
+      "scope": "harvest",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_harvest_seed_conversion.py",
+      "scope": "harvest",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_harvest_seed_conversion_migration.py",
+      "scope": "harvest",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/harvests/Conversion.test.tsx",
+      "scope": "harvest",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/harvests/HarvestScreen.test.tsx",
+      "scope": "harvest",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/harvests/StoredMaterial.test.tsx",
+      "scope": "harvest",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/harvests/api.test.ts",
+      "scope": "harvest",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/events/",
+      "scope": "events",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/events/",
+      "scope": "events",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_event.py",
+      "scope": "events",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_event_model.py",
+      "scope": "events",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_event_schemas.py",
+      "scope": "events",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_event_api.py",
+      "scope": "events",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_event_migration.py",
+      "scope": "events",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/events/EventFeed.test.tsx",
+      "scope": "events",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/events/EventTargetPhoto.test.tsx",
+      "scope": "events",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/events/GlobalEventsScreen.test.tsx",
+      "scope": "events",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/history/",
+      "scope": "history",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/history/",
+      "scope": "history",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_history.py",
+      "scope": "history",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_history.py",
+      "scope": "history",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_history_saved_views.py",
+      "scope": "history",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/history/HistoryScreen.test.tsx",
+      "scope": "history",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/schedule/",
+      "scope": "schedule",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/schedule/",
+      "scope": "schedule",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_schedule.py",
+      "scope": "schedule",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_schedule.py",
+      "scope": "schedule",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/schedule/ScheduleScreen.test.tsx",
+      "scope": "schedule",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/media/",
+      "scope": "media",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/media/",
+      "scope": "media",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_collection_photo_api.py",
+      "scope": "media",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_collection_photos.py",
+      "scope": "media",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_media.py",
+      "scope": "media",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_media_copies.py",
+      "scope": "media",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_media_fetch.py",
+      "scope": "media",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_primary_photo.py",
+      "scope": "media",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_collection_photo_migration.py",
+      "scope": "media",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_external_media_copies.py",
+      "scope": "media",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_primary_photo_api.py",
+      "scope": "media",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_primary_photo_concurrency.py",
+      "scope": "media",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_primary_photo_migration.py",
+      "scope": "media",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_shared_media.py",
+      "scope": "media",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_shared_media_concurrency.py",
+      "scope": "media",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_shared_media_migration.py",
+      "scope": "media",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/media/MediaScreen.test.tsx",
+      "scope": "media",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/attachments/",
+      "scope": "attachments",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/photos/",
+      "scope": "attachments",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_attachment_api.py",
+      "scope": "attachments",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_attachment_artifacts.py",
+      "scope": "attachments",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_attachment_configuration.py",
+      "scope": "attachments",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_attachment_model.py",
+      "scope": "attachments",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_attachment_service.py",
+      "scope": "attachments",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_attachment_storage.py",
+      "scope": "attachments",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_attachment_api.py",
+      "scope": "attachments",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_attachment_migration.py",
+      "scope": "attachments",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/photos/BotanicalIdentityCover.test.tsx",
+      "scope": "attachments",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/photos/PhotosSection.test.tsx",
+      "scope": "attachments",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/photos/PrimaryPhotoVisual.test.tsx",
+      "scope": "attachments",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/photos/RecordVisual.test.tsx",
+      "scope": "attachments",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/geographic_places/",
+      "scope": "geography",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/geographic-places/",
+      "scope": "geography",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_geographic_place.py",
+      "scope": "geography",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_geographic_place_api.py",
+      "scope": "geography",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_geographic_place_migration.py",
+      "scope": "geography",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_geography_003_migration.py",
+      "scope": "geography",
+      "layer": "backend"
+    },
+    {
+      "prefix": "backend/src/florabase/provenance_sites/",
+      "scope": "provenance",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/provenance-sites/",
+      "scope": "provenance",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_provenance_site.py",
+      "scope": "provenance",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_provenance_site_api.py",
+      "scope": "provenance",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/provenance-sites/CoordinateFields.test.tsx",
+      "scope": "provenance",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/provenance-sites/ProvenanceSiteManager.test.tsx",
+      "scope": "provenance",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/provenance-sites/coordinates.test.ts",
+      "scope": "provenance",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/explore/",
+      "scope": "explore",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/species-distribution/",
+      "scope": "explore",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_native_ranges_explore.py",
+      "scope": "explore",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_species_distribution.py",
+      "scope": "explore",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_native_range_views.py",
+      "scope": "explore",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_native_ranges_explore.py",
+      "scope": "explore",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_species_distribution.py",
+      "scope": "explore",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_species_distribution_views.py",
+      "scope": "explore",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/species-distribution/SpeciesDistributionScreen.test.tsx",
+      "scope": "explore",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/taxonomy/",
+      "scope": "taxonomy",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/taxonomy/",
+      "scope": "taxonomy",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_taxonomy.py",
+      "scope": "taxonomy",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_taxonomy_api.py",
+      "scope": "taxonomy",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_taxonomy_service.py",
+      "scope": "taxonomy",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_taxonomy.py",
+      "scope": "taxonomy",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_taxonomy_migration.py",
+      "scope": "taxonomy",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/taxonomy/TaxonomyScreen.test.tsx",
+      "scope": "taxonomy",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/suppliers/",
+      "scope": "suppliers",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/suppliers/",
+      "scope": "suppliers",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_supplier.py",
+      "scope": "suppliers",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_supplier_api.py",
+      "scope": "suppliers",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_supplier_media.py",
+      "scope": "suppliers",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_supplier_media_migration.py",
+      "scope": "suppliers",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_supplier_migration.py",
+      "scope": "suppliers",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/suppliers/SupplierScreen.test.tsx",
+      "scope": "suppliers",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/orders/",
+      "scope": "orders",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/orders/",
+      "scope": "orders",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_orders.py",
+      "scope": "orders",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_purchase_context.py",
+      "scope": "orders",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_orders.py",
+      "scope": "orders",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_purchase_context.py",
+      "scope": "orders",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/orders/OrderPicker.test.tsx",
+      "scope": "orders",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/orders/OrderScreen.test.tsx",
+      "scope": "orders",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/orders/PurchaseContext.test.tsx",
+      "scope": "orders",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/locations/",
+      "scope": "locations",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/locations/",
+      "scope": "locations",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_location.py",
+      "scope": "locations",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_location_api.py",
+      "scope": "locations",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_location_migration.py",
+      "scope": "locations",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/locations/api.test.ts",
+      "scope": "locations",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/lineage/",
+      "scope": "lineage",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/lineage/",
+      "scope": "lineage",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_lineage.py",
+      "scope": "lineage",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_lineage_api.py",
+      "scope": "lineage",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_lineage_integrity.py",
+      "scope": "lineage",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_lineage_integrity_migration.py",
+      "scope": "lineage",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_lineage_migration.py",
+      "scope": "lineage",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/lineage/LineagePanel.test.tsx",
+      "scope": "lineage",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/propagation/",
+      "scope": "propagation",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/propagation/",
+      "scope": "propagation",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_propagation.py",
+      "scope": "propagation",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_propagation_reversal.py",
+      "scope": "propagation",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_reversal.py",
+      "scope": "propagation",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_operation_receipt_migration.py",
+      "scope": "propagation",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_propagation_api.py",
+      "scope": "propagation",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_propagation_reversal.py",
+      "scope": "propagation",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_propagation_reversal_migration.py",
+      "scope": "propagation",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/propagation/CreationReversal.test.tsx",
+      "scope": "propagation",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/propagation/GuidedForms.test.tsx",
+      "scope": "propagation",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/bulk/",
+      "scope": "bulk",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/bulk/",
+      "scope": "bulk",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_bulk_location.py",
+      "scope": "bulk",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_bulk_location.py",
+      "scope": "bulk",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/bulk/BulkLocation.test.tsx",
+      "scope": "bulk",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/bulk/api.test.ts",
+      "scope": "bulk",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/saved_views/",
+      "scope": "saved-views",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/saved-views/",
+      "scope": "saved-views",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_saved_views.py",
+      "scope": "saved-views",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_saved_views_service.py",
+      "scope": "saved-views",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_saved_view_migration.py",
+      "scope": "saved-views",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/saved-views/SavedViews.test.tsx",
+      "scope": "saved-views",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/saved-views/state.test.ts",
+      "scope": "saved-views",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/import_export/",
+      "scope": "import-export",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/import-export/",
+      "scope": "import-export",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_import_export.py",
+      "scope": "import-export",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_import_export_api.py",
+      "scope": "import-export",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_import_export_api.py",
+      "scope": "import-export",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/import-export/ImportExportScreen.test.tsx",
+      "scope": "import-export",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "backend/src/florabase/search/",
+      "scope": "search",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_search_api.py",
+      "scope": "search",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_search_service.py",
+      "scope": "search",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_search.py",
+      "scope": "search",
+      "layer": "backend"
+    },
+    {
+      "path": "frontend/src/collection/DashboardSearch.test.tsx",
+      "scope": "search",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "frontend/src/labels/",
+      "scope": "labels",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/labels/LabelsScreen.test.tsx",
+      "scope": "labels",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "frontend/src/collection/",
+      "scope": "dashboard",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/collection/DashboardSearch.test.tsx",
+      "scope": "dashboard",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "frontend/src/occurrence-map/",
+      "scope": "maps",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/occurrence-map/OccurrenceDensityMap.test.tsx",
+      "scope": "maps",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/occurrence-map/OccurrenceMapPanel.test.tsx",
+      "scope": "maps",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/App.lazy.test.tsx",
+      "scope": "activity",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/App.test.tsx",
+      "scope": "activity",
+      "layer": "frontend"
+    },
+    {
+      "path": "frontend/src/App.transition.test.tsx",
+      "scope": "activity",
+      "layer": "frontend"
+    },
+    {
+      "path": "backend/tests/test_auth_api.py",
+      "scope": "security-regression",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_auth_security.py",
+      "scope": "security-regression",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_auth_service.py",
+      "scope": "security-regression",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_authentication.py",
+      "scope": "security-regression",
+      "layer": "backend"
+    },
+    {
+      "prefix": "backend/src/florabase/collection_views/",
+      "scope": "collection-views",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/test_collection_views.py",
+      "scope": "collection-views",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_native_range_views.py",
+      "scope": "collection-views",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_species_distribution.py",
+      "scope": "collection-views",
+      "layer": "backend"
+    },
+    {
+      "path": "backend/tests/integration/test_species_distribution_views.py",
+      "scope": "collection-views",
+      "layer": "backend"
+    },
+    {
+      "prefix": "backend/src/florabase/collection_photos/",
+      "scope": "media",
+      "layer": "backend"
+    },
+    {
+      "prefix": "backend/src/florabase/reversals/",
+      "scope": "propagation",
+      "layer": "backend"
+    },
+    {
+      "prefix": "frontend/src/native-ranges/",
+      "scope": "explore",
+      "layer": "frontend"
+    },
+    {
+      "prefix": "frontend/src/provenance-map/",
+      "scope": "provenance",
+      "layer": "frontend"
+    }
+  ]
+}

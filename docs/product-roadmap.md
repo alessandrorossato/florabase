@@ -11,6 +11,14 @@ original acceptance contract remain useful records, but RELEASE-001 is not the i
 implementation. Product work continues in the approved sequence before final hardening and the
 1.0.0 stability milestone. Feature statuses remain those in features.json, not inferred from delivery.
 
+The current infrastructure increment refines **CI-003**: deterministic affected/full local
+verification and exact Docker workflow lifecycle retirement share its existing orchestration and
+environment owner. No new feature ID or product capability is introduced. After CI-003 delivery, the
+next action is a dedicated sweep of open bot dependency-update PRs; then the next product increment
+is **DASHBOARD-001**, followed by the agreed functional and information-architecture completion wave
+before broad visual redesign. Protected remote CI remains full. See
+[workflow handoff](ci-003-resource-impact-handoff.md).
+
 Already landed: core lineage integrity audit; LOCATION-003 (`implemented`); ATTACHMENT-005 shared
 Media Library (`implemented`); HARVEST-001 (`implemented`); HARVEST-002 (`verified`); MAP-002
 (`verified`); SEARCH-001 baseline (`implemented`); the UX-004/005/006 visual consistency work
@@ -79,7 +87,7 @@ The approved sequence, retaining completed steps for context, is:
     licensing/security, final CI, clean install, upgrade, complete DB+media restore and release notes.
 12. 1.0.0 stability milestone.
 
-The next selected product increment is **BOTANY-003 — controlled BotanicalProfile text enrichment**.
+**BOTANY-003 — controlled BotanicalProfile text enrichment** remains source-gated future work.
 The 2026-10-09 independent [source re-audit](botanical-profile-enrichment-sources.md) reproduced
 secure Flora of China acquisition failure on the host and three backend images. WCVP v15's distinct
 geographic_area text passed source review; a separate Kew SEPASAL review approved three exact Flora

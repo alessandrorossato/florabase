@@ -76,16 +76,20 @@
     {
       "id": "CI-003",
       "category": "infrastructure",
-      "description": "Consolidate development, dirty-worktree review, stable preview and production workflows",
+      "description": "Consolidate environment workflows, impact-aware local verification and scoped Docker lifecycle retirement",
       "acceptance_criteria": [
         "Existing Codex worktrees initialize without another worktree or switching primary main; linked finish preserves primary index/source safety and per-worktree verification receipts include dirty and untracked source",
         "DEV, Feature Review, Stable Preview, quality, integration and production have explicit source/config/project/resource contracts, observable health and migration current/head, and ahead-of-code refusal without automatic downgrade",
         "A real linked-worktree Compose smoke proves isolated dirty migrations, noninteractive non-root frontend dependency bootstrap, root-owned volume repair, stop/restart persistence, safe scoped removal and unchanged DEV",
-        "Canonical operator commands, review profiles, lifecycle documentation and actionable delivery diagnostics pass focused helper coverage and the final verification gate; paired DEV data cloning and public-image distribution remain deferred"
+        "Canonical operator commands, review profiles, lifecycle documentation and actionable delivery diagnostics pass focused helper coverage and the final verification gate; paired DEV data cloning and public-image distribution remain deferred",
+        "Local feature verification derives a versioned deterministic fail-closed impact plan over committed, staged, unstaged, untracked, renamed and deleted paths; explicit full verification remains supported and protected remote CI remains exhaustive",
+        "Disposable integration, migration, build and real-smoke lifecycles register exact positive ownership cleanup before creation, handle failure and caught interruption, verify no owned containers/networks/volumes remain and never prune shared Docker resources",
+        "Quality has exact-worktree status/cleanup and retires only after proven feature-finish Git safeguards; persistent DEV/Review/UAT/Stable Preview/production retain their existing ownership and data semantics",
+        "Versioned exact-tree receipts record selected suites, commands and completed results with impact-map provenance; delivery rejects stale, incomplete, unsupported or mismatched evidence and resource diagnostics report unknown/ambiguous images/cache without deleting them"
       ],
       "dependencies": ["CI-002"],
       "priority": "P0",
-      "status": "implemented"
+      "status": "verified"
     },
     {
       "id": "PREVIEW-001",

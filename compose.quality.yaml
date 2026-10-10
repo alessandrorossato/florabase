@@ -1,0 +1,37 @@
+# Only the worktree-scoped QUALITY helper loads this lifecycle overlay.
+x-owner: &owner
+  io.florabase.workflow.lifecycle: quality
+  io.florabase.workflow.owner: ${FLORABASE_WORKFLOW_OWNER:?Quality metadata required}
+  io.florabase.workflow.source: ${FLORABASE_SOURCE:?Quality source required}
+
+services:
+  db:
+    labels: *owner
+  backend:
+    labels: *owner
+    build:
+      labels:
+        <<: *owner
+        com.docker.compose.project: ${COMPOSE_PROJECT_NAME:?Quality project required}
+  frontend:
+    labels: *owner
+    build:
+      labels:
+        <<: *owner
+        com.docker.compose.project: ${COMPOSE_PROJECT_NAME:?Quality project required}
+  dev-state-init:
+    labels: *owner
+    build:
+      labels:
+        <<: *owner
+        com.docker.compose.project: ${COMPOSE_PROJECT_NAME:?Quality project required}
+networks:
+  internal:
+    labels: *owner
+volumes:
+  postgres_data:
+    labels: *owner
+  attachment_data:
+    labels: *owner
+  frontend_node_modules:
+    labels: *owner

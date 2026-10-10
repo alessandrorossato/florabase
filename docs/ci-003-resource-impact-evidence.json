@@ -1,0 +1,912 @@
+{
+  "date": "2026-10-10",
+  "worktree": "attached feature worktree",
+  "branch": "ci/workflow-resource-impact-verification",
+  "base": "3592593f8ef78549ae2ba5b00c43b66930dcfd42",
+  "owner": "CI-003",
+  "scope": "Independent implementation review, isolated lifecycle smoke, and exhaustive canonical full gates",
+  "scenarios": {
+    "docs-only": {
+      "changed_paths": ["docs/schedule.md"],
+      "before_selection": {
+        "backend_test_files": 76,
+        "integration_test_files": 78,
+        "frontend_test_files": 57,
+        "workflow_suites": 5,
+        "production_images": 2
+      },
+      "after_selection": {
+        "backend_test_files": 0,
+        "integration_test_files": 0,
+        "frontend_test_files": 0,
+        "workflow_suites": 0,
+        "production_images": 0
+      },
+      "mode": "affected",
+      "reasons": [],
+      "plan": {
+        "version": 1,
+        "base": "3592593f8ef78549ae2ba5b00c43b66930dcfd42",
+        "mode": "affected",
+        "impact_map_version": 1,
+        "impact_map_digest": "de6505d5a80db85d42fadc78b3a78b7289a92191c9ac3229e2f830e08acb4f81",
+        "changed_paths": ["docs/schedule.md"],
+        "changed_scopes": ["documentation"],
+        "affected_scopes": ["documentation"],
+        "escalation_reasons": [],
+        "docs_only": true,
+        "backend": [],
+        "integration": [],
+        "frontend": [],
+        "workflow": [],
+        "static": ["feature-graph", "whitespace"],
+        "migration": false,
+        "migration_cycle": false,
+        "builds": [],
+        "remote_ci": "full"
+      },
+      "plan_seconds": 0.0016,
+      "runtime_seconds": 0.346,
+      "measurement_kind": "plan comparison; docs focused-stage execution measured; no end-to-end canonical timing"
+    },
+    "frontend-taxonomy": {
+      "changed_paths": ["frontend/src/taxonomy/TaxonomyScreen.tsx"],
+      "before_selection": {
+        "backend_test_files": 76,
+        "integration_test_files": 78,
+        "frontend_test_files": 57,
+        "workflow_suites": 5,
+        "production_images": 2
+      },
+      "after_selection": {
+        "backend_test_files": 0,
+        "integration_test_files": 0,
+        "frontend_test_files": 4,
+        "workflow_suites": 0,
+        "production_images": 1
+      },
+      "mode": "affected",
+      "reasons": [],
+      "plan": {
+        "version": 1,
+        "base": "3592593f8ef78549ae2ba5b00c43b66930dcfd42",
+        "mode": "affected",
+        "impact_map_version": 1,
+        "impact_map_digest": "de6505d5a80db85d42fadc78b3a78b7289a92191c9ac3229e2f830e08acb4f81",
+        "changed_paths": ["frontend/src/taxonomy/TaxonomyScreen.tsx"],
+        "changed_scopes": ["taxonomy"],
+        "affected_scopes": [
+          "botany",
+          "collection-views",
+          "explore-regression",
+          "security-regression",
+          "taxonomy",
+          "taxonomy-regression"
+        ],
+        "escalation_reasons": [],
+        "docs_only": false,
+        "backend": [],
+        "integration": [],
+        "frontend": [
+          "frontend/src/native-ranges/NativeRangesScreen.test.tsx",
+          "frontend/src/native-ranges/geometry.test.ts",
+          "frontend/src/species-distribution/SpeciesDistributionScreen.test.tsx",
+          "frontend/src/taxonomy/TaxonomyScreen.test.tsx"
+        ],
+        "workflow": [],
+        "static": [
+          "feature-graph",
+          "whitespace",
+          "format-check",
+          "lint",
+          "typecheck",
+          "api-check"
+        ],
+        "migration": false,
+        "migration_cycle": false,
+        "builds": ["frontend"],
+        "remote_ci": "full"
+      },
+      "plan_seconds": 0.0018,
+      "runtime_seconds": null,
+      "measurement_kind": "plan comparison; docs focused-stage execution measured; no end-to-end canonical timing"
+    },
+    "domain-and-migration": {
+      "changed_paths": [
+        "backend/alembic/versions/new.py",
+        "backend/src/florabase/schedule/service.py"
+      ],
+      "before_selection": {
+        "backend_test_files": 76,
+        "integration_test_files": 78,
+        "frontend_test_files": 57,
+        "workflow_suites": 5,
+        "production_images": 2
+      },
+      "after_selection": {
+        "backend_test_files": 76,
+        "integration_test_files": 78,
+        "frontend_test_files": 57,
+        "workflow_suites": 7,
+        "production_images": 2
+      },
+      "mode": "full",
+      "reasons": ["high-risk path: backend/alembic/versions/new.py"],
+      "plan": {
+        "version": 1,
+        "base": "3592593f8ef78549ae2ba5b00c43b66930dcfd42",
+        "mode": "full",
+        "impact_map_version": 1,
+        "impact_map_digest": "de6505d5a80db85d42fadc78b3a78b7289a92191c9ac3229e2f830e08acb4f81",
+        "changed_paths": [
+          "backend/alembic/versions/new.py",
+          "backend/src/florabase/schedule/service.py"
+        ],
+        "changed_scopes": ["schedule"],
+        "affected_scopes": [
+          "activity",
+          "events-regression",
+          "locations-regression",
+          "plants-regression",
+          "schedule",
+          "security-regression",
+          "seeds-regression",
+          "sowings-regression"
+        ],
+        "escalation_reasons": [
+          "high-risk path: backend/alembic/versions/new.py"
+        ],
+        "docs_only": false,
+        "backend": ["ALL"],
+        "integration": ["ALL"],
+        "frontend": ["ALL"],
+        "workflow": [
+          "test-workflow-helpers",
+          "test-feature-workflow",
+          "test-preview-workflow",
+          "test-environment-workflow",
+          "test-uat-preview",
+          "test-verification-impact",
+          "test-workflow-resources",
+          "workflow-check"
+        ],
+        "static": [
+          "feature-graph",
+          "whitespace",
+          "format-check",
+          "lint",
+          "typecheck",
+          "api-check"
+        ],
+        "migration": true,
+        "migration_cycle": true,
+        "builds": ["backend", "frontend"],
+        "remote_ci": "full"
+      },
+      "plan_seconds": 0.0013,
+      "runtime_seconds": null,
+      "measurement_kind": "plan comparison; docs focused-stage execution measured; no end-to-end canonical timing"
+    },
+    "infrastructure": {
+      "changed_paths": ["scripts/feature-verify.sh"],
+      "before_selection": {
+        "backend_test_files": 76,
+        "integration_test_files": 78,
+        "frontend_test_files": 57,
+        "workflow_suites": 5,
+        "production_images": 2
+      },
+      "after_selection": {
+        "backend_test_files": 76,
+        "integration_test_files": 78,
+        "frontend_test_files": 57,
+        "workflow_suites": 7,
+        "production_images": 2
+      },
+      "mode": "full",
+      "reasons": ["high-risk path: scripts/feature-verify.sh"],
+      "plan": {
+        "version": 1,
+        "base": "3592593f8ef78549ae2ba5b00c43b66930dcfd42",
+        "mode": "full",
+        "impact_map_version": 1,
+        "impact_map_digest": "de6505d5a80db85d42fadc78b3a78b7289a92191c9ac3229e2f830e08acb4f81",
+        "changed_paths": ["scripts/feature-verify.sh"],
+        "changed_scopes": [],
+        "affected_scopes": [],
+        "escalation_reasons": ["high-risk path: scripts/feature-verify.sh"],
+        "docs_only": false,
+        "backend": ["ALL"],
+        "integration": ["ALL"],
+        "frontend": ["ALL"],
+        "workflow": [
+          "test-workflow-helpers",
+          "test-feature-workflow",
+          "test-preview-workflow",
+          "test-environment-workflow",
+          "test-uat-preview",
+          "test-verification-impact",
+          "test-workflow-resources",
+          "workflow-check"
+        ],
+        "static": [
+          "feature-graph",
+          "whitespace",
+          "format-check",
+          "lint",
+          "typecheck",
+          "api-check"
+        ],
+        "migration": true,
+        "migration_cycle": false,
+        "builds": ["backend", "frontend"],
+        "remote_ci": "full"
+      },
+      "plan_seconds": 0.0011,
+      "runtime_seconds": null,
+      "measurement_kind": "plan comparison; docs focused-stage execution measured; no end-to-end canonical timing"
+    }
+  },
+  "resource_before": {
+    "florabase": {
+      "environment": "DEV",
+      "source": ["primary checkout"],
+      "containers": 4,
+      "networks": 1,
+      "volumes": 3,
+      "images": 2
+    },
+    "florabase-attachment-focused": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 0,
+      "images": 0
+    },
+    "florabase-feature-migration-107101": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-feature-migration-338714": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-feature-migration-53850": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-5b6cf35150cd": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-5eb046e49c82": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-797c7ca039b3": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-886994f77ddd": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": ["another feature worktree"],
+      "containers": 2,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-cffd24e00b15": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-e3e808084e84": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-focus-4b10dab6": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-focus-84877087": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-focus-857833a8": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-location-review": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 0,
+      "images": 0
+    },
+    "florabase-media-review": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 0,
+      "images": 0
+    },
+    "florabase-media-tests": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 0,
+      "images": 0
+    },
+    "florabase-perf": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": ["primary checkout"],
+      "containers": 3,
+      "networks": 1,
+      "volumes": 0,
+      "images": 2
+    },
+    "florabase-preview": {
+      "environment": "Stable Preview",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 1,
+      "images": 0
+    },
+    "florabase-prod": {
+      "environment": "Production",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 2
+    },
+    "florabase-propagation003-review": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 0,
+      "images": 0
+    },
+    "florabase-quality-2e1fbf34031c": {
+      "environment": "Quality (legacy)",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 0,
+      "images": 0
+    },
+    "florabase-quality-4d926a296df3": {
+      "environment": "Quality (legacy)",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 3,
+      "images": 2
+    },
+    "florabase-quality-4e6148495d36": {
+      "environment": "Quality (legacy)",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 0,
+      "images": 0
+    },
+    "florabase-quality-b12e7288d355": {
+      "environment": "Quality (legacy)",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 0,
+      "images": 0
+    },
+    "florabase-uat-preview": {
+      "environment": "UAT Preview",
+      "source": ["persistent UAT worktree"],
+      "containers": 4,
+      "networks": 1,
+      "volumes": 3,
+      "images": 2
+    }
+  },
+  "resource_after": {
+    "florabase": {
+      "environment": "DEV",
+      "source": ["primary checkout"],
+      "containers": 4,
+      "networks": 1,
+      "volumes": 3,
+      "images": 2
+    },
+    "florabase-attachment-focused": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 0,
+      "images": 0
+    },
+    "florabase-feature-migration-107101": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-feature-migration-338714": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-feature-migration-53850": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-5b6cf35150cd": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-5eb046e49c82": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-797c7ca039b3": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-886994f77ddd": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": ["another feature worktree"],
+      "containers": 2,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-cffd24e00b15": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-e3e808084e84": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-focus-4b10dab6": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-focus-84877087": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-integration-focus-857833a8": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 1
+    },
+    "florabase-location-review": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 0,
+      "images": 0
+    },
+    "florabase-media-review": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 0,
+      "images": 0
+    },
+    "florabase-media-tests": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 0,
+      "images": 0
+    },
+    "florabase-perf": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": ["primary checkout"],
+      "containers": 3,
+      "networks": 1,
+      "volumes": 0,
+      "images": 2
+    },
+    "florabase-preview": {
+      "environment": "Stable Preview",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 1,
+      "images": 0
+    },
+    "florabase-prod": {
+      "environment": "Production",
+      "source": [],
+      "containers": 0,
+      "networks": 0,
+      "volumes": 0,
+      "images": 2
+    },
+    "florabase-propagation003-review": {
+      "environment": "Unknown Florabase-labelled resources",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 0,
+      "images": 0
+    },
+    "florabase-quality-2e1fbf34031c": {
+      "environment": "Quality (legacy)",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 0,
+      "images": 0
+    },
+    "florabase-quality-4d926a296df3": {
+      "environment": "Quality (legacy)",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 3,
+      "images": 2
+    },
+    "florabase-quality-4e6148495d36": {
+      "environment": "Quality (legacy)",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 0,
+      "images": 0
+    },
+    "florabase-quality-8b4474e4d89f": {
+      "environment": "quality",
+      "source": ["attached feature worktree"],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 3,
+      "images": 2
+    },
+    "florabase-quality-b12e7288d355": {
+      "environment": "Quality (legacy)",
+      "source": [],
+      "containers": 0,
+      "networks": 1,
+      "volumes": 0,
+      "images": 0
+    },
+    "florabase-uat-preview": {
+      "environment": "UAT Preview",
+      "source": ["persistent UAT worktree"],
+      "containers": 4,
+      "networks": 1,
+      "volumes": 3,
+      "images": 2
+    }
+  },
+  "persistent_project_reports_identical": {
+    "florabase": true,
+    "florabase-feature-review": true,
+    "florabase-uat-preview": true,
+    "florabase-preview": true,
+    "florabase-prod": true
+  },
+  "actual_docker_runs": [
+    {
+      "stage": "selected-schedule-integration",
+      "seconds": 35.18,
+      "exit_code": 0
+    },
+    {
+      "stage": "migration-cycle",
+      "seconds": 30.04,
+      "exit_code": 0
+    },
+    {
+      "stage": "selected-frontend-taxonomy",
+      "seconds": 35.4,
+      "exit_code": 0,
+      "command": [
+        "python3",
+        "./scripts/workflow_environment.py",
+        "quality",
+        "compose",
+        "--",
+        "run",
+        "--rm",
+        "--no-deps",
+        "frontend",
+        "pnpm",
+        "test",
+        "src/native-ranges/NativeRangesScreen.test.tsx",
+        "src/native-ranges/geometry.test.ts",
+        "src/species-distribution/SpeciesDistributionScreen.test.tsx",
+        "src/taxonomy/TaxonomyScreen.test.tsx"
+      ]
+    },
+    {
+      "stage": "scoped-production-backend",
+      "seconds": 6.64,
+      "exit_code": 0
+    },
+    {
+      "stage": "scoped-production-frontend",
+      "seconds": 3.05,
+      "exit_code": 0
+    }
+  ],
+  "actual_cleanup": {
+    "selected-schedule-integration": [
+      "RESOURCE_CLEANUP_PASSED project=florabase-integration-89c14ba22234 removed={\"containers\": 2, \"images\": 1, \"networks\": 1, \"volumes\": 0} residual_containers_networks_volumes=0 retained_images=0 shared_build_cache=retained"
+    ],
+    "migration-cycle": [
+      "RESOURCE_CLEANUP_PASSED project=florabase-feature-migration-e1ccc1b888c5 removed={\"containers\": 1, \"images\": 1, \"networks\": 1, \"volumes\": 0} residual_containers_networks_volumes=0 retained_images=0 shared_build_cache=retained"
+    ],
+    "build-backend": [
+      "RESOURCE_CLEANUP_PASSED project=florabase-verification-build-3788410252f1 removed={\"containers\": 0, \"images\": 1, \"networks\": 0, \"volumes\": 0} residual_containers_networks_volumes=0 retained_images=0 shared_build_cache=retained"
+    ],
+    "build-frontend": [
+      "RESOURCE_CLEANUP_PASSED project=florabase-verification-build-02702fb410ca removed={\"containers\": 0, \"images\": 1, \"networks\": 0, \"volumes\": 0} residual_containers_networks_volumes=0 retained_images=0 shared_build_cache=retained"
+    ]
+  },
+  "actual_smoke_results": [
+    "TARGET_CLEANUP_SMOKE_PASSED: exact target removed; 9 protected/non-target fixtures survived; stale network/volume cleaned; repeated cleanup safe",
+    "QUALITY_FINISH_SMOKE_PASSED: dirty primary refusal preserved Quality; proved merge retired exact worktree; all other synthetic environments survived",
+    "WORKFLOW_RESOURCE_SMOKE_PASSED: all synthetic containers/networks/volumes retired; real DEV/Review/UAT/Stable/Prod resource identities unchanged"
+  ],
+  "actual_smoke_resources_retired": {
+    "containers": 11,
+    "networks": 12,
+    "volumes": 12,
+    "images": 0
+  },
+  "actual_failed_initial_pool_smoke": "Default IPv4 pools exhausted; all 9 partially created synthetic sets retired (9 containers/networks/volumes); failed 10th set had no residuals; no unknown resources deleted",
+  "global_static_seconds": [
+    {
+      "stage": "format-check",
+      "seconds": 55.61,
+      "exit_code": 0
+    },
+    {
+      "stage": "lint",
+      "seconds": 118.19,
+      "exit_code": 0
+    },
+    {
+      "stage": "typecheck",
+      "seconds": 91.24,
+      "exit_code": 0
+    },
+    {
+      "stage": "api-check",
+      "seconds": 22.54,
+      "exit_code": 0
+    }
+  ],
+  "helper_test_counts": {
+    "selector_inventory_receipt": 15,
+    "resource_cleanup_runner_signals": 13,
+    "feature_delivery": 37,
+    "environment": 29,
+    "preview": 19,
+    "uat": 19
+  },
+  "other_checks": [
+    "workflow Ruff lint/format: passed; 19 files",
+    "workflow strict mypy: 13 runtime files plus 1 UAT fixture passed",
+    "backend/frontend full format/lint/strict typing and generated API drift: passed",
+    "feature graph: 99 valid",
+    "bash syntax: passed",
+    "git tracked/staged/untracked whitespace: passed",
+    "shell/Git helper fixtures: passed"
+  ],
+  "selected_application_tests": {
+    "schedule_postgresql": 12,
+    "taxonomy_related_frontend": {
+      "files": 4,
+      "tests": 29
+    }
+  },
+  "cache_policy": {
+    "initial_builder": "default/docker, BuildKit v0.34.0",
+    "initial_shared_cache": "73 records, 1.24 GB",
+    "action": "shared cache retained; no safe exclusive project boundary; no global prune"
+  },
+  "limitations": [
+    "Global statics remain a material cost, retained for safety; docs skips them.",
+    "No whole old/new canonical runtime or percentage estimate; final full gate reserved for Luna.",
+    "Domain plus migration conservatively selects full.",
+    "Existing full product smoke suites were adapted and statically checked; only the resource/finish smoke and selected disposable product substages were executed here.",
+    "Current worktree Quality (1 network, 3 volumes, 2 images) intentionally reusable until explicit cleanup or successful finish.",
+    "Legacy/unknown project images/networks and another worktree Quality remain unchanged."
+  ],
+  "current_feature_plan": {
+    "version": 1,
+    "base": "3592593f8ef78549ae2ba5b00c43b66930dcfd42",
+    "mode": "full",
+    "impact_map_version": 1,
+    "impact_map_digest": "de6505d5a80db85d42fadc78b3a78b7289a92191c9ac3229e2f830e08acb4f81",
+    "changed_paths": [
+      ".github/workflows/ci.yml",
+      "CONTRIBUTING.md",
+      "Makefile",
+      "compose.quality.yaml",
+      "docs/architecture.md",
+      "docs/ci-003-resource-impact-evidence.json",
+      "docs/ci-003-resource-impact-handoff.md",
+      "docs/development-workflow.md",
+      "docs/development.md",
+      "docs/features.json",
+      "docs/product-roadmap.md",
+      "docs/progress.md",
+      "scripts/disposable_workflow.py",
+      "scripts/feature-finish.sh",
+      "scripts/feature-tree-fingerprint.py",
+      "scripts/feature-verify.sh",
+      "scripts/smoke-dev-recovery.py",
+      "scripts/smoke-dev-upgrade.py",
+      "scripts/smoke-environment-workflow.py",
+      "scripts/smoke-uat-preview.py",
+      "scripts/smoke-workflow-resources.py",
+      "scripts/smoke_lifecycle.py",
+      "scripts/test-feature-workflow.py",
+      "scripts/test-integration.sh",
+      "scripts/test-preview-workflow.py",
+      "scripts/test-verification-impact.py",
+      "scripts/test-workflow-helpers.sh",
+      "scripts/test-workflow-resources.py",
+      "scripts/verification-impact.json",
+      "scripts/verification_gate.py",
+      "scripts/verification_impact.py",
+      "scripts/verify-migration-cycle.sh",
+      "scripts/workflow_environment.py",
+      "scripts/workflow_resources.py"
+    ],
+    "changed_scopes": ["documentation"],
+    "affected_scopes": ["documentation"],
+    "escalation_reasons": [
+      "high-risk path: .github/workflows/ci.yml",
+      "high-risk path: Makefile",
+      "high-risk path: compose.quality.yaml",
+      "high-risk path: scripts/disposable_workflow.py",
+      "high-risk path: scripts/feature-finish.sh",
+      "high-risk path: scripts/feature-tree-fingerprint.py",
+      "high-risk path: scripts/feature-verify.sh",
+      "high-risk path: scripts/smoke-dev-recovery.py",
+      "high-risk path: scripts/smoke-dev-upgrade.py",
+      "high-risk path: scripts/smoke-environment-workflow.py",
+      "high-risk path: scripts/smoke-uat-preview.py",
+      "high-risk path: scripts/smoke-workflow-resources.py",
+      "high-risk path: scripts/smoke_lifecycle.py",
+      "high-risk path: scripts/test-feature-workflow.py",
+      "high-risk path: scripts/test-integration.sh",
+      "high-risk path: scripts/test-preview-workflow.py",
+      "high-risk path: scripts/test-verification-impact.py",
+      "high-risk path: scripts/test-workflow-helpers.sh",
+      "high-risk path: scripts/test-workflow-resources.py",
+      "high-risk path: scripts/verification-impact.json",
+      "high-risk path: scripts/verification_gate.py",
+      "high-risk path: scripts/verification_impact.py",
+      "high-risk path: scripts/verify-migration-cycle.sh",
+      "high-risk path: scripts/workflow_environment.py",
+      "high-risk path: scripts/workflow_resources.py"
+    ],
+    "docs_only": false,
+    "backend": ["ALL"],
+    "integration": ["ALL"],
+    "frontend": ["ALL"],
+    "workflow": [
+      "test-workflow-helpers",
+      "test-feature-workflow",
+      "test-preview-workflow",
+      "test-environment-workflow",
+      "test-uat-preview",
+      "test-verification-impact",
+      "test-workflow-resources",
+      "workflow-check"
+    ],
+    "static": [
+      "feature-graph",
+      "whitespace",
+      "format-check",
+      "lint",
+      "typecheck",
+      "api-check"
+    ],
+    "migration": true,
+    "migration_cycle": true,
+    "builds": ["backend", "frontend"],
+    "remote_ci": "full"
+  }
+}

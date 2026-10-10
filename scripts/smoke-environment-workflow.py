@@ -13,8 +13,11 @@ import shutil
 import subprocess
 import tarfile
 import tempfile
+import uuid
+from contextlib import ExitStack
 from pathlib import Path
 
+from smoke_lifecycle import SmokeLifecycle, overlay
 from workflow_environment import (
     Environment,
     Repository,
@@ -23,6 +26,7 @@ from workflow_environment import (
     migration_graph,
     run,
 )
+from workflow_resources import Disposable, Owner
 
 
 def assert_equal(actual: object, expected: object, message: str) -> None:
@@ -54,6 +58,7 @@ def main() -> None:
     if repo.source == repo.primary:
         raise WorkflowError("run smoke from the existing linked feature worktree")
     review, dev = Environment(repo, "review"), Environment(repo, "dev")
+    review.project = "florabase-feature-review-smoke-" + uuid.uuid4().hex[:12]
     existing = run(
         [
             "docker",
@@ -82,7 +87,7 @@ def main() -> None:
         "branch_labels = None\ndepends_on = None\n"
         "def upgrade() -> None:\n    pass\n\ndef downgrade() -> None:\n    pass\n"
     )
-    preview_project = "florabase-preview-smoke"
+    preview_project = "florabase-preview-smoke-" + uuid.uuid4().hex[:12]
     with tempfile.TemporaryDirectory(prefix="florabase-stable-smoke-") as temporary:
         stable = Path(temporary)
         archive = subprocess.run(
@@ -137,170 +142,195 @@ def main() -> None:
         ):
             migration.unlink()
             raise WorkflowError("preview-smoke resources already exist; refusing to adopt them")
-        try:
-            review.up()
-            assert_equal(
-                review.current(), ["workflow_smoke"], "dirty migration used only in Review"
+        with ExitStack() as lifetimes:
+            lifetimes.callback(migration.unlink, missing_ok=True)
+            lifetimes.enter_context(SmokeLifecycle(review))
+            preview_owner = Owner.smoke_fixture(preview_project, stable)
+            lifetimes.enter_context(Disposable(preview_owner))
+            preview_config = json.loads(
+                run([*preview_command, "config", "--format", "json"], env=preview_env, capture=True)
             )
-            assert_equal(
-                code_heads(migration_graph(dev.source)), [base_head], "DEV still sees stable head"
-            )
-            uid = review.compose("exec", "-T", "frontend", "id", "-u", capture=True)
-            if uid == "0":
-                raise WorkflowError("frontend runtime is root")
-            review.compose(
-                "exec",
-                "-T",
-                "frontend",
-                "sh",
-                "-ec",
-                "test -w /app/node_modules/.bin; printf preserved > /app/node_modules/.workflow-smoke",
-            )
-            review.compose(
-                "exec",
-                "-T",
-                "backend",
-                "sh",
-                "-ec",
-                "printf preserved > /var/lib/florabase/attachments/.workflow-smoke",
-            )
-            review.compose(
-                "exec",
-                "-T",
-                "db",
-                "sh",
-                "-ec",
-                'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE TABLE workflow_smoke_state (value text); INSERT INTO workflow_smoke_state VALUES (\'preserved\');"',
-            )
-            config = json.loads(review.compose("config", "--format", "json", capture=True))
-            for key in ("postgres_data", "attachment_data", "frontend_node_modules"):
+            ownership = stable / "smoke-ownership.json"
+            ownership.write_text(json.dumps(overlay(preview_config, preview_owner)))
+            preview_command.extend(["--file", str(ownership)])
+            try:
+                review.up()
                 assert_equal(
-                    config["volumes"][key]["name"],
-                    f"{review.project}_{key}",
-                    "isolated review volume",
+                    review.current(), ["workflow_smoke"], "dirty migration used only in Review"
                 )
-            assert_equal(
-                config["networks"]["internal"]["name"],
-                f"{review.project}_internal",
-                "isolated review network",
-            )
-            # Reproduce root-owned dependency state as an automated regression fixture.
-            review.compose(
-                "run",
-                "--rm",
-                "-T",
-                "--no-deps",
-                "--user",
-                "0:0",
-                "--entrypoint",
-                "sh",
-                "frontend",
-                "-ec",
-                "chown -R 0:0 /app/node_modules/.bin",
-            )
-            review.stop()
-            assert_equal(dev_snapshot(dev), before, "DEV untouched by review startup and stop")
-            # Use a source fixture mount to change package+lockfile without touching feature files.
-            changed_frontend = stable / "changed-frontend"
-            shutil.copytree(
-                repo.source / "frontend",
-                changed_frontend,
-                ignore=shutil.ignore_patterns(
-                    "node_modules", "dist", ".pnpm-store", "coverage", "*.tsbuildinfo"
-                ),
-            )
-            review.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")
-            fixture_mount = f"{changed_frontend}:/app"
-            review.compose(
-                "run",
-                "--rm",
-                "-T",
-                "--no-deps",
-                "-v",
-                fixture_mount,
-                "frontend",
-                "pnpm",
-                "add",
-                "--lockfile-only",
-                "--save-dev",
-                "--save-exact",
-                "picocolors@1.1.1",
-            )
-            review.compose(
-                "run",
-                "--rm",
-                "-T",
-                "--no-deps",
-                "-v",
-                fixture_mount,
-                "frontend",
-                "node",
-                "-e",
-                "if(require('picocolors/package.json').version!=='1.1.1')process.exit(1)",
-            )
-            review.up()
-            review.compose(
-                "exec",
-                "-T",
-                "frontend",
-                "sh",
-                "-ec",
-                "test -w /app/node_modules/.bin; test $(cat /app/node_modules/.workflow-smoke) = preserved",
-            )
-            review.compose(
-                "exec",
-                "-T",
-                "backend",
-                "sh",
-                "-ec",
-                "test $(cat /var/lib/florabase/attachments/.workflow-smoke) = preserved",
-            )
-            value = review.compose(
-                "exec",
-                "-T",
-                "db",
-                "sh",
-                "-ec",
-                'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "SELECT value FROM workflow_smoke_state;"',
-                capture=True,
-            )
-            assert_equal(value, "preserved", "Review DB survives stop/restart")
-            run([*preview_command, "config", "--quiet"], env=preview_env)
-            run([*preview_command, "build"], env=preview_env)
-            run(
-                [*preview_command, "up", "-d", "--wait", "--wait-timeout", "120", "db"],
-                env=preview_env,
-            )
-            run(
-                [*preview_command, "run", "--rm", "-T", "backend", "alembic", "upgrade", "head"],
-                env=preview_env,
-            )
-            run([*preview_command, "up", "-d", "--wait", "--wait-timeout", "180"], env=preview_env)
-            stable_head = code_heads(migration_graph(stable))
-            assert_equal(stable_head, [base_head], "stable archive excludes dirty migration")
-            # Validate all canonical topologies without exposing interpolated secrets.
-            Environment(repo, "prod").compose("config", "--quiet")
-            run(
-                [
-                    "docker",
-                    "compose",
-                    "--env-file",
-                    "/dev/null",
-                    "-f",
-                    str(repo.source / "compose.integration.yaml"),
-                    "config",
-                    "--quiet",
-                ]
-            )
-            assert_equal(dev_snapshot(dev), before, "DEV untouched by review and stable preview")
-            print(
-                f"REAL COMPOSE SMOKE PASSED: dirty Review head workflow_smoke; stable head {base_head}; non-root frontend UID {uid}; fresh bootstrap, root-owned .bin repair, changed dependency/lockfile bootstrap, DB/media/dependency persistence and all topology checks passed"
-            )
-        finally:
-            # These names were proved absent before this smoke created them.
-            review.stop(remove=True, confirm=review.project)
-            run([*preview_command, "down", "--volumes", "--remove-orphans"], env=preview_env)
-            migration.unlink(missing_ok=True)
+                assert_equal(
+                    code_heads(migration_graph(dev.source)),
+                    [base_head],
+                    "DEV still sees stable head",
+                )
+                uid = review.compose("exec", "-T", "frontend", "id", "-u", capture=True)
+                if uid == "0":
+                    raise WorkflowError("frontend runtime is root")
+                review.compose(
+                    "exec",
+                    "-T",
+                    "frontend",
+                    "sh",
+                    "-ec",
+                    "test -w /app/node_modules/.bin; printf preserved > /app/node_modules/.workflow-smoke",
+                )
+                review.compose(
+                    "exec",
+                    "-T",
+                    "backend",
+                    "sh",
+                    "-ec",
+                    "printf preserved > /var/lib/florabase/attachments/.workflow-smoke",
+                )
+                review.compose(
+                    "exec",
+                    "-T",
+                    "db",
+                    "sh",
+                    "-ec",
+                    'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE TABLE workflow_smoke_state (value text); INSERT INTO workflow_smoke_state VALUES (\'preserved\');"',
+                )
+                config = json.loads(review.compose("config", "--format", "json", capture=True))
+                for key in ("postgres_data", "attachment_data", "frontend_node_modules"):
+                    assert_equal(
+                        config["volumes"][key]["name"],
+                        f"{review.project}_{key}",
+                        "isolated review volume",
+                    )
+                assert_equal(
+                    config["networks"]["internal"]["name"],
+                    f"{review.project}_internal",
+                    "isolated review network",
+                )
+                # Reproduce root-owned dependency state as an automated regression fixture.
+                review.compose(
+                    "run",
+                    "--rm",
+                    "-T",
+                    "--no-deps",
+                    "--user",
+                    "0:0",
+                    "--entrypoint",
+                    "sh",
+                    "frontend",
+                    "-ec",
+                    "chown -R 0:0 /app/node_modules/.bin",
+                )
+                review.stop()
+                assert_equal(dev_snapshot(dev), before, "DEV untouched by review startup and stop")
+                # Use a source fixture mount to change package+lockfile without touching feature files.
+                changed_frontend = stable / "changed-frontend"
+                shutil.copytree(
+                    repo.source / "frontend",
+                    changed_frontend,
+                    ignore=shutil.ignore_patterns(
+                        "node_modules", "dist", ".pnpm-store", "coverage", "*.tsbuildinfo"
+                    ),
+                )
+                review.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")
+                fixture_mount = f"{changed_frontend}:/app"
+                review.compose(
+                    "run",
+                    "--rm",
+                    "-T",
+                    "--no-deps",
+                    "-v",
+                    fixture_mount,
+                    "frontend",
+                    "pnpm",
+                    "add",
+                    "--lockfile-only",
+                    "--save-dev",
+                    "--save-exact",
+                    "picocolors@1.1.1",
+                )
+                review.compose(
+                    "run",
+                    "--rm",
+                    "-T",
+                    "--no-deps",
+                    "-v",
+                    fixture_mount,
+                    "frontend",
+                    "node",
+                    "-e",
+                    "if(require('picocolors/package.json').version!=='1.1.1')process.exit(1)",
+                )
+                review.up()
+                review.compose(
+                    "exec",
+                    "-T",
+                    "frontend",
+                    "sh",
+                    "-ec",
+                    "test -w /app/node_modules/.bin; test $(cat /app/node_modules/.workflow-smoke) = preserved",
+                )
+                review.compose(
+                    "exec",
+                    "-T",
+                    "backend",
+                    "sh",
+                    "-ec",
+                    "test $(cat /var/lib/florabase/attachments/.workflow-smoke) = preserved",
+                )
+                value = review.compose(
+                    "exec",
+                    "-T",
+                    "db",
+                    "sh",
+                    "-ec",
+                    'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "SELECT value FROM workflow_smoke_state;"',
+                    capture=True,
+                )
+                assert_equal(value, "preserved", "Review DB survives stop/restart")
+                run([*preview_command, "config", "--quiet"], env=preview_env)
+                run([*preview_command, "build"], env=preview_env)
+                run(
+                    [*preview_command, "up", "-d", "--wait", "--wait-timeout", "120", "db"],
+                    env=preview_env,
+                )
+                run(
+                    [
+                        *preview_command,
+                        "run",
+                        "--rm",
+                        "-T",
+                        "backend",
+                        "alembic",
+                        "upgrade",
+                        "head",
+                    ],
+                    env=preview_env,
+                )
+                run(
+                    [*preview_command, "up", "-d", "--wait", "--wait-timeout", "180"],
+                    env=preview_env,
+                )
+                stable_head = code_heads(migration_graph(stable))
+                assert_equal(stable_head, [base_head], "stable archive excludes dirty migration")
+                # Validate all canonical topologies without exposing interpolated secrets.
+                Environment(repo, "prod").compose("config", "--quiet")
+                run(
+                    [
+                        "docker",
+                        "compose",
+                        "--env-file",
+                        "/dev/null",
+                        "-f",
+                        str(repo.source / "compose.integration.yaml"),
+                        "config",
+                        "--quiet",
+                    ]
+                )
+                assert_equal(
+                    dev_snapshot(dev), before, "DEV untouched by review and stable preview"
+                )
+                print(
+                    f"REAL COMPOSE SMOKE PASSED: dirty Review head workflow_smoke; stable head {base_head}; non-root frontend UID {uid}; fresh bootstrap, root-owned .bin repair, changed dependency/lockfile bootstrap, DB/media/dependency persistence and all topology checks passed"
+                )
+            finally:
+                # These names were proved absent before this smoke created them.
+                migration.unlink(missing_ok=True)
         assert_equal(dev_snapshot(dev), before, "cleanup leaves DEV unchanged")
         assert_equal(review.containers(), [], "review containers removed")
         assert_equal(

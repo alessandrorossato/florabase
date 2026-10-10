@@ -79,7 +79,7 @@ api-check: ## Verify generated API artifacts are current
 
 check: format-check lint typecheck test api-check ## Run the main non-destructive verification suite
 
-ci: test-workflow-helpers test-feature-workflow test-preview-workflow test-environment-workflow test-uat-preview workflow-check check test-integration build ## Run the complete local equivalent of pull-request CI
+ci: test-verification-impact test-workflow-resources test-workflow-helpers test-feature-workflow test-preview-workflow test-environment-workflow test-uat-preview workflow-check check test-integration build ## Run the complete local equivalent of pull-request CI
 
 migrate: ## Apply all pending database migrations explicitly
 	$(COMPOSE) run --rm backend alembic upgrade head
@@ -133,8 +133,37 @@ feature-start: export BRANCH := $(BRANCH)
 feature-start: ## Create a branch from updated main: make feature-start BRANCH=feat/example
 	@./scripts/feature-start.sh
 
-feature-verify: ## Run the canonical final local verification gate for the current feature branch
+feature-verify: ## Derive affected/full verification automatically and write the exact receipt
 	@./scripts/feature-verify.sh
+
+verify-affected: feature-verify ## Alias for the automatic safe final gate (may escalate FULL)
+
+verify-full: ## Force the complete final local gate and exact receipt
+	@./scripts/feature-verify.sh --full
+
+verification-plan: ## Show the deterministic impact plan; FORMAT=json for machine output
+	@python3 ./scripts/verification_impact.py --base "$(REF)" $(if $(filter json,$(FORMAT)),--json,)
+
+verify-build: ## Build selected independent production images in a disposable owned project
+	@python3 ./scripts/disposable_workflow.py verification-build $(foreach service,$(SERVICES),--build $(service))
+
+quality-status: ## Inspect exactly this worktree's reusable Quality project
+	@python3 ./scripts/workflow_resources.py quality-status
+
+quality-clean: ## Retire exactly this worktree's Quality resources, preserving other environments
+	@python3 ./scripts/workflow_resources.py quality-clean
+
+workflow-resources: ## Report Florabase workflow resource identities and retained cache policy
+	@python3 ./scripts/workflow_resources.py report
+
+test-verification-impact: ## Test complete-tree impact selection and selected receipt evidence offline
+	@python3 ./scripts/test-verification-impact.py
+
+test-workflow-resources: ## Test exact ownership, failure cleanup and lifecycle safety offline
+	@python3 ./scripts/test-workflow-resources.py
+
+smoke-workflow-resources: ## Prove retirement and protected-project isolation on unique synthetic Docker state
+	@python3 ./scripts/smoke-workflow-resources.py
 
 feature-deliver: ## Push the verified committed feature and wait for protected squash auto-merge
 	@./scripts/feature-deliver.py
@@ -180,9 +209,9 @@ smoke-dev-upgrade: ## Prove upgrade image freshness/retry on unique disposable s
 	@python3 ./scripts/smoke-dev-upgrade.py
 
 workflow-check: ## Lint, format-check and strictly type-check the new environment helpers
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff check --no-cache --isolated --select E4,E7,E9,F,I,B,UP /workflow/workflow_environment.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_preview.py /workflow/test-uat-preview.py /workflow/smoke-uat-preview.py /workflow/uat_fixture.py /workflow/test-uat-fixture.py
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff format --no-cache --check /workflow/workflow_environment.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_preview.py /workflow/test-uat-preview.py /workflow/smoke-uat-preview.py /workflow/uat_fixture.py /workflow/test-uat-fixture.py
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend mypy --strict --follow-imports=skip /workflow/workflow_environment.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_preview.py /workflow/smoke-uat-preview.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff check --no-cache --isolated --select E4,E7,E9,F,I,B,UP /workflow/workflow_resources.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/feature-tree-fingerprint.py /workflow/test-verification-impact.py /workflow/test-workflow-resources.py /workflow/smoke-workflow-resources.py /workflow/workflow_environment.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_preview.py /workflow/test-uat-preview.py /workflow/smoke-uat-preview.py /workflow/uat_fixture.py /workflow/test-uat-fixture.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff format --no-cache --check /workflow/workflow_resources.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/feature-tree-fingerprint.py /workflow/test-verification-impact.py /workflow/test-workflow-resources.py /workflow/smoke-workflow-resources.py /workflow/workflow_environment.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_preview.py /workflow/test-uat-preview.py /workflow/smoke-uat-preview.py /workflow/uat_fixture.py /workflow/test-uat-fixture.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend mypy --strict --follow-imports=skip /workflow/workflow_resources.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/feature-tree-fingerprint.py /workflow/smoke-workflow-resources.py /workflow/workflow_environment.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_preview.py /workflow/smoke-uat-preview.py
 	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" -e MYPYPATH=/app/src:/workflow backend mypy --strict --follow-imports=skip /workflow/uat_fixture.py
 
 
@@ -212,3 +241,5 @@ test-uat-preview: ## Test UAT workflow identity, retirement, reset and fixture i
 
 smoke-uat-preview: ## Prove UAT seed/auth/reset/persistence/ownership transition on disposable Compose state
 	@python3 ./scripts/smoke-uat-preview.py
+
+.PHONY: verify-affected verify-full verification-plan verify-build quality-status quality-clean workflow-resources test-verification-impact test-workflow-resources smoke-workflow-resources

@@ -145,9 +145,19 @@ loads only in requested detail. Location adds a grouped inventory arm to its exi
 aggregation. Revision 0031 creates no inventory and guards populated downgrade. Inventory adds no
 lineage edge, Event effect or media target. See [inventory contract](harvest-inventory.md).
 
-
 ENRICHMENT-001 keeps the optional pinned WCVP SQLite index outside canonical PostgreSQL state and
 application startup. Only an explicit standalone provisioning command accesses the fixed official
 archive. Authenticated APIs read bounded local source data; reviewed Apply atomically writes the
 existing profile-range relation and immutable source evidence. Missing source data cannot affect
 app health or operator-authored knowledge. See [the contract](native-range-enrichment.md).
+
+## Local workflow ownership and verification
+
+CI-003 owns both environment orchestration and its Docker resource lifecycle. Disposable integration,
+migration, verification-build and smoke projects register positive ownership before creation and
+verify retirement; worktree-scoped Quality remains reusable until explicit cleanup or proven finish.
+Persistent operator environments retain their existing independent ownership/state contracts.
+The repository-owned impact map selects bounded local regression suites or escalates full for high
+risk/unknown paths. Exact-tree receipts additionally prove the selected completed gate; protected
+remote PR quality/integration/build stay exhaustive. Shared builder cache and ambiguous images remain
+reported, without global cleanup. See [the workflow contract](development-workflow.md).

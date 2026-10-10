@@ -1,5 +1,77 @@
 # Engineering progress
 
+## 2026-10-10 — CI-003 independent verification and protected delivery preparation
+
+- Independently reviewed the implementation, complete feature graph, CI ownership, resource
+  registration/cleanup paths, failure/signal handling, verification selectors/receipts, delivery and
+  finish guards, and real Compose evidence. No workflow defect or `NEEDS_SOL` blocker was found.
+- `make smoke-workflow-resources` passed against isolated synthetic projects: exact target cleanup
+  was idempotent, dirty-primary finish refusal preserved Quality, proven fixture finish retired only
+  its own Quality resources, and DEV/Review/UAT/Stable Preview/production, another Quality owner,
+  unrelated projects, and shared BuildKit cache remained unchanged.
+- Explicit `make verify-full` passed. After final status and roadmap updates, `make feature-verify`
+  independently selected **FULL** and passed with a final-tree receipt: feature graph **99 valid**;
+  workflow/helper suites, repository format/lint/strict typing and API drift; backend **910 passed**
+  at **90.32%** coverage; frontend **557 passed across 57 files**; PostgreSQL integration **711
+  passed**; backend/frontend production builds; and migration **base → head → base → head** through
+  `20261009_0041`. Every disposable run reported zero owned container/network/volume residuals.
+- The first final-gate attempt had one transient frontend lazy-load timeout under exhausted host
+  swap. The unchanged test passed three isolated repetitions and the complete frontend suite passed
+  on the fresh full-gate retry; no test or timeout was altered. Final canonical rerun follows this
+  progress-log update so the receipt matches the complete final tree.
+- CI-003 is `verified`; no schema changes mean no DEV upgrade is needed. After protected delivery
+  and `make feature-finish`, sweep open bot dependency-update PRs before DASHBOARD-001. No staging,
+  commit, push, PR, delivery, or feature finish has yet occurred.
+
+## 2026-10-10 — CI-003 scoped Docker retirement and impact-aware local verification implemented
+
+- Audited the complete **99-feature** graph and existing workflow/build/environment ownership at
+  SCHEDULE-001 merge `3592593`; extended existing **CI-003** rather than create a duplicate ID.
+  Attached `c122` through `make feature-init`, branch `ci/workflow-resource-impact-verification`.
+- Added a versioned explicit impact map over complete committed/index/dirty/untracked inventories,
+  rename/deletion/mode/symlink changes and bounded transitive regression consumers. Unknown,
+  foundational/security/dependency/migration/workflow paths escalate **FULL**. Canonical local gate
+  derives affected/full automatically; explicit `verify-full` remains available. Docs-only skips all
+  Docker/product/static runtime stages; ordinary product changes skip workflow suites. Remote
+  protected quality/integration/build remain exhaustive and retain coverage policy.
+- Version **2** receipts preserve exact tree/base/branch/HEAD integrity and additionally record map
+  digest, scopes/reasons, selected suites, actual commands/results, migration/build outcomes and UTC
+  completion. Write/read independently rederive selection; stale, unsupported, incomplete or
+  differently mapped evidence refuses delivery. Focused iteration writes no feature receipt.
+- Registered exact positive ownership retirement for integration, migration, selected production
+  builds and existing unique smoke fixtures, including caught INT/TERM, partial creation and cleanup
+  failure. Exact IDs/names, foreign-user preflight/recheck and residual verification replace silent
+  migration cleanup. Quality status/cleanup is worktree-scoped; proven finish retires it only after
+  all existing Git/PR/primary checks. DEV/Review/UAT/Stable/production persistence is preserved.
+  Ambiguous images, legacy unknowns and shared default BuildKit cache are retained/reported;
+  no global prune or retroactive other-worktree cleanup was introduced.
+- Focused offline tests: selector/inventory/receipt **15**, resource/runner/signals **13**, feature/
+  delivery **37**, environment **29**, Preview **19**, UAT **19**; shell/Git helper fixtures pass.
+  Workflow Ruff format/lint (**19 files**) and strict mypy (**13 runtime files + 1 UAT fixture**) pass.
+  Whole product format/lint/type/API drift checks pass, measured serially at **55.61 / 118.19 /
+  91.24 / 22.54 s** including Quality startup. They remain global for product safety, with their
+  material cost documented. Graph remains **99 valid**; shell syntax and whitespace pass.
+- Real disposable Schedule PostgreSQL **12 passed** in **35.18 s**; forced migration cycle passes in
+  **30.04 s** (this source has no new revision: base/feature head both **0041**). Each retires its
+  project/image with **zero** owned containers/networks/volumes. Derived Taxonomy frontend selection
+  **29 passed across 4 files** in **35.40 s** including startup. Separate backend/frontend production
+  builds pass in **6.64 / 3.05 s**, each exclusively owned image retired without deployment.
+- Real synthetic isolation smoke passes exact target cleanup, stale network/volume, idempotence,
+  preservation of nine non-target projects including two independently derived Quality owners, and
+  actual linked-fixture finish safety/retirement. All **11 containers / 12 networks / 12 volumes**
+  retire; real DEV/Review/UAT/Stable/production identities and final reports match their snapshots.
+  Initial smoke reproduced exhausted default IPv4 pools and still cleaned all partial fixtures;
+  synthetic isolation uses explicit unique IPv6 subnets, without changing product networking.
+- [Handoff](ci-003-resource-impact-handoff.md) and [machine evidence](ci-003-resource-impact-evidence.json)
+  distinguish real substage timings from four deterministic before/after selection/resource plans.
+  Focused docs-plan commands took **0.346 s**, creating no Docker resources; no old/new end-to-end
+  canonical timing or percentage is invented. Current Quality intentionally stays reusable;
+  legacy/other-worktree resources and shared cache stay intact. Existing full product smoke scripts
+  were adapted/statically checked, not claimed executed. Luna owns independent review and the final
+  **FULL** canonical gate. CI-003 remains `implemented`; next product increment is **DASHBOARD-001**.
+  Primary source/main unchanged; no staging, commit, push, delivery, attached-feature finish, DEV
+  upgrade, product visual UAT or canonical verification occurred. **READY_FOR_VISUAL_REVIEW**.
+
 ## 2026-10-10 — SCHEDULE-001 independent final verification
 
 - Independently reviewed the Schedule domain boundary, authenticated API and generated contract,
