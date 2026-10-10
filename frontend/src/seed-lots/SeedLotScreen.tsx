@@ -1,3 +1,4 @@
+import { UpcomingActivities } from "../schedule/UpcomingActivities";
 import { PurchaseContextDialog } from "../orders/PurchaseContext";
 import {
   applyPurchase,
@@ -564,6 +565,11 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
+          <UpcomingActivities
+            kind={"seed_lot"}
+            id={lot.id}
+            current={lot.lifecycle === "active"}
+          />
           {lot.harvest_conversion_id && (
             <ConversionHistory
               kind="seed_lot_id"

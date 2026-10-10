@@ -3237,6 +3237,16 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     if (path.endsWith("/health")) return jsonResponse({ status: "ok" });
     if (path.startsWith("/api/v1/orders?"))
       return jsonResponse({ items: [], total: 0, offset: 0, limit: 50 });
+    if (path.startsWith("/api/v1/schedule?"))
+      return jsonResponse({
+        items: [],
+        total: 0,
+        offset: 0,
+        limit: 50,
+        today: "2026-10-10",
+        overdue_count: 0,
+        today_count: 0,
+      });
     if (path.startsWith("/api/v1/history?"))
       return jsonResponse({ items: [], total: 0, offset: 0, limit: 50 });
     if (path.startsWith("/api/v1/media-assets?"))
@@ -3326,6 +3336,7 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "Locations",
     "Journal",
     "History",
+    "Schedule",
     "Botanical identities",
     "Taxonomy",
     "Media",
@@ -3366,6 +3377,7 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "locations",
     "events",
     "history",
+    "schedule",
     "identities",
     "taxonomy",
     "media",
@@ -3385,6 +3397,7 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "Collection",
     "Collection",
     "Collection",
+    "Activity",
     "Activity",
     "Activity",
     "Explore",
@@ -3495,7 +3508,7 @@ test("sidebar disclosures support keyboard, persist preferences and expand activ
     "page",
   );
   expect(
-    screen.getByRole("button", { name: "Lifecycle", pressed: true }),
+    await screen.findByRole("button", { name: "Lifecycle", pressed: true }),
   ).toBeVisible();
   await user.click(within(nav).getByRole("button", { name: "Collection" }));
   expect(within(nav).getByRole("button", { name: "Seeds" })).toBeVisible();

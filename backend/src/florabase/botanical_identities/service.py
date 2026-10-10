@@ -120,6 +120,10 @@ def delete_botanical_identity(database: Session, botanical_identity: BotanicalId
     )
     if cover_count:
         raise BotanicalIdentityCoverReferencedError
+    from florabase.schedule.service import retained_reference
+
+    if retained_reference(database, "botanical_identity", identity_id):
+        raise BotanicalIdentityReferencedError
     references = (
         database.scalar(
             select(func.count())

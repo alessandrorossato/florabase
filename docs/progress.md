@@ -1,5 +1,81 @@
 # Engineering progress
 
+## 2026-10-10 — SCHEDULE-001 independent final verification
+
+- Independently reviewed the Schedule domain boundary, authenticated API and generated contract,
+  target lifecycle/deletion behavior, Event transaction/idempotency, bounded queries, migration 0041,
+  and focused frontend/context integrations. No product-policy blocker or functional/accessibility/
+  responsive defect remains. Broad cross-application visual redesign remains deferred.
+- Reproduced and fixed four stale pre-existing integration expectations exposed by revision 0041:
+  the exact schema table set now includes `scheduled_activities`, and populated older-migration refusal
+  assertions retain the actual Alembic head `20261009_0041`. All four focused PostgreSQL regressions
+  pass; the complete isolated PostgreSQL integration suite passes **711 tests**.
+- Live Schedule Preview review at 1440×844, 1024×844 and 390×844 verified filters, explicit create,
+  completion with and without an Event, cancellation with retained terminal evidence, browser Back,
+  keyboard focus and no horizontal overflow. A synthetic review-only activity was created then
+  cancelled; seeded examples were left intact. No DEV, Stable Preview or production resources changed.
+- Canonical `make feature-verify` passed: feature graph/workflow checks, repository formatting/lint/
+  strict typing, backend tests and coverage policy, frontend strict typecheck and **557 tests across 57
+  files**, generated OpenAPI/TypeScript drift, isolated PostgreSQL integration, production backend/
+  frontend builds, migration 0041 downgrade/re-upgrade verification, whitespace and a per-worktree
+  receipt for this final reviewed tree.
+- SCHEDULE-001 is `verified` in `docs/features.json`. Delivery, `make feature-finish` and
+  `make dev-upgrade` remain the next authorized lifecycle steps; migration 0041 requires the DEV
+  upgrade after successful delivery. See [handoff](schedule-001-handoff.md).
+
+## 2026-10-10 — SCHEDULE-001 scheduled collection activities implemented
+
+- Initialized attached `dcdf` through guarded `make feature-init`, branch
+  `feat/schedule-001-collection-activities`, from `8eece520408679579114677b3e2537e23f357b4b`.
+  The roadmap named SCHEDULE-001 but the base 98-entry feature graph omitted it; exactly one
+  canonical entry reconciles the omission. No existing feature record/status changed.
+- Added retained future intentions with complete date-only due days, eight narrow activity kinds,
+  optional exact BotanicalIdentity/SeedLot/Sowing/Plant/PlantGroup/Location targets, explicit
+  planned/completed/cancelled states and derived overdue. Timestamp/epoch coercion is rejected;
+  browser grouping and displayed day share the returned device-day projection across midnight.
+- Owner/Origin/CSRF-protected APIs use row locks and versions. Completion without Event creates no
+  occurrence or History item. Explicit compatible Plant/PlantGroup Event recording invokes the normal
+  service atomically, with independently entered occurrence day/notes, durable restrictive linkage
+  and exact retry idempotence. Inactive references remain understandable; no lifecycle cascade or
+  target inference. Migration `20261009_0041` adds only Schedule; populated downgrade refuses and
+  empty downgrade/re-upgrade preserves unrelated records.
+- Added Activity → Schedule with active date groups, canonical URL filters, bounded Dashboard
+  counts/upcoming records and Plant/PlantGroup/SeedLot/Sowing detail context/preselection. Existing
+  TaskDialog/ReferencePicker patterns retain accessible confirmations, focus, retry and stale-form
+  recovery. Filters are initially collapsed for mobile access. Calendar, Schedule Saved Views,
+  recurrence, notifications, attachments and generic task-management capabilities remain deferred.
+- Focused checks: backend **93 passed**, `--no-cov`, Schedule/Event/Event schemas/History/Saved Views/
+  Location/BotanicalIdentity service/API; real PostgreSQL **52 passed** (Schedule **12**, Event API,
+  History and Saved Views), including actual two-session races, target lifecycle/deletion races,
+  atomic rollback, API security/filters and migration preservation. Backend Ruff format/lint and strict
+  mypy (**336 files**) pass; UAT fixture scoped Ruff and strict mypy (**1 file**) pass.
+- Frontend **197 passed across 9 files** (Schedule/App/lazy App/Plant/Sowing/SeedLot/Journal/History/
+  Saved Views), full strict TypeScript/ESLint, affected Prettier and asset build. Final inactive-label
+  correction additionally passes **20 tests** (Schedule **16**, ReferencePicker **4**), strict
+  typing, focused lint/format and asset build. The shared picker keeps its original default wording;
+  Schedule preserves transferred/converted/exhausted labels. Fixed duplicate initial reads that
+  could mask a load error; retry and session-expiry regressions pass. Existing navigation expectations
+  include Schedule and await Journal readiness. No assertions/timeouts were weakened.
+- Workflow regressions: `scripts/test-uat-preview.py` **19 passed** and
+  `scripts/test-environment-workflow.py` **29 passed**. Guarded UAT up/seed/status and repeated seed
+  succeed. `make api-generate` and `make api-check` pass; final backend OpenAPI export check confirms
+  no drift after date validation. Structural API audit finds only six new paths/ten new schemas,
+  with all existing contracts unchanged. Feature graph **99 valid**; final docs formatting and
+  `git diff --check` pass. Final production backend/frontend image builds pass (`make build`), without deployment.
+- Retired the prior `748b` Preview through its exact owning guarded remove command, as authorized;
+  `dcdf` Preview remains healthy at <http://localhost:15174>, schema **0041**, with **53** manifest
+  records and additive synthetic Schedule examples. Repeated seed preserves edits. Browser review
+  covered 1440×844, 1024×844 and 390×844 without horizontal overflow, native keyboard date reschedule,
+  create/context across all four detail types, no-Event completion, independent November due/October
+  linked occurrence, cancellation, terminal evidence, Back, focus containment/Escape and mobile More.
+  Synthetic operator review records remain explicit; no personal collection data was used.
+- [Schedule contract](schedule.md) and [implementation handoff](schedule-001-handoff.md) record scope,
+  date/target/completion policy, checks and UAT readiness. SCHEDULE-001 is **implemented**, pending
+  Luna visual review/canonical verification. PHYLOGENY-001 remains planned/SOURCE_BLOCKED,
+  TAXONOMY-003 verified, BOTANY-003/004 and ENRICHMENT-002 planned. Primary remains clean; no DEV,
+  Stable Preview or production services/data were changed. No `make feature-verify`, staging,
+  commit, push, delivery, finish or DEV upgrade occurred. **READY_FOR_VISUAL_REVIEW**.
+
 ## 2026-10-09 — PHYLOGENY-001 source audit blocked before implementation
 
 - Initialized attached `4aaf` through `make feature-init`, branch

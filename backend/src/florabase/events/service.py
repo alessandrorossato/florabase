@@ -278,6 +278,18 @@ def delete_event(database: Session, event: Event) -> None:
             "event_has_photos",
             f"Remove the Event's {photo_count} photo reference(s) before deleting it",
         )
+    from florabase.schedule.model import ScheduledActivity
+
+    if (
+        database.scalar(
+            select(ScheduledActivity.id).where(ScheduledActivity.linked_event_id == event.id)
+        )
+        is not None
+    ):
+        raise EventDomainConflictError(
+            "event_retained_by_schedule",
+            "This Event is linked to a completed scheduled activity and cannot be deleted",
+        )
     database.delete(event)
     database.flush()
 

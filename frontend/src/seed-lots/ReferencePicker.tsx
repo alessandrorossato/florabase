@@ -14,6 +14,7 @@ export interface ReferenceChoice {
   id: string;
   label: string;
   retired?: boolean;
+  inactiveLabel?: string;
 }
 
 export function ReferencePicker({
@@ -148,7 +149,9 @@ export function ReferencePicker({
                   }}
                 >
                   {choice.label}
-                  {choice.retired ? " (retired)" : ""}
+                  {choice.retired
+                    ? ` (${choice.inactiveLabel ?? "retired"})`
+                    : ""}
                 </button>
               </li>
             ))}
@@ -173,7 +176,9 @@ export function ReferencePicker({
       )}
       {help && <FieldHelp id={helpId}>{help}</FieldHelp>}
       {selected?.retired && (
-        <small id={retiredId}>Current selection is retired.</small>
+        <small id={retiredId}>
+          Current selection is {selected.inactiveLabel ?? "retired"}.
+        </small>
       )}
     </div>
   );

@@ -283,7 +283,7 @@ def test_scope_removal_and_delete_preserve_references(
     assert used.value.code == "location_in_use"
 
     monkeypatch.setattr(location_service, "location_usage", lambda _database: {})
-    database.scalar.return_value = 0
+    database.scalar.side_effect = [0, None]
     delete_location(database, item.id)
     database.delete.assert_called_once_with(item)
 

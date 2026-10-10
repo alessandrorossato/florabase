@@ -58,7 +58,7 @@ The approved sequence, retaining completed steps for context, is:
    reviewed Kew WCVP v15 taxon links, source-backed structured native-range proposals, a conservative
    explicit TDWG crosswalk, selective additions and immutable provenance. See
    [source approval](native-range-enrichment-source-v15.md) and [contract](native-range-enrichment.md).
-   ENRICHMENT-002 automatic refresh and SCHEDULE-001 remain future; BOTANY-003's blocked text
+   ENRICHMENT-002 automatic refresh remains future; SCHEDULE-001 owns explicit planning; BOTANY-003's blocked text
    contract is unchanged. Broad visual/product review remains the later checkpoint below.
    Collection origins is the existing material-provenance map, distinct from both botanical concepts.
 6. Daily-use biological/collection improvements: measurements, justified flowering/fruiting work,
@@ -118,15 +118,20 @@ RELEASE-001 remains the planned historical release-hardening feature, without de
 repurposing of its acceptance criteria. Any change to that feature contract requires a separate
 explicit feature-graph decision.
 
-## Later Activity candidate
+## Scheduled collection activities
 
-**SCHEDULE-001 — Scheduled collection events** is a later product candidate, not an implemented
-or in-progress capability. It would let the operator explicitly schedule dated future collection
-activities and expose upcoming/calendar-oriented navigation. Existing Events remain historical
-recorded occurrences. The exact reviewed relationship between a scheduled activity, its completion
-and a historical Event remains open for that future contract; calendar UI would be a presentation,
-not the domain entity. BULK-001's Activity navigation group does not implement scheduling or history
-unification. Orders/Purchases follow Collection productivity v2; BOTANY-003 is unchanged.
+**SCHEDULE-001 — Scheduled collection activities** is verified after independent review and
+canonical verification. Schedule owns
+future intention, Journal owns operator-recorded occurrences and History projects historical facts.
+Date-only planning uses explicit planned/completed/cancelled states; overdue is derived and never
+means occurred. Completion can omit an Event, or explicitly and atomically link a compatible Plant
+or PlantGroup Event using its actual occurrence day. No recurring care or reminder delivery is added.
+
+The existing roadmap candidate had no record in the 98-entry machine-readable graph at base
+`8eece52`; one canonical SCHEDULE-001 record reconciles that omission, with no replacement ID.
+See [Schedule](schedule.md) and [implementation handoff](schedule-001-handoff.md).
+Saved Views, calendar presentation, recurrence and reminders remain deferred. BOTANY-003/004,
+ENRICHMENT-002 and source-blocked PHYLOGENY-001 remain planned; TAXONOMY-003 remains verified.
 
 ## Product principles
 
