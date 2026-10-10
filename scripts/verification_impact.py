@@ -183,17 +183,11 @@ def plan_paths(paths: list[str], base: str, *, force_full: bool = False) -> dict
         **suites,
         "workflow": WORKFLOW if full else [],
         "static": ["feature-graph", "whitespace"] + (STATIC if full or not docs_only else []),
-        "migration": full or any(p.startswith("backend/alembic/") for p in paths),
-        "migration_cycle": any(
-            p.startswith(("backend/alembic/", "backend/src/florabase/db/"))
-            or p
-            in {
-                "scripts/verify-migration-cycle.sh",
-                "scripts/disposable_workflow.py",
-                "compose.integration.yaml",
-            }
-            for p in paths
-        ),
+        "migration": "full-cycle"
+        if full
+        else "affected-cycle"
+        if any(p.startswith("backend/alembic/") for p in paths)
+        else "skip",
         "builds": ["backend", "frontend"]
         if full or layers == {"backend", "frontend"}
         else ["backend"]
@@ -234,7 +228,7 @@ def describe(plan: dict[str, Any]) -> str:
             )
         lines.append(f"{key.title()}: {summary}")
     lines += [
-        f"Migration: {'base → head → base → head (or no revisions)' if plan['migration'] else 'skipped'}",
+        f"Migration: {plan['migration']}",
         "Remote PR CI: full",
     ]
     return "\n".join(lines)

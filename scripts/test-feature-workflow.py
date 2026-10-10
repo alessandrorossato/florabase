@@ -91,6 +91,14 @@ class VerifyHelperTests(unittest.TestCase):
         )
         (self.bin / "docker").write_text(
             "#!/usr/bin/env bash\nset -eu\nprintf '%s\\n' \"$*\" >>\"${VERIFY_LOG}\"\n"
+            "if [[ \"$*\" == *scripts/verify_migration_cycle.py* ]]; then\n"
+            "  if [[ \"${VERIFY_MIGRATION_FAIL:-}\" == 1 ]]; then exit 7; fi\n"
+            "  if [[ \"${VERIFY_MIGRATION_SKIP:-}\" == 1 ]]; then exit 0; fi\n"
+            "  python3 - <<'EVIDENCE'\n"
+            "import json, sys\nsys.path.insert(0, 'scripts')\n"
+            "from disposable_workflow import expected_migration_evidence, SCHEMA_REPORT\n"
+            "print(SCHEMA_REPORT + json.dumps(expected_migration_evidence('origin/main')['verified_revisions']))\n"
+            "EVIDENCE\nfi\n"
         )
         os.chmod(self.bin / "make", 0o755)
         os.chmod(self.bin / "docker", 0o755)
@@ -103,7 +111,7 @@ class VerifyHelperTests(unittest.TestCase):
     def shell(*command: str) -> None:
         subprocess.run(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-    def verify(self, **environment: str) -> subprocess.CompletedProcess[str]:
+    def verify(self, *, full: bool = False, **environment: str) -> subprocess.CompletedProcess[str]:
         env = {
             **os.environ,
             "PATH": f"{self.bin}:{os.environ['PATH']}",
@@ -111,13 +119,120 @@ class VerifyHelperTests(unittest.TestCase):
             **environment,
         }
         return subprocess.run(
-            [str(self.work / "scripts/feature-verify.sh")],
+            [str(self.work / "scripts/feature-verify.sh"), *(["--full"] if full else [])],
             cwd=self.work,
             env=env,
             text=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
         )
+
+    def establish_helper_baseline(self) -> None:
+        # Put unchanged helpers into disposable origin/main: the only feature diff can now be a lock.
+        (self.work / "frontend").mkdir()
+        (self.work / "frontend/pnpm-lock.yaml").write_text("lockfileVersion: '9.0'\n")
+        self.shell("git", "-C", str(self.work), "add", ".")
+        self.shell("git", "-C", str(self.work), "commit", "-m", "fixture helpers")
+        self.shell("git", "-C", str(self.work), "push", "origin", "HEAD:main")
+        self.shell("git", "-C", str(self.work), "fetch", "origin", "main")
+
+    def receipt(self) -> dict:
+        return json.loads((self.work / ".git/info/florabase-feature-verification.json").read_text())
+
+    def test_dependency_only_full_executes_exhaustive_stages_without_revision_diff(self) -> None:
+        self.establish_helper_baseline()
+        lock = self.work / "frontend/pnpm-lock.yaml"
+        lock.write_text(lock.read_text() + "# synthetic dependency change\n")
+        result = self.verify()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        receipt = self.receipt()
+        self.assertEqual(receipt["verification"]["changed_paths"], ["frontend/pnpm-lock.yaml"])
+        self.assertEqual(receipt["verification"]["mode"], "full")
+        migration = next(c for c in receipt["completed"] if c["id"] == "migration-cycle")
+        self.assertIn("--force-cycle", migration["command"])
+        self.assertEqual(migration["evidence"]["verified_revisions"], ["0001"] * 4)
+        self.assertEqual(receipt["migration"]["decision"], "full-cycle")
+        self.assertTrue(receipt["migration"]["cycle_executed"])
+        log = self.log.read_text().splitlines()
+        for command in ("check", "test-integration", "verify-build SERVICES=backend frontend"):
+            self.assertIn(command, log)
+        self.assertIn("MIGRATION_CYCLE_PASSED", result.stdout)
+        self.assertNotIn("no Alembic revisions added", result.stdout)
+
+    def test_docs_affected_skips_and_explicit_full_executes_same_cycle(self) -> None:
+        self.establish_helper_baseline()
+        (self.work / "docs/iteration.md").write_text("synthetic documentation\n")
+        affected = self.verify()
+        self.assertEqual(affected.returncode, 0, affected.stderr)
+        self.assertEqual(self.receipt()["migration"], {
+            "decision": "skip", "cycle_required": False, "cycle_executed": False,
+            "result": "skipped_by_impact", "evidence": None,
+        })
+        self.assertNotIn("cycling", affected.stdout)
+        self.assertFalse(self.log.exists())
+        full = self.verify(full=True)
+        self.assertEqual(full.returncode, 0, full.stderr)
+        self.assertEqual(self.receipt()["migration"]["decision"], "full-cycle")
+        self.assertEqual(self.receipt()["migration"]["evidence"]["verified_revisions"], ["0001"] * 4)
+        self.assertIn("--force-cycle", full.stdout)
+
+    def test_full_cannot_accept_skipped_or_failed_migration_runner(self) -> None:
+        self.establish_helper_baseline()
+        for environment in ({"VERIFY_MIGRATION_SKIP": "1"}, {"VERIFY_MIGRATION_FAIL": "1"}):
+            with self.subTest(environment=environment):
+                result = self.verify(full=True, **environment)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertNotIn("FEATURE_VERIFICATION_PASSED", result.stdout)
+                self.assertFalse((self.work / ".git/info/florabase-feature-verification.json").exists())
+
+    def test_delivery_preflight_rejects_invalid_full_cycle_and_historical_v2(self) -> None:
+        self.establish_helper_baseline()
+        (self.work / "frontend/pnpm-lock.yaml").write_text("# synthetic lock\n")
+        result = self.verify()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.shell("git", "-C", str(self.work), "add", ".")
+        self.shell("git", "-C", str(self.work), "commit", "-m", "fixture feature")
+        original = self.receipt()
+        base = subprocess.check_output(["git", "-C", str(self.work), "rev-parse", "origin/main"], text=True).strip()
+        fixture = self
+
+        class LocalPreflightCommands(FakeCommands):
+            def run(self, *command: str, capture: bool = False) -> str:
+                if command[0] == "python3":
+                    result = subprocess.run(command, cwd=fixture.work, text=True, capture_output=True)
+                    if result.returncode:
+                        raise feature_deliver.DeliveryError(result.stderr)
+                    return result.stdout
+                return super().run(*command, capture=capture)
+
+        responses = {
+            ("gh", "api", "repos/alessandrorossato/florabase"): "{}",
+            ("git", "branch", "--show-current"): "ci/ci-002",
+            ("git", "remote", "get-url", "origin"): "https://github.com/alessandrorossato/florabase.git",
+            ("git", "merge-base", "origin/main", "HEAD"): base,
+        }
+        feature_deliver.Delivery(LocalPreflightCommands(responses)).preflight()
+        invalid = []
+        for key, value in (("cycle_executed", False), ("cycle_executed", 1), ("result", "skipped_by_impact"), ("evidence", None), ("decision", "skip")):
+            invalid.append({**original, "migration": {**original["migration"], key: value}})
+        missing = dict(original)
+        del missing["migration"]
+        invalid.append(missing)
+        historical = dict(missing)
+        historical["migration_result"] = "passed"
+        historical["verification"] = {**historical["verification"], "migration": True, "migration_cycle": False}
+        invalid.append(historical)
+        for key, value in (("cleanup_verified", False), ("cleanup_verified", 1), ("verified_revisions", ["0001"]), ("cycle_executed", False), ("cycle_executed", 1)):
+            completed = [dict(c) for c in original["completed"]]
+            cycle = next(c for c in completed if c["id"] == "migration-cycle")
+            cycle["evidence"] = {**cycle["evidence"], key: value}
+            invalid.append({**original, "completed": completed})
+        for receipt in invalid:
+            (self.work / ".git/info/florabase-feature-verification.json").write_text(json.dumps(receipt))
+            commands = LocalPreflightCommands(responses)
+            with self.assertRaises(feature_deliver.DeliveryError):
+                feature_deliver.Delivery(commands).preflight()
+            self.assertFalse(any(c[:2] == ("git", "push") for c in commands.calls))
 
     def test_success_without_migration_writes_receipt_and_pass_marker(self) -> None:
         result = self.verify()
@@ -209,7 +324,7 @@ class VerifyHelperTests(unittest.TestCase):
         result = self.verify()
         self.assertEqual(result.returncode, 0, result.stderr)
         log = self.log.read_text()
-        self.assertIn("alembic upgrade '0001'; alembic upgrade head; alembic downgrade '0001'; alembic upgrade head", log)
+        self.assertIn("python scripts/verify_migration_cycle.py 0001", log)
         self.assertIn("florabase-feature-migration-", log)
         self.assertNotIn("down --volumes", log)
 

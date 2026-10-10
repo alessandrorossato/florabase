@@ -15,6 +15,9 @@ from typing import Any
 
 from workflow_resources import Disposable, Owner, ResourceError
 
+MIGRATION_REPORT = "MIGRATION_CYCLE_PASSED "
+SCHEMA_REPORT = "MIGRATION_SCHEMA_VERIFIED "
+
 
 def base_revision(base: str) -> str:
     paths = subprocess.run(
@@ -23,12 +26,23 @@ def base_revision(base: str) -> str:
         text=True,
         stdout=subprocess.PIPE,
     ).stdout.splitlines()
+    return migration_head(
+        [
+            (
+                path,
+                subprocess.run(
+                    ["git", "show", f"{base}:{path}"], check=True, text=True, stdout=subprocess.PIPE
+                ).stdout,
+            )
+            for path in paths
+        ]
+    )
+
+
+def migration_head(sources: list[tuple[str, str]]) -> str:
     revisions: set[str] = set()
     referenced: set[str] = set()
-    for path in paths:
-        source = subprocess.run(
-            ["git", "show", f"{base}:{path}"], check=True, text=True, stdout=subprocess.PIPE
-        ).stdout
+    for path, source in sources:
         values: dict[str, Any] = {}
         for node in ast.parse(source).body:
             if isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name):
@@ -51,8 +65,21 @@ def base_revision(base: str) -> str:
         referenced.update([parent] if isinstance(parent, str) else parent or [])
     heads = sorted(revisions - referenced)
     if len(heads) != 1:
-        raise ResourceError(f"expected one migration head at {base}, found {heads}")
+        raise ResourceError(f"expected one migration head, found {heads}")
     return heads[0]
+
+
+def expected_migration_evidence(base: str) -> dict[str, Any]:
+    revision = base_revision(base)
+    head = migration_head(
+        [(str(p), p.read_text()) for p in sorted(Path("backend/alembic/versions").glob("*.py"))]
+    )
+    return {
+        "cycle_executed": True,
+        "result": "passed",
+        "verified_revisions": [revision, head, revision, head],
+        "cleanup_verified": True,
+    }
 
 
 def safe_suites(paths: list[str], root: Path) -> list[str]:
@@ -78,7 +105,8 @@ def execute(
 ) -> None:
     root = Path.cwd().resolve()
     selected = safe_suites(suites or [], root)
-    revision = base_revision(base) if role == "feature-migration" else ""
+    evidence = expected_migration_evidence(base) if role == "feature-migration" else None
+    revision = evidence["verified_revisions"][0] if evidence else ""
     owner = Owner.disposable(role, root)
     # Labels are applied to all resources before creation, including built image outputs.
     services = ["backend", "frontend"] if role == "verification-build" else ["db", "tests"]
@@ -150,9 +178,9 @@ def execute(
                         "--build",
                         "-T",
                         "tests",
-                        "/bin/sh",
-                        "-ec",
-                        f"alembic upgrade '{revision}'; alembic upgrade head; alembic downgrade '{revision}'; alembic upgrade head",
+                        "python",
+                        "scripts/verify_migration_cycle.py",
+                        revision,
                     ]
                 else:
                     action = [
@@ -163,7 +191,30 @@ def execute(
                         "tests",
                     ]
                 print("Executing: " + " ".join([*command, *action]), flush=True)
-                subprocess.run([*command, *action], env=env, check=True)
+                result = subprocess.run(
+                    [*command, *action],
+                    env=env,
+                    check=True,
+                    text=True,
+                    stdout=subprocess.PIPE if evidence else None,
+                )
+                if evidence:
+                    print(result.stdout, end="", flush=True)
+                    reports = [
+                        line.removeprefix(SCHEMA_REPORT)
+                        for line in result.stdout.splitlines()
+                        if line.startswith(SCHEMA_REPORT)
+                    ]
+                    if (
+                        len(reports) != 1
+                        or json.loads(reports[0]) != evidence["verified_revisions"]
+                    ):
+                        raise ResourceError(
+                            "migration schema execution evidence missing or mismatched"
+                        )
+            # Emitted only after the database commands AND verified ownership cleanup succeed.
+            if evidence:
+                print(MIGRATION_REPORT + json.dumps(evidence, sort_keys=True), flush=True)
         except BaseException:
             print(
                 f"Recovery: python3 scripts/workflow_resources.py cleanup-disposable --project {owner.project} --role {owner.role} --owner {owner.identity}",

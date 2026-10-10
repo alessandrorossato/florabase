@@ -364,7 +364,9 @@ Local verification has three layers:
   migration cycling, then writes the exact completed-plan receipt. It can escalate to full.
 - **Full:** `make verify-full` explicitly forces the complete original application and workflow gate.
   Full remains mandatory for infrastructure/security/foundational/dependency/unknown changes,
-  releases and operator-requested exhaustive checks. There is no force-narrow override.
+  releases and operator-requested exhaustive checks. Every selected FULL stage executes exhaustively;
+  migration verification always performs the real PostgreSQL cycle even without a migration diff.
+  There is no force-narrow override.
 
 Preview the human plan with `make verification-plan`; use `make verification-plan FORMAT=json`
 for the same machine-readable decision. `REF=<exact-base>` selects a diagnostic base; canonical
@@ -372,9 +374,10 @@ verification still fetches main and requires that exact base to be an ancestor. 
 [scripts/verification-impact.json](../scripts/verification-impact.json) contains explicit source/test
 ownership, consumer regression boundaries and transitive relationships. Any unknown path escalates
 full. Editing the map or verification infrastructure also escalates full. Migration revisions
-conservatively escalate full; migration infrastructure and foundational DB changes force the complete
-base → head → base → head cycle even without a new revision. Full otherwise retains conditional
-cycling when revisions changed. Generated contracts require an owning classified production scope.
+conservatively escalate full. Every full plan requires the complete base → head → base → head cycle
+on disposable PostgreSQL; no changed-file shortcut may suppress it. Affected plans may skip migration
+cycling only when impact analysis proves it unnecessary. Generated contracts require an owning
+classified production scope.
 
 True docs-only plans run feature graph and complete whitespace checks with no Docker/product
 suites or image builds. Product plans retain whole-repository Ruff, Prettier, ESLint, mypy, TypeScript
@@ -387,6 +390,10 @@ Freeze source before the final gate. It invalidates old evidence at startup and 
 while stages run. Version 2 receipts cover file content, modes and symlinks, exact base/branch, mode,
 impact-map version/digest, changed/affected scopes, escalation reasons, selected suites, completed
 commands, static checks, migration/build decisions and results, and a UTC completion timestamp.
+Migration evidence distinguishes the decision, cycle requirement, actual execution and result. Required
+cycles verify the database revision after all four transitions and record successful disposable cleanup;
+affected skips record `skipped_by_impact`. Older v2 receipts lacking this evidence are incompatible and
+require a new canonical gate.
 Delivery recomputes the policy and rejects incomplete, obsolete, mismatched or stale evidence. The
 normal same reviewed tree can be committed without a ceremonial rerun. Transient staged/committed
 changes masked by unstaged reverts are classified conservatively; freeze the index too when using

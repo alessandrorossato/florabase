@@ -10,10 +10,15 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from disposable_workflow import MIGRATION_REPORT, expected_migration_evidence
 from verification_impact import describe, make_plan
 
 
 def checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
+    if plan["migration"] not in {"skip", "affected-cycle", "full-cycle"} or (
+        plan["mode"] == "full" and plan["migration"] != "full-cycle"
+    ):
+        raise ValueError("invalid migration decision")
     checks: list[dict[str, Any]] = []
 
     def add(name: str, command: list[str]) -> None:
@@ -75,13 +80,13 @@ def checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
         )
     if plan["builds"]:
         add("production-builds", ["make", "verify-build", "SERVICES=" + " ".join(plan["builds"])])
-    if plan["migration"]:
+    if plan["migration"] != "skip":
         add(
             "migration-cycle",
             [
                 "./scripts/verify-migration-cycle.sh",
                 plan["base"],
-                *(["--force-cycle"] if plan["migration_cycle"] else []),
+                "--force-cycle",
             ],
         )
     add("whitespace", ["git", "diff", "--check", plan["base"]])
@@ -94,11 +99,29 @@ def checks_for(plan: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def validate_execution(plan: dict[str, Any], completed: object) -> None:
-    expected = [{**check, "result": "passed"} for check in checks_for(plan)]
-    if completed != expected:
+    expected = []
+    for check in checks_for(plan):
+        item = {**check, "result": "passed"}
+        if check["id"] == "migration-cycle":
+            item["evidence"] = expected_migration_evidence(plan["base"])
+        expected.append(item)
+    # JSON preserves boolean types; Python equality alone equates True with 1.
+    if json.dumps(completed, sort_keys=True) != json.dumps(expected, sort_keys=True):
         raise ValueError(
             "required selected checks did not complete exactly; rerun make feature-verify"
         )
+
+
+def migration_result(plan: dict[str, Any], completed: list[dict[str, Any]]) -> dict[str, Any]:
+    required = plan["migration"] != "skip"
+    evidence = next((c["evidence"] for c in completed if c["id"] == "migration-cycle"), None)
+    return {
+        "decision": plan["migration"],
+        "cycle_required": required,
+        "cycle_executed": evidence is not None and evidence["cycle_executed"] is True,
+        "result": "passed" if required else "skipped_by_impact",
+        "evidence": evidence,
+    }
 
 
 def execute(plan: dict[str, Any], path: Path) -> None:
@@ -109,15 +132,39 @@ def execute(plan: dict[str, Any], path: Path) -> None:
             f"\n== feature verification: {check['id']} ==\nCommand: {' '.join(check['command'])}",
             flush=True,
         )
-        result = subprocess.run(check["command"])
+        migration = check["id"] == "migration-cycle"
+        result = subprocess.run(
+            check["command"], text=True, stdout=subprocess.PIPE if migration else None
+        )
+        if migration:
+            print(result.stdout, end="", flush=True)
         if result.returncode:
             print(
                 f"stage failed: {check['id']}; mode={plan['mode']} scopes={','.join(plan['affected_scopes'])}; command={' '.join(check['command'])}; disposable runner reports cleanup and residuals; recovery: make workflow-resources",
                 file=sys.stderr,
             )
             raise SystemExit(result.returncode)
-        completed.append({**check, "result": "passed"})
-    path.write_text(json.dumps({"plan": plan, "completed": completed}, sort_keys=True) + "\n")
+        item = {**check, "result": "passed"}
+        if migration:
+            reports = [
+                line.removeprefix(MIGRATION_REPORT)
+                for line in result.stdout.splitlines()
+                if line.startswith(MIGRATION_REPORT)
+            ]
+            if len(reports) != 1 or json.loads(reports[0]) != expected_migration_evidence(
+                plan["base"]
+            ):
+                raise ValueError("migration cycle did not report verified execution and cleanup")
+            item["evidence"] = json.loads(reports[0])
+        completed.append(item)
+    validate_execution(plan, completed)
+    path.write_text(
+        json.dumps(
+            {"plan": plan, "completed": completed, "migration": migration_result(plan, completed)},
+            sort_keys=True,
+        )
+        + "\n"
+    )
 
 
 def check_untracked_whitespace() -> None:

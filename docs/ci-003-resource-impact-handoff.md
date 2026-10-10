@@ -153,7 +153,8 @@ Generated artifacts accompanied by classified production ownership expand the fr
 
 - Focused: existing explicit developer checks; no delivery receipt.
 - Affected: canonical `make feature-verify`/`verify-affected` derives safe selection automatically.
-- Full: `make verify-full` forces the complete gate; only stricter override is supported.
+- Full: automatic escalation or `make verify-full` executes the complete exhaustive gate, including
+  real PostgreSQL migration cycling without a migration diff; only stricter override is supported.
 - `make verification-plan [FORMAT=json] [REF=<exact-base>]` exposes the same human/machine decision.
 
 ## Static checks, test/integration selection, migration and builds
@@ -166,9 +167,10 @@ Backend affected suites use exact files and `--no-cov`; full quality/remote CI s
 full/workflow impact, not ordinary domain/UI changes. PostgreSQL selects only explicit mapped files
 through the same disposable runner; zero selection never silently invokes an empty test command.
 
-Migration changes/infrastructure/DB foundations enable appropriate complete cycling. The cycle still
-uses the literal previous-base single Alembic head and real PostgreSQL. Infrastructure can force it
-without a new revision. Docs-only does not invoke it. Independent frontend-only builds frontend;
+Every FULL plan requires complete migration cycling, including dependency changes without a new
+revision. AFFECTED may skip it only when impact analysis proves it unnecessary. The cycle uses the
+literal previous-base single Alembic head and disposable real PostgreSQL, verifies all four database
+revision states and completes exact ownership cleanup. Affected docs-only does not invoke it. Independent frontend-only builds frontend;
 backend-only builds backend; both layers/generated frontend contracts and full plans build both.
 
 ## Receipt format, delivery validation and remote CI policy
@@ -176,7 +178,11 @@ backend-only builds backend; both layers/generated frontend contracts and full p
 Version **2** retains branch/base/exact working-tree digest and committed-HEAD delivery validation.
 It adds the complete versioned plan/map digest, changed paths/scopes and transitive scopes, reasons,
 selected backend/integration/frontend/workflow/static suites, exact completed command/result list,
-migration/build decision/result and UTC timestamp. The gate freezes content and rejects concurrent
+migration/build decision/result and UTC timestamp. Corrected v2 migration evidence distinguishes
+required/executed cycles from `skipped_by_impact`, includes verified revision states and cleanup, and
+rejects historical v2 receipts without that evidence. See the
+[2026-10-10 corrective handoff](ci-003-full-migration-cycle-repair-handoff.md) for the reproduced
+conditional-FULL defect and focused repair checks. The gate freezes content and rejects concurrent
 source changes; successful focused commands cannot write a final receipt.
 
 Receipt write and delivery read independently recompute current selection and require **every**

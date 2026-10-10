@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import contextlib
 import copy
+import io
 import json
 import os
 import signal
@@ -219,21 +221,74 @@ class ResourceTests(unittest.TestCase):
                         self.owner = owner
                         return Disposable(owner, self.fake)
 
-                    def command(*args: object, failure: bool = failure, **kwargs: object) -> None:
+                    def command(
+                        *args: object, failure: bool = failure, **kwargs: object
+                    ) -> subprocess.CompletedProcess[str]:
                         self.populate()
                         if failure:
                             raise subprocess.CalledProcessError(7, ["synthetic-tests"])
+                        return subprocess.CompletedProcess(
+                            [], 0, 'MIGRATION_SCHEMA_VERIFIED ["0001", "0002", "0001", "0002"]\n'
+                        )
 
                     with (
                         patch("disposable_workflow.Disposable", side_effect=context),
                         patch("disposable_workflow.subprocess.run", side_effect=command),
-                        patch("disposable_workflow.base_revision", return_value="0001"),
+                        patch(
+                            "disposable_workflow.expected_migration_evidence",
+                            return_value={
+                                "cycle_executed": True,
+                                "result": "passed",
+                                "verified_revisions": ["0001", "0002", "0001", "0002"],
+                                "cleanup_verified": True,
+                            },
+                        ),
                     ):
                         if failure:
                             with self.assertRaises(subprocess.CalledProcessError):
                                 execute(role, base="base")
                         else:
                             execute(role, base="base")
+                    self.assertTrue(all(not v for v in self.fake.objects.values()))
+
+    def test_migration_success_report_requires_schema_evidence_and_cleanup(self) -> None:
+        evidence = {
+            "cycle_executed": True,
+            "result": "passed",
+            "verified_revisions": ["0001"] * 4,
+            "cleanup_verified": True,
+        }
+        for fail_cleanup in (False, True):
+            with self.subTest(fail_cleanup=fail_cleanup):
+                self.fake = FakeDocker()
+
+                def context(owner: Owner) -> Disposable:
+                    self.owner = owner
+                    return Disposable(owner, self.fake)
+
+                def command(
+                    *args: object, fail_cleanup: bool = fail_cleanup, **kwargs: object
+                ) -> subprocess.CompletedProcess[str]:
+                    self.populate()
+                    self.fake.fail_remove = fail_cleanup
+                    output = (
+                        'MIGRATION_SCHEMA_VERIFIED ["0001", "0001", "0001", "0001"]\n'
+                        if fail_cleanup
+                        else "migration skipped\n"
+                    )
+                    return subprocess.CompletedProcess([], 0, output)
+
+                output = io.StringIO()
+                with (
+                    patch("disposable_workflow.Disposable", side_effect=context),
+                    patch("disposable_workflow.subprocess.run", side_effect=command),
+                    patch("disposable_workflow.expected_migration_evidence", return_value=evidence),
+                    contextlib.redirect_stdout(output),
+                    self.assertRaises(ResourceError),
+                ):
+                    execute("feature-migration", base="base")
+                self.assertNotIn("MIGRATION_CYCLE_PASSED", output.getvalue())
+                if not fail_cleanup:
                     self.assertTrue(all(not v for v in self.fake.objects.values()))
 
     def test_integration_selection_refuses_options_escape_and_missing_files(self) -> None:

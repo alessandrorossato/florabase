@@ -11,7 +11,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from verification_gate import checks_for, validate_execution
+from verification_gate import checks_for, execute, validate_execution
 from verification_impact import MAP_PATH, changed_paths, load_map, plan_paths
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -33,7 +33,7 @@ class SelectionTests(unittest.TestCase):
         self.assertTrue(plan["docs_only"])
         for key in ("backend", "frontend", "integration", "workflow", "builds"):
             self.assertEqual(plan[key], [])
-        self.assertFalse(plan["migration"])
+        self.assertEqual(plan["migration"], "skip")
         self.assertEqual(
             [c["id"] for c in checks_for(plan)],
             ["feature-graph", "whitespace", "staged-whitespace", "untracked-whitespace"],
@@ -89,8 +89,90 @@ class SelectionTests(unittest.TestCase):
         ]:
             with self.subTest(path=path):
                 self.assertEqual(self.plan(path)["mode"], "full")
-        self.assertTrue(self.plan("backend/alembic/versions/new.py")["migration"])
-        self.assertTrue(self.plan("scripts/verify-migration-cycle.sh")["migration_cycle"])
+        self.assertEqual(self.plan("backend/alembic/versions/new.py")["migration"], "full-cycle")
+        self.assertEqual(self.plan("scripts/verify-migration-cycle.sh")["migration"], "full-cycle")
+
+    def test_migration_decision_matrix_and_execution(self) -> None:
+        for paths, forced, decision in (
+            (["docs/test.md"], False, "skip"),
+            (["frontend/src/taxonomy/TaxonomyScreen.tsx"], False, "skip"),
+            (["backend/src/florabase/taxonomy/service.py"], False, "skip"),
+            (["backend/alembic/versions/new.py"], False, "full-cycle"),
+            (["frontend/pnpm-lock.yaml"], False, "full-cycle"),
+            (["docs/test.md"], True, "full-cycle"),
+            (["backend/alembic/versions/new.py"], True, "full-cycle"),
+        ):
+            with self.subTest(paths=paths, forced=forced):
+                plan = plan_paths(paths, "base", force_full=forced)
+                self.assertEqual(plan["migration"], decision)
+                evidence = {
+                    "cycle_executed": True,
+                    "result": "passed",
+                    "verified_revisions": ["0001"] * 4,
+                    "cleanup_verified": True,
+                }
+                output = "MIGRATION_CYCLE_PASSED " + json.dumps(evidence) + "\n"
+                with (
+                    tempfile.TemporaryDirectory() as temporary,
+                    patch("verification_gate.expected_migration_evidence", return_value=evidence),
+                    patch(
+                        "verification_gate.subprocess.run",
+                        return_value=subprocess.CompletedProcess([], 0, output),
+                    ) as runner,
+                ):
+                    result_path = Path(temporary) / "execution.json"
+                    execute(plan, result_path)
+                    execution = json.loads(result_path.read_text())
+                    calls = [
+                        call.args[0]
+                        for call in runner.call_args_list
+                        if call.args[0][0] == "./scripts/verify-migration-cycle.sh"
+                    ]
+                    self.assertEqual(
+                        calls,
+                        []
+                        if decision == "skip"
+                        else [["./scripts/verify-migration-cycle.sh", "base", "--force-cycle"]],
+                    )
+                    self.assertEqual(execution["migration"]["cycle_executed"], decision != "skip")
+                    self.assertEqual(
+                        execution["migration"]["result"],
+                        "skipped_by_impact" if decision == "skip" else "passed",
+                    )
+
+    def test_affected_cycle_instruction_is_unconditional_when_required(self) -> None:
+        # Current Alembic rules conservatively escalate FULL. Exercise the supported decision
+        # without relaxing those rules or introducing a force-narrow mode.
+        plan = {**self.plan("docs/test.md"), "migration": "affected-cycle"}
+        cycle = next(c for c in checks_for(plan) if c["id"] == "migration-cycle")
+        self.assertEqual(
+            cycle["command"], ["./scripts/verify-migration-cycle.sh", "base", "--force-cycle"]
+        )
+
+    def test_full_cannot_downgrade_its_migration_decision(self) -> None:
+        plan = self.plan("frontend/pnpm-lock.yaml")
+        for decision in ("skip", "affected-cycle", True, None):
+            with (
+                self.subTest(decision=decision),
+                self.assertRaisesRegex(ValueError, "invalid migration"),
+            ):
+                checks_for({**plan, "migration": decision})
+
+    def test_full_executor_rejects_successful_exit_without_cycle_evidence(self) -> None:
+        plan = self.plan("frontend/pnpm-lock.yaml")
+        with (
+            tempfile.TemporaryDirectory() as temporary,
+            patch(
+                "verification_gate.subprocess.run",
+                return_value=subprocess.CompletedProcess(
+                    [], 0, "migration verification: no Alembic revisions added\n"
+                ),
+            ),
+        ):
+            result_path = Path(temporary) / "execution.json"
+            with self.assertRaisesRegex(ValueError, "did not report"):
+                execute(plan, result_path)
+            self.assertFalse(result_path.exists())
 
     def test_documentation_does_not_hide_unknown_configuration(self) -> None:
         plan = self.plan("docs/architecture.md", "runtime.yaml")
@@ -240,7 +322,7 @@ class InventoryTests(unittest.TestCase):
                 ("version", 99),
                 ("completed", []),
                 ("base", "other"),
-                ("migration_result", "failed"),
+                ("migration", {"result": "failed"}),
                 ("build_result", "failed"),
             ]:
                 receipt_path.write_text(json.dumps({**original, key: value}))
