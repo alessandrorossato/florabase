@@ -1,3 +1,4 @@
+import { UpcomingActivities } from "../schedule/UpcomingActivities";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
 import { useBulkSelection } from "../bulk/useBulkSelection";
@@ -464,6 +465,11 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
+          <UpcomingActivities
+            kind={record.kind === "plant" ? "plant" : "plant_group"}
+            id={value.id}
+            current={value.lifecycle === "active"}
+          />
           <section
             className="plant-fact-group"
             aria-labelledby="plant-record-title"

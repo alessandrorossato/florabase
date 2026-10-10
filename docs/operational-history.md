@@ -7,20 +7,20 @@ is neither an immutable audit log nor a schedule, and contains no synthetic pers
 
 ## Audited source matrix
 
-| Source | Persisted fact | Authoritative date | Primary subject | Direct related records | Duplication risk | Deep link | Include / reason |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| Event (all current kinds) | Journal occurrence | occurred_on PartialDate; otherwise created_at as Recorded | Plant / PlantGroup | Destination Location; resulting Plant | Structured Harvest; receipt-owned Event | Target Events tab | Yes, except Harvest-owned Events |
-| OperationReceipt: SeedLot → Sowing | Applied propagation, retained status | created_at as Recorded | Resulting Sowing | Source SeedLot | Event link if present | Sowing detail | Yes, only without Event |
-| OperationReceipt: Sowing → Plant / PlantGroup | Applied propagation, retained status | created_at as Recorded | Resulting Plant / PlantGroup | Source Sowing | Event link if present | Result detail | Yes, only without Event |
-| OperationReceipt: extraction / transfer | Operation backing an Event | Event date | Event target | As Event | Always owns Event | Target Events tab | No independent row; Event represents operation, receipt supplies status |
-| GerminationObservation | Dated incremental observation | observed_on exact day | Sowing | None | None | Sowing Germination tab | Yes |
-| Harvest + HarvestItems | Structured collection occurrence with ordered material lines | Harvest occurred_on PartialDate; otherwise created_at as Recorded | Harvest | Source Plant / PlantGroup | Owned Event; multiple material lines | Harvest detail | Yes, one row per Harvest |
-| HarvestMaterialDisposition | Immutable disposition, partial / use-all and amount | occurred_on PartialDate; otherwise created_at as Recorded | Inventory | Owning Harvest | Conversion-owned disposition | Owning Harvest's Stored material section, exact inventory anchor | Yes, except conversion-owned disposition |
-| HarvestSeedLotConversion application | Applied seed conversion and status | created_at as Recorded | Resulting SeedLot | Source inventory | Owned used_for_propagation disposition | SeedLot detail; exact inventory link | Yes |
-| HarvestSeedLotConversion reversal | Persisted reversal instant | reversed_at (UTC) | Resulting SeedLot | Source inventory | None | Same authoritative contexts | Yes, only with reversed_at |
-| Current SeedLot / Sowing lifecycle | Current state only | No transition date | — | — | False history | — | No |
-| Current Location, quantity, Supplier, provenance, updated_at | Current state / correction only | No occurrence evidence | — | — | False history | — | No |
-| Creation of ordinary records / inventory tracking | Current records, no reviewed operational receipt | created_at alone does not establish an operational fact | — | — | False history | — | No |
+| Source                                                       | Persisted fact                                               | Authoritative date                                                | Primary subject              | Direct related records                | Duplication risk                        | Deep link                                                        | Include / reason                                                        |
+| ------------------------------------------------------------ | ------------------------------------------------------------ | ----------------------------------------------------------------- | ---------------------------- | ------------------------------------- | --------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Event (all current kinds)                                    | Journal occurrence                                           | occurred_on PartialDate; otherwise created_at as Recorded         | Plant / PlantGroup           | Destination Location; resulting Plant | Structured Harvest; receipt-owned Event | Target Events tab                                                | Yes, except Harvest-owned Events                                        |
+| OperationReceipt: SeedLot → Sowing                           | Applied propagation, retained status                         | created_at as Recorded                                            | Resulting Sowing             | Source SeedLot                        | Event link if present                   | Sowing detail                                                    | Yes, only without Event                                                 |
+| OperationReceipt: Sowing → Plant / PlantGroup                | Applied propagation, retained status                         | created_at as Recorded                                            | Resulting Plant / PlantGroup | Source Sowing                         | Event link if present                   | Result detail                                                    | Yes, only without Event                                                 |
+| OperationReceipt: extraction / transfer                      | Operation backing an Event                                   | Event date                                                        | Event target                 | As Event                              | Always owns Event                       | Target Events tab                                                | No independent row; Event represents operation, receipt supplies status |
+| GerminationObservation                                       | Dated incremental observation                                | observed_on exact day                                             | Sowing                       | None                                  | None                                    | Sowing Germination tab                                           | Yes                                                                     |
+| Harvest + HarvestItems                                       | Structured collection occurrence with ordered material lines | Harvest occurred_on PartialDate; otherwise created_at as Recorded | Harvest                      | Source Plant / PlantGroup             | Owned Event; multiple material lines    | Harvest detail                                                   | Yes, one row per Harvest                                                |
+| HarvestMaterialDisposition                                   | Immutable disposition, partial / use-all and amount          | occurred_on PartialDate; otherwise created_at as Recorded         | Inventory                    | Owning Harvest                        | Conversion-owned disposition            | Owning Harvest's Stored material section, exact inventory anchor | Yes, except conversion-owned disposition                                |
+| HarvestSeedLotConversion application                         | Applied seed conversion and status                           | created_at as Recorded                                            | Resulting SeedLot            | Source inventory                      | Owned used_for_propagation disposition  | SeedLot detail; exact inventory link                             | Yes                                                                     |
+| HarvestSeedLotConversion reversal                            | Persisted reversal instant                                   | reversed_at (UTC)                                                 | Resulting SeedLot            | Source inventory                      | None                                    | Same authoritative contexts                                      | Yes, only with reversed_at                                              |
+| Current SeedLot / Sowing lifecycle                           | Current state only                                           | No transition date                                                | —                            | —                                     | False history                           | —                                                                | No                                                                      |
+| Current Location, quantity, Supplier, provenance, updated_at | Current state / correction only                              | No occurrence evidence                                            | —                            | —                                     | False history                           | —                                                                | No                                                                      |
+| Creation of ordinary records / inventory tracking            | Current records, no reviewed operational receipt             | created_at alone does not establish an operational fact           | —                            | —                                     | False history                           | —                                                                | No                                                                      |
 
 Receipt result_date snapshots describe Sowing date or collection-entry date for safe reversal;
 they are not a separately contracted propagation occurrence date. Receipt entries therefore use
@@ -86,12 +86,12 @@ characters plus ellipsis), then smaller direct related links. Full notes remain 
 
 Journal's existing filters retain exactly their membership and URL/Saved View values:
 
-| Display label | Internal category | Event kinds |
-| --- | --- | --- |
-| All entries | `all` | All kinds, including `other` |
-| Observations | `observations` | observation, flowering, fruiting |
-| Cultivation | `cultivation` | movement, repotting, pruning, treatment, harvest, extraction, reintegration |
-| Lifecycle | `status` | transfer, death, loss, discarded |
+| Display label | Internal category | Event kinds                                                                 |
+| ------------- | ----------------- | --------------------------------------------------------------------------- |
+| All entries   | `all`             | All kinds, including `other`                                                |
+| Observations  | `observations`    | observation, flowering, fruiting                                            |
+| Cultivation   | `cultivation`     | movement, repotting, pruning, treatment, harvest, extraction, reintegration |
+| Lifecycle     | `status`          | transfer, death, loss, discarded                                            |
 
 History permanently explains its read-only collection-wide purpose, links to Journal, and acknowledges
 recording gaps. Its compact filter bar uses named `aria-pressed` category chips: **All activity** is
@@ -109,3 +109,8 @@ any route, including refresh/deep links and browser navigation, expands its grou
 entry remains discoverable. An operator may collapse it again until the next activation. This
 preference is neither domain data nor Saved View state. Mobile keeps its existing compact navigation
 and More destinations, including separate Journal and History entries.
+
+Schedule is the third Activity destination (`#/schedule`). It stores future intentions separately.
+Neither planned, overdue, completed nor cancelled Schedule records are History sources. Only an
+explicitly created ordinary Event enters Journal and the existing History Event projection. See
+[Schedule](schedule.md).

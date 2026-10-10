@@ -347,7 +347,9 @@ def delete_location(database: Session, location_id: UUID) -> None:
     event_count = database.scalar(
         select(func.count()).select_from(Event).where(Event.destination_location_id == location.id)
     )
-    if reference_count or event_count:
+    from florabase.schedule.service import retained_reference
+
+    if reference_count or event_count or retained_reference(database, "location", location_id):
         raise LocationIntegrityError(
             "location_in_use",
             "This Location is retained by collection or Event history and cannot be deleted",

@@ -2039,6 +2039,110 @@ export interface paths {
         patch: operations["updateSavedView"];
         trace?: never;
     };
+    "/api/v1/schedule": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List All */
+        get: operations["listScheduledActivities"];
+        put?: never;
+        /** Create */
+        post: operations["createScheduledActivity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/schedule/targets/{kind}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Targets */
+        get: operations["listScheduleTargets"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/schedule/targets/{kind}/{identifier}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Target */
+        get: operations["getScheduleTarget"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/schedule/{identifier}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read */
+        get: operations["getScheduledActivity"];
+        /** Update */
+        put: operations["updateScheduledActivity"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/schedule/{identifier}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Cancel */
+        post: operations["cancelScheduledActivity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/schedule/{identifier}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete */
+        post: operations["completeScheduledActivity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/search": {
         parameters: {
             query?: never;
@@ -5598,6 +5702,177 @@ export interface components {
             } | null;
             /** State Version */
             state_version?: number | null;
+        };
+        /** ScheduleComplete */
+        ScheduleComplete: {
+            event?: components["schemas"]["ScheduleEvent"] | null;
+            /** Expected Version */
+            expected_version: number;
+        };
+        /** ScheduleEvent */
+        ScheduleEvent: {
+            /** Destination Location Id */
+            destination_location_id?: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "observation" | "repotting" | "movement" | "other";
+            /** Notes */
+            notes?: string | null;
+            /**
+             * Occurred On
+             * Format: date
+             */
+            occurred_on: string;
+        };
+        /** SchedulePage */
+        SchedulePage: {
+            /** Items */
+            items: components["schemas"]["ScheduleResponse"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Overdue Count */
+            overdue_count: number;
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+            /** Today Count */
+            today_count: number;
+            /** Total */
+            total: number;
+        };
+        /** ScheduleResponse */
+        ScheduleResponse: {
+            /**
+             * Activity Kind
+             * @enum {string}
+             */
+            activity_kind: "repot" | "water" | "fertilize" | "move" | "check_germination" | "inspect" | "harvest" | "follow_up";
+            /** Cancelled At */
+            cancelled_at: string | null;
+            /** Completed At */
+            completed_at: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Due On
+             * Format: date
+             */
+            due_on: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Linked Event Id */
+            linked_event_id: string | null;
+            /** Notes */
+            notes: string | null;
+            /** Overdue */
+            overdue: boolean;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "planned" | "completed" | "cancelled";
+            target: components["schemas"]["ScheduleTargetResponse"] | null;
+            /** Title */
+            title: string;
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Version */
+            version: number;
+        };
+        /** ScheduleTarget */
+        ScheduleTarget: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location";
+        };
+        /** ScheduleTargetPage */
+        ScheduleTargetPage: {
+            /** Items */
+            items: components["schemas"]["ScheduleTargetResponse"][];
+            /** Total */
+            total: number;
+        };
+        /** ScheduleTargetResponse */
+        ScheduleTargetResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location";
+            /** Label */
+            label: string;
+            /** Lifecycle */
+            lifecycle: string | null;
+        };
+        /** ScheduleUpdate */
+        ScheduleUpdate: {
+            /**
+             * Activity Kind
+             * @enum {string}
+             */
+            activity_kind: "repot" | "water" | "fertilize" | "move" | "check_germination" | "inspect" | "harvest" | "follow_up";
+            /**
+             * Due On
+             * Format: date
+             */
+            due_on: string;
+            /** Expected Version */
+            expected_version: number;
+            /** Notes */
+            notes?: string | null;
+            target?: components["schemas"]["ScheduleTarget"] | null;
+            /** Title */
+            title: string;
+        };
+        /** ScheduleVersion */
+        ScheduleVersion: {
+            /** Expected Version */
+            expected_version: number;
+        };
+        /** ScheduleWrite */
+        ScheduleWrite: {
+            /**
+             * Activity Kind
+             * @enum {string}
+             */
+            activity_kind: "repot" | "water" | "fertilize" | "move" | "check_germination" | "inspect" | "harvest" | "follow_up";
+            /**
+             * Due On
+             * Format: date
+             */
+            due_on: string;
+            /** Notes */
+            notes?: string | null;
+            target?: components["schemas"]["ScheduleTarget"] | null;
+            /** Title */
+            title: string;
         };
         /** SearchGroup */
         SearchGroup: {
@@ -12287,6 +12562,305 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SavedViewResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listScheduledActivities: {
+        parameters: {
+            query?: {
+                /** @description Calendar day for overdue. Defaults to UTC; browser supplies its local day. */
+                today?: string | null;
+                status?: "planned" | "completed" | "cancelled";
+                window?: "all" | "overdue" | "today" | "next_seven_days" | "later";
+                activity_kind?: ("repot" | "water" | "fertilize" | "move" | "check_germination" | "inspect" | "harvest" | "follow_up") | null;
+                target_kind?: ("botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location") | null;
+                target_id?: string | null;
+                q?: string;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SchedulePage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    createScheduledActivity: {
+        parameters: {
+            query?: {
+                /** @description Calendar day for overdue. Defaults to UTC; browser supplies its local day. */
+                today?: string | null;
+            };
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleWrite"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listScheduleTargets: {
+        parameters: {
+            query?: {
+                q?: string;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                kind: "botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleTargetPage"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getScheduleTarget: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                kind: "botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location";
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleTargetResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    getScheduledActivity: {
+        parameters: {
+            query?: {
+                /** @description Calendar day for overdue. Defaults to UTC; browser supplies its local day. */
+                today?: string | null;
+            };
+            header?: never;
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    updateScheduledActivity: {
+        parameters: {
+            query?: {
+                /** @description Calendar day for overdue. Defaults to UTC; browser supplies its local day. */
+                today?: string | null;
+            };
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    cancelScheduledActivity: {
+        parameters: {
+            query?: {
+                /** @description Calendar day for overdue. Defaults to UTC; browser supplies its local day. */
+                today?: string | null;
+            };
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleVersion"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    completeScheduledActivity: {
+        parameters: {
+            query?: {
+                /** @description Calendar day for overdue. Defaults to UTC; browser supplies its local day. */
+                today?: string | null;
+            };
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                identifier: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ScheduleComplete"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ScheduleResponse"];
                 };
             };
             /** @description Validation Error */

@@ -11,8 +11,9 @@ import json
 import os
 import re
 import sys
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any, TypeVar, cast
+from typing import Any, Protocol, TypeVar, cast
 from urllib.parse import urlsplit
 from uuid import UUID
 
@@ -73,6 +74,16 @@ from florabase.plants.schemas import PlantCreate, PlantGroupCreate
 from florabase.provenance_sites import service as sites
 from florabase.provenance_sites.model import ProvenanceSite
 from florabase.provenance_sites.schemas import ProvenanceSiteCreate
+from florabase.schedule import service as schedule
+from florabase.schedule.model import ScheduledActivity
+from florabase.schedule.schemas import (
+    ActivityKind,
+    ScheduleComplete,
+    ScheduleEvent,
+    ScheduleTarget,
+    ScheduleWrite,
+    TargetKind,
+)
 from florabase.seed_lots import service as seeds
 from florabase.seed_lots.model import SeedLot
 from florabase.seed_lots.schemas import SeedLotCreate
@@ -103,13 +114,20 @@ MODELS: dict[str, type[Base]] = {
     "plant": Plant,
     "group": PlantGroup,
     "event": Event,
+    "schedule": ScheduledActivity,
     "harvest": Harvest,
     "item": HarvestItem,
     "inventory": HarvestMaterialInventory,
     "asset": MediaAsset,
     "link": RecordMediaLink,
 }
-T = TypeVar("T", bound=Base)
+
+
+class FixtureRecord(Protocol):
+    id: UUID
+
+
+T = TypeVar("T", bound=FixtureRecord)
 
 
 class FixtureError(RuntimeError):
@@ -240,6 +258,23 @@ def validate_manifest(database: Session, root: Path, manifest: dict[str, Any]) -
         expected.add("inventory:basil")
     if manifest.get("taxonomy_extension") == 1:
         expected.update({"identity:Ocimum tenuiflorum", "seed:holy_basil"})
+    if manifest.get("schedule_extension") == 1:
+        expected.update(
+            "schedule:" + key
+            for key in (
+                "overdue",
+                "today",
+                "seed",
+                "sowing",
+                "later",
+                "repot",
+                "location",
+                "identity",
+                "completed",
+                "linked",
+                "cancelled",
+            )
+        )
     if set(manifest["records"]) != expected:
         raise FixtureError(
             "Preview fixture baseline has missing records; run guarded uat-preview-reset"
@@ -357,12 +392,83 @@ def ensure_taxonomy(database: Session, root: Path, manifest: dict[str, Any]) -> 
     write_manifest(root, manifest)
 
 
+def ensure_schedule(database: Session, root: Path, manifest: dict[str, Any]) -> None:
+    """One explicit synthetic extension; repeating seed never reschedules operator edits."""
+    if manifest.get("schedule_extension") == 1:
+        return
+    today = datetime.now(UTC).date()
+    samples: tuple[tuple[str, ActivityKind, int, TargetKind, str, str], ...] = (
+        ("overdue", "inspect", -3, "plant", "plant:direct", "Inspect nursery aloe leaves"),
+        ("today", "water", 0, "plant", "plant:derived", "Water basil mother plant"),
+        ("seed", "inspect", 3, "seed_lot", "seed:0", "Check seed packet storage"),
+        ("sowing", "check_germination", 5, "sowing", "sowing:basil", "Check basil germination"),
+        ("later", "repot", 21, "plant_group", "group:basil", "Repot basil group"),
+        (
+            "repot",
+            "repot",
+            2,
+            "plant",
+            "plant:direct",
+            "Repot nursery aloe — optional Journal Event",
+        ),
+        (
+            "location",
+            "follow_up",
+            7,
+            "location",
+            "location:Greenhouse bench",
+            "Inspect greenhouse bench",
+        ),
+        (
+            "identity",
+            "follow_up",
+            14,
+            "botanical_identity",
+            "identity:Ocimum basilicum",
+            "Review basil cultivation plan",
+        ),
+        ("completed", "inspect", -2, "plant", "plant:direct", "Completed inspection without Event"),
+        ("linked", "repot", -1, "plant", "plant:derived", "Completed repot with explicit Event"),
+        ("cancelled", "follow_up", 10, "sowing", "sowing:basil", "Cancelled sowing follow-up"),
+    )
+    # A single transaction makes the extension atomic. Persist the marker only after commit.
+    for key, kind, delta, target_kind, ref, title in samples:
+        activity = schedule.create(
+            database,
+            ScheduleWrite(
+                activity_kind=kind,
+                title="Preview — " + title,
+                due_on=today + timedelta(days=delta),
+                target=ScheduleTarget(kind=target_kind, id=UUID(manifest["records"][ref])),
+                notes=NOTE,
+            ),
+        )
+        if key == "completed":
+            schedule.complete(database, activity.id, ScheduleComplete(expected_version=1))
+        elif key == "linked":
+            schedule.complete(
+                database,
+                activity.id,
+                ScheduleComplete(
+                    expected_version=1,
+                    event=ScheduleEvent(kind="repotting", occurred_on=today, notes=NOTE),
+                ),
+            )
+        elif key == "cancelled":
+            schedule.cancel(database, activity.id, 1)
+        manifest["records"]["schedule:" + key] = str(activity.id)
+    database.commit()
+    manifest["schedule_extension"] = 1
+    write_manifest(root, manifest)
+
+
 def seed(database: Session, root: Path) -> dict[str, Any]:
     existing = read_manifest(root)
     if existing is not None:
         validate_manifest(database, root, existing)
         ensure_stored_material(database, root, existing)
         ensure_taxonomy(database, root, existing)
+        ensure_schedule(database, root, existing)
         return existing
     if (
         database.scalar(select(User.id).limit(1)) is not None
@@ -851,6 +957,7 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
     database.commit()
     ensure_stored_material(database, root, manifest)
     ensure_taxonomy(database, root, manifest)
+    ensure_schedule(database, root, manifest)
     manifest["state"] = "ready"
     write_manifest(root, manifest)
     return manifest

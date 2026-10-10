@@ -62,6 +62,13 @@ const DashboardScreen = lazy(() =>
   }),
 );
 
+const ScheduleScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./schedule/ScheduleScreen");
+    return { default: module.ScheduleScreen };
+  }),
+);
+
 const HistoryScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./history/HistoryScreen");
@@ -173,6 +180,7 @@ type Section =
   | "harvests"
   | "events"
   | "history"
+  | "schedule"
   | "species-distribution"
   | "native-ranges"
   | "taxonomy"
@@ -247,6 +255,7 @@ function currentRoute(): Route {
     "harvests",
     "events",
     "history",
+    "schedule",
     "species-distribution",
     "native-ranges",
     "taxonomy",
@@ -293,6 +302,7 @@ const desktopGroups: {
     items: [
       { id: "events", label: "Journal" },
       { id: "history", label: "History" },
+      { id: "schedule", label: "Schedule" },
     ],
   },
   {
@@ -665,6 +675,8 @@ function ApplicationShell() {
                   startCreating={route.action === "create"}
                   initialCreationKind={route.creationKind}
                 />
+              ) : route.section === "schedule" ? (
+                <ScheduleScreen />
               ) : route.section === "history" ? (
                 <HistoryScreen />
               ) : route.section === "events" ? (

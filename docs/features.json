@@ -1424,6 +1424,28 @@
       "dependencies": ["BOTANY-002", "EXPLORE-001"],
       "priority": "P3",
       "status": "planned"
+    },
+    {
+      "id": "SCHEDULE-001",
+      "category": "activity",
+      "description": "Add explicit date-only scheduled collection activities distinct from Journal and History",
+      "acceptance_criteria": [
+        "Retained date-only future intentions use bounded activity kinds, explicit planned/completed/cancelled statuses, derived overdue and six optional exact collection targets",
+        "Authenticated Origin/CSRF-protected create/edit/reschedule/cancel/complete APIs use versions, atomic revalidation and durable idempotent optional compatible Event recording with an operator-selected actual day",
+        "Schedule under Activity emphasizes overdue/today/next seven days/later, retains terminal evidence, canonical URL filters, accessible forms, bounded Dashboard and Plant/PlantGroup/SeedLot/Sowing contextual integration",
+        "Real PostgreSQL races, target retention, migration 0041 downgrade/re-upgrade preservation and synthetic UAT fixtures cover planning boundaries; Journal/History sources remain unchanged",
+        "No recurrence, notifications, automatic completion, automatic Event, generic task manager or attachment system is introduced; Schedule Saved Views are explicitly deferred"
+      ],
+      "dependencies": [
+        "HISTORY-001",
+        "EVENT-002",
+        "VIEW-001",
+        "PLANT-003",
+        "SOWING-003",
+        "SEED-004"
+      ],
+      "priority": "P2",
+      "status": "verified"
     }
   ]
 }

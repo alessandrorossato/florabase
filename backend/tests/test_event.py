@@ -84,7 +84,7 @@ def test_movement_create_updates_location_but_update_and_delete_do_not_reapply_o
     plant, _, old_location, destination = _targets()
     plant.location_id = old_location.id
     database = _database(plant, old_location, destination)
-    database.scalar.side_effect = [plant, None, 0]
+    database.scalar.side_effect = [plant, None, 0, None]
     event = service.create_event(
         database,
         "plant",

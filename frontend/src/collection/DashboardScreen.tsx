@@ -1,3 +1,4 @@
+import { UpcomingActivities } from "../schedule/UpcomingActivities";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useEffect, useState } from "react";
 
@@ -177,6 +178,7 @@ function DashboardOverview() {
                 </div>
               </div>
             </nav>
+            <UpcomingActivities />
             <section
               aria-labelledby="recent-activity-title"
               className="dashboard-activity"

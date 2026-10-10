@@ -542,7 +542,7 @@ resulting Plant. Ordinary Plant/PlantGroup edits do not create Events and remain
 for current lifecycle.
 
 The receipt boundary preserves this rule. An ordinary journal Event remains independently editable
-or deletable and never reverses current state. A transfer or extraction Event created by an
+and never reverses current state; deletion is also blocked when a completed Schedule retains it. A transfer or extraction Event created by an
 authoritative operation has a one-to-one receipt relationship and ordinary deletion is rejected;
 transfer editing remains correction of journal history and never changes the immutable receipt or
 aggregate state. Authoritative extraction and reintegration Events cannot be edited through the
@@ -580,7 +580,7 @@ and structured filter state. [Search and filter semantics](search.md) define exa
 location scope, partial-year behavior, and result paging. Local directory search remains available.
 
 Desktop navigation uses these macroareas, in order: **Overview** (Dashboard), **Collection**
-(Seeds, Sowings, Plants, Harvests, Locations), **Activity** (Journal, History), **Explore**
+(Seeds, Sowings, Plants, Harvests, Locations), **Activity** (Journal, History, Schedule), **Explore**
 (Botanical identities, Media, Geography, Collection origins), **Sourcing** (Suppliers, Orders), and
 **Tools** (Import / Export, Labels). Page-level eyebrows follow the macroarea. Routes are unchanged;
 Collection origins retains `#/map` and Saved View surface `provenance_map`. Mobile More retains every
@@ -592,9 +592,9 @@ it is considered biologically native/original. Neither is inferred from collecti
 Supplier or current Location. EXPLORE-001 adds the separate collection-aware Species distribution
 workspace; EXPLORE-002 adds the separate recorded Native ranges workspace.
 
-Activity contains the focused Event Journal and the read-only unified operational History
-projection. SCHEDULE-001 remains a later candidate, without treating recorded facts as planned tasks. Future
-schedule → completion → historical Event semantics remain undecided; a calendar is a presentation.
+Activity contains the focused Event Journal, read-only unified operational History and date-only
+Schedule workspace. Schedule stores future intention separately from historical occurrences.
+Completion can omit an Event or explicitly link one atomically; a calendar remains a presentation.
 
 Desktop macro-groups use accessible disclosures. All start expanded; a browser-only localStorage
 presentation preference remembers collapsed groups. Route activation expands the active group.
@@ -953,3 +953,19 @@ acquisition facts. Order total remains read-only transaction context, without pe
 referenced Orders cannot be deleted. Migration 0036 preserves existing unlinked lots and refuses a
 populated downgrade. Orders adds bounded REST/detail/directory, Saved Views and direct Global Search;
 it does not expand History or purchasing to Plants/general inventory.
+
+## Scheduled collection activities — SCHEDULE-001
+
+ScheduledActivity is an explicit future intention with a concrete `due_on` day, bounded kind,
+title/notes, optional exact Identity/SeedLot/Sowing/Plant/PlantGroup/Location reference and version.
+It remains a planning record when completed or cancelled. `overdue` derives from planned status
+and a due day before the displayed current calendar day. Overdue does not mean occurred; completed
+Schedule does not necessarily mean Event. No background mutation, recurrence or delivery exists.
+
+References are restrictive and retained in all statuses. Lifecycle changes preserve links and show
+the current target lifecycle; existing intentions can be edited/rescheduled/closed after retirement.
+New work requires a current target. Hard deletion cannot orphan retained planning evidence.
+Completion without Event is always possible. Explicit compatible Plant/PlantGroup Events are created
+with actual full occurrence day through the existing Event service, in the same transaction. Exact
+completion retry returns the same durable link; changed completion details and stale writes conflict.
+See [Schedule contract](schedule.md) for dates, supported kinds and lifecycle policy.

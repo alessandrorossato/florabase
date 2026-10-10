@@ -85,12 +85,12 @@ def test_update_corrects_the_same_identity_and_rejects_a_duplicate() -> None:
 def test_delete_allows_unused_identity_and_rejects_collection_references() -> None:
     identity = BotanicalIdentity(id=uuid7(), scientific_name="Acer palmatum")
     database = MagicMock()
-    database.scalar.side_effect = [identity.id, 0, 0, 0, 0, 0]
+    database.scalar.side_effect = [identity.id, 0, None, 0, 0, 0, 0]
     delete_botanical_identity(database, identity)
     database.delete.assert_called_once_with(identity)
 
     database = MagicMock()
-    database.scalar.side_effect = [identity.id, 0, 0, 1, 0, 0]
+    database.scalar.side_effect = [identity.id, 0, None, 0, 1, 0, 0]
     with pytest.raises(BotanicalIdentityReferencedError):
         delete_botanical_identity(database, identity)
     database.delete.assert_not_called()
@@ -105,7 +105,7 @@ def test_delete_allows_unused_identity_and_rejects_collection_references() -> No
 def test_delete_rejects_retained_native_range_source_applications() -> None:
     identity = BotanicalIdentity(id=uuid7(), scientific_name="Acer palmatum")
     database = MagicMock()
-    database.scalar.side_effect = [identity.id, 0, 1, 0, 0, 0]
+    database.scalar.side_effect = [identity.id, 0, None, 1, 0, 0, 0]
     with pytest.raises(BotanicalIdentityReferencedError):
         delete_botanical_identity(database, identity)
     database.delete.assert_not_called()

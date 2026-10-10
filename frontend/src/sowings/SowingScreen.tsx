@@ -1,3 +1,4 @@
+import { UpcomingActivities } from "../schedule/UpcomingActivities";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
 import { useBulkSelection } from "../bulk/useBulkSelection";
@@ -402,6 +403,11 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
+          <UpcomingActivities
+            kind={"sowing"}
+            id={sowing.id}
+            current={sowing.lifecycle === "active"}
+          />
           <section
             aria-labelledby="sowing-origin-title"
             className="sowing-fact-group"
