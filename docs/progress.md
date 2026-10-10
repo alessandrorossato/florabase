@@ -1,5 +1,34 @@
 # Engineering progress
 
+## 2026-10-10 — frontend low-risk dependency batch (implementation handoff)
+
+- From merged PR #85 main `aebe471`, updated only `@types/leaflet` **1.9.21 → 1.9.22** and
+  `@testing-library/user-event` **14.6.6 → 14.6.7**, with pnpm-generated lockfile and no transitive
+  churn. Node, React, Vite, jsdom, lint/format tools and backend dependencies are unchanged.
+- Baseline App **73 passed**; updated focused App/form/map selection **104 passed / 7 files**,
+  strict TypeScript/Leaflet declarations, frontend lint, dependency formatting and production
+  frontend build passed. Bounded synthetic browser smoke covered auth, normal form creation,
+  partial/final profile clearing and real Leaflet marker/popup behavior; exact owned cleanup passed.
+- CI-003 selects **FULL** including migration cycle. Changes remain unstaged/uncommitted;
+  canonical gate, independent review and delivery belong to Luna. See the
+  [handoff](dependency-maintenance-frontend-low-risk-handoff.md), including cold-test readiness
+  evidence. Independent review found the clear-flow test acted on a hidden Uses field; the test now
+  activates its tab before clearing, without weakening assertions or changing production behavior.
+  No roadmap status changed.
+
+## 2026-10-10 — frontend low-risk dependency batch (Luna independent verification)
+
+- Independent review accepted the two-package dependency scope and pnpm lockfile delta. The only
+  test repair follows the real UI by activating “Uses & warnings” before accessing Uses; production
+  behavior and all save/clear assertions remain unchanged.
+- Canonical `make feature-verify` selected **FULL** and passed: **910 backend tests, 90.32% coverage;
+  557 frontend tests across 57 files; 711 PostgreSQL integration tests; eight workflow checks;
+  static/format/lint/type/API checks; backend/frontend production builds; full migration cycle at
+  `20261009_0041`; exact-tree receipt. Node 24.19.0 and pnpm 11.19.0 were used by Quality.
+- Independent synthetic browser smoke confirmed authenticated Dashboard boot, identity creation,
+  profile save, partial/final clearing, and Leaflet marker popup. Exact fixture and Quality cleanup
+  passed; protected project identities remained. No database migration or DEV upgrade is needed.
+
 ## 2026-10-10 — CI-003 independent verification and protected delivery preparation
 
 - Independently reviewed the implementation, complete feature graph, CI ownership, resource
