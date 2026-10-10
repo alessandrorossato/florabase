@@ -1322,10 +1322,10 @@ test("clearing one section updates the profile and clearing the final section re
   await user.click(screen.getByRole("button", { name: "Save profile" }));
   expect(await screen.findByRole("status")).toHaveTextContent(/profile saved/i);
   await user.click(screen.getByRole("button", { name: "Edit profile" }));
+  await user.click(screen.getByRole("tab", { name: "Uses & warnings" }));
   expect(screen.getByLabelText("Uses")).toHaveValue("Ornamental");
 
   await user.clear(screen.getByLabelText("Uses"));
-  await user.click(screen.getByRole("tab", { name: "Uses & warnings" }));
   await user.click(screen.getByRole("button", { name: "Save profile" }));
   expect(await screen.findByRole("status")).toHaveTextContent(
     /profile cleared/i,
