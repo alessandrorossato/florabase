@@ -30,7 +30,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Test repository workflow helpers
-        run: make test-workflow-helpers test-feature-workflow test-preview-workflow test-environment-workflow test-uat-preview workflow-check
+        run: make test-verification-impact test-workflow-resources test-workflow-helpers test-feature-workflow test-preview-workflow test-environment-workflow test-uat-preview workflow-check
       - name: Run formatting, lint, typing, unit, frontend, and API drift checks
         run: make check
 

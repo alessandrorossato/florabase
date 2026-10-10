@@ -375,8 +375,13 @@ class PreviewIsolationTests(unittest.TestCase):
 
     def test_integration_workflow_remains_disposable_and_separate(self) -> None:
         integration = (ROOT / "scripts/test-integration.sh").read_text()
-        self.assertIn('compose_project="florabase-integration-', integration)
-        self.assertIn("--volumes", integration)
+        self.assertIn("disposable_workflow.py integration", integration)
+        runner = (ROOT / "scripts/disposable_workflow.py").read_text()
+        ownership = (ROOT / "scripts/workflow_resources.py").read_text()
+        self.assertIn("with Disposable(owner)", runner)
+        self.assertIn("florabase-{role}-{identity[:12]}", ownership)
+        self.assertIn("('volumes'", ownership.replace('"', "'"))
+        self.assertIn("residual_containers_networks_volumes=0", ownership)
         self.assertNotIn("florabase-preview", integration)
         compose = (ROOT / "compose.integration.yaml").read_text()
         self.assertIn("tmpfs:", compose)

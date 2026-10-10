@@ -126,7 +126,12 @@ if [[ "${1:-}" == "pr" && "${2:-}" == "view" ]]; then
 fi
 exit 1
 EOF
-chmod +x "${mock_bin}/gh"
+cat >"${mock_bin}/docker" <<'EOF'
+#!/usr/bin/env bash
+# No resources in these isolated Git fixtures. Never contacts the Docker daemon.
+exit 0
+EOF
+chmod +x "${mock_bin}/gh" "${mock_bin}/docker"
 
 expect_failure env -C "${work}" PATH="${mock_bin}:${PATH}" MOCK_PR_STATE=OPEN \
   MOCK_HEAD_OID="${feature_oid}" "${feature_finish}"

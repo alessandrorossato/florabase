@@ -9,6 +9,7 @@ import tempfile
 import uuid
 from pathlib import Path
 
+from smoke_lifecycle import SmokeLifecycle
 from workflow_environment import (
     Environment,
     Repository,
@@ -17,6 +18,7 @@ from workflow_environment import (
     migration_graph,
     run,
 )
+from workflow_resources import Resources
 
 
 def require(condition: bool, message: str) -> None:
@@ -178,7 +180,7 @@ def main() -> None:
             not run(["docker", "image", "ls", "-q", frontend_image], capture=True),
             "image already exists",
         )
-        try:
+        with SmokeLifecycle(env) as lifetime:
             graph = migration_graph(source)
             head = code_heads(graph)[0]
             require(len(graph[head]) == 1, "fixture needs one previous revision")
@@ -190,6 +192,11 @@ def main() -> None:
                     "build",
                     "--target",
                     "dependencies",
+                    *[
+                        part
+                        for key, value in lifetime.owner.labels().items()
+                        for part in ("--label", f"{key}={value}")
+                    ],
                     "--tag",
                     frontend_image,
                     str(source / "frontend"),
@@ -238,6 +245,14 @@ def main() -> None:
                 dockerfile.write_text(original)
             for image_state in ("stale", "retry-at-head", "absent"):
                 if image_state == "absent":
+                    image = json.loads(
+                        run(["docker", "image", "inspect", frontend_image], capture=True)
+                    )[0]
+                    Resources(lifetime.owner).prove(image, "images")
+                    require(
+                        not Resources(lifetime.owner).users("ancestor", str(image["Id"])),
+                        "fixture image has a container user",
+                    )
                     run(["docker", "image", "rm", frontend_image])
                 env.commands.clear()
                 env.upgrade_state()  # Exactly the orchestration used by the supported CLI.
@@ -278,16 +293,10 @@ def main() -> None:
                     f"UPGRADE_{image_state.upper()}_PASSED: {previous} -> {head}; DB/media/dependencies intact"
                 )
                 env.markers(seed=True)  # Retry must repair ownership idempotently again.
-        finally:
-            # Only the UUID fixture, proven absent at entry, may have its state removed.
-            env.compose("down", "--volumes", "--remove-orphans")
-            for image in (frontend_image, f"{project}-backend-development"):
-                if run(["docker", "image", "ls", "-q", image], capture=True):
-                    run(["docker", "image", "rm", image])
-    require(
-        operator_snapshot(repository) == before,
-        "operator environments/volumes or primary Git changed",
-    )
+        require(
+            operator_snapshot(repository) == before,
+            "operator environments/volumes or primary Git changed",
+        )
     print(
         "DEV_UPGRADE_SMOKE_PASSED: stale/absent images, pending migration, at-head retry, failed build, executable preflight, persistent state; fixture cleaned; operator state unchanged"
     )

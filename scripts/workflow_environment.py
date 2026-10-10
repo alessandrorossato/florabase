@@ -254,6 +254,7 @@ def file_digest(path: Path) -> bytes:
 class Environment:
     def __init__(self, repository: Repository, role: str) -> None:
         self.repository = repository
+        self.workflow_overlay: Path | None = None
         self.role = role
         self.source = repository.primary if role == "dev" else repository.source
         self.repo = Repository(self.source)
@@ -278,6 +279,8 @@ class Environment:
         env.update({f"FLORABASE_{key.upper()}": value for key, value in identity.items()})
         env["COMPOSE_PROJECT_NAME"] = self.project
         env["FLORABASE_ROLE"] = self.role
+        if self.role == "quality":
+            env["FLORABASE_WORKFLOW_OWNER"] = str(self.repository.metadata.resolve())
         if self.role in {"dev", "review", "uat", "quality"}:
             # Shell values override .env and Compose's defaults, including stale 1000:1000
             # settings. Runtime users and dev-state-init receive the same numeric identity.
@@ -308,6 +311,8 @@ class Environment:
             files.append("compose.dev.yaml")
         if self.role in {"review", "uat"}:
             files.append("compose.review.yaml")
+        if self.role == "quality":
+            files.append("compose.quality.yaml")
         if self.role == "uat":
             files.append("compose.uat.yaml")
         return [
@@ -320,6 +325,7 @@ class Environment:
             "--project-directory",
             str(self.source),
             *[part for name in files for part in ("--file", str(self.source / name))],
+            *(["--file", str(self.workflow_overlay)] if self.workflow_overlay else []),
             *args,
         ]
 
@@ -862,6 +868,10 @@ def main() -> int:
                     "restart",
                 }:
                     env.require_durable_legacy_media()
+            if env.role == "quality" and command[0] in {"down", "rm", "stop", "kill"}:
+                raise WorkflowError(
+                    "use make quality-clean for exact worktree lifecycle retirement"
+                )
             if env.role == "quality" and command[:1] == ["run"] and "frontend" in command:
                 env.prepare_initializer()
                 env.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")

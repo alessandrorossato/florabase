@@ -46,11 +46,16 @@ if [[ "${git_dir}" != "${common_dir}" ]]; then
     fail "primary checkout ${primary} must be on main; resolve its branch deliberately"
   [[ -z "$(git -C "${primary}" status --porcelain)" ]] ||
     fail "primary checkout ${primary} has staged or working changes; preserve/resolve them before finish"
+  # All Git/merge/primary safety checks passed; retire this worktree before detaching.
+  python3 "$(dirname "${BASH_SOURCE[0]}")/workflow_resources.py" quality-clean ||
+    fail "Quality retirement failed; branch retained. Inspect make workflow-resources"
   # Fast-forward uses Git's normal index/worktree update, never a raw main ref write.
   git -C "${primary}" merge --ff-only origin/main
   git switch --detach "${branch_oid}"
   printf 'Linked feature worktree retained at %s; archive it through Codex when no longer needed\n' "$(git rev-parse --show-toplevel)"
 else
+  python3 "$(dirname "${BASH_SOURCE[0]}")/workflow_resources.py" quality-clean ||
+    fail "Quality retirement failed; branch retained. Inspect make workflow-resources"
   git switch main
   git merge --ff-only origin/main
 fi

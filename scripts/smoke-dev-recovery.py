@@ -10,6 +10,7 @@ import tempfile
 import uuid
 from pathlib import Path
 
+from smoke_lifecycle import SmokeLifecycle
 from workflow_environment import (
     Environment,
     Repository,
@@ -127,121 +128,96 @@ def main() -> None:
         )
         inherited_env_file = os.environ.pop("FLORABASE_ENV_FILE", None)
         env.env_source = primary / ".env"
-        try:
-            env.compose("build")
-            shutil.copytree(primary, old, ignore=shutil.ignore_patterns(".git"))
-            shutil.copy2(primary / "compose.yaml", old / "compose.yaml")
-            # Model the real older development override, including its tmpfs media and retained
-            # durable attachment mount. Automatic Compose labels are the legacy identity evidence.
-            (old / "compose.dev.yaml").write_text(
-                json.dumps(
-                    {
-                        "services": {
-                            "db": {"ports": ["127.0.0.1::5432"]},
-                            "backend": {
-                                "image": f"{project}-backend-development",
-                                "build": {"target": "development"},
-                                "user": "1000:1000",
-                                "command": ["sleep", "3600"],
-                                "environment": {
-                                    "FLORABASE_ENVIRONMENT": "development",
-                                    "FLORABASE_COOKIE_MODE": "loopback-development",
-                                    "FLORABASE_ATTACHMENT_STORAGE_ROOT": "/tmp/florabase-attachments",
-                                },
-                                "volumes": [
-                                    "./backend/src:/app/src",
-                                    "./backend/alembic:/app/alembic",
-                                ],
-                                "tmpfs": ["/tmp/florabase-attachments:uid=1000,gid=1000,mode=0700"],
-                                "healthcheck": {"test": ["CMD", "true"]},
-                            },
-                            "frontend": {
-                                "image": f"{project}-frontend-development",
-                                "build": {"target": "development"},
-                                "entrypoint": ["sleep", "3600"],
-                                "user": "1000:1000",
-                                "volumes": [
-                                    "./frontend:/app",
-                                    "frontend_node_modules:/app/node_modules",
-                                ],
-                                "healthcheck": {"test": ["CMD", "true"]},
-                            },
-                        },
-                        "volumes": {"frontend_node_modules": {}},
-                    }
-                )
-            )
-            old_env = FixtureEnvironment(Repository(primary), "dev")
-            old_env.project, old_env.source, old_env.env_source = project, old, primary / ".env"
-            old_env.compose("up", "-d", "--wait", "--wait-timeout", "120")
-            env.upgrade()  # Only the fixture DB, using primary migrations.
-            old_env.compose(
-                "exec",
-                "-T",
-                "backend",
-                "sh",
-                "-ec",
-                "printf temporary > /tmp/florabase-attachments/recovery-marker",
-            )
-            old_env.compose(
-                "exec",
-                "-T",
-                "--user",
-                "0:0",
-                "backend",
-                "sh",
-                "-ec",
-                "printf durable > /var/lib/florabase/attachments/durable-marker",
-            )
-            old_env.compose(
-                "exec",
-                "-T",
-                "--user",
-                "0:0",
-                "frontend",
-                "sh",
-                "-ec",
-                "printf dependencies > /app/node_modules/.recovery-marker",
-            )
-            old_env.compose(
-                "exec",
-                "-T",
-                "db",
-                "sh",
-                "-ec",
-                'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE TABLE recovery_state (value text); INSERT INTO recovery_state VALUES (\'preserved\');"',
-            )
-            original_ids = {item["Id"] for item in env.containers()}
-            volumes_before = run(
-                [
-                    "docker",
-                    "volume",
-                    "inspect",
-                    *[
-                        f"{project}_{key}"
-                        for key in ("postgres_data", "attachment_data", "frontend_node_modules")
-                    ],
-                ],
-                capture=True,
-            )
+        with SmokeLifecycle(env):
             try:
-                env.status()
-            except WorkflowError as error:
-                require("make dev-stop" in str(error), "status lacks supported recovery action")
-            else:
-                raise WorkflowError("foreign-source status did not refuse")
-            # Simulate a vanished Codex source. Recovery must use only the existing Docker identity.
-            shutil.rmtree(old)
-            env.stop()
-            stopped = env.containers()
-            require(
-                {item["Id"] for item in stopped} == original_ids, "stop removed/replaced containers"
-            )
-            require(
-                all(not item["State"]["Running"] for item in stopped), "containers still running"
-            )
-            require(
-                run(
+                env.compose("build")
+                shutil.copytree(primary, old, ignore=shutil.ignore_patterns(".git"))
+                shutil.copy2(primary / "compose.yaml", old / "compose.yaml")
+                # Model the real older development override, including its tmpfs media and retained
+                # durable attachment mount. Automatic Compose labels are the legacy identity evidence.
+                (old / "compose.dev.yaml").write_text(
+                    json.dumps(
+                        {
+                            "services": {
+                                "db": {"ports": ["127.0.0.1::5432"]},
+                                "backend": {
+                                    "image": f"{project}-backend-development",
+                                    "build": {"target": "development"},
+                                    "user": "1000:1000",
+                                    "command": ["sleep", "3600"],
+                                    "environment": {
+                                        "FLORABASE_ENVIRONMENT": "development",
+                                        "FLORABASE_COOKIE_MODE": "loopback-development",
+                                        "FLORABASE_ATTACHMENT_STORAGE_ROOT": "/tmp/florabase-attachments",
+                                    },
+                                    "volumes": [
+                                        "./backend/src:/app/src",
+                                        "./backend/alembic:/app/alembic",
+                                    ],
+                                    "tmpfs": [
+                                        "/tmp/florabase-attachments:uid=1000,gid=1000,mode=0700"
+                                    ],
+                                    "healthcheck": {"test": ["CMD", "true"]},
+                                },
+                                "frontend": {
+                                    "image": f"{project}-frontend-development",
+                                    "build": {"target": "development"},
+                                    "entrypoint": ["sleep", "3600"],
+                                    "user": "1000:1000",
+                                    "volumes": [
+                                        "./frontend:/app",
+                                        "frontend_node_modules:/app/node_modules",
+                                    ],
+                                    "healthcheck": {"test": ["CMD", "true"]},
+                                },
+                            },
+                            "volumes": {"frontend_node_modules": {}},
+                        }
+                    )
+                )
+                old_env = FixtureEnvironment(Repository(primary), "dev")
+                old_env.project, old_env.source, old_env.env_source = project, old, primary / ".env"
+                old_env.workflow_overlay = env.workflow_overlay
+                old_env.compose("up", "-d", "--wait", "--wait-timeout", "120")
+                env.upgrade()  # Only the fixture DB, using primary migrations.
+                old_env.compose(
+                    "exec",
+                    "-T",
+                    "backend",
+                    "sh",
+                    "-ec",
+                    "printf temporary > /tmp/florabase-attachments/recovery-marker",
+                )
+                old_env.compose(
+                    "exec",
+                    "-T",
+                    "--user",
+                    "0:0",
+                    "backend",
+                    "sh",
+                    "-ec",
+                    "printf durable > /var/lib/florabase/attachments/durable-marker",
+                )
+                old_env.compose(
+                    "exec",
+                    "-T",
+                    "--user",
+                    "0:0",
+                    "frontend",
+                    "sh",
+                    "-ec",
+                    "printf dependencies > /app/node_modules/.recovery-marker",
+                )
+                old_env.compose(
+                    "exec",
+                    "-T",
+                    "db",
+                    "sh",
+                    "-ec",
+                    'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "CREATE TABLE recovery_state (value text); INSERT INTO recovery_state VALUES (\'preserved\');"',
+                )
+                original_ids = {item["Id"] for item in env.containers()}
+                volumes_before = run(
                     [
                         "docker",
                         "volume",
@@ -253,83 +229,117 @@ def main() -> None:
                     ],
                     capture=True,
                 )
-                == volumes_before,
-                "stop changed volume identities",
-            )
-            env.stop()  # Idempotent; stopped backend tmpfs is never read again.
-            env.up()
-            require(
-                all(
-                    item["Config"]["Labels"].get("io.florabase.source") == str(primary)
-                    for item in env.containers()
-                ),
-                "primary source was not adopted",
-            )
-            for service, command in (
-                (
-                    "backend",
-                    "test $(cat /var/lib/florabase/attachments/recovery-marker) = temporary; test $(cat /var/lib/florabase/attachments/durable-marker) = durable",
-                ),
-                (
-                    "frontend",
-                    "test $(cat /app/node_modules/.recovery-marker) = dependencies; test $(id -u) != 0",
-                ),
-                (
-                    "db",
-                    'test "$(psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc \'SELECT value FROM recovery_state\')" = preserved',
-                ),
-            ):
-                env.compose("exec", "-T", service, "sh", "-ec", command)
-            head = code_heads(migration_graph(primary))[0]
-            env.compose(
-                "exec",
-                "-T",
-                "db",
-                "sh",
-                "-ec",
-                'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "UPDATE alembic_version SET version_num = \'fixture_ahead\';"',
-            )
-            env.stop()
-            for operation in (env.up, env.upgrade):
                 try:
-                    operation()
+                    env.status()
                 except WorkflowError as error:
-                    require(
-                        "AHEAD OF OR INCOMPATIBLE" in str(error),
-                        "ahead revision lacks clear refusal",
-                    )
+                    require("make dev-stop" in str(error), "status lacks supported recovery action")
                 else:
-                    raise WorkflowError("ahead-of-code fixture DB was accepted")
-                require(env.current() == ["fixture_ahead"], "DB was downgraded")
+                    raise WorkflowError("foreign-source status did not refuse")
+                # Simulate a vanished Codex source. Recovery must use only the existing Docker identity.
+                shutil.rmtree(old)
+                env.stop()
+                stopped = env.containers()
                 require(
-                    not any(
-                        item["State"]["Running"]
-                        for item in env.containers()
-                        if item["Config"]["Labels"]["com.docker.compose.service"]
-                        in {"backend", "frontend"}
-                    ),
-                    "ahead DB started application",
+                    {item["Id"] for item in stopped} == original_ids,
+                    "stop removed/replaced containers",
                 )
-            env.compose(
-                "exec",
-                "-T",
-                "db",
-                "sh",
-                "-ec",
-                f'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "UPDATE alembic_version SET version_num = \'{head}\';"',
-            )
-            require(
-                operator_snapshot(repository) == before,
-                "operator environments or primary Git changed",
-            )
-            print(
-                "DEV_RECOVERY_SMOKE_PASSED: absent old source, tmpfs+durable media, DB/dependencies, idempotent stop, primary restart, ahead refusal; operator DEV/Review/Preview/Prod unchanged"
-            )
-        finally:
-            # Only this UUID project, proven absent before the fixture, is disposable.
-            env.compose("down", "--volumes", "--remove-orphans")
-            if inherited_env_file is not None:
-                os.environ["FLORABASE_ENV_FILE"] = inherited_env_file
+                require(
+                    all(not item["State"]["Running"] for item in stopped),
+                    "containers still running",
+                )
+                require(
+                    run(
+                        [
+                            "docker",
+                            "volume",
+                            "inspect",
+                            *[
+                                f"{project}_{key}"
+                                for key in (
+                                    "postgres_data",
+                                    "attachment_data",
+                                    "frontend_node_modules",
+                                )
+                            ],
+                        ],
+                        capture=True,
+                    )
+                    == volumes_before,
+                    "stop changed volume identities",
+                )
+                env.stop()  # Idempotent; stopped backend tmpfs is never read again.
+                env.up()
+                require(
+                    all(
+                        item["Config"]["Labels"].get("io.florabase.source") == str(primary)
+                        for item in env.containers()
+                    ),
+                    "primary source was not adopted",
+                )
+                for service, command in (
+                    (
+                        "backend",
+                        "test $(cat /var/lib/florabase/attachments/recovery-marker) = temporary; test $(cat /var/lib/florabase/attachments/durable-marker) = durable",
+                    ),
+                    (
+                        "frontend",
+                        "test $(cat /app/node_modules/.recovery-marker) = dependencies; test $(id -u) != 0",
+                    ),
+                    (
+                        "db",
+                        'test "$(psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc \'SELECT value FROM recovery_state\')" = preserved',
+                    ),
+                ):
+                    env.compose("exec", "-T", service, "sh", "-ec", command)
+                head = code_heads(migration_graph(primary))[0]
+                env.compose(
+                    "exec",
+                    "-T",
+                    "db",
+                    "sh",
+                    "-ec",
+                    'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "UPDATE alembic_version SET version_num = \'fixture_ahead\';"',
+                )
+                env.stop()
+                for operation in (env.up, env.upgrade):
+                    try:
+                        operation()
+                    except WorkflowError as error:
+                        require(
+                            "AHEAD OF OR INCOMPATIBLE" in str(error),
+                            "ahead revision lacks clear refusal",
+                        )
+                    else:
+                        raise WorkflowError("ahead-of-code fixture DB was accepted")
+                    require(env.current() == ["fixture_ahead"], "DB was downgraded")
+                    require(
+                        not any(
+                            item["State"]["Running"]
+                            for item in env.containers()
+                            if item["Config"]["Labels"]["com.docker.compose.service"]
+                            in {"backend", "frontend"}
+                        ),
+                        "ahead DB started application",
+                    )
+                env.compose(
+                    "exec",
+                    "-T",
+                    "db",
+                    "sh",
+                    "-ec",
+                    f'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "UPDATE alembic_version SET version_num = \'{head}\';"',
+                )
+                require(
+                    operator_snapshot(repository) == before,
+                    "operator environments or primary Git changed",
+                )
+                print(
+                    "DEV_RECOVERY_SMOKE_PASSED: absent old source, tmpfs+durable media, DB/dependencies, idempotent stop, primary restart, ahead refusal; operator DEV/Review/Preview/Prod unchanged"
+                )
+            finally:
+                # Only this UUID project, proven absent before the fixture, is disposable.
+                if inherited_env_file is not None:
+                    os.environ["FLORABASE_ENV_FILE"] = inherited_env_file
     require(
         operator_snapshot(repository) == before, "operator state changed during fixture cleanup"
     )

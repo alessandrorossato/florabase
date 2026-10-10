@@ -52,13 +52,21 @@ code changes. Run migration and integration checks for schema or persistence cha
 
 GitHub runs three stable checks for pull requests into `main`: `quality` runs `make check`,
 `integration` exercises the same disposable PostgreSQL suite as `make test-integration`, and `build`
-builds the production backend and frontend images. `make ci` remains the direct local equivalent of
-those three jobs. `make feature-verify` is the canonical feature-level final gate: it runs the
-workflow-helper and feature-graph checks, the same quality, integration, and build stages once,
-`git diff --check`, and records a local receipt for the verified working tree. It does not require a
-clean tree and never modifies application files. When the branch adds Alembic revisions, it also runs
-the previous-main-head → feature-head → previous-main-head → feature-head cycle in a uniquely named,
-tmpfs-backed disposable Compose project; it never touches the development database or its volume.
+builds both complete production images. `make ci` remains exhaustive. The canonical local
+`make feature-verify` computes an explicit affected/full plan automatically; `make verify-full`
+forces exhaustive local verification. Inspect it with `make verification-plan FORMAT=json`.
+True docs-only plans run no Docker/product suites. Product static checks stay global; bounded suites
+and independent production builds are selected by the versioned fail-closed impact map. Unknown,
+workflow, foundational, dependency and migration changes escalate full. Remote PR CI remains full.
+Version 2 receipts prove both the exact source tree and selected completed checks; focused iteration
+never writes delivery evidence. See [the canonical contract](development-workflow.md#review-profiles-and-verification-timing).
+
+Disposable integration/migration/build/smoke resources retire automatically on success/failure and
+caught interruption, with exact positive ownership and residual verification. Quality remains
+reusable; `make quality-status`, `make quality-clean` and `make workflow-resources` expose its exact
+worktree lifecycle. Proven `feature-finish` retires only the finishing worktree's Quality project.
+Persistent environments retain their existing guarded semantics. Shared BuildKit cache and ambiguous
+images remain explicitly reported; no shared-daemon global prune is automated.
 
 ## Optional host tools
 

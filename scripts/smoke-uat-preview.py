@@ -10,11 +10,13 @@ import shutil
 import socket
 import tempfile
 import uuid
+from contextlib import ExitStack
 from pathlib import Path
 from typing import Any, cast
 from urllib.error import HTTPError
 from urllib.request import HTTPCookieProcessor, Request, build_opener
 
+from smoke_lifecycle import SmokeLifecycle
 from uat_preview import UATPreview
 from workflow_environment import (
     Environment,
@@ -215,6 +217,7 @@ def ownership_transition(preview: SmokeUAT, previous: dict[str, Any]) -> None:
                 shutil.copy2(original, target)
         next_preview = SmokeUAT(Repository(source))
         next_preview.project = preview.project
+        next_preview.workflow_overlay = preview.workflow_overlay
         next_preview.url = preview.url
         for action in (next_preview.up, lambda: next_preview.remove(next_preview.project)):
             try:
@@ -276,146 +279,150 @@ def main() -> None:
     migration.write_text(
         f"revision = 'uat_smoke_marker'\ndown_revision = {base_head!r}\nbranch_labels = None\ndepends_on = None\ndef upgrade():\n    pass\ndef downgrade():\n    pass\n"
     )
-    try:
-        preview.up()
-        require(
-            preview.current() == ["uat_smoke_marker"],
-            "current untracked migration source used",
-        )
-        login(preview, expected=401)
-        preview.seed()
-        baseline = preview.state()
-        require(baseline["counts"]["users"] == 1, "one real owner")
-        require(
-            baseline["counts"]["botanical_identities"] == 6,
-            "six synthetic botanical identities, five represented and one reference-only",
-        )
-        require(len(baseline["media"]) == 1, "one tiny binary media asset")
-        login(preview)
-        # Runtime guard tests run against this disposable real DB, never operator resources.
-        preview.compose(
-            "run",
-            "--rm",
-            "-T",
-            "--no-deps",
-            "--volume",
-            f"{repo.source / 'scripts'}:/uat:ro",
-            "-e",
-            "PYTHONPATH=/app/src:/uat",
-            "backend",
-            "pytest",
-            "/uat/test-uat-fixture.py",
-            "--no-cov",
-            "-q",
-        )
-        # Model/service relationship evidence and one ordinary operator edit/new record.
-        preview.python("""
-import json
-import shutil
-from pathlib import Path
-from uuid import UUID
-from sqlalchemy import select
-from sqlalchemy.orm import Session
-import florabase.main
-from florabase.db.session import get_engine
-from florabase.suppliers.model import Supplier
-from florabase.suppliers.service import update_supplier,create_supplier
-from florabase.suppliers.schemas import SupplierUpdate,SupplierCreate
-from florabase.plants.model import Plant,PlantGroup
-from florabase.seed_lots.model import SeedLot
-from florabase.sowings.model import Sowing
-from florabase.harvests.model import Harvest,HarvestItem
-from florabase.collection_photos.model import RecordMediaLink,CollectionPrimaryPhoto
-m=json.loads(Path('/var/lib/florabase/attachments/.uat-fixture.json').read_text())['records']
-with Session(get_engine()) as db:
-    row=lambda key,model:db.get(model,UUID(m[key]))
-    assert row('plant:derived',Plant).originating_sowing_id==row('sowing:basil',Sowing).id
-    assert row('group:basil',PlantGroup).originating_sowing_id==row('sowing:basil',Sowing).id
-    assert row('sowing:basil',Sowing).seed_lot_id==row('seed:0',SeedLot).id
-    assert row('harvest:basil',Harvest).plant_id==row('plant:derived',Plant).id
-    assert row('item:basil',HarvestItem).harvest_id==row('harvest:basil',Harvest).id
-    links=[row('link:'+kind,RecordMediaLink) for kind in ('supplier','plant','seed_lot')]
-    assert len({link.media_asset_id for link in links})==1
-    assert len(list(db.scalars(select(CollectionPrimaryPhoto))))==3
-    supplier=row('supplier:nursery',Supplier)
-    update_supplier(db,supplier,SupplierUpdate(name='Operator-edited nursery',kind='nursery',notes='UAT edit must persist'))
-    create_supplier(db,SupplierCreate(name='Operator-only UAT supplier',kind='exchange'))
-    db.commit()
-""")
-        edited = preview.state()
-        preview.seed()
-        preview.seed()
-        require(
-            preview.state() == edited,
-            "repeated seed preserves IDs/counts/media/operator edits",
-        )
-        preview.compose(
-            "exec",
-            "-T",
-            "frontend",
-            "sh",
-            "-ec",
-            "printf retained > /app/node_modules/.uat-smoke",
-        )
-        preview.stop()
-        preview.up()
-        require(
-            preview.state() == edited,
-            "stop/start retains fixture, owner, operator changes and media",
-        )
-        preview.compose(
-            "exec",
-            "-T",
-            "frontend",
-            "sh",
-            "-ec",
-            "test $(cat /app/node_modules/.uat-smoke) = retained",
-        )
-        login(preview)
-        edited = preview.state()
-        # Remove only the temporary source marker: ahead DB must refuse without downgrade.
-        migration.unlink()
+    with ExitStack() as lifetimes:
+        lifetimes.callback(migration.unlink, missing_ok=True)
+        lifetimes.enter_context(SmokeLifecycle(preview))
         try:
             preview.up()
-        except WorkflowError as error:
-            require("AHEAD OF OR INCOMPATIBLE" in str(error), "ahead refusal")
-        else:
-            raise WorkflowError("UAT smoke: ahead DB unexpectedly accepted")
-        require(preview.current() == ["uat_smoke_marker"], "ahead refusal never downgrades")
-        for token in ("", "wrong", "florabase", "florabase-preview"):
+            require(
+                preview.current() == ["uat_smoke_marker"],
+                "current untracked migration source used",
+            )
+            login(preview, expected=401)
+            preview.seed()
+            baseline = preview.state()
+            require(baseline["counts"]["users"] == 1, "one real owner")
+            require(
+                baseline["counts"]["botanical_identities"] == 6,
+                "six synthetic botanical identities, five represented and one reference-only",
+            )
+            require(len(baseline["media"]) == 1, "one tiny binary media asset")
+            login(preview)
+            # Runtime guard tests run against this disposable real DB, never operator resources.
+            preview.compose(
+                "run",
+                "--rm",
+                "-T",
+                "--no-deps",
+                "--volume",
+                f"{repo.source / 'scripts'}:/uat:ro",
+                "-e",
+                "PYTHONPATH=/app/src:/uat",
+                "backend",
+                "pytest",
+                "/uat/test-uat-fixture.py",
+                "--no-cov",
+                "-q",
+            )
+            # Model/service relationship evidence and one ordinary operator edit/new record.
+            preview.python("""
+    import json
+    import shutil
+    from pathlib import Path
+    from uuid import UUID
+    from sqlalchemy import select
+    from sqlalchemy.orm import Session
+    import florabase.main
+    from florabase.db.session import get_engine
+    from florabase.suppliers.model import Supplier
+    from florabase.suppliers.service import update_supplier,create_supplier
+    from florabase.suppliers.schemas import SupplierUpdate,SupplierCreate
+    from florabase.plants.model import Plant,PlantGroup
+    from florabase.seed_lots.model import SeedLot
+    from florabase.sowings.model import Sowing
+    from florabase.harvests.model import Harvest,HarvestItem
+    from florabase.collection_photos.model import RecordMediaLink,CollectionPrimaryPhoto
+    m=json.loads(Path('/var/lib/florabase/attachments/.uat-fixture.json').read_text())['records']
+    with Session(get_engine()) as db:
+        row=lambda key,model:db.get(model,UUID(m[key]))
+        assert row('plant:derived',Plant).originating_sowing_id==row('sowing:basil',Sowing).id
+        assert row('group:basil',PlantGroup).originating_sowing_id==row('sowing:basil',Sowing).id
+        assert row('sowing:basil',Sowing).seed_lot_id==row('seed:0',SeedLot).id
+        assert row('harvest:basil',Harvest).plant_id==row('plant:derived',Plant).id
+        assert row('item:basil',HarvestItem).harvest_id==row('harvest:basil',Harvest).id
+        links=[row('link:'+kind,RecordMediaLink) for kind in ('supplier','plant','seed_lot')]
+        assert len({link.media_asset_id for link in links})==1
+        assert len(list(db.scalars(select(CollectionPrimaryPhoto))))==3
+        supplier=row('supplier:nursery',Supplier)
+        update_supplier(db,supplier,SupplierUpdate(name='Operator-edited nursery',kind='nursery',notes='UAT edit must persist'))
+        create_supplier(db,SupplierCreate(name='Operator-only UAT supplier',kind='exchange'))
+        db.commit()
+    """)
+            edited = preview.state()
+            preview.seed()
+            preview.seed()
+            require(
+                preview.state() == edited,
+                "repeated seed preserves IDs/counts/media/operator edits",
+            )
+            preview.compose(
+                "exec",
+                "-T",
+                "frontend",
+                "sh",
+                "-ec",
+                "printf retained > /app/node_modules/.uat-smoke",
+            )
+            preview.stop()
+            preview.up()
+            require(
+                preview.state() == edited,
+                "stop/start retains fixture, owner, operator changes and media",
+            )
+            preview.compose(
+                "exec",
+                "-T",
+                "frontend",
+                "sh",
+                "-ec",
+                "test $(cat /app/node_modules/.uat-smoke) = retained",
+            )
+            login(preview)
+            edited = preview.state()
+            # Remove only the temporary source marker: ahead DB must refuse without downgrade.
+            migration.unlink()
             try:
-                preview.reset(token)
-            except WorkflowError:
-                pass
+                preview.up()
+            except WorkflowError as error:
+                require("AHEAD OF OR INCOMPATIBLE" in str(error), "ahead refusal")
             else:
-                raise WorkflowError("UAT smoke: reset without correct token succeeded")
-        require(preview.state() == edited, "wrong reset leaves data/media unchanged")
-        preview.reset(preview.project)
-        reset = preview.state()
-        require(reset["counts"]["suppliers"] == 2, "reset removes operator-only UAT record")
-        require(
-            reset["counts"]["users"] == 1 and len(reset["media"]) == 1,
-            "reset recreates owner and media",
-        )
-        require(reset["manifest"]["version"] == 4, "fixture version")
-        login(preview)
-        reset = preview.state()
-        preview.seed()
-        require(preview.state() == reset, "reset baseline remains idempotent")
-        require(
-            operator_snapshot(repo) == before,
-            "DEV/Review/Stable Preview/PROD/operator UAT and primary unchanged",
-        )
-        ownership_transition(preview, reset)
-        print(
-            "REAL UAT COMPOSE SMOKE PASSED: first startup/empty auth; dirty untracked source; real Argon2/session login; runtime guard tests; fixture relationships; triple seed/operator edits; DB/media/dependency stop-start persistence; ahead refusal; guarded reset/owner/media rebuild; old-owner remove/new linked-source up/fresh seed/login; unchanged operator environments"
-        )
-    except Exception:
-        preview.compose("logs", "--no-color", "--tail", "80", "frontend", "backend")
-        raise
-    finally:
-        migration.unlink(missing_ok=True)
-        preview.cleanup()
+                raise WorkflowError("UAT smoke: ahead DB unexpectedly accepted")
+            require(preview.current() == ["uat_smoke_marker"], "ahead refusal never downgrades")
+            for token in ("", "wrong", "florabase", "florabase-preview"):
+                try:
+                    preview.reset(token)
+                except WorkflowError:
+                    pass
+                else:
+                    raise WorkflowError("UAT smoke: reset without correct token succeeded")
+            require(preview.state() == edited, "wrong reset leaves data/media unchanged")
+            preview.reset(preview.project)
+            reset = preview.state()
+            require(reset["counts"]["suppliers"] == 2, "reset removes operator-only UAT record")
+            require(
+                reset["counts"]["users"] == 1 and len(reset["media"]) == 1,
+                "reset recreates owner and media",
+            )
+            require(reset["manifest"]["version"] == 4, "fixture version")
+            login(preview)
+            reset = preview.state()
+            preview.seed()
+            require(preview.state() == reset, "reset baseline remains idempotent")
+            require(
+                operator_snapshot(repo) == before,
+                "DEV/Review/Stable Preview/PROD/operator UAT and primary unchanged",
+            )
+            ownership_transition(preview, reset)
+            print(
+                "REAL UAT COMPOSE SMOKE PASSED: first startup/empty auth; dirty untracked source; real Argon2/session login; runtime guard tests; fixture relationships; triple seed/operator edits; DB/media/dependency stop-start persistence; ahead refusal; guarded reset/owner/media rebuild; old-owner remove/new linked-source up/fresh seed/login; unchanged operator environments"
+            )
+        except Exception:
+            preview.compose("logs", "--no-color", "--tail", "80", "frontend", "backend")
+            raise
+        finally:
+            migration.unlink(missing_ok=True)
+            preview.cleanup()
+
     require(
         operator_snapshot(repo) == before,
         "disposable cleanup leaves operator state unchanged",

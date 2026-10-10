@@ -11,8 +11,17 @@ create a second feature worktree or move the primary checkout off `main`.
 | UAT Preview      | Current feature worktree, including dirty/untracked files   | baseline + DEV + Review + `compose.uat.yaml` | `florabase-uat-preview`                  | `http://localhost:15174`   | Persistent isolated synthetic DB/media/dependencies           |
 | Stable Preview   | Clean detached checkout of fetched `origin/main` by default | baseline + `compose.preview.yaml`            | `florabase-preview`                      | `http://localhost:15173`   | Persistent isolated DB/media, immutable frontend dependencies |
 | Quality checks   | Current feature worktree                                    | baseline + DEV                               | `florabase-quality-<metadata-path-hash>` | None started               | Isolated dependency/media volumes, no live DB required        |
-| Integration / CI | Current source / CI checkout                                | `compose.integration.yaml`                   | `florabase-integration-<random-run-id>`  | None                       | Ephemeral PostgreSQL tmpfs and test state                     |
+| Integration / CI | Current source / CI checkout                                | `compose.integration.yaml`                   | `florabase-integration-<random-run-id>`  | None                       | Disposable PostgreSQL tmpfs and test state                    |
 | Production       | Selected deployable source/artifact                         | `compose.yaml`                               | `florabase-prod`                         | Proxy port 8080 by default | Persistent DB/media                                           |
+
+Migration verification (`florabase-feature-migration-<run-id>`), selected production verification
+builds (`florabase-verification-build-<run-id>`) and unique smoke fixtures are also disposable.
+Integration, migration and smoke register retirement before creating resources and verify zero owned
+containers/networks/volumes after success, failure, partial creation and caught INT/TERM. A cleanup
+failure fails the workflow. Images with exact ownership and no foreign tags/users retire; ambiguous
+images and shared BuildKit cache remain and are reported. DEV, Review, UAT, Stable Preview and
+production never use this automatic retirement. The fixed `florabase-perf` benchmark is explicitly
+operator-managed reusable test state, not a unique per-gate fixture; its manual stop contract remains.
 
 DEV deliberately retains the legacy explicit project name `florabase`. Renaming it to
 `florabase-dev` would silently select an empty database instead of the operator's existing data.
@@ -344,14 +353,82 @@ Independent review seeks objective correctness defects. It does not reopen opera
 choices without a correctness/accessibility reason. Visual acceptance does not redefine established
 domain contracts.
 
-Use focused checks during implementation. Freeze the tree, then run `make feature-verify` once as the
-expensive canonical gate. It includes workflow/environment helpers and their static checks, quality, integration, production
-builds, conditional migration cycling, whitespace and a per-worktree verification receipt. Verification
-invalidates old evidence at startup and rejects source edits made while stages run. Receipts cover
-actual dirty/untracked source, file modes and symlinks in the feature worktree, never primary source.
-The same tree can be committed without invalidating evidence. Later source/schema/test/workflow
-changes require focused checks and another gate. A reviewer making no changes does not require a
-ceremonial rerun when the receipt still matches.
+Local verification has three layers:
+
+- **Focused:** developer-selected existing test/check commands for iteration. These do not write a
+  delivery receipt. Integration accepts explicit existing files, for example
+  `./scripts/test-integration.sh backend/tests/integration/test_schedule.py`.
+- **Affected:** `make feature-verify` (or `make verify-affected`) derives the safe plan automatically
+  from the exact base and complete committed/index/dirty/untracked feature tree. It runs explicit
+  affected suites, global product static checks, selected independent production builds and required
+  migration cycling, then writes the exact completed-plan receipt. It can escalate to full.
+- **Full:** `make verify-full` explicitly forces the complete original application and workflow gate.
+  Full remains mandatory for infrastructure/security/foundational/dependency/unknown changes,
+  releases and operator-requested exhaustive checks. There is no force-narrow override.
+
+Preview the human plan with `make verification-plan`; use `make verification-plan FORMAT=json`
+for the same machine-readable decision. `REF=<exact-base>` selects a diagnostic base; canonical
+verification still fetches main and requires that exact base to be an ancestor. The versioned
+[scripts/verification-impact.json](../scripts/verification-impact.json) contains explicit source/test
+ownership, consumer regression boundaries and transitive relationships. Any unknown path escalates
+full. Editing the map or verification infrastructure also escalates full. Migration revisions
+conservatively escalate full; migration infrastructure and foundational DB changes force the complete
+base → head → base → head cycle even without a new revision. Full otherwise retains conditional
+cycling when revisions changed. Generated contracts require an owning classified production scope.
+
+True docs-only plans run feature graph and complete whitespace checks with no Docker/product
+suites or image builds. Product plans retain whole-repository Ruff, Prettier, ESLint, mypy, TypeScript
+and generated API drift checks. Affected unit tests use explicit files and `--no-cov`; exhaustive
+local/remote quality still enforces the existing whole-application coverage threshold. Frontend-only
+changes build frontend; backend-only changes build backend; generated frontend contract changes
+build both. The contexts are independent. Pure product changes skip workflow-specific suites.
+
+Freeze source before the final gate. It invalidates old evidence at startup and rejects source edits
+while stages run. Version 2 receipts cover file content, modes and symlinks, exact base/branch, mode,
+impact-map version/digest, changed/affected scopes, escalation reasons, selected suites, completed
+commands, static checks, migration/build decisions and results, and a UTC completion timestamp.
+Delivery recomputes the policy and rejects incomplete, obsolete, mismatched or stale evidence. The
+normal same reviewed tree can be committed without a ceremonial rerun. Transient staged/committed
+changes masked by unstaged reverts are classified conservatively; freeze the index too when using
+such unusual combinations, since removing transient impact invalidates the stored plan.
+
+Protected GitHub `quality`, `integration`, and `build` still run **complete** suites and both builds.
+`make ci` also remains exhaustive; remote CI is not sectorized. This CI-003 increment itself requires
+Luna's independent **full** canonical gate before commit/delivery. See the
+[handoff/evidence](ci-003-resource-impact-handoff.md).
+
+### Quality and Docker resources
+
+```bash
+make quality-status       # Exact invoking worktree metadata/project and resource counts
+make workflow-resources   # Known Florabase environments, legacy/unknown resources, image/cache policy
+make quality-clean        # Explicit destructive retirement of ONLY this worktree's Quality state
+```
+
+Quality remains reusable during feature work; individual test/lint/type commands do not retire it.
+Its project derives from the exact Git metadata path. New resources carry workflow lifecycle, owner
+metadata and source labels as well as Compose project identity. Legacy Quality containers require
+exact source/role; legacy networks and the three known volume keys require exact deterministic
+project/Compose metadata. Unknown ownership refuses before mutation. Another worktree's resources
+are never selected. `feature-finish` retires the current Quality project only after all existing
+PR/merge/branch/primary Git safety checks pass, before detaching or switching source. Failure retains
+the branch and reports diagnostics. It does not retire Review/UAT state.
+
+Cleanup validates ownership and foreign resource users, removes exact container IDs (including
+orphans), network IDs and volume names, then verifies retirement. No name-substring/blacklist cleanup
+or shared-daemon prune is used. Cleanup cannot adopt persistent projects. SIGKILL/daemon loss cannot
+run a process's cleanup; the failed-run log provides an exact owner/project/source recovery command.
+Use that command from the owning source after restoring Docker access; never substitute global prune.
+Status does not inspect collection data, environment secrets or unrelated workloads.
+
+Verification image builds use unique labelled projects and retire exclusive image outputs. Normal
+`make build` still builds the persistent production tags. Legacy or multiply tagged/shared images
+are retained. Current builds use the daemon's shared default BuildKit builder; cache lacks a safe
+project ownership boundary, so automatic cache deletion is deliberately absent. A dedicated builder
+would require a separately evaluated dependency/cache migration and is not required here. The
+resource report states this residual. Do not run global Docker system/container/image/volume/network/
+builder/buildx prune as normal automation. For address-pool, disk/cache or volume failures, inspect
+`make workflow-resources` and use only exact owning-worktree/run retirement; unknowns remain intact.
 
 For a review before committing, check the dirty/untracked worktree explicitly:
 
@@ -391,12 +468,12 @@ refusal with feature source retained. Single-checkout manual finish still switch
 
 `make test-environment-workflow` models primary 0029 and a dirty untracked linked-worktree 0030,
 configuration fallback, project boundaries, ahead-of-code refusal and destructive scope.
-`make smoke-environment-workflow` requires an already linked worktree and absent Review resources.
+`make smoke-environment-workflow` requires an already linked worktree and fresh unique synthetic Review/Preview projects; existing operator Review is preserved.
 It creates an untracked no-op migration, starts real Review, proves non-root/noninteractive fresh
 bootstrap, repairs an intentionally root-owned `.bin` fixture through normal startup, checks
 changed dependency/lockfile bootstrap and DB/media/dependency stop/restart persistence, builds a separate `origin/main` archive Preview and
 validates production/integration topology. DEV container/mount/Git/revision snapshots are compared
-before and after. Only resources proven absent at startup are destroyed; no operator data is deleted
+before and after. Only fresh resources bearing exact registered-run labels are retired and verified; no operator data is deleted
 and no additional real Git worktree is created.
 
 `make smoke-dev-recovery` uses a unique disposable DEV fixture with a vanished old source. It proves
