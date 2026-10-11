@@ -3496,3 +3496,17 @@ implementation detail.
   `make feature-verify` / `make verify-full` deliberately reserved for Luna. Dependency maintenance
   remains paused until this repair is delivered. See the
   [repair handoff](ci-003-full-migration-cycle-repair-handoff.md) and its focused evidence.
+
+## 2026-10-11 — frontend lint/format dependency maintenance (review handoff)
+
+- On `fix/deps-frontend-lint-format` from `bc84fa4`, refreshed only ESLint, typescript-eslint,
+  eslint-plugin-react-refresh, and Prettier. Prettier 3.9.10 remained inside the configured
+  24-hour minimum-release-age window, so 3.9.9 was selected without an allowlist exception.
+- Frozen install, Prettier check, zero-warning ESLint, strict TypeScript, and all 557 frontend tests
+  across 57 files passed. The production frontend image built and its disposable project cleaned.
+  A unique synthetic UAT smoke authenticated, rendered Dashboard and Plants, and retired all owned
+  containers, images, network, and volumes.
+- CI-003 selects FULL because the dependency manifest and lockfile are high-risk paths. No source or
+  lint/format configuration changes were needed. The unstaged, uncommitted candidate is documented
+  in [the dependency handoff](dependency-maintenance-frontend-lint-format-handoff.md); Luna owns the
+  canonical gate and delivery.
