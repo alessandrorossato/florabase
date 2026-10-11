@@ -4,7 +4,7 @@
 #
 #    pip-compile --extra=dev --no-index --output-file=requirements-dev.lock --strip-extras pyproject.toml
 #
-alembic==1.19.1
+alembic==1.20.0
     # via florabase-backend (pyproject.toml)
 annotated-doc==0.0.5
     # via fastapi
@@ -113,7 +113,7 @@ python-multipart==0.0.32
     # via florabase-backend (pyproject.toml)
 ruff==0.17.0
     # via florabase-backend (pyproject.toml)
-sqlalchemy==2.0.52
+sqlalchemy==2.0.54
     # via
     #   alembic
     #   florabase-backend (pyproject.toml)
