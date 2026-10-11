@@ -3497,16 +3497,21 @@ implementation detail.
   remains paused until this repair is delivered. See the
   [repair handoff](ci-003-full-migration-cycle-repair-handoff.md) and its focused evidence.
 
-## 2026-10-11 — frontend lint/format dependency maintenance (review handoff)
+## 2026-10-11 — dependency-maintenance sweep closure
 
-- On `fix/deps-frontend-lint-format` from `bc84fa4`, refreshed only ESLint, typescript-eslint,
-  eslint-plugin-react-refresh, and Prettier. Prettier 3.9.10 remained inside the configured
-  24-hour minimum-release-age window, so 3.9.9 was selected without an allowlist exception.
-- Frozen install, Prettier check, zero-warning ESLint, strict TypeScript, and all 557 frontend tests
-  across 57 files passed. The production frontend image built and its disposable project cleaned.
-  A unique synthetic UAT smoke authenticated, rendered Dashboard and Plants, and retired all owned
-  containers, images, network, and volumes.
-- CI-003 selects FULL because the dependency manifest and lockfile are high-risk paths. No source or
-  lint/format configuration changes were needed. The unstaged, uncommitted candidate is documented
-  in [the dependency handoff](dependency-maintenance-frontend-lint-format-handoff.md); Luna owns the
-  canonical gate and delivery.
+- Sequential maintenance delivered frontend lint/format (#88), Vite (#90), backend tooling (#92),
+  psycopg (#94), FastAPI/Uvicorn (#96), and compatible SQLAlchemy 2.0/Alembic maintenance (#98), each
+  with canonical FULL verification, protected quality/integration/build checks and workflow finish.
+- The final isolated increment refreshes only pip-tools 7.6.1 → 7.6.2. Python 3.14.7/Click 8.5.0
+  compatibility and clean installed requirements were confirmed. Both backend locks reproduce
+  byte-for-byte; runtime pins are unchanged and generated headers remove the erroneous `--no-index`.
+  CI-003 selects FULL for the actual manifest/lock diff, including forced complete migration cycle;
+  exact-tree canonical verification and protected CI are required before delivering this closure.
+- SQLAlchemy 2.1 remains deferred for substantive typing migration; jsdom for the Node contract;
+  React 19.3 for missing reproducible browser coverage of the required complex forms/map flows.
+  Only the uncommitted React dependency candidate was discarded; React stays 19.2.8.
+- Old grouped bot proposals were re-read for compatible, superseded or deferred decisions, never
+  merged. Node/Python/PostgreSQL contracts, protected environments and product scope are preserved.
+  The [consolidated baseline](dependency-maintenance-baseline.md) records versions, prior delivery
+  identities, focused evidence and reconsideration conditions without reopening completed groups.
+- No schema migration or Dashboard work is included. DASHBOARD-001 is the next product increment.
