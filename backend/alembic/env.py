@@ -46,6 +46,10 @@ if config.config_file_name is not None:
 config.set_main_option("sqlalchemy.url", get_settings().database_url)
 target_metadata = Base.metadata
 
+# Preserve the named CHECK detection enabled by default in Alembic 1.19.1.
+# Florabase declares explicit names for all model CHECK constraints.
+autogenerate_plugins = ["alembic.autogenerate.*", "alembic.ext.checkconstraint_byname"]
+
 # Importing the mapping registers it with the shared metadata used by Alembic.
 assert BotanicalIdentity.__table__.metadata is target_metadata
 assert Attachment.__table__.metadata is target_metadata
@@ -90,6 +94,7 @@ def run_migrations_offline() -> None:
     context.configure(
         url=config.get_main_option("sqlalchemy.url"),
         target_metadata=target_metadata,
+        autogenerate_plugins=autogenerate_plugins,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
@@ -104,7 +109,11 @@ def run_migrations_online() -> None:
         poolclass=pool.NullPool,
     )
     with connectable.connect() as connection:
-        context.configure(connection=connection, target_metadata=target_metadata)
+        context.configure(
+            connection=connection,
+            target_metadata=target_metadata,
+            autogenerate_plugins=autogenerate_plugins,
+        )
         with context.begin_transaction():
             context.run_migrations()
 
