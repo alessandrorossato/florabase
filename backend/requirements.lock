@@ -48,9 +48,9 @@ markupsafe==3.0.3
     # via mako
 pillow==12.3.0
     # via florabase-backend (pyproject.toml)
-psycopg==3.3.4
+psycopg==3.3.6
     # via florabase-backend (pyproject.toml)
-psycopg-binary==3.3.4
+psycopg-binary==3.3.6
     # via psycopg
 pwdlib==0.3.1
     # via florabase-backend (pyproject.toml)
