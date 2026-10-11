@@ -34,7 +34,7 @@ click==8.5.0
     #   uvicorn
 coverage==7.15.4
     # via pytest-cov
-fastapi==0.141.1
+fastapi==0.143.0
     # via florabase-backend (pyproject.toml)
 greenlet==3.5.5
     # via sqlalchemy
@@ -62,6 +62,8 @@ mypy==2.4.0
     # via florabase-backend (pyproject.toml)
 mypy-extensions==1.1.0
     # via mypy
+opentelemetry-api==1.45.1
+    # via fastapi
 packaging==26.3
     # via
     #   build
@@ -122,6 +124,7 @@ typing-extensions==4.16.0
     #   alembic
     #   fastapi
     #   mypy
+    #   opentelemetry-api
     #   pydantic
     #   pydantic-core
     #   sqlalchemy
@@ -131,7 +134,7 @@ typing-inspection==0.4.4
     #   fastapi
     #   pydantic
     #   pydantic-settings
-uvicorn==0.52.4
+uvicorn==0.54.0
     # via florabase-backend (pyproject.toml)
 wheel==0.48.0
     # via pip-tools
