@@ -4,13 +4,39 @@ from uuid import uuid7
 
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.collection_views import api, service
-from florabase.collection_views.schemas import DashboardCounts, DashboardResponse
+from florabase.collection_views.schemas import DashboardCounts, DashboardOverview, DashboardResponse
+
+
+def empty_overview() -> DashboardOverview:
+    return DashboardOverview(
+        today=datetime(2026, 10, 11, tzinfo=UTC).date(),
+        current_identities=0,
+        identities_with_wfo=0,
+        identities_with_profile=0,
+        sowings_unknown_germination=0,
+        sowings_with_germination=0,
+        sowings_zero_germination=0,
+        purchase_packets_without_order=0,
+        overdue=0,
+        due_today=0,
+        next_seven_days=0,
+        upcoming=[],
+        recent_activity=[],
+    )
 
 
 def test_dashboard_uses_database_counts_and_a_bounded_recent_event_query() -> None:
     database = MagicMock()
-    database.scalar.side_effect = [2, 3, 4, 5, 6, 7]
+    database.execute.return_value.mappings.return_value.one.return_value = {
+        "active_plants": 2,
+        "active_plant_groups": 3,
+        "active_seed_lots": 4,
+        "active_sowings": 5,
+        "botanical_identities": 6,
+        "events": 7,
+    }
     with (
+        patch("florabase.collection_views.service.overview", return_value=empty_overview()),
         patch(
             "florabase.collection_views.service.list_all_events", return_value=["event"]
         ) as events,
@@ -70,6 +96,7 @@ def test_identity_collection_missing_and_dashboard_api_are_thin() -> None:
         assert service.botanical_identity_collection(database, uuid7()) is None
 
     response = DashboardResponse(
+        overview=empty_overview(),
         counts=DashboardCounts(
             active_plants=0,
             active_plant_groups=0,

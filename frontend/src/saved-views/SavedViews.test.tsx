@@ -403,3 +403,40 @@ test("detail return preserves directory filters, task state, and refreshable URL
     "basil",
   );
 });
+
+test("toolbar presentation preserves all-surface routing and restores focus on dismissal", async () => {
+  const user = userEvent.setup();
+  window.history.replaceState(null, "", "#/dashboard");
+  vi.mocked(api.listSavedViews).mockResolvedValue([view()]);
+  wrap(
+    <SavedViews
+      surface="global_search"
+      state={{ q: "basil" }}
+      allSurfaces
+      presentation="dialog"
+    />,
+  );
+  const trigger = screen.getByRole("button", {
+    name: "Saved views",
+  });
+  expect(screen.queryByRole("button", { name: "Save view" })).toBeNull();
+  await user.click(trigger);
+  const dialog = screen.getByRole("dialog", {
+    name: "Saved views",
+  });
+  expect(
+    await within(dialog).findByRole("button", { name: "Open Basil view" }),
+  ).toBeVisible();
+  expect(
+    within(dialog).getByRole("button", { name: "Save view" }),
+  ).toBeEnabled();
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog", { name: "Saved views" })).toBeNull();
+  expect(trigger).toHaveFocus();
+  await user.click(trigger);
+  await user.click(
+    await screen.findByRole("button", { name: "Open Basil view" }),
+  );
+  expect(window.location.hash).toBe("#/seeds?q=basil&lifecycle=history");
+  expect(screen.queryByRole("dialog", { name: "Saved views" })).toBeNull();
+});

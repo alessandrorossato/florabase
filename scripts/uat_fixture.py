@@ -275,6 +275,10 @@ def validate_manifest(database: Session, root: Path, manifest: dict[str, Any]) -
                 "cancelled",
             )
         )
+    if manifest.get("dashboard_extension") == 1:
+        expected.update(
+            {"seed:dashboard_unlinked", "sowing:dashboard_unknown", "sowing:dashboard_zero"}
+        )
     if set(manifest["records"]) != expected:
         raise FixtureError(
             "Preview fixture baseline has missing records; run guarded uat-preview-reset"
@@ -462,6 +466,41 @@ def ensure_schedule(database: Session, root: Path, manifest: dict[str, Any]) -> 
     write_manifest(root, manifest)
 
 
+def ensure_dashboard(database: Session, root: Path, manifest: dict[str, Any]) -> None:
+    """Add explicit sourcing/unknown-outcome examples once; never repair operator edits."""
+    if manifest.get("dashboard_extension") == 1:
+        return
+    ready = manifest["state"] == "ready"
+    manifest["state"] = "building"
+    write_manifest(root, manifest)
+    lot = seeds.create_seed_lot(
+        database,
+        SeedLotCreate(
+            botanical_identity_id=UUID(manifest["records"]["identity:Ocimum basilicum"]),
+            label="Preview — Purchased basil without Order link",
+            source_kind="purchased",
+            notes=NOTE,
+        ),
+    )
+    manifest["records"]["seed:dashboard_unlinked"] = str(lot.id)
+    for key, count in (("unknown", None), ("zero", 0)):
+        sowing = sowings.create_sowing(
+            database,
+            SowingCreate(
+                seed_lot_id=lot.id,
+                label=f"Preview — Basil germination {key}",
+                germinated_count=count,
+                notes=NOTE,
+            ),
+        )
+        manifest["records"]["sowing:dashboard_" + key] = str(sowing.id)
+    database.commit()
+    manifest["dashboard_extension"] = 1
+    if ready:
+        manifest["state"] = "ready"
+    write_manifest(root, manifest)
+
+
 def seed(database: Session, root: Path) -> dict[str, Any]:
     existing = read_manifest(root)
     if existing is not None:
@@ -469,6 +508,7 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
         ensure_stored_material(database, root, existing)
         ensure_taxonomy(database, root, existing)
         ensure_schedule(database, root, existing)
+        ensure_dashboard(database, root, existing)
         return existing
     if (
         database.scalar(select(User.id).limit(1)) is not None
@@ -958,6 +998,7 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
     ensure_stored_material(database, root, manifest)
     ensure_taxonomy(database, root, manifest)
     ensure_schedule(database, root, manifest)
+    ensure_dashboard(database, root, manifest)
     manifest["state"] = "ready"
     write_manifest(root, manifest)
     return manifest

@@ -893,7 +893,7 @@
       ],
       "dependencies": ["GERMINATION-001", "EVENT-002", "PLANT-003"],
       "priority": "P2",
-      "status": "planned"
+      "status": "verified"
     },
     {
       "id": "UX-001",

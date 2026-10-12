@@ -33,11 +33,13 @@ export function SavedViews({
   state,
   allSurfaces = false,
   utilityActions,
+  presentation = "inline",
 }: {
   surface: Surface;
   state: SavedState | null;
   allSurfaces?: boolean;
   utilityActions?: ReactNode;
+  presentation?: "inline" | "dialog";
 }) {
   const auth = useAuth();
   const panelId = useId();
@@ -174,10 +176,161 @@ export function SavedViews({
     }
   }
 
+  const listPanel = (
+    <section
+      id={panelId}
+      aria-label={
+        allSurfaces
+          ? "All Saved Views"
+          : `${surfaceLabels[surface]} Saved Views`
+      }
+      className="saved-views__panel"
+    >
+      <h3>
+        Saved views
+        {allSurfaces ? " across Florabase" : ` · ${surfaceLabels[surface]}`}
+      </h3>
+      {notice && presentation === "dialog" && (
+        <p role="status" className="field-help">
+          {notice}
+        </p>
+      )}
+      {presentation === "dialog" && (
+        <div className="saved-views__controls">
+          {meaningful && (
+            <button
+              type="button"
+              className="button--secondary"
+              onClick={() => {
+                begin({ kind: "create" });
+              }}
+            >
+              Save view
+            </button>
+          )}
+          <button
+            type="button"
+            className="button--quiet"
+            onClick={() => {
+              setExpanded(false);
+            }}
+          >
+            Close
+          </button>
+        </div>
+      )}
+      {loadError ? (
+        <p role="alert">
+          Could not load Saved Views.{" "}
+          <button
+            type="button"
+            onClick={() => {
+              setLoadError(false);
+              setAttempt((value) => value + 1);
+            }}
+          >
+            Retry Saved Views
+          </button>
+        </p>
+      ) : !views ? (
+        <p role="status">Loading Saved Views…</p>
+      ) : !views.length ? (
+        <p className="field-help">
+          No Saved Views yet. Apply a search or filter, then choose Save view.
+        </p>
+      ) : (
+        <ul className="saved-views__list">
+          {views.map((view) => {
+            const compatible =
+              view.compatibility === "supported" &&
+              Boolean(
+                savedViewHash(view.surface, view.state_version, view.state),
+              );
+            return (
+              <li key={view.id}>
+                <div className="saved-views__name">
+                  <strong>{view.name}</strong>
+                  <span className="field-help">
+                    {surfaceLabels[view.surface]}
+                  </span>
+                  {!compatible && (
+                    <span className="field-help">
+                      Unsupported or incompatible saved state
+                    </span>
+                  )}
+                </div>
+                <div className="saved-views__actions">
+                  <button
+                    type="button"
+                    className="button--secondary"
+                    aria-label={`Open ${view.name}`}
+                    onClick={() => {
+                      open(view);
+                    }}
+                  >
+                    Open
+                  </button>
+                  <button
+                    type="button"
+                    className="button--secondary"
+                    aria-label={`Rename ${view.name}`}
+                    onClick={() => {
+                      begin({ kind: "rename", view });
+                    }}
+                  >
+                    Rename
+                  </button>
+                  {view.surface === surface && meaningful && (
+                    <button
+                      type="button"
+                      className="button--secondary"
+                      aria-label={`Update ${view.name} with current view`}
+                      onClick={() => {
+                        begin({ kind: "update", view });
+                      }}
+                    >
+                      Update with current view
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="button--secondary"
+                    aria-label={`Delete ${view.name}`}
+                    onClick={() => {
+                      begin({ kind: "delete", view });
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {hasMore && views && (
+        <button
+          type="button"
+          className="button--secondary"
+          disabled={loadingMore || loadError}
+          onClick={() => {
+            setLoadingMore(true);
+            setOffset((value) => value + 100);
+          }}
+        >
+          {" "}
+          {loadingMore ? "Loading more Saved Views…" : "Show more Saved Views"}
+        </button>
+      )}
+    </section>
+  );
+
   return (
-    <div className="saved-views">
+    <div
+      className={`saved-views${presentation === "dialog" ? " saved-views--toolbar" : ""}`}
+    >
       <div className="saved-views__controls">
-        {meaningful && (
+        {meaningful && presentation === "inline" && (
           <button
             type="button"
             className="button--secondary"
@@ -192,6 +345,7 @@ export function SavedViews({
           type="button"
           className="button--secondary"
           aria-expanded={expanded}
+          aria-haspopup={presentation === "dialog" ? "dialog" : undefined}
           ref={listTrigger}
           aria-controls={panelId}
           onClick={() => {
@@ -204,137 +358,31 @@ export function SavedViews({
             setExpanded((value) => !value);
           }}
         >
-          Saved views{allSurfaces ? " · all surfaces" : ""}
+          Saved views
+          {allSurfaces && presentation === "inline" ? " · all surfaces" : ""}
         </button>
         {utilityActions}
       </div>
-      {notice && (
+      {notice && presentation === "inline" && (
         <p role="status" className="field-help">
           {notice}
         </p>
       )}
-      {expanded && (
-        <section
-          id={panelId}
-          aria-label={
-            allSurfaces
-              ? "All Saved Views"
-              : `${surfaceLabels[surface]} Saved Views`
-          }
-          className="saved-views__panel"
-        >
-          <h3>
-            Saved views
-            {allSurfaces ? " across Florabase" : ` · ${surfaceLabels[surface]}`}
-          </h3>
-          {loadError ? (
-            <p role="alert">
-              Could not load Saved Views.{" "}
-              <button
-                type="button"
-                onClick={() => {
-                  setLoadError(false);
-                  setAttempt((value) => value + 1);
-                }}
-              >
-                Retry Saved Views
-              </button>
-            </p>
-          ) : !views ? (
-            <p role="status">Loading Saved Views…</p>
-          ) : !views.length ? (
-            <p className="field-help">
-              No Saved Views yet. Apply a search or filter, then choose Save
-              view.
-            </p>
-          ) : (
-            <ul className="saved-views__list">
-              {views.map((view) => {
-                const compatible =
-                  view.compatibility === "supported" &&
-                  Boolean(
-                    savedViewHash(view.surface, view.state_version, view.state),
-                  );
-                return (
-                  <li key={view.id}>
-                    <div className="saved-views__name">
-                      <strong>{view.name}</strong>
-                      <span className="field-help">
-                        {surfaceLabels[view.surface]}
-                      </span>
-                      {!compatible && (
-                        <span className="field-help">
-                          Unsupported or incompatible saved state
-                        </span>
-                      )}
-                    </div>
-                    <div className="saved-views__actions">
-                      <button
-                        type="button"
-                        className="button--secondary"
-                        aria-label={`Open ${view.name}`}
-                        onClick={() => {
-                          open(view);
-                        }}
-                      >
-                        Open
-                      </button>
-                      <button
-                        type="button"
-                        className="button--secondary"
-                        aria-label={`Rename ${view.name}`}
-                        onClick={() => {
-                          begin({ kind: "rename", view });
-                        }}
-                      >
-                        Rename
-                      </button>
-                      {view.surface === surface && meaningful && (
-                        <button
-                          type="button"
-                          className="button--secondary"
-                          aria-label={`Update ${view.name} with current view`}
-                          onClick={() => {
-                            begin({ kind: "update", view });
-                          }}
-                        >
-                          Update with current view
-                        </button>
-                      )}
-                      <button
-                        type="button"
-                        className="button--secondary"
-                        aria-label={`Delete ${view.name}`}
-                        onClick={() => {
-                          begin({ kind: "delete", view });
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          {hasMore && views && (
-            <button
-              type="button"
-              className="button--secondary"
-              disabled={loadingMore || loadError}
-              onClick={() => {
-                setLoadingMore(true);
-                setOffset((value) => value + 100);
-              }}
-            >
-              {" "}
-              {loadingMore
-                ? "Loading more Saved Views…"
-                : "Show more Saved Views"}
-            </button>
-          )}
-        </section>
-      )}
+      {expanded &&
+        (presentation === "dialog" ? (
+          <TaskDialog
+            title="Saved views"
+            className="saved-views-dialog"
+            dismissOnBackdrop
+            onClose={() => {
+              if (!action) setExpanded(false);
+            }}
+          >
+            {listPanel}
+          </TaskDialog>
+        ) : (
+          listPanel
+        ))}
       {action && (
         <TaskDialog
           title={

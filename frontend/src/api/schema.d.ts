@@ -3106,9 +3106,42 @@ export interface components {
             /** Events */
             events: number;
         };
+        /** DashboardOverview */
+        DashboardOverview: {
+            /** Current Identities */
+            current_identities: number;
+            /** Due Today */
+            due_today: number;
+            /** Identities With Profile */
+            identities_with_profile: number;
+            /** Identities With Wfo */
+            identities_with_wfo: number;
+            /** Next Seven Days */
+            next_seven_days: number;
+            /** Overdue */
+            overdue: number;
+            /** Purchase Packets Without Order */
+            purchase_packets_without_order: number;
+            /** Recent Activity */
+            recent_activity: components["schemas"]["HistoryEntry"][];
+            /** Sowings Unknown Germination */
+            sowings_unknown_germination: number;
+            /** Sowings With Germination */
+            sowings_with_germination: number;
+            /** Sowings Zero Germination */
+            sowings_zero_germination: number;
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+            /** Upcoming */
+            upcoming: components["schemas"]["ScheduleResponse"][];
+        };
         /** DashboardResponse */
         DashboardResponse: {
             counts: components["schemas"]["DashboardCounts"];
+            overview: components["schemas"]["DashboardOverview"];
             /** Recent Events */
             recent_events: components["schemas"]["EventResponse"][];
         };
@@ -9079,7 +9112,10 @@ export interface operations {
     };
     getDashboard: {
         parameters: {
-            query?: never;
+            query?: {
+                /** @description Browser local calendar day; defaults to UTC. */
+                today?: string | null;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -9093,6 +9129,15 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DashboardResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

@@ -1,5 +1,7 @@
+import { emptyOverview, journalFixture } from "./dashboardFixtures";
 import {
   cleanup,
+  fireEvent,
   render,
   screen,
   waitFor,
@@ -19,6 +21,7 @@ const identity = {
   display_label: "Acmella oleracea",
 };
 const dashboard = {
+  overview: emptyOverview,
   counts: {
     active_seed_lots: 2,
     active_sowings: 1,
@@ -63,7 +66,8 @@ function setup(
       return Promise.resolve(json({ csrf_token: "csrf" }));
     if (path.endsWith("/health"))
       return Promise.resolve(json({ status: "ok" }));
-    if (path === "/api/v1/dashboard") return Promise.resolve(json(overview));
+    if (path.startsWith("/api/v1/dashboard"))
+      return Promise.resolve(json(overview));
     if (path === "/api/v1/botanical-identities")
       return Promise.resolve(json([identity]));
     if (
@@ -108,6 +112,13 @@ test("Dashboard keeps its counts, actions, and chronological Event context", asy
   };
   setup(() => json({}), {
     ...dashboard,
+    overview: {
+      ...emptyOverview,
+      recent_activity: [
+        journalFixture(id, "First growth"),
+        journalFixture(`${id.slice(0, -1)}2`, "Later growth"),
+      ],
+    },
     recent_events: [
       event,
       { ...event, id: `${id.slice(0, -1)}2`, notes: "Later growth" },
@@ -127,6 +138,8 @@ test("Dashboard keeps its counts, actions, and chronological Event context", asy
       within(snapshot).getByRole("link", { name: `${name}: ${count}` }),
     ).toBeInTheDocument();
   }
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Quick add" }));
   const actions = screen.getByRole("navigation", { name: "Quick actions" });
   expect(within(actions).getAllByRole("link")).toHaveLength(9);
   for (const [name, href] of [
@@ -145,17 +158,16 @@ test("Dashboard keeps its counts, actions, and chronological Event context", asy
       href,
     );
   }
+  await user.keyboard("{Escape}");
   const activity = screen.getByRole("region", { name: "Recent activity" });
   expect(
     within(activity).getByRole("link", { name: "Open Journal" }),
   ).toHaveAttribute("href", "#/events");
   expect(within(activity).getAllByRole("article")).toHaveLength(2);
   expect(within(activity).getAllByText("2024")).toHaveLength(2);
-  expect(within(activity).getByText("First growth")).toBeInTheDocument();
-  expect(within(activity).getByText("Later growth")).toBeInTheDocument();
-  expect(
-    within(activity).getAllByRole("link", { name: "Acmella oleracea" }),
-  ).toHaveLength(2);
+  expect(within(activity).getByText(/First growth/)).toBeInTheDocument();
+  expect(within(activity).getByText(/Later growth/)).toBeInTheDocument();
+  expect(within(activity).getAllByText("Journal")).toHaveLength(2);
   expect(
     screen.getByRole("searchbox", { name: "Search your collection" }),
   ).toBeEnabled();
@@ -206,6 +218,10 @@ test("Dashboard search replaces overview, groups results, and restores the norma
   expect(
     await screen.findByRole("heading", { name: "Collection snapshot" }),
   ).toBeInTheDocument();
+  expect(
+    screen.queryByRole("navigation", { name: "Quick actions" }),
+  ).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Quick add" }));
   const quickActions = screen.getByRole("navigation", {
     name: "Quick actions",
   });
@@ -224,12 +240,9 @@ test("Dashboard search replaces overview, groups results, and restores the norma
       "href",
       href,
     );
-    expect(within(quickActions).getByRole("link", { name })).toHaveClass(
-      "button-link",
-      "button--secondary",
-    );
   }
   expect(screen.queryByRole("link", { name: "Browse Plants" })).toBeNull();
+  await user.keyboard("{Escape}");
   await user.type(
     screen.getByRole("searchbox", { name: "Search your collection" }),
     "acmella",
@@ -303,7 +316,7 @@ test("filters work without query text and active chips can be removed", async ()
   render(<App />);
   await screen.findByRole("heading", { name: "Collection snapshot" });
   await user.click(screen.getByRole("button", { name: "Filters" }));
-  const panel = screen.getByRole("region", { name: "Search filters" });
+  const panel = screen.getByRole("dialog", { name: "Search filters" });
   await user.click(within(panel).getByRole("checkbox", { name: "Plants" }));
   await user.selectOptions(
     within(panel).getByRole("combobox", { name: "Plants lifecycle" }),
@@ -413,7 +426,8 @@ test("a slower response for an old query cannot replace the current results", as
       return Promise.resolve(json({ csrf_token: "csrf" }));
     if (path.endsWith("/health"))
       return Promise.resolve(json({ status: "ok" }));
-    if (path === "/api/v1/dashboard") return Promise.resolve(json(dashboard));
+    if (path.startsWith("/api/v1/dashboard"))
+      return Promise.resolve(json(dashboard));
     if (path === "/api/v1/botanical-identities")
       return Promise.resolve(json([identity]));
     if (
@@ -570,7 +584,7 @@ test("Harvest kind offers occurrence year and restores mixed kinds through brows
   render(<App />);
   await screen.findByRole("heading", { name: "Collection snapshot" });
   await user.click(screen.getByRole("button", { name: "Filters" }));
-  const panel = screen.getByRole("region", { name: "Search filters" });
+  const panel = screen.getByRole("dialog", { name: "Search filters" });
   await user.click(within(panel).getByRole("checkbox", { name: "Harvests" }));
   const year = within(panel).getByRole("spinbutton", { name: "Occurred year" });
   await user.type(year, "2026");
@@ -744,4 +758,87 @@ test("Orders and Suppliers share Sourcing search with exact Order deep links", a
     screen.getByRole("heading", { name: "Sourcing", level: 4 }),
   ).toBeVisible();
   expect(result).toHaveTextContent("2026-10 · Nursery · EUR 42.50");
+});
+
+test("Dashboard toolbar keeps compact controls and Quick add supports keyboard and outside dismissal", async () => {
+  setup(() => json({}));
+  const user = userEvent.setup();
+  render(<App />);
+  const toolbar = await screen.findByRole("group", {
+    name: "Dashboard controls",
+  });
+  expect(
+    within(toolbar).getByRole("searchbox", { name: "Search your collection" }),
+  ).toBeEnabled();
+  expect(
+    within(toolbar)
+      .getAllByRole("button")
+      .map((item) => item.textContent),
+  ).toEqual(["Filters", "Saved views", "Quick add ▾"]);
+  expect(
+    screen.queryByRole("heading", { name: "Record in your collection" }),
+  ).toBeNull();
+  const trigger = within(toolbar).getByRole("button", { name: "Quick add" });
+  trigger.focus();
+  await user.keyboard("{ArrowDown}");
+  const menu = await screen.findByRole("group", { name: "Quick add menu" });
+  await waitFor(() => {
+    expect(
+      within(menu).getByRole("link", { name: "New seed lot" }),
+    ).toHaveFocus();
+  });
+  await user.keyboard("{End}");
+  expect(
+    within(menu).getByRole("link", { name: "New local place" }),
+  ).toHaveFocus();
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("group", { name: "Quick add menu" })).toBeNull();
+  expect(trigger).toHaveFocus();
+  await user.click(trigger);
+  await user.click(screen.getByRole("heading", { name: "Dashboard" }));
+  expect(screen.queryByRole("group", { name: "Quick add menu" })).toBeNull();
+  await waitFor(() => {
+    expect(trigger).toHaveFocus();
+  });
+});
+
+test("filter drawer retains applied state on Escape and backdrop dismissal, and resets filters without clearing search", async () => {
+  setup((path) =>
+    path.startsWith("/api/v1/search?")
+      ? json({ query: "basil", total: 0, offset: 0, limit: 20, groups: [] })
+      : json({}),
+  );
+  const user = userEvent.setup();
+  render(<App />);
+  const search = await screen.findByRole("searchbox", {
+    name: "Search your collection",
+  });
+  await user.type(search, "basil");
+  await user.click(screen.getByRole("button", { name: "Filters" }));
+  let drawer = screen.getByRole("dialog", { name: "Search filters" });
+  expect(within(drawer).getByRole("button", { name: "Close" })).toHaveFocus();
+  await user.click(within(drawer).getByRole("checkbox", { name: "Plants" }));
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog", { name: "Search filters" })).toBeNull();
+  expect(screen.getByRole("button", { name: "Filters (1)" })).toHaveFocus();
+  expect(window.location.hash).toContain("kind=plant");
+  await user.click(screen.getByRole("button", { name: "Filters (1)" }));
+  drawer = screen.getByRole("dialog", { name: "Search filters" });
+  expect(
+    within(drawer).getByRole("checkbox", { name: "Plants" }),
+  ).toBeChecked();
+  fireEvent.click(drawer, { clientX: -1, clientY: -1 });
+  expect(screen.queryByRole("dialog", { name: "Search filters" })).toBeNull();
+  expect(window.location.hash).toContain("kind=plant");
+  await user.click(screen.getByRole("button", { name: "Filters (1)" }));
+  drawer = screen.getByRole("dialog", { name: "Search filters" });
+  await user.click(
+    within(drawer).getByRole("button", { name: "Reset filters" }),
+  );
+  expect(
+    within(drawer).getByRole("checkbox", { name: "Plants" }),
+  ).not.toBeChecked();
+  expect(window.location.hash).toBe("#/dashboard?q=basil");
+  await user.click(within(drawer).getByRole("button", { name: "Done" }));
+  expect(screen.getByRole("button", { name: "Filters" })).toHaveFocus();
 });

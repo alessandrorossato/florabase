@@ -6,8 +6,14 @@ export type BotanicalIdentityCollectionResponse =
   components["schemas"]["BotanicalIdentityCollectionResponse"];
 export type EventResponse = components["schemas"]["EventResponse"];
 
-export function getDashboard(signal?: AbortSignal): Promise<DashboardResponse> {
-  return requestJson<DashboardResponse>("/api/v1/dashboard", { signal });
+export function getDashboard(
+  signal?: AbortSignal,
+  today?: string,
+): Promise<DashboardResponse> {
+  return requestJson<DashboardResponse>(
+    `/api/v1/dashboard${today ? `?today=${encodeURIComponent(today)}` : ""}`,
+    { signal },
+  );
 }
 
 export function listGlobalEvents(

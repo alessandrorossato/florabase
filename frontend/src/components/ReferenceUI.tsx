@@ -19,7 +19,7 @@ export function PageHeader({
   title: string;
   titleId: string;
   description: string;
-  actions: ReactNode;
+  actions?: ReactNode;
   eyebrow?: string;
 }) {
   return (
@@ -220,8 +220,19 @@ export function OverflowMenu({
         event.target instanceof Node &&
         !trigger.current?.contains(event.target) &&
         !panel.current?.contains(event.target)
-      )
+      ) {
         setOpen(false);
+        // A pointer dismissal restores focus before the clicked control takes it.
+        // Focus-driven dismissal (for example Tab) keeps the chosen destination.
+        if (event.type === "pointerdown") {
+          trigger.current?.focus();
+          requestAnimationFrame(() => {
+            // Clicking a non-focusable surface can blur the trigger after pointerdown.
+            if (document.activeElement === document.body)
+              trigger.current?.focus();
+          });
+        }
+      }
     };
     const escape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {

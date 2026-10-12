@@ -1,39 +1,77 @@
-import { UpcomingActivities } from "../schedule/UpcomingActivities";
-import { SavedViews } from "../saved-views/SavedViews";
 import { useEffect, useState } from "react";
-
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-
-import { EventFeed } from "../events/EventFeed";
+import { OverflowMenu, PageHeader } from "../components/ReferenceUI";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  Metric,
+  Page,
+  SectionHeader,
+  StatusBadge,
+} from "../components/WorkspaceUI";
+import { formatPartialDate } from "../events/eventData";
+import { historyHref } from "../history/api";
+import { SavedViews } from "../saved-views/SavedViews";
+import { localDay, targetLabels } from "../schedule/state";
 import { getDashboard, type DashboardResponse } from "./api";
 import { useDashboardSearch } from "./DashboardSearch";
+import "./dashboard.css";
 
 type State =
   | { status: "loading" }
   | { status: "ready"; value: DashboardResponse }
   | { status: "error" };
+const actions = [
+  ["New seed lot", "#/seeds?action=create"],
+  ["New sowing", "#/sowings?action=create"],
+  ["New plant", "#/plants?action=create&kind=plant"],
+  ["New plant group", "#/plants?action=create&kind=group"],
+  ["Record harvest", "#/harvests?action=create"],
+  ["New botanical identity", "#/identities?action=create"],
+  ["New supplier", "#/suppliers?action=create"],
+  ["New location", "#/locations?action=create"],
+  ["New local place", "#/geography?action=create"],
+];
+const recordedDay = (value: string) =>
+  new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeZone: "UTC",
+  }).format(new Date(value));
 
 function isDashboardResponse(value: unknown): value is DashboardResponse {
   if (typeof value !== "object" || value === null) return false;
   const candidate = value as Partial<DashboardResponse>;
   return (
-    candidate.counts !== undefined && Array.isArray(candidate.recent_events)
+    candidate.counts !== undefined &&
+    candidate.overview !== undefined &&
+    Array.isArray(candidate.overview.upcoming) &&
+    Array.isArray(candidate.overview.recent_activity)
   );
 }
 
-function DashboardOverview() {
+export function DashboardOverview() {
   const auth = useAuth();
   const [state, setState] = useState<State>({ status: "loading" });
   const [attempt, setAttempt] = useState(0);
-
+  const [day, setDay] = useState(localDay);
+  useEffect(() => {
+    // Check the calendar locally; no network polling while the day is unchanged.
+    const timer = window.setInterval(() => {
+      setDay(localDay());
+    }, 30000);
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
   useEffect(() => {
     const controller = new AbortController();
-    void getDashboard(controller.signal)
+    void getDashboard(controller.signal, day)
       .then((value: unknown) => {
         if (!isDashboardResponse(value))
           throw new Error("Invalid Dashboard response");
-        setState({ status: "ready", value });
+        if (!controller.signal.aborted) setState({ status: "ready", value });
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
@@ -44,193 +82,291 @@ function DashboardOverview() {
     return () => {
       controller.abort();
     };
-  }, [attempt, auth]);
-
+  }, [attempt, auth, day]);
+  if (state.status === "loading")
+    return <LoadingState>Loading collection overview…</LoadingState>;
+  if (state.status === "error")
+    return (
+      <ErrorState
+        onRetry={() => {
+          setState({ status: "loading" });
+          setAttempt((n) => n + 1);
+        }}
+      >
+        Florabase could not load the Dashboard.
+      </ErrorState>
+    );
+  const { counts, overview: data } = state.value;
   return (
-    <>
-      {state.status === "loading" && (
-        <p role="status">Loading collection overview…</p>
-      )}
-      {state.status === "error" && (
-        <div className="notice notice--error" role="alert">
-          <p>Florabase could not load the Dashboard.</p>
-          <button
-            type="button"
-            onClick={() => {
-              setAttempt((value) => value + 1);
-            }}
-          >
-            Retry
-          </button>
+    <div className="dashboard-content">
+      <section aria-labelledby="collection-snapshot-title">
+        <SectionHeader
+          id="collection-snapshot-title"
+          title="Collection snapshot"
+        >
+          <span className="dashboard-context">
+            Current holdings · <time dateTime={data.today}>{data.today}</time>
+          </span>
+        </SectionHeader>
+        <div className="dashboard-metrics">
+          <Metric
+            label="Plants"
+            value={counts.active_plants}
+            context="Active individual records"
+            href="#/plants?type=plant"
+          />
+          <Metric
+            label="Plant groups"
+            value={counts.active_plant_groups}
+            context="Active groups, not plant totals"
+            href="#/plants?type=group"
+          />
+          <Metric
+            label="Seed lots"
+            value={counts.active_seed_lots}
+            context="Active; quantity may be unknown"
+            href="#/seeds"
+          />
+          <Metric
+            label="Sowings"
+            value={counts.active_sowings}
+            context="Active propagation records"
+            href="#/sowings"
+          />
         </div>
-      )}
-      {state.status === "ready" && (
-        <div className="dashboard-overview">
-          <section
-            aria-labelledby="collection-snapshot-title"
-            className="dashboard-snapshot"
-          >
-            <div className="section-heading">
-              <div>
-                <p className="eyebrow">Current holdings</p>
-                <h3 id="collection-snapshot-title">Collection snapshot</h3>
-              </div>
-            </div>
-            <div className="dashboard-stat-strip">
-              {[
-                {
-                  label: "Seed lots",
-                  value: state.value.counts.active_seed_lots,
-                  href: "#/seeds",
-                },
-                {
-                  label: "Sowings",
-                  value: state.value.counts.active_sowings,
-                  href: "#/sowings",
-                },
-                {
-                  label: "Plants",
-                  value: state.value.counts.active_plants,
-                  href: "#/plants?type=plant",
-                },
-                {
-                  label: "Plant groups",
-                  value: state.value.counts.active_plant_groups,
-                  href: "#/plants?type=group",
-                },
-              ].map((item) => (
-                <a
-                  aria-label={`${item.label}: ${String(item.value)}`}
-                  href={item.href}
-                  key={item.label}
-                >
-                  <span>{item.label}</span>
-                  <strong>{item.value}</strong>
-                </a>
-              ))}
-            </div>
-          </section>
-          <div className="dashboard-main">
-            <nav aria-label="Quick actions" className="dashboard-quick-actions">
-              <h3>Quick actions</h3>
-              <div className="dashboard-action-group">
-                <h4>Collection</h4>
-                <div className="dashboard-action-links">
-                  <a
-                    className="button-link button--secondary"
-                    href="#/seeds?action=create"
-                  >
-                    New seed lot
-                  </a>
-                  <a
-                    className="button-link button--secondary"
-                    href="#/sowings?action=create"
-                  >
-                    New sowing
-                  </a>
-                  <a
-                    className="button-link button--secondary"
-                    href="#/plants?action=create&kind=plant"
-                  >
-                    New plant
-                  </a>
-                  <a
-                    className="button-link button--secondary"
-                    href="#/plants?action=create&kind=group"
-                  >
-                    New plant group
-                  </a>
-                  <a
-                    className="button-link button--secondary"
-                    href="#/harvests?action=create"
-                  >
-                    Record harvest
-                  </a>
-                </div>
-              </div>
-              <div className="dashboard-action-group">
-                <h4>Reference</h4>
-                <div className="dashboard-action-links">
-                  <a
-                    className="button-link button--secondary"
-                    href="#/identities?action=create"
-                  >
-                    New botanical identity
-                  </a>
-                  <a
-                    className="button-link button--secondary"
-                    href="#/suppliers?action=create"
-                  >
-                    New supplier
-                  </a>
-                  <a
-                    className="button-link button--secondary"
-                    href="#/locations?action=create"
-                  >
-                    New location
-                  </a>
-                  <a
-                    className="button-link button--secondary"
-                    href="#/geography?action=create"
-                  >
-                    New local place
-                  </a>
-                </div>
-              </div>
-            </nav>
-            <UpcomingActivities />
-            <section
-              aria-labelledby="recent-activity-title"
-              className="dashboard-activity"
-            >
-              <div className="section-heading">
-                <div>
-                  <p className="eyebrow">Across the collection</p>
-                  <h3 id="recent-activity-title">Recent activity</h3>
-                </div>
-                <a href="#/events">Open Journal</a>
-              </div>
-              {state.value.recent_events.length ? (
-                <EventFeed
-                  compact
-                  showTargetPhoto
-                  events={state.value.recent_events}
-                />
-              ) : (
-                <div className="empty-state">
-                  <p>No Events have been recorded yet.</p>
-                </div>
-              )}
-            </section>
+        <p className="dashboard-membership">
+          <strong>{data.current_identities}</strong> botanical identities
+          represented in current material, including stored harvests.{" "}
+          <a href="#/species-distribution?scope=current">Explore collection</a>
+        </p>
+      </section>
+      <div className="dashboard-columns">
+        <section
+          className="dashboard-attention"
+          aria-labelledby="attention-title"
+        >
+          <SectionHeader id="attention-title" title="Attention & upcoming">
+            <a href="#/schedule">Open Schedule</a>
+          </SectionHeader>
+          <div className="dashboard-attention-counts">
+            {(
+              [
+                ["Overdue", data.overdue, "overdue"],
+                ["Due today", data.due_today, "today"],
+                ["Next 7 days", data.next_seven_days, "next_seven_days"],
+              ] as const
+            ).map(([label, value, window]) => (
+              <a
+                key={window}
+                aria-label={`${label}: ${String(value)}`}
+                href={`#/schedule?window=${window}`}
+                className={
+                  window === "overdue" && value > 0
+                    ? "has-attention"
+                    : undefined
+                }
+              >
+                <strong>{value}</strong>
+                <span>{label}</span>
+              </a>
+            ))}
           </div>
-        </div>
-      )}
-    </>
+          <p className="dashboard-context">
+            Planned work · next 7 days starts tomorrow
+          </p>
+          {data.upcoming.length ? (
+            <ol className="dashboard-rows">
+              {data.upcoming.map((item) => (
+                <li key={item.id}>
+                  <div>
+                    <a
+                      className="dashboard-row-title"
+                      href={`#/schedule/${item.id}`}
+                    >
+                      {item.title}
+                    </a>
+                    <p>
+                      {item.target
+                        ? `${targetLabels[item.target.kind]} · ${item.target.label}${item.target.lifecycle && item.target.lifecycle !== "active" ? ` · ${item.target.lifecycle}` : ""}`
+                        : "Collection-wide"}
+                    </p>
+                  </div>
+                  <div className="dashboard-row-meta">
+                    <StatusBadge
+                      attention={item.overdue || item.due_on === data.today}
+                    >
+                      {item.overdue
+                        ? "Overdue"
+                        : item.due_on === data.today
+                          ? "Due today"
+                          : "Planned"}
+                    </StatusBadge>
+                    <time dateTime={item.due_on}>{item.due_on}</time>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <EmptyState>
+              No planned activities. Schedule work when your collection needs
+              it.
+            </EmptyState>
+          )}
+        </section>
+        <section
+          className="dashboard-recent"
+          aria-labelledby="recent-activity-title"
+        >
+          <SectionHeader id="recent-activity-title" title="Recent activity">
+            <span className="dashboard-section-links">
+              <a href="#/events">Open Journal</a>
+              <a href="#/history">Open History</a>
+            </span>
+          </SectionHeader>
+          <p className="dashboard-context">
+            Recorded observations and operational facts
+          </p>
+          {data.recent_activity.length ? (
+            <ol className="dashboard-rows">
+              {data.recent_activity.map((entry) => (
+                <li key={entry.key}>
+                  <article>
+                    <div className="dashboard-activity-heading">
+                      <StatusBadge>
+                        {entry.source_kind === "event" ? "Journal" : "History"}
+                      </StatusBadge>
+                      <time>
+                        {entry.date_basis === "recorded"
+                          ? `Recorded ${recordedDay(entry.recorded_at)} (UTC)`
+                          : formatPartialDate(entry.occurred_on)}
+                      </time>
+                      {entry.status === "reversed" && (
+                        <StatusBadge>Reversed</StatusBadge>
+                      )}
+                    </div>
+                    <a
+                      className="dashboard-row-title"
+                      href={historyHref(entry.primary, entry.source_kind)}
+                    >
+                      {entry.title}
+                    </a>
+                    <p>
+                      {entry.primary.label}
+                      {entry.context ? ` · ${entry.context}` : ""}
+                    </p>
+                  </article>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <EmptyState>
+              No recent activity. Journal observations and recorded operations
+              will appear here.
+            </EmptyState>
+          )}
+        </section>
+      </div>
+      <div className="dashboard-support">
+        <section aria-labelledby="propagation-title">
+          <SectionHeader id="propagation-title" title="Propagation">
+            <a href="#/sowings">View sowings</a>
+          </SectionHeader>
+          <p className="dashboard-context">
+            Germination counts in active sowings
+          </p>
+          <dl className="dashboard-facts">
+            <div>
+              <dt>No count recorded</dt>
+              <dd>{data.sowings_unknown_germination}</dd>
+            </div>
+            <div>
+              <dt>Germination recorded</dt>
+              <dd>{data.sowings_with_germination}</dd>
+            </div>
+            <div>
+              <dt>Zero recorded</dt>
+              <dd>{data.sowings_zero_germination}</dd>
+            </div>
+          </dl>
+          <p className="dashboard-context">
+            Unknown and zero counts do not establish a failed or final outcome.
+          </p>
+        </section>
+        <section aria-labelledby="sourcing-title">
+          <SectionHeader id="sourcing-title" title="Sourcing">
+            <a href="#/orders">View Orders</a>
+          </SectionHeader>
+          <dl className="dashboard-facts">
+            <div>
+              <dt>Purchase packets without Order link</dt>
+              <dd>{data.purchase_packets_without_order}</dd>
+            </div>
+          </dl>
+          <p className="dashboard-context">
+            Active purchased seed lots. Review links if useful; a missing link
+            is not an outstanding order.
+          </p>
+        </section>
+        <section aria-labelledby="coverage-title">
+          <SectionHeader id="coverage-title" title="Botanical coverage">
+            <a href="#/identities">View identities</a>
+          </SectionHeader>
+          <p className="dashboard-context">
+            Among {data.current_identities} current identities
+          </p>
+          <dl className="dashboard-facts">
+            <div>
+              <dt>With confirmed WFO link</dt>
+              <dd>{data.identities_with_wfo}</dd>
+            </div>
+            <div>
+              <dt>With profile content</dt>
+              <dd>{data.identities_with_profile}</dd>
+            </div>
+          </dl>
+          <p className="dashboard-context">
+            Stored links and content, not a completeness score.
+          </p>
+        </section>
+      </div>
+    </div>
   );
 }
 
 export function DashboardScreen() {
   const search = useDashboardSearch();
   return (
-    <section
-      aria-labelledby="dashboard-title"
-      className="workspace workspace--dashboard"
-    >
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">Overview</p>
-          <h2 id="dashboard-title">Dashboard</h2>
-          <p>See what is in your collection and what happened recently.</p>
-        </div>
-        {search.header}
-      </header>
-      <SavedViews
-        surface="global_search"
-        state={search.savedState}
-        allSurfaces
+    <Page titleId="dashboard-title" className="workspace--dashboard">
+      <PageHeader
+        title="Dashboard"
+        titleId="dashboard-title"
+        eyebrow="Overview"
+        description="Current holdings, planned work and recent activity."
       />
+      <div
+        className="dashboard-toolbar"
+        role="group"
+        aria-label="Dashboard controls"
+      >
+        {search.header}
+        <SavedViews
+          surface="global_search"
+          state={search.savedState}
+          allSurfaces
+          presentation="dialog"
+        />
+        <OverflowMenu label="Quick add ▾" ariaLabel="Quick add">
+          <nav className="dashboard-quick-add" aria-label="Quick actions">
+            {actions.map(([label, href]) => (
+              <a key={label} href={href}>
+                {label}
+              </a>
+            ))}
+          </nav>
+        </OverflowMenu>
+      </div>
       {search.content}
       {!search.active && <DashboardOverview />}
-    </section>
+    </Page>
   );
 }

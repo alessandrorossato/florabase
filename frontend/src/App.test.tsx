@@ -1,3 +1,4 @@
+import { emptyOverview } from "./collection/dashboardFixtures";
 import {
   act,
   cleanup,
@@ -3257,7 +3258,7 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
         coordinate_less_sites: 0,
         total_provenance_sites: 0,
       });
-    if (path === "/api/v1/dashboard")
+    if (path.startsWith("/api/v1/dashboard"))
       return jsonResponse({
         counts: {
           active_seed_lots: 0,
@@ -3265,6 +3266,7 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
           active_plants: 0,
           active_plant_groups: 0,
         },
+        overview: emptyOverview,
         recent_events: [],
       });
     if (path.startsWith("/api/v1/explore/native-ranges/identities"))

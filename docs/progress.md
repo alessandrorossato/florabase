@@ -3515,3 +3515,54 @@ implementation detail.
   The [consolidated baseline](dependency-maintenance-baseline.md) records versions, prior delivery
   identities, focused evidence and reconsideration conditions without reopening completed groups.
 - No schema migration or Dashboard work is included. DASHBOARD-001 is the next product increment.
+
+## 2026-10-12 — UI Foundation v0.1 and DASHBOARD-001 implementation handoff
+
+- Established semantic tokens, self-hosted Source Sans 3 / Source Serif 4, shared workspace
+  primitives, safe base/shell styling and authoritative [UI contract](ui-contract.md).
+- Dashboard now provides explicit active-record metrics, current identity coverage, planned
+  attention, distinguishable Journal/History rows, propagation counts and optional sourcing review
+  through one bounded authenticated aggregate. No schema migration or inferred rates.
+- Added idempotent synthetic sourcing/propagation fixtures; authorized UAT replacement is healthy
+  at localhost:15174. Visual self-review covered Dashboard, Seeds, Botanical identities and Schedule
+  at 1440/1024/390; keyboard focus and navigation checked.
+- Focused evidence: 3 backend unit, 21 PostgreSQL integration, 93 frontend and 1 fixture test pass;
+  Ruff/script lint, mypy, ESLint, TypeScript/Vite build, generated API drift and formatting pass.
+  Host-side lazy-loading timeouts resolved in the unchanged Quality runtime tests.
+- [Handoff](dashboard-001-handoff.md) records definitions, evidence, screenshots and deferred global
+  migration. Status implemented; independent QA owns canonical verification and final visual review.
+  No staging, commit, push, delivery, main modification or canonical feature-verify performed.
+
+## 2026-10-12 — DASHBOARD-001 visual-review refinement handoff
+
+- Consolidated Search, Filters, Saved views and Quick add into a compact toolbar. Quick add uses
+  the existing menu and nine creation routes; shared SavedViews supports optional dialog access.
+  Advanced filters now use a compact right-side TaskDialog drawer with immediate URL state,
+  query-preserving reset, keyboard dismissal and focus return.
+- Scoped Dashboard width/overflow corrections enable document scrolling and full content width.
+  Operational sections use approximately 7:5 desktop columns, equal tablet columns and mobile
+  stacking; supporting sections retain light dividers. Existing domain/API/dependency semantics
+  are unchanged by this refinement.
+- Browser review at 1440×844, 1024×844 and 390×844 confirms toolbar/menu/drawer usability, reachable
+  mobile footer controls and no horizontal overflow. Seeds and Botanical identities retain their
+  existing layouts and inline SavedViews. Current screenshots and a synthetic Saved View review
+  are recorded in the [handoff](dashboard-001-handoff.md).
+- Focused evidence: 105 frontend tests across five files, 3 collection-view unit tests and
+  4 Dashboard PostgreSQL tests pass; TypeScript, ESLint, Prettier, production Vite build and
+  whitespace checks pass. Quality's configured `pnpm test` runner reports all 105 passes; its
+  wrapper termination status and a concurrent host run's three App timing failures are documented
+  in the handoff. Those three pass in isolation on the host; assertions/timeouts remain unchanged.
+- Candidate stays implemented, unstaged and uncommitted for Luna. Canonical feature-verify,
+  staging, commit, push and delivery remain reserved for the next owner.
+
+## 2026-10-12 — DASHBOARD-001 independent verification
+
+- Independent review corrected one strict-mypy issue in the new integration test's empty-state
+  assertion by checking upcoming and recent-history lists separately; no test was weakened.
+- Canonical FULL `make feature-verify` passed on the exact candidate tree: backend unit **910
+  passed**, PostgreSQL integration **717 passed**, frontend **564 passed / 58 files**, strict lint,
+  typing, format and API drift checks, production backend/frontend builds, migration full-cycle at
+  existing head `20261009_0041`, health checks and whitespace checks. Exact-tree receipt recorded.
+- Prior Quality Vitest wrapper exit 143 did not recur in the canonical run; its 564-test report
+  completed, followed by the remaining integration/build/migration stages. No assertions or
+  timeouts were weakened. Dashboard acceptance criteria are now evidenced; status is `verified`.
