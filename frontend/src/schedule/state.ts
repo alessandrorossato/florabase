@@ -1,3 +1,7 @@
+import type { Activity } from "./api";
+import { localDay, validDay, validMonth } from "./calendar";
+export { localDay } from "./calendar";
+
 export const activityLabels = {
   repot: "Repot",
   water: "Water",
@@ -27,6 +31,9 @@ export type ActivityKind = keyof typeof activityLabels;
 export type TargetKind = keyof typeof targetLabels;
 export type DateWindow = keyof typeof windowLabels;
 export interface ScheduleState {
+  view: "list" | "calendar";
+  month: string;
+  date: string;
   status: "planned" | "completed" | "cancelled";
   window: DateWindow;
   activity_kind: ActivityKind | "";
@@ -35,6 +42,9 @@ export interface ScheduleState {
   q: string;
 }
 export const defaultState: ScheduleState = {
+  view: "list",
+  month: localDay().slice(0, 7),
+  date: "",
   status: "planned",
   window: "all",
   activity_kind: "",
@@ -42,9 +52,6 @@ export const defaultState: ScheduleState = {
   target_id: "",
   q: "",
 };
-export function localDay(day = new Date()): string {
-  return `${String(day.getFullYear()).padStart(4, "0")}-${String(day.getMonth() + 1).padStart(2, "0")}-${String(day.getDate()).padStart(2, "0")}`;
-}
 export function readScheduleState(hash = window.location.hash): ScheduleState {
   const [path, query = ""] = hash.split("?", 2);
   const p = new URLSearchParams(path.startsWith("#/schedule") ? query : "");
@@ -53,7 +60,13 @@ export function readScheduleState(hash = window.location.hash): ScheduleState {
   const kind = p.get("activity_kind") ?? "";
   const target = p.get("target_kind") ?? "";
   const id = p.get("target_id") ?? "";
+  const month = p.get("month") ?? "";
+  const selected = p.get("date") ?? "";
+  const period = validMonth(month) ? month : localDay().slice(0, 7);
   return {
+    view: p.get("view") === "calendar" ? "calendar" : "list",
+    month: period,
+    date: validDay(selected) && selected.startsWith(period) ? selected : "",
     status:
       status === "completed" || status === "cancelled" ? status : "planned",
     window: Object.hasOwn(windowLabels, window)
@@ -87,6 +100,11 @@ export function scheduleParams(state: ScheduleState): URLSearchParams {
 }
 export function scheduleHash(state: ScheduleState): string {
   const p = scheduleParams(state);
+  if (state.view === "calendar") {
+    p.set("view", "calendar");
+    p.set("month", state.month);
+    if (state.date) p.set("date", state.date);
+  }
   return `#/schedule${p.size ? `?${p}` : ""}`;
 }
 export function targetHref(target: { kind: TargetKind; id: string }): string {
@@ -99,4 +117,12 @@ export function targetHref(target: { kind: TargetKind; id: string }): string {
     location: "locations",
   };
   return `#/${routes[target.kind]}/${target.id}`;
+}
+
+export function activityState(item: Activity, today: string): string {
+  if (item.status === "completed") return "Completed";
+  if (item.status === "cancelled") return "Cancelled";
+  if (item.due_on < today) return "Planned · Overdue";
+  if (item.due_on === today) return "Planned · Due today";
+  return "Planned";
 }

@@ -194,6 +194,28 @@ exercise distinct families/higher ancestors; lavender remains unlinked. Repeat s
 operator link edits. Interrupted extensions remain `building` and require the guarded reset.
 Mobile retains all destinations. See [taxonomy UAT handoff](taxonomy-003-handoff.md).
 
+The current manual-review fixture keeps version 4 and evolves through validated additive markers.
+`dashboard_extension=1` adds a purchased packet without an Order link and unknown/zero germination
+examples. `schedule_extension=1` and `schedule_calendar_extension=1` provide overdue/today/future,
+completed/cancelled work, all six target types and same-day overflow. `manual_review_extension=1`
+adds an `Ocimum basilicum` ‘Genovese’ identity with explicitly synthetic profile text, an unknown
+quantity packet linked to the month-only Order, and whole-collection scheduled work. There are
+66 manifest records, or 68 with the optional pinned WFO index and its Holy basil extension.
+These are small interconnected review examples, not source-backed botanical assertions.
+
+Persistent UAT at **http://localhost:15174** is the normal manual product-review dataset. Start it
+with `make uat-preview-up`, inspect `make uat-preview-status`, and sign in with the UAT-only
+**preview / preview** fixture owner. Explicit `make uat-preview-seed` initializes a fresh UAT or
+applies missing recognized additive extensions; ordinary up never seeds or resets. Same-owner
+stop/up preserves DB, media, operator edits and dependencies. Feature Review remains separate.
+Schedule due dates are anchored to the UTC day of each explicit extension's first seed, following
+the existing fixture convention. Repeat seed never rolls dates forward or reschedules edits.
+To refresh overdue/today/future examples for a later review day, deliberately use the guarded
+`make uat-preview-reset CONFIRM_RESET_UAT_PREVIEW=florabase-uat-preview`; that discards all UAT
+operator edits. An incompatible/interrupted fixture still refuses ordinary seed and requires
+this explicit reset. Keep the optional WFO index/seal in the owning worktree's ignored cache for
+Taxonomy review; no reference-source download occurs during startup or seed.
+
 The seed manifest lives outside production domain models in the UAT media volume and records service
 created UUIDv7 identities. Repeating seed validates existing identities and binary integrity, leaves
 all operator text/quantity/primary edits alone, and creates no duplicates. It does not recreate a

@@ -3566,3 +3566,100 @@ implementation detail.
 - Prior Quality Vitest wrapper exit 143 did not recur in the canonical run; its 564-test report
   completed, followed by the remaining integration/build/migration stages. No assertions or
   timeouts were weakened. Dashboard acceptance criteria are now evidenced; status is `verified`.
+
+## 2026-10-12 — SCHEDULE-002 Calendar implementation handoff
+
+- Added Month Calendar within Schedule, sharing ScheduledActivity, filters, URL navigation and
+  versioned mutations. Inclusive API due-date bounds restrict loading to the visible month;
+  scientific target fields support exact botanical typography. No migration or dependency.
+- Bounded summaries reveal complete day work in the existing TaskDialog drawer. Mobile uses
+  compact date/count navigation and the selected-day list; creation prefills its date.
+  Synthetic fixtures add same-day density, month-end and next-month examples without overwrite.
+- Focused checks pass: 17 backend unit, 15 PostgreSQL integration, 28 Schedule frontend and
+  1 fixture test; date tests in three timezones, Ruff/format, strict mypy (339 files), ESLint,
+  TypeScript, OpenAPI/client drift, backend production image and frontend production build.
+  Feature schema validation and whitespace checks pass. Existing Alembic deprecations remain.
+- Browser self-review at 1440×844, 1024×844 and 390×844 covered populated/empty states, shared
+  filters/history, overflow/detail, keyboard focus/Escape, mobile transformation, selected-date
+  creation, native reschedule and completion without Event. No horizontal overflow found.
+  [Handoff and screenshots](schedule-002-handoff.md) record precise evidence and limitations.
+- Exact owned disposable previews were cleaned after review, preserving operator environments.
+  Candidate remains implemented, unstaged and uncommitted on `feat/schedule-002` at base
+  `8ed57d63b45286cb2509e9eeca9c2a84ad5b14eb`. No canonical feature-verify, staging, commit,
+  push, delivery, merge, feature-finish or primary-main change; independent QA owns the gate.
+
+## 2026-10-12 — SCHEDULE-002 focused UX refinement
+
+- Kept Calendar within Schedule as the same ScheduledActivity presentation, across shared filters,
+  kinds and targets; Journal and History remain separate. Refined only Schedule's compact
+  List/Calendar toolbar, creation action, subordinate guidance and truthful compact empty List.
+  Empty/single-page pagination is suppressed; a concurrently emptied later page returns to page one.
+- Create/edit reuses TaskDialog and FormActions with a viewport-bounded form, one scrolling
+  content region and reachable Cancel/Save footer. Pristine dismissal returns focus; dirty
+  Escape/backdrop/Cancel requires explicit discard and preserves entries when dismissed.
+- Current checks pass: **45 Schedule frontend**, **17 backend unit** and **15 PostgreSQL** tests;
+  focused ESLint, strict TypeScript, production Vite build and Schedule formatting. No assertions
+  or timeouts weakened. Guarded integration cleanup reports zero residual resources.
+- Current synthetic browser evidence covers Calendar, create/edit and compact empty List at
+  1440×844, 1024×844 and 390×844, with same-day overflow, overdue/today/future and six target types.
+  Browser access returned and all interrupted checks completed in a fresh isolated preview.
+  Mobile content scrolls independently while the footer stays visible; pristine dismissal returns
+  focus and dirty dismissal retains entries until explicit discard. Real synthetic create/edit
+  saves persist. No horizontal overflow. The [handoff](schedule-002-handoff.md) records screenshots
+  and precise evidence; independent QA still owns acceptance and canonical verification.
+- No domain/API/Calendar-placement or global UI changes in this refinement. Candidate remains
+  implemented, unstaged and uncommitted; no canonical feature-verify, commit, push or delivery.
+  Exact-owner recovery cleaned the disposable synthetic preview with zero residual resources,
+  preserving persistent environments and shared cache. Handoff/progress formatting, feature
+  schema validation (100 features) and whitespace checks pass; HEAD and empty index are unchanged.
+
+## 2026-10-12 — SCHEDULE-002 compact controls and persistent manual-review UAT
+
+- Grouped target search/results/count and compact page controls; suppressed zero/single-page
+  pagers. Reset now sits beside Filters only for active filters, preserving view/month/day while
+  restoring defaults. Period navigation is compact `‹ Today ›` with accessible/disabled semantics.
+  Shared bounded editor, footer, dirty protection and focus behavior remain intact.
+- Audited the existing v4 fixture and added only its missing Genovese profile/packet and
+  collection-wide activity through `manual_review_extension=1`. Recognized upgrades are additive;
+  repeat seed preserves operator edits/IDs/dates, and interrupted work requires explicit reset.
+  Provisioned the existing checksum-pinned WFO index for meaningful Taxonomy; cache remains ignored.
+- Authorized guarded retirement of old synthetic UAT from its 51ba owner; stopped this candidate's
+  Feature Review with volumes preserved to release the shared port. Established persistent UAT
+  from 6147 at **http://localhost:15174**, UAT-only **preview / preview**, schema `20261009_0041`,
+  v4/68 manifest records. Two repeat seeds and fixed-UAT stop/up preserved full row/media/manifest
+  digests. UAT remains running; DEV/Stable Preview/production and unknown resources were preserved.
+- Manual browser inspection covered Dashboard, Seeds, Sowings (active/completed), Plants,
+  Harvests/stored material, Locations, Journal, History, Schedule List/Calendar, identities/profile,
+  Taxonomy and Suppliers/Orders. Persistent Schedule review at 1440×844, 1024×844 and 390×844
+  confirms controls, overflow detail, target variety, intended-date semantics, editor dismissal/
+  scrolling/reachable footer and no horizontal overflow. Unrelated legacy UI polish is deferred.
+- Focused evidence: 51 frontend, 17 Schedule unit, 15 Schedule PostgreSQL, 5 fixture-extension unit,
+  25 real fixture/guard and 19 UAT workflow tests; guarded UAT Compose smoke and fixed persistence
+  pass. Ruff/format, strict helper mypy (six files), ESLint, TypeScript and Vite build pass; no
+  assertion or timeout was weakened. Disposable resources cleaned with zero residuals.
+  Both Schedule extensions also retain a building marker across simulated post-commit write
+  interruption, preventing silent duplicate reseeding. Current generated API drift check passes.
+- [Handoff](schedule-002-handoff.md) records exact fixture/source/credentials/operator workflow,
+  checks, screenshots and global-review deferrals. Candidate remains implemented, unstaged and
+  uncommitted. No canonical feature-verify, commit, push or delivery.
+
+## 2026-10-12 — SCHEDULE-002 independent verification
+
+- Independent review of the full candidate diff confirmed Calendar remains a presentation of the
+  shared `ScheduledActivity` workspace and filters, with no Journal/History mixing, preserved
+  versioned actions, bounded inclusive month loading, local date semantics, responsive layouts,
+  accessible controls, dialog dirty protection, and additive synthetic fixture ownership. No
+  production/domain/workflow defect was found; two Schedule List density/desktop-width polish items
+  remain deferred to the global page review.
+- Canonical `make feature-verify` selected **FULL** and passed on the exact candidate tree: feature
+  graph **100 valid**; backend **912 passed at 90.25% coverage**; frontend **599 passed across 60
+  files**; PostgreSQL integration **720 passed**; all eight workflow suites; repository format,
+  lint, strict typing and API drift checks; backend/frontend production builds; whitespace and exact
+  working-tree receipt.
+- Forced migration cycle passed through existing head `20261009_0041` (base → head → base → head);
+  SCHEDULE-002 adds no migration. Exact disposable integration/build/migration resources were
+  cleaned, while shared cache and unknown/legacy resources were retained. Persistent UAT remains
+  healthy at `http://localhost:15174` with its v4/68-record synthetic fixture. DEV, Stable Preview,
+  production and unrelated environments remain preserved. See the [handoff](schedule-002-handoff.md).
+- SCHEDULE-002 is now `verified`. Protected delivery and `make feature-finish` follow the repository
+  lifecycle after the exact verified candidate is committed.

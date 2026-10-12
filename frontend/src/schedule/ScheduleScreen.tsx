@@ -1,11 +1,17 @@
+import { ScheduleTargetLabel } from "./ScheduleTargetLabel";
 import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
+import { FormActions, PageHeader } from "../components/ReferenceUI";
+import { Page } from "../components/WorkspaceUI";
+import { ScheduleCalendar } from "./ScheduleCalendar";
+import { ScheduleActivityRow } from "./ScheduleActivityRow";
 import { TaskDialog } from "../components/TaskDialog";
 import {
   getActivity,
   getTarget,
   listSchedule,
+  listCalendar,
   transitionActivity,
   writeActivity,
   type Activity,
@@ -33,6 +39,7 @@ interface Dialog {
   action: "create" | "edit" | "complete" | "cancel" | "inspect";
   item: Activity | null;
   target: Target | null;
+  due?: string;
 }
 const eventKinds: Partial<Record<ActivityKind, ScheduleEvent["kind"][]>> = {
   repot: ["repotting"],
@@ -72,7 +79,7 @@ function ActivityDialog({
   const [kind, setKind] = useState<ActivityKind>(
     item?.activity_kind ?? "inspect",
   );
-  const [due, setDue] = useState(item?.due_on ?? localDay());
+  const [due, setDue] = useState(item?.due_on ?? dialog.due ?? localDay());
   const [notes, setNotes] = useState(item?.notes ?? "");
   const [targetKind, setTargetKind] = useState<TargetKind | "">(
     (item?.target ?? dialog.target)?.kind ?? "",
@@ -93,6 +100,26 @@ function ActivityDialog({
   const [actual, setActual] = useState(localDay());
   const [eventNotes, setEventNotes] = useState("");
   const [destination, setDestination] = useState("");
+  const values = JSON.stringify([
+    title,
+    kind,
+    due,
+    notes,
+    targetKind,
+    targetId,
+    recordEvent,
+    eventKind,
+    actual,
+    eventNotes,
+    destination,
+  ]);
+  const [initialValues] = useState(values);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
+  function dismiss() {
+    if (busy) return;
+    if (values === initialValues) onClose();
+    else setConfirmDiscard(true);
+  }
   const heading =
     dialog.action === "create"
       ? "Schedule activity"
@@ -104,308 +131,409 @@ function ActivityDialog({
             ? "Cancel activity"
             : "Scheduled activity";
   return (
-    <TaskDialog
-      title={heading}
-      onClose={() => {
-        if (!busy) onClose();
-      }}
-    >
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (dialog.action === "create" || dialog.action === "edit") {
-            if (targetKind && !targetId) return;
-            onSave({
-              activity_kind: kind,
-              title,
-              due_on: due,
-              notes: notes.trim() || null,
-              target: targetKind ? { kind: targetKind, id: targetId } : null,
-              ...(item ? { expected_version: item.version } : {}),
-            });
-          } else
-            onTransition(
-              recordEvent
-                ? {
-                    kind: eventKind,
-                    occurred_on: actual,
-                    notes: eventNotes.trim() || null,
-                    destination_location_id:
-                      eventKind === "movement" ? destination : null,
-                  }
-                : null,
-            );
-        }}
+    <>
+      <TaskDialog
+        title={heading}
+        className="schedule-activity-dialog"
+        dismissOnBackdrop
+        onClose={dismiss}
       >
-        <h3>{heading}</h3>
-        {error && (
-          <div role="alert">
-            <p>{error}</p>
-            {item && (
-              <button type="button" disabled={busy} onClick={onReload}>
-                Reload current activity
-              </button>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (busy) return;
+            if (dialog.action === "create" || dialog.action === "edit") {
+              if (targetKind && !targetId) return;
+              onSave({
+                activity_kind: kind,
+                title,
+                due_on: due,
+                notes: notes.trim() || null,
+                target: targetKind ? { kind: targetKind, id: targetId } : null,
+                ...(item ? { expected_version: item.version } : {}),
+              });
+            } else
+              onTransition(
+                recordEvent
+                  ? {
+                      kind: eventKind,
+                      occurred_on: actual,
+                      notes: eventNotes.trim() || null,
+                      destination_location_id:
+                        eventKind === "movement" ? destination : null,
+                    }
+                  : null,
+              );
+          }}
+        >
+          <header className="schedule-dialog-header">
+            <h3>{heading}</h3>
+          </header>
+          <div className="schedule-dialog-content">
+            {error && (
+              <div role="alert">
+                <p>{error}</p>
+                {item && (
+                  <button type="button" disabled={busy} onClick={onReload}>
+                    Reload current activity
+                  </button>
+                )}
+              </div>
             )}
-          </div>
-        )}
-        {dialog.action === "create" || dialog.action === "edit" ? (
-          <fieldset disabled={busy}>
-            <label className="field">
-              Title
-              <input
-                required
-                maxLength={255}
-                value={title}
-                onChange={(e) => {
-                  setTitle(e.target.value);
-                }}
-              />
-            </label>
-            <label className="field">
-              Activity kind
-              <select
-                value={kind}
-                onChange={(e) => {
-                  setKind(e.target.value as ActivityKind);
-                }}
-              >
-                {Object.entries(activityLabels).map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="field">
-              Due date
-              <input
-                required
-                type="date"
-                value={due}
-                onChange={(e) => {
-                  setDue(e.target.value);
-                }}
-              />
-            </label>
-            <p className="muted">
-              A complete calendar day. Passing this day leaves the activity
-              planned.
-            </p>
-            <label className="field">
-              Target type
-              <select
-                value={targetKind}
-                onChange={(e) => {
-                  setTargetKind(e.target.value as TargetKind | "");
-                  setTargetId("");
-                }}
-              >
-                <option value="">Whole collection / no specific record</option>
-                {Object.entries(targetLabels).map(([key, label]) => (
-                  <option key={key} value={key}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            {targetKind && (
-              <ScheduleTargetPicker
-                key={targetKind}
-                kind={targetKind}
-                value={targetId}
-                selected={
-                  (item?.target ?? dialog.target)?.kind === targetKind
-                    ? (item?.target ?? dialog.target)
-                    : null
-                }
-                onChange={setTargetId}
-              />
-            )}
-            <label className="field">
-              Planning notes
-              <textarea
-                maxLength={20000}
-                value={notes}
-                onChange={(e) => {
-                  setNotes(e.target.value);
-                }}
-              />
-            </label>
-          </fieldset>
-        ) : (
-          <>
-            <p>
-              <strong>{item?.title}</strong> · Due {item?.due_on}
-            </p>
-            {item?.target && (
-              <p>
-                {targetLabels[item.target.kind]}:{" "}
-                <a href={targetHref(item.target)}>{item.target.label}</a>
-                {item.target.lifecycle && item.target.lifecycle !== "active"
-                  ? ` (${item.target.lifecycle})`
-                  : ""}
-              </p>
-            )}
-            {dialog.action === "inspect" ? (
-              <>
-                <p>Status: {item?.status}</p>
-                {item?.notes && <p className="schedule-notes">{item.notes}</p>}
-                {item?.completed_at && (
-                  <p>
-                    Completed: {new Date(item.completed_at).toLocaleString()}
-                  </p>
-                )}
-                {item?.cancelled_at && (
-                  <p>
-                    Cancelled: {new Date(item.cancelled_at).toLocaleString()}
-                  </p>
-                )}
-                {item?.linked_event_id && item.target && (
-                  <a href={`${targetHref(item.target)}?tab=events`}>
-                    View linked Journal Event
-                  </a>
-                )}
-                {item?.status === "completed" && !item.linked_event_id && (
-                  <p>Completed without a Journal Event.</p>
-                )}
-              </>
-            ) : dialog.action === "cancel" ? (
-              <p>
-                Cancel this intention? The planning record will remain available
-                under Cancelled.
-              </p>
-            ) : (
-              <fieldset disabled={busy}>
-                <p>
-                  Completion closes this intention. Choose explicitly whether to
-                  record what happened.
-                </p>
-                <label>
+            {dialog.action === "create" || dialog.action === "edit" ? (
+              <fieldset disabled={busy} className="schedule-edit-fields">
+                <label className="field schedule-field-full">
+                  Title
                   <input
-                    type="radio"
-                    name="completion"
-                    checked={!recordEvent}
-                    onChange={() => {
-                      setRecordEvent(false);
+                    required
+                    maxLength={255}
+                    value={title}
+                    onChange={(e) => {
+                      setTitle(e.target.value);
                     }}
-                  />{" "}
-                  Complete without a Journal Event
+                  />
                 </label>
-                {possible ? (
-                  <label>
-                    <input
-                      type="radio"
-                      name="completion"
-                      checked={recordEvent}
-                      onChange={() => {
-                        setRecordEvent(true);
-                      }}
-                    />{" "}
-                    Record what happened in Journal
-                  </label>
-                ) : (
+                <label className="field">
+                  Activity kind
+                  <select
+                    value={kind}
+                    onChange={(e) => {
+                      setKind(e.target.value as ActivityKind);
+                    }}
+                  >
+                    {Object.entries(activityLabels).map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="field">
+                  Due date
+                  <input
+                    required
+                    type="date"
+                    value={due}
+                    onChange={(e) => {
+                      setDue(e.target.value);
+                    }}
+                  />
+                </label>
+                <p className="schedule-guidance schedule-field-full">
+                  Date only. Overdue work stays planned.
+                </p>
+                <label className="field schedule-field-full">
+                  Target type
+                  <select
+                    value={targetKind}
+                    onChange={(e) => {
+                      setTargetKind(e.target.value as TargetKind | "");
+                      setTargetId("");
+                    }}
+                  >
+                    <option value="">
+                      Whole collection / no specific record
+                    </option>
+                    {Object.entries(targetLabels).map(([key, label]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                {targetKind && (
+                  <ScheduleTargetPicker
+                    key={targetKind}
+                    kind={targetKind}
+                    value={targetId}
+                    selected={
+                      (item?.target ?? dialog.target)?.kind === targetKind
+                        ? (item?.target ?? dialog.target)
+                        : null
+                    }
+                    onChange={setTargetId}
+                  />
+                )}
+                <label className="field schedule-field-full">
+                  Planning notes
+                  <textarea
+                    maxLength={20000}
+                    value={notes}
+                    onChange={(e) => {
+                      setNotes(e.target.value);
+                    }}
+                  />
+                </label>
+              </fieldset>
+            ) : (
+              <>
+                <p>
+                  <strong>{item?.title}</strong> · Due {item?.due_on}
+                </p>
+                {item?.target && (
                   <p>
-                    This target or activity uses completion without an Event.
-                    Record structured Harvests and germination observations in
-                    their existing workflows.
+                    {targetLabels[item.target.kind]}:{" "}
+                    <a href={targetHref(item.target)}>
+                      <ScheduleTargetLabel target={item.target} />
+                    </a>
+                    {item.target.lifecycle && item.target.lifecycle !== "active"
+                      ? ` (${item.target.lifecycle})`
+                      : ""}
                   </p>
                 )}
-                {recordEvent && (
+                {dialog.action === "inspect" ? (
                   <>
-                    <label className="field">
-                      Event kind
-                      <select
-                        value={eventKind}
-                        onChange={(e) => {
-                          setEventKind(e.target.value as ScheduleEvent["kind"]);
-                        }}
-                      >
-                        {possible?.map((k) => (
-                          <option key={k} value={k}>
-                            {k}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="field">
-                      Actual occurrence date
-                      <input
-                        required
-                        type="date"
-                        value={actual}
-                        onChange={(e) => {
-                          setActual(e.target.value);
-                        }}
-                      />
-                    </label>
-                    <p className="muted">
-                      Confirm the actual day, independently of the scheduled due
-                      date.
-                    </p>
-                    {eventKind === "movement" && (
-                      <ScheduleTargetPicker
-                        kind="location"
-                        value={destination}
-                        selected={null}
-                        onChange={setDestination}
-                      />
+                    <p>Status: {item?.status}</p>
+                    {item?.notes && (
+                      <p className="schedule-notes">{item.notes}</p>
                     )}
-                    <label className="field">
-                      Event notes
-                      <textarea
-                        value={eventNotes}
-                        maxLength={20000}
-                        onChange={(e) => {
-                          setEventNotes(e.target.value);
-                        }}
-                      />
-                    </label>
-                    {eventKind === "movement" && (
+                    {item?.completed_at && (
                       <p>
-                        Recording this Movement also updates the current
-                        Location through the existing Event workflow.
+                        Completed:{" "}
+                        {new Date(item.completed_at).toLocaleString()}
                       </p>
                     )}
+                    {item?.cancelled_at && (
+                      <p>
+                        Cancelled:{" "}
+                        {new Date(item.cancelled_at).toLocaleString()}
+                      </p>
+                    )}
+                    {item?.linked_event_id && item.target && (
+                      <a href={`${targetHref(item.target)}?tab=events`}>
+                        View linked Journal Event
+                      </a>
+                    )}
+                    {item?.status === "completed" && !item.linked_event_id && (
+                      <p>Completed without a Journal Event.</p>
+                    )}
                   </>
+                ) : dialog.action === "cancel" ? (
+                  <p>
+                    Cancel this intention? The planning record will remain
+                    available under Cancelled.
+                  </p>
+                ) : (
+                  <fieldset disabled={busy}>
+                    <p>
+                      Completion closes this intention. Choose explicitly
+                      whether to record what happened.
+                    </p>
+                    <label>
+                      <input
+                        type="radio"
+                        name="completion"
+                        checked={!recordEvent}
+                        onChange={() => {
+                          setRecordEvent(false);
+                        }}
+                      />{" "}
+                      Complete without a Journal Event
+                    </label>
+                    {possible ? (
+                      <label>
+                        <input
+                          type="radio"
+                          name="completion"
+                          checked={recordEvent}
+                          onChange={() => {
+                            setRecordEvent(true);
+                          }}
+                        />{" "}
+                        Record what happened in Journal
+                      </label>
+                    ) : (
+                      <p>
+                        This target or activity uses completion without an
+                        Event. Record structured Harvests and germination
+                        observations in their existing workflows.
+                      </p>
+                    )}
+                    {recordEvent && (
+                      <>
+                        <label className="field">
+                          Event kind
+                          <select
+                            value={eventKind}
+                            onChange={(e) => {
+                              setEventKind(
+                                e.target.value as ScheduleEvent["kind"],
+                              );
+                            }}
+                          >
+                            {possible?.map((k) => (
+                              <option key={k} value={k}>
+                                {k}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="field">
+                          Actual occurrence date
+                          <input
+                            required
+                            type="date"
+                            value={actual}
+                            onChange={(e) => {
+                              setActual(e.target.value);
+                            }}
+                          />
+                        </label>
+                        <p className="muted">
+                          Confirm the actual day, independently of the scheduled
+                          due date.
+                        </p>
+                        {eventKind === "movement" && (
+                          <ScheduleTargetPicker
+                            kind="location"
+                            value={destination}
+                            selected={null}
+                            onChange={setDestination}
+                          />
+                        )}
+                        <label className="field">
+                          Event notes
+                          <textarea
+                            value={eventNotes}
+                            maxLength={20000}
+                            onChange={(e) => {
+                              setEventNotes(e.target.value);
+                            }}
+                          />
+                        </label>
+                        {eventKind === "movement" && (
+                          <p>
+                            Recording this Movement also updates the current
+                            Location through the existing Event workflow.
+                          </p>
+                        )}
+                      </>
+                    )}
+                  </fieldset>
                 )}
-              </fieldset>
+              </>
             )}
-          </>
-        )}
-        <div className="button-row">
-          {dialog.action !== "inspect" && (
+          </div>
+          <FormActions>
             <button
-              type="submit"
-              disabled={
-                busy ||
-                ((dialog.action === "create" || dialog.action === "edit") &&
-                  Boolean(targetKind) &&
-                  !targetId) ||
-                (recordEvent && eventKind === "movement" && !destination)
-              }
+              type="button"
+              className="button--secondary"
+              disabled={busy}
+              onClick={dismiss}
             >
-              {busy
-                ? "Saving…"
-                : dialog.action === "create" || dialog.action === "edit"
-                  ? "Save activity"
-                  : dialog.action === "cancel"
-                    ? "Confirm cancellation"
-                    : recordEvent
-                      ? "Complete and record Event"
-                      : "Complete without Event"}
+              {dialog.action === "inspect" ? "Close" : "Cancel"}
             </button>
-          )}
-          <button
-            type="button"
-            className="button--secondary"
-            disabled={busy}
-            onClick={onClose}
-          >
-            {dialog.action === "inspect" ? "Close" : "Keep editing / close"}
-          </button>
-        </div>
-      </form>
-    </TaskDialog>
+            {dialog.action !== "inspect" && (
+              <button
+                type="submit"
+                disabled={
+                  busy ||
+                  ((dialog.action === "create" || dialog.action === "edit") &&
+                    Boolean(targetKind) &&
+                    !targetId) ||
+                  (recordEvent && eventKind === "movement" && !destination)
+                }
+              >
+                {busy
+                  ? "Saving…"
+                  : dialog.action === "create" || dialog.action === "edit"
+                    ? "Save activity"
+                    : dialog.action === "cancel"
+                      ? "Confirm cancellation"
+                      : recordEvent
+                        ? "Complete and record Event"
+                        : "Complete without Event"}
+              </button>
+            )}
+          </FormActions>
+        </form>
+      </TaskDialog>
+      {confirmDiscard && (
+        <TaskDialog
+          title="Discard unsaved activity changes?"
+          className="schedule-discard-dialog"
+          dismissOnBackdrop
+          onClose={() => {
+            setConfirmDiscard(false);
+          }}
+        >
+          <h3>Discard unsaved activity changes?</h3>
+          <p>Your entries will be lost if you discard them.</p>
+          <FormActions>
+            <button
+              type="button"
+              className="button--secondary"
+              onClick={() => {
+                setConfirmDiscard(false);
+              }}
+            >
+              Continue editing
+            </button>
+            <button type="button" onClick={onClose}>
+              Discard changes
+            </button>
+          </FormActions>
+        </TaskDialog>
+      )}
+    </>
+  );
+}
+
+/** An empty filtered page alone cannot prove that its filters removed existing work. */
+function EmptyScheduleList({
+  state,
+  onExpire,
+}: {
+  state: ScheduleState;
+  onExpire: () => void;
+}) {
+  const filterHash = scheduleHash(state);
+  const narrowed = Boolean(
+    state.window !== "all" ||
+    state.activity_kind ||
+    state.target_kind ||
+    state.target_id ||
+    state.q,
+  );
+  const [baseline, setBaseline] = useState<{
+    hash: string;
+    total: number;
+  } | null>(null);
+  useEffect(() => {
+    if (!narrowed) return;
+    const c = new AbortController();
+    const status = readScheduleState(filterHash).status;
+    void listSchedule({ ...defaultState, status }, 0, 1, c.signal)
+      .then((page) => {
+        if (!c.signal.aborted)
+          setBaseline({ hash: filterHash, total: page.total });
+      })
+      .catch((error: unknown) => {
+        if (
+          !c.signal.aborted &&
+          error instanceof ApiError &&
+          error.status === 401
+        )
+          onExpire();
+      });
+    return () => {
+      c.abort();
+    };
+  }, [filterHash, narrowed, onExpire]);
+  const total = baseline?.hash === filterHash ? baseline.total : null;
+  const filtered = narrowed && total !== 0;
+  return (
+    <div className="schedule-list-empty" role="status">
+      <p>
+        {filtered
+          ? "No activities match these filters."
+          : state.status === "planned"
+            ? "No planned activities yet."
+            : state.status === "completed"
+              ? "No completed activities."
+              : "No cancelled activities."}
+      </p>
+    </div>
   );
 }
 
@@ -432,7 +560,8 @@ export function ScheduleScreen() {
   const expire = useCallback(() => {
     auth.sessionExpired();
   }, [auth]);
-  const key = JSON.stringify([state, offset, attempt, day]);
+  const queryHash = scheduleHash({ ...state, date: "" });
+  const key = JSON.stringify([queryHash, offset, attempt, day]);
   const current = result?.key === key ? result : null;
   const page = current?.page;
   const loadError = current?.error ?? false;
@@ -447,9 +576,17 @@ export function ScheduleScreen() {
   }, []);
   useEffect(() => {
     const c = new AbortController();
-    void listSchedule(state, offset, 50, c.signal)
+    const queryState = readScheduleState(queryHash);
+    void (
+      queryState.view === "calendar"
+        ? listCalendar(queryState, c.signal)
+        : listSchedule(queryState, offset, 50, c.signal)
+    )
       .then((value) => {
-        if (!c.signal.aborted) setResult({ key, page: value, error: false });
+        if (c.signal.aborted) return;
+        if (queryState.view === "list" && offset > 0 && !value.items.length)
+          setOffset(0);
+        else setResult({ key, page: value, error: false });
       })
       .catch((e: unknown) => {
         if (c.signal.aborted) return;
@@ -459,7 +596,7 @@ export function ScheduleScreen() {
     return () => {
       c.abort();
     };
-  }, [state, offset, key, expire]);
+  }, [queryHash, offset, key, expire]);
   const route = useCallback(() => {
     setState((previous) => {
       const next = readScheduleState();
@@ -547,6 +684,7 @@ export function ScheduleScreen() {
         `Activity ${saved.status === "planned" ? "saved" : saved.status}${saved.linked_event_id ? " with a linked Journal Event" : ""}.`,
       );
       close();
+      setOffset(0);
       setAttempt((a) => a + 1);
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) expire();
@@ -592,34 +730,39 @@ export function ScheduleScreen() {
     return item.due_on <= localDay(horizon) ? "Next 7 days" : "Later";
   }
   return (
-    <section className="schedule-workspace" aria-labelledby="schedule-title">
-      <header className="section-heading">
-        <div>
-          <p className="eyebrow">Activity</p>
-          <h2 id="schedule-title">Schedule</h2>
-          <p>
-            Future intended collection work. Journal records occurrences;
-            History shows recorded facts.
-          </p>
-        </div>
-        {owner && (
-          <button
-            onClick={() => {
-              open("create");
-            }}
-          >
-            Schedule activity
-          </button>
-        )}
-      </header>
-      <p className="muted">
-        Dates use this device’s calendar day ({projectionDay}). Overdue
-        activities remain planned until you complete or cancel them.
-      </p>
+    <Page className="schedule-workspace" titleId="schedule-title">
+      <PageHeader
+        title="Schedule"
+        titleId="schedule-title"
+        eyebrow="Activity"
+        description="Future intended work. Journal records occurrences; History records facts."
+      />
       {notice && <p role="status">{notice}</p>}
-      <div className="button-row">
+      <div
+        className="schedule-toolbar"
+        role="group"
+        aria-label="Schedule controls"
+      >
+        <nav className="schedule-view-switch" aria-label="Schedule view">
+          {(["list", "calendar"] as const).map((view) => (
+            <a
+              key={view}
+              href={scheduleHash({ ...state, view })}
+              aria-current={state.view === view ? "page" : undefined}
+              onClick={(e) => {
+                if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+                  e.preventDefault();
+                  update({ ...state, view });
+                }
+              }}
+            >
+              {view === "list" ? "List" : "Calendar"}
+            </a>
+          ))}
+        </nav>
         <button
           type="button"
+          className="button--secondary"
           aria-expanded={filtersOpen}
           aria-controls="schedule-filters"
           onClick={() => {
@@ -628,6 +771,27 @@ export function ScheduleScreen() {
         >
           Filters
         </button>
+        {(state.status !== defaultState.status ||
+          state.window !== defaultState.window ||
+          state.activity_kind ||
+          state.target_kind ||
+          state.target_id ||
+          state.q.trim()) && (
+          <button
+            type="button"
+            className="button--secondary"
+            onClick={() => {
+              update({
+                ...defaultState,
+                view: state.view,
+                month: state.month,
+                date: state.date,
+              });
+            }}
+          >
+            Reset filters
+          </button>
+        )}
         <span>
           {state.status === "planned"
             ? "Active"
@@ -641,7 +805,21 @@ export function ScheduleScreen() {
           {state.target_kind ? ` · ${targetLabels[state.target_kind]}` : ""}
           {state.q ? ` · Search: ${state.q}` : ""}
         </span>
+        {owner && (
+          <button
+            type="button"
+            className="schedule-create"
+            onClick={() => {
+              open("create");
+            }}
+          >
+            Schedule activity
+          </button>
+        )}
       </div>
+      <p className="schedule-guidance">
+        Local day: {projectionDay}. Overdue work stays planned.
+      </p>
       <div
         id="schedule-filters"
         className="schedule-filters"
@@ -750,7 +928,25 @@ export function ScheduleScreen() {
           </button>
         </p>
       )}
-      {loadError ? (
+      {state.view === "calendar" ? (
+        <ScheduleCalendar
+          key={state.month}
+          state={state}
+          page={page ?? null}
+          error={loadError}
+          today={projectionDay}
+          owner={owner}
+          onChange={update}
+          onRetry={() => {
+            setAttempt((a) => a + 1);
+          }}
+          onAction={open}
+          onCreate={(due) => {
+            setError("");
+            setDialog({ action: "create", item: null, target: null, due });
+          }}
+        />
+      ) : loadError ? (
         <div role="alert">
           <p>Florabase could not load Schedule.</p>
           <button
@@ -765,21 +961,14 @@ export function ScheduleScreen() {
         <p role="status">Loading scheduled activities…</p>
       ) : (
         <>
-          <p>
-            {page.total} {state.status === "planned" ? "active" : state.status}{" "}
-            activities
-          </p>
+          {page.items.length > 0 && (
+            <p className="schedule-result-count">
+              {page.total}{" "}
+              {state.status === "planned" ? "active" : state.status} activities
+            </p>
+          )}
           {!page.items.length && (
-            <div className="empty-state">
-              <p>No activities match this view.</p>
-              <button
-                onClick={() => {
-                  update(defaultState);
-                }}
-              >
-                Reset filters
-              </button>
-            </div>
+            <EmptyScheduleList state={state} onExpire={expire} />
           )}
           {groups.map((heading) => {
             const items = page.items.filter((item) => group(item) === heading);
@@ -789,107 +978,39 @@ export function ScheduleScreen() {
                 <ol className="schedule-list">
                   {items.map((item) => (
                     <li key={item.id}>
-                      <div className="schedule-row">
-                        <div>
-                          <button
-                            className="link-button schedule-title"
-                            onClick={() => {
-                              open("inspect", item);
-                            }}
-                          >
-                            {item.title}
-                          </button>
-                          <p>
-                            <time dateTime={item.due_on}>{item.due_on}</time> ·{" "}
-                            {activityLabels[item.activity_kind]} ·{" "}
-                            <strong>
-                              {item.overdue ? "Planned · Overdue" : item.status}
-                            </strong>
-                          </p>
-                          {item.target ? (
-                            <p>
-                              {targetLabels[item.target.kind]}:{" "}
-                              <a href={targetHref(item.target)}>
-                                {item.target.label}
-                              </a>
-                              {item.target.lifecycle &&
-                                item.target.lifecycle !== "active" &&
-                                ` (${item.target.lifecycle})`}
-                            </p>
-                          ) : (
-                            <p>Whole collection</p>
-                          )}
-                          {item.notes && (
-                            <p className="schedule-notes">
-                              {item.notes.length > 240
-                                ? `${item.notes.slice(0, 240)}…`
-                                : item.notes}
-                            </p>
-                          )}
-                          {item.linked_event_id && item.target && (
-                            <a href={`${targetHref(item.target)}?tab=events`}>
-                              Linked Journal Event
-                            </a>
-                          )}
-                          {item.status === "completed" &&
-                            !item.linked_event_id && (
-                              <p>Completed without a Journal Event</p>
-                            )}
-                        </div>
-                        {owner && item.status === "planned" && (
-                          <div className="button-row">
-                            <button
-                              className="button--secondary"
-                              onClick={() => {
-                                open("edit", item);
-                              }}
-                            >
-                              Edit / reschedule
-                            </button>
-                            <button
-                              className="button--secondary"
-                              onClick={() => {
-                                open("complete", item);
-                              }}
-                            >
-                              Complete
-                            </button>
-                            <button
-                              className="button--secondary"
-                              onClick={() => {
-                                open("cancel", item);
-                              }}
-                            >
-                              Cancel activity
-                            </button>
-                          </div>
-                        )}
-                      </div>
+                      <ScheduleActivityRow
+                        item={item}
+                        owner={owner}
+                        onAction={open}
+                        today={projectionDay}
+                      />
                     </li>
                   ))}
                 </ol>
               </section>
             ) : null;
           })}
-          <nav className="button-row" aria-label="Schedule pages">
-            <button
-              disabled={!offset}
-              onClick={() => {
-                setOffset((o) => Math.max(0, o - 50));
-              }}
-            >
-              Previous
-            </button>
-            <span>Page {Math.floor(offset / 50) + 1}</span>
-            <button
-              disabled={offset + 50 >= page.total}
-              onClick={() => {
-                setOffset((o) => o + 50);
-              }}
-            >
-              Next
-            </button>
-          </nav>
+          {page.items.length > 0 && page.total > 50 && (
+            <nav className="button-row" aria-label="Schedule pages">
+              <button
+                disabled={!offset}
+                onClick={() => {
+                  setOffset((o) => Math.max(0, o - 50));
+                }}
+              >
+                Previous
+              </button>
+              <span>Page {Math.floor(offset / 50) + 1}</span>
+              <button
+                disabled={offset + 50 >= page.total}
+                onClick={() => {
+                  setOffset((o) => o + 50);
+                }}
+              >
+                Next
+              </button>
+            </nav>
+          )}
         </>
       )}
       {dialog && (
@@ -922,6 +1043,6 @@ export function ScheduleScreen() {
           }}
         />
       )}
-    </section>
+    </Page>
   );
 }

@@ -1450,6 +1450,21 @@
       ],
       "priority": "P2",
       "status": "verified"
+    },
+    {
+      "id": "SCHEDULE-002",
+      "category": "activity",
+      "description": "Add a month Calendar presentation to the existing ScheduledActivity workspace",
+      "acceptance_criteria": [
+        "List remains the default; canonical URL state restores List/Calendar, month/day and shared Schedule filters through browser navigation",
+        "Date-only Month navigation uses bounded inclusive due-date queries, stable ordering, batched targets, local-day semantics and existing planned/completed/cancelled rules",
+        "Bounded day summaries and accessible full day detail reuse versioned Schedule actions and selected-date creation; mobile uses compact dates and a selected-day list",
+        "Canonical FULL verification and independent QA cover date boundaries, filters, overflow, accessibility and mutations; synthetic fixtures and visual review cover 1440/1024/390",
+        "No new scheduling domain, recurrence, reminders, notifications, dependency, external sync or drag-and-drop; independent QA owns canonical verification"
+      ],
+      "dependencies": ["SCHEDULE-001", "DASHBOARD-001"],
+      "priority": "P2",
+      "status": "verified"
     }
   ]
 }

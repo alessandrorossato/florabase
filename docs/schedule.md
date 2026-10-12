@@ -99,7 +99,7 @@ View all; new contextual creation is hidden. Directory rows and quick previews r
 
 Schedule Saved Views are explicitly deferred: adding and reviewing another persistence/surface
 adapter is beyond this first planning increment. Existing VIEW-001 surfaces and semantics are
-unchanged. A calendar is also deferred; the accessible list is the initial presentation.
+unchanged. Calendar is the complementary Month presentation described below; List remains the default operational view.
 
 ## Synthetic UAT and exclusions
 
@@ -115,3 +115,32 @@ See [handoff](schedule-001-handoff.md) for checks and visual-review readiness.
 
 Recurrence, notifications/reminders, assignees/teams, subtasks, priority matrices, attachments,
 workflow engines, kanban and broad visual redesign remain outside this increment.
+
+## Calendar presentation (SCHEDULE-002)
+
+Calendar uses the same ScheduledActivity records and filters. Open
+`#/schedule?view=calendar&month=2026-10`; optional `date=2026-10-12` selects a day.
+List remains the default. View links and period/day navigation create browser-history entries;
+search continues to replace the current entry. Back/Forward restore URL state. Month is the only
+calendar mode. Previous / Today / Next use local calendar components; placement always uses the
+concrete `due_on`, without time or timezone conversion.
+
+Desktop and tablet show a Monday-first semantic month table with two summaries per day and a
+“more” action. Selecting a day opens a context-preserving native-modal drawer for every matching
+activity on that date. It reuses the existing inspect/edit/reschedule/cancel/complete paths and their
+optimistic versions. Add activity prefills the selected date in the existing creation form.
+At ≤48rem, compact date buttons and counts replace cell summaries, and a selected-day list exposes
+all work and actions without horizontal scrolling. Selected date is deep-linkable; drawer visibility
+is transient. Current/selected dates and terminal/overdue states have explicit accessible/text cues.
+
+Calendar intersects existing Schedule filters with inclusive API `due_from` / `due_to` bounds for
+the visible month. The existing list endpoint retains its auth, capped pagination, due-day/ID order
+and batched target resolution. It rejects reversed bounds. Month loading retrieves all its matching
+pages and aborts superseded requests; selecting a day uses the loaded month. A request fixes the
+local `today` across pages and the screen refreshes at midnight. PartialDate is not involved.
+
+Explicit synthetic seed adds seven Calendar examples (including five same-day activities, month
+end and next month) once, preserving original Schedule examples and operator edits. The independent
+review handoff and focused evidence are in [SCHEDULE-002 handoff](schedule-002-handoff.md).
+Week, drag/drop, recurrence, reminders, assignments, priorities, external sync/export, Schedule
+Saved Views and global visual migration remain deferred.

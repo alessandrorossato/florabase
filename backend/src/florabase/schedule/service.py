@@ -91,7 +91,12 @@ def _target_response(kind: str, record: TargetRecord) -> ScheduleTargetResponse:
     else:
         label = getattr(record, "label", None) or f"{kind.replace('_', ' ').title()} {record.id}"
     return ScheduleTargetResponse(
-        kind=cast(TargetKind, kind), id=record.id, label=label, lifecycle=_lifecycle(record)
+        kind=cast(TargetKind, kind),
+        id=record.id,
+        label=label,
+        lifecycle=_lifecycle(record),
+        scientific_name=record.scientific_name if isinstance(record, BotanicalIdentity) else None,
+        cultivar_name=record.cultivar_name if isinstance(record, BotanicalIdentity) else None,
     )
 
 
@@ -287,9 +292,17 @@ def list_activities(
     q: str = "",
     offset: int = 0,
     limit: int = 50,
+    due_from: date | None = None,
+    due_to: date | None = None,
 ) -> SchedulePage:
     model = ScheduledActivity
     criteria: list[Any] = [model.status == status]
+    if due_from and due_to and due_from > due_to:
+        raise ScheduleError("schedule_date_range_invalid", "The due-date range is reversed", 422)
+    if due_from:
+        criteria.append(model.due_on >= due_from)
+    if due_to:
+        criteria.append(model.due_on <= due_to)
     if activity_kind:
         criteria.append(model.activity_kind == activity_kind)
     if target_kind:

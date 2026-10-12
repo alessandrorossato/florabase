@@ -10502,6 +10502,17 @@
       "ScheduleTargetResponse": {
         "additionalProperties": false,
         "properties": {
+          "cultivar_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cultivar Name"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -10533,6 +10544,17 @@
               }
             ],
             "title": "Lifecycle"
+          },
+          "scientific_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scientific Name"
           }
         },
         "required": [
@@ -24783,6 +24805,44 @@
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
+            }
+          },
+          {
+            "description": "Inclusive due-date lower bound",
+            "in": "query",
+            "name": "due_from",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inclusive due-date lower bound",
+              "title": "Due From"
+            }
+          },
+          {
+            "description": "Inclusive due-date upper bound",
+            "in": "query",
+            "name": "due_to",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Inclusive due-date upper bound",
+              "title": "Due To"
             }
           }
         ],

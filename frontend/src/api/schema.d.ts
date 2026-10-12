@@ -5849,6 +5849,8 @@ export interface components {
         };
         /** ScheduleTargetResponse */
         ScheduleTargetResponse: {
+            /** Cultivar Name */
+            cultivar_name?: string | null;
             /**
              * Id
              * Format: uuid
@@ -5863,6 +5865,8 @@ export interface components {
             label: string;
             /** Lifecycle */
             lifecycle: string | null;
+            /** Scientific Name */
+            scientific_name?: string | null;
         };
         /** ScheduleUpdate */
         ScheduleUpdate: {
@@ -12633,6 +12637,10 @@ export interface operations {
                 q?: string;
                 offset?: number;
                 limit?: number;
+                /** @description Inclusive due-date lower bound */
+                due_from?: string | null;
+                /** @description Inclusive due-date upper bound */
+                due_to?: string | null;
             };
             header?: never;
             path?: never;
