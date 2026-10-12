@@ -2,12 +2,14 @@ import { useEffect, useRef, type ReactNode } from "react";
 
 /** Native modal focus handling, Escape, and return to the invoking control. */
 export function TaskDialog({
+  id,
   title,
   onClose,
   children,
   className,
   dismissOnBackdrop = false,
 }: {
+  id?: string;
   title: string;
   onClose: () => void;
   children: ReactNode;
@@ -38,6 +40,7 @@ export function TaskDialog({
 
   return (
     <dialog
+      id={id}
       aria-label={title}
       className={`task-dialog${className ? ` ${className}` : ""}`}
       ref={dialog}

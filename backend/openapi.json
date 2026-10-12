@@ -1878,10 +1878,93 @@
         "title": "DashboardCounts",
         "type": "object"
       },
+      "DashboardOverview": {
+        "properties": {
+          "current_identities": {
+            "title": "Current Identities",
+            "type": "integer"
+          },
+          "due_today": {
+            "title": "Due Today",
+            "type": "integer"
+          },
+          "identities_with_profile": {
+            "title": "Identities With Profile",
+            "type": "integer"
+          },
+          "identities_with_wfo": {
+            "title": "Identities With Wfo",
+            "type": "integer"
+          },
+          "next_seven_days": {
+            "title": "Next Seven Days",
+            "type": "integer"
+          },
+          "overdue": {
+            "title": "Overdue",
+            "type": "integer"
+          },
+          "purchase_packets_without_order": {
+            "title": "Purchase Packets Without Order",
+            "type": "integer"
+          },
+          "recent_activity": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryEntry"
+            },
+            "title": "Recent Activity",
+            "type": "array"
+          },
+          "sowings_unknown_germination": {
+            "title": "Sowings Unknown Germination",
+            "type": "integer"
+          },
+          "sowings_with_germination": {
+            "title": "Sowings With Germination",
+            "type": "integer"
+          },
+          "sowings_zero_germination": {
+            "title": "Sowings Zero Germination",
+            "type": "integer"
+          },
+          "today": {
+            "format": "date",
+            "title": "Today",
+            "type": "string"
+          },
+          "upcoming": {
+            "items": {
+              "$ref": "#/components/schemas/ScheduleResponse"
+            },
+            "title": "Upcoming",
+            "type": "array"
+          }
+        },
+        "required": [
+          "today",
+          "current_identities",
+          "identities_with_wfo",
+          "identities_with_profile",
+          "sowings_unknown_germination",
+          "sowings_with_germination",
+          "sowings_zero_germination",
+          "purchase_packets_without_order",
+          "overdue",
+          "due_today",
+          "next_seven_days",
+          "upcoming",
+          "recent_activity"
+        ],
+        "title": "DashboardOverview",
+        "type": "object"
+      },
       "DashboardResponse": {
         "properties": {
           "counts": {
             "$ref": "#/components/schemas/DashboardCounts"
+          },
+          "overview": {
+            "$ref": "#/components/schemas/DashboardOverview"
           },
           "recent_events": {
             "items": {
@@ -1892,6 +1975,7 @@
           }
         },
         "required": [
+          "overview",
           "counts",
           "recent_events"
         ],
@@ -18088,6 +18172,27 @@
     "/api/v1/dashboard": {
       "get": {
         "operationId": "getDashboard",
+        "parameters": [
+          {
+            "description": "Browser local calendar day; defaults to UTC.",
+            "in": "query",
+            "name": "today",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "date",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Browser local calendar day; defaults to UTC.",
+              "title": "Today"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -18098,6 +18203,16 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "Read Dashboard",

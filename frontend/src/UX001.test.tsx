@@ -1,3 +1,4 @@
+import { emptyOverview, journalFixture } from "./collection/dashboardFixtures";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
@@ -80,7 +81,7 @@ afterEach(() => {
 
 test("Dashboard is the default workspace with grouped desktop and five-item mobile navigation", async () => {
   mockAuthenticated((path) => {
-    if (path === "/api/v1/dashboard")
+    if (path.startsWith("/api/v1/dashboard"))
       return json({
         counts: {
           active_plants: 12,
@@ -89,6 +90,10 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
           active_sowings: 4,
           botanical_identities: 9,
           events: 27,
+        },
+        overview: {
+          ...emptyOverview,
+          recent_activity: [journalFixture(event.id, "Strong new growth.")],
         },
         recent_events: [event],
       });
@@ -104,8 +109,17 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
   const snapshot = await screen.findByRole("region", {
     name: "Collection snapshot",
   });
-  expect(snapshot).toHaveTextContent("Seed lots8Sowings4Plants12Plant groups3");
-  expect(screen.getByText("Strong new growth.")).toBeInTheDocument();
+  for (const label of [
+    "Seed lots: 8",
+    "Sowings: 4",
+    "Plants: 12",
+    "Plant groups: 3",
+  ]) {
+    expect(
+      within(snapshot).getByRole("link", { name: label }),
+    ).toBeInTheDocument();
+  }
+  expect(screen.getByText(/Strong new growth\./)).toBeInTheDocument();
 
   const desktop = screen.getByRole("navigation", {
     name: "Primary navigation",
@@ -138,9 +152,11 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
   expect(
     within(snapshot).getByRole("link", { name: /Plant groups.*3/ }),
   ).toHaveAttribute("href", "#/plants?type=group");
+  await user.click(screen.getByRole("button", { name: "Quick add" }));
   expect(
     screen.getByRole("navigation", { name: "Quick actions" }),
   ).toHaveTextContent("New seed lot");
+  await user.keyboard("{Escape}");
   await user.click(within(mobile).getByRole("button", { name: "More" }));
   expect(
     screen.getByRole("navigation", { name: "More navigation" }),
@@ -342,7 +358,7 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
   );
 
   await user.click(screen.getByRole("tab", { name: "Events" }));
-  expect(screen.getByText("Strong new growth.")).toBeInTheDocument();
+  expect(screen.getByText(/Strong new growth\./)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Courtyard maple" })).toHaveAttribute(
     "href",
     `#/plants/${event.target.id}?tab=events`,

@@ -1,0 +1,156 @@
+/* Safe base and shell vocabulary; legacy page layouts are intentionally retained. */
+:root {
+  font: var(--type-body);
+  font-size: 16px;
+  color: var(--text);
+  background: var(--background);
+}
+body {
+  font: var(--type-body);
+}
+button,
+input,
+select,
+textarea {
+  font-family: var(--font-ui);
+}
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+.page-header h2 {
+  font: var(--type-h1);
+}
+.page-header p:last-child {
+  font: var(--type-body);
+  color: var(--text-muted);
+}
+.eyebrow {
+  font: var(--type-eyebrow);
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+.scientific-name,
+.identity-scientific-name {
+  font-family: var(--font-botanical);
+  font-style: italic;
+}
+.desktop-sidebar {
+  background: var(--surface-subtle);
+  color: var(--text);
+  border-right: 1px solid var(--border);
+}
+.desktop-sidebar .brand {
+  color: var(--primary);
+  font: var(--type-h2);
+  font-weight: 650;
+}
+.desktop-sidebar .navigation-link {
+  color: var(--text);
+  background: transparent;
+  font: var(--type-strong);
+  border-radius: var(--radius-small);
+}
+.desktop-sidebar .navigation-link:hover {
+  background: var(--surface-hover);
+}
+.desktop-sidebar .navigation-link[aria-current="page"] {
+  color: var(--primary);
+  background: var(--primary-subtle);
+  border-left-color: var(--primary);
+}
+.desktop-sidebar nav section > p,
+.desktop-sidebar .sidebar-group-heading,
+.desktop-sidebar .sidebar-group-toggle,
+.sidebar-utility p {
+  color: var(--text-muted);
+}
+.desktop-sidebar .sidebar-group-toggle:hover {
+  color: var(--text);
+  background: var(--surface-hover);
+}
+.sidebar-top,
+.sidebar-utility {
+  border-color: var(--border);
+}
+.desktop-sidebar .sidebar-toggle--hide {
+  color: var(--text-muted);
+  border-color: var(--border-strong);
+}
+.desktop-sidebar :is(.brand, .sidebar-group-toggle):focus-visible {
+  outline-color: var(--focus-ring);
+}
+.ui-page {
+  min-width: 0;
+}
+.ui-section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.ui-section-header h3 {
+  margin: 0;
+  font: var(--type-h2);
+}
+.ui-section-header a {
+  font: var(--type-small);
+}
+.ui-metric {
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+  background: var(--surface);
+  text-decoration: none;
+  color: var(--text);
+}
+.ui-metric:hover {
+  border-color: var(--border-strong);
+}
+.ui-metric__label {
+  font: var(--type-strong);
+}
+.ui-metric__value {
+  font: var(--type-metric);
+  font-variant-numeric: tabular-nums;
+}
+.ui-metric__context {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.ui-badge {
+  display: inline-block;
+  width: fit-content;
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  color: var(--text-muted);
+  font: var(--type-label);
+  white-space: nowrap;
+}
+.ui-badge--attention {
+  color: var(--warning-text);
+  border-color: var(--warning);
+}
+.ui-state {
+  padding: var(--space-4) 0;
+  color: var(--text-muted);
+  font: var(--type-body);
+}
+.ui-state--error {
+  color: var(--danger);
+}
+@media (prefers-reduced-motion: reduce) {
+  .ui-page *,
+  .desktop-sidebar * {
+    scroll-behavior: auto;
+    transition: none;
+    animation: none;
+  }
+}

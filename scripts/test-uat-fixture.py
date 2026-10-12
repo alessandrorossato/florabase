@@ -264,3 +264,38 @@ def test_additive_stored_fixture_preserves_existing_operator_inventory_and_is_id
     assert manifest["records"]["inventory:basil"] == str(inventory.id)
     assert database.scalar.call_count == 1
     assert database.commit.call_count == 1
+
+
+def test_dashboard_extension_is_idempotent_and_keeps_operator_edits() -> None:
+    from uuid import UUID
+
+    from uat_fixture import ensure_dashboard
+
+    from florabase.collection_views.service import dashboard
+    from florabase.seed_lots.model import SeedLot
+    from florabase.sowings.model import Sowing
+
+    with Session(get_engine()) as database:
+        root = require_identity(get_settings(), database)
+        manifest = read_manifest(root)
+        assert manifest is not None
+        assert manifest["dashboard_extension"] == 1
+        lot = database.get(SeedLot, UUID(manifest["records"]["seed:dashboard_unlinked"]))
+        sowing = database.get(Sowing, UUID(manifest["records"]["sowing:dashboard_unknown"]))
+        assert lot is not None
+        assert sowing is not None
+        assert lot.order_id is None
+        assert sowing.germinated_count is None
+        result = dashboard(database).overview
+        assert result.purchase_packets_without_order >= 1
+        assert result.sowings_unknown_germination >= 1
+        assert result.sowings_zero_germination >= 1
+        lot.notes = "Operator edit"
+        sowing.germinated_count = 2
+        database.flush()
+        with patch("uat_fixture.seeds.create_seed_lot") as create:
+            ensure_dashboard(database, root, manifest)
+            create.assert_not_called()
+        assert lot.notes == "Operator edit"
+        assert sowing.germinated_count == 2
+        database.rollback()

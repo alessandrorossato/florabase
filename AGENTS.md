@@ -35,6 +35,8 @@ then complete the relevant full verification before marking a feature `verified`
 
 ## Engineering conventions
 
+- New UI follows [UI Foundation v0.1](docs/ui-contract.md); reuse semantic tokens and shared primitives.
+
 - Use Python type hints and modern SQLAlchemy 2.x APIs. Ruff owns formatting/imports; mypy is strict.
 - Keep TypeScript strict. ESLint and Prettier own lint and format. Use semantic HTML and cover
   loading, success, validation, and failure states.
