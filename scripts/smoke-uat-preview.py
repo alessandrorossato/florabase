@@ -293,8 +293,9 @@ def main() -> None:
             baseline = preview.state()
             require(baseline["counts"]["users"] == 1, "one real owner")
             require(
-                baseline["counts"]["botanical_identities"] == 6,
-                "six synthetic botanical identities, five represented and one reference-only",
+                baseline["counts"]["botanical_identities"]
+                == 7 + int(baseline["manifest"].get("taxonomy_extension") == 1),
+                "seven synthetic botanical identities plus optional Holy basil; one reference-only",
             )
             require(len(baseline["media"]) == 1, "one tiny binary media asset")
             login(preview)

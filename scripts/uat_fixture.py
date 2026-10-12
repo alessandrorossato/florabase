@@ -11,7 +11,7 @@ import json
 import os
 import re
 import sys
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 from typing import Any, Protocol, TypeVar, cast
 from urllib.parse import urlsplit
@@ -275,10 +275,25 @@ def validate_manifest(database: Session, root: Path, manifest: dict[str, Any]) -
                 "cancelled",
             )
         )
+    if manifest.get("schedule_calendar_extension") == 1:
+        expected.update(
+            "schedule:calendar_" + key
+            for key in (
+                "density_1",
+                "density_2",
+                "density_3",
+                "density_4",
+                "density_5",
+                "month_end",
+                "next_month",
+            )
+        )
     if manifest.get("dashboard_extension") == 1:
         expected.update(
             {"seed:dashboard_unlinked", "sowing:dashboard_unknown", "sowing:dashboard_zero"}
         )
+    if manifest.get("manual_review_extension") == 1:
+        expected.update({"identity:genovese", "seed:genovese", "schedule:collection"})
     if set(manifest["records"]) != expected:
         raise FixtureError(
             "Preview fixture baseline has missing records; run guarded uat-preview-reset"
@@ -400,6 +415,9 @@ def ensure_schedule(database: Session, root: Path, manifest: dict[str, Any]) -> 
     """One explicit synthetic extension; repeating seed never reschedules operator edits."""
     if manifest.get("schedule_extension") == 1:
         return
+    ready = manifest["state"] == "ready"
+    manifest["state"] = "building"
+    write_manifest(root, manifest)
     today = datetime.now(UTC).date()
     samples: tuple[tuple[str, ActivityKind, int, TargetKind, str, str], ...] = (
         ("overdue", "inspect", -3, "plant", "plant:direct", "Inspect nursery aloe leaves"),
@@ -463,6 +481,60 @@ def ensure_schedule(database: Session, root: Path, manifest: dict[str, Any]) -> 
         manifest["records"]["schedule:" + key] = str(activity.id)
     database.commit()
     manifest["schedule_extension"] = 1
+    if ready:
+        manifest["state"] = "ready"
+    write_manifest(root, manifest)
+
+
+def ensure_schedule_calendar(database: Session, root: Path, manifest: dict[str, Any]) -> None:
+    """Add Calendar density once; never reschedule existing synthetic/operator work."""
+    if manifest.get("schedule_calendar_extension") == 1:
+        return
+    ready = manifest["state"] == "ready"
+    manifest["state"] = "building"
+    write_manifest(root, manifest)
+    today = datetime.now(UTC).date()
+    next_month = (today.replace(day=28) + timedelta(days=4)).replace(day=1)
+    month_end = next_month - timedelta(days=1)
+    samples: tuple[tuple[str, ActivityKind, date, TargetKind, str, str], ...] = (
+        ("density_1", "inspect", today, "plant", "plant:direct", "Check aloe roots"),
+        ("density_2", "fertilize", today, "plant_group", "group:basil", "Feed basil group"),
+        ("density_3", "inspect", today, "seed_lot", "seed:0", "Inspect seed packets"),
+        (
+            "density_4",
+            "follow_up",
+            today,
+            "location",
+            "location:Greenhouse bench",
+            "Plan bench space",
+        ),
+        ("density_5", "check_germination", today, "sowing", "sowing:basil", "Review basil sowing"),
+        ("month_end", "inspect", month_end, "plant", "plant:direct", "Month-end aloe inspection"),
+        (
+            "next_month",
+            "repot",
+            next_month + timedelta(days=4),
+            "plant_group",
+            "group:basil",
+            "Next-month basil repot",
+        ),
+    )
+    for key, kind, due, target_kind, ref, title in samples:
+        activity = schedule.create(
+            database,
+            ScheduleWrite(
+                activity_kind=kind,
+                title="Preview — " + title,
+                due_on=due,
+                target=ScheduleTarget(kind=target_kind, id=UUID(manifest["records"][ref])),
+                notes=NOTE,
+            ),
+        )
+        manifest["records"]["schedule:calendar_" + key] = str(activity.id)
+    database.commit()
+    manifest["schedule_calendar_extension"] = 1
+    if ready:
+        manifest["state"] = "ready"
     write_manifest(root, manifest)
 
 
@@ -501,6 +573,64 @@ def ensure_dashboard(database: Session, root: Path, manifest: dict[str, Any]) ->
     write_manifest(root, manifest)
 
 
+def ensure_manual_review(database: Session, root: Path, manifest: dict[str, Any]) -> None:
+    """Add only missing review examples once; never rewrite an existing v4 collection."""
+    if manifest.get("manual_review_extension") == 1:
+        return
+    ready = manifest["state"] == "ready"
+    manifest["state"] = "building"
+    write_manifest(root, manifest)
+    cultivar = identities.create_botanical_identity(
+        database,
+        BotanicalIdentityCreate(
+            scientific_name="Ocimum basilicum",
+            cultivar_name="Genovese",
+            common_name="Preview — Genovese basil",
+        ),
+    )
+    put_botanical_profile(
+        database,
+        cultivar.id,
+        BotanicalProfilePut(
+            description=f"{NOTE} Cultivar typography and profile editor example.",
+            cultivation=f"{NOTE} Review watering and repotting notes here; not cultivation advice.",
+        ),
+    )
+    packet = seeds.create_seed_lot(
+        database,
+        SeedLotCreate(
+            botanical_identity_id=cultivar.id,
+            label="Preview — Genovese packet with unknown quantity",
+            source_kind="purchased",
+            order_id=UUID(manifest["records"]["order:partial"]),
+            location_id=UUID(manifest["records"]["location:Indoor seed shelf"]),
+            notes=NOTE,
+        ),
+    )
+    activity = schedule.create(
+        database,
+        ScheduleWrite(
+            activity_kind="follow_up",
+            title="Preview — Review whole collection plan",
+            due_on=datetime.now(UTC).date(),
+            target=None,
+            notes=NOTE,
+        ),
+    )
+    manifest["records"].update(
+        {
+            "identity:genovese": str(cultivar.id),
+            "seed:genovese": str(packet.id),
+            "schedule:collection": str(activity.id),
+        }
+    )
+    database.commit()
+    manifest["manual_review_extension"] = 1
+    if ready:
+        manifest["state"] = "ready"
+    write_manifest(root, manifest)
+
+
 def seed(database: Session, root: Path) -> dict[str, Any]:
     existing = read_manifest(root)
     if existing is not None:
@@ -508,7 +638,9 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
         ensure_stored_material(database, root, existing)
         ensure_taxonomy(database, root, existing)
         ensure_schedule(database, root, existing)
+        ensure_schedule_calendar(database, root, existing)
         ensure_dashboard(database, root, existing)
+        ensure_manual_review(database, root, existing)
         return existing
     if (
         database.scalar(select(User.id).limit(1)) is not None
@@ -998,7 +1130,9 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
     ensure_stored_material(database, root, manifest)
     ensure_taxonomy(database, root, manifest)
     ensure_schedule(database, root, manifest)
+    ensure_schedule_calendar(database, root, manifest)
     ensure_dashboard(database, root, manifest)
+    ensure_manual_review(database, root, manifest)
     manifest["state"] = "ready"
     write_manifest(root, manifest)
     return manifest

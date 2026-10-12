@@ -35,6 +35,8 @@ class ScheduleTarget(BaseModel):
 class ScheduleTargetResponse(ScheduleTarget):
     label: str
     lifecycle: str | None
+    scientific_name: str | None = None
+    cultivar_name: str | None = None
 
 
 class ScheduleWrite(BaseModel):

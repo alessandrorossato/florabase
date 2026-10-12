@@ -28,6 +28,7 @@ from florabase.schedule.schemas import (
     DateWindow,
     ScheduleComplete,
     ScheduleEvent,
+    ScheduleStatus,
     ScheduleTarget,
     ScheduleUpdate,
     ScheduleWrite,
@@ -481,3 +482,166 @@ def test_api_filters_target_choices_and_boundary_dates(
     assert _api_get("/api/v1/schedule?target_id=" + str(uuid7()), cookie)[0] == 422
     assert _api_get("/api/v1/schedule?today=9999-12-31&window=later", cookie)[0] == 200
     assert _api_get("/api/v1/schedule/targets/plant?limit=1", cookie)[0] == 200
+
+
+@pytest.mark.parametrize(
+    ("start", "end", "outside"),
+    [
+        (date(2024, 2, 1), date(2024, 2, 29), date(2024, 3, 1)),
+        (date(2026, 12, 1), date(2026, 12, 31), date(2027, 1, 1)),
+    ],
+)
+def test_calendar_range_intersects_existing_filters_and_preserves_order(
+    database_connection: Connection,
+    start: date,
+    end: date,
+    outside: date,
+) -> None:
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as db:
+        location = Location(name="Calendar range bench")
+        db.add(location)
+        db.flush()
+        rows = [
+            service.create(
+                db,
+                ScheduleWrite(
+                    activity_kind="inspect",
+                    title="Calendar boundary",
+                    due_on=due,
+                    target=ScheduleTarget(kind="location", id=location.id),
+                ),
+            )
+            for due in (start - date.resolution, start, end, end, outside)
+        ]
+        page = service.list_activities(
+            db,
+            today=end,
+            due_from=start,
+            due_to=end,
+            target_kind="location",
+            target_id=location.id,
+            activity_kind="inspect",
+            q="Calendar boundary",
+            limit=2,
+        )
+        assert page.total == 3
+        assert [a.id for a in page.items] == [rows[1].id, min(rows[2].id, rows[3].id)]
+        assert page.items[0].overdue is True
+        tail = service.list_activities(
+            db,
+            today=end,
+            due_from=start,
+            due_to=end,
+            target_kind="location",
+            target_id=location.id,
+            offset=2,
+        )
+        assert [a.id for a in tail.items] == [max(rows[2].id, rows[3].id)]
+        assert tail.items[0].overdue is False
+        assert (
+            service.list_activities(
+                db,
+                today=end,
+                due_from=start,
+                due_to=end,
+                window="today",
+                target_kind="location",
+                target_id=location.id,
+            ).total
+            == 2
+        )
+        assert (
+            service.list_activities(
+                db,
+                today=end,
+                due_from=start,
+                due_to=end,
+                window="overdue",
+                target_kind="location",
+                target_id=location.id,
+            ).total
+            == 1
+        )
+        assert (
+            service.list_activities(
+                db,
+                today=end,
+                due_from=start,
+                due_to=end,
+                activity_kind="water",
+                target_kind="location",
+                target_id=location.id,
+            ).total
+            == 0
+        )
+        service.complete(db, rows[1].id, ScheduleComplete(expected_version=1))
+        service.cancel(db, rows[2].id, 1)
+        for status, row in (("completed", rows[1]), ("cancelled", rows[2])):
+            terminal = service.list_activities(
+                db,
+                today=end,
+                due_from=start,
+                due_to=end,
+                target_kind="location",
+                target_id=location.id,
+                status=cast(ScheduleStatus, status),
+            )
+            assert [a.id for a in terminal.items] == [row.id]
+            assert not terminal.items[0].overdue
+        assert (
+            service.list_activities(
+                db, today=end, due_from=outside, target_kind="location", target_id=location.id
+            ).total
+            == 1
+        )
+        assert (
+            service.list_activities(
+                db, today=end, due_to=start, target_kind="location", target_id=location.id
+            ).total
+            == 1
+        )
+
+
+def test_calendar_api_auth_date_validation_and_versioned_reschedule(
+    authenticated_browser: tuple[str, str],
+) -> None:
+    from .test_search import _api_get
+
+    cookie, _ = authenticated_browser
+    query = (
+        "/api/v1/schedule?due_from=2024-02-01&due_to=2024-02-29&today=2024-02-29&q=Calendar%20API"
+    )
+    assert _api_get(query, "")[0] == 401
+    payload = {"activity_kind": "inspect", "title": "Calendar API", "due_on": "2024-02-29"}
+    status, _, created = mutate(authenticated_browser, "POST", "/api/v1/schedule", payload)
+    assert status == 201
+    status, page = _api_get(query, cookie)
+    assert status == 200
+    items = page["items"]
+    assert isinstance(items, list)
+    assert [a["id"] for a in items] == [created["id"]]
+    assert items[0]["due_on"] == "2024-02-29"
+    assert not items[0]["overdue"]
+    for bad in (
+        "due_from=2024-03-01&due_to=2024-02-29",
+        "due_from=2024-02-30",
+        "due_to=2024-02-29T00:00:00Z",
+    ):
+        assert _api_get("/api/v1/schedule?" + bad, cookie)[0] == 422
+    path = f"/api/v1/schedule/{created['id']}"
+    assert (
+        mutate(
+            authenticated_browser,
+            "PUT",
+            path,
+            {**payload, "due_on": "2024-03-01", "expected_version": 1},
+        )[0]
+        == 200
+    )
+    assert (
+        mutate(authenticated_browser, "POST", path + "/cancel", {"expected_version": 1})[0] == 409
+    )
+    assert _api_get(query, cookie)[1]["items"] == []
+    assert (
+        mutate(authenticated_browser, "POST", path + "/cancel", {"expected_version": 2})[0] == 200
+    )

@@ -466,3 +466,36 @@ def test_remaining_api_transition_adapters_translate_errors(
             database,
         )
     assert owner_error.value.status_code == 403
+
+
+def test_reversed_due_date_range_fails_before_database_query() -> None:
+    database = MagicMock()
+    with pytest.raises(ScheduleError, match="schedule_date_range_invalid") as caught:
+        service.list_activities(
+            database,
+            today=date(2026, 10, 12),
+            due_from=date(2026, 11, 1),
+            due_to=date(2026, 10, 31),
+        )
+    assert caught.value.status == 422
+    database.scalar.assert_not_called()
+
+
+def test_identity_target_preserves_scientific_name_and_roman_cultivar_parts() -> None:
+    identity = BotanicalIdentity(
+        id=uuid7(),
+        scientific_name="Ocimum basilicum",
+        cultivar_name="Genovese",
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    target = service._target_response("botanical_identity", identity)
+    assert target.scientific_name == "Ocimum basilicum"
+    assert target.cultivar_name == "Genovese"
+    assert target.label == "Ocimum basilicum \u2018Genovese\u2019"
+    assert (
+        service._target_response(
+            "location", Location(id=uuid7(), name="Basil bench")
+        ).scientific_name
+        is None
+    )

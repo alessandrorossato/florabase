@@ -63,6 +63,12 @@ def list_all(
     q: Annotated[str, Query(max_length=200)] = "",
     offset: Annotated[int, Query(ge=0, le=100000)] = 0,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    due_from: Annotated[
+        CalendarDay | None, Query(description="Inclusive due-date lower bound")
+    ] = None,
+    due_to: Annotated[
+        CalendarDay | None, Query(description="Inclusive due-date upper bound")
+    ] = None,
 ) -> SchedulePage:
     try:
         return service.list_activities(
@@ -76,6 +82,8 @@ def list_all(
             q=q,
             offset=offset,
             limit=limit,
+            due_from=due_from,
+            due_to=due_to,
         )
     except service.ScheduleError as error:
         raise _error(error) from error

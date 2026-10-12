@@ -1,5 +1,6 @@
 import type { components } from "../api/schema";
 import { requestJson } from "../auth/api";
+import { monthDays } from "./calendar";
 import {
   localDay,
   scheduleParams,
@@ -38,6 +39,44 @@ export function getActivity(
     `/api/v1/schedule/${encodeURIComponent(id)}?today=${localDay()}`,
     { signal },
   );
+}
+
+/** Only the visible month, through the existing capped and ordered list API. */
+export async function listCalendar(
+  state: ScheduleState,
+  signal?: AbortSignal,
+): Promise<SchedulePage> {
+  const days = monthDays(state.month);
+  const p = scheduleParams(state);
+  p.set("due_from", days[0] ?? "");
+  p.set("due_to", days.at(-1) ?? "");
+  p.set("today", localDay());
+  p.set("limit", "100");
+  const items: Activity[] = [];
+  const seen = new Set<string>();
+  let first: SchedulePage | undefined;
+  for (let offset = 0; offset <= 100000; offset += 100) {
+    p.set("offset", String(offset));
+    const page = await requestJson<SchedulePage>(`/api/v1/schedule?${p}`, {
+      signal,
+    });
+    if (
+      !Array.isArray(page.items) ||
+      !Number.isInteger(page.total) ||
+      page.total < 0
+    )
+      throw new Error("Invalid Schedule response");
+    first ??= page;
+    for (const item of page.items) {
+      if (!seen.has(item.id)) {
+        seen.add(item.id);
+        items.push(item);
+      }
+    }
+    if (offset + 100 >= first.total || !page.items.length)
+      return { ...first, items };
+  }
+  throw new Error("Calendar period exceeds the Schedule paging limit");
 }
 export function getTarget(
   kind: TargetKind,

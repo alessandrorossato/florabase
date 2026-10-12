@@ -156,14 +156,35 @@ def test_species_distribution_fixture_scopes_and_truthful_link() -> None:
         records = manifest["records"]
         all_ids = {row.id for row in list_identities(database).items}
         assert UUID(records["identity:Viola tricolor"]) not in all_ids
-        assert len(all_ids) == 5
+        expected_ids = {
+            UUID(records["identity:" + name])
+            for name in (
+                "Ocimum basilicum",
+                "Lavandula angustifolia",
+                "Aloe vera",
+                "Raphanus sativus",
+                "Salvia officinalis",
+            )
+        } | {UUID(records["identity:genovese"])}
+        if "identity:Ocimum tenuiflorum" in records:
+            expected_ids.add(UUID(records["identity:Ocimum tenuiflorum"]))
+        assert all_ids == expected_ids
         assert {row.scientific_name for row in list_identities(database, scope="living").items} == {
             "Ocimum basilicum",
             "Aloe vera",
         }
-        assert {
+        current_names = {
             row.scientific_name for row in list_identities(database, scope="current").items
-        } == {"Ocimum basilicum", "Aloe vera", "Lavandula angustifolia", "Salvia officinalis"}
+        }
+        expected_names = {
+            "Ocimum basilicum",
+            "Aloe vera",
+            "Lavandula angustifolia",
+            "Salvia officinalis",
+        }
+        if "identity:Ocimum tenuiflorum" in records:
+            expected_names.add("Ocimum tenuiflorum")
+        assert current_names == expected_names
         assert (
             list_identities(database, scope="historical").items[0].scientific_name
             == "Raphanus sativus"
@@ -185,7 +206,12 @@ def test_native_range_fixture_overlap_disjoint_custom_and_no_range() -> None:
         assert manifest is not None
         records = manifest["records"]
         overview = native_ranges.overview(database)
-        assert (overview.represented, overview.with_range, overview.without_range) == (5, 4, 1)
+        optional_holy = int("identity:Ocimum tenuiflorum" in records)
+        assert (overview.represented, overview.with_range, overview.without_range) == (
+            6 + optional_holy,
+            4,
+            2 + optional_holy,
+        )
         units = {unit.source_code: unit.identity_count for unit in overview.territories}
         assert units["BR"] == 1
         assert units["AR"] == 1
@@ -298,4 +324,69 @@ def test_dashboard_extension_is_idempotent_and_keeps_operator_edits() -> None:
             create.assert_not_called()
         assert lot.notes == "Operator edit"
         assert sowing.germinated_count == 2
+        database.rollback()
+
+
+def test_manual_review_and_schedule_fixture_coverage_preserves_operator_edits() -> None:
+    from collections import Counter
+    from datetime import timedelta
+    from uuid import UUID
+
+    from sqlalchemy import select
+    from uat_fixture import seed
+
+    from florabase.botanical_identities.model import BotanicalIdentity
+    from florabase.botanical_profiles.model import BotanicalProfile
+    from florabase.schedule.model import TARGETS, ScheduledActivity
+    from florabase.seed_lots.model import SeedLot
+
+    with Session(get_engine()) as database:
+        root = require_identity(get_settings(), database)
+        manifest = read_manifest(root)
+        assert manifest is not None and manifest["manual_review_extension"] == 1
+        records = manifest["records"]
+        cultivar = database.get(BotanicalIdentity, UUID(records["identity:genovese"]))
+        assert cultivar is not None and cultivar.cultivar_name == "Genovese"
+        profile = database.scalar(
+            select(BotanicalProfile).where(BotanicalProfile.botanical_identity_id == cultivar.id)
+        )
+        assert profile is not None and "Synthetic UAT" in (profile.description or "")
+        packet = database.get(SeedLot, UUID(records["seed:genovese"]))
+        assert packet is not None and packet.quantity_value is None
+        assert packet.order_id == UUID(records["order:partial"])
+        activities = list(database.scalars(select(ScheduledActivity)))
+        assert len(activities) == 19
+        assert Counter(a.status for a in activities) == {
+            "planned": 16,
+            "completed": 2,
+            "cancelled": 1,
+        }
+        anchor = database.get(ScheduledActivity, UUID(records["schedule:today"]))
+        overdue = database.get(ScheduledActivity, UUID(records["schedule:overdue"]))
+        collection = database.get(ScheduledActivity, UUID(records["schedule:collection"]))
+        assert anchor is not None and overdue is not None and collection is not None
+        assert overdue.due_on == anchor.due_on - timedelta(days=3) and overdue.status == "planned"
+        assert sum(a.due_on == anchor.due_on and a.status == "planned" for a in activities) == 7
+        assert any(
+            a.due_on.month != anchor.due_on.month and a.due_on > anchor.due_on for a in activities
+        )
+        assert all(
+            any(getattr(a, f"{kind}_id") is not None for a in activities) for kind in TARGETS
+        )
+        assert all(getattr(collection, f"{kind}_id") is None for kind in TARGETS)
+        original = {a.id: (a.due_on, a.status, a.version) for a in activities}
+        collection.title = "Operator-edited collection review"
+        collection.due_on += timedelta(days=20)
+        packet.notes = "Operator-edited packet"
+        database.flush()
+        with patch("uat_fixture.schedule.create") as create:
+            assert seed(database, root) == manifest
+            assert seed(database, root) == manifest
+            create.assert_not_called()
+        assert packet.notes == "Operator-edited packet"
+        assert collection.title == "Operator-edited collection review"
+        assert collection.due_on == original[collection.id][0] + timedelta(days=20)
+        assert {
+            a.id: (a.due_on, a.status, a.version) for a in activities if a.id != collection.id
+        } == {key: value for key, value in original.items() if key != collection.id}
         database.rollback()

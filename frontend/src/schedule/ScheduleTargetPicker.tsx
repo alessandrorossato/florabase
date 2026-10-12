@@ -56,7 +56,11 @@ export function ScheduleTargetPicker({
       ? [retained, ...choices]
       : choices;
   return (
-    <div className="schedule-target-picker">
+    <div
+      className="schedule-target-picker"
+      role="group"
+      aria-label="Target record"
+    >
       <label className="field">
         Find collection record
         <input
@@ -98,26 +102,40 @@ export function ScheduleTargetPicker({
             }}
             required
           />
-          <div className="button-row">
-            <button
-              type="button"
-              disabled={!offset}
-              onClick={() => {
-                setOffset((o) => Math.max(0, o - 50));
-              }}
-            >
-              Previous records
-            </button>
-            <span>{page.total} matching records</span>
-            <button
-              type="button"
-              disabled={offset + 50 >= page.total}
-              onClick={() => {
-                setOffset((o) => o + 50);
-              }}
-            >
-              Next records
-            </button>
+          <div className="schedule-target-results">
+            <span>
+              {page.total} matching {page.total === 1 ? "record" : "records"}
+            </span>
+            {page.total > 50 && (
+              <nav
+                className="schedule-compact-nav"
+                aria-label="Target record pages"
+              >
+                <button
+                  type="button"
+                  className="button--secondary"
+                  aria-label="Previous records"
+                  disabled={!offset}
+                  onClick={() => {
+                    setOffset((o) => Math.max(0, o - 50));
+                  }}
+                >
+                  <span aria-hidden="true">‹</span>
+                </button>
+                <span>Page {Math.floor(offset / 50) + 1}</span>
+                <button
+                  type="button"
+                  className="button--secondary"
+                  aria-label="Next records"
+                  disabled={offset + 50 >= page.total}
+                  onClick={() => {
+                    setOffset((o) => o + 50);
+                  }}
+                >
+                  <span aria-hidden="true">›</span>
+                </button>
+              </nav>
+            )}
           </div>
         </>
       ) : (
