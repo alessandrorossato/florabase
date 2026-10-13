@@ -53,6 +53,7 @@ class UATTests(unittest.TestCase):
             for key in ("postgres_data", "attachment_data", "frontend_node_modules")
         ]
         with (
+            patch.object(self.preview.repository, "identity", return_value={"branch": "ci/test"}),
             patch.object(self.preview, "require_identity"),
             patch.object(self.preview, "resource_volumes", return_value=volumes),
             patch.object(self.preview, "compose") as compose,
@@ -284,6 +285,9 @@ class UATTests(unittest.TestCase):
             volume["Labels"][key] = value
             with (
                 self.subTest(key=key),
+                patch.object(
+                    self.preview.repository, "identity", return_value={"branch": "ci/test"}
+                ),
                 patch.object(self.preview, "require_context"),
                 patch.object(self.preview, "validate"),
                 patch.object(self.preview, "require_owner"),
@@ -322,10 +326,15 @@ class UATTests(unittest.TestCase):
     def test_stop_preserves_volumes_and_source(self) -> None:
         with (
             patch.object(self.preview, "require_identity"),
+            patch.object(self.preview, "containers", return_value=[{"Id": "uat-only"}]),
+            patch("uat_preview.run") as run,
             patch.object(self.preview, "compose") as compose,
         ):
             self.preview.stop()
-        compose.assert_called_once_with("down", "--remove-orphans")
+            self.preview.stop()
+        self.assertEqual(run.call_count, 2)
+        run.assert_called_with(["docker", "container", "stop", "uat-only"])
+        compose.assert_not_called()
 
     def test_fixture_is_explicit_mount_and_never_default_startup(self) -> None:
         with (

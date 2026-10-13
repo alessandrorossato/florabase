@@ -3663,3 +3663,39 @@ implementation detail.
   production and unrelated environments remain preserved. See the [handoff](schedule-002-handoff.md).
 - SCHEDULE-002 is now `verified`. Protected delivery and `make feature-finish` follow the repository
   lifecycle after the exact verified candidate is committed.
+
+## 2026-10-13 — INFRA-MAINT-001 implementation and preserved real UAT recovery
+
+- From authoritative main `ec992440cba2681ca6e5327ec613a25f88183c3d`, initialized existing `947e`
+  worktree through `make feature-init`, branch `ci/infra-maint-001`. Added exactly this consolidated
+  infrastructure increment as implemented; SCHEDULE-002 and all existing statuses remain unchanged.
+- Existing UAT guards now accept a proven clean delivered detached owner, including exact
+  squash-merged PR heads with concurrent main changes. Stop preserves containers/network/volumes.
+  Explicit same-path `uat-preview-sync` fetches delivered main, checks DB identity/target migration
+  ancestry before source/migration mutation, journals intent, quiesces writers, switches normally,
+  migrates only forward and recreates healthy applications. Interrupted sync resumes its pinned
+  target; ordinary up/seed refuse it. Ownership/foreign-user/source/port/fixture guards stay closed.
+  Feature finish is unchanged; detached reset refuses before mutation, preserving its attached-only contract.
+- Encoded SQLAlchemy 2.1, React/DOM/types 19.3+, jsdom 30.1+ and Node declarations >24 deferrals
+  in Dependabot per-package version rules. Compatible maintenance and unrelated weekly groups
+  remain enabled. No dependency/pin/lock/runtime/product/UI change. QA closes open #102/#103/#104
+  only after this policy merges; current bot proposals remain untouched.
+- Focused checks pass: UAT **19 + 15**, environment **29**, feature helpers **41**, resource **14**,
+  Stable Preview **19**, impact **19** and shell helper suite. Disposable real Compose smoke
+  `florabase-uat-preview-smoke-c7fa48e9e127` passes **25** fixture tests, real finish/detach and
+  repeated management, newer-main forward migration, interruption/refusal/resume, full domain/
+  fixture/media/credential hash and dependency sentinel preservation, exact zero-residual cleanup
+  and unchanged protected environments. Workflow lint/format (**22** files), strict typing
+  (**15 + 2**), YAML/group/native-range validation, affected Prettier, graph **101**, syntax and
+  whitespace checks pass. Initial smoke fixture faults were fixed; no check/assertion was weakened.
+- Recovered real UAT using only the new Makefile sync command from owning `6147`: clean detached
+  `ff6ab788` → delivered `ec99244`, schema/code **0041**, frontend/backend/db healthy at
+  **http://localhost:15174**, normal **preview / preview** login/private collection/readiness 200.
+  Exact full DB data digest, **68** fixture IDs/extensions, all **5** media-volume file hashes,
+  original volume identities and ignored WFO index/seal hashes match before/after. No real seed,
+  reset or removal. DEV/Review/Stable Preview/production and primary snapshots remain identical.
+- [Handoff](infra-maint-001-handoff.md) and [machine evidence](infra-maint-001-evidence.json)
+  include the interim reviewed-Makefile invocation, provenance, safety, checks and post-delivery bot
+  cleanup. Candidate is unstaged/uncommitted at unchanged base HEAD; independent QA owns canonical
+  verification and delivery. No canonical feature-verify, feature commit/push/delivery or real
+  feature-finish/DEV upgrade occurred. **READY_FOR_REVIEW**.

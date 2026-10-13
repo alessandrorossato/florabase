@@ -1465,6 +1465,20 @@
       "dependencies": ["SCHEDULE-001", "DASHBOARD-001"],
       "priority": "P2",
       "status": "verified"
+    },
+    {
+      "id": "INFRA-MAINT-001",
+      "category": "infrastructure",
+      "description": "Persistent delivered UAT lifecycle and explicit Dependabot dependency deferrals",
+      "acceptance_criteria": [
+        "Established clean delivered detached UAT owners support guarded status, stop, restart and compatible explicit seed while arbitrary, dirty, foreign and ambiguous owners fail closed",
+        "Explicit same-owner source synchronization fetches delivered main, validates forward DB compatibility, preserves DB/media/dependency volumes and operator fixtures, and resumes interrupted transitions without automatic downgrade or reset",
+        "Disposable real-Compose delivery/detach and newer-main smoke demonstrates full record/media/fixture preservation and exact owned cleanup; current real UAT is restored through supported non-destructive commands with before/after evidence",
+        "Dependabot per-dependency ignore rules encode SQLAlchemy, React/types, jsdom and Node declaration deferrals while compatible patch updates and unrelated weekly groups remain enabled; YAML/policy checks and reopening/post-delivery cleanup guidance are documented"
+      ],
+      "dependencies": ["CI-003", "PREVIEW-001"],
+      "priority": "P0",
+      "status": "implemented"
     }
   ]
 }
