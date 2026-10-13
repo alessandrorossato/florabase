@@ -755,10 +755,13 @@
     {
       "id": "CUTTING-001",
       "category": "cutting",
-      "description": "Add a CuttingLot workflow parallel to SeedLot",
+      "description": "Design and add explicit vegetative propagation / cuttings without forcing material into SeedLot",
       "acceptance_criteria": [
-        "One physical cutting lot retains BotanicalIdentity, source, quantity, location, lifecycle, and provenance",
+        "A dedicated propagation-domain decision compares VegetativeLot plus PropagationAttempt, a broader Propagation model with typed source material, or another demonstrated fit before choosing a schema; division, offsets, layering and grafting are extension cases rather than immediate implementation requirements",
+        "Vegetative material retains BotanicalIdentity, known mother Plant or unknown source, clonal lineage, PartialDate taken/start dates, quantity, lifecycle, location, notes, media and provenance without using SeedLot",
         "Rooting or establishment into Plants or PlantGroups preserves known parent-Plant lineage without using Sowing",
+        "Known or unknown starting quantity remains separate from rooted/surviving quantity; unknown, successful, failed and partial outcomes preserve uncertainty and failed propagation evidence",
+        "Journal observations, History facts and concrete Schedule follow-ups integrate with material lineage without duplicate event systems",
         "The implementation follows concrete cutting workflows rather than speculative inheritance"
       ],
       "dependencies": [
@@ -1266,10 +1269,11 @@
     {
       "id": "TAXONOMY-001",
       "category": "taxonomy",
-      "description": "Add assisted BotanicalIdentity reconciliation",
+      "description": "Add assisted accepted-name reconciliation / correction for BotanicalIdentity",
       "acceptance_criteria": [
         "Reconciliation proposes rather than automatically applies identity changes",
-        "An explicit survivor preserves and repoints all collection references transactionally",
+        "An explicit accepted/current-name correction preserves the names under which material was acquired or recorded and historically accurate provenance; name-retention design precedes mutation and a correction never silently merges identities",
+        "When duplicate-identity reconciliation is selected, an explicit survivor preserves and repoints all collection references transactionally",
         "Source evidence, conflicts, authorization, and rollback-safe failures are retained"
       ],
       "dependencies": ["ENRICHMENT-001", "LINEAGE-002"],
@@ -1283,6 +1287,7 @@
       "acceptance_criteria": [
         "Former and synonymous names are source-scoped or operator-authored and do not replace the stable identity UUID",
         "Current-name selection and history are explicit and attributable",
+        "Acquisition and provenance retain historically recorded names while the accepted/current name remains distinguishable; no destructive rename erases botanical history",
         "Search can find historical names without treating every synonym as a new BotanicalIdentity"
       ],
       "dependencies": ["TAXONOMY-001"],

@@ -3418,33 +3418,34 @@ implementation detail.
 
 ## Current state
 
-- Alembic head: `20261009_0040`; TAXONOMY-003 is independently verified and awaits protected delivery.
-- Verified product boundary: local owner authentication; botanical identities/profiles; suppliers;
-  collection locations; geographic places/material provenance; seed lots; sowings and simple
-  germination totals; Plants/PlantGroups; explicit producer/Sowing/extraction lineage; and the
-  protected Plant/PlantGroup Event journal and timeline UI; atomic extraction history; retained
-  transferred Plant/PlantGroup history; scope-aware hierarchical collection Locations; direct,
-  connected-record Supplier summaries; and exact structured BotanicalProfile native ranges over the
-  shared GeographicPlace hierarchy; and guarded local still-image attachment storage with
-  authenticated retrieval and coordinated database/content backup.
-- `PROPAGATION-001` through `PROPAGATION-003`, `SUPPLIER-002`, `BOTANY-002`, and
-  `ATTACHMENT-002` are verified. `LOCATION-002`, `GEOGRAPHY-003`, `MAP-001`, `GEOGRAPHY-002`,
-  `ATTACHMENT-003`, `IMPORT-001`, `SEARCH-001`, and `UX-002` through `UX-006` are implemented in the
-  graph; UX-004, UX-005, and UX-006 have landed on `main`, but their graph status has not been
-  promoted to `verified`.
-  `PERF-001` is verified on the frozen 0.1.0 scope. The agreed blocking cross-application UI polish
-  is awaiting operator visual review before `RELEASE-001` hardening and acceptance; PERF-001's
-  measurement report records the remaining costs and review caveats.
-  Optional product candidates are not dependencies of either required increment. Licensing,
-  version/upgrade policy, and release readiness remain to be resolved in `RELEASE-001`.
-- `CI-001` repository automation is verified through the merged pull-request workflow and protected
-  `main` checks.
-  Other unblocked P2 product items are listed by the machine-readable dependency graph rather than
-  prioritized here.
-- Deliberately absent: arbitrary derivative pipelines beyond the fixed cached local 320px WebP,
-  identity-cover history, automatic or
-  provider image discovery, PWA behavior,
-  offline/synchronization behavior, generic graphs, and multi-user collaboration.
+As of 2026-10-13, delivered main is `f54648f` (PR #106); Alembic head is
+`20261009_0041`. Historical handoff entries below and above describe their own candidate phase,
+not the current delivery state.
+
+- The [canonical product/release roadmap](product-roadmap.md) owns the agreed v0.1.0 → v1.0.0
+  sequence. Immediate work: Journal/History product pass → Labels audit → functional/IA freeze →
+  page-by-page visual review → UI Foundation normalization → release-readiness audit → public
+  documentation/presentation → v0.1.0. No public release or release-gate completion is claimed.
+- Dashboard/UI Foundation (PR #101) and Schedule Calendar (PR #105) are delivered and `verified`.
+  Schedule remains future intention, Journal human-recorded observations/occurrences/notes and
+  History a read-only factual projection. Existing LABEL-001 already includes authenticated QR lookup;
+  mobile quick capture remains later work.
+- The roadmap's delivered baseline and `docs/features.json` distinguish landed capabilities from
+  implementation/verification status. Older landed increments recorded as `implemented` remain so;
+  this planning work promotes none to `verified`. INFRA-MAINT-001 landed in PR #106 and retains its
+  graph status `implemented`. Detailed delivery and verification evidence stays in the handoffs.
+- PERF-001's verified measurements remain historical evidence; the expanded release candidate
+  requires measured resource review. RELEASE-001 remains `planned`; install/upgrade, paired DB/media
+  recovery, security, responsive/accessibility, public documentation and versioned distribution
+  acceptance are outstanding. GHCR is preferred; no publishing is performed here.
+- POST-0.1 priorities begin with material lineage, accepted-name reconciliation, name history,
+  measurements, phenology and vegetative propagation/cuttings. Existing IDs are reused; unscheduled
+  themes receive no speculative IDs. Vegetative propagation requires a domain decision before v1.0.
+- PHYLOGENY-001 remains SOURCE_BLOCKED (`planned` in JSON) and blocks neither v0.1 freeze/release
+  nor v1.0 core collection management. BOTANY-003's general-description path remains source-blocked;
+  BOTANY-004 and ENRICHMENT-002 remain deferred. Source prerequisites are not implementation failures.
+  Generic task management, multi-user collaboration and full offline writes/sync remain outside the
+  agreed core scope.
 
 ## 2026-10-05 — PREVIEW-001 independent final verification
 
@@ -3699,3 +3700,28 @@ implementation detail.
   cleanup. Candidate is unstaged/uncommitted at unchanged base HEAD; independent QA owns canonical
   verification and delivery. No canonical feature-verify, feature commit/push/delivery or real
   feature-finish/DEV upgrade occurred. **READY_FOR_REVIEW**.
+
+## 2026-10-13 — canonical v0.1.0 to v1.0.0 roadmap (planning review handoff)
+
+- Audited existing roadmap, feature graph, progress, workflow/UI contracts and relevant delivered
+  feature/source handoffs from clean fetched main `f54648f`; initialized the existing Codex worktree
+  with `make feature-init BRANCH=docs/product-release-roadmap`. No second worktree or primary change.
+- Consolidated superseded roadmap sequences into the existing `docs/product-roadmap.md`: explicit
+  DELIVERED / PLANNED / DEFERRED / SOURCE_BLOCKED / RELEASE_GATE vocabulary, PRE-0.1 freeze path,
+  measurable release evidence, versioned GHCR distribution direction and stable-core v1.0 criteria.
+- Recorded all fourteen post-0.1 priorities, including material ancestry distinct from taxonomy/
+  phylogeny, historical botanical names, structured observations, care recurrence and vegetative
+  propagation. CUTTING-001 retains its ID/dependencies/status but requires an explicit domain-model
+  decision and honest starting/outcome quantities; TAXONOMY-001/002 now explicitly preserve names
+  under which material was acquired or recorded. No implementation status is promoted or ID added.
+- Corrected README/current-state planning prose against delivered capabilities without rewriting
+  historical milestones. Journal/History and Labels remain the next product passes; physical print/
+  scan evidence is outstanding. Source-blocked phylogeny and profile text do not block core releases.
+- Validation passed: feature graph (101 records), JSON parse, pinned Prettier for all four changed
+  files, 58 local Markdown links/anchors and 55 fully spelled roadmap feature IDs, unchanged graph
+  IDs/statuses/priorities/dependencies and schema, unchanged RELEASE-001 contract, documentation-only
+  scope, empty index, unchanged base HEAD and `git diff --check`. No application tests or operational
+  release drills are claimed by this planning handoff.
+- No application/UI/dependency/migration/publishing changes. No canonical `make feature-verify`,
+  staging, commit, push, delivery, finish or environment mutation. Candidate remains available for
+  independent planning review; next product increment is the Journal/History pass. **READY_FOR_REVIEW**.
