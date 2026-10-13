@@ -53,6 +53,7 @@ class UATTests(unittest.TestCase):
             for key in ("postgres_data", "attachment_data", "frontend_node_modules")
         ]
         with (
+            patch.object(self.preview.repository, "identity", return_value={"branch": "ci/test"}),
             patch.object(self.preview, "require_identity"),
             patch.object(self.preview, "resource_volumes", return_value=volumes),
             patch.object(self.preview, "compose") as compose,
@@ -284,6 +285,9 @@ class UATTests(unittest.TestCase):
             volume["Labels"][key] = value
             with (
                 self.subTest(key=key),
+                patch.object(
+                    self.preview.repository, "identity", return_value={"branch": "ci/test"}
+                ),
                 patch.object(self.preview, "require_context"),
                 patch.object(self.preview, "validate"),
                 patch.object(self.preview, "require_owner"),
