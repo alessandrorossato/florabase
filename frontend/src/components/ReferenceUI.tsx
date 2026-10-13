@@ -14,21 +14,24 @@ export function PageHeader({
   titleId,
   description,
   actions,
+  tools,
   eyebrow = "Collection reference",
 }: {
   title: string;
   titleId: string;
-  description: string;
+  description?: string;
   actions?: ReactNode;
+  tools?: ReactNode;
   eyebrow?: string;
 }) {
   return (
-    <header className="page-header">
-      <div>
+    <header className={`page-header${tools ? " page-header--with-tools" : ""}`}>
+      <div className="page-identity">
         <p className="eyebrow">{eyebrow}</p>
         <h2 id={titleId}>{title}</h2>
-        <p>{description}</p>
+        {description && <p>{description}</p>}
       </div>
+      {tools && <div className="page-tools">{tools}</div>}
       {actions}
     </header>
   );
@@ -170,10 +173,15 @@ export function OverflowMenu({
   const trigger = useRef<HTMLButtonElement>(null);
   const panel = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  const [portalHost, setPortalHost] = useState<HTMLElement | null>(null);
   const [position, setPosition] = useState({ left: 12, top: 12 });
   const close = (restore = false) => {
     setOpen(false);
     if (restore) trigger.current?.focus();
+  };
+  const show = () => {
+    setPortalHost(trigger.current?.closest("dialog") ?? document.body);
+    setOpen(true);
   };
   useLayoutEffect(() => {
     if (!open) return;
@@ -260,12 +268,18 @@ export function OverflowMenu({
         aria-expanded={open}
         aria-controls={open ? id : undefined}
         onClick={() => {
-          setOpen((current) => !current);
+          if (open) close();
+          else show();
         }}
         onKeyDown={(event) => {
+          if (event.key === "Escape" && open) {
+            event.preventDefault();
+            event.stopPropagation();
+            close(true);
+          }
           if (event.key === "ArrowDown") {
             event.preventDefault();
-            setOpen(true);
+            show();
             requestAnimationFrame(() =>
               panel.current
                 ?.querySelector<HTMLElement>("button:not(:disabled),a[href]")
@@ -293,6 +307,12 @@ export function OverflowMenu({
                 close(true);
             }}
             onKeyDown={(event) => {
+              if (event.key === "Escape") {
+                event.preventDefault();
+                event.stopPropagation();
+                close(true);
+                return;
+              }
               const items = Array.from(
                 panel.current?.querySelectorAll<HTMLElement>(
                   "button:not(:disabled),a[href]",
@@ -319,7 +339,7 @@ export function OverflowMenu({
           >
             {children}
           </div>,
-          document.body,
+          portalHost ?? document.body,
         )}
     </>
   );

@@ -1,5 +1,5 @@
 import { ScheduleTargetLabel } from "./ScheduleTargetLabel";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { TaskDialog } from "../components/TaskDialog";
 import {
   EmptyState,
@@ -34,6 +34,7 @@ const weekdays = [
 
 export function ScheduleCalendar({
   state,
+  viewSwitcher,
   page,
   error,
   today,
@@ -44,6 +45,7 @@ export function ScheduleCalendar({
   onCreate,
 }: {
   state: ScheduleState;
+  viewSwitcher?: ReactNode;
   page: SchedulePage | null;
   error: boolean;
   today: string;
@@ -119,49 +121,48 @@ export function ScheduleCalendar({
   }
   return (
     <section className="schedule-calendar" aria-labelledby="calendar-period">
-      <div className="schedule-calendar-nav">
+      <div className="schedule-view-heading">
         <h3 id="calendar-period" aria-live="polite">
           {monthLabel(state.month)}
         </h3>
-        <nav className="schedule-compact-nav" aria-label="Calendar period">
-          <button
-            type="button"
-            className="button--secondary"
-            aria-label="Previous month"
-            disabled={state.month === "0001-01"}
-            onClick={() => {
-              navigate(shiftMonth(state.month, -1));
-            }}
-          >
-            <span aria-hidden="true">‹</span>
-          </button>
-          <button
-            type="button"
-            className="button--secondary schedule-period-today"
-            onClick={() => {
-              setDrawerOpen(false);
-              onChange({ ...state, month: today.slice(0, 7), date: today });
-            }}
-          >
-            Today
-          </button>
-          <button
-            type="button"
-            className="button--secondary"
-            aria-label="Next month"
-            disabled={state.month === "9999-12"}
-            onClick={() => {
-              navigate(shiftMonth(state.month, 1));
-            }}
-          >
-            <span aria-hidden="true">›</span>
-          </button>
-        </nav>
+        <div className="schedule-view-controls">
+          {viewSwitcher}
+          <nav className="schedule-compact-nav" aria-label="Calendar period">
+            <button
+              type="button"
+              className="button--secondary"
+              aria-label="Previous month"
+              disabled={state.month === "0001-01"}
+              onClick={() => {
+                navigate(shiftMonth(state.month, -1));
+              }}
+            >
+              <span aria-hidden="true">‹</span>
+            </button>
+            <button
+              type="button"
+              className="button--secondary schedule-period-today"
+              onClick={() => {
+                setDrawerOpen(false);
+                onChange({ ...state, month: today.slice(0, 7), date: today });
+              }}
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              className="button--secondary"
+              aria-label="Next month"
+              disabled={state.month === "9999-12"}
+              onClick={() => {
+                navigate(shiftMonth(state.month, 1));
+              }}
+            >
+              <span aria-hidden="true">›</span>
+            </button>
+          </nav>
+        </div>
       </div>
-      <p className="muted schedule-calendar-help">
-        Month overview · Select a day for its work. Dates show intended work,
-        not occurrences.
-      </p>
       {error ? (
         <ErrorState onRetry={onRetry}>
           Florabase could not load Calendar.
@@ -172,8 +173,8 @@ export function ScheduleCalendar({
         <>
           <p className="schedule-calendar-summary" role="status">
             {page.items.length}{" "}
-            {state.status === "planned" ? "planned" : state.status} activities
-            in this month
+            {state.status.length === 1 ? state.status[0] : "scheduled"}{" "}
+            activities in this month
           </p>
           {!page.items.length && (
             <div className="schedule-calendar-empty">
@@ -215,7 +216,7 @@ export function ScheduleCalendar({
                           className="schedule-day-button"
                           aria-pressed={day === selected}
                           aria-current={day === today ? "date" : undefined}
-                          aria-label={`${dayLabel(day)}${day === today ? ", today" : ""}${page ? `, ${String(items.length)} ${state.status} activities` : ""}`}
+                          aria-label={`${dayLabel(day)}${day === today ? ", today" : ""}${page ? `, ${String(items.length)} ${state.status.length === 1 ? state.status[0] : "scheduled"} activities` : ""}`}
                           onClick={() => {
                             select(day);
                           }}
@@ -313,11 +314,9 @@ export function ScheduleCalendar({
             </button>
           </header>
           <p className="muted">
-            {state.status === "planned"
-              ? "Planned"
-              : state.status === "completed"
-                ? "Completed"
-                : "Cancelled"}{" "}
+            {state.status.length === 1
+              ? state.status[0][0].toUpperCase() + state.status[0].slice(1)
+              : "Scheduled"}{" "}
             work · current Schedule filters
           </p>
           {detail()}

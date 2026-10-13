@@ -95,15 +95,38 @@ class StoredMaterialState(TextState):
     location_id: UUID | None = None
 
 
-class EventState(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    category: Literal["all", "observations", "cultivation", "status"] = "all"
+class EventState(TextState):
+    category: list[Literal["observations", "cultivation", "status"]] = Field(
+        default_factory=list, max_length=3
+    )
+
+    @field_validator("category", mode="before")
+    @classmethod
+    def legacy_category(cls, value: object) -> object:
+        return [] if value == "all" else [value] if isinstance(value, str) else value
+
+    @field_validator("category")
+    @classmethod
+    def ordered_entries(
+        cls, value: list[Literal["observations", "cultivation", "status"]]
+    ) -> list[Literal["observations", "cultivation", "status"]]:
+        return [item for item in ("observations", "cultivation", "status") if item in value]
 
 
-class HistoryState(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    category: list[HistoryCategory] = Field(default_factory=list, max_length=5)
-    subject_kind: HistorySubjectKind | None = None
+class HistoryState(TextState):
+    category: list[HistoryCategory] = Field(default_factory=list, max_length=6)
+    subject_kind: list[HistorySubjectKind] = Field(default_factory=list, max_length=7)
+
+    @field_validator("subject_kind", mode="before")
+    @classmethod
+    def legacy_subject(cls, value: object) -> object:
+        return [] if value is None else [value] if isinstance(value, str) else value
+
+    @field_validator("subject_kind")
+    @classmethod
+    def ordered_subjects(cls, value: list[HistorySubjectKind]) -> list[HistorySubjectKind]:
+        return [item for item in HistorySubjectKind if item in value]
+
     year: int | None = Field(default=None, ge=1, le=9999, strict=True)
 
     @field_validator("category")

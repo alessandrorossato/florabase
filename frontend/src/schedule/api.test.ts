@@ -65,3 +65,36 @@ test("invalid or failed period responses surface a recoverable error", async () 
   vi.mocked(requestJson).mockRejectedValueOnce(new Error("Network"));
   await expect(listCalendar(state)).rejects.toThrow("Network");
 });
+
+test("Schedule sends every selected value and unrestricted statuses as real stored enum values", async () => {
+  vi.mocked(requestJson).mockResolvedValue(page(0, 0));
+  await listCalendar(
+    readScheduleState(
+      "#/schedule?status=cancelled&status=planned&activity_kind=inspect&activity_kind=water&target_kind=plant&target_kind=seed_lot&window=today&q=needle&view=calendar&month=2024-02",
+    ),
+  );
+  let url = new URL(
+    vi.mocked(requestJson).mock.calls[0][0],
+    "http://localhost",
+  );
+  expect(url.searchParams.getAll("status")).toEqual(["planned", "cancelled"]);
+  expect(url.searchParams.getAll("activity_kind")).toEqual([
+    "water",
+    "inspect",
+  ]);
+  expect(url.searchParams.getAll("target_kind")).toEqual(["seed_lot", "plant"]);
+  expect(url.searchParams.get("window")).toBe("today");
+  expect(url.searchParams.get("q")).toBe("needle");
+  await listCalendar(
+    readScheduleState(
+      "#/schedule?status=planned&status=completed&status=cancelled&view=calendar&month=2024-02",
+    ),
+  );
+  url = new URL(vi.mocked(requestJson).mock.calls[1][0], "http://localhost");
+  expect(url.searchParams.getAll("status")).toEqual([
+    "planned",
+    "completed",
+    "cancelled",
+  ]);
+  expect(url.searchParams.getAll("status")).not.toContain("all");
+});

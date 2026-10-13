@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { WorkspaceIntro } from "../components/CollectionUI";
-import { InfoDisclosure } from "../components/ContextualHelp";
+import { Page, StatusBadge } from "../components/WorkspaceUI";
+import { ActivityChoices } from "../events/ActivityFilters";
+import { selectionLabel } from "../events/filterSelection";
+import { ActivityPageHeader } from "../events/ActivityPageHeader";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
-import { formatPartialDate } from "../events/eventData";
+import { historyDateLabel, historyOrigin } from "./presentation";
+import "../events/activity.css";
 import {
   getHistory,
   historyHref,
@@ -13,7 +16,6 @@ import {
   type HistoryResponse,
 } from "./api";
 import {
-  categories,
   categoryLabels,
   historyHash,
   readHistoryState,
@@ -23,11 +25,6 @@ import {
   type SubjectKind,
 } from "./state";
 
-const recordedDate = (value: string) =>
-  new Intl.DateTimeFormat("en-GB", {
-    dateStyle: "medium",
-    timeZone: "UTC",
-  }).format(new Date(value));
 export function HistoryScreen() {
   const auth = useAuth();
   const [filters, setFilters] = useState(readHistoryState);
@@ -87,152 +84,134 @@ export function HistoryScreen() {
       controller.abort();
     };
   }, [filters, offset, attempt, auth]);
-  function update(next: HistoryState) {
+  function update(next: HistoryState, typing = false) {
     const hash = historyHash(next);
-    if (window.location.hash !== hash) window.history.pushState(null, "", hash);
+    if (window.location.hash !== hash) {
+      if (typing) window.history.replaceState(null, "", hash);
+      else window.history.pushState(null, "", hash);
+    }
     reset(next);
   }
   return (
-    <section className="workspace" aria-labelledby="history-title">
-      <WorkspaceIntro
-        eyebrow="Activity"
-        title="History"
+    <Page className="activity-page" titleId="history-title">
+      <ActivityPageHeader
+        name="History"
         titleId="history-title"
-        description="Read-only timeline of recorded collection activity: Events, propagation, germination, Harvests and stored material."
-      />
-      <p className="activity-orientation">
-        For editable Plant and Plant group Event entries, use{" "}
-        <a href="#/events">Journal</a>. Some activity has no recorded history.
-      </p>
-      <InfoDisclosure label="About recorded history">
-        <p>
-          History reflects existing domain records and their corrections. It is
-          not an immutable audit log. Some current-state changes have no
-          recorded history.
-        </p>
-        <p>
-          Partial dates keep their recorded precision. “Recorded” indicates a
-          recording date, rather than an occurrence date. Timeline year follows
-          the date shown.
-        </p>
-      </InfoDisclosure>
-      <SavedViews surface="history" state={saveHistoryState(filters)} />
-      <div className="history-filters">
-        <div
-          className="history-categories"
-          role="group"
-          aria-label="Activity categories"
-        >
-          <button
-            className="filter-chip"
-            type="button"
-            aria-pressed={filters.category.length === 0}
-            onClick={() => {
-              update({ ...filters, category: [] });
-            }}
-          >
-            All activity
-          </button>
-          {categories.map((category) => (
-            <button
-              key={category}
-              type="button"
-              className="filter-chip"
-              aria-pressed={filters.category.includes(category)}
-              onClick={() => {
-                update({
-                  ...filters,
-                  category: categories.filter((c) =>
-                    c === category
-                      ? !filters.category.includes(c)
-                      : filters.category.includes(c),
-                  ),
-                });
-              }}
-            >
-              {categoryLabels[category]}
-            </button>
-          ))}
-        </div>
-        <div className="field">
-          <label htmlFor="history-subject">Primary record type</label>
-          <select
-            id="history-subject"
-            value={filters.subject_kind}
-            onChange={(event) => {
-              update({
-                ...filters,
-                subject_kind: event.target.value as SubjectKind | "",
-              });
-            }}
-          >
-            <option value="">All record types</option>
-            {Object.entries(subjectLabels).map(([kind, label]) => (
-              <option key={kind} value={kind}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <form
-          className="history-year"
-          onSubmit={(event) => {
-            event.preventDefault();
-            if (
-              yearInput &&
-              (!/^\d{1,4}$/.test(yearInput) || Number(yearInput) < 1)
-            ) {
-              setYearError(true);
-              return;
-            }
-            update({
-              ...filters,
-              year: yearInput ? String(Number(yearInput)) : "",
-            });
-          }}
-        >
-          <div className="field">
-            <label htmlFor="history-year">Timeline year</label>
-            <input
-              id="history-year"
-              inputMode="numeric"
-              value={yearInput}
-              maxLength={4}
-              aria-invalid={yearError}
-              aria-describedby={yearError ? "history-year-error" : undefined}
-              onChange={(event) => {
-                setYearInput(event.target.value);
-                setYearError(false);
-              }}
-            />
-            {yearError && (
-              <span id="history-year-error">Enter a year from 1 to 9999.</span>
+        subtitle="Past collection activity, with links to its source records."
+        query={filters.q}
+        onSearch={(q) => {
+          update({ ...filters, q }, true);
+        }}
+        filterCount={
+          Number(filters.category.length > 0 && filters.category.length < 6) +
+          Number(
+            filters.subject_kind.length > 0 &&
+              filters.subject_kind.length < Object.keys(subjectLabels).length,
+          ) +
+          Number(Boolean(filters.year))
+        }
+        resetFilters={() => {
+          update({ q: filters.q, category: [], subject_kind: [], year: "" });
+        }}
+        savedViews={
+          <SavedViews
+            presentation="dialog"
+            surface="history"
+            state={saveHistoryState(filters)}
+          />
+        }
+        summary={
+          <>
+            {filters.category.length > 0 && filters.category.length < 6 && (
+              <button
+                type="button"
+                className="filter-chip"
+                aria-label="Remove fact type filter"
+                onClick={() => {
+                  update({ ...filters, category: [] });
+                }}
+              >
+                Fact type: {selectionLabel(filters.category, categoryLabels)} ×
+              </button>
             )}
-          </div>
-          <button type="submit">Apply year</button>
-          {(yearInput || filters.year) && (
-            <button
-              type="button"
-              className="button--secondary"
-              onClick={() => {
-                update({ ...filters, year: "" });
-              }}
-            >
-              Clear year
-            </button>
-          )}
-        </form>
-        {Object.keys(saveHistoryState(filters)).length > 0 && (
-          <button
-            type="button"
-            onClick={() => {
-              update({ category: [], subject_kind: "", year: "" });
+            {filters.subject_kind.length > 0 &&
+              filters.subject_kind.length <
+                Object.keys(subjectLabels).length && (
+                <button
+                  type="button"
+                  className="filter-chip"
+                  aria-label="Remove record type filter"
+                  onClick={() => {
+                    update({ ...filters, subject_kind: [] });
+                  }}
+                >
+                  Primary record:{" "}
+                  {selectionLabel(filters.subject_kind, subjectLabels)} ×
+                </button>
+              )}
+            {filters.year && (
+              <button
+                type="button"
+                className="filter-chip"
+                aria-label="Remove year filter"
+                onClick={() => {
+                  update({ ...filters, year: "" });
+                }}
+              >
+                {filters.year} ×
+              </button>
+            )}
+          </>
+        }
+      >
+        <ActivityChoices
+          title="Fact type"
+          labels={categoryLabels}
+          selected={filters.category}
+          onChange={(category) => {
+            update({ ...filters, category });
+          }}
+        />
+        <ActivityChoices
+          title="Primary record type"
+          labels={subjectLabels}
+          selected={filters.subject_kind}
+          onChange={(subject_kind) => {
+            update({ ...filters, subject_kind });
+          }}
+        />
+        <div className="field activity-year-field">
+          <label htmlFor="history-year">Timeline year</label>
+          <input
+            id="history-year"
+            inputMode="numeric"
+            value={yearInput}
+            maxLength={4}
+            aria-invalid={yearError}
+            aria-describedby="history-year-help"
+            onChange={(event) => {
+              const value = event.target.value;
+              const invalid = Boolean(
+                value && (!/^\d{1,4}$/.test(value) || Number(value) < 1),
+              );
+              setYearInput(value);
+              setYearError(invalid);
+              if (!invalid) {
+                update(
+                  { ...filters, year: value ? String(Number(value)) : "" },
+                  true,
+                );
+                setYearInput(value);
+              }
             }}
-          >
-            Clear filters
-          </button>
-        )}
-      </div>
+          />
+          <span id="history-year-help" role={yearError ? "alert" : undefined}>
+            {yearError
+              ? "Enter a year from 1 to 9999."
+              : "Leave empty for every year."}
+          </span>
+        </div>
+      </ActivityPageHeader>
       {loading && <p role="status">Loading History…</p>}
       {error && (
         <div className="notice notice--error" role="alert">
@@ -291,45 +270,38 @@ export function HistoryScreen() {
           )}
         </>
       )}
-    </section>
+    </Page>
   );
 }
 function HistoryRow({ entry }: { entry: HistoryEntry }) {
+  const origin = historyOrigin(entry);
   return (
     <li>
       <article className="history-row">
         <div className="history-date">
-          {entry.date_basis === "recorded" ? (
-            <>
-              Recorded{" "}
-              <time dateTime={entry.recorded_at}>
-                {recordedDate(entry.recorded_at)}
-              </time>
-            </>
-          ) : (
-            <time>{formatPartialDate(entry.occurred_on)}</time>
-          )}
+          <time>{historyDateLabel(entry)}</time>
         </div>
         <div className="history-content">
-          <div className="history-badges">
-            <span className="record-state">
-              {categoryLabels[entry.category]}
-            </span>
-            {entry.status === "reversed" && (
-              <span className="record-state">Reversed</span>
-            )}
+          <div className="activity-row-heading">
+            <StatusBadge>{origin.label}</StatusBadge>
+            <h3>{entry.title}</h3>
+            {entry.status === "reversed" && <StatusBadge>Reversed</StatusBadge>}
           </div>
-          <h3>{entry.title}</h3>
           <a
             className="history-primary"
             href={historyHref(entry.primary, entry.source_kind)}
           >
             {entry.primary.label}
           </a>
-          <span className="history-subject">
-            {subjectLabels[entry.primary.kind as SubjectKind]}
-          </span>
-          {entry.context && <p>{entry.context}</p>}
+          {subjectLabels[entry.primary.kind as SubjectKind] !==
+            origin.label && (
+            <span className="history-subject">
+              {subjectLabels[entry.primary.kind as SubjectKind]}
+            </span>
+          )}
+          {entry.context && entry.source_kind !== "scheduled_activity" && (
+            <p>{entry.context}</p>
+          )}
           {entry.related.length > 0 && (
             <ul className="history-related">
               {entry.related.map((ref) => (

@@ -1,0 +1,337 @@
+/* Activity pages share Dashboard's document flow, toolbar and modal drawer grammar. */
+.application-shell:has(.activity-page) {
+  width: 100%;
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+  align-items: start;
+}
+.application-shell:has(.activity-page) > .app-content {
+  height: auto;
+  overflow: visible;
+  min-width: 0;
+}
+body:has(.activity-page dialog[open]) {
+  overflow: hidden;
+}
+.app-content > .activity-page.ui-page,
+.app-content > .activity-page.ui-page:has(#global-events-title) {
+  display: block;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  overflow: visible;
+  padding: 0;
+  margin-top: 0;
+}
+.workspace.activity-page:has(#global-events-title) .page-header,
+.workspace.activity-page:has(#history-title) .page-header,
+.workspace.activity-page:has(#schedule-title) .page-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-6);
+  margin: 0 0 var(--space-6);
+}
+.activity-page .page-identity {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+.activity-page .page-tools {
+  flex: 2 1 36rem;
+  min-width: 0;
+}
+.activity-page .page-tools .activity-toolbar {
+  margin: 0;
+  align-items: center;
+}
+.activity-page .page-header p {
+  margin: 0;
+}
+.activity-page .page-header h2 {
+  margin: var(--space-1) 0 var(--space-2);
+}
+.activity-page .page-header .overflow-trigger {
+  color: var(--on-primary);
+  background: var(--primary);
+  border-color: var(--primary);
+}
+.activity-page .page-header .overflow-trigger:hover {
+  background: var(--primary-hover);
+}
+.activity-page .activity-toolbar .dashboard-search-field {
+  flex: 1 1 14rem;
+  min-width: 0;
+  margin: 0;
+}
+.activity-toolbar {
+  margin-bottom: var(--space-3);
+}
+.activity-toolbar .saved-views__controls {
+  margin: 0;
+}
+.activity-filter-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.activity-source-filters label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+}
+.activity-source-filters input {
+  width: auto;
+  min-height: auto;
+}
+.activity-page .history-list,
+.activity-page .journal-feed {
+  display: block;
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+  background: var(--surface);
+}
+.activity-page .history-list > li:first-child .history-row,
+.activity-page .journal-feed > li:first-child > article {
+  border-top: 0;
+}
+.activity-page .history-row,
+.activity-page .journal-feed > li > article {
+  display: grid;
+  grid-template-columns: minmax(6rem, 9rem) minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.activity-page .history-date,
+.activity-page .journal-date {
+  padding: 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+  font-variant-numeric: tabular-nums;
+}
+.activity-page .history-content,
+.activity-page .journal-content {
+  min-width: 0;
+  border-left: 1px solid var(--border);
+  padding: 0 0 0 var(--space-4);
+  position: relative;
+  overflow-wrap: anywhere;
+}
+.activity-page .history-content::before,
+.activity-page .journal-content::before {
+  content: "";
+  position: absolute;
+  width: var(--space-2);
+  height: var(--space-2);
+  left: calc(var(--space-1) * -1);
+  top: var(--space-1);
+  border: 1px solid var(--primary);
+  border-radius: 50%;
+  background: var(--background);
+}
+.activity-row-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+.activity-page .activity-row-heading h3,
+.activity-page .journal-feed .event-kind {
+  font: var(--type-strong);
+  margin: 0;
+}
+.activity-page .history-primary,
+.activity-page .journal-feed .event-target {
+  display: inline;
+  font: var(--type-body);
+  color: var(--primary);
+  margin: 0;
+  text-underline-offset: 3px;
+}
+.activity-page .history-subject,
+.activity-page .journal-record-type {
+  display: inline;
+  margin-left: var(--space-2);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.activity-page .history-content p,
+.activity-page .journal-feed p {
+  margin: var(--space-1) 0 0;
+  font: var(--type-small);
+  overflow-wrap: anywhere;
+}
+.activity-page .history-related,
+.activity-page .journal-related {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  list-style: none;
+  font: var(--type-small);
+}
+.activity-page .journal-feed .journal-related p {
+  margin: 0;
+}
+.activity-page .journal-excerpt {
+  white-space: pre-line;
+}
+.dashboard-quick-add:has(button) :is(a, button) {
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  width: 100%;
+  min-height: 2.75rem;
+  border: 0;
+  background: transparent;
+  padding: var(--space-2) var(--space-3);
+  color: var(--text);
+  font: var(--type-body);
+  text-align: left;
+  border-radius: var(--radius-small);
+}
+.dashboard-quick-add:has(button) :is(a, button):hover {
+  background: var(--surface-hover);
+}
+.journal-entry-dialog {
+  width: min(42rem, calc(100vw - var(--space-8)));
+  max-height: calc(100dvh - var(--space-8));
+  overflow: auto;
+}
+.journal-entry-dialog h3 {
+  font: var(--type-h2);
+}
+.journal-entry-dialog .field-help {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.journal-entry-dialog textarea {
+  min-height: 6rem;
+}
+.event-journal .event-card {
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  box-shadow: none;
+  border-radius: 0;
+  padding: var(--space-3) 0;
+}
+@media (min-width: 48.01rem) {
+  .application-shell:has(.activity-page) > .desktop-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+  }
+}
+@media (max-width: 48rem) {
+  .activity-page .activity-toolbar .dashboard-search-field {
+    flex-basis: 100%;
+  }
+  .app-content > .activity-page.ui-page,
+  .app-content > .activity-page.ui-page:has(#global-events-title) {
+    padding: 0 0 var(--space-16);
+  }
+  .activity-page .history-row,
+  .activity-page .journal-feed > li > article {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+    border-left: 1px solid var(--border);
+    padding-left: var(--space-3);
+  }
+  .activity-page .history-content,
+  .activity-page .journal-content {
+    padding: 0;
+    border-left: 0;
+  }
+  .activity-page .history-content::before,
+  .activity-page .journal-content::before {
+    left: calc(var(--space-4) * -1);
+  }
+}
+
+/* Dashboard's live drawer grammar, bounded to the Activity family. */
+.task-dialog.dashboard-filter-drawer.activity-filter-drawer {
+  inset: 0 0 auto auto;
+  margin: 0;
+  width: min(34rem, 100%);
+  height: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+.activity-filter-drawer .section-heading {
+  margin: 0;
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.activity-filter-drawer .dashboard-drawer-fields {
+  min-height: 0;
+  overflow-y: auto;
+  margin: 0;
+  padding: var(--space-4) var(--space-6);
+}
+.activity-filter-drawer .dashboard-drawer-actions {
+  margin: auto 0 0;
+  padding: var(--space-4) var(--space-6);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.activity-filter-drawer .dashboard-drawer-actions > button:last-child {
+  margin-left: auto;
+}
+.activity-filter-drawer .activity-choice-group {
+  display: block;
+}
+.activity-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-1) var(--space-4);
+}
+.activity-choice-grid label {
+  display: flex;
+  gap: var(--space-2);
+  align-items: center;
+  min-height: 44px;
+  font: var(--type-body);
+  cursor: pointer;
+}
+.activity-choice-grid input {
+  width: auto;
+  flex-shrink: 0;
+  margin: 0;
+}
+.activity-filter-drawer .activity-year-field,
+.activity-filter-drawer .activity-window-field {
+  max-width: 16rem;
+  margin: 0;
+}
+.activity-year-field > span {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+@media (max-width: 36rem) {
+  .activity-choice-grid {
+    grid-template-columns: 1fr;
+  }
+  .activity-filter-drawer .section-heading,
+  .activity-filter-drawer .dashboard-drawer-fields,
+  .activity-filter-drawer .dashboard-drawer-actions {
+    padding-inline: var(--space-4);
+  }
+}

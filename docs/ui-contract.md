@@ -82,7 +82,13 @@ large 14px. Default surfaces use borders, no shadow. Overlay elevation only:
 
 AppShell → Page → PageHeader → optional PageToolbar → PageContent → optional DetailPanel.
 These are semantic regions, not a requirement to build a component for every wrapper.
-Reuse PageHeader from ReferenceUI: optional eyebrow, title, concise description, actions.
+Reuse PageHeader from ReferenceUI: optional eyebrow, title, optional concise description, actions.
+For the Activity family, its optional `tools` slot gives PageHeader two regions: PageIdentity
+(eyebrow, title, short subtitle) and PageTools (search, Filters, supported Saved views, primary action).
+ActivityPageHeader composes that slot with the existing Dashboard toolbar and native filter drawer.
+Identity and tools use flexible bases and wrapping: wide layouts share one row, tools wrap as available
+space shrinks, and mobile places identity first. Search retains a practical basis and fills remaining
+space; buttons remain compact. Available width, including actual browser zoom, drives adaptation.
 The shell owns the brand h1; page titles are h2, sections h3, subordinate headings h4.
 `Page`, `SectionHeader`, `Metric`, `StatusBadge`, `EmptyState`, `LoadingState`, `ErrorState`
 are the small immediate vocabulary in WorkspaceUI. A source badge uses StatusBadge with literal
@@ -154,3 +160,35 @@ Do: “Journal · recorded 11 Oct (UTC)” when occurrence is unknown. Don't: as
 Do: a section heading and ruled list. Don't: wrap every heading, row and badge in another card.
 Do: consume primary/text/space/type tokens. Don't: add a feature-specific green or font scale.
 Do: show planned overdue work in Schedule. Don't: present completion as an event that occurred.
+
+## Activity recording and timeline pages
+
+Journal/History/Schedule reuse the Dashboard control grammar and native right-side filter drawer:
+flexible Search, Filters, supported adjacent Saved views, compact removable active-filter summary.
+Use concise page subtitles. Journal's + Record action belongs in PageTools and uses OverflowMenu.
+Schedule's primary creation action is in PageTools; List/Calendar belongs in the local view heading,
+with month identity and temporal navigation in Calendar and count/identity alone in List.
+Schedule has no Saved Views contract. Structured Journal choices navigate
+to delivered canonical forms; notebook choices reuse contextual Journal creation. History has no
+primary mutation action and uses concise source labels/links, not repeated product prose.
+
+Operational lists prefer a grouped white surface with compact rows and subtle dividers over an
+oversized card per short record. Schedule preserves its due-date buckets; chronology keeps original
+order/precision without forcing uncertain dates into relative-day groups. Borders carry structure;
+shadows are restrained and reserved for overlays. Row secondary actions use OverflowMenu, including
+inside a modal where the menu remains in that modal's interactive subtree and Escape closes it first.
+
+Activity pages use the available desktop width and document scrolling with intrinsic wrapping.
+Newly touched pages must adapt to available width, including actual browser zoom. Review Dashboard
+as reference and Activity at desktop 80/100/125/150%, tablet 100/125%, and 390×844 mobile, including
+PageTools, date columns, drawers, row actions and Calendar. Sidebar/global normalization stays deferred.
+
+Activity filters apply live, following Dashboard: one Reset filters / Done footer, including a valid
+single Timeline year. Multi-valued dimensions use native checkbox fieldsets with compact two-column
+wide grids and one-column narrow grids. Empty selection means unrestricted, not a selected All
+pseudo-value. Preserve existing default-query contracts when encoding unrestricted state using real
+supported values. Filters (N) counts restricting dimensions consistently; search stays separate.
+Compact dimension summaries are removable and reset preserves query and local representation/period.
+Content-sized Activity drawers cap at the viewport and scroll fields while keeping their footer
+reachable. All dismissal routes restore focus to Filters. This is a narrow Activity contract update;
+Dashboard interaction and the broader product remain unchanged.

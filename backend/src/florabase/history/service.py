@@ -2,8 +2,20 @@
 
 from typing import Any
 
-from sqlalchemy import Integer, Select, String, case, cast, func, literal, select, true, union_all
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import (
+    Integer,
+    Select,
+    String,
+    case,
+    cast,
+    func,
+    literal,
+    or_,
+    select,
+    true,
+    union_all,
+)
+from sqlalchemy.dialects.postgresql import JSONB, JSONPATH
 from sqlalchemy.orm import Session, aliased
 
 from florabase.botanical_identities.model import BotanicalIdentity
@@ -22,6 +34,7 @@ from florabase.locations.model import Location
 from florabase.plants.model import Plant, PlantGroup
 from florabase.reversals.model import OperationKind
 from florabase.reversals.model import OperationReceipt as Receipt
+from florabase.schedule.model import ScheduledActivity
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import GerminationObservation as Germination
 from florabase.sowings.model import Sowing
@@ -351,18 +364,73 @@ def candidates() -> Any:
         conversions.append(
             statement.where(Conversion.reversed_at.is_not(None)) if reversed_entry else statement
         )
+    # A terminal planning fact has its own persisted instant. It never borrows due_on
+    # or implies the optional linked Journal occurrence happened at completion time.
+    activity = ScheduledActivity
+    completion_refs = []
+    for ref_kind, target_model, ref_label in (
+        ("plant", Plant, _label(Plant, "Unlabelled plant")),
+        ("plant_group", PlantGroup, _label(PlantGroup, "Unlabelled plant group")),
+        ("seed_lot", SeedLot, _label(SeedLot, "Unlabelled seed lot")),
+        ("sowing", Sowing, _label(Sowing, "Unlabelled sowing")),
+        ("location", Location, Location.name),
+        ("botanical_identity", BotanicalIdentity, BotanicalIdentity.scientific_name),
+    ):
+        completion_refs.append(
+            (
+                getattr(activity, f"{ref_kind}_id").is_not(None),
+                func.jsonb_build_array(_ref(ref_kind, target_model.id, ref_label)),
+            )
+        )
+    completions = (
+        _branch(
+            "scheduled_activity",
+            activity,
+            "schedule",
+            literal("completed"),
+            literal("Scheduled work marked completed"),
+            _ref("scheduled_activity", activity.id, activity.title),
+            instant=activity.completed_at,
+            context=case(
+                (
+                    activity.linked_event_id.is_not(None),
+                    "Completion recorded; a separate Journal occurrence is linked in Schedule.",
+                ),
+                else_="Completion recorded without a Journal occurrence.",
+            ),
+            related=case(*completion_refs, else_=func.jsonb_build_array()),
+        )
+        .select_from(activity)
+        .outerjoin(Plant, Plant.id == activity.plant_id)
+        .outerjoin(PlantGroup, PlantGroup.id == activity.plant_group_id)
+        .outerjoin(Sowing, Sowing.id == activity.sowing_id)
+        .outerjoin(SeedLot, SeedLot.id == func.coalesce(activity.seed_lot_id, Sowing.seed_lot_id))
+        .outerjoin(Location, Location.id == activity.location_id)
+        .outerjoin(
+            BotanicalIdentity,
+            BotanicalIdentity.id
+            == func.coalesce(
+                activity.botanical_identity_id,
+                Plant.botanical_identity_id,
+                PlantGroup.botanical_identity_id,
+                SeedLot.botanical_identity_id,
+            ),
+        )
+        .where(activity.status == "completed", activity.completed_at.is_not(None))
+    )
     return union_all(
-        events, harvests, germination, *receipts, dispositions, *conversions
+        events, harvests, germination, *receipts, dispositions, *conversions, completions
     ).subquery()
 
 
 def history_statement(
     *,
     categories: tuple[HistoryCategory, ...] = (),
-    subject_kind: HistorySubjectKind | None = None,
+    subject_kind: HistorySubjectKind | tuple[HistorySubjectKind, ...] | None = None,
     year: int | None = None,
     offset: int = 0,
     limit: int = 50,
+    q: str = "",
 ) -> Select[Any]:
     rows = candidates()
     utc = func.timezone("UTC", rows.c.sort_stamp)
@@ -370,10 +438,46 @@ def history_statement(
         cast(rows.c.year, String), cast(func.extract("year", utc), String)
     )
     filtered = select(rows)
+    if q.strip():
+        source_label = case(
+            (
+                rows.c.source_kind == "event",
+                case(
+                    (
+                        or_(
+                            rows.c.status.is_not(None),
+                            rows.c.subtype.in_(["extraction", "reintegration"]),
+                        ),
+                        "Collection operation",
+                    ),
+                    else_="Journal",
+                ),
+            ),
+            (rows.c.source_kind == "operation_receipt", "Sowing Propagation"),
+            (rows.c.source_kind == "germination", "Germination"),
+            (rows.c.source_kind == "harvest", "Harvest"),
+            (rows.c.source_kind.in_(["disposition", "conversion"]), "Stored material"),
+            else_="Scheduled activity",
+        )
+        related_labels = cast(
+            func.jsonb_path_query_array(rows.c.related, cast("$[*].label", JSONPATH)), String
+        )
+        filtered = filtered.where(
+            or_(
+                rows.c.title.icontains(q.strip(), autoescape=True),
+                rows.c.context.icontains(q.strip(), autoescape=True),
+                rows.c.primary["label"].astext.icontains(q.strip(), autoescape=True),
+                related_labels.icontains(q.strip(), autoescape=True),
+                source_label.icontains(q.strip(), autoescape=True),
+            )
+        )
     if categories:
         filtered = filtered.where(rows.c.category.in_([c.value for c in categories]))
     if subject_kind:
-        filtered = filtered.where(rows.c.primary["kind"].astext == subject_kind.value)
+        subjects = (subject_kind,) if isinstance(subject_kind, HistorySubjectKind) else subject_kind
+        filtered = filtered.where(
+            rows.c.primary["kind"].astext.in_([item.value for item in subjects])
+        )
     if year is not None:
         filtered = filtered.where(cast(displayed_year, Integer) == year)
     data = filtered.cte("history_candidates")
@@ -412,10 +516,11 @@ def list_history(
     database: Session,
     *,
     categories: tuple[HistoryCategory, ...] = (),
-    subject_kind: HistorySubjectKind | None = None,
+    subject_kind: HistorySubjectKind | tuple[HistorySubjectKind, ...] | None = None,
     year: int | None = None,
     offset: int = 0,
     limit: int = 50,
+    q: str = "",
 ) -> HistoryResponse:
     rows = (
         database.execute(
@@ -425,6 +530,7 @@ def list_history(
                 year=year,
                 offset=offset,
                 limit=limit,
+                q=q,
             )
         )
         .mappings()

@@ -842,3 +842,50 @@ test("filter drawer retains applied state on Escape and backdrop dismissal, and 
   await user.click(within(drawer).getByRole("button", { name: "Done" }));
   expect(screen.getByRole("button", { name: "Filters" })).toHaveFocus();
 });
+
+test("Dashboard recent facts distinguish completion and owned operations from Journal entries", async () => {
+  const base = journalFixture(id, "First growth");
+  setup(() => json({}), {
+    ...dashboard,
+    overview: {
+      ...emptyOverview,
+      recent_activity: [
+        base,
+        {
+          ...base,
+          key: "event:operation",
+          subtype: "extraction",
+          title: "Extraction",
+          status: "applied",
+        },
+        {
+          ...base,
+          key: "scheduled_activity:done",
+          source_kind: "scheduled_activity",
+          category: "schedule",
+          title: "Scheduled work marked completed",
+          occurred_at: "2026-10-12T23:30:00Z",
+          primary: { kind: "scheduled_activity", id, label: "Inspect basil" },
+        },
+      ],
+    },
+  });
+  render(<App />);
+  const activity = await screen.findByRole("region", {
+    name: "Recent activity",
+  });
+  expect(
+    within(activity).getAllByText("Journal", { selector: ".ui-badge" }),
+  ).toHaveLength(1);
+  expect(
+    within(activity).getAllByText("History", { selector: ".ui-badge" }),
+  ).toHaveLength(2);
+  expect(
+    within(activity).getByText("Completion recorded 12 Oct 2026 (UTC)"),
+  ).toBeVisible();
+  expect(
+    within(activity).getByRole("link", {
+      name: "Scheduled work marked completed",
+    }),
+  ).toHaveAttribute("href", `#/schedule/${id}`);
+});

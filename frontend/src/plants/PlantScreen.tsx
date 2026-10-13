@@ -444,7 +444,7 @@ function Detail({
       <DetailTabs
         tabs={[
           { id: "overview", label: "Overview" },
-          { id: "events", label: "Events" },
+          { id: "events", label: "Journal" },
           { id: "photos", label: "Photos" },
           { id: "lineage", label: "Lineage" },
         ]}
@@ -2764,7 +2764,7 @@ export function PlantScreen({
               <h3 id="reintegration-title">Reintegrate into original group?</h3>
               <p>
                 This Plant will stop being an active individual. Its identity,
-                lineage, notes, and Event history will remain available.
+                lineage, notes, and recorded history will remain available.
               </p>
               <p>
                 Florabase will restore the recorded pre-extraction state of{" "}
@@ -2774,7 +2774,7 @@ export function PlantScreen({
                     "Unlabelled plant group",
                   )}
                 </strong>{" "}
-                and add one reintegration Event to that group.
+                and add one reintegration record to that group.
               </p>
               {reintegration.eligibility.status === "confirmation_required" && (
                 <div className="notice">

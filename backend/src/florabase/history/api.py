@@ -15,17 +15,19 @@ router = APIRouter(prefix="/history", tags=["collection"])
 def read_history(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
     database: Annotated[Session, Depends(get_database_session)],
-    category: Annotated[list[HistoryCategory] | None, Query()] = None,
-    subject_kind: HistorySubjectKind | None = None,
+    category: Annotated[list[HistoryCategory] | None, Query(max_length=6)] = None,
+    subject_kind: Annotated[list[HistorySubjectKind] | None, Query(max_length=7)] = None,
     year: Annotated[int | None, Query(ge=1, le=9999)] = None,
     offset: Annotated[int, Query(ge=0, le=100_000)] = 0,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
+    q: Annotated[str, Query(max_length=200)] = "",
 ) -> HistoryResponse:
     return list_history(
         database,
         categories=tuple(dict.fromkeys(category or [])),
-        subject_kind=subject_kind,
+        subject_kind=tuple(dict.fromkeys(subject_kind or [])),
         year=year,
         offset=offset,
         limit=limit,
+        q=q,
     )

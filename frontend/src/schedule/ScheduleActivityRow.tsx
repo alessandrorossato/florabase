@@ -1,4 +1,5 @@
 import { ScheduleTargetLabel } from "./ScheduleTargetLabel";
+import { OverflowMenu } from "../components/ReferenceUI";
 import type { Activity } from "./api";
 import {
   activityLabels,
@@ -34,7 +35,9 @@ export function ScheduleActivityRow({
         <p>
           <time dateTime={item.due_on}>{item.due_on}</time> ·{" "}
           {activityLabels[item.activity_kind]} ·{" "}
-          <strong>{activityState(item, today)}</strong>
+          <strong>
+            {activityState(item, today).replace("Planned · ", "")}
+          </strong>
         </p>
         {item.target ? (
           <p>
@@ -51,30 +54,24 @@ export function ScheduleActivityRow({
         )}
         {item.notes && (
           <p className="schedule-notes">
-            {item.notes.length > 240
-              ? `${item.notes.slice(0, 240)}…`
+            {item.notes.length > 160
+              ? `${item.notes.slice(0, 160)}…`
               : item.notes}
           </p>
         )}
         {item.linked_event_id && item.target && (
           <a href={`${targetHref(item.target)}?tab=events`}>
-            Linked Journal Event
+            Linked Journal entry
           </a>
         )}
         {item.status === "completed" && !item.linked_event_id && (
-          <p>Completed without a Journal Event</p>
+          <p className="schedule-row-context">
+            Completed without a Journal entry
+          </p>
         )}
       </div>
       {owner && item.status === "planned" && (
-        <div className="button-row">
-          <button
-            className="button--secondary"
-            onClick={() => {
-              onAction("edit", item);
-            }}
-          >
-            Edit / reschedule
-          </button>
+        <div className="schedule-row-actions">
           <button
             className="button--secondary"
             onClick={() => {
@@ -83,14 +80,30 @@ export function ScheduleActivityRow({
           >
             Complete
           </button>
-          <button
-            className="button--secondary"
-            onClick={() => {
-              onAction("cancel", item);
-            }}
-          >
-            Cancel activity
-          </button>
+          <OverflowMenu label="⋯" ariaLabel={`Actions for ${item.title}`}>
+            <nav
+              className="schedule-row-menu"
+              aria-label={`Activity actions for ${item.title}`}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  onAction("edit", item);
+                }}
+              >
+                Edit / reschedule
+              </button>
+              <button
+                type="button"
+                className="schedule-cancel-action"
+                onClick={() => {
+                  onAction("cancel", item);
+                }}
+              >
+                Cancel activity
+              </button>
+            </nav>
+          </OverflowMenu>
         </div>
       )}
     </div>

@@ -83,7 +83,12 @@ def test_planning_boundaries_filters_dates_and_retention(database_connection: Co
         service.complete(db, activities[0].id, ScheduleComplete(expected_version=1))
         assert service.read(db, activities[0].id, DAY).overdue is False
         assert db.scalar(select(func.count()).select_from(Event)) == prior_events
-        assert list_history(db).total == prior_history
+        completion = list_history(db)
+        assert completion.total == prior_history + 1
+        assert completion.items[0].source_kind == "scheduled_activity"
+        assert completion.items[0].source_id == activities[0].id
+        assert completion.items[0].occurred_at == activities[0].completed_at
+        assert completion.items[0].related[0].id == plant.id
         service.cancel(db, activities[1].id, 1)
         assert service.cancel(db, activities[1].id, 1).version == 2
         with pytest.raises(service.ScheduleError):
@@ -472,6 +477,8 @@ def test_api_filters_target_choices_and_boundary_dates(
         ("q=%25_", 1),
         ("q=absent", 0),
         ("activity_kind=water", 0),
+        ("status=planned&status=completed&activity_kind=water&activity_kind=inspect&q=%25_", 1),
+        ("status=completed&status=cancelled&q=%25_", 0),
     ):
         status, body = _api_get("/api/v1/schedule?" + query, cookie)
         assert status == 200
@@ -479,6 +486,7 @@ def test_api_filters_target_choices_and_boundary_dates(
     assert _api_get("/api/v1/schedule?today=2026-10-10T00:00:00Z", cookie)[0] == 422
     assert _api_get("/api/v1/schedule?today=0", cookie)[0] == 422
     assert _api_get("/api/v1/schedule?status=overdue", cookie)[0] == 422
+    assert _api_get("/api/v1/schedule?" + "&".join(["status=planned"] * 4), cookie)[0] == 422
     assert _api_get("/api/v1/schedule?target_id=" + str(uuid7()), cookie)[0] == 422
     assert _api_get("/api/v1/schedule?today=9999-12-31&window=later", cookie)[0] == 200
     assert _api_get("/api/v1/schedule/targets/plant?limit=1", cookie)[0] == 200
@@ -645,3 +653,173 @@ def test_calendar_api_auth_date_validation_and_versioned_reschedule(
     assert (
         mutate(authenticated_browser, "POST", path + "/cancel", {"expected_version": 2})[0] == 200
     )
+
+
+def test_schedule_note_search_is_literal_and_filtered_before_calendar_count_and_page(
+    database_connection: Connection,
+) -> None:
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as db:
+        activities = [
+            service.create(
+                db,
+                ScheduleWrite(
+                    activity_kind="inspect",
+                    title="Readiness check",
+                    due_on=due,
+                    notes=notes,
+                ),
+            )
+            for due, notes in (
+                (date(2026, 10, 1), "Inspection bench %_ context"),
+                (date(2026, 10, 2), "Inspection bench second"),
+                (date(2026, 11, 1), "Inspection bench next month"),
+                (date(2026, 10, 3), "Inspection bench cancelled"),
+            )
+        ]
+        service.cancel(db, activities[-1].id, 1)
+        start, end = date(2026, 10, 1), date(2026, 10, 31)
+        page = service.list_activities(
+            db, today=DAY, q="inspection BENCH", limit=1, due_from=start, due_to=end
+        )
+        assert page.total == 2
+        assert [item.id for item in page.items] == [activities[0].id]
+        tail = service.list_activities(
+            db, today=DAY, q="Inspection bench", offset=50, due_from=start, due_to=end
+        )
+        assert tail.total == 2
+        assert tail.items == []
+        literal = service.list_activities(db, today=DAY, q="%_", due_from=start, due_to=end)
+        assert literal.total == 1
+        assert literal.items[0].id == activities[0].id
+        assert service.list_activities(db, today=DAY, q="Inspection bench").total == 3
+        assert (
+            service.list_activities(
+                db,
+                today=DAY,
+                q="Inspection bench",
+                activity_kind="water",
+                due_from=start,
+                due_to=end,
+            ).total
+            == 0
+        )
+
+
+def test_multiselect_filters_union_within_dimensions_intersect_before_paging(
+    database_connection: Connection,
+) -> None:
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as db:
+        identity = BotanicalIdentity(scientific_name="Filterus combinatus")
+        location = Location(name="Multi filter bench")
+        db.add_all([identity, location])
+        db.flush()
+        plant = Plant(
+            direct_origin_kind="unknown",
+            botanical_identity_id=identity.id,
+            lifecycle="active",
+            label="Filter plant",
+        )
+        db.add(plant)
+        db.flush()
+        first = service.create(
+            db,
+            ScheduleWrite(
+                activity_kind="inspect",
+                title="Multi %_ inspect",
+                due_on=DAY,
+                target=ScheduleTarget(kind="plant", id=plant.id),
+            ),
+        )
+        second = service.create(
+            db,
+            ScheduleWrite(
+                activity_kind="water",
+                title="Multi %_ water",
+                due_on=DAY,
+                target=ScheduleTarget(kind="location", id=location.id),
+            ),
+        )
+        third = service.create(
+            db,
+            ScheduleWrite(
+                activity_kind="water",
+                title="Multi %_ cancelled",
+                due_on=DAY,
+                target=ScheduleTarget(kind="plant", id=plant.id),
+            ),
+        )
+        service.create(
+            db, ScheduleWrite(activity_kind="inspect", title="Multi %_ untargeted", due_on=DAY)
+        )
+        service.complete(db, second.id, ScheduleComplete(expected_version=1))
+        service.cancel(db, third.id, 1)
+        expected = sorted([first.id, second.id])
+        page = service.list_activities(
+            db,
+            today=DAY,
+            status=("planned", "completed"),
+            activity_kind=("inspect", "water"),
+            target_kind=("plant", "location"),
+            q="Multi %_",
+            window="today",
+            limit=1,
+        )
+        assert page.total == 2
+        assert [item.id for item in page.items] == expected[:1]
+        tail = service.list_activities(
+            db,
+            today=DAY,
+            status=("planned", "completed"),
+            activity_kind=("inspect", "water"),
+            target_kind=("plant", "location"),
+            q="Multi %_",
+            window="today",
+            limit=1,
+            offset=1,
+        )
+        assert tail.total == 2
+        assert [item.id for item in tail.items] == expected[1:]
+        assert (
+            service.list_activities(
+                db, today=DAY, status=("planned", "completed", "cancelled"), q="Multi %_"
+            ).total
+            == 4
+        )
+        assert (
+            service.list_activities(
+                db,
+                today=DAY,
+                status=("planned", "completed"),
+                activity_kind=("water",),
+                target_kind=("plant", "location"),
+                q="Multi %_",
+            ).total
+            == 1
+        )
+        assert (
+            service.list_activities(
+                db, today=DAY, status=("completed", "cancelled"), window="overdue", q="Multi %_"
+            ).total
+            == 0
+        )
+        assert (
+            service.list_activities(
+                db,
+                today=DAY,
+                status=("planned", "completed", "cancelled"),
+                target_kind=(
+                    "botanical_identity",
+                    "seed_lot",
+                    "sowing",
+                    "plant",
+                    "plant_group",
+                    "location",
+                ),
+                q="Multi %_",
+            ).total
+            == 3
+        )
+        with pytest.raises(service.ScheduleError, match="schedule_target_kind_required"):
+            service.list_activities(
+                db, today=DAY, target_kind=("plant", "location"), target_id=plant.id
+            )

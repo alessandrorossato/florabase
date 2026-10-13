@@ -46,7 +46,10 @@ export interface DirectoryStates {
     identity_id: string;
     location_id: string;
   };
-  events: { category: "all" | "observations" | "cultivation" | "status" };
+  events: {
+    q: string;
+    category: ("observations" | "cultivation" | "status")[];
+  };
   media: {
     q: string;
     kind: string;
@@ -134,7 +137,7 @@ export const defaults: DirectoryStates = {
     identity_id: "",
     location_id: "",
   },
-  events: { category: "all" },
+  events: { q: "", category: [] },
   media: { q: "", kind: "", association: "all", target: "" },
   species_distribution: { q: "", scope: "all", identity: "" },
   native_ranges: {
@@ -208,6 +211,16 @@ function fieldValue(
   key: string,
   value: unknown,
 ): string | boolean | string[] | null {
+  if (surface === "events" && key === "category") {
+    const values =
+      value === "all" ? [] : typeof value === "string" ? [value] : value;
+    const ordered = ["observations", "cultivation", "status"];
+    return Array.isArray(values) &&
+      values.length <= 3 &&
+      values.every((item) => ordered.includes(item as string))
+      ? ordered.filter((item) => values.includes(item))
+      : null;
+  }
   if (surface === "native_ranges" && (key === "identity" || key === "record")) {
     const values =
       key === "identity" && typeof value === "string" ? [value] : value;

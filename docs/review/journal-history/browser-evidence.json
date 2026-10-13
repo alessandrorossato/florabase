@@ -1,0 +1,62 @@
+[
+  {
+    "width": 1440,
+    "route": "events",
+    "layout": {
+      "viewport": 1440,
+      "document": 1440,
+      "main": 1440,
+      "mainWidth": 1440
+    }
+  },
+  {
+    "width": 1440,
+    "route": "history",
+    "layout": {
+      "viewport": 1440,
+      "document": 1440,
+      "main": 1440,
+      "mainWidth": 1440
+    }
+  },
+  {
+    "width": 1024,
+    "route": "events",
+    "layout": {
+      "viewport": 1024,
+      "document": 1024,
+      "main": 1024,
+      "mainWidth": 1024
+    }
+  },
+  {
+    "width": 1024,
+    "route": "history",
+    "layout": {
+      "viewport": 1024,
+      "document": 1024,
+      "main": 1024,
+      "mainWidth": 1024
+    }
+  },
+  {
+    "width": 390,
+    "route": "events",
+    "layout": {
+      "viewport": 390,
+      "document": 390,
+      "main": 390,
+      "mainWidth": 390
+    }
+  },
+  {
+    "width": 390,
+    "route": "history",
+    "layout": {
+      "viewport": 390,
+      "document": 390,
+      "main": 390,
+      "mainWidth": 390
+    }
+  }
+]
