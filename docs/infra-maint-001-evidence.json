@@ -1,0 +1,410 @@
+{
+  "base": "ec992440cba2681ca6e5327ec613a25f88183c3d",
+  "source_update_command": "make -C /home/alessandro/.codex/worktrees/6147/florabase -f /home/alessandro/.codex/worktrees/947e/florabase/Makefile uat-preview-sync",
+  "before": {
+    "source": {
+      "source": "/home/alessandro/.codex/worktrees/6147/florabase",
+      "branch": "detached",
+      "sha": "ff6ab788980845cfd1d5c3a985acb808983c2e80",
+      "dirty": "no"
+    },
+    "volumes": [
+      {
+        "name": "florabase-uat-preview_attachment_data",
+        "created": "2026-10-12T18:54:10+02:00",
+        "labels": {
+          "com.docker.compose.config-hash": "31eeafc9b844b012a7b5f7d708f57f132da51b13385c564262af6ca80c8f6af5",
+          "com.docker.compose.project": "florabase-uat-preview",
+          "com.docker.compose.version": "5.6.0",
+          "com.docker.compose.volume": "attachment_data",
+          "io.florabase.source": "/home/alessandro/.codex/worktrees/6147/florabase"
+        }
+      },
+      {
+        "name": "florabase-uat-preview_frontend_node_modules",
+        "created": "2026-10-12T18:54:10+02:00",
+        "labels": {
+          "com.docker.compose.config-hash": "fbe2133ad79eb75e85d10df5c696e819adc8fbd1355fb4c9a1a99002ca39db61",
+          "com.docker.compose.project": "florabase-uat-preview",
+          "com.docker.compose.version": "5.6.0",
+          "com.docker.compose.volume": "frontend_node_modules",
+          "io.florabase.source": "/home/alessandro/.codex/worktrees/6147/florabase"
+        }
+      },
+      {
+        "name": "florabase-uat-preview_postgres_data",
+        "created": "2026-10-12T18:54:04+02:00",
+        "labels": {
+          "com.docker.compose.config-hash": "3afcc058cbb65b10e529e92bb7b63d1e08fd54ba3f65661d28bff08469edcda9",
+          "com.docker.compose.project": "florabase-uat-preview",
+          "com.docker.compose.version": "5.6.0",
+          "com.docker.compose.volume": "postgres_data",
+          "io.florabase.source": "/home/alessandro/.codex/worktrees/6147/florabase"
+        }
+      }
+    ],
+    "fixture": {
+      ".uat-identity.json": {
+        "project": "florabase-uat-preview",
+        "source": "/home/alessandro/.codex/worktrees/6147/florabase",
+        "database": "florabase_uat",
+        "origin": "http://localhost:15174"
+      },
+      ".uat-fixture.json": {
+        "dashboard_extension": 1,
+        "manual_review_extension": 1,
+        "records": {
+          "asset:external": "01a1310a-6e14-7333-b760-514758905e1b",
+          "asset:local": "01a1310a-6e05-7722-a926-b856e144304c",
+          "event:0": "01a1310a-6ddb-728d-b657-673c642d1beb",
+          "event:1": "01a1310a-6de0-7527-8538-a6de274b6a53",
+          "event:harvest": "01a1310a-6de1-727b-a545-ce958b1d7179",
+          "external_taxon:basil": "01a1310a-6d13-7112-a0c9-f9b855d3a8bb",
+          "group:basil": "01a1310a-6dd6-7001-b343-a69ccd7e8aab",
+          "harvest:basil": "01a1310a-6de3-7696-a445-f0441920fc27",
+          "identity:Aloe vera": "01a1310a-6d09-772d-8653-0ec63e334a5d",
+          "identity:Lavandula angustifolia": "01a1310a-6d07-76d3-b6a4-939f1aa20702",
+          "identity:Ocimum basilicum": "01a1310a-6d03-7738-931e-2b186c0ea475",
+          "identity:Ocimum tenuiflorum": "01a1310a-72c8-770a-a798-2b4eb757da89",
+          "identity:Raphanus sativus": "01a1310a-6d1d-7060-92ca-9355e9e81c9a",
+          "identity:Salvia officinalis": "01a1310a-6d37-76fa-9b38-bc0f265880ac",
+          "identity:Viola tricolor": "01a1310a-6d34-709c-bd6d-25c30c5683ff",
+          "identity:genovese": "01a1310a-7348-74f7-aef1-127898499ae7",
+          "inventory:basil": "01a1310a-6e85-7173-ac91-df87dbaa5ae1",
+          "item:basil": "01a1310a-6dee-704b-8064-3f574e282b47",
+          "link:external": "01a1310a-6e19-70d5-bf52-408e6b42d19f",
+          "link:plant": "01a1310a-6e6a-7712-a13b-94b55c2807e9",
+          "link:seed_lot": "01a1310a-6e58-7780-bc8e-000b7cfa7688",
+          "link:supplier": "01a1310a-6e2a-734f-bed2-57224104b154",
+          "location:Greenhouse bench": "01a1310a-6d9d-723e-977f-d82c0704b227",
+          "location:Indoor seed shelf": "01a1310a-6d9b-763b-8438-a25015a237f2",
+          "location:Outdoor herb bed": "01a1310a-6d9e-7748-829b-31bca62aa2d5",
+          "location:root": "01a1310a-6d99-761d-bb73-612e70a31a44",
+          "order:exact": "01a1310a-6da9-703c-b8a4-f2b025a4656b",
+          "order:partial": "01a1310a-6dab-7548-92e2-8a94634ab84f",
+          "owner:preview": "01a1310a-6c58-7772-8b56-601558f807d7",
+          "place:garden": "01a1310a-6da4-76f9-b3fb-31b8c9a3dfc8",
+          "place:native": "01a1310a-6d49-74e8-b797-2d31e4d767e7",
+          "plant:derived": "01a1310a-6dd1-74d0-8ff8-9aeb2d758111",
+          "plant:direct": "01a1310a-6dca-7763-9e61-d950e9891fb6",
+          "schedule:calendar_density_1": "01a1310a-7320-7706-a3a7-fd3b68c3833c",
+          "schedule:calendar_density_2": "01a1310a-7322-766c-89c7-f7d70dba396c",
+          "schedule:calendar_density_3": "01a1310a-7325-7417-a14b-d6304024ffed",
+          "schedule:calendar_density_4": "01a1310a-7327-759c-9cbb-e79fad4ce966",
+          "schedule:calendar_density_5": "01a1310a-7329-7081-b148-46cb52721ebf",
+          "schedule:calendar_month_end": "01a1310a-732a-726f-a603-4b71a7c2aff1",
+          "schedule:calendar_next_month": "01a1310a-732c-70ca-afa0-43df73bbdc8a",
+          "schedule:cancelled": "01a1310a-7316-70c2-b210-d798e675556b",
+          "schedule:collection": "01a1310a-7357-73ee-8494-41ffec1cd9b2",
+          "schedule:completed": "01a1310a-7309-71a8-a365-30a34366ea5d",
+          "schedule:identity": "01a1310a-7306-734d-be1e-039de3803087",
+          "schedule:later": "01a1310a-72ff-7145-b86f-2216e57c7b00",
+          "schedule:linked": "01a1310a-730f-742a-91c0-d2dd2e52dec7",
+          "schedule:location": "01a1310a-7304-7470-b831-7cabb0fbf1f1",
+          "schedule:overdue": "01a1310a-72ef-7147-8d80-b934f0b58adf",
+          "schedule:repot": "01a1310a-7301-75fd-8cf4-6b0c959700f2",
+          "schedule:seed": "01a1310a-72f8-744d-be80-8e451f72b02b",
+          "schedule:sowing": "01a1310a-72fa-7116-8228-d7e1f87b03cf",
+          "schedule:today": "01a1310a-72f5-7211-bc87-8fe24ccc7dcd",
+          "seed:0": "01a1310a-6db1-71a4-878f-fcfe25719b5e",
+          "seed:1": "01a1310a-6db5-717d-b45d-670dfed44f9c",
+          "seed:2": "01a1310a-6db8-7681-a532-e1fb239af415",
+          "seed:3": "01a1310a-6dbd-7503-b456-2b42b7aeb796",
+          "seed:dashboard_unlinked": "01a1310a-7337-7085-b1b3-78de63067885",
+          "seed:genovese": "01a1310a-7353-77b7-81f3-4194c03c0da6",
+          "seed:historical": "01a1310a-6d1f-72b5-87a3-7a142bc8befb",
+          "seed:holy_basil": "01a1310a-72c9-71ca-bd2f-d35e0ddffe69",
+          "seed:unranged": "01a1310a-6d39-7693-86a1-2c1386bc09ec",
+          "site:herbs": "01a1310a-6da5-75ba-9bcb-1c9da1034259",
+          "sowing:basil": "01a1310a-6dc2-7439-9a42-a902d611d4fd",
+          "sowing:dashboard_unknown": "01a1310a-733a-71c7-8001-88d74d0adf04",
+          "sowing:dashboard_zero": "01a1310a-733c-7573-8d02-c25103911dae",
+          "sowing:historical": "01a1310a-6dc5-75e6-b075-01c22bad149a",
+          "supplier:exchange": "01a1310a-6d95-7297-bb03-65755dcbbbd9",
+          "supplier:nursery": "01a1310a-6d94-77c2-89b6-23081cd758da"
+        },
+        "schedule_calendar_extension": 1,
+        "schedule_extension": 1,
+        "state": "ready",
+        "taxonomy_extension": 1,
+        "version": 4
+      }
+    },
+    "database_revision": ["20261009_0041"],
+    "database_data_digest": "0d4bc56614ecfea61bb67cbb9603dab23b257591e286c735f6ed71b1a5450155",
+    "representatives": {
+      "suppliers": [
+        {
+          "id": "01a1310a-6d94-77c2-89b6-23081cd758da",
+          "name": "Preview \u2014 Greenhouse Nursery",
+          "notes": "Synthetic UAT Preview data; no real collection or provenance claims."
+        },
+        {
+          "id": "01a1310a-6d95-7297-bb03-65755dcbbbd9",
+          "name": "Preview \u2014 Garden Seed Exchange",
+          "notes": "Synthetic UAT Preview data; no real collection or provenance claims."
+        }
+      ],
+      "users": 1,
+      "plants": 2,
+      "seed_lots": 9,
+      "schedule": 19,
+      "media": 2
+    },
+    "media_digests": {
+      ".thumbnails/01a1310a6e057722a926b856e144304c-320-webp-v1-f01546939be0303d86acb3caee959fda992fc28932eceae52f54525bede404f0.webp": "c3b69d4fb150a7dd862ad1b7cefc70b67690180728f45817ab6c8b5bbfb3a164",
+      ".uat-fixture.json": "c41a8e42b43063a14539b176a47b056ee85be1fed6d1adb646050233ab51d3bf",
+      ".uat-fixture.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".uat-identity.json": "5cab1a3d64f9f19450c00392882acc7dfeaea10bbe06f0bc5bcc6ffaeb952ad9",
+      "objects/01/01a1310a6e057722a926b854cd03c0a0": "f01546939be0303d86acb3caee959fda992fc28932eceae52f54525bede404f0"
+    },
+    "health": {
+      "frontend": {
+        "running": false,
+        "health": "unhealthy",
+        "source": "/home/alessandro/.codex/worktrees/6147/florabase",
+        "sha": "8ed57d63b45286cb2509e9eeca9c2a84ad5b14eb"
+      },
+      "backend": {
+        "running": false,
+        "health": "unhealthy",
+        "source": "/home/alessandro/.codex/worktrees/6147/florabase",
+        "sha": "8ed57d63b45286cb2509e9eeca9c2a84ad5b14eb"
+      },
+      "dev-state-init": {
+        "running": false,
+        "health": null,
+        "source": "/home/alessandro/.codex/worktrees/6147/florabase",
+        "sha": "8ed57d63b45286cb2509e9eeca9c2a84ad5b14eb"
+      },
+      "db": {
+        "running": true,
+        "health": "healthy",
+        "source": "/home/alessandro/.codex/worktrees/6147/florabase",
+        "sha": "8ed57d63b45286cb2509e9eeca9c2a84ad5b14eb"
+      }
+    },
+    "source_cache_digests": {
+      "wfo-2026-06.sqlite": "f5df6db6b8db0d1d9bae9f4579387dec1534489d75d02407c9250ebfebe19695",
+      "wfo-2026-06.sha256": "f97c5c007bb0914171eb0c3b22aceea72ad805f528269909553663f615ea975b"
+    },
+    "code_head": ["20261009_0041"]
+  },
+  "after_before_login_check": {
+    "source": {
+      "source": "/home/alessandro/.codex/worktrees/6147/florabase",
+      "branch": "detached",
+      "sha": "ec992440cba2681ca6e5327ec613a25f88183c3d",
+      "dirty": "no"
+    },
+    "volumes": [
+      {
+        "name": "florabase-uat-preview_attachment_data",
+        "created": "2026-10-12T18:54:10+02:00",
+        "labels": {
+          "com.docker.compose.config-hash": "31eeafc9b844b012a7b5f7d708f57f132da51b13385c564262af6ca80c8f6af5",
+          "com.docker.compose.project": "florabase-uat-preview",
+          "com.docker.compose.version": "5.6.0",
+          "com.docker.compose.volume": "attachment_data",
+          "io.florabase.source": "/home/alessandro/.codex/worktrees/6147/florabase"
+        }
+      },
+      {
+        "name": "florabase-uat-preview_frontend_node_modules",
+        "created": "2026-10-12T18:54:10+02:00",
+        "labels": {
+          "com.docker.compose.config-hash": "fbe2133ad79eb75e85d10df5c696e819adc8fbd1355fb4c9a1a99002ca39db61",
+          "com.docker.compose.project": "florabase-uat-preview",
+          "com.docker.compose.version": "5.6.0",
+          "com.docker.compose.volume": "frontend_node_modules",
+          "io.florabase.source": "/home/alessandro/.codex/worktrees/6147/florabase"
+        }
+      },
+      {
+        "name": "florabase-uat-preview_postgres_data",
+        "created": "2026-10-12T18:54:04+02:00",
+        "labels": {
+          "com.docker.compose.config-hash": "3afcc058cbb65b10e529e92bb7b63d1e08fd54ba3f65661d28bff08469edcda9",
+          "com.docker.compose.project": "florabase-uat-preview",
+          "com.docker.compose.version": "5.6.0",
+          "com.docker.compose.volume": "postgres_data",
+          "io.florabase.source": "/home/alessandro/.codex/worktrees/6147/florabase"
+        }
+      }
+    ],
+    "fixture": {
+      ".uat-identity.json": {
+        "project": "florabase-uat-preview",
+        "source": "/home/alessandro/.codex/worktrees/6147/florabase",
+        "database": "florabase_uat",
+        "origin": "http://localhost:15174"
+      },
+      ".uat-fixture.json": {
+        "dashboard_extension": 1,
+        "manual_review_extension": 1,
+        "records": {
+          "asset:external": "01a1310a-6e14-7333-b760-514758905e1b",
+          "asset:local": "01a1310a-6e05-7722-a926-b856e144304c",
+          "event:0": "01a1310a-6ddb-728d-b657-673c642d1beb",
+          "event:1": "01a1310a-6de0-7527-8538-a6de274b6a53",
+          "event:harvest": "01a1310a-6de1-727b-a545-ce958b1d7179",
+          "external_taxon:basil": "01a1310a-6d13-7112-a0c9-f9b855d3a8bb",
+          "group:basil": "01a1310a-6dd6-7001-b343-a69ccd7e8aab",
+          "harvest:basil": "01a1310a-6de3-7696-a445-f0441920fc27",
+          "identity:Aloe vera": "01a1310a-6d09-772d-8653-0ec63e334a5d",
+          "identity:Lavandula angustifolia": "01a1310a-6d07-76d3-b6a4-939f1aa20702",
+          "identity:Ocimum basilicum": "01a1310a-6d03-7738-931e-2b186c0ea475",
+          "identity:Ocimum tenuiflorum": "01a1310a-72c8-770a-a798-2b4eb757da89",
+          "identity:Raphanus sativus": "01a1310a-6d1d-7060-92ca-9355e9e81c9a",
+          "identity:Salvia officinalis": "01a1310a-6d37-76fa-9b38-bc0f265880ac",
+          "identity:Viola tricolor": "01a1310a-6d34-709c-bd6d-25c30c5683ff",
+          "identity:genovese": "01a1310a-7348-74f7-aef1-127898499ae7",
+          "inventory:basil": "01a1310a-6e85-7173-ac91-df87dbaa5ae1",
+          "item:basil": "01a1310a-6dee-704b-8064-3f574e282b47",
+          "link:external": "01a1310a-6e19-70d5-bf52-408e6b42d19f",
+          "link:plant": "01a1310a-6e6a-7712-a13b-94b55c2807e9",
+          "link:seed_lot": "01a1310a-6e58-7780-bc8e-000b7cfa7688",
+          "link:supplier": "01a1310a-6e2a-734f-bed2-57224104b154",
+          "location:Greenhouse bench": "01a1310a-6d9d-723e-977f-d82c0704b227",
+          "location:Indoor seed shelf": "01a1310a-6d9b-763b-8438-a25015a237f2",
+          "location:Outdoor herb bed": "01a1310a-6d9e-7748-829b-31bca62aa2d5",
+          "location:root": "01a1310a-6d99-761d-bb73-612e70a31a44",
+          "order:exact": "01a1310a-6da9-703c-b8a4-f2b025a4656b",
+          "order:partial": "01a1310a-6dab-7548-92e2-8a94634ab84f",
+          "owner:preview": "01a1310a-6c58-7772-8b56-601558f807d7",
+          "place:garden": "01a1310a-6da4-76f9-b3fb-31b8c9a3dfc8",
+          "place:native": "01a1310a-6d49-74e8-b797-2d31e4d767e7",
+          "plant:derived": "01a1310a-6dd1-74d0-8ff8-9aeb2d758111",
+          "plant:direct": "01a1310a-6dca-7763-9e61-d950e9891fb6",
+          "schedule:calendar_density_1": "01a1310a-7320-7706-a3a7-fd3b68c3833c",
+          "schedule:calendar_density_2": "01a1310a-7322-766c-89c7-f7d70dba396c",
+          "schedule:calendar_density_3": "01a1310a-7325-7417-a14b-d6304024ffed",
+          "schedule:calendar_density_4": "01a1310a-7327-759c-9cbb-e79fad4ce966",
+          "schedule:calendar_density_5": "01a1310a-7329-7081-b148-46cb52721ebf",
+          "schedule:calendar_month_end": "01a1310a-732a-726f-a603-4b71a7c2aff1",
+          "schedule:calendar_next_month": "01a1310a-732c-70ca-afa0-43df73bbdc8a",
+          "schedule:cancelled": "01a1310a-7316-70c2-b210-d798e675556b",
+          "schedule:collection": "01a1310a-7357-73ee-8494-41ffec1cd9b2",
+          "schedule:completed": "01a1310a-7309-71a8-a365-30a34366ea5d",
+          "schedule:identity": "01a1310a-7306-734d-be1e-039de3803087",
+          "schedule:later": "01a1310a-72ff-7145-b86f-2216e57c7b00",
+          "schedule:linked": "01a1310a-730f-742a-91c0-d2dd2e52dec7",
+          "schedule:location": "01a1310a-7304-7470-b831-7cabb0fbf1f1",
+          "schedule:overdue": "01a1310a-72ef-7147-8d80-b934f0b58adf",
+          "schedule:repot": "01a1310a-7301-75fd-8cf4-6b0c959700f2",
+          "schedule:seed": "01a1310a-72f8-744d-be80-8e451f72b02b",
+          "schedule:sowing": "01a1310a-72fa-7116-8228-d7e1f87b03cf",
+          "schedule:today": "01a1310a-72f5-7211-bc87-8fe24ccc7dcd",
+          "seed:0": "01a1310a-6db1-71a4-878f-fcfe25719b5e",
+          "seed:1": "01a1310a-6db5-717d-b45d-670dfed44f9c",
+          "seed:2": "01a1310a-6db8-7681-a532-e1fb239af415",
+          "seed:3": "01a1310a-6dbd-7503-b456-2b42b7aeb796",
+          "seed:dashboard_unlinked": "01a1310a-7337-7085-b1b3-78de63067885",
+          "seed:genovese": "01a1310a-7353-77b7-81f3-4194c03c0da6",
+          "seed:historical": "01a1310a-6d1f-72b5-87a3-7a142bc8befb",
+          "seed:holy_basil": "01a1310a-72c9-71ca-bd2f-d35e0ddffe69",
+          "seed:unranged": "01a1310a-6d39-7693-86a1-2c1386bc09ec",
+          "site:herbs": "01a1310a-6da5-75ba-9bcb-1c9da1034259",
+          "sowing:basil": "01a1310a-6dc2-7439-9a42-a902d611d4fd",
+          "sowing:dashboard_unknown": "01a1310a-733a-71c7-8001-88d74d0adf04",
+          "sowing:dashboard_zero": "01a1310a-733c-7573-8d02-c25103911dae",
+          "sowing:historical": "01a1310a-6dc5-75e6-b075-01c22bad149a",
+          "supplier:exchange": "01a1310a-6d95-7297-bb03-65755dcbbbd9",
+          "supplier:nursery": "01a1310a-6d94-77c2-89b6-23081cd758da"
+        },
+        "schedule_calendar_extension": 1,
+        "schedule_extension": 1,
+        "state": "ready",
+        "taxonomy_extension": 1,
+        "version": 4
+      }
+    },
+    "database_revision": ["20261009_0041"],
+    "database_data_digest": "0d4bc56614ecfea61bb67cbb9603dab23b257591e286c735f6ed71b1a5450155",
+    "representatives": {
+      "suppliers": [
+        {
+          "id": "01a1310a-6d94-77c2-89b6-23081cd758da",
+          "name": "Preview \u2014 Greenhouse Nursery",
+          "notes": "Synthetic UAT Preview data; no real collection or provenance claims."
+        },
+        {
+          "id": "01a1310a-6d95-7297-bb03-65755dcbbbd9",
+          "name": "Preview \u2014 Garden Seed Exchange",
+          "notes": "Synthetic UAT Preview data; no real collection or provenance claims."
+        }
+      ],
+      "users": 1,
+      "plants": 2,
+      "seed_lots": 9,
+      "schedule": 19,
+      "media": 2
+    },
+    "media_digests": {
+      ".thumbnails/01a1310a6e057722a926b856e144304c-320-webp-v1-f01546939be0303d86acb3caee959fda992fc28932eceae52f54525bede404f0.webp": "c3b69d4fb150a7dd862ad1b7cefc70b67690180728f45817ab6c8b5bbfb3a164",
+      ".uat-fixture.json": "c41a8e42b43063a14539b176a47b056ee85be1fed6d1adb646050233ab51d3bf",
+      ".uat-fixture.lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      ".uat-identity.json": "5cab1a3d64f9f19450c00392882acc7dfeaea10bbe06f0bc5bcc6ffaeb952ad9",
+      "objects/01/01a1310a6e057722a926b854cd03c0a0": "f01546939be0303d86acb3caee959fda992fc28932eceae52f54525bede404f0"
+    },
+    "health": {
+      "frontend": {
+        "running": true,
+        "health": "healthy",
+        "source": "/home/alessandro/.codex/worktrees/6147/florabase",
+        "sha": "ec992440cba2681ca6e5327ec613a25f88183c3d"
+      },
+      "backend": {
+        "running": true,
+        "health": "healthy",
+        "source": "/home/alessandro/.codex/worktrees/6147/florabase",
+        "sha": "ec992440cba2681ca6e5327ec613a25f88183c3d"
+      },
+      "dev-state-init": {
+        "running": false,
+        "health": null,
+        "source": "/home/alessandro/.codex/worktrees/6147/florabase",
+        "sha": "ec992440cba2681ca6e5327ec613a25f88183c3d"
+      },
+      "db": {
+        "running": true,
+        "health": "healthy",
+        "source": "/home/alessandro/.codex/worktrees/6147/florabase",
+        "sha": "ec992440cba2681ca6e5327ec613a25f88183c3d"
+      }
+    },
+    "source_cache_digests": {
+      "wfo-2026-06.sqlite": "f5df6db6b8db0d1d9bae9f4579387dec1534489d75d02407c9250ebfebe19695",
+      "wfo-2026-06.sha256": "f97c5c007bb0914171eb0c3b22aceea72ad805f528269909553663f615ea975b"
+    },
+    "code_head": ["20261009_0041"]
+  },
+  "preservation_checks": {
+    "volumes": true,
+    "fixture": true,
+    "database_revision": true,
+    "code_head": true,
+    "database_data_digest": true,
+    "representatives": true,
+    "media_digests": true,
+    "source_cache_digests": true
+  },
+  "disposable_smoke": {
+    "project": "florabase-uat-preview-smoke-c7fa48e9e127",
+    "fixture_tests_passed": 25,
+    "delivery_detach_persistence": true,
+    "forward_sync_interruption_resume": true,
+    "full_domain_row_hashes_preserved": true,
+    "media_and_manifest_preserved": true,
+    "dependency_sentinel_preserved": true,
+    "owned_container_network_volume_residuals": 0,
+    "operator_environments_unchanged": true
+  },
+  "protected_primary_dev_review_stable_production_unchanged": true,
+  "credential_check_after_preservation_snapshot": {
+    "login": 200,
+    "authenticated_seed_lots": 200,
+    "ready": 200,
+    "note": "Normal login creates a session after the exact DB preservation snapshot; credentials were never reset."
+  }
+}

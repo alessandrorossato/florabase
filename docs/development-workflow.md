@@ -8,7 +8,7 @@ create a second feature worktree or move the primary checkout off `main`.
 | ---------------- | ----------------------------------------------------------- | -------------------------------------------- | ---------------------------------------- | -------------------------- | ------------------------------------------------------------- |
 | DEV              | Primary checkout discovered through Git                     | `compose.yaml` + `compose.dev.yaml`          | `florabase`                              | `http://localhost:5173`    | Persistent DB, media, dependencies                            |
 | Feature Review   | Current feature worktree, including dirty/untracked files   | baseline + DEV + `compose.review.yaml`       | `florabase-feature-review`               | `http://localhost:15174`   | Persistent, isolated DB/media/dependencies                    |
-| UAT Preview      | Current feature worktree, including dirty/untracked files   | baseline + DEV + Review + `compose.uat.yaml` | `florabase-uat-preview`                  | `http://localhost:15174`   | Persistent isolated synthetic DB/media/dependencies           |
+| UAT Preview      | Owning feature source or clean delivered detached owner     | baseline + DEV + Review + `compose.uat.yaml` | `florabase-uat-preview`                  | `http://localhost:15174`   | Persistent isolated synthetic DB/media/dependencies           |
 | Stable Preview   | Clean detached checkout of fetched `origin/main` by default | baseline + `compose.preview.yaml`            | `florabase-preview`                      | `http://localhost:15173`   | Persistent isolated DB/media, immutable frontend dependencies |
 | Quality checks   | Current feature worktree                                    | baseline + DEV                               | `florabase-quality-<metadata-path-hash>` | None started               | Isolated dependency/media volumes, no live DB required        |
 | Integration / CI | Current source / CI checkout                                | `compose.integration.yaml`                   | `florabase-integration-<random-run-id>`  | None                       | Disposable PostgreSQL tmpfs and test state                    |
@@ -149,6 +149,7 @@ make uat-preview-status
 # Open http://localhost:15174
 make uat-preview-stop
 make uat-preview-up            # Same owner, collection, operator edits and media
+make uat-preview-sync          # Explicit forward update after delivery/finish; preserves state
 # Destructive return to the canonical synthetic baseline:
 make uat-preview-reset CONFIRM_RESET_UAT_PREVIEW=florabase-uat-preview
 ```
@@ -161,7 +162,7 @@ before starting UAT; stop retains its independent data. Stable Preview remains a
 
 Startup builds the current worktree including untracked source, upgrades forward only and waits for
 health. Source bindings remain live. Startup never creates an owner or synthetic records. Seeding is
-explicit and network independent. UAT's public `preview / preview` credential is synthetic fixture
+explicit and provider independent; detached delivery proof may need GitHub access as described below. UAT's public `preview / preview` credential is synthetic fixture
 state, **UAT PREVIEW ONLY**; production defaults and normal owner password validation are unchanged.
 The seed helper is mounted explicitly by the host workflow and is absent from production images.
 Before seeding, host guards check source/context, project, containers, origin, network, actual volume
@@ -224,7 +225,7 @@ state refuses with an explicit reset instruction. Interrupted initial seeding re
 `building`; normal seed never guesses which unrecorded rows belong to fixtures. Reset is the sole
 workflow for returning to a canonical baseline.
 
-Reset requires the exact project token, validates every target resource before stopping writers,
+Reset requires an attached feature owner and the exact project token, and validates every target resource before stopping writers,
 then removes only the individually identified `florabase-uat-preview_postgres_data`,
 `florabase-uat-preview_attachment_data` and `florabase-uat-preview_frontend_node_modules` volumes.
 It recreates health, owner and fixtures in one command. It never uses `down -v`, deletes a source
@@ -232,42 +233,64 @@ worktree or touches DEV/Stable Preview/production. A failed rebuild is actionabl
 stopped or unseeded; rerun `up` and explicit `seed` after resolving the failure. Never delete a volume
 manually to bypass identity refusal. A different worktree cannot adopt persisted UAT resources.
 
-Before moving UAT to the next feature, deliberately retire the old synthetic state from its owning
-linked worktree (including a delivered, detached owner):
+Persistent UAT survives feature delivery and `feature-finish`. Finish leaves the owning linked
+source detached and removes its feature branch; it does not change the operator environment.
+Do not archive that source while UAT uses its bind mounts. Ordinary status/stop/up/seed remain
+supported for an established clean delivered detached owner. Delivery proof requires either HEAD
+contained in cached origin/main or an exact squash-merged PR head with Florabase/main
+base and merge commit contained in cached origin/main. Concurrent main changes can make its merge
+tree differ from the reviewed head; the exact PR proof still permits management, and explicit sync
+advances to the complete delivered main tree. The latter uses an authenticated read-only
+GitHub query and fails closed when unavailable. Arbitrary/dirty/unmerged detached sources refuse.
+Existing exact source/resource/DB/port/fixture guards still apply, including foreign volume users
+and network endpoints. Stop retains containers, network and all three volumes.
+
+Status distinguishes attached valid owner, detached delivered owner current with cached main,
+stale delivered owner, missing UAT and invalid/foreign ownership. It reports current/launch HEAD,
+service running/stopped health, fixture version/count, DB/code revisions and recovery guidance.
+An incompatible DB returns a diagnostic failure; stop remains available. Status never starts a
+stopped DB, so its revision is then explicitly unavailable. Ordinary commands never fetch or sync.
+
+From the existing owning checkout, explicitly advance persistent UAT after delivery:
 
 ```bash
-# In the old owning worktree: discards its UAT collection, edits, media and dependencies.
-make uat-preview-remove CONFIRM_REMOVE_UAT_PREVIEW=florabase-uat-preview
-# In the next active feature worktree:
-make uat-preview-up
-make uat-preview-seed
 make uat-preview-status
+make uat-preview-sync
+make uat-preview-status
+# Optional explicit additive extensions, after checking the upgraded fixture contract:
+make uat-preview-seed
 ```
 
-Removal validates the exact project, source labels, source mounts, service settings, all three
-named volumes and the scoped internal network. Foreign container users of a volume or network,
-missing/wrong confirmation and non-owning sources refuse before stopping anything. It stops UAT
-writers, rechecks identities, removes only proved UAT containers/network and individually removes
-the three volumes above. It never uses `down -v`, rebuilds, seeds, edits Git/source or changes
-DEV/Stable Preview/Feature Review/production. A partial failure reports an error; resolve it and
-rerun removal from the same owner. Stop preserves ownership; reset rebuilds under the same owner;
-remove releases ownership for a fresh baseline. Cross-worktree state transfer is still excluded.
+Sync requires a clean detached delivered owner. It validates existing ownership, fetches normally,
+pins newer origin/main, inspects its migration graph, checks the actual preserved DB's identity and
+forward compatibility, then stops application writers. A normal detached switch advances only the
+owning source; primary main and other worktrees are unchanged. Code builds, forward migrations and
+healthy container recreation reuse the same DB/media/dependency volumes and source labels. No
+automatic seed, reset, downgrade or transfer to another source path occurs. Ahead/unknown DB
+revisions refuse before the source changes or migrations run.
 
-If an old owner predates this command, invoke the corrected Makefile **while keeping that old
-worktree as the current directory**. The removal target resolves its helper from that Makefile,
-while ownership and Compose sources resolve from the invoking checkout:
+An atomic per-owner journal in Git metadata retains before/target/source/project and exact original
+volume creation identities/labels. If interrupted, preserve it and rerun `make uat-preview-sync`:
+recovery resumes the pinned target, even if origin/main has advanced again. Up/seed refuse incomplete
+sync; status/stop remain supported. Failed transitions leave the volumes intact and writers stopped
+when already quiesced. There is no automatic code rollback after a migration. Inspect ambiguous
+metadata rather than deleting it or manually rewriting labels. CLI mutations hold a nonblocking
+per-owner lock; direct external Docker/Git operations still require operator coordination.
+
+An older delivered owner can invoke a reviewed/newer helper through its Makefile without copying
+source files. Working directory continues to select the established owner:
 
 ```bash
-# Example: run from /home/alessandro/.codex/worktrees/80b3/florabase
-make -f /home/alessandro/.codex/worktrees/9f48/florabase/Makefile uat-preview-remove \
-  CONFIRM_REMOVE_UAT_PREVIEW=florabase-uat-preview
+cd /path/to/established/uat/owner
+make -f /path/to/reviewed/implementation/Makefile uat-preview-status
+make -f /path/to/reviewed/implementation/Makefile uat-preview-sync
 ```
 
-No source copying, branch switching, ownership-label changes or manual Docker deletion is needed.
-
-The browser has no additional environment badge; CLI/status identity and Preview-prefixed fixture
-labels provide the distinction without changing the application shell.
-See [PREVIEW-001 handoff](preview-001-handoff.md) for checks and operator scenarios.
+Preservation is the normal lifecycle. `uat-preview-remove` and `uat-preview-reset` remain deliberately
+destructive, with exact project confirmation and individually proved resource identities. Use them
+only when intentionally discarding the synthetic collection, edits and media; they are unnecessary
+for finish or later delivered-main updates. A different feature worktree cannot adopt persisted UAT.
+See the [INFRA-MAINT-001 handoff](infra-maint-001-handoff.md) for proof, smoke and recovery evidence.
 
 ## Feature Review and browser acceptance
 

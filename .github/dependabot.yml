@@ -4,6 +4,10 @@ updates:
     directory: /backend
     schedule:
       interval: weekly
+    # Remove only during the dedicated ORM typing/application migration review.
+    ignore:
+      - dependency-name: sqlalchemy
+        versions: [">=2.1,<2.2"]
     groups:
       backend-minor-patches:
         update-types: [minor, patch]
@@ -11,6 +15,23 @@ updates:
     directory: /frontend
     schedule:
       interval: weekly
+    # Reopening criteria: docs/dependency-maintenance-baseline.md.
+    # Retain 19.2 patch proposals until real-browser acceptance coverage exists.
+    ignore:
+      - dependency-name: react
+        versions: [">=19.3.0 <20.0.0"]
+      - dependency-name: react-dom
+        versions: [">=19.3.0 <20.0.0"]
+      - dependency-name: "@types/react"
+        versions: [">=19.3.0 <20.0.0"]
+      - dependency-name: "@types/react-dom"
+        versions: [">=19.3.0 <20.0.0"]
+      # Resolve the declared Node-support contract before adopting this line.
+      - dependency-name: jsdom
+        versions: [">=30.1.0"]
+      # Types follow the Node 24 runtime; compatible 24.x proposals remain enabled.
+      - dependency-name: "@types/node"
+        versions: [">=25.0.0"]
     groups:
       frontend-minor-patches:
         update-types: [minor, patch]

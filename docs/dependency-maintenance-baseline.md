@@ -14,14 +14,14 @@ repository delivery and repository feature-finish. Their GitHub merge identities
 and successful protected checks were refreshed during closure; their maintenance
 changes were not repeated.
 
-| Group | Versions before → after | PR | Reviewed commit | Merge commit |
-| --- | --- | --- | --- | --- |
+| Group                | Versions before → after                                                                                          | PR                                                            | Reviewed commit                            | Merge commit                               |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------ |
 | Frontend lint/format | ESLint 10.9.1 → 10.12.0; typescript-eslint 8.68.0 → 8.71.1; refresh plugin 0.5.5 → 0.5.7; Prettier 3.9.6 → 3.9.9 | [#88](https://github.com/alessandrorossato/florabase/pull/88) | `5a37084664d7b69952db4f4372cde7213a7449ac` | `1299d0cd973839c156e348c7b3bf14d264c85c79` |
-| Vite toolchain | Vite 8.2.2 → 8.3.4; plugin-react 6.1.0 → 6.1.2 | [#90](https://github.com/alessandrorossato/florabase/pull/90) | `2abd7ca942583953e1f1ecddc9695b5fbfa86576` | `9594b7157cd0f93a46d9249693d9d76f94cea77a` |
-| Backend tooling | mypy 2.3.1 → 2.4.0; Ruff 0.16.5 → 0.17.0 | [#92](https://github.com/alessandrorossato/florabase/pull/92) | `5dc0976f4cf7be9bc026b53698b3ddeed7ce02c8` | `a16172c88855fdac60ac006c1bd7861b4853b210` |
-| PostgreSQL driver | psycopg/binary 3.3.4 → 3.3.6 | [#94](https://github.com/alessandrorossato/florabase/pull/94) | `eddffd0ee78445ba52afeb996547198584f1ab2b` | `106d2a622e77885eb71afcd1fc04e8b4c9841d9a` |
-| Framework/server | FastAPI 0.141.1 → 0.143.0; Uvicorn 0.52.4 → 0.54.0 | [#96](https://github.com/alessandrorossato/florabase/pull/96) | `a2a2535feb522fd0be8ce0c54c270194ec11d3d2` | `48e9c4d4f5b3ba6aa6c21a51e8ee188460e098e8` |
-| ORM/migrations | SQLAlchemy 2.0.52 → 2.0.54; Alembic 1.19.1 → 1.20.0 | [#98](https://github.com/alessandrorossato/florabase/pull/98) | `10a074ad50b450859d31f99c24a1d653bda5f122` | `d31d6681bc7bf2f050608786ed6d75f6d22e9e52` |
+| Vite toolchain       | Vite 8.2.2 → 8.3.4; plugin-react 6.1.0 → 6.1.2                                                                   | [#90](https://github.com/alessandrorossato/florabase/pull/90) | `2abd7ca942583953e1f1ecddc9695b5fbfa86576` | `9594b7157cd0f93a46d9249693d9d76f94cea77a` |
+| Backend tooling      | mypy 2.3.1 → 2.4.0; Ruff 0.16.5 → 0.17.0                                                                         | [#92](https://github.com/alessandrorossato/florabase/pull/92) | `5dc0976f4cf7be9bc026b53698b3ddeed7ce02c8` | `a16172c88855fdac60ac006c1bd7861b4853b210` |
+| PostgreSQL driver    | psycopg/binary 3.3.4 → 3.3.6                                                                                     | [#94](https://github.com/alessandrorossato/florabase/pull/94) | `eddffd0ee78445ba52afeb996547198584f1ab2b` | `106d2a622e77885eb71afcd1fc04e8b4c9841d9a` |
+| Framework/server     | FastAPI 0.141.1 → 0.143.0; Uvicorn 0.52.4 → 0.54.0                                                               | [#96](https://github.com/alessandrorossato/florabase/pull/96) | `a2a2535feb522fd0be8ce0c54c270194ec11d3d2` | `48e9c4d4f5b3ba6aa6c21a51e8ee188460e098e8` |
+| ORM/migrations       | SQLAlchemy 2.0.52 → 2.0.54; Alembic 1.19.1 → 1.20.0                                                              | [#98](https://github.com/alessandrorossato/florabase/pull/98) | `10a074ad50b450859d31f99c24a1d653bda5f122` | `d31d6681bc7bf2f050608786ed6d75f6d22e9e52` |
 
 The recorded canonical suites were 910 backend, 557 frontend (57 files), and 711
 PostgreSQL tests for #88–#96; #98 included 713 PostgreSQL tests after adding two
@@ -113,36 +113,62 @@ exceptions, followed by canonical FULL verification and protected CI.
 Node 26 types remain inappropriate for the Node 24 runtime contract.
 @types/node stays 24.13.3. Reconsider only with an explicit runtime/platform upgrade.
 
-## Bot proposals
+## Dependabot defer policy
 
-Original #46 and #68 were already closed and remain closed. Re-read #24 before
-closing its Node 26 proposal; re-read #91 before closing its React/types/jsdom
-proposal with the explicit deferrals above. Re-read #99 before closing its grouped
-SQLAlchemy 2.1.4/pip-tools proposal: SQLAlchemy remains deliberately deferred and
-pip-tools is reproduced independently here. None of these branches was merged,
-rebased or rewritten, and no bot PR comments were added. Newly generated routine
-proposals should be classified as future maintenance rather than reopening this
-completed scope unless necessary to preserve this baseline.
+[`.github/dependabot.yml`](../.github/dependabot.yml) now encodes the approved deferrals per
+dependency. SQLAlchemy `>=2.1,<2.2` waits for the dedicated ORM typing/application migration review;
+2.0.x remains eligible. React/DOM and their matching declarations ignore `>=19.3.0 <20.0.0` until
+repository-supported real-browser acceptance covers the flows above; 19.2.x maintenance remains
+eligible. jsdom `>=30.1.0` waits for complete Node-contract compatibility or an explicit platform
+decision. Node declarations `>=25.0.0` wait until the runtime/support contract moves beyond 24;
+24.x remains eligible. React's remaining 19.x minors share the browser gate; future React/SQLAlchemy
+major proposals remain separately reviewable, not automatically accepted.
+
+Remove each rule only during the review that supplies its missing evidence, and update this record
+and the lightweight policy regression together. Ignores are documented decisions, not unexplained
+permanent freezes. No current pin/lockfile or runtime range changes with this policy.
+
+Both `backend-minor-patches` and `frontend-minor-patches` retain minor/patch grouping and weekly
+scheduling; ignored versions are filtered per dependency and unrelated useful updates remain
+eligible. Docker automation remains unchanged. GitHub's
+[options reference](https://docs.github.com/en/code-security/reference/supply-chain-security/dependabot-options-reference#ignore)
+defines the native version-range syntax and ignore filtering. The repository check uses the
+existing pinned YAML parser, validates names/ranges/groups and delivered contracts, and runs with
+`make test-dependabot-policy` through Quality and `make workflow-check`.
+
+## Bot proposals and post-delivery cleanup
+
+Earlier proposals #24/#46/#68/#91/#99 were closed during the delivered baseline. Read-only inspection
+for INFRA-MAINT-001 confirmed equivalent new proposals #102/#103/#104 are open. The implementation
+owner leaves them untouched: the policy becomes authoritative only after this infrastructure
+candidate is independently verified and merged to main.
+
+After delivery, QA must re-read and close [#102](https://github.com/alessandrorossato/florabase/pull/102)
+as deliberately deferred SQLAlchemy 2.1, [#103](https://github.com/alessandrorossato/florabase/pull/103)
+as deliberately deferred React 19.3/types and jsdom, and
+[#104](https://github.com/alessandrorossato/florabase/pull/104) as incompatible with the Node 24
+contract. List all open Dependabot PRs to confirm no equivalent proposal remains; inspect the next
+weekly run for compatible updates. Closure alone never substitutes for the source-controlled policy.
 
 ## Final dependency/runtime contract
 
-| Component | Pin or contract |
-| --- | --- |
-| Node image / frontend engine | 24.19.0 / `>=24 <25` |
-| pnpm / TypeScript | 11.19.0 / 5.9.3 |
-| React / React DOM | 19.2.8 / 19.2.8 |
-| React / DOM declarations | 19.2.18 / 19.2.5 |
-| Vite / plugin-react | 8.3.4 / 6.1.2 |
-| ESLint / typescript-eslint | 10.12.0 / 8.71.1 |
-| react-refresh / Prettier | 0.5.7 / 3.9.9 |
-| jsdom / Node declarations | 30.0.1 / 24.13.3 |
+| Component                         | Pin or contract          |
+| --------------------------------- | ------------------------ |
+| Node image / frontend engine      | 24.19.0 / `>=24 <25`     |
+| pnpm / TypeScript                 | 11.19.0 / 5.9.3          |
+| React / React DOM                 | 19.2.8 / 19.2.8          |
+| React / DOM declarations          | 19.2.18 / 19.2.5         |
+| Vite / plugin-react               | 8.3.4 / 6.1.2            |
+| ESLint / typescript-eslint        | 10.12.0 / 8.71.1         |
+| react-refresh / Prettier          | 0.5.7 / 3.9.9            |
+| jsdom / Node declarations         | 30.0.1 / 24.13.3         |
 | Leaflet declarations / user-event | 1.9.22 / 14.6.7 (PR #86) |
-| Python image / supported Python | 3.14.7 / `>=3.12,<3.15` |
-| FastAPI / Uvicorn | 0.143.0 / 0.54.0 |
-| SQLAlchemy / Alembic | 2.0.54 / 1.20.0 |
-| psycopg / binary | 3.3.6 / 3.3.6 |
-| PostgreSQL | 18.6-alpine |
-| mypy / Ruff / pip-tools | 2.4.0 / 0.17.0 / 7.6.2 |
+| Python image / supported Python   | 3.14.7 / `>=3.12,<3.15`  |
+| FastAPI / Uvicorn                 | 0.143.0 / 0.54.0         |
+| SQLAlchemy / Alembic              | 2.0.54 / 1.20.0          |
+| psycopg / binary                  | 3.3.6 / 3.3.6            |
+| PostgreSQL                        | 18.6-alpine              |
+| mypy / Ruff / pip-tools           | 2.4.0 / 0.17.0 / 7.6.2   |
 
 Framework-required OpenTelemetry API is not an adopted telemetry feature: no SDK
 or exporter extras were installed and automatic instrumentation stays disabled.

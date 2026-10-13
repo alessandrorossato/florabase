@@ -322,10 +322,15 @@ class UATTests(unittest.TestCase):
     def test_stop_preserves_volumes_and_source(self) -> None:
         with (
             patch.object(self.preview, "require_identity"),
+            patch.object(self.preview, "containers", return_value=[{"Id": "uat-only"}]),
+            patch("uat_preview.run") as run,
             patch.object(self.preview, "compose") as compose,
         ):
             self.preview.stop()
-        compose.assert_called_once_with("down", "--remove-orphans")
+            self.preview.stop()
+        self.assertEqual(run.call_count, 2)
+        run.assert_called_with(["docker", "container", "stop", "uat-only"])
+        compose.assert_not_called()
 
     def test_fixture_is_explicit_mount_and_never_default_startup(self) -> None:
         with (

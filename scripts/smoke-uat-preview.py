@@ -6,13 +6,16 @@ from __future__ import annotations
 import hashlib
 import http.cookiejar
 import json
+import os
 import shutil
 import socket
 import tempfile
+import textwrap
 import uuid
 from contextlib import ExitStack
 from pathlib import Path
 from typing import Any, cast
+from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.request import HTTPCookieProcessor, Request, build_opener
 
@@ -124,7 +127,9 @@ class SmokeUAT(UATPreview):
         return environment
 
     def python(self, program: str) -> str:
-        return self.compose("exec", "-T", "backend", "python", "-c", program, capture=True)
+        return self.compose(
+            "exec", "-T", "backend", "python", "-c", textwrap.dedent(program), capture=True
+        )
 
     def state(self) -> dict[str, Any]:
         program = """
@@ -138,9 +143,10 @@ from florabase.db.session import get_engine
 root=Path('/var/lib/florabase/attachments')
 with Session(get_engine()) as db:
     counts={t.name:db.scalar(select(func.count()).select_from(t)) for t in Base.metadata.tables.values()}
+    rows={t.name:hashlib.sha256(json.dumps(sorted(json.dumps(dict(row),default=str,sort_keys=True) for row in db.execute(select(t)).mappings())).encode()).hexdigest() for t in Base.metadata.tables.values() if t.name not in {'auth_sessions','login_throttles'}}
 manifest=json.loads((root/'.uat-fixture.json').read_text())
 files={str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in root.glob('objects/**/*') if p.is_file()}
-print(json.dumps({'counts':counts,'manifest':manifest,'media':files},sort_keys=True))
+print(json.dumps({'counts':counts,'manifest':manifest,'media':files,'rows':rows},sort_keys=True))
 """
         return cast(dict[str, Any], json.loads(self.python(program)))
 
@@ -258,11 +264,179 @@ def ownership_transition(preview: SmokeUAT, previous: dict[str, Any]) -> None:
             require(marker["source"] == str(source), "new media marker ownership")
             login(next_preview)
             next_preview.status()
+            persistent_delivery_transition(next_preview, primary)
         finally:
             next_preview.cleanup()
         require(
             not next_preview.containers() and not next_preview.resource_volumes(), "new UAT retired"
         )
+
+
+def persistent_delivery_transition(preview: SmokeUAT, primary: Path) -> None:
+    """Execute real finish/detach and forward sync on the disposable Git/Compose owner."""
+    source = preview.source
+    repo = preview.repository
+    for key, value in (("user.name", "UAT Test"), ("user.email", "uat@example.invalid")):
+        repo.git("config", key, value)
+    repo.git("add", ".")
+    repo.git("commit", "-m", "synthetic feature delivered")
+    head = repo.git("rev-parse", "HEAD")
+    branch = repo.git("branch", "--show-current")
+    run(["git", "-C", str(primary), "merge", "--ff-only", branch], capture=True)
+    remote = primary.parent / "delivered.git"
+    run(["git", "clone", "--bare", str(primary), str(remote)], capture=True)
+    # Only this synthetic repository points at this local disposable delivery remote.
+    repo.git("remote", "set-url", "origin", str(remote))
+    try:
+        with tempfile.TemporaryDirectory(prefix="uat-finish-gh-") as directory:
+            gh = Path(directory) / "gh"
+            gh.write_text(
+                "#!/bin/sh\nif [ \"$1\" = auth ]; then exit 0; fi\nprintf '%s\\n' 'MERGED|main|"
+                + branch
+                + "|"
+                + head
+                + "|"
+                + head
+                + "'\n"
+            )
+            gh.chmod(0o755)
+            environment = dict(os.environ)
+            environment["PATH"] = directory + os.pathsep + environment["PATH"]
+            run(
+                [
+                    "bash",
+                    "-c",
+                    'cd "$1" && exec bash "$2"',
+                    "uat-finish",
+                    str(source),
+                    str(source / "scripts/feature-finish.sh"),
+                ],
+                env=environment,
+            )
+    finally:
+        repo.git(
+            "remote", "set-url", "origin", "https://github.com/alessandrorossato/florabase.git"
+        )
+    require(
+        repo.identity()["branch"] == "detached" and repo.identity()["dirty"] == "no",
+        "finish leaves clean detached delivered UAT owner",
+    )
+    preview.python("""
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+import florabase.main
+from florabase.db.session import get_engine
+from florabase.suppliers.model import Supplier
+with Session(get_engine()) as db:
+    supplier=db.scalar(select(Supplier).order_by(Supplier.id))
+    supplier.notes='Persistent operator edit across delivery and newer main'
+    db.commit()
+""")
+    preserved = preview.state()
+    preview.compose(
+        "exec",
+        "-T",
+        "frontend",
+        "sh",
+        "-ec",
+        "printf persistent > /app/node_modules/.uat-sync-smoke",
+    )
+    for _ in range(2):
+        preview.status()
+        preview.stop()
+        preview.stop()
+        preview.status()
+        preview.up()
+        preview.seed()
+        require(
+            preview.state() == preserved,
+            "delivered detached status/stop/up/seed preserve every domain row, credential, fixture and media hash",
+        )
+    base = code_heads(migration_graph(source))[0]
+    migration = primary / "backend/alembic/versions/uat_sync_smoke.py"
+    migration.write_text(
+        f"revision='uat_sync_smoke'\ndown_revision={base!r}\nbranch_labels=None\ndepends_on=None\ndef upgrade():\n    pass\ndef downgrade():\n    pass\n"
+    )
+    run(["git", "-C", str(primary), "add", str(migration)], capture=True)
+    run(["git", "-C", str(primary), "commit", "-m", "newer synthetic delivered main"], capture=True)
+    run(["git", "-C", str(primary), "push", str(remote), "main"], capture=True)
+    # Real fetch/switch against the fixture's local main; never contact or alter real origin/main.
+    original_git = repo.git
+
+    def fixture_git(*args: str) -> str:
+        if args[0] == "fetch":
+            return run(
+                [
+                    "git",
+                    "-C",
+                    str(source),
+                    "fetch",
+                    "--prune",
+                    str(remote),
+                    "refs/heads/main:refs/remotes/origin/main",
+                ],
+                capture=True,
+            )
+        return original_git(*args)
+
+    volumes = preview.volume_identity()
+    with patch.object(repo, "git", side_effect=fixture_git):
+        original_compose = preview.compose
+
+        def interrupted_compose(*args: str, capture: bool = False) -> str:
+            if args[0] == "build":
+                raise WorkflowError("synthetic interruption after source switch")
+            return original_compose(*args, capture=capture)
+
+        with patch.object(preview, "compose", side_effect=interrupted_compose):
+            try:
+                preview.sync()
+            except WorkflowError as error:
+                require("synthetic interruption" in str(error), "expected transition interruption")
+            else:
+                raise WorkflowError("UAT smoke: interruption was not injected")
+        require(preview.transition() is not None, "interrupted transition retains pinned journal")
+        require(
+            preview.volume_identity() == volumes, "interruption preserves all volume identities"
+        )
+        for action in (preview.up, preview.seed):
+            try:
+                action()
+            except WorkflowError as error:
+                require("interrupted" in str(error), "ordinary action must direct to sync recovery")
+            else:
+                raise WorkflowError("UAT smoke: ordinary action bypassed pending sync")
+        preview.status()
+        preview.stop()
+        preview.sync()
+    require(
+        preview.current() == ["uat_sync_smoke"],
+        "explicit sync migrates forward to newer delivered code",
+    )
+    require(
+        preview.volume_identity() == volumes,
+        "all original volume creation identities and labels retained",
+    )
+    require(
+        preview.state() == preserved,
+        "forward source/DB transition preserves full domain rows, fixture extensions, credential and media",
+    )
+    preview.compose(
+        "exec",
+        "-T",
+        "frontend",
+        "sh",
+        "-ec",
+        "test $(cat /app/node_modules/.uat-sync-smoke) = persistent",
+    )
+    preview.seed()
+    require(
+        preview.state() == preserved, "fixture seed after supported sync preserves operator edits"
+    )
+    login(preview)
+    print(
+        "PERSISTENT DELIVERED UAT SMOKE PASSED: feature-finish/detach; repeated status/stop/up/seed; newer delivered main forward sync with interruption/resume; exact DB rows/media/fixture/credentials/dependency sentinel retained"
+    )
 
 
 def main() -> None:
