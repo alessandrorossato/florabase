@@ -5,7 +5,9 @@ botanical reference information separate from the material and plants in a colle
 preserving explicit provenance through real collection workflows.
 
 Florabase is under active pre-release development. The current application is usable for one local
-owner, but no stable public release or supported-version policy has been published yet.
+owner, but no stable public release has been published yet. The
+[canonical product/release roadmap](docs/product-roadmap.md) defines v0.1.0 as the first public
+self-hosted release, subsequent 0.x increments and the v1.0.0 stable-contract milestone.
 
 ## What works today
 
@@ -15,7 +17,11 @@ owner, but no stable public release or supported-version policy has been publish
 - Seed lots with source, partial dates, quantity, storage, lifecycle, and optional producer lineage
 - Sowings with partial dates, quantities, cultivation details, and simple germination totals
 - Individually tracked Plants and quantity-aware PlantGroups
-- Plant and PlantGroup Events/history, including the collection-wide Events view
+- Plant and PlantGroup Journal Events and read-only cross-domain operational History
+- Operational Dashboard and concrete planned work in Schedule List and Month Calendar
+- Global search, saved operator views, atomic bulk Location moves and purchase Orders
+- Guided CSV import/export, dated germination observations and printable labels with authenticated QR lookup
+- Collection-aware occurrence/native-range Maps, reviewed native-range enrichment and a classification Taxonomy tree
 - Explicit lineage through `SeedLot → Sowing → Plant / PlantGroup`, PlantGroup extraction, and
   collection-produced seed lots, with receipt-proven reversal for supported authoritative operations
 - A collection provenance map for coordinate-bearing ProvenanceSites
@@ -24,13 +30,16 @@ owner, but no stable public release or supported-version policy has been publish
 - Collection-photo galleries and optional BotanicalIdentity covers; layered contextual form help
 - Local owner authentication with server-side sessions and CSRF protection
 
-Richer germination observations, advanced search and analytics, import/export, and PWA installability
-are planned, not implemented. See the
-[product roadmap](docs/product-roadmap.md) and the detailed [feature backlog](docs/features.json).
+First-class material lineage navigation, accepted-name reconciliation/name history, measurements,
+phenology, vegetative propagation and mobile quick capture are planned after v0.1.0. PWA
+installability remains deferred. The [product roadmap](docs/product-roadmap.md) separates delivered
+capabilities, pre-v0.1 product work, release gates and the path to v1.0.0; the detailed
+[feature backlog](docs/features.json) retains each increment's implementation/verification status.
 
 ## Screenshots
 
-No current screenshots are committed. Before the first public release, capture the authenticated
+Feature-review screenshots exist in engineering handoffs; a curated public screenshot set remains
+a release gate. Before the first public release, capture the authenticated
 desktop Plants view, the mobile Seed lots or Sowings workflow, and a lineage-aware PlantGroup
 extraction result using non-sensitive demonstration data.
 
