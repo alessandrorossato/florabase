@@ -284,10 +284,10 @@ def list_activities(
     database: Session,
     *,
     today: date,
-    status: ScheduleStatus = "planned",
+    status: ScheduleStatus | tuple[ScheduleStatus, ...] = "planned",
     window: DateWindow = "all",
-    activity_kind: ActivityKind | None = None,
-    target_kind: TargetKind | None = None,
+    activity_kind: ActivityKind | tuple[ActivityKind, ...] | None = None,
+    target_kind: TargetKind | tuple[TargetKind, ...] | None = None,
     target_id: UUID | None = None,
     q: str = "",
     offset: int = 0,
@@ -296,7 +296,8 @@ def list_activities(
     due_to: date | None = None,
 ) -> SchedulePage:
     model = ScheduledActivity
-    criteria: list[Any] = [model.status == status]
+    statuses = (status,) if isinstance(status, str) else status
+    criteria: list[Any] = [model.status.in_(statuses)]
     if due_from and due_to and due_from > due_to:
         raise ScheduleError("schedule_date_range_invalid", "The due-date range is reversed", 422)
     if due_from:
@@ -304,10 +305,24 @@ def list_activities(
     if due_to:
         criteria.append(model.due_on <= due_to)
     if activity_kind:
-        criteria.append(model.activity_kind == activity_kind)
+        kinds = (activity_kind,) if isinstance(activity_kind, str) else activity_kind
+        criteria.append(model.activity_kind.in_(kinds))
     if target_kind:
-        column = getattr(model, f"{target_kind}_id")
-        criteria.append(column == target_id if target_id else column.is_not(None))
+        targets = (target_kind,) if isinstance(target_kind, str) else target_kind
+        if target_id and len(targets) != 1:
+            raise ScheduleError(
+                "schedule_target_kind_required", "Target ID requires exactly one record type", 422
+            )
+        criteria.append(
+            or_(
+                *(
+                    getattr(model, f"{kind}_id") == target_id
+                    if target_id
+                    else getattr(model, f"{kind}_id").is_not(None)
+                    for kind in targets
+                )
+            )
+        )
     elif target_id:
         raise ScheduleError(
             "schedule_target_kind_required", "Target ID requires its record type", 422

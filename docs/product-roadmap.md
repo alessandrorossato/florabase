@@ -107,8 +107,11 @@ baseline inputs to UAT and page review, not new implementation increments in thi
 
 ### Journal / History product pass
 
-- **Journal:** operator/human-recorded observations, occurrences and notes. The current workspace is
-  the Plant/PlantGroup Event journal; this definition does not claim all future observation types exist.
+The bounded implementation candidate is ACTIVITY-001; see its [semantic audit and QA handoff](journal-history-product-pass-handoff.md). Independent acceptance remains pending.
+
+- **Journal:** recording hub plus operator notebook. Delivered structured actions open their canonical
+  workflows; observations and notes reuse the Plant/PlantGroup Journal. Future observation domains
+  are not implemented by this pass.
 - **History:** read-only authoritative facts that actually happened, projected from their owning
   records. It is not an immutable audit log: supported corrections affect its projection.
 - **Schedule:** future intended collection work. Overdue is derived and never means that work occurred.

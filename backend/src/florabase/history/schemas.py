@@ -14,6 +14,7 @@ class HistoryCategory(StrEnum):
     GERMINATION = "germination"
     HARVEST = "harvest"
     MATERIAL = "material"
+    SCHEDULE = "schedule"
 
 
 class HistorySubjectKind(StrEnum):
@@ -23,10 +24,11 @@ class HistorySubjectKind(StrEnum):
     HARVEST = "harvest"
     HARVEST_INVENTORY = "harvest_inventory"
     SEED_LOT = "seed_lot"
+    SCHEDULED_ACTIVITY = "scheduled_activity"
 
 
 class HistoryReference(BaseModel):
-    kind: HistorySubjectKind | Literal["location"]
+    kind: HistorySubjectKind | Literal["location", "botanical_identity"]
     id: UUID
     label: str
     harvest_id: UUID | None = None
@@ -36,7 +38,13 @@ class HistoryEntry(BaseModel):
     key: str
     category: HistoryCategory
     source_kind: Literal[
-        "event", "operation_receipt", "germination", "harvest", "disposition", "conversion"
+        "event",
+        "operation_receipt",
+        "germination",
+        "harvest",
+        "disposition",
+        "conversion",
+        "scheduled_activity",
     ]
     source_id: UUID
     subtype: str

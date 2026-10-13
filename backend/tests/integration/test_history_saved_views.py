@@ -35,7 +35,7 @@ def test_history_saved_view_persisted_management(authenticated_browser: tuple[st
         "PATCH",
         path,
         {"state_version": 1, "state": {"subject_kind": "sowing"}},
-    )[2]["state"] == {"subject_kind": "sowing"}
+    )[2]["state"] == {"subject_kind": ["sowing"]}
     for invalid in (
         {"offset": 50},
         {"category": ["bad"]},

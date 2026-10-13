@@ -1,43 +1,9 @@
+import { StatusBadge } from "../components/WorkspaceUI";
 import { useRecordName } from "../components/recordPresentation";
 import { EventTargetPhoto } from "./EventTargetPhoto";
 
 import type { EventResponse } from "../collection/api";
-import { eventLabels, formatPartialDate, type EventFilter } from "./eventData";
-
-export function EventFilters({
-  selected,
-  onSelect,
-}: {
-  selected: EventFilter;
-  onSelect: (filter: EventFilter) => void;
-}) {
-  return (
-    <div aria-label="Filter Events" className="filter-tabs" role="group">
-      {(["all", "observations", "cultivation", "status"] as const).map(
-        (filter) => (
-          <button
-            aria-pressed={selected === filter}
-            className="filter-chip"
-            key={filter}
-            type="button"
-            onClick={() => {
-              onSelect(filter);
-            }}
-          >
-            {
-              {
-                all: "All entries",
-                observations: "Observations",
-                cultivation: "Cultivation",
-                status: "Lifecycle",
-              }[filter]
-            }
-          </button>
-        ),
-      )}
-    </div>
-  );
-}
+import { eventLabels, eventSourceLabel, formatPartialDate } from "./eventData";
 
 export function EventFeed({
   events,
@@ -77,7 +43,12 @@ export function EventFeed({
               </a>
             </p>
             {event.destination_location && (
-              <p>Moved to {event.destination_location.display_path}</p>
+              <p>
+                Moved to{" "}
+                <a href={`#/locations/${event.destination_location.id}`}>
+                  {event.destination_location.display_path}
+                </a>
+              </p>
             )}
             {event.recipient && <p>Recipient: {event.recipient}</p>}
             {event.kind === "extraction" && event.resulting_plant && (
@@ -110,6 +81,36 @@ export function EventFeed({
             )}
           </>
         );
+        if (journal)
+          return (
+            <li key={event.id}>
+              <article>
+                <time className="journal-date">
+                  {event.occurred_on
+                    ? formatPartialDate(event.occurred_on)
+                    : `Recorded ${new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(event.created_at))} (UTC)`}
+                </time>
+                <div className="journal-content">
+                  <div className="activity-row-heading">
+                    <StatusBadge>{eventSourceLabel(event)}</StatusBadge>
+                    <h3>{eventLabels[event.kind]}</h3>
+                  </div>
+                  <a className="event-target" href={href}>
+                    {name}
+                  </a>
+                  <span className="journal-record-type">{type}</span>
+                  {event.notes && (
+                    <p className="journal-excerpt">
+                      {event.notes.length > 240
+                        ? `${event.notes.slice(0, 240).trimEnd()}…`
+                        : event.notes}
+                    </p>
+                  )}
+                  <div className="journal-related">{related}</div>
+                </div>
+              </article>
+            </li>
+          );
         return (
           <li key={event.id}>
             <article>
@@ -135,37 +136,15 @@ export function EventFeed({
                 />
               )}
               <div className="event-feed-heading">
-                {journal && (
-                  <time>
-                    {event.occurred_on
-                      ? formatPartialDate(event.occurred_on)
-                      : `Recorded ${new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "UTC" }).format(new Date(event.created_at))}`}
-                  </time>
-                )}
                 <span className="event-kind">{eventLabels[event.kind]}</span>
-                {!journal && (
-                  <time>{formatPartialDate(event.occurred_on)}</time>
-                )}
+                <time>{formatPartialDate(event.occurred_on)}</time>
               </div>
               <a className="event-target" href={href}>
                 {name}
               </a>
               <span className="record-state">{type}</span>
-              {journal && event.notes && (
-                <p className="journal-excerpt">
-                  {event.notes.length > 240
-                    ? `${event.notes.slice(0, 240).trimEnd()}…`
-                    : event.notes}
-                </p>
-              )}
-              {journal ? (
-                <div className="journal-related">{related}</div>
-              ) : (
-                related
-              )}
-              {!journal && event.notes && (
-                <p className="preserve-lines">{event.notes}</p>
-              )}
+              {related}
+              {event.notes && <p className="preserve-lines">{event.notes}</p>}
             </article>
           </li>
         );

@@ -5,11 +5,21 @@ import { useEffect, useMemo, useState } from "react";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { InfoDisclosure } from "../components/ContextualHelp";
-import { WorkspaceIntro } from "../components/CollectionUI";
+import { Page } from "../components/WorkspaceUI";
+import "./activity.css";
 import { listGlobalEvents, type EventResponse } from "../collection/api";
-import { EventFeed, EventFilters } from "./EventFeed";
-import { filteredEvents, type EventFilter } from "./eventData";
+import { RecordLauncher } from "./RecordLauncher";
+import { ActivityPageHeader } from "./ActivityPageHeader";
+import { ActivityChoices } from "./ActivityFilters";
+import { selectionLabel } from "./filterSelection";
+import { EventFeed } from "./EventFeed";
+import {
+  filteredEvents,
+  notebookEvents,
+  searchJournal,
+  type EntryCategory,
+  entryLabels,
+} from "./eventData";
 
 type State =
   | { status: "loading" }
@@ -21,17 +31,16 @@ export function GlobalEventsScreen() {
   const [state, setState] = useState<State>({ status: "loading" });
   const view = useDirectoryView("events");
   const filter = view.state.category;
-  const setFilter = (value: EventFilter) => {
+  const setFilter = (value: EntryCategory[]) => {
     view.update("category", value);
   };
 
   const [attempt, setAttempt] = useState(0);
-
   useEffect(() => {
     const controller = new AbortController();
     void listGlobalEvents(controller.signal)
       .then((events) => {
-        setState({ status: "ready", events });
+        if (!controller.signal.aborted) setState({ status: "ready", events });
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
@@ -46,29 +55,57 @@ export function GlobalEventsScreen() {
 
   const visible = useMemo(
     () =>
-      state.status === "ready" ? filteredEvents(state.events, filter) : [],
-    [filter, state],
+      state.status === "ready"
+        ? searchJournal(
+            filteredEvents(notebookEvents(state.events), filter),
+            view.state.q,
+          )
+        : [],
+    [filter, state, view.state.q],
   );
 
   return (
-    <section aria-labelledby="global-events-title" className="workspace">
-      <WorkspaceIntro
-        eyebrow="Activity"
-        title="Journal"
+    <Page titleId="global-events-title" className="activity-page">
+      <ActivityPageHeader
+        name="Journal"
         titleId="global-events-title"
-        description="Observations and actions recorded for Plants and Plant groups. Review and correct Event entries through their Plant or Plant group."
-      />
-      <p className="activity-orientation">
-        For a read-only timeline across the collection, use{" "}
-        <a href="#/history">History</a>.
-      </p>
-      <InfoDisclosure label="How Event corrections affect current state">
-        <p>
-          Editing or deleting an ordinary Event does not recompute a Plant or
-          Plant group’s current lifecycle, Location or lineage. Authoritative
-          operation reversal is a separate contextual action.
-        </p>
-      </InfoDisclosure>
+        subtitle="Record collection work and keep observations and notes."
+        primaryAction={<RecordLauncher />}
+        query={view.state.q}
+        onSearch={(q) => {
+          view.update("q", q);
+        }}
+        filterCount={filter.length > 0 ? 1 : 0}
+        resetFilters={() => {
+          setFilter([]);
+        }}
+        savedViews={
+          <SavedViews
+            presentation="dialog"
+            surface="events"
+            state={view.savedState}
+          />
+        }
+        summary={
+          <button
+            className="filter-chip"
+            type="button"
+            aria-label="Remove entry type filter"
+            onClick={() => {
+              setFilter([]);
+            }}
+          >
+            Entry type: {selectionLabel(filter, entryLabels)} ×
+          </button>
+        }
+      >
+        <ActivityChoices
+          title="Entry type"
+          labels={entryLabels}
+          selected={filter}
+          onChange={setFilter}
+        />
+      </ActivityPageHeader>
       {state.status === "loading" && <p role="status">Loading Journal…</p>}
       {state.status === "error" && (
         <div className="notice notice--error" role="alert">
@@ -85,22 +122,23 @@ export function GlobalEventsScreen() {
       )}
       {state.status === "ready" && (
         <>
-          <SavedViews surface="events" state={view.savedState} />
-          <EventFilters selected={filter} onSelect={setFilter} />
           <DirectoryResults count={visible.length} />
-          {state.events.length === 0 ? (
+          {notebookEvents(state.events).length === 0 ? (
             <div className="empty-state">
-              <p>No Events have been recorded yet.</p>
+              <p>
+                No Journal entries yet. Choose a Plant or Plant group to record
+                an observation, note or action.
+              </p>
             </div>
           ) : visible.length === 0 ? (
             <p className="notice" role="status">
-              No Events match this filter.
+              No Journal entries match this search or filter.
             </p>
           ) : (
-            <EventFeed journal showTargetPhoto events={visible} />
+            <EventFeed journal events={visible} />
           )}
         </>
       )}
-    </section>
+    </Page>
   );
 }

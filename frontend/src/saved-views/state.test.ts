@@ -265,3 +265,26 @@ test("Native selection and record categories are bounded canonical sets with leg
     directoryState("native_ranges", { identity: ids[0] })?.identity,
   ).toEqual([ids[0]]);
 });
+
+test("Journal multi-select and legacy scalar states share deterministic repeated URLs", () => {
+  expect(
+    savedViewHash("events", 1, {
+      q: "needle",
+      category: ["status", "observations", "status"],
+    }),
+  ).toBe("#/events?q=needle&category=observations&category=status");
+  expect(
+    readDirectoryState(
+      "events",
+      "#/events?q=needle&category=status&category=observations",
+    ),
+  ).toEqual({ q: "needle", category: ["observations", "status"] });
+  expect(readDirectoryState("events", "#/events?category=all")).toEqual({
+    q: "",
+    category: [],
+  });
+  expect(savedViewHash("events", 1, { category: "all", q: "needle" })).toBe(
+    "#/events?q=needle",
+  );
+  expect(savedViewHash("events", 1, { category: ["unknown"] })).toBeNull();
+});

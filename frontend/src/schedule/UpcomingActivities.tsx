@@ -36,7 +36,7 @@ export function UpcomingActivities({
   useEffect(() => {
     const c = new AbortController();
     void listSchedule(
-      { ...defaultState, target_kind: kind ?? "", target_id: id ?? "" },
+      { ...defaultState, target_kind: kind ? [kind] : [], target_id: id ?? "" },
       0,
       3,
       c.signal,
@@ -55,7 +55,7 @@ export function UpcomingActivities({
   }, [kind, id, key, auth]);
   const href = scheduleHash({
     ...defaultState,
-    target_kind: kind ?? "",
+    target_kind: kind ? [kind] : [],
     target_id: id ?? "",
   });
   return (

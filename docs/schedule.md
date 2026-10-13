@@ -64,9 +64,11 @@ the original expected version and also return the existing cancellation. Other s
 all edits of terminal records conflict. Linked Event corrections retain the normal Journal correction
 semantics; deletion is blocked to preserve the planning link.
 
-Planned/overdue/completed/cancelled records are never added as History sources. An explicit linked
+Completed records now project a terminal **Completion recorded** fact in History at `completed_at`
+(UTC), with navigation back to Schedule. This does not establish the actual work occurrence date.
+Planned/overdue/cancelled records remain excluded. An explicit linked
 Event appears through the existing Journal and History Event projection. Completion without Event
-creates no botanical occurrence, operation receipt or History item.
+creates the terminal completion fact, without a botanical occurrence or operation receipt.
 
 ## API and persistence
 
@@ -74,7 +76,7 @@ Authenticated routes under `/api/v1/schedule` list/filter, retrieve, create, upd
 and complete activities. Reads use normal sessions; writes require owner, exact Origin and CSRF.
 Writes use `expected_version`; creation starts at version 1. List pages cap at 100 (default 50),
 order by due day then ID and return bounded total/overdue/today counts. Search is literal title/notes,
-never a related-record expansion. Filters support status, date bucket, activity kind, target kind,
+never a related-record expansion. Filters support repeated status/activity-kind/target-kind values, a single date bucket,
 exact typed target and search. Target choices cap at 100 and have an exact-target read route.
 
 Migration `20261009_0041` follows delivered `0040`, adding only the scheduled-activities table,
@@ -85,12 +87,21 @@ record explicit planning lifecycle transitions, not inferred horticultural occur
 
 ## Workspace and integrations
 
-Active work is grouped into Overdue, Today, Next 7 days and Later. Filters open through an accessible
-disclosure and the current view remains visible; completed/cancelled filters
-remain secondary. URL keys are `status`, `window`, `activity_kind`, `target_kind`, `target_id`, `q`; default
-values are omitted in deterministic order. Refresh, Back and Forward restore filters; page state and
+Active work is grouped into Overdue, Today, Next 7 days and Later within compact white list surfaces.
+Schedule shares the Activity PageIdentity/PageTools header: short subtitle, visible Search, Filters,
+and owner-only creation. Filters use the shared Dashboard-style native drawer; completed/cancelled
+use actual stored statuses. Search uses the existing server-side literal title/notes query, capped at 200 characters,
+with filtering before count/page; it applies identically in List and the bounded visible Calendar month.
+Clear filters preserves search and the current view/month/day. The default planned Status is an active dimension; removing it includes all stored statuses.
+Active dimensions have removable summaries. URL keys are `status`, `window`, `activity_kind`, `target_kind`, `target_id`, `q`;
+values are encoded in deterministic enum order; empty kind/target restrictions are omitted. Legacy omitted Status remains planned; unrestricted Status repeats all three real values. Refresh, Back and Forward restore filters; page state and
 forms are transient. `#/schedule/<id>` opens retained evidence; contextual `action=create` uses an
 exact target. Search typing replaces the current URL to avoid one history step per keystroke.
+List/Calendar sits in the local count/month heading, alongside temporal navigation in Calendar. Planned owner rows expose Complete plus an accessible
+overflow menu for Edit/reschedule and Cancel, retaining confirmation, expected versions and reload.
+Terminal/non-owner records expose inspection/source navigation only. Calendar day-drawer menus render
+within the modal's interactive subtree; Escape closes the menu before the drawer and restores focus.
+Full notes remain in inspection; compact row excerpts keep synthetic fixture notes unobtrusive.
 
 Dashboard shows global overdue/today counts and at most three active records, linking to Schedule.
 Plant/PlantGroup, SeedLot and Sowing full-detail overviews show at most three active records and
@@ -144,3 +155,10 @@ end and next month) once, preserving original Schedule examples and operator edi
 review handoff and focused evidence are in [SCHEDULE-002 handoff](schedule-002-handoff.md).
 Week, drag/drop, recurrence, reminders, assignments, priorities, external sync/export, Schedule
 Saved Views and global visual migration remain deferred.
+
+The Activity filter drawer applies live. Status, Activity kind and Target type use checkbox fieldsets;
+Date window is a single select. No selection includes all values. API enum lists are bounded at 3/8/6,
+union within each dimension and intersect across dimensions before count/page. Exact target IDs
+require exactly one type. Overdue still requires planned status and a due day before today, even
+when combined with terminal statuses. Filters count dimensions, and each summary removes a complete
+dimension. Reset/Done is the sole footer. List URLs retain month/day for reversible view switching.

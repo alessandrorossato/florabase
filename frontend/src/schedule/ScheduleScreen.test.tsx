@@ -115,9 +115,11 @@ test("active intentions show explicit due day, overdue and Activity purpose", as
     await screen.findByRole("button", { name: "Repot basil" }),
   ).toBeVisible();
   expect(api.listSchedule).toHaveBeenCalledTimes(1);
-  expect(screen.getByText("Planned · Overdue")).toBeVisible();
+  expect(screen.getByText("Overdue", { selector: "strong" })).toBeVisible();
   expect(screen.getByRole("heading", { name: "Overdue" })).toBeVisible();
-  expect(screen.getByText(/Journal records occurrences/)).toBeVisible();
+  expect(
+    screen.getByText("Future work planned for your collection."),
+  ).toBeVisible();
   expect(screen.getByRole("link", { name: "Basil" })).toHaveAttribute(
     "href",
     `#/plants/${id}`,
@@ -149,6 +151,9 @@ test("create a concrete future intention without any Event", async () => {
 test("reschedule uses current version and preserved typed target", async () => {
   const u = userEvent.setup();
   mount();
+  await u.click(
+    await screen.findByRole("button", { name: "Actions for Repot basil" }),
+  );
   await u.click(
     await screen.findByRole("button", { name: "Edit / reschedule" }),
   );
@@ -218,6 +223,9 @@ test("completion defaults to no Event; explicit recording asks actual date and n
 test("cancel confirmation retains planning evidence and sends version", async () => {
   const u = userEvent.setup();
   mount();
+  await u.click(
+    await screen.findByRole("button", { name: "Actions for Repot basil" }),
+  );
   await u.click(await screen.findByRole("button", { name: "Cancel activity" }));
   expect(screen.getByText(/planning record will remain/)).toBeVisible();
   await u.click(screen.getByRole("button", { name: "Confirm cancellation" }));
@@ -234,6 +242,9 @@ test("stale save preserves entries and offers current server reload", async () =
   vi.mocked(api.writeActivity).mockRejectedValueOnce(new ApiError(409));
   const u = userEvent.setup();
   mount();
+  await u.click(
+    await screen.findByRole("button", { name: "Actions for Repot basil" }),
+  );
   await u.click(
     await screen.findByRole("button", { name: "Edit / reschedule" }),
   );
@@ -276,11 +287,13 @@ test("contextual create resolves exact selected target", async () => {
 test("filters have deterministic URLs and Back/Forward restores query", async () => {
   const u = userEvent.setup();
   mount();
-  await u.click(screen.getByRole("button", { name: "Filters" }));
+  await u.click(screen.getByRole("button", { name: /^Filters/ }));
   await u.selectOptions(screen.getByLabelText("Date window"), "overdue");
   expect(window.location.hash).toBe("#/schedule?window=overdue");
-  await u.selectOptions(screen.getByLabelText("Status"), "completed");
-  expect(window.location.hash).toBe("#/schedule?status=completed");
+  await u.click(screen.getByRole("checkbox", { name: "Completed" }));
+  expect(window.location.hash).toBe(
+    "#/schedule?status=planned&status=completed&window=overdue",
+  );
   window.history.replaceState(null, "", "/#/schedule?window=today");
   fireEvent(window, new PopStateEvent("popstate"));
   expect(screen.getByLabelText("Date window")).toHaveValue("today");
@@ -295,7 +308,7 @@ test("completed and cancelled evidence remains inspectable with no write actions
   expect(
     screen.queryByRole("button", { name: "Complete" }),
   ).not.toBeInTheDocument();
-  expect(screen.getByText("Completed without a Journal Event")).toBeVisible();
+  expect(screen.getByText("Completed without a Journal entry")).toBeVisible();
 });
 test("keyboard modal closes with Escape and returns focus", async () => {
   const u = userEvent.setup();
@@ -321,7 +334,7 @@ test("bounded entity and Dashboard summaries link to canonical Schedule filters"
   mount(<UpcomingActivities kind="plant" id={id} />);
   await screen.findByRole("link", { name: "Repot basil" });
   expect(api.listSchedule).toHaveBeenCalledWith(
-    expect.objectContaining({ target_kind: "plant", target_id: id }),
+    expect.objectContaining({ target_kind: ["plant"], target_id: id }),
     0,
     3,
     expect.any(AbortSignal),
@@ -342,8 +355,8 @@ test("URL parser rejects unsupported manager dimensions and invalid targets", ()
   expect(
     scheduleHash({
       ...defaultState,
-      activity_kind: "repot",
-      target_kind: "plant",
+      activity_kind: ["repot"],
+      target_kind: ["plant"],
       q: " basil ",
     }),
   ).toBe("#/schedule?activity_kind=repot&target_kind=plant&q=basil");
@@ -357,7 +370,7 @@ test("date groups and displayed day use the same returned projection across midn
   expect(
     await screen.findByRole("heading", { name: "Today", level: 3 }),
   ).toBeVisible();
-  expect(screen.getByText(/Local day: 2026-01-02/)).toBeVisible();
+  expect(screen.queryByText(/Local day:/)).not.toBeInTheDocument();
   expect(
     screen.queryByRole("heading", { name: "Overdue", level: 3 }),
   ).not.toBeInTheDocument();
@@ -382,6 +395,9 @@ test("editing a retained inactive target keeps its actual lifecycle label", asyn
   vi.mocked(api.listTargets).mockResolvedValue({ items: [inactive], total: 1 });
   const user = userEvent.setup();
   mount();
+  await user.click(
+    await screen.findByRole("button", { name: "Actions for Repot basil" }),
+  );
   await user.click(
     await screen.findByRole("button", { name: "Edit / reschedule" }),
   );
@@ -426,7 +442,7 @@ test("List and Calendar share filters, link URLs and restore browser state", asy
     expect(api.listCalendar).toHaveBeenCalledWith(
       expect.objectContaining({
         window: "overdue",
-        activity_kind: "repot",
+        activity_kind: ["repot"],
         q: "basil",
       }),
       expect.any(AbortSignal),
@@ -530,6 +546,11 @@ test("selected-date create and day actions reuse versioned Schedule dialogs incl
     );
   });
   drawer = screen.getByRole("dialog", { name: /Scheduled work/ });
+  await user.click(
+    await within(drawer).findByRole("button", {
+      name: "Actions for Repot basil",
+    }),
+  );
   await within(drawer).findByRole("button", { name: "Edit / reschedule" });
   await user.click(
     within(drawer).getByRole("button", { name: "Edit / reschedule" }),
@@ -551,7 +572,7 @@ test("selected-date create and day actions reuse versioned Schedule dialogs incl
   await user.keyboard("{Escape}");
   await user.click(screen.getByRole("button", { name: "Discard changes" }));
   expect(
-    within(drawer).getByRole("button", { name: "Edit / reschedule" }),
+    within(drawer).getByRole("button", { name: "Actions for Repot basil" }),
   ).toHaveFocus();
   await user.click(within(drawer).getByRole("button", { name: "Complete" }));
   await user.click(
@@ -565,6 +586,11 @@ test("selected-date create and day actions reuse versioned Schedule dialogs incl
       null,
     );
   });
+  await user.click(
+    await within(drawer).findByRole("button", {
+      name: "Actions for Repot basil",
+    }),
+  );
   await within(drawer).findByRole("button", { name: "Cancel activity" });
   await user.click(
     within(drawer).getByRole("button", { name: "Cancel activity" }),
@@ -639,8 +665,10 @@ test("Calendar loading, retry, empty filtered period and reset preserve presenta
   expect(
     await screen.findByText("No activities match this month and its filters."),
   ).toBeVisible();
-  fireEvent.click(screen.getByRole("button", { name: "Reset filters" }));
-  expect(window.location.hash).toBe("#/schedule?view=calendar&month=2026-10");
+  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  expect(window.location.hash).toBe(
+    "#/schedule?status=planned&status=completed&status=cancelled&view=calendar&month=2026-10",
+  );
 });
 
 test("calendar target uses scientific typography only on exact scientific fields", async () => {
@@ -787,46 +815,42 @@ test("Calendar reset stays in the toolbar and preserves its month/day and browse
   vi.mocked(api.listCalendar).mockResolvedValue(page([]));
   mount();
   await screen.findByText("No activities match this month and its filters.");
-  const controls = screen.getByRole("group", { name: "Schedule controls" });
-  const reset = within(controls).getByRole("button", { name: "Reset filters" });
-  expect(screen.getAllByRole("button", { name: "Reset filters" })).toHaveLength(
+  const controls = screen.getByRole("group", { name: "Active filters" });
+  const reset = within(controls).getByRole("button", { name: "Clear filters" });
+  expect(screen.getAllByRole("button", { name: "Clear filters" })).toHaveLength(
     1,
   );
   const push = vi.spyOn(window.history, "pushState");
   await userEvent.click(reset);
   expect(window.location.hash).toBe(
-    "#/schedule?view=calendar&month=2026-10&date=2026-10-14",
+    "#/schedule?status=planned&status=completed&status=cancelled&q=missing&view=calendar&month=2026-10&date=2026-10-14",
   );
   expect(push).toHaveBeenCalledWith(null, "", window.location.hash);
   expect(
-    screen.queryByRole("button", { name: "Reset filters" }),
+    screen.queryByRole("button", { name: "Clear filters" }),
   ).not.toBeInTheDocument();
   push.mockRestore();
 });
 
-test("Calendar period changes alone never expose filter Reset", async () => {
+test("Calendar period changes preserve the active planned status filter", async () => {
   calendarRoute();
   mount();
   await userEvent.click(screen.getByRole("button", { name: "Next month" }));
   expect(window.location.hash).toBe("#/schedule?view=calendar&month=2026-11");
-  expect(
-    screen.queryByRole("button", { name: "Reset filters" }),
-  ).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Clear filters" })).toBeVisible();
   expect(
     screen.getByRole("navigation", { name: "Calendar period" }),
   ).toContainElement(screen.getByRole("button", { name: "Today" }));
 });
 
-test("empty default List is compact, truthful and has no pagination or reset", async () => {
+test("empty planned List is compact, truthful and offers status reset", async () => {
   vi.mocked(api.listSchedule).mockResolvedValue(page([]));
   mount();
   expect(await screen.findByText("No planned activities yet.")).toBeVisible();
   expect(
     screen.queryByRole("navigation", { name: "Schedule pages" }),
   ).not.toBeInTheDocument();
-  expect(
-    screen.queryByRole("button", { name: "Reset filters" }),
-  ).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Clear filters" })).toBeVisible();
   expect(screen.queryByText("Page 1")).not.toBeInTheDocument();
   expect(api.listSchedule).toHaveBeenCalledTimes(1);
 });
@@ -849,11 +873,13 @@ test("empty filtered List resets all filters from the shared toolbar", async () 
     screen.queryByRole("navigation", { name: "Schedule pages" }),
   ).not.toBeInTheDocument();
   await userEvent.click(
-    await screen.findByRole("button", { name: "Reset filters" }),
+    await screen.findByRole("button", { name: "Clear filters" }),
   );
-  expect(window.location.hash).toBe("#/schedule");
+  expect(window.location.hash).toBe(
+    "#/schedule?status=planned&status=completed&status=cancelled&q=missing",
+  );
   expect(api.listSchedule).toHaveBeenCalledWith(
-    expect.objectContaining({ status: "completed", q: "", window: "all" }),
+    expect.objectContaining({ status: ["completed"], q: "", window: "all" }),
     0,
     1,
     expect.any(AbortSignal),
@@ -866,17 +892,10 @@ test("empty underlying List stays truthful while toolbar offers active-filter re
   mount();
   expect(await screen.findByText("No planned activities yet.")).toBeVisible();
   expect(api.listSchedule).toHaveBeenCalledTimes(2);
+  expect(screen.getByRole("button", { name: "Clear filters" })).toBeVisible();
   expect(
-    within(screen.getByRole("group", { name: "Schedule controls" })).getByRole(
-      "button",
-      { name: "Reset filters" },
-    ),
-  ).toBeVisible();
-  expect(
-    within(screen.getByRole("status")).queryByRole("button", {
-      name: "Reset filters",
-    }),
-  ).not.toBeInTheDocument();
+    screen.getByRole("searchbox", { name: "Search Schedule" }),
+  ).toHaveValue("missing");
 });
 
 test.each(["completed", "cancelled"] as const)(
@@ -887,9 +906,10 @@ test.each(["completed", "cancelled"] as const)(
     mount();
     expect(await screen.findByText(`No ${status} activities.`)).toBeVisible();
     expect(
-      within(
-        screen.getByRole("group", { name: "Schedule controls" }),
-      ).getByRole("button", { name: "Reset filters" }),
+      within(screen.getByRole("group", { name: "Active filters" })).getByRole(
+        "button",
+        { name: "Clear filters" },
+      ),
     ).toBeVisible();
   },
 );
@@ -910,7 +930,9 @@ test("a concurrently emptied last List page returns to existing activities", asy
     .mockResolvedValueOnce({ ...page(), total: 50 });
   mount();
   await userEvent.click(await screen.findByRole("button", { name: "Next" }));
-  expect(await screen.findByText("50 active activities")).toBeVisible();
+  expect(
+    await screen.findByRole("heading", { name: "50 activities" }),
+  ).toBeVisible();
   expect(api.listSchedule).toHaveBeenLastCalledWith(
     expect.anything(),
     0,
@@ -996,9 +1018,10 @@ test("edit date changes are protected and reverting them restores pristine dismi
   const user = userEvent.setup();
   mount();
   const trigger = await screen.findByRole("button", {
-    name: "Edit / reschedule",
+    name: "Actions for Repot basil",
   });
   await user.click(trigger);
+  await user.click(screen.getByRole("button", { name: "Edit / reschedule" }));
   const dialog = screen.getByRole("dialog");
   fireEvent.change(within(dialog).getByLabelText("Due date"), {
     target: { value: "2026-11-05" },
@@ -1077,3 +1100,210 @@ test.each(["Escape", "backdrop"])(
     expect(api.writeActivity).not.toHaveBeenCalled();
   },
 );
+
+test("Schedule PageTools search and filter drawer preserve query across views and reset", async () => {
+  const user = userEvent.setup();
+  mount();
+  await screen.findByRole("button", { name: "Repot basil" });
+  const toolbar = screen.getByRole("group", { name: "Schedule toolbar" });
+  expect(toolbar.closest("header")).not.toBeNull();
+  expect(
+    screen.getByRole("navigation", { name: "Schedule view" }).closest("header"),
+  ).toBeNull();
+  expect(
+    screen.queryByRole("button", { name: "Saved views" }),
+  ).not.toBeInTheDocument();
+  const search = within(toolbar).getByRole("searchbox", {
+    name: "Search Schedule",
+  });
+  expect(search).toHaveAttribute("maxlength", "200");
+  await user.type(search, "basil");
+  expect(window.location.hash).toBe("#/schedule?q=basil");
+  await waitFor(() => {
+    expect(api.listSchedule).toHaveBeenLastCalledWith(
+      expect.objectContaining({ q: "basil" }),
+      0,
+      50,
+      expect.any(AbortSignal),
+    );
+  });
+  await user.click(screen.getByRole("button", { name: "Filters (1)" }));
+  const drawer = screen.getByRole("dialog", { name: "Schedule filters" });
+  await user.click(within(drawer).getByRole("checkbox", { name: "Inspect" }));
+  await user.keyboard("{Escape}");
+  expect(screen.getByRole("button", { name: "Filters (2)" })).toHaveFocus();
+  await user.click(screen.getByRole("button", { name: "Clear filters" }));
+  expect(window.location.hash).toBe(
+    "#/schedule?status=planned&status=completed&status=cancelled&q=basil",
+  );
+  expect(search).toHaveValue("basil");
+  await user.click(screen.getByRole("link", { name: "Calendar" }));
+  await waitFor(() => {
+    expect(api.listCalendar).toHaveBeenLastCalledWith(
+      expect.objectContaining({ q: "basil", view: "calendar" }),
+      expect.any(AbortSignal),
+    );
+  });
+  window.history.replaceState(
+    null,
+    "",
+    "#/schedule?q=bench&view=calendar&month=2026-11",
+  );
+  fireEvent.popState(window);
+  expect(search).toHaveValue("bench");
+  await waitFor(() => {
+    expect(api.listCalendar).toHaveBeenLastCalledWith(
+      expect.objectContaining({ q: "bench", month: "2026-11" }),
+      expect.any(AbortSignal),
+    );
+  });
+});
+
+test("row overflow supports outside, Escape, arrows, and focus before versioned edit", async () => {
+  const user = userEvent.setup();
+  mount();
+  const trigger = await screen.findByRole("button", {
+    name: "Actions for Repot basil",
+  });
+  expect(
+    screen.queryByRole("button", { name: "Edit / reschedule" }),
+  ).not.toBeInTheDocument();
+  await user.click(trigger);
+  await user.click(screen.getByRole("heading", { name: "Schedule" }));
+  expect(
+    screen.queryByRole("navigation", {
+      name: "Activity actions for Repot basil",
+    }),
+  ).not.toBeInTheDocument();
+  await waitFor(() => {
+    expect(trigger).toHaveFocus();
+  });
+  await user.keyboard("{ArrowDown}");
+  await waitFor(() => {
+    expect(
+      screen.getByRole("button", { name: "Edit / reschedule" }),
+    ).toHaveFocus();
+  });
+  await user.keyboard("{ArrowDown}");
+  expect(screen.getByRole("button", { name: "Cancel activity" })).toHaveFocus();
+  await user.keyboard("{Escape}");
+  expect(trigger).toHaveFocus();
+  await user.click(trigger);
+  await user.click(screen.getByRole("button", { name: "Edit / reschedule" }));
+  await screen.findByRole("combobox", { name: "Target record" });
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(trigger).toHaveFocus();
+});
+
+test("Calendar row menu stays within the modal and Escape closes only the menu", async () => {
+  calendarRoute();
+  const user = userEvent.setup();
+  mount();
+  await user.click(
+    await screen.findByRole("button", { name: /Thursday, 1 October 2026,/ }),
+  );
+  const drawer = screen.getByRole("dialog", { name: /Scheduled work/ });
+  const trigger = within(drawer).getByRole("button", {
+    name: "Actions for Repot basil",
+  });
+  await user.click(trigger);
+  const menu = screen.getByRole("navigation", {
+    name: "Activity actions for Repot basil",
+  });
+  expect(menu.closest("dialog")).toBe(drawer);
+  await user.click(
+    within(menu).getByRole("button", { name: "Cancel activity" }),
+  );
+  const confirmation = screen.getByRole("dialog", {
+    name: "Cancel activity",
+  });
+  await user.keyboard("{Escape}");
+  expect(confirmation).not.toBeInTheDocument();
+  expect(trigger).toHaveFocus();
+  await user.keyboard("{ArrowDown}");
+  await waitFor(() => {
+    expect(
+      within(drawer).getByRole("button", { name: "Edit / reschedule" }),
+    ).toHaveFocus();
+  });
+  await user.keyboard("{Escape}");
+  expect(drawer).toBeVisible();
+  expect(trigger).toHaveFocus();
+});
+
+test("checkbox combinations count dimensions, reset preserves period/search and local headings retain the switcher", async () => {
+  calendarRoute("&q=basil&date=2026-10-14");
+  const user = userEvent.setup();
+  mount();
+  await screen.findByRole("heading", { name: "October 2026" });
+  await user.click(screen.getByRole("button", { name: "Filters (1)" }));
+  const drawer = screen.getByRole("dialog", { name: "Schedule filters" });
+  await user.click(within(drawer).getByRole("checkbox", { name: "Completed" }));
+  await user.click(within(drawer).getByRole("checkbox", { name: "Water" }));
+  await user.click(within(drawer).getByRole("checkbox", { name: "Inspect" }));
+  await user.click(within(drawer).getByRole("checkbox", { name: "Plant" }));
+  await user.click(within(drawer).getByRole("checkbox", { name: "Seed lot" }));
+  await user.selectOptions(
+    within(drawer).getByLabelText("Date window"),
+    "today",
+  );
+  expect(
+    screen.getByRole("button", { name: "Filters (4)" }),
+  ).toBeInTheDocument();
+  expect(readScheduleState().status).toEqual(["planned", "completed"]);
+  expect(readScheduleState().activity_kind).toEqual(["water", "inspect"]);
+  expect(readScheduleState().target_kind).toEqual(["seed_lot", "plant"]);
+  await user.click(
+    within(drawer).getByRole("button", { name: "Reset filters" }),
+  );
+  expect(readScheduleState()).toEqual({
+    ...defaultState,
+    status: [],
+    view: "calendar",
+    month: "2026-10",
+    date: "2026-10-14",
+    q: "basil",
+  });
+  for (const name of [
+    "Botanical identity",
+    "Seed lot",
+    "Sowing",
+    "Plant",
+    "Plant group",
+    "Location",
+  ]) {
+    await user.click(within(drawer).getByRole("checkbox", { name }));
+  }
+  // Every typed target still excludes valid untargeted plans: one restricting dimension.
+  expect(
+    screen.getByRole("button", { name: "Filters (1)" }),
+  ).toBeInTheDocument();
+  await user.click(
+    within(drawer).getByRole("button", { name: "Reset filters" }),
+  );
+  await user.click(within(drawer).getByRole("button", { name: "Done" }));
+  expect(screen.getByRole("button", { name: "Filters" })).toHaveFocus();
+  const calendarHeading = screen.getByRole("heading", {
+    name: "October 2026",
+  }).parentElement;
+  if (!calendarHeading) throw new Error("Missing local Calendar heading");
+  expect(calendarHeading).toContainElement(
+    screen.getByRole("navigation", { name: "Schedule view" }),
+  );
+  await user.click(screen.getByRole("link", { name: "List" }));
+  expect(readScheduleState().date).toBe("2026-10-14");
+  expect(readScheduleState().month).toBe("2026-10");
+  expect(
+    screen.queryByRole("navigation", { name: "Calendar period" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen
+      .getByRole("navigation", { name: "Schedule view" })
+      .closest(".schedule-view-heading"),
+  ).toBeInTheDocument();
+  await user.click(screen.getByRole("link", { name: "Calendar" }));
+  expect(
+    screen.getByRole("button", { name: /Wednesday, 14 October 2026/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+});

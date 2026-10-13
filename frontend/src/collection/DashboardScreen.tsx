@@ -11,7 +11,7 @@ import {
   SectionHeader,
   StatusBadge,
 } from "../components/WorkspaceUI";
-import { formatPartialDate } from "../events/eventData";
+import { historyDateLabel, historyOrigin } from "../history/presentation";
 import { historyHref } from "../history/api";
 import { SavedViews } from "../saved-views/SavedViews";
 import { localDay, targetLabels } from "../schedule/state";
@@ -34,11 +34,6 @@ const actions = [
   ["New location", "#/locations?action=create"],
   ["New local place", "#/geography?action=create"],
 ];
-const recordedDay = (value: string) =>
-  new Intl.DateTimeFormat("en-GB", {
-    dateStyle: "medium",
-    timeZone: "UTC",
-  }).format(new Date(value));
 
 function isDashboardResponse(value: unknown): value is DashboardResponse {
   if (typeof value !== "object" || value === null) return false;
@@ -232,14 +227,8 @@ export function DashboardOverview() {
                 <li key={entry.key}>
                   <article>
                     <div className="dashboard-activity-heading">
-                      <StatusBadge>
-                        {entry.source_kind === "event" ? "Journal" : "History"}
-                      </StatusBadge>
-                      <time>
-                        {entry.date_basis === "recorded"
-                          ? `Recorded ${recordedDay(entry.recorded_at)} (UTC)`
-                          : formatPartialDate(entry.occurred_on)}
-                      </time>
+                      <StatusBadge>{historyOrigin(entry).surface}</StatusBadge>
+                      <time>{historyDateLabel(entry)}</time>
                       {entry.status === "reversed" && (
                         <StatusBadge>Reversed</StatusBadge>
                       )}

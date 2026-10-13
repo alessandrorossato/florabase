@@ -5,7 +5,12 @@
     "P2": "Valuable after the core path",
     "P3": "Optional or later improvement"
   },
-  "allowed_statuses": ["planned", "in_progress", "implemented", "verified"],
+  "allowed_statuses": [
+    "planned",
+    "in_progress",
+    "implemented",
+    "verified"
+  ],
   "features": [
     {
       "id": "FOUNDATION-001",
@@ -29,7 +34,9 @@
         "Migration revision and infrastructure metadata match the source",
         "The drill and cleanup procedure are documented without touching valuable data"
       ],
-      "dependencies": ["FOUNDATION-001"],
+      "dependencies": [
+        "FOUNDATION-001"
+      ],
       "priority": "P0",
       "status": "verified"
     },
@@ -42,7 +49,9 @@
         "Installation, development, upgrade, backup, contribution, security, and repository metadata guidance is consistent with executable configuration",
         "Feature dependencies, internal links, documentation formatting, and the unchanged application verification suite pass, with unresolved release decisions reported"
       ],
-      "dependencies": ["PLANT-004"],
+      "dependencies": [
+        "PLANT-004"
+      ],
       "priority": "P0",
       "status": "verified"
     },
@@ -55,7 +64,10 @@
         "PostgreSQL integration tests and generated API drift checks run in an isolated repeatable environment",
         "Production image builds run where practical and failures are visible without weakening local verification"
       ],
-      "dependencies": ["DOCS-001", "TESTING-001"],
+      "dependencies": [
+        "DOCS-001",
+        "TESTING-001"
+      ],
       "priority": "P0",
       "status": "verified"
     },
@@ -69,7 +81,9 @@
         "A fail-closed delivery command verifies the exact reviewed commit, performs only a normal push, reuses or creates one pull request, validates current-SHA required checks, enables exact-SHA squash auto-merge, and reports migration follow-up without local cleanup or database mutation",
         "Focused no-network helper tests cover verification orchestration, migration detection, delivery safety preconditions, current-SHA check handling, PR reuse, and terminal delivery states"
       ],
-      "dependencies": ["CI-001"],
+      "dependencies": [
+        "CI-001"
+      ],
       "priority": "P0",
       "status": "verified"
     },
@@ -87,7 +101,9 @@
         "Quality has exact-worktree status/cleanup and retires only after proven feature-finish Git safeguards; persistent DEV/Review/UAT/Stable Preview/production retain their existing ownership and data semantics",
         "Versioned exact-tree receipts record selected suites, commands and completed results with impact-map provenance; delivery rejects stale, incomplete, unsupported or mismatched evidence and resource diagnostics report unknown/ambiguous images/cache without deleting them"
       ],
-      "dependencies": ["CI-002"],
+      "dependencies": [
+        "CI-002"
+      ],
       "priority": "P0",
       "status": "verified"
     },
@@ -102,7 +118,9 @@
         "Simple uat-preview-up, uat-preview-stop, uat-preview-status, uat-preview-seed, uat-preview-reset and uat-preview-remove commands remain distinct from existing Stable Preview commands; startup never seeds, stop/start preserves state, and reset deletes only individually validated UAT resources with exact confirmation; owning-worktree removal stops writers and retires only exact UAT containers/network/volumes without rebuilding or editing Git/source, so the next feature starts and seeds fresh state",
         "Real uniquely isolated Compose smoke covers fresh/empty startup, real owner login, runtime guard refusals, repeat seed, fixture/media/lineage relationships, operator edits, DB/media/dependency persistence, forward migrations and ahead refusal, reset, old-owner removal followed by new-feature fresh startup/seed/login and before/after unchanged operator environments; operator UAT and independent canonical verification complete acceptance"
       ],
-      "dependencies": ["CI-003"],
+      "dependencies": [
+        "CI-003"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -118,7 +136,12 @@
         "Desktop, intermediate-width, and approximately 390 by 844 mobile review covers keyboard use, visible focus, dialogs, menus, forms, maps with companion lists, and important error, empty, and loading states without claiming formal accessibility certification; final release-candidate resource sanity checks documented PERF-001 expectations, material regressions, and obvious runaway CPU, memory, or request behavior rather than repeating the primary optimization project",
         "Installation, persistence, backup, restore, upgrade, configuration, and map documentation matches the release tree; application version 0.1.0, pre-1.0 version and upgrade expectations, coherent exposed version surfaces, and the first changelog entry are recorded; stale current-state prose and concrete release defects are resolved before the exact release tree passes canonical verification"
       ],
-      "dependencies": ["UX-006", "ATTACHMENT-002", "CI-002", "PERF-001"],
+      "dependencies": [
+        "UX-006",
+        "ATTACHMENT-002",
+        "CI-002",
+        "PERF-001"
+      ],
       "priority": "P0",
       "status": "planned"
     },
@@ -134,7 +157,10 @@
         "The production Compose stack is assessed for modest self-hosted hardware using measured CPU, memory, network, database, image-size, startup, package, process, and duplicate-work costs; footprint changes preserve reproducible builds, security updates, and needed operability, with no arbitrary hardware guarantee set before measurement",
         "After focused optimization, the same representative workload is re-measured against the baseline; material improvements, remaining costs, practical small-installation resource expectations, and any meaningful regressions across measured dimensions are documented, with evidence-based regression budgets added only where justified"
       ],
-      "dependencies": ["UX-006", "MAP-002"],
+      "dependencies": [
+        "UX-006",
+        "MAP-002"
+      ],
       "priority": "P0",
       "status": "verified"
     },
@@ -149,7 +175,9 @@
         "Proxy, HTTPS, CORS, API failure, configuration, database, and deferred boundaries are testable",
         "An accepted ADR records the chosen boundary and required protections without fake authentication"
       ],
-      "dependencies": ["FOUNDATION-001"],
+      "dependencies": [
+        "FOUNDATION-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -163,7 +191,10 @@
         "Secure cookie, same-origin, CSRF, generic failure, authorization-default, rate-limit, and secret-redaction behavior are tested",
         "Production fails closed for insecure origin, cookie, CORS, or required authentication configuration"
       ],
-      "dependencies": ["SECURITY-001", "TESTING-001"],
+      "dependencies": [
+        "SECURITY-001",
+        "TESTING-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -176,7 +207,9 @@
         "BotanicalIdentity, scientific taxon name, cultivar qualifier, shared scope, and duplicate reconciliation boundaries are explicit",
         "The change remains small enough for one migration and API increment"
       ],
-      "dependencies": ["SECURITY-001"],
+      "dependencies": [
+        "SECURITY-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -189,7 +222,9 @@
         "Upgrade and downgrade are tested against PostgreSQL",
         "No unrelated botanical tables are introduced"
       ],
-      "dependencies": ["DOMAIN-001"],
+      "dependencies": [
+        "DOMAIN-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -202,7 +237,10 @@
         "Validation, conflicts, not-found behavior, and database constraints are tested",
         "OpenAPI and generated frontend types are current"
       ],
-      "dependencies": ["DATABASE-001", "SECURITY-002"],
+      "dependencies": [
+        "DATABASE-001",
+        "SECURITY-002"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -215,7 +253,9 @@
         "An authenticated browser session is restored after reload, including a safe way to obtain a usable session-bound CSRF token without re-entering the password",
         "Logout is supported without storing authentication tokens in localStorage or sessionStorage or weakening the HttpOnly session-cookie boundary"
       ],
-      "dependencies": ["SECURITY-002"],
+      "dependencies": [
+        "SECURITY-002"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -228,7 +268,10 @@
         "Loading, empty, success, validation, and server-error states are explicit",
         "Keyboard and accessible-name behavior has component coverage"
       ],
-      "dependencies": ["BACKEND-001", "FRONTEND-002"],
+      "dependencies": [
+        "BACKEND-001",
+        "FRONTEND-002"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -241,7 +284,11 @@
         "The accessible frontend supports browsing/selecting an existing BotanicalIdentity and reuses its existing detail/profile interaction",
         "Creation, duplicate handling, loading, empty, selection, authentication, and failure behavior remain explicit without introducing advanced collection search"
       ],
-      "dependencies": ["BACKEND-001", "FRONTEND-001", "PROFILE-002"],
+      "dependencies": [
+        "BACKEND-001",
+        "FRONTEND-001",
+        "PROFILE-002"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -254,7 +301,9 @@
         "Volume ownership and reverse-proxy upload limits are defined",
         "No object storage is introduced without a concrete requirement"
       ],
-      "dependencies": ["FOUNDATION-001"],
+      "dependencies": [
+        "FOUNDATION-001"
+      ],
       "priority": "P2",
       "status": "verified"
     },
@@ -267,7 +316,9 @@
         "Migrations initialize the schema and cleanup cannot target non-test data",
         "The integration command is documented and works in Compose"
       ],
-      "dependencies": ["FOUNDATION-001"],
+      "dependencies": [
+        "FOUNDATION-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -280,7 +331,9 @@
         "A small incomplete-friendly first profile is defined without one field per possible botanical fact",
         "Operator-authored content and later source-scoped enrichment boundaries are explicit"
       ],
-      "dependencies": ["DOMAIN-001"],
+      "dependencies": [
+        "DOMAIN-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -293,7 +346,11 @@
         "Authenticated create, read, and update behavior is validated and integration-tested",
         "The accessible UI distinguishes reference knowledge from collection observations"
       ],
-      "dependencies": ["PROFILE-001", "BACKEND-001", "FRONTEND-001"],
+      "dependencies": [
+        "PROFILE-001",
+        "BACKEND-001",
+        "FRONTEND-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -307,7 +364,10 @@
         "Alembic-managed relational provider links retain opaque external IDs and link-time provenance, while a concurrency-safe PostgreSQL response cache records payload and fetch time under a configurable freshness policy without becoming canonical botanical data",
         "The accessible responsive BotanicalIdentity UI exposes unlinked, search, ambiguous-candidate, linked, stale, refresh-failure, change, and unlink states with trusted GBIF references and no automatic taxonomy correction, profile enrichment, native-range import, or occurrence mapping"
       ],
-      "dependencies": ["PROFILE-002", "UX-001"],
+      "dependencies": [
+        "PROFILE-002",
+        "UX-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -325,7 +385,10 @@
         "After successful independent identity creation an optional botanical-information review and Skip are available; existing identities support explicit later trusted-source checks without recreation",
         "Missing optional local sources leave ordinary startup and manual profile editing usable; descriptions and geographic_area text are never fabricated from taxonomy, occurrences, structured native assertions or drawing geometry"
       ],
-      "dependencies": ["BOTANY-002", "PROFILE-002"],
+      "dependencies": [
+        "BOTANY-002",
+        "PROFILE-002"
+      ],
       "priority": "P1",
       "status": "planned"
     },
@@ -338,7 +401,10 @@
         "Protected persistence and API behavior preserve optional contact or descriptive data",
         "The accessible UI supports selecting and maintaining suppliers independently of lots"
       ],
-      "dependencies": ["BACKEND-001", "FRONTEND-001"],
+      "dependencies": [
+        "BACKEND-001",
+        "FRONTEND-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -351,7 +417,10 @@
         "Protected persistence and API behavior cover roots, children, rename, and safe retirement",
         "The accessible UI can choose a location for stored material or cultivated plants"
       ],
-      "dependencies": ["BACKEND-001", "FRONTEND-001"],
+      "dependencies": [
+        "BACKEND-001",
+        "FRONTEND-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -364,7 +433,10 @@
         "Relationships select the most appropriate known node and infer ancestors without manufacturing precision or redundantly persisting every ancestor",
         "Canonical base nodes remain stable reference data, while operator-defined local places can extend them without introducing coordinates, GIS, maps, or external runtime geography integrations"
       ],
-      "dependencies": ["BACKEND-001", "FRONTEND-001"],
+      "dependencies": [
+        "BACKEND-001",
+        "FRONTEND-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -377,7 +449,10 @@
         "A BotanicalIdentity or profile may reference one or more broad or precise known places without replacing disjunct areas with their common ancestor",
         "Existing operator-authored BotanicalProfile origin_distribution text remains valid and is not silently overwritten"
       ],
-      "dependencies": ["GEOGRAPHY-001", "PROFILE-002"],
+      "dependencies": [
+        "GEOGRAPHY-001",
+        "PROFILE-002"
+      ],
       "priority": "P2",
       "status": "implemented"
     },
@@ -390,7 +465,9 @@
         "Acquisition and harvest dates preserve known precision, and optional quantity supports exact or approximate count or weight",
         "Source category, optional Supplier, optional geographic origin, storage, notes, lifecycle, and later parent-Plant lineage boundaries are explicit"
       ],
-      "dependencies": ["DOMAIN-001"],
+      "dependencies": [
+        "DOMAIN-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -422,7 +499,10 @@
         "Validation covers partial dates, optional exact or approximate quantity, source, supplier, origin, and location independently",
         "Failures, authorization, and historical retention are integration-tested and generated API artifacts are current"
       ],
-      "dependencies": ["SEED-002", "SECURITY-002"],
+      "dependencies": [
+        "SEED-002",
+        "SECURITY-002"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -435,7 +515,10 @@
         "List and detail views distinguish inactive lots while retaining their history",
         "Loading, empty, success, validation, and failure states have component coverage"
       ],
-      "dependencies": ["SEED-003", "FRONTEND-001"],
+      "dependencies": [
+        "SEED-003",
+        "FRONTEND-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -448,7 +531,9 @@
         "Fast entry has a small minimum while substrate, method, treatment, temperature, and environment remain optional",
         "Simple sown and germinated totals coexist with later optional dated germination observations"
       ],
-      "dependencies": ["SEED-001"],
+      "dependencies": [
+        "SEED-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -461,7 +546,11 @@
         "Authenticated API behavior supports quick entry, optional cultivation details, and simple germination totals",
         "Quantity integrity, failures, and historical retention are integration-tested"
       ],
-      "dependencies": ["SOWING-001", "SEED-003", "LINEAGE-001"],
+      "dependencies": [
+        "SOWING-001",
+        "SEED-003",
+        "LINEAGE-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -474,7 +563,10 @@
         "Advanced optional details are available without blocking simple use",
         "Active, failed, and completed Sowings remain discoverable with tested loading and failure states"
       ],
-      "dependencies": ["SOWING-002", "SEED-004"],
+      "dependencies": [
+        "SOWING-002",
+        "SEED-004"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -487,7 +579,10 @@
         "Origin, optional location, quantity for groups, and historical lifecycle outcomes are explicit",
         "Individual extraction preserves group provenance but its transaction details remain deferred"
       ],
-      "dependencies": ["SOWING-001", "LOCATION-001"],
+      "dependencies": [
+        "SOWING-001",
+        "LOCATION-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -500,7 +595,11 @@
         "Authenticated API behavior supports individual and group lifecycle and location changes without destructive deletion",
         "Group quantity, provenance, authorization, and inactive-state invariants are integration-tested"
       ],
-      "dependencies": ["PLANT-001", "SOWING-002", "LINEAGE-001"],
+      "dependencies": [
+        "PLANT-001",
+        "SOWING-002",
+        "LINEAGE-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -513,7 +612,10 @@
         "Current location and active or historical state are visible without hiding provenance",
         "Loading, empty, validation, success, and failure states have component coverage"
       ],
-      "dependencies": ["PLANT-002", "SOWING-003"],
+      "dependencies": [
+        "PLANT-002",
+        "SOWING-003"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -526,7 +628,11 @@
         "Known provenance is retained while unknown links remain optional",
         "No generic graph, genealogy engine, or speculative relationship type is introduced"
       ],
-      "dependencies": ["SEED-001", "SOWING-001", "PLANT-001"],
+      "dependencies": [
+        "SEED-001",
+        "SOWING-001",
+        "PLANT-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -539,7 +645,11 @@
         "The API can traverse the explicit upstream and downstream workflow relationships",
         "Lineage survives inactive lifecycle states and is covered by integration tests"
       ],
-      "dependencies": ["SEED-003", "PLANT-002", "LINEAGE-001"],
+      "dependencies": [
+        "SEED-003",
+        "PLANT-002",
+        "LINEAGE-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -552,7 +662,10 @@
         "Events retain when and what happened with partial information allowed",
         "Collection observations remain separate from BotanicalProfile reference knowledge"
       ],
-      "dependencies": ["PLANT-001", "PROFILE-001"],
+      "dependencies": [
+        "PLANT-001",
+        "PROFILE-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -565,7 +678,10 @@
         "Location and lifecycle events preserve prior history rather than overwriting it",
         "Authenticated API and accessible timeline behavior cover validation, failure, and inactive records"
       ],
-      "dependencies": ["EVENT-001", "PLANT-003"],
+      "dependencies": [
+        "EVENT-001",
+        "PLANT-003"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -578,7 +694,11 @@
         "Upload and retrieval validate size, filename, media type, authorization, and trusted storage roots",
         "Backup, restore, deletion, and failure behavior are integration-tested and documented"
       ],
-      "dependencies": ["ATTACHMENT-001", "SECURITY-002", "TESTING-001"],
+      "dependencies": [
+        "ATTACHMENT-001",
+        "SECURITY-002",
+        "TESTING-001"
+      ],
       "priority": "P2",
       "status": "verified"
     },
@@ -592,7 +712,11 @@
         "Inactive collection records retain their photo history and remain usable without images, while each BotanicalIdentity may independently have one optional local or operator-approved external representative cover without becoming a collection-photo target",
         "Identity covers support safe replacement and removal but no version history, automatic discovery, provider search, albums or reordering, EXIF inspection, thumbnails, derivatives, background media workers, compact directory rendering, or BotanicalIdentity gallery"
       ],
-      "dependencies": ["ATTACHMENT-002", "EVENT-002", "SEED-004"],
+      "dependencies": [
+        "ATTACHMENT-002",
+        "EVENT-002",
+        "SEED-004"
+      ],
       "priority": "P2",
       "status": "implemented"
     },
@@ -606,7 +730,10 @@
         "Changing or removing the designation preserves photo history; deleting or removing the primary photo clears or safely resolves the designation without dangling references",
         "Directories and details may use a bounded representation of the explicitly selected primary photo without loading full-size originals or changing BotanicalIdentity cover semantics"
       ],
-      "dependencies": ["ATTACHMENT-003", "UX-006"],
+      "dependencies": [
+        "ATTACHMENT-003",
+        "UX-006"
+      ],
       "priority": "P2",
       "status": "implemented"
     },
@@ -623,7 +750,10 @@
         "External references support explicit persistent Save, Refresh and Remove local copy; protected saved content is preferred across views, failures retain valid snapshots, SSRF and concurrency boundaries are tested, and snapshots participate in backup/restore",
         "Canonical verification, rendered review and basic query, storage and resource evidence are recorded"
       ],
-      "dependencies": ["ATTACHMENT-004", "UX-006"],
+      "dependencies": [
+        "ATTACHMENT-004",
+        "UX-006"
+      ],
       "priority": "P1",
       "status": "implemented"
     },
@@ -665,7 +795,10 @@
         "Authenticated reads and owner/CSRF/exact-Origin mutations use generated authoritative contracts; migration has no backfill and guards populated downgrade while empty downgrade/re-upgrade works",
         "No source lifecycle or Event effects, lineage edge, SeedLot conversion, propagation record/receipt, new media target, global-search expansion or generic inventory framework is introduced"
       ],
-      "dependencies": ["HARVEST-001", "LOCATION-003"],
+      "dependencies": [
+        "HARVEST-001",
+        "LOCATION-003"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -678,7 +811,9 @@
         "Percentage, first germination, timing, cumulative germination, and T50 are derived only when sufficient data exists",
         "Missing observations never prevent basic Sowing use"
       ],
-      "dependencies": ["SOWING-003"],
+      "dependencies": [
+        "SOWING-003"
+      ],
       "priority": "P2",
       "status": "implemented"
     },
@@ -691,7 +826,10 @@
         "Service-worker and cache behavior has an explicit safe policy that does not accidentally persist authenticated API responses, session material, or stale mutation results, and application updates have clear user-visible behavior",
         "Initial PWA scope provides installability and reliable application-shell behavior without claiming offline mutation/synchronization, push notifications, or native-device integrations that have not been separately designed"
       ],
-      "dependencies": ["FRONTEND-002", "SOWING-003"],
+      "dependencies": [
+        "FRONTEND-002",
+        "SOWING-003"
+      ],
       "priority": "P2",
       "status": "planned"
     },
@@ -704,7 +842,10 @@
         "Optional price, date, supplier, and order-reference data preserve known precision",
         "SeedLots can link to an Order without requiring all lots to be purchased"
       ],
-      "dependencies": ["SUPPLIER-001", "SEED-003"],
+      "dependencies": [
+        "SUPPLIER-001",
+        "SEED-003"
+      ],
       "priority": "P2",
       "status": "verified"
     },
@@ -717,7 +858,9 @@
         "Existing lightweight events and free observations remain valid",
         "History remains chronological, attributable, and non-destructive"
       ],
-      "dependencies": ["EVENT-002"],
+      "dependencies": [
+        "EVENT-002"
+      ],
       "priority": "P2",
       "status": "planned"
     },
@@ -730,7 +873,10 @@
         "The individual preserves its direct originating PlantGroup relationship and derivable upstream Sowing and SeedLot provenance while BotanicalIdentity remains independently correctable",
         "Invalid quantities, concurrent extraction, and historical-group behavior are integration-tested"
       ],
-      "dependencies": ["PLANT-003", "LINEAGE-002"],
+      "dependencies": [
+        "PLANT-003",
+        "LINEAGE-002"
+      ],
       "priority": "P2",
       "status": "verified"
     },
@@ -783,7 +929,10 @@
         "QR URLs use the configured canonical origin and existing detail routes, independent of the browser Host",
         "Printable output is tested for the selected physical label workflow"
       ],
-      "dependencies": ["SEED-004", "PLANT-003"],
+      "dependencies": [
+        "SEED-004",
+        "PLANT-003"
+      ],
       "priority": "P2",
       "status": "verified"
     },
@@ -796,7 +945,12 @@
         "Botanical reference knowledge and collection observations remain distinguishable in results",
         "Empty, partial, authorized, and large-result behavior is tested"
       ],
-      "dependencies": ["PROFILE-002", "SEED-004", "PLANT-003", "EVENT-002"],
+      "dependencies": [
+        "PROFILE-002",
+        "SEED-004",
+        "PLANT-003",
+        "EVENT-002"
+      ],
       "priority": "P2",
       "status": "implemented"
     },
@@ -814,7 +968,11 @@
         "Exact Media navigation validates UUIDs and handles missing assets safely across refresh and browser history",
         "Existing SEARCH-001 kinds remain covered; saved views, bulk operations and generic history remain deferred"
       ],
-      "dependencies": ["SEARCH-001", "HARVEST-001", "ATTACHMENT-005"],
+      "dependencies": [
+        "SEARCH-001",
+        "HARVEST-001",
+        "ATTACHMENT-005"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -830,7 +988,9 @@
         "Focused backend, real PostgreSQL/migration, frontend adapter/product/regression, generated API/static/build checks support operator UAT and independent final verification",
         "No materialized results, arbitrary route or executable state, browser-local persistence, default views, sharing, bulk operations or unified history are introduced"
       ],
-      "dependencies": ["SEARCH-002"],
+      "dependencies": [
+        "SEARCH-002"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -894,7 +1054,11 @@
         "Incomplete data is reported without manufacturing denominators or precision",
         "Definitions for every displayed statistic are documented and tested"
       ],
-      "dependencies": ["GERMINATION-001", "EVENT-002", "PLANT-003"],
+      "dependencies": [
+        "GERMINATION-001",
+        "EVENT-002",
+        "PLANT-003"
+      ],
       "priority": "P2",
       "status": "verified"
     },
@@ -908,7 +1072,11 @@
         "A consistent visual and interaction language applies across Florabase while preserving accessible responsive behavior",
         "The review decides whether collection-wide Event activity belongs in a global timeline, dashboard feed, cross-Plant and PlantGroup filters, or navigation entry without presupposing the final model"
       ],
-      "dependencies": ["SEED-004", "SOWING-003", "PLANT-003"],
+      "dependencies": [
+        "SEED-004",
+        "SOWING-003",
+        "PLANT-003"
+      ],
       "priority": "P2",
       "status": "verified"
     },
@@ -921,7 +1089,9 @@
         "Additional examples use keyboard-, focus-, and screen-reader-accessible information controls rather than hover-only tooltips",
         "Deeper help is reserved for genuinely complex concepts and self-explanatory fields avoid excessive help chrome"
       ],
-      "dependencies": ["UX-003"],
+      "dependencies": [
+        "UX-003"
+      ],
       "priority": "P2",
       "status": "implemented"
     },
@@ -934,7 +1104,10 @@
         "The contract defines when source quantities change and when SeedLot or Sowing lifecycle remains active, becomes partially completed where that is a supported concept, or reaches a terminal state",
         "Concurrency, correction, rollback, historical retention, and Event coordination boundaries are documented before persistence or UI changes are designed"
       ],
-      "dependencies": ["LINEAGE-002", "EVENT-002"],
+      "dependencies": [
+        "LINEAGE-002",
+        "EVENT-002"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -947,7 +1120,10 @@
         "Each transition asks the operator to confirm total or partial usage and the resulting source lifecycle when the known quantity and workflow make that decision meaningful",
         "Successful transitions present understandable quantity and lifecycle outcomes, preserve correction and failure safety, and provide consistent cross-links between the records involved"
       ],
-      "dependencies": ["PROPAGATION-001", "UX-001"],
+      "dependencies": [
+        "PROPAGATION-001",
+        "UX-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -960,7 +1136,10 @@
         "Focused locked transfer operations atomically create a transfer Event with partial date, optional free-text recipient and notes, and set the target lifecycle to transferred; one-individual group transfer uses the existing extraction-first workflow",
         "PlantGroup extraction atomically adds a source-targeted extraction Event with a structured resulting-Plant link, while direct lifecycle correction and Event edit/delete preserve the documented non-replay boundary"
       ],
-      "dependencies": ["PROPAGATION-002", "EVENT-002"],
+      "dependencies": [
+        "PROPAGATION-002",
+        "EVENT-002"
+      ],
       "priority": "P2",
       "status": "verified"
     },
@@ -973,7 +1152,10 @@
         "An Alembic-managed, immutable operation receipt persists a controlled operation type and status, its operation-owned Event where applicable, affected and created record identifiers, and typed authoritative before-state values needed for inversion, including quantity dimension, unit, exact or approximate state, and lifecycle",
         "Forward execution and undo lock the affected records, use one transaction, preserve exact round trips without deriving approximate or unknown values, and expose deterministic safe, confirmation-required, and blocked dependency outcomes"
       ],
-      "dependencies": ["PROPAGATION-002", "PLANT-005"],
+      "dependencies": [
+        "PROPAGATION-002",
+        "PLANT-005"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -986,7 +1168,10 @@
         "The approved historical-retention representation keeps the former individual and its prior Events and lineage accessible, records an operation-owned reinsertion history item, and restores the original PlantGroup state from the operation receipt: exact quantities round trip while approximate and unknown quantities are never reconstructed arithmetically",
         "Undo or reinsertion is atomic and dependency-aware: later state-changing work, lineage, or incompatible correction blocks it until resolved, while any permitted confirmation path clearly identifies retained historical facts and never silently rewrites them"
       ],
-      "dependencies": ["REVERSAL-001", "PLANT-005"],
+      "dependencies": [
+        "REVERSAL-001",
+        "PLANT-005"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -999,7 +1184,10 @@
         "Exact compatible SeedLot quantities round trip without negative or cross-dimension results; approximate estimates and unknown quantities restore their recorded prior state, and use-all restores its recorded lifecycle and quantity representation",
         "Created descendants and later propagation work are guarded by deterministic dependency checks, and the chosen historical treatment of an undone created record preserves provenance and audit access without hard-deleting dependent facts"
       ],
-      "dependencies": ["REVERSAL-001", "PROPAGATION-002"],
+      "dependencies": [
+        "REVERSAL-001",
+        "PROPAGATION-002"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -1012,7 +1200,10 @@
         "Desktop and mobile navigation keep related lifecycle work discoverable with stable orientation and accessible responsive behavior",
         "Contextual actions and cross-links support the BotanicalIdentity to SeedLot to Sowing to Plant or PlantGroup to Event or terminal-state lifecycle without presenting identity aggregation as lineage"
       ],
-      "dependencies": ["PROPAGATION-002", "UX-001"],
+      "dependencies": [
+        "PROPAGATION-002",
+        "UX-001"
+      ],
       "priority": "P2",
       "status": "implemented"
     },
@@ -1025,7 +1216,11 @@
         "BotanicalIdentity separates directory, compact preview and dedicated detail experiences, integrates representative imagery into cards and the detail header, and preserves existing workflows with accessible desktop and mobile navigation",
         "The reference preserves lazy and privacy boundaries, establishes reusable detail and form patterns, and leaves remaining application surfaces for subsequent scoped increments after operator acceptance"
       ],
-      "dependencies": ["UX-003", "UX-002", "ATTACHMENT-003"],
+      "dependencies": [
+        "UX-003",
+        "UX-002",
+        "ATTACHMENT-003"
+      ],
       "priority": "P1",
       "status": "implemented"
     },
@@ -1077,7 +1272,10 @@
         "A hierarchical collapsible presentation keeps roots, descendants, current paths, retirement state, and empty branches understandable",
         "Desktop and mobile interactions remain accessible and link Location usage to the relevant supported records"
       ],
-      "dependencies": ["LOCATION-001", "UX-001"],
+      "dependencies": [
+        "LOCATION-001",
+        "UX-001"
+      ],
       "priority": "P2",
       "status": "implemented"
     },
@@ -1110,7 +1308,10 @@
         "A focused ProvenanceSite model stores an optional named GeographicPlace, an optional coherent WGS84 latitude/longitude pair, optional non-negative coordinate accuracy, notes, and safe collection-record relationships without conflating Location, Supplier, or botanical native distribution",
         "Flat protected APIs and the accessible responsive Geography hub provide derived paths, collapsed hierarchy management, usage-aware safe deletion, ProvenanceSite CRUD and coordinate entry, and map-ready internal provenance data without maps, geocoding, or external services"
       ],
-      "dependencies": ["GEOGRAPHY-001", "UX-001"],
+      "dependencies": [
+        "GEOGRAPHY-001",
+        "UX-001"
+      ],
       "priority": "P3",
       "status": "implemented"
     },
@@ -1128,7 +1329,10 @@
         "Existing Geography and provenance workflows remain valid, production frontend assets build successfully, and no database migration is introduced unless an explicitly justified persistence defect requires one",
         "The collection provenance map remains distinct from future botanical native-range and occurrence or distribution mapping in MAP-002"
       ],
-      "dependencies": ["GEOGRAPHY-003", "UX-001"],
+      "dependencies": [
+        "GEOGRAPHY-003",
+        "UX-001"
+      ],
       "priority": "P2",
       "status": "implemented"
     },
@@ -1165,7 +1369,11 @@
         "Separate OR filters for SeedLots, Sowings, Plants, PlantGroups and managed Stored material qualify exact category records within the single selected representation scope; directory, overview and selected coverage share search, category, scope and with-range eligibility without replacing excluded or stale selections",
         "Canonical URL and private v1 native_ranges Saved Views restore only scope, search, mode, a sorted bounded set of up to 20 identity IDs, OR record categories and optional with-range filter; migration 0038 solely extends the SavedView surface constraint and refuses incompatible populated downgrade without data loss"
       ],
-      "dependencies": ["GEOGRAPHY-002", "EXPLORE-001", "VIEW-001"],
+      "dependencies": [
+        "GEOGRAPHY-002",
+        "EXPLORE-001",
+        "VIEW-001"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -1178,7 +1386,10 @@
         "Source, retrieval time, licensing, attribution, uncertainty, record density, and privacy behavior are visible and tested without presenting occurrence points as a BotanicalIdentity's authoritative native range",
         "The accessible desktop and mobile map remains distinct from MAP-001 collection provenance and from GEOGRAPHY-002 structured native-range relationships"
       ],
-      "dependencies": ["BOTANY-002", "UX-001"],
+      "dependencies": [
+        "BOTANY-002",
+        "UX-001"
+      ],
       "priority": "P2",
       "status": "verified"
     },
@@ -1191,7 +1402,10 @@
         "Related SeedLots and, where explicit relationships exist, Plants or other material are derived from recorded links rather than inferred from names or notes",
         "Spending, price, and order totals are not shown unless ORDER-001 supplies an implemented and tested transaction model"
       ],
-      "dependencies": ["SUPPLIER-001", "SEED-004"],
+      "dependencies": [
+        "SUPPLIER-001",
+        "SEED-004"
+      ],
       "priority": "P2",
       "status": "verified"
     },
@@ -1208,7 +1422,10 @@
         "Existing auth, CSRF, Origin, external disclosure, saved-copy, attribution, retention and deletion guards remain intact",
         "Supplier target constraints, primary uniqueness, concurrency, bounded queries and history-preserving upgrade/downgrade behavior have focused coverage"
       ],
-      "dependencies": ["SUPPLIER-002", "ATTACHMENT-005"],
+      "dependencies": [
+        "SUPPLIER-002",
+        "ATTACHMENT-005"
+      ],
       "priority": "P1",
       "status": "verified"
     },
@@ -1221,7 +1438,10 @@
         "Import validates before mutation and provides a preview or dry run with valid rows, invalid rows, unresolved or ambiguous references, records requiring creation, and clear row-level errors without silent guessing",
         "Supported core collection records have a simple human-oriented CSV export, with structured JSON added only where useful and explicitly distinguished from backup, restore, and full-fidelity collection transfer"
       ],
-      "dependencies": ["SEED-004", "PLANT-003"],
+      "dependencies": [
+        "SEED-004",
+        "PLANT-003"
+      ],
       "priority": "P2",
       "status": "implemented"
     },
@@ -1234,7 +1454,10 @@
         "Unknown parents and inactive ancestors are represented honestly",
         "Large or branching lineages remain navigable and authorized"
       ],
-      "dependencies": ["LINEAGE-002", "PLANT-004"],
+      "dependencies": [
+        "LINEAGE-002",
+        "PLANT-004"
+      ],
       "priority": "P2",
       "status": "planned"
     },
@@ -1249,7 +1472,9 @@
         "An explicit versioned TDWG-to-canonical GeographicPlace crosswalk distinguishes equivalent, partial, unsupported split and unresolved units; Introduced and qualified assertions remain context only",
         "Apply revalidates identity, link, frozen source, destination revision and crosswalk atomically; missing optional source data leaves startup and canonical ranges usable; BOTANY-003 and automated refresh remain separate"
       ],
-      "dependencies": ["PROFILE-002"],
+      "dependencies": [
+        "PROFILE-002"
+      ],
       "priority": "P2",
       "status": "verified"
     },
@@ -1262,7 +1487,9 @@
         "Changed external data becomes a reviewable proposal or remains source-scoped",
         "Scheduling, retries, attribution, and removal behavior are observable and documented"
       ],
-      "dependencies": ["ENRICHMENT-001"],
+      "dependencies": [
+        "ENRICHMENT-001"
+      ],
       "priority": "P3",
       "status": "planned"
     },
@@ -1276,7 +1503,10 @@
         "When duplicate-identity reconciliation is selected, an explicit survivor preserves and repoints all collection references transactionally",
         "Source evidence, conflicts, authorization, and rollback-safe failures are retained"
       ],
-      "dependencies": ["ENRICHMENT-001", "LINEAGE-002"],
+      "dependencies": [
+        "ENRICHMENT-001",
+        "LINEAGE-002"
+      ],
       "priority": "P3",
       "status": "planned"
     },
@@ -1290,7 +1520,9 @@
         "Acquisition and provenance retain historically recorded names while the accepted/current name remains distinguishable; no destructive rename erases botanical history",
         "Search can find historical names without treating every synonym as a new BotanicalIdentity"
       ],
-      "dependencies": ["TAXONOMY-001"],
+      "dependencies": [
+        "TAXONOMY-001"
+      ],
       "priority": "P3",
       "status": "planned"
     },
@@ -1303,7 +1535,10 @@
         "Imported conditions retain source, place, time, and retrieval provenance",
         "Weather data remains distinct from operator observations and BotanicalProfile guidance"
       ],
-      "dependencies": ["EVENT-002", "LOCATION-001"],
+      "dependencies": [
+        "EVENT-002",
+        "LOCATION-001"
+      ],
       "priority": "P3",
       "status": "planned"
     },
@@ -1316,7 +1551,9 @@
         "Completion and dismissal retain useful history without manufacturing PlantEvents",
         "Time zones, missed runs, notification failure, and authorization are tested"
       ],
-      "dependencies": ["EVENT-003"],
+      "dependencies": [
+        "EVENT-003"
+      ],
       "priority": "P3",
       "status": "planned"
     },
@@ -1329,7 +1566,10 @@
         "Reference-profile guidance is not treated as observed collection evidence",
         "Incomplete samples, uncertainty, and insufficient data are reported honestly"
       ],
-      "dependencies": ["DASHBOARD-001", "EVENT-003"],
+      "dependencies": [
+        "DASHBOARD-001",
+        "EVENT-003"
+      ],
       "priority": "P3",
       "status": "planned"
     },
@@ -1342,7 +1582,10 @@
         "Import validates before mutation and reports partial or conflicting records",
         "Export and restore responsibilities are distinct and attachment handling is explicit"
       ],
-      "dependencies": ["LINEAGE-002", "ATTACHMENT-003"],
+      "dependencies": [
+        "LINEAGE-002",
+        "ATTACHMENT-003"
+      ],
       "priority": "P3",
       "status": "planned"
     },
@@ -1355,7 +1598,10 @@
         "External mutations are attributable, idempotent where needed, and observable",
         "No generic integration framework is introduced before repeated needs exist"
       ],
-      "dependencies": ["TRANSFER-001", "REMINDER-001"],
+      "dependencies": [
+        "TRANSFER-001",
+        "REMINDER-001"
+      ],
       "priority": "P3",
       "status": "planned"
     },
@@ -1368,7 +1614,10 @@
         "Existing shared BotanicalIdentity scope and collection-record ownership are reconciled explicitly",
         "Enrollment, recovery, audit, and migration risks are decided before implementation"
       ],
-      "dependencies": ["SECURITY-002", "TRANSFER-001"],
+      "dependencies": [
+        "SECURITY-002",
+        "TRANSFER-001"
+      ],
       "priority": "P3",
       "status": "planned"
     },
@@ -1403,7 +1652,9 @@
         "Source-specific values retain field-level reference provenance and historical context; no synthesized advice, inferred toxicity or implied safety from missing warnings",
         "Explicit operator review and selective Apply preserve manual content and immutable evidence with stale destination safety; no new profile fields or automatic refresh"
       ],
-      "dependencies": ["BOTANY-003"],
+      "dependencies": [
+        "BOTANY-003"
+      ],
       "priority": "P3",
       "status": "planned"
     },
@@ -1417,7 +1668,10 @@
         "Family and genus inspection, BotanicalIdentity breadcrumbs and Related in my collection provide accessible responsive navigation with missing source/link states",
         "Exact parent semantics, accepted/synonym handling, release provenance, snapshot/index footprint and optional category filters are reviewed before implementation; Taxonomy stays distinct from collection Lineage and evolutionary phylogeny"
       ],
-      "dependencies": ["BOTANY-002", "EXPLORE-001"],
+      "dependencies": [
+        "BOTANY-002",
+        "EXPLORE-001"
+      ],
       "priority": "P2",
       "status": "verified"
     },
@@ -1430,7 +1684,10 @@
         "Coverage and evolutionary uncertainty are explicit; taxonomy hierarchy and propagation Lineage do not imply phylogenetic relationships",
         "Branch lengths, MRCA and synthetic tree semantics require their own product review; no evolutionary inference is added by BOTANY-003 or TAXONOMY-003"
       ],
-      "dependencies": ["BOTANY-002", "EXPLORE-001"],
+      "dependencies": [
+        "BOTANY-002",
+        "EXPLORE-001"
+      ],
       "priority": "P3",
       "status": "planned"
     },
@@ -1467,7 +1724,10 @@
         "Canonical FULL verification and independent QA cover date boundaries, filters, overflow, accessibility and mutations; synthetic fixtures and visual review cover 1440/1024/390",
         "No new scheduling domain, recurrence, reminders, notifications, dependency, external sync or drag-and-drop; independent QA owns canonical verification"
       ],
-      "dependencies": ["SCHEDULE-001", "DASHBOARD-001"],
+      "dependencies": [
+        "SCHEDULE-001",
+        "DASHBOARD-001"
+      ],
       "priority": "P2",
       "status": "verified"
     },
@@ -1481,9 +1741,35 @@
         "Disposable real-Compose delivery/detach and newer-main smoke demonstrates full record/media/fixture preservation and exact owned cleanup; current real UAT is restored through supported non-destructive commands with before/after evidence",
         "Dependabot per-dependency ignore rules encode SQLAlchemy, React/types, jsdom and Node declaration deferrals while compatible patch updates and unrelated weekly groups remain enabled; YAML/policy checks and reopening/post-delivery cleanup guidance are documented"
       ],
-      "dependencies": ["CI-003", "PREVIEW-001"],
+      "dependencies": [
+        "CI-003",
+        "PREVIEW-001"
+      ],
       "priority": "P0",
       "status": "implemented"
+    },
+    {
+      "id": "ACTIVITY-001",
+      "category": "collection",
+      "description": "Refine the Activity visual family around the Journal recording hub, read-only History and planned Schedule work",
+      "acceptance_criteria": [
+        "Journal Record menu routes delivered structured actions to canonical Florabase workflows and keeps existing contextual notebook target/date/edit safety without duplicating forms",
+        "History stays read-only with user-facing source labels, authoritative record navigation and preserved PartialDate or labelled UTC recording dates",
+        "Completed ScheduledActivity records project one deterministic terminal completion fact at completed_at; planned, overdue and cancelled work never enter History",
+        "Optional compatible Event creation remains explicit, atomic and idempotent; completion time and intended due date never become the actual Journal occurrence date",
+        "History backing-row deduplication remains intact; the global notebook excludes owned backing records and bare movement/lifecycle actions without explanatory notes",
+        "Contextual Journal editing reuses the shared modal with pristine dismissal, dirty protection and focus return",
+        "Journal and History reuse Dashboard search, filter drawer and Saved View grammar with URL-addressable bounded text search, backward-compatible states, compact source labels and responsive real browser zoom evidence",
+        "Activity pages share an intrinsic PageIdentity/PageTools header, grouped white lists and live checkbox drawers with dimension counts; repeated typed filters preserve URL/Saved View compatibility, while Schedule integrates List/Calendar into its local heading and retains versioned Complete/overflow actions without adding Saved Views"
+      ],
+      "dependencies": [
+        "EVENT-002",
+        "HISTORY-001",
+        "SCHEDULE-002",
+        "DASHBOARD-001"
+      ],
+      "priority": "P1",
+      "status": "verified"
     }
   ]
 }

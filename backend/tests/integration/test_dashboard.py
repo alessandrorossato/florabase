@@ -168,7 +168,7 @@ def test_schedule_windows_bounded_lists_history_sources_and_query_bound(
             db.add(activity)
             planned.append(activity)
         for state in ("completed", "cancelled"):
-            # Use lifecycle service to preserve constraints and prove completion does not occur.
+            # Complete explicitly; cancelled and planned work remain outside recent History.
             from florabase.schedule import service
             from florabase.schedule.schemas import ScheduleComplete, ScheduleWrite
 
@@ -178,6 +178,7 @@ def test_schedule_windows_bounded_lists_history_sources_and_query_bound(
             )
             if state == "completed":
                 service.complete(db, activity.id, ScheduleComplete(expected_version=1))
+                activity.completed_at = datetime(2026, 10, 12, tzinfo=UTC)
             else:
                 service.cancel(db, activity.id, 1)
         db.flush()
@@ -196,12 +197,19 @@ def test_schedule_windows_bounded_lists_history_sources_and_query_bound(
         assert (result.overdue, result.due_today, result.next_seven_days) == (2, 1, 2)
         assert [a.id for a in result.upcoming] == [a.id for a in planned[:5]]
         assert len(result.recent_activity) == 6
-        assert {row.source_kind for row in result.recent_activity} == {"event", "germination"}
+        assert {row.source_kind for row in result.recent_activity} == {
+            "event",
+            "germination",
+            "scheduled_activity",
+        }
         assert not any(row.title.startswith("Plan") for row in result.recent_activity)
-        assert result.recent_activity[0].source_kind == "germination"
+        assert result.recent_activity[0].source_kind == "scheduled_activity"
+        assert result.recent_activity[0].primary.label == "completed"
+        assert result.recent_activity[0].occurred_at == datetime(2026, 10, 12, tzinfo=UTC)
+        assert result.recent_activity[1].source_kind == "germination"
         assert all(
             row.date_basis == "recorded" and row.occurred_on is None
-            for row in result.recent_activity[1:]
+            for row in result.recent_activity[2:]
         )
         assert [r.key for r in result.recent_activity] == [
             r.key for r in dashboard(db, DAY).overview.recent_activity

@@ -18,6 +18,10 @@ export function historyHref(
   source?: HistoryEntry["source_kind"],
 ): string {
   switch (ref.kind) {
+    case "scheduled_activity":
+      return `#/schedule/${ref.id}`;
+    case "botanical_identity":
+      return `#/identities/${ref.id}`;
     case "plant":
       return `#/plants/${ref.id}${source === "event" ? "?tab=events" : ""}`;
     case "plant_group":

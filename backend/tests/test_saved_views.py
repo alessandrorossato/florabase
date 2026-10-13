@@ -40,7 +40,7 @@ from florabase.saved_views.state import SavedViewSurface, canonical_state
             {"state": "all", "location_id": "AAAAAAAA-AAAA-AAAA-AAAA-AAAAAAAAAAAA"},
             {"state": "all", "location_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"},
         ),
-        ("events", {"category": "cultivation"}, {"category": "cultivation"}),
+        ("events", {"category": "cultivation"}, {"category": ["cultivation"]}),
         (
             "media",
             {"q": "leaf", "association": "all", "target": "supplier"},

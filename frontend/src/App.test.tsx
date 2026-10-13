@@ -3509,8 +3509,12 @@ test("sidebar disclosures support keyboard, persist preferences and expand activ
     "aria-current",
     "page",
   );
+  await user.click(await screen.findByRole("button", { name: "Filters (1)" }));
   expect(
-    await screen.findByRole("button", { name: "Lifecycle", pressed: true }),
+    await screen.findByRole("checkbox", {
+      name: "Lifecycle",
+      checked: true,
+    }),
   ).toBeVisible();
   await user.click(within(nav).getByRole("button", { name: "Collection" }));
   expect(within(nav).getByRole("button", { name: "Seeds" })).toBeVisible();

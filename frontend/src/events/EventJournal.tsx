@@ -1,8 +1,6 @@
 import {
   useEffect,
-  useId,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
   type SyntheticEvent,
@@ -10,6 +8,10 @@ import {
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
+import { TaskDialog } from "../components/TaskDialog";
+import { StatusBadge } from "../components/WorkspaceUI";
+import { eventSourceLabel } from "./eventData";
+import "./activity.css";
 import { FieldHelp } from "../components/ContextualHelp";
 import { locationsForScope, type LocationResponse } from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
@@ -128,53 +130,16 @@ function EventDialog({
   onClose: () => void;
   children: ReactNode;
 }) {
-  const titleId = useId();
-  const dialog = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    dialog.current
-      ?.querySelector<HTMLElement>("select, input, textarea, button")
-      ?.focus();
-  }, []);
   return (
-    <div
-      className="dialog-backdrop"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
+    <TaskDialog
+      title={title}
+      onClose={onClose}
+      dismissOnBackdrop
+      className="journal-entry-dialog"
     >
-      <div
-        className="context-dialog event-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        ref={dialog}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            onClose();
-            return;
-          }
-          if (event.key !== "Tab" || !dialog.current) return;
-          const focusable = Array.from(
-            dialog.current.querySelectorAll<HTMLElement>(
-              "button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])",
-            ),
-          );
-          const first = focusable.at(0);
-          const last = focusable.at(-1);
-          if (event.shiftKey && document.activeElement === first) {
-            event.preventDefault();
-            last?.focus();
-          } else if (!event.shiftKey && document.activeElement === last) {
-            event.preventDefault();
-            first?.focus();
-          }
-        }}
-      >
-        <h3 id={titleId}>{title}</h3>
-        {children}
-      </div>
-    </div>
+      <h3>{title}</h3>
+      {children}
+    </TaskDialog>
   );
 }
 
@@ -198,6 +163,7 @@ export function EventJournal({
   const [attempt, setAttempt] = useState(0);
   const [filter, setFilter] = useState<EventFilter>("all");
   const [editor, setEditor] = useState<EventResponse | "create" | null>(null);
+  const [confirmDiscard, setConfirmDiscard] = useState(false);
   const [deleting, setDeleting] = useState<EventResponse | null>(null);
   const [photoEvent, setPhotoEvent] = useState<EventResponse | null>(null);
   const [form, setForm] = useState<EventFormState>(blankForm);
@@ -237,6 +203,13 @@ export function EventJournal({
     return null;
   const csrfToken = auth.state.csrfToken;
   const pending = mutation.status === "pending";
+
+  function dismissEditor() {
+    if (pending || !editor) return;
+    const initial = editor === "create" ? blankForm() : formFrom(editor);
+    if (JSON.stringify(form) === JSON.stringify(initial)) setEditor(null);
+    else setConfirmDiscard(true);
+  }
 
   async function refreshTimeline() {
     const events = await listEvents(targetKind, targetId);
@@ -306,15 +279,15 @@ export function EventJournal({
               tone: "error",
               message: historyRefreshFailed
                 ? creating
-                  ? "The Event was added, but Florabase could not refresh its history. Retry the Event history and reload the record before making another change."
-                  : "The Event changes were saved, but Florabase could not refresh the history. Retry the Event history before making another change."
-                : "The Event was added and its history refreshed, but Florabase could not refresh the current record. Reload the record before making another change.",
+                  ? "The entry was added, but Florabase could not refresh its history. Retry the Journal entries and reload the record before making another change."
+                  : "The entry changes were saved, but Florabase could not refresh the history. Retry the Journal entries before making another change."
+                : "The entry was added and its history refreshed, but Florabase could not refresh the current record. Reload the record before making another change.",
             }
           : {
               tone: "success",
               message: creating
-                ? "Event was added."
-                : "Event changes were saved.",
+                ? "Journal entry was recorded."
+                : "Journal entry changes were saved.",
             },
       );
     } catch (error: unknown) {
@@ -326,8 +299,8 @@ export function EventJournal({
         status: "error",
         message:
           error instanceof ApiError && error.status === 422
-            ? "Check the Event details and try again."
-            : "Florabase could not save or refresh this Event. Check the connection and try again.",
+            ? "Check the entry details and try again."
+            : "Florabase could not save or refresh this entry. Check the connection and try again.",
       });
     }
   }
@@ -357,12 +330,12 @@ export function EventJournal({
           ? {
               tone: "error",
               message: historyRefreshFailed
-                ? "The Event was deleted, but Florabase could not refresh the history. Retry the Event history before making another change."
-                : "The Event was deleted and its history refreshed, but Florabase could not refresh the current record. Reload the record before making another change.",
+                ? "The entry was deleted, but Florabase could not refresh the history. Retry the Journal entries before making another change."
+                : "The entry was deleted and its history refreshed, but Florabase could not refresh the current record. Reload the record before making another change.",
             }
           : {
               tone: "success",
-              message: "Event was deleted from the history.",
+              message: "Journal entry was deleted.",
             },
       );
     } catch (error: unknown) {
@@ -374,8 +347,8 @@ export function EventJournal({
         status: "error",
         message:
           error instanceof ApiError && error.status === 409
-            ? "This Event cannot be deleted while it has photo references or belongs to an authoritative operation. Remove its photos or use the operation's undo flow first."
-            : "Florabase could not delete this Event. Check the connection and try again.",
+            ? "This entry cannot be deleted while it has photo references or belongs to an authoritative operation. Remove its photos or use the operation's undo flow first."
+            : "Florabase could not delete this entry. Check the connection and try again.",
       });
     }
   }
@@ -385,14 +358,16 @@ export function EventJournal({
       <div className="event-heading">
         <div>
           <p className="eyebrow">Journal</p>
-          <h4 id={`events-${targetId}`}>Events</h4>
+          <h4 id={`events-${targetId}`}>Journal entries</h4>
         </div>
         <button type="button" onClick={openCreate}>
-          Add event
+          Add entry
         </button>
       </div>
       <p className="field-help">
-        Observations and cultivation changes recorded for {targetLabel}.
+        Record observations, notes and actions for {targetLabel}. Read-only
+        facts across the collection are in <a href="#/history">History</a>;
+        intended work is in <a href="#/schedule">Schedule</a>.
       </p>
       {notice && (
         <div
@@ -403,10 +378,10 @@ export function EventJournal({
         </div>
       )}
       {timeline.status === "loading" ? (
-        <p role="status">Loading Events…</p>
+        <p role="status">Loading Journal entries…</p>
       ) : timeline.status === "error" ? (
         <div className="notice notice--error" role="alert">
-          <p>Florabase could not load this Event history.</p>
+          <p>Florabase could not load these Journal entries.</p>
           <button
             type="button"
             onClick={() => {
@@ -414,24 +389,24 @@ export function EventJournal({
               setAttempt((value) => value + 1);
             }}
           >
-            Retry Events
+            Retry Journal
           </button>
         </div>
       ) : timeline.events.length === 0 ? (
         <div className="event-empty">
-          <h5>No Events recorded yet</h5>
+          <h5>No Journal entries yet</h5>
           <p>
-            Events build a history of observations, cultivation work, movement,
-            and status changes.
+            Entries record observations, cultivation work, movement, and status
+            changes.
           </p>
           <button type="button" onClick={openCreate}>
-            Add the first event
+            Add the first entry
           </button>
         </div>
       ) : (
         <>
           <fieldset className="lifecycle-filter event-filters">
-            <legend>Filter Events</legend>
+            <legend>Filter Journal entries</legend>
             {(["all", "observations", "cultivation", "status"] as const).map(
               (item) => (
                 <button
@@ -454,9 +429,9 @@ export function EventJournal({
             )}
           </fieldset>
           {visible.length === 0 ? (
-            <p>No Events match this filter.</p>
+            <p>No Journal entries match this filter.</p>
           ) : (
-            <ol className="event-timeline" aria-label="Event history">
+            <ol className="event-timeline" aria-label="Journal entries">
               {visible.map((item) => (
                 <li
                   className={`event-item event-item--${item.kind}`}
@@ -487,6 +462,7 @@ export function EventJournal({
                       <div>
                         <h5>{eventKindLabels[item.kind]}</h5>
                         <time>{partialDateLabel(item.occurred_on)}</time>
+                        <StatusBadge>{eventSourceLabel(item)}</StatusBadge>
                       </div>
                       <div
                         className="event-actions"
@@ -624,10 +600,8 @@ export function EventJournal({
       )}
       {editor && (
         <EventDialog
-          title={editor === "create" ? "Add event" : "Edit event"}
-          onClose={() => {
-            if (!pending) setEditor(null);
-          }}
+          title={editor === "create" ? "Add entry" : "Edit entry"}
+          onClose={dismissEditor}
         >
           <form
             className="event-form"
@@ -635,7 +609,7 @@ export function EventJournal({
             noValidate
           >
             <div className="field">
-              <label htmlFor={`event-kind-${targetId}`}>Event kind</label>
+              <label htmlFor={`event-kind-${targetId}`}>Entry type</label>
               <select
                 aria-describedby={`event-kind-help-${targetId}`}
                 id={`event-kind-${targetId}`}
@@ -665,9 +639,9 @@ export function EventJournal({
                   ))}
               </select>
               <FieldHelp id={`event-kind-help-${targetId}`}>
-                Most Events are journal history. Movement and lifecycle Events
-                also apply the specific current-state change shown below when
-                created.
+                Choose Observation or Other for a note. Movement and lifecycle
+                entries also change current state when created. Use the owning
+                Harvest or operation workflow for structured records.
               </FieldHelp>
             </div>
             <PartialDateField
@@ -679,6 +653,11 @@ export function EventJournal({
                 setForm((current) => ({ ...current, occurredOn: value }));
               }}
             />
+            <p className="field-help">
+              When did this happen? Keep the date unknown or use year/month
+              precision when needed. Recording time does not establish an
+              occurrence date.
+            </p>
             {form.kind === "movement" && (
               <div className="field">
                 <label htmlFor={`event-destination-${targetId}`}>
@@ -735,6 +714,7 @@ export function EventJournal({
               </label>
               <textarea
                 id={`event-notes-${targetId}`}
+                maxLength={20000}
                 value={form.notes}
                 disabled={pending}
                 onChange={(event) => {
@@ -745,13 +725,13 @@ export function EventJournal({
             </div>
             {editor === "create" && form.kind === "movement" && (
               <p className="notice event-effect">
-                Creating this Event also changes the current Location of this
+                Creating this entry also changes the current Location of this
                 record.
               </p>
             )}
             {editor === "create" && lifecycleKinds.has(form.kind) && (
               <p className="notice event-effect">
-                Creating this Event also changes the current lifecycle of this
+                Creating this entry also changes the current lifecycle of this
                 record to {eventKindLabels[form.kind].toLocaleLowerCase()}.
               </p>
             )}
@@ -771,7 +751,7 @@ export function EventJournal({
                 {pending
                   ? "Saving…"
                   : editor === "create"
-                    ? "Add event"
+                    ? "Add entry"
                     : "Save changes"}
               </button>
               <button
@@ -779,7 +759,7 @@ export function EventJournal({
                 className="button--secondary"
                 disabled={pending}
                 onClick={() => {
-                  setEditor(null);
+                  dismissEditor();
                 }}
               >
                 Cancel
@@ -788,15 +768,47 @@ export function EventJournal({
           </form>
         </EventDialog>
       )}
+      {confirmDiscard && (
+        <TaskDialog
+          title="Discard unsaved Journal changes?"
+          dismissOnBackdrop
+          onClose={() => {
+            setConfirmDiscard(false);
+          }}
+        >
+          <h3>Discard unsaved Journal changes?</h3>
+          <p>Your unsaved entry will be lost.</p>
+          <div className="actions">
+            <button
+              type="button"
+              className="button--secondary"
+              onClick={() => {
+                setConfirmDiscard(false);
+              }}
+            >
+              Continue editing
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setConfirmDiscard(false);
+                setEditor(null);
+              }}
+            >
+              Discard changes
+            </button>
+          </div>
+        </TaskDialog>
+      )}
       {deleting && (
         <EventDialog
-          title={`Delete ${eventKindLabels[deleting.kind]} event?`}
+          title={`Delete ${eventKindLabels[deleting.kind]} entry?`}
           onClose={() => {
             if (!pending) setDeleting(null);
           }}
         >
           <p>
-            Deleting this Event removes it from the history. It does not undo
+            Deleting this entry removes it from the history. It does not undo
             changes previously made to the record’s current Location or
             lifecycle.
           </p>
@@ -811,7 +823,7 @@ export function EventJournal({
               disabled={pending}
               onClick={() => void confirmDelete()}
             >
-              {pending ? "Deleting…" : "Delete event"}
+              {pending ? "Deleting…" : "Delete entry"}
             </button>
             <button
               type="button"

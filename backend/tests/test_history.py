@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 from uuid import uuid7
 
 import pytest
+from pydantic import JsonValue
 
 from florabase.history import api
 from florabase.history.schemas import HistoryCategory, HistoryResponse, HistorySubjectKind
@@ -64,7 +65,7 @@ def test_empty_page_total_and_api_filter_forwarding() -> None:
                 MagicMock(),
                 database,
                 [HistoryCategory.EVENT, HistoryCategory.EVENT],
-                HistorySubjectKind.PLANT,
+                [HistorySubjectKind.PLANT],
                 2026,
                 0,
                 100,
@@ -74,10 +75,11 @@ def test_empty_page_total_and_api_filter_forwarding() -> None:
         projected.assert_called_once_with(
             database,
             categories=(HistoryCategory.EVENT,),
-            subject_kind=HistorySubjectKind.PLANT,
+            subject_kind=(HistorySubjectKind.PLANT,),
             year=2026,
             offset=0,
             limit=100,
+            q="",
         )
 
 
@@ -102,5 +104,45 @@ def test_history_saved_state_canonicalizes_only_stable_filters() -> None:
     assert canonical_state(
         SavedViewSurface.HISTORY,
         1,
-        {"category": ["harvest", "event", "harvest"], "year": 2026, "subject_kind": "plant"},
-    ) == {"category": ["event", "harvest"], "year": 2026, "subject_kind": "plant"}
+        {"category": ["harvest", "event", "harvest"], "year": 2026, "subject_kind": ["plant"]},
+    ) == {"category": ["event", "harvest"], "year": 2026, "subject_kind": ["plant"]}
+
+
+def test_schedule_completion_filters_are_saved_as_stable_existing_surface_state() -> None:
+    assert canonical_state(
+        SavedViewSurface.HISTORY,
+        1,
+        {
+            "category": ["schedule", "event"],
+            "subject_kind": "scheduled_activity",
+            "year": 2026,
+        },
+    ) == {"category": ["event", "schedule"], "subject_kind": ["scheduled_activity"], "year": 2026}
+
+
+@pytest.mark.parametrize("surface", [SavedViewSurface.EVENTS, SavedViewSurface.HISTORY])
+def test_activity_search_saved_state_is_optional_bounded_and_backward_compatible(
+    surface: SavedViewSurface,
+) -> None:
+    assert canonical_state(surface, 1, {"q": " basil "}) == {"q": "basil"}
+    with pytest.raises(ValueError, match="validation error"):
+        canonical_state(surface, 1, {"q": "x" * 201})
+    # Existing version-1 states omit search and remain canonical.
+    legacy: dict[str, JsonValue] = (
+        {"category": "status"} if surface == SavedViewSurface.EVENTS else {"category": ["event"]}
+    )
+    assert canonical_state(surface, 1, legacy) == {
+        "category": ["status"] if surface == SavedViewSurface.EVENTS else ["event"]
+    }
+
+
+def test_multiselect_saved_filters_accept_legacy_and_order_new_values() -> None:
+    assert canonical_state(SavedViewSurface.EVENTS, 1, {"q": "needle", "category": "all"}) == {
+        "q": "needle"
+    }
+    assert canonical_state(
+        SavedViewSurface.EVENTS, 1, {"category": ["status", "observations", "status"]}
+    ) == {"category": ["observations", "status"]}
+    assert canonical_state(
+        SavedViewSurface.HISTORY, 1, {"subject_kind": ["seed_lot", "plant", "plant"], "year": 2026}
+    ) == {"subject_kind": ["plant", "seed_lot"], "year": 2026}

@@ -9,11 +9,13 @@ export function ScheduleTargetPicker({
   value,
   selected,
   onChange,
+  allowInactive = false,
 }: {
   kind: TargetKind;
   value: string;
   selected: Target | null;
   onChange: (id: string) => void;
+  allowInactive?: boolean;
 }) {
   const auth = useAuth();
   const [remembered, setRemembered] = useState<Target | null>(selected);
@@ -91,8 +93,11 @@ export function ScheduleTargetPicker({
             label="Target record"
             choices={all.map((c) => ({
               id: c.id,
-              label: c.label,
-              retired: c.lifecycle !== null && c.lifecycle !== "active",
+              label: `${c.label}${allowInactive && c.lifecycle && c.lifecycle !== "active" ? ` (${c.lifecycle})` : ""}`,
+              retired:
+                !allowInactive &&
+                c.lifecycle !== null &&
+                c.lifecycle !== "active",
               ...(c.lifecycle ? { inactiveLabel: c.lifecycle } : {}),
             }))}
             value={value}

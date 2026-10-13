@@ -2,8 +2,12 @@ import { ScheduleTargetLabel } from "./ScheduleTargetLabel";
 import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { FormActions, PageHeader } from "../components/ReferenceUI";
+import { FormActions } from "../components/ReferenceUI";
 import { Page } from "../components/WorkspaceUI";
+import { ActivityChoices } from "../events/ActivityFilters";
+import { selectionLabel } from "../events/filterSelection";
+import { ActivityPageHeader } from "../events/ActivityPageHeader";
+import "../events/activity.css";
 import { ScheduleCalendar } from "./ScheduleCalendar";
 import { ScheduleActivityRow } from "./ScheduleActivityRow";
 import { TaskDialog } from "../components/TaskDialog";
@@ -28,6 +32,7 @@ import {
   scheduleHash,
   targetHref,
   targetLabels,
+  statusLabels,
   windowLabels,
   type ActivityKind,
   type ScheduleState,
@@ -490,8 +495,8 @@ function EmptyScheduleList({
   const filterHash = scheduleHash(state);
   const narrowed = Boolean(
     state.window !== "all" ||
-    state.activity_kind ||
-    state.target_kind ||
+    state.activity_kind.length ||
+    state.target_kind.length ||
     state.target_id ||
     state.q,
   );
@@ -527,11 +532,11 @@ function EmptyScheduleList({
       <p>
         {filtered
           ? "No activities match these filters."
-          : state.status === "planned"
-            ? "No planned activities yet."
-            : state.status === "completed"
-              ? "No completed activities."
-              : "No cancelled activities."}
+          : state.status.length === 1
+            ? state.status[0] === "planned"
+              ? "No planned activities yet."
+              : `No ${state.status[0]} activities.`
+            : "No scheduled activities yet."}
       </p>
     </div>
   );
@@ -541,7 +546,6 @@ export function ScheduleScreen() {
   const auth = useAuth();
   const [state, setState] = useState(readScheduleState);
   const [offset, setOffset] = useState(0);
-  const [filtersOpen, setFiltersOpen] = useState(false);
   const [result, setResult] = useState<{
     key: string;
     page: SchedulePage | null;
@@ -625,8 +629,8 @@ export function ScheduleScreen() {
         });
     } else if (p.get("action") === "create") {
       const parsed = readScheduleState();
-      if (parsed.target_kind && parsed.target_id)
-        void getTarget(parsed.target_kind, parsed.target_id, c.signal)
+      if (parsed.target_kind.length === 1 && parsed.target_id)
+        void getTarget(parsed.target_kind[0], parsed.target_id, c.signal)
           .then((target) => {
             if (!c.signal.aborted)
               setDialog({ action: "create", item: null, target });
@@ -717,12 +721,41 @@ export function ScheduleScreen() {
       setBusy(false);
     }
   }
-  const groups =
-    state.status === "planned"
-      ? ["Overdue", "Today", "Next 7 days", "Later"]
-      : [state.status === "completed" ? "Completed" : "Cancelled"];
+  const groups = [
+    "Overdue",
+    "Today",
+    "Next 7 days",
+    "Later",
+    "Completed",
+    "Cancelled",
+  ];
+  const viewSwitcher = (
+    <nav className="schedule-view-switch" aria-label="Schedule view">
+      {(["list", "calendar"] as const).map((view) => (
+        <a
+          key={view}
+          href={scheduleHash({ ...state, view })}
+          aria-current={state.view === view ? "page" : undefined}
+          onClick={(event) => {
+            if (
+              !event.ctrlKey &&
+              !event.metaKey &&
+              !event.shiftKey &&
+              !event.altKey
+            ) {
+              event.preventDefault();
+              update({ ...state, view });
+            }
+          }}
+        >
+          {view === "list" ? "List" : "Calendar"}
+        </a>
+      ))}
+    </nav>
+  );
   function group(item: Activity): string {
-    if (state.status !== "planned") return groups[0] ?? "";
+    if (item.status !== "planned")
+      return item.status === "completed" ? "Completed" : "Cancelled";
     if (item.due_on < projectionDay) return "Overdue";
     if (item.due_on === projectionDay) return "Today";
     const horizon = new Date(`${projectionDay}T12:00:00`);
@@ -730,208 +763,170 @@ export function ScheduleScreen() {
     return item.due_on <= localDay(horizon) ? "Next 7 days" : "Later";
   }
   return (
-    <Page className="schedule-workspace" titleId="schedule-title">
-      <PageHeader
-        title="Schedule"
+    <Page className="schedule-workspace activity-page" titleId="schedule-title">
+      <ActivityPageHeader
+        name="Schedule"
         titleId="schedule-title"
-        eyebrow="Activity"
-        description="Future intended work. Journal records occurrences; History records facts."
-      />
-      {notice && <p role="status">{notice}</p>}
-      <div
-        className="schedule-toolbar"
-        role="group"
-        aria-label="Schedule controls"
-      >
-        <nav className="schedule-view-switch" aria-label="Schedule view">
-          {(["list", "calendar"] as const).map((view) => (
-            <a
-              key={view}
-              href={scheduleHash({ ...state, view })}
-              aria-current={state.view === view ? "page" : undefined}
-              onClick={(e) => {
-                if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
-                  e.preventDefault();
-                  update({ ...state, view });
-                }
+        subtitle="Future work planned for your collection."
+        query={state.q}
+        onSearch={(q) => {
+          update({ ...state, q }, true);
+        }}
+        filterCount={
+          Number(state.status.length > 0 && state.status.length < 3) +
+          Number(state.window !== "all") +
+          Number(
+            state.activity_kind.length > 0 && state.activity_kind.length < 8,
+          ) +
+          Number(state.target_kind.length > 0) +
+          Number(Boolean(state.target_id))
+        }
+        resetFilters={() => {
+          update({
+            ...defaultState,
+            status: [],
+            q: state.q,
+            view: state.view,
+            month: state.month,
+            date: state.date,
+          });
+        }}
+        primaryAction={
+          owner && (
+            <button
+              type="button"
+              className="schedule-create"
+              aria-label="Schedule activity"
+              onClick={() => {
+                open("create");
               }}
             >
-              {view === "list" ? "List" : "Calendar"}
-            </a>
-          ))}
-        </nav>
-        <button
-          type="button"
-          className="button--secondary"
-          aria-expanded={filtersOpen}
-          aria-controls="schedule-filters"
-          onClick={() => {
-            setFiltersOpen((open) => !open);
-          }}
-        >
-          Filters
-        </button>
-        {(state.status !== defaultState.status ||
-          state.window !== defaultState.window ||
-          state.activity_kind ||
-          state.target_kind ||
-          state.target_id ||
-          state.q.trim()) && (
-          <button
-            type="button"
-            className="button--secondary"
-            onClick={() => {
-              update({
-                ...defaultState,
-                view: state.view,
-                month: state.month,
-                date: state.date,
-              });
-            }}
-          >
-            Reset filters
-          </button>
-        )}
-        <span>
-          {state.status === "planned"
-            ? "Active"
-            : state.status === "completed"
-              ? "Completed"
-              : "Cancelled"}{" "}
-          · {windowLabels[state.window]}
-          {state.activity_kind
-            ? ` · ${activityLabels[state.activity_kind]}`
-            : ""}
-          {state.target_kind ? ` · ${targetLabels[state.target_kind]}` : ""}
-          {state.q ? ` · Search: ${state.q}` : ""}
-        </span>
-        {owner && (
-          <button
-            type="button"
-            className="schedule-create"
-            onClick={() => {
-              open("create");
-            }}
-          >
-            Schedule activity
-          </button>
-        )}
-      </div>
-      <p className="schedule-guidance">
-        Local day: {projectionDay}. Overdue work stays planned.
-      </p>
-      <div
-        id="schedule-filters"
-        className="schedule-filters"
-        hidden={!filtersOpen}
+              + Schedule activity
+            </button>
+          )
+        }
+        summary={
+          <>
+            {state.status.length > 0 && state.status.length < 3 && (
+              <button
+                type="button"
+                className="filter-chip"
+                aria-label="Remove status filter"
+                onClick={() => {
+                  update({ ...state, status: [] });
+                }}
+              >
+                Status: {selectionLabel(state.status, statusLabels)} ×
+              </button>
+            )}
+            {state.window !== "all" && (
+              <button
+                type="button"
+                className="filter-chip"
+                aria-label="Remove date window filter"
+                onClick={() => {
+                  update({ ...state, window: "all" });
+                }}
+              >
+                {windowLabels[state.window]} ×
+              </button>
+            )}
+            {state.activity_kind.length > 0 &&
+              state.activity_kind.length < 8 && (
+                <button
+                  type="button"
+                  className="filter-chip"
+                  aria-label="Remove activity kind filter"
+                  onClick={() => {
+                    update({ ...state, activity_kind: [] });
+                  }}
+                >
+                  Activity kind:{" "}
+                  {selectionLabel(state.activity_kind, activityLabels)} ×
+                </button>
+              )}
+            {state.target_kind.length > 0 && (
+              <button
+                type="button"
+                className="filter-chip"
+                aria-label="Remove target type filter"
+                onClick={() => {
+                  update({ ...state, target_kind: [], target_id: "" });
+                }}
+              >
+                Target type: {selectionLabel(state.target_kind, targetLabels)} ×
+              </button>
+            )}
+            {state.target_id && (
+              <button
+                type="button"
+                className="filter-chip"
+                aria-label="Clear target filter"
+                onClick={() => {
+                  update({ ...state, target_id: "" });
+                }}
+              >
+                Selected record ×
+              </button>
+            )}
+          </>
+        }
       >
-        <label className="field">
-          Status
-          <select
-            value={state.status}
-            onChange={(e) => {
-              update({
-                ...state,
-                status: e.target.value as ScheduleState["status"],
-                window: "all",
-              });
-            }}
-          >
-            <option value="planned">Active</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </label>
-        <label className="field">
+        <ActivityChoices
+          title="Status"
+          labels={statusLabels}
+          selected={state.status}
+          onChange={(status) => {
+            update({ ...state, status: status.length === 3 ? [] : status });
+          }}
+        />
+        <label className="field activity-window-field">
           Date window
           <select
             value={state.window}
-            onChange={(e) => {
+            onChange={(event) => {
               update({
                 ...state,
-                window: e.target.value as ScheduleState["window"],
+                window: event.target.value as ScheduleState["window"],
               });
             }}
           >
-            {Object.entries(windowLabels)
-              .filter(
-                ([key]) => state.status === "planned" || key !== "overdue",
-              )
-              .map(([key, label]) => (
-                <option key={key} value={key}>
-                  {label}
-                </option>
-              ))}
-          </select>
-        </label>
-        <label className="field">
-          Activity kind
-          <select
-            value={state.activity_kind}
-            onChange={(e) => {
-              update({
-                ...state,
-                activity_kind: e.target.value as ScheduleState["activity_kind"],
-              });
-            }}
-          >
-            <option value="">All activities</option>
-            {Object.entries(activityLabels).map(([key, label]) => (
-              <option key={key} value={key}>
+            {Object.entries(windowLabels).map(([value, label]) => (
+              <option key={value} value={value}>
                 {label}
               </option>
             ))}
           </select>
         </label>
-        <label className="field">
-          Target type
-          <select
-            value={state.target_kind}
-            onChange={(e) => {
-              update({
-                ...state,
-                target_kind: e.target.value as ScheduleState["target_kind"],
-                target_id: "",
-              });
-            }}
-          >
-            <option value="">All record types</option>
-            {Object.entries(targetLabels).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
-          Search title / notes
-          <input
-            type="search"
-            maxLength={200}
-            value={state.q}
-            onChange={(e) => {
-              update({ ...state, q: e.target.value }, true);
-            }}
-          />
-        </label>
-      </div>
-      {state.target_id && (
-        <p>
-          Showing only the selected{" "}
-          {state.target_kind && targetLabels[state.target_kind]}.{" "}
-          <button
-            onClick={() => {
-              update({ ...state, target_id: "" });
-            }}
-          >
-            Clear target filter
-          </button>
-        </p>
+        <ActivityChoices
+          title="Activity kind"
+          labels={activityLabels}
+          selected={state.activity_kind}
+          onChange={(activity_kind) => {
+            update({ ...state, activity_kind });
+          }}
+        />
+        <ActivityChoices
+          title="Target type"
+          labels={targetLabels}
+          selected={state.target_kind}
+          onChange={(target_kind) => {
+            update({ ...state, target_kind, target_id: "" });
+          }}
+        />
+      </ActivityPageHeader>
+      {state.view === "list" && (
+        <div className="schedule-view-heading">
+          <h3>{page ? `${String(page.total)} activities` : "Activities"}</h3>
+          <div className="schedule-view-controls">{viewSwitcher}</div>
+        </div>
       )}
+      {notice && <p role="status">{notice}</p>}
       {state.view === "calendar" ? (
         <ScheduleCalendar
           key={state.month}
           state={state}
+          viewSwitcher={viewSwitcher}
           page={page ?? null}
           error={loadError}
           today={projectionDay}
@@ -961,19 +956,17 @@ export function ScheduleScreen() {
         <p role="status">Loading scheduled activities…</p>
       ) : (
         <>
-          {page.items.length > 0 && (
-            <p className="schedule-result-count">
-              {page.total}{" "}
-              {state.status === "planned" ? "active" : state.status} activities
-            </p>
-          )}
           {!page.items.length && (
             <EmptyScheduleList state={state} onExpire={expire} />
           )}
           {groups.map((heading) => {
             const items = page.items.filter((item) => group(item) === heading);
             return items.length ? (
-              <section key={heading} aria-label={heading}>
+              <section
+                className="schedule-group"
+                key={heading}
+                aria-label={heading}
+              >
                 <h3>{heading}</h3>
                 <ol className="schedule-list">
                   {items.map((item) => (

@@ -4088,7 +4088,8 @@
           "propagation",
           "germination",
           "harvest",
-          "material"
+          "material",
+          "schedule"
         ],
         "title": "HistoryCategory",
         "type": "string"
@@ -4164,7 +4165,8 @@
               "germination",
               "harvest",
               "disposition",
-              "conversion"
+              "conversion",
+              "scheduled_activity"
             ],
             "title": "Source Kind",
             "type": "string"
@@ -4237,7 +4239,10 @@
                 "$ref": "#/components/schemas/HistorySubjectKind"
               },
               {
-                "const": "location",
+                "enum": [
+                  "location",
+                  "botanical_identity"
+                ],
                 "type": "string"
               }
             ],
@@ -4294,7 +4299,8 @@
           "sowing",
           "harvest",
           "harvest_inventory",
-          "seed_lot"
+          "seed_lot",
+          "scheduled_activity"
         ],
         "title": "HistorySubjectKind",
         "type": "string"
@@ -20681,6 +20687,7 @@
                   "items": {
                     "$ref": "#/components/schemas/HistoryCategory"
                   },
+                  "maxItems": 6,
                   "type": "array"
                 },
                 {
@@ -20697,7 +20704,11 @@
             "schema": {
               "anyOf": [
                 {
-                  "$ref": "#/components/schemas/HistorySubjectKind"
+                  "items": {
+                    "$ref": "#/components/schemas/HistorySubjectKind"
+                  },
+                  "maxItems": 7,
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -20746,6 +20757,17 @@
               "minimum": 1,
               "title": "Limit",
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Q",
+              "type": "string"
             }
           }
         ],
@@ -24678,14 +24700,24 @@
             "name": "status",
             "required": false,
             "schema": {
-              "default": "planned",
-              "enum": [
-                "planned",
-                "completed",
-                "cancelled"
+              "anyOf": [
+                {
+                  "items": {
+                    "enum": [
+                      "planned",
+                      "completed",
+                      "cancelled"
+                    ],
+                    "type": "string"
+                  },
+                  "maxItems": 3,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
               ],
-              "title": "Status",
-              "type": "string"
+              "title": "Status"
             }
           },
           {
@@ -24712,17 +24744,21 @@
             "schema": {
               "anyOf": [
                 {
-                  "enum": [
-                    "repot",
-                    "water",
-                    "fertilize",
-                    "move",
-                    "check_germination",
-                    "inspect",
-                    "harvest",
-                    "follow_up"
-                  ],
-                  "type": "string"
+                  "items": {
+                    "enum": [
+                      "repot",
+                      "water",
+                      "fertilize",
+                      "move",
+                      "check_germination",
+                      "inspect",
+                      "harvest",
+                      "follow_up"
+                    ],
+                    "type": "string"
+                  },
+                  "maxItems": 8,
+                  "type": "array"
                 },
                 {
                   "type": "null"
@@ -24738,15 +24774,19 @@
             "schema": {
               "anyOf": [
                 {
-                  "enum": [
-                    "botanical_identity",
-                    "seed_lot",
-                    "sowing",
-                    "plant",
-                    "plant_group",
-                    "location"
-                  ],
-                  "type": "string"
+                  "items": {
+                    "enum": [
+                      "botanical_identity",
+                      "seed_lot",
+                      "sowing",
+                      "plant",
+                      "plant_group",
+                      "location"
+                    ],
+                    "type": "string"
+                  },
+                  "maxItems": 6,
+                  "type": "array"
                 },
                 {
                   "type": "null"

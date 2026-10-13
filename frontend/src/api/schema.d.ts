@@ -3786,7 +3786,7 @@ export interface components {
          * HistoryCategory
          * @enum {string}
          */
-        HistoryCategory: "event" | "propagation" | "germination" | "harvest" | "material";
+        HistoryCategory: "event" | "propagation" | "germination" | "harvest" | "material" | "schedule";
         /** HistoryEntry */
         HistoryEntry: {
             category: components["schemas"]["HistoryCategory"];
@@ -3819,7 +3819,7 @@ export interface components {
              * Source Kind
              * @enum {string}
              */
-            source_kind: "event" | "operation_receipt" | "germination" | "harvest" | "disposition" | "conversion";
+            source_kind: "event" | "operation_receipt" | "germination" | "harvest" | "disposition" | "conversion" | "scheduled_activity";
             /** Status */
             status: ("applied" | "reversed") | null;
             /** Subtype */
@@ -3837,7 +3837,7 @@ export interface components {
              */
             id: string;
             /** Kind */
-            kind: components["schemas"]["HistorySubjectKind"] | "location";
+            kind: components["schemas"]["HistorySubjectKind"] | ("location" | "botanical_identity");
             /** Label */
             label: string;
         };
@@ -3856,7 +3856,7 @@ export interface components {
          * HistorySubjectKind
          * @enum {string}
          */
-        HistorySubjectKind: "plant" | "plant_group" | "sowing" | "harvest" | "harvest_inventory" | "seed_lot";
+        HistorySubjectKind: "plant" | "plant_group" | "sowing" | "harvest" | "harvest_inventory" | "seed_lot" | "scheduled_activity";
         /**
          * IdentityCollectionCounts
          * @description Active collection records, never quantities or inferred lineage.
@@ -10359,10 +10359,11 @@ export interface operations {
         parameters: {
             query?: {
                 category?: components["schemas"]["HistoryCategory"][] | null;
-                subject_kind?: components["schemas"]["HistorySubjectKind"] | null;
+                subject_kind?: components["schemas"]["HistorySubjectKind"][] | null;
                 year?: number | null;
                 offset?: number;
                 limit?: number;
+                q?: string;
             };
             header?: never;
             path?: never;
@@ -12629,10 +12630,10 @@ export interface operations {
             query?: {
                 /** @description Calendar day for overdue. Defaults to UTC; browser supplies its local day. */
                 today?: string | null;
-                status?: "planned" | "completed" | "cancelled";
+                status?: ("planned" | "completed" | "cancelled")[] | null;
                 window?: "all" | "overdue" | "today" | "next_seven_days" | "later";
-                activity_kind?: ("repot" | "water" | "fertilize" | "move" | "check_germination" | "inspect" | "harvest" | "follow_up") | null;
-                target_kind?: ("botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location") | null;
+                activity_kind?: ("repot" | "water" | "fertilize" | "move" | "check_germination" | "inspect" | "harvest" | "follow_up")[] | null;
+                target_kind?: ("botanical_identity" | "seed_lot" | "sowing" | "plant" | "plant_group" | "location")[] | null;
                 target_id?: string | null;
                 q?: string;
                 offset?: number;

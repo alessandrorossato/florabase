@@ -3725,3 +3725,177 @@ not the current delivery state.
 - No application/UI/dependency/migration/publishing changes. No canonical `make feature-verify`,
   staging, commit, push, delivery, finish or environment mutation. Candidate remains available for
   independent planning review; next product increment is the Journal/History pass. **READY_FOR_REVIEW**.
+
+## 2026-10-13 — ACTIVITY-001 Journal / History product pass (implementation handoff)
+
+- Audited existing Event/Journal, History authority/deduplication, Schedule completion, entity
+  activity contexts, Dashboard/search/navigation and synthetic UAT before implementation. Initialized
+  existing `a165` worktree through `make feature-init` from requested main `b99bb4a` on
+  `feat/journal-history-product-pass`; no new worktree or primary change.
+- Product contract is visible in the pages: Journal = operator-recorded, History = authoritative
+  past facts, Schedule = future intended work. Journal adds a target chooser and compact source-aware
+  entries; contextual editor uses shared modal dismissal, dirty protection and focus return.
+  History keeps read-only source navigation, precision, bounded SQL and existing backing-row suppression.
+- Added one terminal History fact per completed ScheduledActivity, with persisted UTC completion
+  time explicitly distinguished from actual occurrence/due date. Planned/overdue/cancelled work is
+  excluded; explicit linked Events remain atomic/idempotent and retain their chosen actual date.
+  Dashboard shares source/date presentation. No migration, new Event domain or universal timeline.
+- Focused checks: backend **71**, PostgreSQL **56**, final affected frontend **81** plus contextual
+  Plant **42**, real fixture/guard **25** tests. Repository Ruff lint/format, mypy **339** files,
+  ESLint, TypeScript, scoped Prettier, frontend production build, `make api-check`, graph **102**,
+  JSON and whitespace checks pass. PostgreSQL suites ran via guarded `scripts/test-integration.sh`;
+  existing Harvest/receipt/conversion deduplication, uncertainty and query bounds are retained.
+- Browser evidence at **1440×844 / 1024×844 / 390×844** covers pages, populated target chooser,
+  editor and discard confirmation: no horizontal overflow, reachable controls, pristine/dirty
+  dismissal and focus return. Real mobile Journal create/edit/month precision/filter/navigation/delete
+  passes. In-app controller timed out; isolated Chromium supplied scoped checks, not global acceptance.
+- Existing additive UAT fixture is sufficient; no fixture or real UAT data/ownership changes.
+  Unique disposable candidate preview proved repeated-seed preservation and normal synthetic login.
+  Temporary QA note was removed through its supported workflow. Protected environments were preserved.
+- [Handoff](journal-history-product-pass-handoff.md) records the audit, correction/duplication/date
+  rules, filters/navigation, checks, screenshots and exclusions. ACTIVITY-001 is **implemented**;
+  independent QA owns visual acceptance and canonical verification. All changes remain unstaged and
+  uncommitted at unchanged base HEAD. No `make feature-verify`, staging, commit, push or delivery.
+  **READY_FOR_VISUAL_REVIEW**.
+
+## 2026-10-13 — ACTIVITY-001 recording hub and Dashboard grammar refinement
+
+- Same `a165` candidate and unchanged base `b99bb4a`. Journal is now a recording hub plus notebook
+  fallback. Shared Record menu opens delivered Harvest/Sowing forms, atomic bulk Location moves,
+  Schedule completion and contextual germination; notes retain the existing target chooser/editor.
+  No copied structured forms or future domains. Global notebook excludes owned backing records and
+  bare movement/lifecycle facts without notes; contextual source records remain available.
+- Journal/History share Dashboard's flexible Search / Filters drawer / Saved views grammar, active
+  summaries, query-preserving reset and compact ruled chronology. History stays read-only with source
+  labels/links and PartialDate/UTC completion semantics. Bounded literal History search runs before
+  SQL count/page; optional version-1 Saved View `q` preserves old states and URL navigation.
+- Restored concise Journal/History subtitles at the operator's final request. Header/toolbar/date
+  columns use available width and intrinsic wrapping; legacy Journal pane/header selectors no longer
+  override document flow. Dashboard shares source/date semantics without a layout redesign.
+- Focused verification: backend **147** (History/Saved Views/Schedule/Event/schema), PostgreSQL **57**
+  (History/History Saved Views/Schedule/Dashboard/Event API); guarded integration cleanup passed.
+  Frontend affected selection covers **194** tests; final contextual Plant/Journal rerun **42/42**
+  passed after the last error-copy assertion update. Ruff lint/format, mypy **339** files, ESLint,
+  strict TypeScript, scoped Prettier, production build and API drift pass; feature graph **102** valid.
+  Commands used the Quality environment, `pytest --no-cov`, guarded `scripts/test-integration.sh`
+  exact suite selections and `pnpm test` for `src/events`, `src/history`, contextual Plant,
+  DashboardSearch, Saved Views, Schedule and UX001. No canonical `make feature-verify`.
+- Real Chrome browser zoom: **1440×844 at 80/100/125/150%**, **1024×844 at 100/125%**,
+  **390×844 at 100%**. All **21** Dashboard/Journal/History measurements show no horizontal
+  document/main overflow and visible document flow; **71** screenshots include filters, Saved Views,
+  Record, chooser and editor. Native checks pass for canonical routes, menu keyboard/outside/Escape/
+  focus, chooser, pristine/dirty editor dismissal and mobile note create/edit/month/search/delete.
+- Existing synthetic v4 fixture suffices; repeat seed preserves state. Final disposable preview
+  `florabase-uat-preview-smoke-6f992cfb07eb` retired with zero residual owned resources; protected
+  operator Git/container/volume/database snapshots unchanged. Temporary QA note removed via UI.
+  Earlier interrupted/EOF-ended disposable previews retired by exact positive ownership.
+- [Refined handoff](journal-history-product-pass-handoff.md) records the full product/routing contract,
+  source/duplication/search/date rules, actual zoom evidence, checks and deferred sidebar IA questions.
+  ACTIVITY-001 remains **implemented**, pending independent visual acceptance and canonical QA.
+  Candidate remains unstaged/uncommitted; no commit, stage, push, delivery, Labels, sidebar restructuring
+  or global visual review. **READY_FOR_VISUAL_REVIEW**.
+
+## 2026-10-13 — ACTIVITY-001 consolidated Activity family refinement
+
+- Same `a165` candidate on `feat/journal-history-product-pass`, unchanged base `b99bb4a`; no new
+  feature/worktree or promotion of delivered features. Journal/History/Schedule semantics, canonical
+  Record routing, duplicate suppression, completion evidence and Dashboard aggregates are preserved.
+- `ActivityPageHeader` composes PageHeader's PageIdentity/PageTools with the existing Dashboard search,
+  filter drawer and supported Saved Views grammar. Wide layouts share identity/tools horizontally;
+  intrinsic wrapping and a stable search basis handle zoom/intermediate widths, with full-width mobile
+  search. Concise subtitles remain. Schedule List/Calendar is a separate local control; no Schedule
+  Saved Views contract is invented. CSS specificity removes an import-order wrapping conflict.
+- Journal/History use grouped white chronologies with subtle dividers. Schedule retains its actual
+  Overdue/Today/Next 7 days/Later buckets as white grouped surfaces, quieter counts/notes and Complete
+  plus overflow actions. Terminal/non-owner rows remain inspectable without writes. Native-modal row
+  menus stay inside their dialog; Escape closes the menu first, then returns focus. Versioned forms,
+  conflicts/reload, confirmation, dirty safety and selected-date prefill remain canonical.
+- Schedule exposes its existing bounded server-side title/notes `q`, shared by List and visible-month
+  Calendar. Clear filters preserves query/view/month/day; exact-target and other URL dimensions remain.
+  No new API, schema, runtime dependency, future domain or migration is introduced by this refinement.
+  UI contract and [consolidated handoff](activity-family-refinement-handoff.md) record the demonstrated
+  header/list pattern; sidebar membership/order and global visual migration remain deferred.
+- Checks: baseline **68** frontend; final **147** focused backend tests, **197** affected frontend tests
+  plus **2** shared interaction tests, **58** distinct PostgreSQL regressions (original selection **57**;
+  final Schedule rerun **16**, including notes/literal search before count/page). Ruff lint/format,
+  mypy **339** files, ESLint, strict TypeScript, scoped Prettier, final frontend build, `make api-check`,
+  feature graph **102** and `git diff --check` pass. No weakened assertions or canonical verification.
+- Actual Chrome zoom: all **35** Dashboard/Journal/History/Schedule List/Calendar page measurements
+  pass at **1440×844 80/100/125/150%**, **1024×844 100/125%**, **390×844 100%**. Scoped graphical
+  comparison confirms one Activity UI foundation. Native Record/Journal workflows and Schedule
+  search/reset/view/menu, reschedule/completion/cancellation, Calendar drawer/month/mobile agenda pass.
+  Browser evidence is in `docs/review/activity-family/`; global acceptance remains independent QA.
+- Existing synthetic v4 fixture and repeated-seed preservation suffice. All temporary previews use
+  positive ownership and retire with zero residual resources. Final preview
+  `florabase-uat-preview-smoke-932dcdd1a4bd` preserves protected Git/container/volume metadata, raw
+  database checksums and all **39** persistent UAT table counts/contents. Intermediate raw-dump
+  comparisons varied in the persistent UAT database digest; no metadata difference was found in the
+  retained diagnostic, and the earlier cause remains undetermined. Follow-up/final stable audits pass.
+  No persistent UAT reset/reseed/repair or ownership change; temporary plans only persist until exact
+  disposable retirement, and notebook test notes are deleted through their normal source workflow.
+- Empty index and unchanged HEAD; all work remains unstaged/uncommitted. No stage, commit, push,
+  delivery, `make feature-verify`, Labels, sidebar restructuring or global visual review.
+  **READY_FOR_VISUAL_REVIEW**.
+
+## 2026-10-13 — ACTIVITY-001 filter grammar and local Schedule heading correction
+
+- Same unstaged/uncommitted `a165` candidate on `feat/journal-history-product-pass`; base HEAD
+  remains `b99bb4a`. Concise subtitles remain restored. Dashboard behavior, domain ownership,
+  notebook exclusions, History dedup/dates and Schedule versioned mutation contracts are preserved.
+- Shared native checkbox fieldsets use two-column wide / one-column narrow grids. Journal Entry
+  type, History Fact/Primary record type and Schedule Status/Activity kind/Target type support real
+  combinations. History/Schedule enum queries are repeated, bounded, union within each dimension
+  and intersect across search/date/other filters before count/page. Stable SQL ordering remains.
+  Legacy v1 scalar Saved Views normalize without changing persisted rows; old URLs remain readable.
+- Dashboard's live model now applies to every Activity drawer, including valid Timeline year:
+  one conditional Reset filters / Done footer, no Apply year. Filters count restricting dimensions;
+  compact dimension chips clear one restriction, while reset preserves query and Schedule view/month/
+  day. Omitted legacy Status remains planned; unrestricted Status repeats all three real values.
+  Journal's named groups still exclude Other, and all typed Schedule targets still exclude untargeted
+  plans, so both remain counted restrictions. Overdue is still derived from planned due dates.
+- Schedule List/Calendar moves into the local count/month heading. Calendar shares that region
+  with Previous/Today/Next; List has no date navigation. Repeated filters, search and explicit
+  month/day survive switching/refresh/browser history. Existing list surfaces and row menus remain.
+- Content-sized 34rem Activity drawers cap at the viewport, scroll fields and keep the footer
+  reachable. Scoped selectors fix Dashboard import-order precedence; native inset anchoring removes
+  the remaining full-height blank Journal sheet. UI contract and the [consolidated handoff](activity-family-refinement-handoff.md)
+  document the grammar, encoding, counts, accessibility and exact review evidence.
+- Checks: baseline 129 frontend; 148 focused backend tests; Ruff lint/format (384 files), mypy (339),
+  ESLint and strict TypeScript pass. 204 affected frontend tests pass, followed by all 56 Schedule
+  tests and the final production build after the target-count/CSS corrections. 60 distinct focused
+  PostgreSQL tests pass across History/Saved Views/Schedule/Dashboard/Event API: initial 59/60,
+  corrected History fixture rerun 22/22 and final Schedule 17/17. API artifacts regenerated;
+  `make api-check`, feature graph 102 and `git diff --check` pass. No canonical gate ran.
+- Final actual zoom matrix passes all 35 page and 28 drawer measurements, with 168 captures in
+  `docs/review/activity-family/filter-consistency/`. All four native/browser checks pass, including
+  checkboxes/Space, combinations/count/reset, refresh/Back, local headings, period and mobile footer.
+  Existing synthetic v4/repeated seed suffices. Final exact-owned disposable preview
+  `florabase-uat-preview-smoke-c50bf9eb3778` retires with zero residual resources.
+- Final preservation audit matches protected Git/container/volume metadata, non-UAT raw digests and
+  all 38 UAT tables other than auth_sessions. That table keeps one row but its digest changes;
+  exact fields/cause remain unproven, and full 39-table/raw-UAT preservation is not claimed for this
+  interval. The preceding browser run matched all 39 tables. No persistent reset/reseed/repair or
+  session rewrite; task browser actions target disposable URLs only, with no secret contents emitted.
+- Empty index and unchanged HEAD. ACTIVITY-001 remains implemented for independent QA. No stage,
+  commit, push, delivery, `make feature-verify`, Labels, sidebar restructuring or global visual review.
+  **READY_FOR_VISUAL_REVIEW**.
+
+
+## 2026-10-13 — ACTIVITY-001 independent review and verification
+
+- Independent implementation and live product review found no material Journal, History, Schedule,
+  filter, responsive, accessibility or domain-model defect. Persistent UAT inspection covered
+  Dashboard, Journal, History, Schedule List/Calendar, filters, source navigation, linked completion
+  context and URL-preserving view switching. No UAT business or fixture records were changed;
+  authenticated sign-in exercised the expected session touch (`last_seen_at` / `idle_expires_at`).
+- The first canonical full run exposed three load-sensitive 15-second timeouts in unchanged Sowing
+  tests; all 19 tests passed both in isolation and in the subsequent full canonical run. No timeout
+  threshold or test behavior was changed.
+- Final `git diff --check` and `make feature-verify` pass on the review tree. Full evidence: feature
+  graph 102 valid; 916 backend tests; 618 frontend tests; 731 PostgreSQL integration tests; lint,
+  formatting, strict typing, API drift, backend/frontend production builds, complete migration cycle
+  at `20261009_0041`, workflow/resource guards, and exact disposable-resource cleanup all pass.
+  No application migration was added. Protected UAT/DEV/Feature Review resources and unknown
+  Docker resources remain preserved.
+- ACTIVITY-001 is verified against its acceptance criteria. The candidate is ready for staged-diff
+  review and local commit; delivery and finish remain the requested next lifecycle steps.

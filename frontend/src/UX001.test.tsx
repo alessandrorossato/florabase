@@ -175,23 +175,17 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
   expect(
     await screen.findByRole("heading", { name: "Journal" }),
   ).toBeInTheDocument();
-  await user.click(
-    screen.getByRole("button", {
-      name: "How Event corrections affect current state",
-    }),
-  );
   expect(
-    screen.getByText(
-      /Editing or deleting an ordinary Event does not recompute/i,
-    ),
-  ).toBeInTheDocument();
-  expect(screen.getByRole("link", { name: "Courtyard maple" })).toHaveAttribute(
-    "href",
-    `#/plants/${event.target.id}?tab=events`,
-  );
-  await user.click(screen.getByRole("button", { name: "Lifecycle" }));
+    screen.queryByText("How Event corrections affect current state"),
+  ).not.toBeInTheDocument();
+  expect(
+    await screen.findByRole("link", { name: "Courtyard maple" }),
+  ).toHaveAttribute("href", `#/plants/${event.target.id}?tab=events`);
+  await user.click(screen.getByRole("button", { name: "Filters" }));
+  await user.click(screen.getByRole("checkbox", { name: "Lifecycle" }));
+  await user.click(screen.getByRole("button", { name: "Done" }));
   expect(screen.getByRole("status")).toHaveTextContent(
-    "No Events match this filter.",
+    "No Journal entries match this search or filter.",
   );
 });
 

@@ -414,7 +414,7 @@ test("Plant and PlantGroup detail hashes retain Events across navigation and bro
   expect(
     await screen.findByRole("heading", { name: "Avocado #1" }),
   ).toBeVisible();
-  expect(screen.getByRole("tab", { name: "Events" })).toHaveAttribute(
+  expect(screen.getByRole("tab", { name: "Journal" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
@@ -429,7 +429,7 @@ test("Plant and PlantGroup detail hashes retain Events across navigation and bro
     "href",
     `#/labels?kind=plant-group&record=${groupId}`,
   );
-  expect(screen.getByRole("tab", { name: "Events" })).toHaveAttribute(
+  expect(screen.getByRole("tab", { name: "Journal" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
@@ -440,7 +440,7 @@ test("Plant and PlantGroup detail hashes retain Events across navigation and bro
   expect(
     await screen.findByRole("heading", { name: "Avocado #1" }),
   ).toBeVisible();
-  expect(screen.getByRole("tab", { name: "Events" })).toHaveAttribute(
+  expect(screen.getByRole("tab", { name: "Journal" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
@@ -451,7 +451,7 @@ test("Plant and PlantGroup detail hashes retain Events across navigation and bro
   expect(
     await screen.findByRole("heading", { name: "Seedlings 2026" }),
   ).toBeVisible();
-  expect(screen.getByRole("tab", { name: "Events" })).toHaveAttribute(
+  expect(screen.getByRole("tab", { name: "Journal" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
@@ -1386,7 +1386,7 @@ test("recorded extraction reintegration explains eligibility, restores authorita
     name: "Reintegrate into original group?",
   });
   expect(dialog).toHaveTextContent(
-    "identity, lineage, notes, and Event history",
+    "identity, lineage, notes, and recorded history",
   );
   expect(dialog).toHaveTextContent("restore the recorded pre-extraction state");
   await user.click(
@@ -1598,7 +1598,7 @@ test("explicit Plant transfer records recipient and keeps the historical detail 
   expect(
     screen.queryByRole("button", { name: "Transfer" }),
   ).not.toBeInTheDocument();
-  await user.click(screen.getByRole("tab", { name: "Events" }));
+  await user.click(screen.getByRole("tab", { name: "Journal" }));
   expect(
     await screen.findByRole("heading", { name: "Transfer" }),
   ).toBeInTheDocument();
@@ -1655,7 +1655,7 @@ test("whole-group transfer has no quantity control and extraction Events link th
     within(dialog).queryByLabelText(/Quantity|Count/),
   ).not.toBeInTheDocument();
   await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
-  await user.click(screen.getByRole("tab", { name: "Events" }));
+  await user.click(screen.getByRole("tab", { name: "Journal" }));
   expect(
     await screen.findByRole("link", { name: "Reintegrate Plant" }),
   ).toHaveAttribute("href", `#/plants/${plantId}`);
@@ -1671,8 +1671,8 @@ test("whole-group transfer has no quantity control and extraction Events link th
   expect(
     await screen.findByRole("heading", { name: "Chosen seedling" }),
   ).toBeInTheDocument();
-  await user.click(screen.getByRole("tab", { name: "Events" }));
-  await user.click(screen.getByRole("button", { name: "Add event" }));
+  await user.click(screen.getByRole("tab", { name: "Journal" }));
+  await user.click(screen.getByRole("button", { name: "Add entry" }));
   expect(
     within(screen.getByRole("dialog")).queryByRole("option", {
       name: "Extraction",
@@ -1680,7 +1680,7 @@ test("whole-group transfer has no quantity control and extraction Events link th
   ).not.toBeInTheDocument();
 });
 
-test("Plant Event history preserves API order, every label and partial-date precision while filters stay predictable", async () => {
+test("Plant Journal entries preserves API order, every label and partial-date precision while filters stay predictable", async () => {
   const events = Object.keys(eventKinds).map((kind, index) =>
     journalEvent(kind, {
       target: {
@@ -1720,8 +1720,8 @@ test("Plant Event history preserves API order, every label and partial-date prec
   );
   const user = await openPlants();
   await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
-  await user.click(screen.getByRole("tab", { name: "Events" }));
-  const timeline = await screen.findByRole("list", { name: "Event history" });
+  await user.click(screen.getByRole("tab", { name: "Journal" }));
+  const timeline = await screen.findByRole("list", { name: "Journal entries" });
   const items = within(timeline).getAllByRole("listitem");
   expect(items).toHaveLength(15);
   expect(
@@ -1742,7 +1742,7 @@ test("Plant Event history preserves API order, every label and partial-date prec
     within(timeline).queryByText("External primary photo"),
   ).not.toBeInTheDocument();
 
-  const filters = screen.getByRole("group", { name: "Filter Events" });
+  const filters = screen.getByRole("group", { name: "Filter Journal entries" });
   await user.click(
     within(filters).getByRole("button", { name: "Observations" }),
   );
@@ -1777,15 +1777,15 @@ test("PlantGroup detail has the same responsive Event journal and a useful empty
   await user.click(
     await screen.findByRole("button", { name: /Seedlings 2026/ }),
   );
-  await user.click(screen.getByRole("tab", { name: "Events" }));
+  await user.click(screen.getByRole("tab", { name: "Journal" }));
   expect(
-    await screen.findByRole("heading", { name: "No Events recorded yet" }),
+    await screen.findByRole("heading", { name: "No Journal entries yet" }),
   ).toBeInTheDocument();
   expect(
     screen.getByText(/observations, cultivation work/),
   ).toBeInTheDocument();
   expect(
-    screen.getByRole("button", { name: "Add the first event" }),
+    screen.getByRole("button", { name: "Add the first entry" }),
   ).toBeInTheDocument();
 
   cleanup();
@@ -1818,7 +1818,7 @@ test("PlantGroup detail has the same responsive Event journal and a useful empty
   await parityUser.click(
     await screen.findByRole("button", { name: /Seedlings 2026/ }),
   );
-  await parityUser.click(screen.getByRole("tab", { name: "Events" }));
+  await parityUser.click(screen.getByRole("tab", { name: "Journal" }));
   expect(
     await screen.findByRole("heading", { name: "Flowering" }),
   ).toBeInTheDocument();
@@ -1869,28 +1869,30 @@ test("Event creation validates movement, explains side effects and authoritative
   );
   const user = await openPlants();
   await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
-  await user.click(screen.getByRole("tab", { name: "Events" }));
-  await user.click(await screen.findByRole("button", { name: "Add event" }));
-  expect(screen.getByLabelText("Event kind")).toHaveAccessibleDescription(
-    /Most Events are journal history/i,
+  await user.click(screen.getByRole("tab", { name: "Journal" }));
+  await user.click(await screen.findByRole("button", { name: "Add entry" }));
+  expect(screen.getByLabelText("Entry type")).toHaveAccessibleDescription(
+    /Choose Observation or Other for a note/i,
   );
   await user.type(screen.getByLabelText("Notes (optional)"), "New leaf.");
   await user.click(
     within(screen.getByRole("dialog")).getByRole("button", {
-      name: "Add event",
+      name: "Add entry",
     }),
   );
-  expect(await screen.findByText("Event was added.")).toBeInTheDocument();
+  expect(
+    await screen.findByText("Journal entry was recorded."),
+  ).toBeInTheDocument();
   expect(screen.getByText("New leaf.")).toBeInTheDocument();
 
-  await user.click(screen.getByRole("button", { name: "Add event" }));
-  await user.selectOptions(screen.getByLabelText("Event kind"), "movement");
+  await user.click(screen.getByRole("button", { name: "Add entry" }));
+  await user.selectOptions(screen.getByLabelText("Entry type"), "movement");
   expect(
     screen.getByText(/also changes the current Location/),
   ).toBeInTheDocument();
   await user.click(
     within(screen.getByRole("dialog")).getByRole("button", {
-      name: "Add event",
+      name: "Add entry",
     }),
   );
   expect(screen.getByRole("alert")).toHaveTextContent(
@@ -1907,23 +1909,23 @@ test("Event creation validates movement, explains side effects and authoritative
   await user.type(screen.getByLabelText("Month"), "8");
   await user.click(
     within(screen.getByRole("dialog")).getByRole("button", {
-      name: "Add event",
+      name: "Add entry",
     }),
   );
   expect(await screen.findByText("2026-08")).toBeInTheDocument();
   expect(screen.getAllByText(location.display_path).length).toBeGreaterThan(0);
 
-  await user.click(screen.getByRole("button", { name: "Add event" }));
+  await user.click(screen.getByRole("button", { name: "Add entry" }));
   for (const kind of ["death", "loss", "discarded"]) {
-    await user.selectOptions(screen.getByLabelText("Event kind"), kind);
+    await user.selectOptions(screen.getByLabelText("Entry type"), kind);
     expect(
       screen.getByText(/also changes the current lifecycle/),
     ).toHaveTextContent(kind);
   }
-  await user.selectOptions(screen.getByLabelText("Event kind"), "death");
+  await user.selectOptions(screen.getByLabelText("Entry type"), "death");
   await user.click(
     within(screen.getByRole("dialog")).getByRole("button", {
-      name: "Add event",
+      name: "Add entry",
     }),
   );
   expect(await screen.findByText("Dead")).toBeInTheDocument();
@@ -1971,17 +1973,17 @@ test("historical edit and delete refresh the target without synthesizing rollbac
   );
   const user = await openPlants();
   await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
-  await user.click(screen.getByRole("tab", { name: "Events" }));
+  await user.click(screen.getByRole("tab", { name: "Journal" }));
   await screen.findByText("Moved for winter.");
   const readsAfterOpen = targetReads;
   await user.click(screen.getByRole("button", { name: "Edit" }));
   expect(screen.getByText(/Editing changes history only/)).toHaveTextContent(
     "does not move the record again",
   );
-  await user.selectOptions(screen.getByLabelText("Event kind"), "death");
+  await user.selectOptions(screen.getByLabelText("Entry type"), "death");
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   expect(
-    await screen.findByText("Event changes were saved."),
+    await screen.findByText("Journal entry changes were saved."),
   ).toBeInTheDocument();
   expect(
     await screen.findByRole("heading", { name: "Death" }),
@@ -1992,9 +1994,9 @@ test("historical edit and delete refresh the target without synthesizing rollbac
   expect(screen.getByRole("dialog")).toHaveTextContent(
     "does not undo changes previously made",
   );
-  await user.click(screen.getByRole("button", { name: "Delete event" }));
+  await user.click(screen.getByRole("button", { name: "Delete entry" }));
   expect(
-    await screen.findByRole("heading", { name: "No Events recorded yet" }),
+    await screen.findByRole("heading", { name: "No Journal entries yet" }),
   ).toBeInTheDocument();
   expect(targetReads).toBe(readsAfterOpen + 2);
 });
@@ -2011,13 +2013,13 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
   );
   const user = await openPlants();
   await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
-  await user.click(screen.getByRole("tab", { name: "Events" }));
+  await user.click(screen.getByRole("tab", { name: "Journal" }));
   expect(await screen.findByRole("status", { name: "" })).toHaveTextContent(
-    "Loading Events",
+    "Loading Journal entries",
   );
   resolveEvents?.(json([]));
   expect(
-    await screen.findByRole("heading", { name: "No Events recorded yet" }),
+    await screen.findByRole("heading", { name: "No Journal entries yet" }),
   ).toBeInTheDocument();
 
   cleanup();
@@ -2033,12 +2035,12 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
   await failingUser.click(
     await screen.findByRole("button", { name: /Avocado #1/ }),
   );
-  await failingUser.click(screen.getByRole("tab", { name: "Events" }));
+  await failingUser.click(screen.getByRole("tab", { name: "Journal" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
-    "could not load this Event history",
+    "could not load these Journal entries",
   );
   expect(
-    screen.getByRole("button", { name: "Retry Events" }),
+    screen.getByRole("button", { name: "Retry Journal" }),
   ).toBeInTheDocument();
 
   cleanup();
@@ -2058,17 +2060,17 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
   await mutationUser.click(
     await screen.findByRole("button", { name: /Avocado #1/ }),
   );
-  await mutationUser.click(screen.getByRole("tab", { name: "Events" }));
+  await mutationUser.click(screen.getByRole("tab", { name: "Journal" }));
   await mutationUser.click(
-    await screen.findByRole("button", { name: "Add the first event" }),
+    await screen.findByRole("button", { name: "Add the first entry" }),
   );
   await mutationUser.click(
     within(screen.getByRole("dialog")).getByRole("button", {
-      name: "Add event",
+      name: "Add entry",
     }),
   );
   expect(await screen.findByRole("alert")).toHaveTextContent(
-    "could not save or refresh this Event",
+    "could not save or refresh this entry",
   );
   expect(screen.getByRole("dialog")).toBeInTheDocument();
 });
@@ -2084,11 +2086,13 @@ test("desktop Plant selection previews record facts without mounting Events", as
   expect(
     within(preview).getByRole("heading", { name: "Avocado #1" }),
   ).toBeInTheDocument();
-  expect(screen.queryByRole("tab", { name: "Events" })).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("tab", { name: "Journal" }),
+  ).not.toBeInTheDocument();
   await user.click(
     within(preview).getByRole("button", { name: "Open details" }),
   );
-  expect(screen.getByRole("tab", { name: "Events" })).toBeInTheDocument();
+  expect(screen.getByRole("tab", { name: "Journal" })).toBeInTheDocument();
 });
 
 test("reselecting a previewed record after narrowing the viewport opens its detail", async () => {
@@ -2102,7 +2106,7 @@ test("reselecting a previewed record after narrowing the viewport opens its deta
   setViewportMatches(true);
   await user.click(screen.getByRole("button", { name: /Avocado #1/ }));
   expect(
-    await screen.findByRole("tab", { name: "Events" }),
+    await screen.findByRole("tab", { name: "Journal" }),
   ).toBeInTheDocument();
   expect(screen.queryByText(/Loading .* detail/)).not.toBeInTheDocument();
 });
@@ -2470,4 +2474,35 @@ test("BULK-001 mixed Plant and Group directory selection retains concrete kind",
     "1 record",
   );
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+});
+
+test("Journal editor dismisses pristine forms, protects changed notes and restores focus", async () => {
+  mockApi(plantHandler([plant()], []));
+  const user = await openPlants();
+  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(screen.getByRole("tab", { name: "Journal" }));
+  const add = await screen.findByRole("button", { name: "Add entry" });
+  await user.click(add);
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(add).toHaveFocus();
+  await user.click(add);
+  await user.type(
+    screen.getByLabelText("Notes (optional)"),
+    "Warm nights prompted this move.",
+  );
+  await user.keyboard("{Escape}");
+  const discard = screen.getByRole("dialog", {
+    name: "Discard unsaved Journal changes?",
+  });
+  await user.click(
+    within(discard).getByRole("button", { name: "Continue editing" }),
+  );
+  expect(screen.getByLabelText("Notes (optional)")).toHaveValue(
+    "Warm nights prompted this move.",
+  );
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  await user.click(screen.getByRole("button", { name: "Discard changes" }));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(add).toHaveFocus();
 });

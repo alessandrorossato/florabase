@@ -21,6 +21,7 @@ from florabase.harvests.service import write_harvest
 from florabase.history.schemas import HistoryCategory as Category
 from florabase.history.schemas import HistorySubjectKind as Subject
 from florabase.history.service import history_statement, list_history
+from florabase.locations.model import Location
 from florabase.plants.model import Plant
 from florabase.plants.schemas import PlantExtractionCreate
 from florabase.plants.service import extract_plant, reintegrate_plant
@@ -442,6 +443,14 @@ def test_authenticated_read_only_api_and_bounds(authenticated_browser: tuple[str
     ):
         assert _api_get(f"/api/v1/history?{query}", cookie)[0] == 422
     assert _api_get("/api/v1/history?category=event&category=harvest&limit=100", cookie)[0] == 200
+    assert (
+        _api_get(
+            "/api/v1/history?category=event&category=harvest&subject_kind=plant&subject_kind=seed_lot&q=needle&year=2026",
+            cookie,
+        )[0]
+        == 200
+    )
+    assert _api_get("/api/v1/history?" + "&".join(["subject_kind=plant"] * 8), cookie)[0] == 422
     assert request("POST", "/api/v1/history", headers={"cookie": cookie})[0] == 405
 
 
@@ -499,3 +508,205 @@ def test_recorded_year_is_utc_even_when_database_timezone_differs(db: Session) -
     db.execute(text("SET LOCAL TIME ZONE 'Pacific/Auckland'"))
     assert list_history(db, year=2026).total == 1
     assert list_history(db, year=2027).total == 0
+
+
+def test_schedule_completion_is_terminal_fact_with_explicit_event_and_deterministic_order(
+    db: Session,
+    database_connection: Connection,
+) -> None:
+    from florabase.collection_views.service import dashboard
+    from florabase.schedule import service as schedule
+    from florabase.schedule.schemas import (
+        ScheduleComplete,
+        ScheduleEvent,
+        ScheduleTarget,
+        ScheduleWrite,
+    )
+
+    plant, _, _ = fixtures(db)
+    plant.lifecycle = "active"
+    db.flush()
+
+    def plan(title: str, target: ScheduleTarget | None = None) -> Any:
+        return schedule.create(
+            db,
+            ScheduleWrite(
+                activity_kind="inspect",
+                title=title,
+                due_on=date(2020, 1, 1),
+                target=target,
+            ),
+        )
+
+    plain = plan("Inspect collection")
+    linked = plan("Inspect plant", ScheduleTarget(kind="plant", id=plant.id))
+    cancelled = plan("Cancelled inspection")
+    plan("Still intended")
+    schedule.cancel(db, cancelled.id, 1)
+    no_event = ScheduleComplete(expected_version=1)
+    schedule.complete(db, plain.id, no_event)
+    payload = ScheduleComplete(
+        expected_version=1,
+        event=ScheduleEvent(
+            kind="observation",
+            occurred_on=date(2024, 3, 9),
+            notes="Leaves healthy after inspection",
+        ),
+    )
+    schedule.complete(db, linked.id, payload)
+    schedule.complete(db, plain.id, no_event)
+    schedule.complete(db, linked.id, payload)
+    plain.completed_at = linked.completed_at = STAMP
+    db.flush()
+    statements: list[str] = []
+
+    def capture(_conn: Any, _cursor: Any, statement: str, *_args: Any) -> None:
+        statements.append(statement)
+
+    event.listen(database_connection, "before_cursor_execute", capture)
+    try:
+        result = list_history(db)
+    finally:
+        event.remove(database_connection, "before_cursor_execute", capture)
+    assert len(statements) == 1
+    assert result.total == 3
+    completions = [row for row in result.items if row.source_kind == "scheduled_activity"]
+    assert [row.key for row in completions] == sorted(row.key for row in completions)
+    assert all(
+        row.occurred_at == STAMP and row.occurred_on and row.occurred_on.year == 2026
+        for row in completions
+    )
+    assert all(row.primary.kind == "scheduled_activity" for row in completions)
+    assert next(row for row in completions if row.source_id == plain.id).related == []
+    linked_row = next(row for row in completions if row.source_id == linked.id)
+    assert linked_row.related[0].id == plant.id
+    assert "separate Journal occurrence" in linked_row.context
+    occurrence = next(row for row in result.items if row.source_kind == "event")
+    assert occurrence.source_id == linked.linked_event_id
+    assert occurrence.occurred_on
+    assert occurrence.occurred_on.year == 2024
+    assert occurrence.occurred_on.day == 9
+    assert list_history(db, categories=(Category.SCHEDULE,), year=2026).total == 2
+    assert list_history(db, categories=(Category.SCHEDULE,), year=2020).total == 0
+    assert list_history(db, subject_kind=Subject.SCHEDULED_ACTIVITY, limit=1).total == 2
+    assert [row.key for row in dashboard(db, date(2026, 10, 7)).overview.recent_activity] == [
+        row.key for row in result.items
+    ]
+
+
+@pytest.mark.parametrize(
+    "kind", ["plant", "plant_group", "seed_lot", "sowing", "location", "botanical_identity"]
+)
+def test_completion_recovers_supported_target(kind: str, db: Session) -> None:
+    from florabase.locations.model import Location
+    from florabase.plants.model import PlantGroup
+    from florabase.schedule import service as schedule
+    from florabase.schedule.schemas import ScheduleComplete, ScheduleWrite
+
+    lot, sowing, plant = propagation(db)
+    sowing.lifecycle = "active"
+    db.flush()
+    group = db.scalar(select(PlantGroup))
+    assert group
+    location = db.scalar(select(Location))
+    assert location
+    targets = {
+        "plant": plant.id,
+        "plant_group": group.id,
+        "seed_lot": lot.id,
+        "sowing": sowing.id,
+        "location": location.id,
+        "botanical_identity": plant.botanical_identity_id,
+    }
+    activity = schedule.create(
+        db,
+        ScheduleWrite.model_validate(
+            {
+                "activity_kind": "inspect",
+                "title": "Review target",
+                "due_on": "2026-10-07",
+                "target": {"kind": kind, "id": targets[kind]},
+            }
+        ),
+    )
+    schedule.complete(db, activity.id, ScheduleComplete(expected_version=1))
+    row = list_history(db, categories=(Category.SCHEDULE,)).items[0]
+    assert row.related[0].kind == kind
+    assert row.related[0].id == targets[kind]
+    assert row.related[0].label
+
+
+def test_history_search_filters_before_count_and_page_without_like_wildcards(db: Session) -> None:
+    plant, _, _ = fixtures(db)
+    plant.label = "Basil %_ specimen"
+    location = db.get(Location, plant.location_id)
+    assert location
+    location.name = "Terrace bench"
+    occurrence = create_event(
+        db, "plant", plant.id, EventCreate(kind="movement", destination_location_id=location.id)
+    )
+    db.flush()
+    for query in ("movement", "BASIL", "Terrace", "%_", "Journal"):
+        page = list_history(db, q=query, limit=1)
+        assert page.total == 1
+        assert page.items[0].source_id == occurrence.id
+    assert list_history(db, q="unrelated", limit=1).total == 0
+    assert list_history(db, q="basil", categories=(Category.HARVEST,)).total == 0
+    out_of_range = list_history(db, q="Terrace", offset=50)
+    assert out_of_range.total == 1
+    assert out_of_range.items == []
+
+
+def test_primary_record_multiselect_combines_with_fact_search_year_and_paging(db: Session) -> None:
+    _, sowing, plant = propagation(db)
+    plant.label = "Multi history needle"
+    create_event(
+        db,
+        "plant",
+        plant.id,
+        EventCreate.model_validate(
+            {
+                "kind": "observation",
+                "notes": "Multi history needle",
+                "occurred_on": {"precision": "year", "year": 2026},
+            }
+        ),
+    )
+    db.flush()
+    # Both subject values select a union; category/year/primary-label search still intersect it.
+    page = list_history(
+        db,
+        categories=(Category.EVENT, Category.PROPAGATION),
+        subject_kind=(Subject.PLANT, Subject.SOWING),
+        q="Multi history needle",
+        year=2026,
+        limit=1,
+    )
+    assert page.total == 2
+    assert page.items[0].primary.id == plant.id
+    assert (
+        list_history(
+            db,
+            categories=(Category.EVENT,),
+            subject_kind=(Subject.SOWING,),
+            q="Multi history needle",
+            year=2026,
+        ).total
+        == 0
+    )
+    combined = list_history(
+        db,
+        categories=(Category.PROPAGATION,),
+        subject_kind=(Subject.PLANT, Subject.SOWING),
+        limit=1,
+    )
+    assert combined.total == 2
+    tail = list_history(
+        db,
+        categories=(Category.PROPAGATION,),
+        subject_kind=(Subject.PLANT, Subject.SOWING),
+        limit=1,
+        offset=1,
+    )
+    assert tail.total == 2
+    assert {combined.items[0].primary.id, tail.items[0].primary.id} == {plant.id, sowing.id}
