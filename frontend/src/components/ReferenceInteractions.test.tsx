@@ -152,3 +152,22 @@ test("overflow menus dismiss outside and on action, Escape, or another menu", as
   expect(first).toHaveAttribute("aria-expanded", "false");
   expect(second).toHaveAttribute("aria-expanded", "true");
 });
+
+test("navigation dialogs include links in focus containment", async () => {
+  const user = userEvent.setup();
+  render(
+    <TaskDialog title="Navigation" onClose={vi.fn()}>
+      <button type="button">Close navigation</button>
+      <a href="#/labels">Labels</a>
+    </TaskDialog>,
+  );
+  expect(
+    screen.getByRole("button", { name: "Close navigation" }),
+  ).toHaveFocus();
+  await user.keyboard("{Shift>}{Tab}{/Shift}");
+  expect(screen.getByRole("link", { name: "Labels" })).toHaveFocus();
+  await user.keyboard("{Tab}");
+  expect(
+    screen.getByRole("button", { name: "Close navigation" }),
+  ).toHaveFocus();
+});

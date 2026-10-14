@@ -1,0 +1,86 @@
+.settings-workspace {
+  min-width: 0;
+}
+.settings-content {
+  display: grid;
+  gap: var(--space-4);
+  width: min(100%, 58rem);
+}
+.settings-panel {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+  background: var(--surface);
+}
+.settings-panel h3,
+.settings-panel p {
+  margin: 0;
+}
+.settings-panel input {
+  width: 100%;
+  min-width: 0;
+}
+.settings-panel p {
+  overflow-wrap: anywhere;
+}
+.settings-tools {
+  display: grid;
+  gap: var(--space-3);
+}
+.settings-tools a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  text-decoration: none;
+}
+.settings-panel form {
+  display: grid;
+  gap: var(--space-2);
+}
+.settings-tools a > span:first-child {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.settings-tools a span span {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.settings-tool-open {
+  white-space: nowrap;
+  color: var(--primary);
+  font: var(--type-small);
+}
+.settings-tools a:hover {
+  background: var(--surface-hover);
+}
+.application-shell:has(.settings-workspace) {
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+  align-items: start;
+}
+.application-shell:has(.settings-workspace) > .app-content {
+  height: auto;
+  overflow: visible;
+  min-width: 0;
+}
+.app-content > .settings-workspace.ui-page {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+@media screen and (min-width: 48.01rem) {
+  .application-shell:has(.settings-workspace) > .desktop-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+  }
+}

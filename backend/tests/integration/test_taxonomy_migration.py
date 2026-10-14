@@ -2,6 +2,7 @@ from uuid import uuid7
 
 import pytest
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import Engine, text
 from sqlalchemy.exc import DBAPIError
 
@@ -34,7 +35,10 @@ def test_empty_cycle_and_populated_downgrade_preserves_link(database_engine: Eng
         with pytest.raises(DBAPIError, match="Cannot downgrade with confirmed WFO links"):
             command.downgrade(config, "20261009_0039")
         with database_engine.begin() as db:
-            assert db.scalar(text("SELECT version_num FROM alembic_version")) == "20261009_0041"
+            assert (
+                db.scalar(text("SELECT version_num FROM alembic_version"))
+                == ScriptDirectory.from_config(config).get_current_head()
+            )
             assert (
                 db.scalar(
                     text("SELECT version FROM wfo_links WHERE identity_id=:id"), {"id": ident}

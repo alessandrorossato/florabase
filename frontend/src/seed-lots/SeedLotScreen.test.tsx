@@ -203,7 +203,11 @@ async function openSeeds() {
   setViewportMatches(true);
   const user = userEvent.setup();
   render(<App />);
-  await user.click(await screen.findByRole("button", { name: "Seeds" }));
+  await user.click(
+    within(
+      await screen.findByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Seeds" }),
+  );
   await screen.findByRole("heading", { name: "Seeds", level: 2 });
   return user;
 }
@@ -258,10 +262,11 @@ test("Seeds navigation exposes the collection loading and global empty states", 
     throw new Error(`Unexpected request: ${path}`);
   });
   await openSeeds();
-  expect(screen.getByRole("button", { name: "Seeds" })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
+  expect(
+    within(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Seeds" }),
+  ).toHaveAttribute("aria-current", "page");
   expect(await screen.findByText("Loading seed inventory…")).toHaveAttribute(
     "role",
     "status",
@@ -351,7 +356,11 @@ test("reselecting Seeds clears selection, search and lifecycle filter without re
   ).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "All" }));
   await user.type(screen.getByLabelText("Search seed inventory"), "Blue");
-  await user.click(screen.getByRole("button", { name: "Seeds" }));
+  await user.click(
+    within(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Seeds" }),
+  );
   expect(window.location.hash).toBe("#/seeds");
   expect(await screen.findByLabelText("Search seed inventory")).toHaveValue("");
   expect(screen.getByRole("button", { name: "Active" })).toHaveAttribute(
@@ -370,13 +379,21 @@ test("reselecting Seeds protects an edited form until changes are discarded", as
   await user.click(await screen.findByRole("button", { name: /Blue packet/ }));
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   await user.type(screen.getByLabelText("Lot label (optional)"), " changed");
-  await user.click(screen.getByRole("button", { name: "Seeds" }));
+  await user.click(
+    within(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Seeds" }),
+  );
   expect(confirm).toHaveBeenCalledOnce();
   expect(screen.getByLabelText("Lot label (optional)")).toHaveValue(
     "Blue packet changed",
   );
   confirm.mockReturnValue(true);
-  await user.click(screen.getByRole("button", { name: "Seeds" }));
+  await user.click(
+    within(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Seeds" }),
+  );
   expect(window.location.hash).toBe("#/seeds");
   expect(
     screen.queryByRole("button", { name: "Save changes" }),

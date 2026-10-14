@@ -1,6 +1,6 @@
 import { SidebarResizeHandle } from "./components/SidebarResizeHandle";
 import { sidebarWidthLimit } from "./components/sidebarWidth";
-import type { CSSProperties } from "react";
+import type { CSSProperties, MouseEvent } from "react";
 import { RecordPresentationProvider } from "./components/RecordPresentationProvider";
 import { Fragment, lazy, Suspense, useEffect, useRef, useState } from "react";
 
@@ -8,6 +8,8 @@ import type { components } from "./api/schema";
 import { AuthProvider } from "./auth/AuthProvider";
 import { useAuth } from "./auth/context";
 import { LoginForm } from "./auth/LoginForm";
+import { ThemeControl, type ThemePreview } from "./components/ThemeControl";
+import { TaskDialog } from "./components/TaskDialog";
 import { WorkspaceBoundary } from "./components/WorkspaceBoundary";
 import { loadWorkspaceChunk } from "./components/workspaceChunk";
 import { isFreshDirectoryNavigation } from "./components/recordNavigation";
@@ -103,6 +105,13 @@ const LocationScreen = lazy(() =>
   }),
 );
 
+const SettingsScreen = lazy(() =>
+  loadWorkspaceChunk(async () => {
+    const module = await import("./settings/SettingsScreen");
+    return { default: module.SettingsScreen };
+  }),
+);
+
 const LabelsScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./labels/LabelsScreen");
@@ -192,6 +201,7 @@ type Section =
   | "geography"
   | "import-export"
   | "labels"
+  | "settings"
   | "media";
 
 interface Route {
@@ -267,6 +277,7 @@ function currentRoute(): Route {
     "geography",
     "import-export",
     "labels",
+    "settings",
     "media",
   ];
   return {
@@ -284,7 +295,7 @@ function currentRoute(): Route {
 
 const desktopGroups: {
   label: string;
-  items: { id: Section; label: string }[];
+  items: { id: Section; label: string; subgroup?: "Maps" }[];
 }[] = [
   { label: "Overview", items: [{ id: "dashboard", label: "Dashboard" }] },
   {
@@ -312,9 +323,13 @@ const desktopGroups: {
       { id: "taxonomy", label: "Taxonomy" },
       { id: "media", label: "Media" },
       { id: "geography", label: "Geography" },
-      { id: "species-distribution", label: "Species distribution" },
-      { id: "native-ranges", label: "Native ranges" },
-      { id: "map", label: "Collection origins" },
+      {
+        id: "species-distribution",
+        subgroup: "Maps",
+        label: "Species distribution",
+      },
+      { id: "native-ranges", subgroup: "Maps", label: "Native ranges" },
+      { id: "map", subgroup: "Maps", label: "Collection origins" },
     ],
   },
   {
@@ -322,13 +337,6 @@ const desktopGroups: {
     items: [
       { id: "suppliers", label: "Suppliers" },
       { id: "orders", label: "Orders" },
-    ],
-  },
-  {
-    label: "Tools",
-    items: [
-      { id: "import-export", label: "Import / Export" },
-      { id: "labels", label: "Labels" },
     ],
   },
 ];
@@ -373,6 +381,7 @@ function WorkspaceLoading() {
 function ApplicationShell() {
   const auth = useAuth();
   const state = auth.state;
+  const [themePreview, setThemePreview] = useState<ThemePreview>("System");
   const [health, setHealth] = useState<HealthState>({ status: "loading" });
   const [route, setRoute] = useState<Route>(currentRoute);
   const [collapsedGroups, setCollapsedGroups] = useState(() =>
@@ -405,6 +414,40 @@ function ApplicationShell() {
   }, []);
   const showNavigationRef = useRef<HTMLButtonElement>(null);
   const hideNavigationRef = useRef<HTMLButtonElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const container = sidebarRef.current?.querySelector<HTMLElement>(
+      ".desktop-sidebar__content",
+    );
+    if (!container || !navigationVisible) return;
+    const revealActive = () => {
+      const active = container.querySelector<HTMLElement>(
+        ".navigation-link[aria-current=page]",
+      );
+      if (!active) return;
+      const bounds = container.getBoundingClientRect();
+      const target = active.getBoundingClientRect();
+      if (target.bottom > bounds.bottom)
+        container.scrollTop += target.bottom - bounds.bottom;
+      else if (target.top < bounds.top)
+        container.scrollTop -= bounds.top - target.top;
+    };
+    revealActive();
+    // Lazy workspace CSS can change shell geometry after the route has activated.
+    const resize =
+      typeof ResizeObserver === "undefined"
+        ? undefined
+        : new ResizeObserver(revealActive);
+    resize?.observe(container);
+    const workspace =
+      sidebarRef.current?.parentElement?.querySelector(".app-content");
+    const content = new MutationObserver(revealActive);
+    if (workspace) content.observe(workspace, { childList: true });
+    return () => {
+      resize?.disconnect();
+      content.disconnect();
+    };
+  }, [route.section, collapsedGroups, navigationVisible, state.status]);
   const formChanged = useRef(false);
 
   useEffect(() => {
@@ -453,6 +496,22 @@ function ApplicationShell() {
     if (window.scrollY > 0) window.scrollTo(0, 0);
   }
 
+  function followNavigation(
+    event: MouseEvent<HTMLAnchorElement>,
+    section: Section,
+  ) {
+    if (
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
+      return;
+    event.preventDefault();
+    navigate(section);
+  }
+
   useEffect(() => {
     const controller = new AbortController();
     void fetch("/api/v1/health", { signal: controller.signal })
@@ -487,27 +546,31 @@ function ApplicationShell() {
         { "--sidebar-width": `${String(sidebarWidth)}px` } as CSSProperties
       }
     >
-      <aside className="desktop-sidebar" aria-label="Application sidebar">
+      <aside
+        ref={sidebarRef}
+        className="desktop-sidebar"
+        aria-label="Application sidebar"
+      >
+        <div className="sidebar-top">
+          <h1 className="sidebar-brand" id="page-title">
+            <a className="brand" href="#/dashboard">
+              Florabase
+            </a>
+          </h1>
+          <button
+            type="button"
+            className="sidebar-toggle sidebar-toggle--hide"
+            ref={hideNavigationRef}
+            aria-label="Hide navigation"
+            onClick={() => {
+              setNavigationVisible(false);
+              window.setTimeout(() => showNavigationRef.current?.focus(), 0);
+            }}
+          >
+            <span aria-hidden="true">‹</span>
+          </button>
+        </div>
         <div className="desktop-sidebar__content">
-          <div className="sidebar-top">
-            <h1 className="sidebar-brand" id="page-title">
-              <a className="brand" href="#/dashboard">
-                Florabase
-              </a>
-            </h1>
-            <button
-              type="button"
-              className="sidebar-toggle sidebar-toggle--hide"
-              ref={hideNavigationRef}
-              aria-label="Hide navigation"
-              onClick={() => {
-                setNavigationVisible(false);
-                window.setTimeout(() => showNavigationRef.current?.focus(), 0);
-              }}
-            >
-              <span aria-hidden="true">‹</span>
-            </button>
-          </div>
           <nav aria-label="Primary navigation">
             {desktopGroups.map((group) => (
               <section key={group.label} aria-label={group.label}>
@@ -540,18 +603,18 @@ function ApplicationShell() {
                       {item.id === "species-distribution" && (
                         <p className="sidebar-subsection">Maps</p>
                       )}
-                      <button
-                        type="button"
-                        className="navigation-link"
+                      <a
+                        href={`#/${item.id}`}
+                        className={`navigation-link${item.subgroup ? " navigation-link--map" : ""}`}
                         aria-current={
                           route.section === item.id ? "page" : undefined
                         }
-                        onClick={() => {
-                          navigate(item.id);
+                        onClick={(event) => {
+                          followNavigation(event, item.id);
                         }}
                       >
                         {item.label}
-                      </button>
+                      </a>
                     </Fragment>
                   ))}
                 </div>
@@ -561,8 +624,35 @@ function ApplicationShell() {
         </div>
         <div className="sidebar-utility">
           <p>Signed in as {signedInAs}</p>
+          <div className="sidebar-footer-actions">
+            <a
+              href="#/settings"
+              className="footer-settings"
+              aria-current={route.section === "settings" ? "page" : undefined}
+              onClick={(event) => {
+                followNavigation(event, "settings");
+              }}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                className="footer-settings-icon"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.7"
+              >
+                <path d="m9 3-1 3-3 1-2 3 2 2-1 3 3 2 3-1 2 2 3-2 1-3 3-1-1-4-3-1-1-3Z" />
+                <circle cx="12" cy="11" r="3" />
+              </svg>
+              Settings
+            </a>
+            <ThemeControl
+              mode={themePreview}
+              onPreviewChange={setThemePreview}
+            />
+          </div>
           <button
-            className="button--secondary"
+            className="footer-sign-out"
             type="button"
             disabled={state.status === "logging-out"}
             onClick={() => {
@@ -710,12 +800,13 @@ function ApplicationShell() {
                 />
               ) : route.section === "import-export" ? (
                 <ImportExportScreen />
+              ) : route.section === "settings" ? (
+                <SettingsScreen focusQr={route.tab === "general"} />
               ) : route.section === "labels" ? (
                 <LabelsScreen
                   key={`${route.labelKind ?? ""}:${route.labelRecord ?? ""}`}
                   initialKind={route.labelKind}
                   initialId={route.labelRecord}
-                  canonicalOrigin={state.session.canonical_origin}
                 />
               ) : route.section === "locations" ? (
                 <LocationScreen
@@ -776,8 +867,7 @@ function ApplicationShell() {
             href={`#/${item.id}`}
             aria-current={route.section === item.id ? "page" : undefined}
             onClick={(event) => {
-              event.preventDefault();
-              navigate(item.id as Section);
+              followNavigation(event, item.id as Section);
             }}
           >
             {item.label}
@@ -800,28 +890,97 @@ function ApplicationShell() {
         </button>
       </nav>
       {moreOpen && (
-        <nav
-          aria-label="More navigation"
-          className="mobile-more"
+        <TaskDialog
           id="mobile-more-menu"
+          title="Navigation"
+          className="mobile-navigation-dialog"
+          onClose={() => {
+            setMoreOpen(false);
+          }}
+          dismissOnBackdrop
         >
-          {desktopGroups
-            .slice(1)
-            .flatMap(({ items }) => items)
-            .filter(({ id }) => !["plants", "seeds", "sowings"].includes(id))
-            .map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                aria-current={route.section === item.id ? "page" : undefined}
-                onClick={() => {
-                  navigate(item.id);
+          <div className="mobile-navigation-heading">
+            <h2>Navigation</h2>
+            <button
+              type="button"
+              className="button--secondary"
+              onClick={() => {
+                setMoreOpen(false);
+              }}
+            >
+              Close navigation
+            </button>
+          </div>
+          <nav
+            aria-label="More navigation"
+            className="mobile-navigation-groups"
+          >
+            {desktopGroups.map((group) => (
+              <section key={group.label} aria-label={group.label}>
+                <h3>{group.label}</h3>
+                {group.items.map((item) => (
+                  <Fragment key={item.id}>
+                    {item.id === "species-distribution" && (
+                      <p className="sidebar-subsection">Maps</p>
+                    )}
+                    <a
+                      href={`#/${item.id}`}
+                      className={`navigation-link${item.subgroup ? " navigation-link--map" : ""}`}
+                      aria-current={
+                        route.section === item.id ? "page" : undefined
+                      }
+                      onClick={(event) => {
+                        followNavigation(event, item.id);
+                      }}
+                    >
+                      {item.label}
+                    </a>
+                  </Fragment>
+                ))}
+              </section>
+            ))}
+          </nav>
+          <div className="mobile-navigation-account">
+            <p>Signed in as {signedInAs}</p>
+            <div className="sidebar-footer-actions">
+              <a
+                href="#/settings"
+                className="footer-settings"
+                aria-current={route.section === "settings" ? "page" : undefined}
+                onClick={(event) => {
+                  followNavigation(event, "settings");
                 }}
               >
-                {item.label}
-              </button>
-            ))}
-        </nav>
+                <svg
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  className="footer-settings-icon"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                >
+                  <path d="m9 3-1 3-3 1-2 3 2 2-1 3 3 2 3-1 2 2 3-2 1-3 3-1-1-4-3-1-1-3Z" />
+                  <circle cx="12" cy="11" r="3" />
+                </svg>
+                Settings
+              </a>
+              <ThemeControl
+                mode={themePreview}
+                onPreviewChange={setThemePreview}
+              />
+            </div>
+            <button
+              className="footer-sign-out"
+              type="button"
+              disabled={state.status === "logging-out"}
+              onClick={() => {
+                void auth.logOut();
+              }}
+            >
+              {state.status === "logging-out" ? "Signing out…" : "Sign out"}
+            </button>
+          </div>
+        </TaskDialog>
       )}
     </div>
   );

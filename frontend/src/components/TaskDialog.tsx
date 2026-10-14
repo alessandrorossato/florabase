@@ -29,7 +29,7 @@ export function TaskDialog({
     if (typeof element.showModal === "function") element.showModal();
     else element.setAttribute("open", "");
     element
-      .querySelector<HTMLElement>("input, select, textarea, button")
+      .querySelector<HTMLElement>("input, select, textarea, button, a[href]")
       ?.focus();
     return () => {
       if (typeof element.close === "function") element.close();
@@ -67,7 +67,7 @@ export function TaskDialog({
         if (event.key !== "Tab") return;
         const focusable = Array.from(
           dialog.current?.querySelectorAll<HTMLElement>(
-            "button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])",
+            "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])",
           ) ?? [],
         );
         const first = focusable.at(0);

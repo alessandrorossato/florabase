@@ -51,7 +51,7 @@ SOURCE_BLOCKED work stays `planned` in JSON; DELIVERED does not promote an `impl
 | ------------------------------------------------------------------ | ------------------------------------ | ---------------------------------------------------------- |
 | Existing collection core, Dashboard, Schedule List and Calendar    | DELIVERED / PRE-0.1                  | No new implementation required; release UAT still applies. |
 | Journal / History product pass                                     | PLANNED / PRE-0.1                    | Yes: semantic and workflow acceptance.                     |
-| Labels product/workflow audit                                      | PLANNED / PRE-0.1                    | Yes: coherent first-release print/lookup scope.            |
+| Labels product/workflow audit                                      | IA-FREEZE-001 candidate / PRE-0.1    | Yes: coherent first-release print/lookup scope.            |
 | Functional/IA freeze, global visual review and UI normalization    | RELEASE_GATE / PRE-0.1               | Yes.                                                       |
 | Release-readiness audit, public documentation and distribution     | RELEASE_GATE / PRE-0.1, RELEASE-001  | Yes: every gate below requires evidence.                   |
 | New product themes in the post-0.1 priority list                   | PLANNED / POST-0.1 / 1.0 ROADMAP     | No.                                                        |
@@ -130,16 +130,28 @@ timeline below remains post-0.1 unless a narrow correction is required for relea
 
 ### Labels product/workflow audit
 
-Review **label → QR → Florabase record → mobile quick actions** as the long-term workflow.
-LABEL-001 already supplies browser printing and QR URLs for SeedLot, Plant and PlantGroup; do not
-relabel that delivered lookup as future work. Audit supported records, legibility, long names,
-physical print size/alignment, scanability, configured canonical origin, exact-record routing,
-normal authorization and mobile arrival after login. Existing review leaves physical printer/system
-print-dialog checks with the operator; retain that open evidence requirement.
+IA-FREEZE-001 fixes the first-release scope: **SeedLot, Plant, PlantGroup and managed Stored
+material**, one contextual/central composer, mixed copies, browser printing and exact authenticated
+QR lookup. Three physical A4 presets are **40 × 20**, **50 × 30** and **70 × 40 mm**, with deliberate
+botanical-name/QR content. Physical labels omit operational metadata and show only scientific name,
+cultivar/common name when recorded, QR and a tiny category glyph. The QR destination comes from a
+persisted validated public origin shared by Settings and a small contextual Labels Edit dialog;
+no URL is inferred from the current host. Category glyphs preserve quiet zones and functional QR
+patterns, with a clean QR and adjacent glyph at the smallest size.
 
-Acceptance: record the minimal coherent v0.1 scope and its physical print/scan evidence, with any
-necessary corrections scoped separately. New QR capabilities and mobile quick-action UI are not
-implemented here and remain post-0.1; full PWA/native/offline behavior does not block this audit.
+Settings is the footer destination for one-page General and Tools. Labels holds its explicit saved
+default-size action in Print format. Labels and Import / Export retain their routes there; contextual printing stays discoverable. Primary navigation keeps
+five groups and Explore's visual Maps subgroup. Theme preview cycles monitor/sun/moon icons truthfully without
+applying or persisting a theme. Location labels, arbitrary design, PDF generation and mobile
+QR capture remain deferred. The candidate is **implemented**, pending independent visual acceptance
+and canonical QA; the small settings migration requires normal explicit deployment. Printer/stock
+alignment and system print-dialog acceptance remain with the operator. See
+[Labels/navigation handoff](labels-navigation-ia-handoff.md).
+
+The final IA is Overview → Collection → Activity → Explore (with a non-actionable Maps subgroup)
+→ Sourcing, shared by desktop/mobile with stable URLs. Tools remains accessible through Settings. Plant groups stay within Plants;
+Stored material stays within Harvests. No separate database-entity menu or future-domain entry is
+added. This establishes **FUNCTIONAL_IA_FREEZE_READY** for workflow/structure, not release approval.
 
 ### Global page-by-page visual review and normalization
 

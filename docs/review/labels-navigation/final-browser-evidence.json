@@ -1,0 +1,760 @@
+{
+  "url": "http://localhost:50481",
+  "activation": "DOM regression activation; true Chromium tab zoom; separate connected-browser native interaction check",
+  "matrix": [
+    {
+      "width": 1440,
+      "height": 844,
+      "zoom": 0.8,
+      "icons": ["System", "Light", "Dark"],
+      "dialog_in_bounds": true,
+      "formats": [
+        {
+          "preset": "small",
+          "width": 39.997591666666665,
+          "height": 19.998769375,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 15.999036666666667,
+          "glyph": "adjacent",
+          "printGeometry": {
+            "width": 39.997591666666665,
+            "height": 19.998769375
+          }
+        },
+        {
+          "preset": "medium",
+          "width": 49.99698958333334,
+          "height": 29.99819375,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 23.99852854166667,
+          "glyph": "inset",
+          "printGeometry": {
+            "width": 49.99698958333334,
+            "height": 29.99819375
+          }
+        },
+        {
+          "preset": "large",
+          "width": 69.99578541666666,
+          "height": 39.997591666666665,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 31.998179166666663,
+          "glyph": "inset",
+          "printGeometry": {
+            "width": 69.99578541666666,
+            "height": 39.997591666666665
+          }
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "zoom": 1,
+      "icons": ["System", "Light", "Dark"],
+      "dialog_in_bounds": true,
+      "formats": [
+        {
+          "preset": "small",
+          "width": 39.997591666666665,
+          "height": 19.996705625,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 15.999036666666667,
+          "glyph": "adjacent",
+          "printGeometry": {
+            "width": 39.997591666666665,
+            "height": 19.996705625
+          }
+        },
+        {
+          "preset": "medium",
+          "width": 49.99804791666666,
+          "height": 29.997135416666666,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 23.99852854166667,
+          "glyph": "inset",
+          "printGeometry": {
+            "width": 49.99804791666666,
+            "height": 29.997135416666666
+          }
+        },
+        {
+          "preset": "large",
+          "width": 69.99869583333333,
+          "height": 39.997591666666665,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 31.998179166666663,
+          "glyph": "inset",
+          "printGeometry": {
+            "width": 69.99869583333333,
+            "height": 39.997591666666665
+          }
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "zoom": 1.25,
+      "icons": ["System", "Light", "Dark"],
+      "dialog_in_bounds": true,
+      "formats": [
+        {
+          "preset": "small",
+          "width": 39.99838541666667,
+          "height": 19.999192708333336,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 15.997369791666666,
+          "glyph": "adjacent",
+          "printGeometry": {
+            "width": 39.99838541666667,
+            "height": 19.999192708333336
+          }
+        },
+        {
+          "preset": "medium",
+          "width": 49.999635416666656,
+          "height": 29.997135416666666,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 23.997708333333332,
+          "glyph": "inset",
+          "printGeometry": {
+            "width": 49.999635416666656,
+            "height": 29.997135416666666
+          }
+        },
+        {
+          "preset": "large",
+          "width": 69.99869583333333,
+          "height": 39.99838541666667,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 31.998179166666663,
+          "glyph": "inset",
+          "printGeometry": {
+            "width": 69.99869583333333,
+            "height": 39.99838541666667
+          }
+        }
+      ]
+    },
+    {
+      "width": 1440,
+      "height": 844,
+      "zoom": 1.5,
+      "icons": ["System", "Light", "Dark"],
+      "dialog_in_bounds": true,
+      "formats": [
+        {
+          "preset": "small",
+          "width": 39.99891458333333,
+          "height": 19.99808145833333,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 15.999036666666667,
+          "glyph": "adjacent",
+          "printGeometry": {
+            "width": 39.99891458333333,
+            "height": 19.99808145833333
+          }
+        },
+        {
+          "preset": "medium",
+          "width": 49.99804791666666,
+          "height": 29.999781249999998,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 23.999904374999996,
+          "glyph": "inset",
+          "printGeometry": {
+            "width": 49.99804791666666,
+            "height": 29.999781249999998
+          }
+        },
+        {
+          "preset": "large",
+          "width": 69.99869583333333,
+          "height": 39.99891458333333,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 31.998179166666663,
+          "glyph": "inset",
+          "printGeometry": {
+            "width": 69.99869583333333,
+            "height": 39.99891458333333
+          }
+        }
+      ]
+    },
+    {
+      "width": 1024,
+      "height": 844,
+      "zoom": 1,
+      "icons": ["System", "Light", "Dark"],
+      "dialog_in_bounds": true,
+      "formats": [
+        {
+          "preset": "small",
+          "width": 39.997591666666665,
+          "height": 19.996705625,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 15.999036666666667,
+          "glyph": "adjacent",
+          "printGeometry": {
+            "width": 39.997591666666665,
+            "height": 19.996705625
+          }
+        },
+        {
+          "preset": "medium",
+          "width": 49.99804791666666,
+          "height": 29.997135416666666,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 23.99852854166667,
+          "glyph": "inset",
+          "printGeometry": {
+            "width": 49.99804791666666,
+            "height": 29.997135416666666
+          }
+        },
+        {
+          "preset": "large",
+          "width": 69.99869583333333,
+          "height": 39.997591666666665,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 31.998179166666663,
+          "glyph": "inset",
+          "printGeometry": {
+            "width": 69.99869583333333,
+            "height": 39.997591666666665
+          }
+        }
+      ]
+    },
+    {
+      "width": 1024,
+      "height": 844,
+      "zoom": 1.25,
+      "icons": ["System", "Light", "Dark"],
+      "dialog_in_bounds": true,
+      "formats": [
+        {
+          "preset": "small",
+          "width": 39.99838541666667,
+          "height": 19.999192708333336,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 15.997369791666666,
+          "glyph": "adjacent",
+          "printGeometry": {
+            "width": 39.99838541666667,
+            "height": 19.999192708333336
+          }
+        },
+        {
+          "preset": "medium",
+          "width": 49.999635416666656,
+          "height": 29.997135416666666,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 23.997708333333332,
+          "glyph": "inset",
+          "printGeometry": {
+            "width": 49.999635416666656,
+            "height": 29.997135416666666
+          }
+        },
+        {
+          "preset": "large",
+          "width": 69.99869583333333,
+          "height": 39.99838541666667,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 31.998179166666663,
+          "glyph": "inset",
+          "printGeometry": {
+            "width": 69.99869583333333,
+            "height": 39.99838541666667
+          }
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "zoom": 1,
+      "icons": ["System", "Light", "Dark"],
+      "dialog_in_bounds": true,
+      "formats": [
+        {
+          "preset": "small",
+          "width": 39.997591666666665,
+          "height": 19.996705625,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 15.999036666666667,
+          "glyph": "adjacent",
+          "printGeometry": {
+            "width": 39.997591666666665,
+            "height": 19.996705625
+          }
+        },
+        {
+          "preset": "medium",
+          "width": 49.99804791666666,
+          "height": 29.997135416666666,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 23.99852854166667,
+          "glyph": "inset",
+          "printGeometry": {
+            "width": 49.99804791666666,
+            "height": 29.997135416666666
+          }
+        },
+        {
+          "preset": "large",
+          "width": 69.99869583333333,
+          "height": 39.997591666666665,
+          "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil",
+          "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+          "qr": 31.998179166666663,
+          "glyph": "inset",
+          "printGeometry": {
+            "width": 69.99869583333333,
+            "height": 39.997591666666665
+          }
+        }
+      ]
+    }
+  ],
+  "dialog": {
+    "saved_normalized": true,
+    "composition_copies_preset_preserved": true,
+    "qr_regenerated": true,
+    "dirty_escape_and_cancel_guarded": true,
+    "focus_restored": true,
+    "settings_reflects_value": true
+  },
+  "names": [
+    {
+      "preset": "small",
+      "case": "neither",
+      "rendered_names_match": true,
+      "no_operational_metadata": true,
+      "no_warning": true
+    },
+    {
+      "preset": "medium",
+      "case": "neither",
+      "rendered_names_match": true,
+      "no_operational_metadata": true,
+      "no_warning": true
+    },
+    {
+      "preset": "large",
+      "case": "neither",
+      "rendered_names_match": true,
+      "no_operational_metadata": true,
+      "no_warning": true
+    },
+    {
+      "preset": "small",
+      "case": "cultivar",
+      "rendered_names_match": true,
+      "no_operational_metadata": true,
+      "no_warning": true
+    },
+    {
+      "preset": "medium",
+      "case": "cultivar",
+      "rendered_names_match": true,
+      "no_operational_metadata": true,
+      "no_warning": true
+    },
+    {
+      "preset": "large",
+      "case": "cultivar",
+      "rendered_names_match": true,
+      "no_operational_metadata": true,
+      "no_warning": true
+    },
+    {
+      "preset": "small",
+      "case": "common",
+      "rendered_names_match": true,
+      "no_operational_metadata": true,
+      "no_warning": true
+    },
+    {
+      "preset": "medium",
+      "case": "common",
+      "rendered_names_match": true,
+      "no_operational_metadata": true,
+      "no_warning": true
+    },
+    {
+      "preset": "large",
+      "case": "common",
+      "rendered_names_match": true,
+      "no_operational_metadata": true,
+      "no_warning": true
+    },
+    {
+      "preset": "small",
+      "case": "both",
+      "rendered_names_match": true,
+      "no_operational_metadata": true,
+      "no_warning": true
+    },
+    {
+      "preset": "medium",
+      "case": "both",
+      "rendered_names_match": true,
+      "no_operational_metadata": true,
+      "no_warning": true
+    },
+    {
+      "preset": "large",
+      "case": "both",
+      "rendered_names_match": true,
+      "no_operational_metadata": true,
+      "no_warning": true
+    }
+  ],
+  "stress": [
+    {
+      "case": "scientific",
+      "preset": "small",
+      "actual_clipping_warns": true
+    },
+    {
+      "case": "scientific",
+      "preset": "medium",
+      "actual_clipping_warns": true
+    },
+    {
+      "case": "scientific",
+      "preset": "large",
+      "actual_clipping_warns": true
+    },
+    {
+      "case": "cultivar",
+      "preset": "small",
+      "actual_clipping_warns": true
+    },
+    {
+      "case": "cultivar",
+      "preset": "medium",
+      "actual_clipping_warns": true
+    },
+    {
+      "case": "cultivar",
+      "preset": "large",
+      "actual_clipping_warns": true
+    },
+    {
+      "case": "common",
+      "preset": "small",
+      "actual_clipping_warns": true
+    },
+    {
+      "case": "common",
+      "preset": "medium",
+      "actual_clipping_warns": true
+    },
+    {
+      "case": "common",
+      "preset": "large",
+      "actual_clipping_warns": true
+    },
+    {
+      "case": "combined",
+      "preset": "small",
+      "actual_clipping_warns": true
+    },
+    {
+      "case": "combined",
+      "preset": "medium",
+      "actual_clipping_warns": true
+    },
+    {
+      "case": "combined",
+      "preset": "large",
+      "actual_clipping_warns": true
+    }
+  ],
+  "printSamples": [
+    {
+      "preset": "small",
+      "kind": "seed-lot",
+      "path": "/tmp/ia4-print-small-seed-lot.pdf",
+      "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+      "glyph": "adjacent",
+      "qrMm": 15.9990234375,
+      "crop": {
+        "x": 23.002213541666666,
+        "y": 0.9963216145833332,
+        "width": 15.9990234375,
+        "height": 15.9990234375
+      },
+      "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil"
+    },
+    {
+      "preset": "small",
+      "kind": "plant",
+      "path": "/tmp/ia4-print-small-plant.pdf",
+      "url": "https://flora.example/#/plants/01a13939-ecc5-759b-927b-4e701496bcff",
+      "glyph": "adjacent",
+      "qrMm": 15.9990234375,
+      "crop": {
+        "x": 23.002213541666666,
+        "y": 0.9963216145833332,
+        "width": 15.9990234375,
+        "height": 15.9990234375
+      },
+      "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil"
+    },
+    {
+      "preset": "small",
+      "kind": "plant-group",
+      "path": "/tmp/ia4-print-small-plant-group.pdf",
+      "url": "https://flora.example/#/plant-groups/01a13939-ecd1-74e0-b097-28a83ed36c61",
+      "glyph": "adjacent",
+      "qrMm": 15.9990234375,
+      "crop": {
+        "x": 23.002213541666666,
+        "y": 0.9963216145833332,
+        "width": 15.9990234375,
+        "height": 15.9990234375
+      },
+      "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil"
+    },
+    {
+      "preset": "small",
+      "kind": "stored-material",
+      "path": "/tmp/ia4-print-small-stored-material.pdf",
+      "url": "https://flora.example/#/harvests/01a13939-ece2-74d3-99f6-44bb95506616?inventory=01a13939-edd7-7526-8e78-12993218cecc",
+      "glyph": "adjacent",
+      "qrMm": 15.9990234375,
+      "crop": {
+        "x": 23.002213541666666,
+        "y": 0.9963216145833332,
+        "width": 15.9990234375,
+        "height": 15.9990234375
+      },
+      "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil"
+    },
+    {
+      "preset": "medium",
+      "kind": "seed-lot",
+      "path": "/tmp/ia4-print-medium-seed-lot.pdf",
+      "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+      "glyph": "inset",
+      "qrMm": 23.99853515625,
+      "crop": {
+        "x": 24.502897135416664,
+        "y": 2.9972330729166665,
+        "width": 23.99853515625,
+        "height": 23.99853515625
+      },
+      "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil"
+    },
+    {
+      "preset": "medium",
+      "kind": "plant",
+      "path": "/tmp/ia4-print-medium-plant.pdf",
+      "url": "https://flora.example/#/plants/01a13939-ecc5-759b-927b-4e701496bcff",
+      "glyph": "inset",
+      "qrMm": 23.99853515625,
+      "crop": {
+        "x": 24.502897135416664,
+        "y": 2.9972330729166665,
+        "width": 23.99853515625,
+        "height": 23.99853515625
+      },
+      "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil"
+    },
+    {
+      "preset": "medium",
+      "kind": "plant-group",
+      "path": "/tmp/ia4-print-medium-plant-group.pdf",
+      "url": "https://flora.example/#/plant-groups/01a13939-ecd1-74e0-b097-28a83ed36c61",
+      "glyph": "inset",
+      "qrMm": 23.99853515625,
+      "crop": {
+        "x": 24.502897135416664,
+        "y": 2.9972330729166665,
+        "width": 23.99853515625,
+        "height": 23.99853515625
+      },
+      "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil"
+    },
+    {
+      "preset": "medium",
+      "kind": "stored-material",
+      "path": "/tmp/ia4-print-medium-stored-material.pdf",
+      "url": "https://flora.example/#/harvests/01a13939-ece2-74d3-99f6-44bb95506616?inventory=01a13939-edd7-7526-8e78-12993218cecc",
+      "glyph": "inset",
+      "qrMm": 23.99853515625,
+      "crop": {
+        "x": 24.502897135416664,
+        "y": 2.9972330729166665,
+        "width": 23.99853515625,
+        "height": 23.99853515625
+      },
+      "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil"
+    },
+    {
+      "preset": "large",
+      "kind": "seed-lot",
+      "path": "/tmp/ia4-print-large-seed-lot.pdf",
+      "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+      "glyph": "inset",
+      "qrMm": 31.998046875,
+      "crop": {
+        "x": 36.00400390625,
+        "y": 3.997688802083333,
+        "width": 31.998046875,
+        "height": 31.998046875
+      },
+      "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil"
+    },
+    {
+      "preset": "large",
+      "kind": "plant",
+      "path": "/tmp/ia4-print-large-plant.pdf",
+      "url": "https://flora.example/#/plants/01a13939-ecc5-759b-927b-4e701496bcff",
+      "glyph": "inset",
+      "qrMm": 31.998046875,
+      "crop": {
+        "x": 36.00400390625,
+        "y": 3.997688802083333,
+        "width": 31.998046875,
+        "height": 31.998046875
+      },
+      "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil"
+    },
+    {
+      "preset": "large",
+      "kind": "plant-group",
+      "path": "/tmp/ia4-print-large-plant-group.pdf",
+      "url": "https://flora.example/#/plant-groups/01a13939-ecd1-74e0-b097-28a83ed36c61",
+      "glyph": "inset",
+      "qrMm": 31.998046875,
+      "crop": {
+        "x": 36.00400390625,
+        "y": 3.997688802083333,
+        "width": 31.998046875,
+        "height": 31.998046875
+      },
+      "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil"
+    },
+    {
+      "preset": "large",
+      "kind": "stored-material",
+      "path": "/tmp/ia4-print-large-stored-material.pdf",
+      "url": "https://flora.example/#/harvests/01a13939-ece2-74d3-99f6-44bb95506616?inventory=01a13939-edd7-7526-8e78-12993218cecc",
+      "glyph": "inset",
+      "qrMm": 31.998046875,
+      "crop": {
+        "x": 36.00400390625,
+        "y": 3.997688802083333,
+        "width": 31.998046875,
+        "height": 31.998046875
+      },
+      "text": "Ocimum basilicum\n\u2018Genovese\u2019\nSweet basil"
+    }
+  ],
+  "errors": [],
+  "native_connected_browser": {
+    "theme_keyboard_and_pointer_cycle": true,
+    "dirty_escape_guard": true,
+    "qr_dialog_normalized_save_and_focus_return": true
+  },
+  "actual_print_page_checks": [
+    {
+      "preset": "small",
+      "kind": "seed-lot",
+      "pages": 1,
+      "a4_rounding_within_0_5pt": true
+    },
+    {
+      "preset": "small",
+      "kind": "plant",
+      "pages": 1,
+      "a4_rounding_within_0_5pt": true
+    },
+    {
+      "preset": "small",
+      "kind": "plant-group",
+      "pages": 1,
+      "a4_rounding_within_0_5pt": true
+    },
+    {
+      "preset": "small",
+      "kind": "stored-material",
+      "pages": 1,
+      "a4_rounding_within_0_5pt": true
+    },
+    {
+      "preset": "medium",
+      "kind": "seed-lot",
+      "pages": 1,
+      "a4_rounding_within_0_5pt": true
+    },
+    {
+      "preset": "medium",
+      "kind": "plant",
+      "pages": 1,
+      "a4_rounding_within_0_5pt": true
+    },
+    {
+      "preset": "medium",
+      "kind": "plant-group",
+      "pages": 1,
+      "a4_rounding_within_0_5pt": true
+    },
+    {
+      "preset": "medium",
+      "kind": "stored-material",
+      "pages": 1,
+      "a4_rounding_within_0_5pt": true
+    },
+    {
+      "preset": "large",
+      "kind": "seed-lot",
+      "pages": 1,
+      "a4_rounding_within_0_5pt": true
+    },
+    {
+      "preset": "large",
+      "kind": "plant",
+      "pages": 1,
+      "a4_rounding_within_0_5pt": true
+    },
+    {
+      "preset": "large",
+      "kind": "plant-group",
+      "pages": 1,
+      "a4_rounding_within_0_5pt": true
+    },
+    {
+      "preset": "large",
+      "kind": "stored-material",
+      "pages": 1,
+      "a4_rounding_within_0_5pt": true
+    }
+  ]
+}

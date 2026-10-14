@@ -12,6 +12,7 @@
     "backend/requirements",
     "backend/alembic/",
     "backend/alembic.ini",
+    "backend/src/florabase/application_settings/",
     "backend/src/florabase/auth/",
     "backend/src/florabase/core/",
     "backend/src/florabase/db/",

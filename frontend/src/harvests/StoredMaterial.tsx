@@ -1,3 +1,4 @@
+import { labelComposerHref } from "../labels/labelData";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
 import { useBulkSelection } from "../bulk/useBulkSelection";
@@ -151,14 +152,21 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
   }, [harvest.id, harvest.updated_at, attempt, auth]);
   useEffect(() => {
     if (!rows) return;
-    const inventoryId = new URLSearchParams(
-      window.location.hash.split("?", 2)[1] ?? "",
-    ).get("inventory");
-    if (!inventoryId || !rows.some((row) => row.id === inventoryId)) return;
-    const item = document.getElementById(`inventory-${inventoryId}`);
-    if (item && typeof item.scrollIntoView === "function")
-      item.scrollIntoView({ block: "center" });
-    item?.focus({ preventScroll: true });
+    const focusInventory = () => {
+      const inventoryId = new URLSearchParams(
+        window.location.hash.split("?", 2)[1] ?? "",
+      ).get("inventory");
+      if (!inventoryId || !rows.some((row) => row.id === inventoryId)) return;
+      const item = document.getElementById(`inventory-${inventoryId}`);
+      if (item && typeof item.scrollIntoView === "function")
+        item.scrollIntoView({ block: "center" });
+      item?.focus({ preventScroll: true });
+    };
+    focusInventory();
+    window.addEventListener("hashchange", focusInventory);
+    return () => {
+      window.removeEventListener("hashchange", focusInventory);
+    };
   }, [rows]);
   async function remove() {
     if (!removing || pending) return;
@@ -258,6 +266,14 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
                   />
                 )}
                 <div className="actions">
+                  {inventory && (
+                    <a
+                      className="button-link button--secondary"
+                      href={labelComposerHref("stored-material", inventory.id)}
+                    >
+                      Print label
+                    </a>
+                  )}
                   {!inventory ? (
                     <button
                       type="button"
@@ -638,6 +654,14 @@ export function StoredMaterialDirectory() {
                       <small>Open source Harvest</small>
                     </span>
                   </a>
+                  {!bulk.active && (
+                    <a
+                      className="button-link button--secondary"
+                      href={labelComposerHref("stored-material", row.id)}
+                    >
+                      Print label
+                    </a>
+                  )}
                   {!bulk.active &&
                     row.material_kind === "seed" &&
                     row.state === "active" && (

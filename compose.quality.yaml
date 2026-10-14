@@ -15,6 +15,9 @@ services:
         com.docker.compose.project: ${COMPOSE_PROJECT_NAME:?Quality project required}
   frontend:
     labels: *owner
+    environment:
+      # Keep the full jsdom suite stable on small linked-worktree hosts.
+      VITEST_MAX_WORKERS: "1"
     build:
       labels:
         <<: *owner

@@ -133,6 +133,19 @@ it("focuses the exact retained inventory reached from History", async () => {
     expect(document.getElementById("inventory-inventory")).toHaveFocus();
   });
 });
+it("a QR inventory hash change focuses the retained record on an already-open Harvest", async () => {
+  window.history.replaceState(null, "", "#/harvests/harvest");
+  vi.mocked(api.inventoryList).mockResolvedValue([inventory]);
+  wrap(<StoredMaterialSection harvest={harvest} />);
+  await screen.findByText(/Remaining now:/);
+  window.history.replaceState(
+    null,
+    "",
+    "#/harvests/harvest?inventory=inventory",
+  );
+  window.dispatchEvent(new HashChangeEvent("hashchange"));
+  expect(document.getElementById("inventory-inventory")).toHaveFocus();
+});
 it("shows untracked opt-in separately from historical collection", async () => {
   wrap(<StoredMaterialSection harvest={harvest} />);
   expect(await screen.findByText("Not tracked")).toBeVisible();
@@ -465,4 +478,17 @@ it("BULK-001 selects only active Stored material and clears on search", async ()
     "Coffee",
   );
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+});
+
+it("each managed stored record enters the canonical label composer from its source Harvest and directory", async () => {
+  vi.mocked(api.inventoryList).mockResolvedValue([inventory]);
+  const view = wrap(<StoredMaterialSection harvest={harvest} />);
+  expect(
+    await screen.findByRole("link", { name: "Print label" }),
+  ).toHaveAttribute("href", "#/labels?kind=stored-material&record=inventory");
+  view.unmount();
+  wrap(<StoredMaterialDirectory />);
+  expect(
+    await screen.findByRole("link", { name: "Print label" }),
+  ).toHaveAttribute("href", "#/labels?kind=stored-material&record=inventory");
 });

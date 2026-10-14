@@ -124,19 +124,13 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
   const desktop = screen.getByRole("navigation", {
     name: "Primary navigation",
   });
-  for (const group of [
-    "Overview",
-    "Collection",
-    "Explore",
-    "Sourcing",
-    "Tools",
-  ])
+  for (const group of ["Overview", "Collection", "Explore", "Sourcing"])
     expect(
       within(desktop).getByRole("region", { name: group }),
     ).toBeInTheDocument();
   expect(
     within(within(desktop).getByRole("region", { name: "Explore" })).getByRole(
-      "button",
+      "link",
       { name: "Botanical identities" },
     ),
   ).toBeInTheDocument();
@@ -164,14 +158,14 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
   expect(
     within(
       screen.getByRole("navigation", { name: "More navigation" }),
-    ).getByRole("button", { name: "Journal" }),
+    ).getByRole("link", { name: "Journal" }),
   ).toBeInTheDocument();
   await user.click(within(mobile).getByRole("link", { name: "Home" }));
   expect(
     screen.queryByRole("navigation", { name: "More navigation" }),
   ).not.toBeInTheDocument();
 
-  await user.click(within(desktop).getByRole("button", { name: "Journal" }));
+  await user.click(within(desktop).getByRole("link", { name: "Journal" }));
   expect(
     await screen.findByRole("heading", { name: "Journal" }),
   ).toBeInTheDocument();
@@ -268,7 +262,10 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
   expect(
     screen.getByRole("navigation", { name: "Breadcrumb" }),
   ).toContainElement(
-    screen.getByRole("link", { name: "Botanical identities" }),
+    within(screen.getByRole("navigation", { name: "Breadcrumb" })).getByRole(
+      "link",
+      { name: "Botanical identities" },
+    ),
   );
   expect(screen.getByRole("tab", { name: "Overview" })).toHaveAttribute(
     "aria-selected",
