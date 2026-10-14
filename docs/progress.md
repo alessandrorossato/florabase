@@ -3880,7 +3880,6 @@ not the current delivery state.
   commit, push, delivery, `make feature-verify`, Labels, sidebar restructuring or global visual review.
   **READY_FOR_VISUAL_REVIEW**.
 
-
 ## 2026-10-13 — ACTIVITY-001 independent review and verification
 
 - Independent implementation and live product review found no material Journal, History, Schedule,
@@ -3899,3 +3898,204 @@ not the current delivery state.
   Docker resources remain preserved.
 - ACTIVITY-001 is verified against its acceptance criteria. The candidate is ready for staged-diff
   review and local commit; delivery and finish remain the requested next lifecycle steps.
+
+## 2026-10-13 — IA-FREEZE-001 Labels and navigation candidate
+
+- Clean current main `3fbf0ca` → `feat/ia-freeze-001` in the provided `4ff7` Codex worktree.
+  One shared contextual/central Labels composer supports Seed lot, Plant, Plant group and managed
+  Stored material. Mixed temporary batches expose typed sources, exact UUIDs/routes, per-record
+  copies, totals, up to ten A4 sheets and final empty cells. No new API, persistence or migration.
+- Record-specific real fields retain structured scientific/cultivar typography, PartialDate,
+  approximation and unknown versus zero quantity. Stored material uses current managed inventory,
+  not collected quantity. QR generation and canonical-origin creation gating are removed from this
+  frozen print workflow; exact source associations and existing future-QR safeguards remain.
+- One A4 / 50 × 30 mm / 4 × 9 preset, zero gutters, 5 mm horizontal / 13.5 mm vertical margins.
+  Proportional full-paper preview remains responsive. Print isolates the sheet portal and uses exact
+  mm offsets to avoid Chromium’s cumulative print-grid rounding. Long physical text gets explicit
+  capacity feedback and readable full Label content; acquisition/quantity retain their priority line.
+- Final IA remains Overview → Collection → Activity → Explore → Sourcing → Tools. Labels stays in
+  Tools with everyday contextual entry; groups/material remain local Plants/Harvests modes. Maps
+  stays non-actionable with its three indented children, Geography outside. URLs/search/deep links
+  remain. Real navigation links, scrollable visible active destination, collapsed desktop and grouped
+  native mobile navigation retain keyboard focus/return and account access.
+- Baseline **101** tests. Final focused run **235 tests / eleven files**; final print-position,
+  breadcrumb and shared-dialog rerun **107 / three files**, final fixed-header sidebar pass
+  **85 / five files**. ESLint, strict TypeScript, production
+  frontend build, graph **103 valid** and whitespace checks pass. No weakened checks or timeouts.
+  Backend/API/schema are unchanged; no canonical `make feature-verify` was run.
+- Final browser matrix covers 1440×844 **80/100/125/150%**, 1024×844 **100/125%**, 390×844 **100%**.
+  No horizontal overflow or trapped Labels list; all four native contextual entries/source returns,
+  mobile links/focus/Escape, active/expanded/collapsed sidebar and synthetic long-name stress pass.
+  Four zoom levels produce identical A4 output geometry, two sheets, ~50 × 30 mm measured pitch;
+  actual printer/stock alignment and system print dialog remain operator acceptance.
+- Host interruption cleared initial temporary logs. Guarded exact recovery retired the old disposable
+  preview with zero residual owned resources; the fresh preview proved repeat-seed preservation.
+  Final cleanup/preservation evidence is in the [handoff](labels-navigation-ia-handoff.md) alongside
+  screenshot/print measurements. Persistent UAT and other protected environments were preserved.
+- IA-FREEZE-001 is **implemented**. **FUNCTIONAL_IA_FREEZE_READY** records no unresolved major v0.1
+  workflow/IA decision; independent visual acceptance, canonical QA and release gates remain.
+  No stage, commit, push, delivery, dependency updates, Location labels, QR/scanning, PDF feature,
+  future domains, global visual normalization or release benchmarking. **READY_FOR_VISUAL_REVIEW**.
+
+## 2026-10-13 — IA-FREEZE-001 operator corrections: QR, presets and Settings
+
+- Continued the same `4ff7` / `feat/ia-freeze-001` candidate. Restored exact-source QR for all four
+  material types using a persisted validated public origin, H correction, protected quiet/pattern
+  regions, inset category vectors and an immediately adjacent Small fallback. Unconfigured or
+  overly dense destinations block both Print and browser-menu label output. Picker/normal selected
+  rows omit UUIDs and use human/domain context; exact links and advanced content retain IDs.
+- Three direct physical A4 presets: **40 × 20 / 5 × 13**, **50 × 30 / 4 × 9**,
+  **70 × 40 / 2 × 7 mm**. Each defines margins, QR size, typography and metadata density.
+  Preset selection stays above composition; metadata gets a full-width band below the QR.
+  Temporary size overrides do not alter the saved default. Stored-material QR hash changes focus
+  the exact retained item even on an already-open Harvest.
+- Small full-page **Settings** holds public QR origin, default preset and Tools links. Migration
+  **20261013_0042** adds only typed singleton application preferences, default Medium/unconfigured;
+  reads require authentication and writes CSRF. Security/login origin remains independent.
+  Tools leaves primary navigation; five groups and Maps remain. Compact Settings / Theme / Sign out
+  controls stay reachable. Theme presents planned modes truthfully and changes/persists no theme.
+- **244 affected frontend tests / 13 files**, then final **81 / six** after corrections pass;
+  **33 backend unit tests** and **seven PostgreSQL settings/migration regression tests** pass.
+  Historical migration head checks now resolve code head without weakening retention assertions.
+  Formatting, frontend/backend lint, strict typing, production frontend build, both API drift checks,
+  graph **103** and whitespace pass. Broad pre-existing Alembic autogenerate differences are recorded
+  honestly in the [handoff](labels-navigation-ia-handoff.md); the new table/cycle checks pass.
+- Final actual zoom matrix **1440×844 80/100/125/150%; 1024×844 100/125%; 390×844 100%** has no
+  document horizontal overflow. Each preset covers one/full/partial/multi-page output and exact
+  source context; 21 zoomed print probes preserve physical dimensions. **48 independent decoder
+  checks** pass across all categories/sizes, inset/adjacent glyphs and complete printed-size labels.
+  Physical printer/stock/system-dialog acceptance remains with the operator.
+- Disposable preview uses existing fixtures, preserving repeat seed state, and was retired with
+  zero owned residual resources. This task did not reset/reseed/sync/migrate persistent UAT or write
+  its settings. Protected runtime/Git identities and other database digests match; the live UAT
+  digest differs, with authentication activity observed and full data equivalence unproven.
+  Final read-only UAT status reported healthy services, revision **0042**, ready fixture **v4/66**,
+  configured QR and Medium default. See the handoff for the comparison limits.
+  The **2026-10-14** read-only recheck after host interruption finds frontend/backend stopped,
+  database healthy, revision **0042** and fixture **v4/66** unchanged; no restart was performed.
+- **FUNCTIONAL_IA_FREEZE_READY**, feature still **implemented**. No canonical `make feature-verify`,
+  stage, commit, push or delivery; no dark mode, theme persistence, PDF feature, mobile QR capture,
+  Location labels, dependency updates or global visual review. **READY_FOR_VISUAL_REVIEW**.
+
+## 2026-10-14 — IA-FREEZE-001 final Settings / Labels information cleanup
+
+- Continued `4ff7` / `feat/ia-freeze-001` without lifecycle advancement. Settings now shows General
+  and compact Tools links on one page; no tab strip or duplicate label-size configuration.
+  QR General Save retains validation/normalization/persistence and focuses via the existing direct
+  QR Settings link. Labels → Print format keeps temporary size changes and adds explicit persisted
+  **Set as default** / **Default**, saving/error/retry states. Each preference save preserves the
+  latest other field in the existing API contract.
+- Signed-in identity precedes labelled gear Settings and quiet Theme utilities, with Sign out as a
+  separate account action. Expanded/sidebar reopen, narrow/zoomed desktop and mobile More remain
+  accessible. Theme switching remains deferred. Physical labels retain scientific-name/cultivar
+  typography, separate material type and record identity; classification hierarchy is excluded.
+- Baseline **49 / three files** and final **136 focused frontend tests / five files** pass. Scoped
+  formatting/lint, strict TypeScript and production build pass; feature graph/whitespace are checked
+  at handoff. No backend/API/migration/dependency changes in this cleanup.
+- All **seven** requested actual-zoom boundaries pass; **21** screen/print preset geometry probes
+  retain physical width/height within **0.02 mm**. No horizontal page overflow. Short visible content
+  with omitted optional metadata gives no Small warning; a long visible stock name still warns.
+  Connected-browser clicks verify normalized General save, explicit defaults and bidirectional links.
+- Current `cleanup-*` evidence and the updated [handoff](labels-navigation-ia-handoff.md) supersede
+  preceding Settings/footer screenshots; the unchanged QR implementation retains prior decoder proof.
+  The exactly owned disposable review preview is retired after review; protected-environment and
+  fixture/media retention results are recorded separately in its preservation evidence. The complete
+  protected snapshot for this cleanup matches; prior checksum uncertainty is not retroactively resolved.
+  Final read-only persistent UAT status reports all three services healthy at **0042**, fixture
+  **v4/66** ready. No UAT restart or mutation was performed by this task.
+- **FUNCTIONAL_IA_FREEZE_READY** is reconfirmed; IA-FREEZE-001 remains **implemented**. Physical
+  printer/system-dialog acceptance and independent visual/canonical QA remain subsequent phases.
+  No UAT reset, stage, commit, push, delivery, dark mode or global visual review.
+  **READY_FOR_VISUAL_REVIEW**.
+
+## 2026-10-14 — IA-FREEZE-001 final Theme / QR editor / physical content correction
+
+- Continued the same candidate. Theme is now one truthful SVG monitor → sun → moon icon cycler,
+  with shared ephemeral footer state and keyboard/title/accessibility labels. No popover, visible
+  prose, applied colors/tokens, backend write or theme persistence. Settings/Theme utilities remain
+  separate from quiet Sign out.
+- Labels QR destination now opens a small TaskDialog for the same persisted General setting.
+  Shared save logic preserves the latest default; normalized Save regenerates QR in place without
+  losing sources, copies or temporary preset. Cancel/pristine dismissal, guarded dirty dismissal,
+  pending-save protection, validation/retry and Edit focus restoration retain the UI contract.
+- Physical sheets now contain only scientific botanical name, optional roman cultivar/common name,
+  exact-source QR and tiny category glyph. Existing BotanicalIdentity `common_name` is used without
+  inventing names. Stock names, type text, UUIDs, Location/source/quantity/acquisition and taxonomy
+  hierarchy do not print. Application chooser/details retain rich non-printing context. Overflow
+  measures only rendered names. QR sizes are **16/24/32 mm**; scientific type **8/10/12 pt**.
+- Baseline **53 / three files** and final serial **147 focused frontend tests / six files** pass.
+  Scoped formatting/lint, strict typing and production frontend build pass. Initial unchanged-test
+  timeouts under full swap disappear in the final serial run; no assertions/timeouts were weakened.
+  No backend/API/schema/dependency change or canonical verification in this correction.
+- All **seven** actual-zoom boundaries and **21** screen/print preset geometry probes pass within
+  **0.02 mm**; 12 optional-name/preset combinations fit, and 12 long-name/preset cases warn on real
+  clipping. Native browser interaction confirms cycling, dirty Escape, normalized Save and return
+  focus. **48 ZXing checks** pass on 12 actual print-media A4 samples, including full labels and blur.
+  The initial screen-media PDF probe was replaced before acceptance; all accepted samples are A4.
+- Exactly owned review project `florabase-uat-preview-smoke-bff8e2a5be73` is retired with zero residual
+  resources. Domain/fixture/media retention matches. Protected runtime/Git identity and non-UAT
+  digests match; live UAT raw digest differs with authentication activity observed, but exact cause
+  and full data equivalence remain unproven. No protected UAT reset/reseed/sync/migration/settings
+  write; no live-state rollback. Current `final-*` evidence supersedes previous UI/print screenshots.
+- [Handoff](labels-navigation-ia-handoff.md) reconfirms **FUNCTIONAL_IA_FREEZE_READY**; status remains
+  **implemented**. Actual themes, physical printer/system-dialog acceptance, independent visual/
+  canonical QA and future capabilities stay deferred. No stage, commit, push, delivery or global
+  visual review. **READY_FOR_VISUAL_REVIEW**.
+
+## 2026-10-14 — IA-FREEZE-001 independent delivery review in progress
+
+- Independent review confirmed the v0.1 four-source label contract, exact-route QR content, Settings /
+  Labels shared destination, three physical presets, botanical-only label output, stored-material
+  identity, route/navigation grouping and the truthful icon-only Theme preview. Live persistent UAT
+  is owned by this feature worktree, healthy at revision **0042** with fixture **v4/66** ready. A
+  normal synthetic login, General settings read and temporary SeedLot composition succeeded; no
+  settings or collection records were written.
+- Independent settings unit tests: **23 passed**. Isolated PostgreSQL settings API, migration and
+  schema-table regression tests: **26 passed**. The first broad integration attempt found one stale
+  expected-table assertion; it was corrected to include `application_settings`, and the exact focused
+  suites passed. The stale Settings navigation test was corrected to follow the Settings → Tools links.
+- The first authorized canonical run reached workflow safeguards and stopped because the new backend
+  settings package was not classified by the verification-impact map. The package is now explicitly
+  marked FULL, satisfying the repository's production-module coverage rule while retaining the most
+  conservative verification path. The canonical gate must be rerun on this updated tree.
+- Isolated serial Labels/frontend lazy-navigation suites passed **54 + 1**. A broader selected frontend
+  run passed **246/249**, with three Label cases timing out while host swap was full and unrelated
+  Docker workloads were consuming CPU; the affected complete Labels suite and lazy-navigation case
+  passed separately without changing timeouts. Independent ZXing-C++ rerun passed **48/48** actual
+  print-sample checks. Canonical verification is now authorized and pending; IA-FREEZE-001 remains
+  **implemented** until its exact-tree gate passes.
+- Historical live-UAT raw-database checksum variance remains unresolved: prior snapshots lack a
+  per-table baseline, so its exact cause and complete data equivalence cannot be reconstructed.
+  Runtime/container identity, fixture integrity and available domain/media checks show no evidence of
+  loss. No state was rolled back to force digest equality. The required login refreshed normal
+  authentication-session activity during this review.
+- [Updated independent-review handoff](labels-navigation-ia-handoff.md). **FUNCTIONAL_IA_FREEZE_READY**
+  remains the product/architecture assessment. Physical printer acceptance remains deferred.
+
+## 2026-10-14 — IA-FREEZE-001 independent verification passed
+
+- Independently reviewed the complete candidate and final IA evidence. Confirmed the four supported
+  source types, shared contextual/central label composer, botanical-only physical content, exact
+  record QR routes, shared persisted QR origin, Settings → Tools routes, five primary navigation
+  groups, Maps subgroup, utility footer and truthful theme icon cycler. Reviewed uncertainty and
+  Stored material identity semantics; no major v0.1 workflow or architecture blocker remains.
+- Canonical `make feature-verify` passed on the final candidate: backend **939/939**, PostgreSQL
+  integration **734/734**, frontend **664/664**. Workflow/resource safeguards, format, lint, strict
+  typing, generated API drift, both production builds, feature graph and whitespace checks passed.
+  Full migration cycle **0041 → 0042 → 0041 → 0042** passed; its disposable resources were retired
+  with zero container/network/volume residuals. Exact-tree receipt recorded.
+- QR decoder rerun passed **48/48** checks over 12 actual print-media A4 samples. The seven viewport /
+  zoom boundaries, 21 preset geometry probes, optional-name fit cases and clipping stress evidence
+  are retained in `docs/review/labels-navigation/`. Real printer/stock alignment remains deferred.
+- QA-only corrections updated the schema expectation for `application_settings`, routed legacy
+  Import / Export test navigation through Settings → Tools, and allowed five seconds for lazy-route
+  assertions under full-suite load. The Quality-only Compose profile runs Vitest with one worker so
+  the complete jsdom suite avoids host contention; no test files, product behavior or assertions
+  were removed or weakened.
+- Persistent UAT remains owned by this feature tree, healthy at revision **0042**, fixture **v4/66**.
+  The reviewer performed only login, settings read and temporary browser composition. Historical raw
+  database checksum variance remains unresolved without a per-table baseline; no evidence of loss or
+  corruption was found and no live UAT data was changed or reverted.
+- IA-FREEZE-001 is **verified** and **FUNCTIONAL_IA_FREEZE_READY**. Commit, protected delivery and
+  conservative finish are the remaining lifecycle steps. See
+  [the verified handoff](labels-navigation-ia-handoff.md).

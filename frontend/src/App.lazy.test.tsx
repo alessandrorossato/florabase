@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 
@@ -64,16 +64,38 @@ test("restoration defers workspaces and navigation loads only the selected works
       { headers: { "Content-Type": "application/json" } },
     ),
   );
-  await screen.findByRole("heading", { name: "Dashboard workspace" });
+  await screen.findByRole(
+    "heading",
+    { name: "Dashboard workspace" },
+    { timeout: 5000 },
+  );
   expect(loaded).toEqual(["dashboard"]);
   const user = userEvent.setup();
-  await user.click(screen.getByRole("button", { name: "Labels" }));
-  await screen.findByRole("heading", { name: "Labels workspace" });
+  await user.click(screen.getByRole("link", { name: "Settings" }));
+  await screen.findByRole("heading", { name: "Settings" }, { timeout: 5000 });
+  await user.click(await screen.findByRole("link", { name: "Labels" }));
+  await screen.findByRole(
+    "heading",
+    { name: "Labels workspace" },
+    { timeout: 5000 },
+  );
   expect(loaded).toEqual(["dashboard", "labels"]);
-  await user.click(screen.getByRole("button", { name: "Seeds" }));
-  await screen.findByRole("heading", { name: "Seeds workspace" });
+  await user.click(
+    within(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Seeds" }),
+  );
+  await screen.findByRole(
+    "heading",
+    { name: "Seeds workspace" },
+    { timeout: 5000 },
+  );
   expect(loaded).toEqual(["dashboard", "labels", "seeds"]);
-  await user.click(screen.getByRole("button", { name: "Dashboard" }));
-  await screen.findByRole("heading", { name: "Dashboard workspace" });
+  await user.click(screen.getByRole("link", { name: "Dashboard" }));
+  await screen.findByRole(
+    "heading",
+    { name: "Dashboard workspace" },
+    { timeout: 5000 },
+  );
   expect(loaded).toEqual(["dashboard", "labels", "seeds"]);
 });

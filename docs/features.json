@@ -1770,6 +1770,28 @@
       ],
       "priority": "P1",
       "status": "verified"
+    },
+    {
+      "id": "IA-FREEZE-001",
+      "category": "ux",
+      "description": "Complete physical labels and freeze the v0.1 workspace navigation architecture",
+      "acceptance_criteria": [
+        "Seed lots, Plants, Plant groups and managed Stored material share one contextual and central browser-print composer with exact source references",
+        "Mixed batches expose per-record copies, accurate totals and three deterministic physical A4 presets including 50 by 30 mm",
+        "Physical labels contain only scientific name, optional cultivar/common name and exact-source QR with safe category glyphs; rich application context retains PartialDate and unknown versus zero quantity",
+        "Single-page Settings and the contextual Labels dialog share one persisted QR origin; Labels explicitly persists its default preset, while five primary groups, stable routes, Maps subgroup and a truthful icon-only Theme preview remain accessible",
+        "Focused tests, Labels/sidebar responsive and true-browser-zoom evidence and the functional IA freeze assessment are recorded for independent visual review"
+      ],
+      "dependencies": [
+        "LABEL-001",
+        "HARVEST-002",
+        "DASHBOARD-001",
+        "ACTIVITY-001",
+        "ORDER-001",
+        "IMPORT-001"
+      ],
+      "priority": "P0",
+      "status": "verified"
     }
   ]
 }

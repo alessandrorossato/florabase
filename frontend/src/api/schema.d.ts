@@ -4,6 +4,24 @@
  */
 
 export interface paths {
+    "/api/v1/application-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read */
+        get: operations["getApplicationSettings"];
+        /** Save */
+        put: operations["saveApplicationSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/attachments": {
         parameters: {
             query?: never;
@@ -2505,6 +2523,16 @@ export interface components {
              * Format: uuid
              */
             proposal_id: string;
+        };
+        /** ApplicationSettingsValue */
+        ApplicationSettingsValue: {
+            /**
+             * Default Label Preset
+             * @enum {string}
+             */
+            default_label_preset: "small" | "medium" | "large";
+            /** Public Qr Base Url */
+            public_qr_base_url: string | null;
         };
         /** ApplyWrite */
         ApplyWrite: {
@@ -7170,6 +7198,61 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    getApplicationSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationSettingsValue"];
+                };
+            };
+        };
+    };
+    saveApplicationSettings: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplicationSettingsValue"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplicationSettingsValue"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     createAttachment: {
         parameters: {
             query?: never;

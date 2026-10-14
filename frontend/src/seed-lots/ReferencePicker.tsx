@@ -13,6 +13,7 @@ import { describedBy } from "../components/aria";
 export interface ReferenceChoice {
   id: string;
   label: string;
+  description?: string;
   retired?: boolean;
   inactiveLabel?: string;
 }
@@ -54,7 +55,10 @@ export function ReferencePicker({
     return choices.filter(
       (choice) =>
         (!choice.retired || choice.id === value) &&
-        (!normalized || choice.label.toLocaleLowerCase().includes(normalized)),
+        (!normalized ||
+          `${choice.label} ${choice.description ?? ""}`
+            .toLocaleLowerCase()
+            .includes(normalized)),
     );
   }, [choices, query, value]);
 
@@ -148,7 +152,12 @@ export function ReferencePicker({
                     choose(choice);
                   }}
                 >
-                  {choice.label}
+                  <span>{choice.label}</span>
+                  {choice.description && (
+                    <small className="reference-choice-context">
+                      {choice.description}
+                    </small>
+                  )}
                   {choice.retired
                     ? ` (${choice.inactiveLabel ?? "retired"})`
                     : ""}

@@ -1,4 +1,4 @@
-import { act, cleanup, render, screen } from "@testing-library/react";
+import { act, cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 
@@ -58,7 +58,13 @@ test("an unresolved route chunk shows a compact loading placeholder and one shel
   window.history.replaceState(null, "", "/#/dashboard");
   render(<App />);
   await screen.findByRole("heading", { name: "Dashboard workspace" });
-  await userEvent.setup().click(screen.getByRole("button", { name: "Seeds" }));
+  await userEvent
+    .setup()
+    .click(
+      within(
+        screen.getByRole("navigation", { name: "Primary navigation" }),
+      ).getByRole("link", { name: "Seeds" }),
+    );
   const loading = screen.getByRole("status");
   expect(loading).toHaveClass("workspace-route-loading");
   expect(loading).toHaveTextContent("Loading workspace…");

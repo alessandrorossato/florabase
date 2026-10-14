@@ -3,6 +3,7 @@ from uuid import uuid7
 
 import pytest
 from alembic.config import Config
+from alembic.script import ScriptDirectory
 from sqlalchemy import Engine, text
 
 from alembic import command
@@ -104,7 +105,7 @@ def test_native_ranges_surface_upgrade_preserves_views_and_refuses_populated_dow
             )
             assert (
                 connection.scalar(text("SELECT version_num FROM alembic_version"))
-                == "20261009_0041"
+                == ScriptDirectory.from_config(config).get_current_head()
             )
             connection.execute(text("DELETE FROM saved_views WHERE id=:id"), {"id": history})
         command.downgrade(config, "20261008_0037")

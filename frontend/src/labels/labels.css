@@ -1,136 +1,178 @@
+.labels-workspace {
+  min-width: 0;
+}
 .label-composer {
   display: grid;
-  grid-template-columns: minmax(15rem, 21rem) minmax(0, 1fr);
-  gap: 2rem;
+  grid-template-columns: minmax(18rem, 23rem) minmax(0, 1fr);
+  gap: var(--space-6);
   align-items: start;
 }
-.label-controls,
-.label-preview {
+.label-controls {
   min-width: 0;
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+}
+.label-controls h3,
+.label-preview h3 {
+  font: var(--type-h3);
+  margin: 0 0 var(--space-3);
 }
 .label-controls > label {
   display: grid;
-  gap: 0.4rem;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+.label-controls > .reference-picker {
+  margin-bottom: var(--space-3);
+}
+.label-batch-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: var(--space-6);
+}
+.label-batch-heading span,
+.label-entries small,
+.label-preset small {
+  font: var(--type-small);
+  color: var(--text-muted);
 }
 .label-entries {
   list-style: none;
   padding: 0;
-}
-.label-capacity {
-  margin: -0.35rem 0 0.65rem;
-  color: #587064;
-  font-size: 0.85rem;
-}
-.label-entries:focus-visible {
-  outline: 3px solid #14704a;
-  outline-offset: -3px;
+  margin: 0;
 }
 .label-entries li {
-  padding: 1rem 0;
-  border-bottom: 1px solid #cfdbd2;
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
   overflow-wrap: anywhere;
 }
-.label-entries small {
-  display: block;
-}
 .label-entries a {
-  color: #1e6446;
-  font-weight: 600;
+  font: var(--type-strong);
+  color: var(--primary);
 }
 .label-entry-actions {
   display: flex;
-  gap: 0.75rem;
+  flex-wrap: wrap;
   align-items: end;
-  margin-top: 0.5rem;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
 }
 .label-entry-actions label {
   display: grid;
-  gap: 0.25rem;
+  gap: var(--space-1);
+  font: var(--type-small);
 }
 .label-entry-actions input {
   width: 5rem;
 }
-.label-empty {
-  padding: 2rem;
-  background: #f4f7f4;
-  border: 1px dashed #cfdbd2;
-  border-radius: 0.75rem;
+.label-preset {
+  border-top: 1px solid var(--border);
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+}
+.label-preset p {
+  margin: 0;
+}
+.label-totals {
+  font: var(--type-strong);
+}
+.label-print-guidance {
+  font: var(--type-small);
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-3);
+}
+.label-print-guidance summary {
+  cursor: pointer;
+  min-height: 2.75rem;
+  align-content: center;
+}
+.label-preview {
+  min-width: 0;
+  padding: var(--space-4);
+  background: var(--surface-subtle);
+  border-radius: var(--radius-normal);
+}
+.label-sheet-preview {
+  margin: 0 auto var(--space-6);
+  max-width: 210mm;
+}
+.label-sheet-preview figcaption {
+  font: var(--type-small);
+  color: var(--text-muted);
+  margin-bottom: var(--space-2);
+}
+.label-paper-preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 210 / 297;
+  overflow: hidden;
+  background: var(--surface);
+  outline: 1px solid var(--border);
+}
+.label-paper-preview .label-page {
+  position: absolute;
+  transform: scale(var(--preview-scale));
+  transform-origin: top left;
 }
 .label-page {
+  box-sizing: border-box;
+  width: 210mm;
+  height: 297mm;
+  padding: var(--label-margin-y) var(--label-margin-x);
   display: grid;
-  grid-template-columns: repeat(auto-fit, 50mm);
-  gap: 0.5rem;
-  align-content: start;
+  grid-template-columns: repeat(var(--label-columns), var(--label-width));
+  grid-template-rows: repeat(var(--label-rows), var(--label-height));
+  gap: 0;
+  background: white;
+  color: black;
 }
 .physical-label {
   box-sizing: border-box;
-  width: 50mm;
-  height: 30mm;
+  width: var(--label-width);
+  height: var(--label-height);
   padding: 1.5mm;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 22mm;
+  grid-template-columns: minmax(0, 1fr) var(--label-qr-size);
+  grid-template-rows: minmax(0, 1fr);
   gap: 1mm;
   align-items: center;
   overflow: hidden;
-  color: #000;
-  background: #fff;
-  outline: 1px solid #d4d4d4;
-  font-family: Arial, sans-serif;
+  color: black;
+  background: white;
+  outline: 0.15mm solid var(--border);
+  font-family: var(--font-ui);
   break-inside: avoid;
   page-break-inside: avoid;
 }
-.physical-label__text {
-  min-width: 0;
-  height: 27mm;
-  display: flex;
-  flex-direction: column;
-}
 .physical-label__name {
-  font-size: 9pt;
-  line-height: 1.12;
-  font-weight: 700;
+  font-size: 10pt;
+  line-height: 1.16;
+  font-weight: 600;
   overflow-wrap: anywhere;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
-  overflow: hidden;
-  flex-shrink: 0;
-  max-height: 14.3mm;
 }
-.physical-label__type {
-  font-size: 7pt;
-  line-height: 1.3;
-  margin-top: 1mm;
+.label-cultivar {
+  font-family: var(--font-ui);
+  font-style: normal;
 }
-.physical-label__context {
-  font-size: 7pt;
-  line-height: 1.15;
+.physical-label__cultivar,
+.physical-label__common-name {
+  font-size: 8pt;
+  line-height: 1.2;
   overflow-wrap: anywhere;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  max-height: 5.7mm;
-}
-.physical-label__brand {
-  font-size: 5.5pt;
-  line-height: 1.1;
-  margin-top: auto;
-  padding-top: 0.5mm;
-}
-.physical-label__qr {
-  display: block;
-  width: 22mm;
-  height: 22mm;
-  flex-shrink: 0;
 }
 .label-print-root {
   display: none;
 }
-@media (max-width: 1100px) {
+@media screen and (max-width: 70rem) {
   .label-composer {
-    grid-template-columns: 1fr;
-    gap: 1rem;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
 @page florabase-labels {
@@ -144,27 +186,33 @@
     padding: 0;
     min-width: 0;
     min-height: 0;
-    background: #fff;
+    background: white;
   }
   body:has(> .label-print-root) > :not(.label-print-root) {
     display: none !important;
   }
   .label-print-root {
     display: block;
-    color: #000;
-    page: florabase-labels;
+    color: black;
   }
-  .label-page {
-    width: 200mm;
-    height: 270mm;
-    display: grid;
-    grid-template-columns: repeat(4, 50mm);
-    grid-template-rows: repeat(9, 30mm);
-    gap: 0;
+  .label-print-root .label-page {
+    position: relative;
+    display: block;
+    width: calc(var(--label-width) * var(--label-columns));
+    height: calc(var(--label-height) * var(--label-rows));
+    padding: 0;
+    margin: 0;
+    transform: none;
     break-after: page;
     page-break-after: always;
   }
-  .label-page:last-child {
+  /* Absolute physical offsets avoid Chromium print-grid per-row pixel rounding. */
+  .label-print-root .physical-label {
+    position: absolute;
+    left: calc(var(--label-column) * var(--label-width));
+    top: calc(var(--label-row) * var(--label-height));
+  }
+  .label-print-root .label-page:last-child {
     break-after: auto;
     page-break-after: auto;
   }
@@ -175,72 +223,279 @@
   }
 }
 
-@media screen {
-  .label-composer {
-    gap: 1.5rem;
-    grid-template-columns: minmax(15rem, 18rem) minmax(0, 1fr);
-  }
-  .label-controls {
-    padding: 1rem;
-    border: 1px solid #cfdbd2;
-    border-radius: 0.65rem;
-    background: #f4f7f4;
-  }
-  .label-controls > h3 {
-    margin-top: 0;
-  }
-  .label-print-guidance {
-    padding: 0.65rem;
-    margin: 0.75rem 0;
-    background: #fff;
-    border-left: 3px solid #cfdbd2;
-    font-size: 0.8rem;
-  }
-  .label-print-guidance .notice {
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: transparent;
-  }
-  .label-print-guidance .field-help {
-    margin-bottom: 0;
-  }
-  .label-preview > h3 {
-    margin-top: 0;
-  }
-  .label-empty {
-    padding: 1rem;
-  }
-  .label-entries li {
-    padding: 0.65rem 0;
+/* Release Labels uses the same document flow as Dashboard and Activity. */
+.application-shell:has(.labels-workspace) {
+  width: 100%;
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+  align-items: start;
+}
+.application-shell:has(.labels-workspace) > .app-content {
+  height: auto;
+  overflow: visible;
+  min-width: 0;
+}
+.app-content > .labels-workspace.ui-page {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  overflow: visible;
+}
+.labels-workspace .label-composer {
+  flex: none;
+  min-height: auto;
+  align-items: start;
+}
+.labels-workspace .label-controls {
+  display: block;
+  overflow: visible;
+}
+.labels-workspace .label-entries {
+  flex: none;
+  min-height: auto;
+  max-height: none;
+  overflow: visible;
+}
+.labels-workspace .label-preview {
+  overflow: visible;
+}
+@media screen and (min-width: 48.01rem) {
+  .application-shell:has(.labels-workspace) > .desktop-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
   }
 }
-@media screen and (min-width: 1101px) {
-  .labels-workspace {
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
-    height: 100%;
-  }
-  .label-composer {
-    flex: 1 1 auto;
-    min-height: 0;
-    align-items: stretch;
-  }
-  .label-controls,
-  .label-preview {
-    overflow: auto;
-    min-height: 0;
-  }
-  .label-preview {
-    padding: 0.75rem;
-    background: #f4f7f4;
-    border-radius: 0.65rem;
-  }
+.label-content-details {
+  font: var(--type-small);
 }
-@media screen and (max-width: 1100px) {
-  .label-composer {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 1rem;
-  }
+.label-content-details summary {
+  min-height: 2.75rem;
+  align-content: center;
+  cursor: pointer;
+}
+.label-content-details > div {
+  display: grid;
+  gap: var(--space-1);
+  padding-bottom: var(--space-2);
+}
+.label-overflow-warning {
+  font: var(--type-small);
+  color: var(--warning-text);
+  border-left: 3px solid var(--warning);
+  padding-left: var(--space-3);
+}
+.label-scientific-name {
+  font-family: var(--font-botanical);
+}
+.label-name-rank {
+  font-style: normal;
+}
+.label-source-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  justify-content: space-between;
+}
+.label-source-meta .label-source-id {
+  font: var(--type-label);
+  font-weight: 400;
+}
+.label-entry-actions label {
+  display: flex;
+  align-items: center;
+}
+
+@page florabase-labels-small {
+  size: A4 portrait;
+  margin: 18.5mm 5mm;
+}
+@page florabase-labels-large {
+  size: A4 portrait;
+  margin: 8.5mm 35mm;
+}
+.label-page--small {
+  page: florabase-labels-small;
+}
+.label-page--medium {
+  page: florabase-labels;
+}
+.label-page--large {
+  page: florabase-labels-large;
+}
+.physical-label__content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-height: 100%;
+  overflow: hidden;
+}
+.physical-label__content > * {
+  flex-shrink: 0;
+}
+.physical-label__content {
+  gap: 0.8mm;
+}
+.label-page--small .physical-label__cultivar,
+.label-page--small .physical-label__common-name {
+  font-size: 7pt;
+}
+.label-page--large .physical-label__cultivar,
+.label-page--large .physical-label__common-name {
+  font-size: 10pt;
+}
+.category-glyph {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  vertical-align: middle;
+}
+.label-qr {
+  position: relative;
+  width: var(--label-qr-size);
+  color: black;
+}
+.label-qr__code {
+  display: block;
+  width: var(--label-qr-size);
+  height: var(--label-qr-size);
+}
+.label-qr__code .category-glyph {
+  width: 100%;
+  height: 100%;
+}
+
+.label-qr-unconfigured {
+  width: var(--label-qr-size);
+  height: var(--label-qr-size);
+  border: 0.2mm dashed #888;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: #555;
+  font-size: 7pt;
+}
+.label-page--small .physical-label {
+  padding: 1mm;
+  gap: 0.75mm;
+}
+.label-page--small .physical-label__name {
+  font-size: 8pt;
+}
+.label-page--large .physical-label {
+  padding: 2mm;
+  gap: 1.5mm;
+}
+.label-page--large .physical-label__name {
+  font-size: 12pt;
+}
+.label-source-meta small {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+.label-qr-destination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  font: var(--type-small);
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+  margin: 0 0 var(--space-4);
+}
+.label-preset label {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.label-print-blocked {
+  color: black;
+  font-family: var(--font-ui);
+}
+
+.labels-workspace .reference-menu li button {
+  display: grid;
+  gap: var(--space-1);
+  text-align: left;
+}
+.labels-workspace .reference-choice-context {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+
+.labels-workspace .label-preset {
+  margin: 0 0 var(--space-4);
+  padding: 0 0 var(--space-4);
+  border-top: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+/* The clean-QR fallback keeps its category mark immediately outside the four-module quiet zone. */
+.label-qr__adjacent {
+  display: block;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  width: 2mm;
+  height: 2mm;
+}
+
+.label-format-choice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.label-format-choice > label {
+  flex: 1 1 12rem;
+  min-width: 0;
+  margin: 0;
+}
+.label-format-choice > button,
+.label-default-indicator {
+  flex: none;
+  min-height: 2.75rem;
+  padding: var(--space-2);
+  font: var(--type-small);
+}
+.label-default-indicator {
+  display: flex;
+  align-items: center;
+  color: var(--text-muted);
+}
+
+.label-qr-destination > button {
+  min-height: 2.75rem;
+  padding: var(--space-1) var(--space-2);
+  font: var(--type-small);
+}
+.qr-destination-dialog {
+  width: min(30rem, calc(100vw - 2rem));
+  box-sizing: border-box;
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+}
+.qr-destination-dialog form {
+  display: grid;
+  gap: var(--space-2);
+}
+.qr-destination-dialog input {
+  width: 100%;
+  min-width: 0;
+}
+.qr-destination-dialog p {
+  margin: 0;
+}
+.qr-discard {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.label-page--small .label-qr {
+  align-self: start;
 }

@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-14",
+  "project": "florabase-uat-preview-smoke-bff8e2a5be73",
+  "protected_snapshot_match": false,
+  "protected_runtime_match": true,
+  "protected_git_match": true,
+  "protected_db_digest_changes": ["florabase-uat-preview"],
+  "live_auth_activity": {
+    "sessions_seen_during_review": 1
+  },
+  "full_live_uat_data_equivalence_proven": false,
+  "comparison_limit": "Only live UAT raw data dump digest differs. Authentication activity was observed, but no per-table baseline establishes the exact cause or complete business data equivalence. No live state was reverted.",
+  "repeat_seed_match": true,
+  "disposable_domain_fixture_media_match": true,
+  "retirement": {
+    "removed": {
+      "containers": 4,
+      "images": 2,
+      "networks": 1,
+      "volumes": 3
+    },
+    "residual_containers_networks_volumes": 0,
+    "retained_owned_images": 0,
+    "shared_build_cache": "retained"
+  },
+  "task_actions_on_protected_uat": {
+    "reset": false,
+    "reseed": false,
+    "synchronize": false,
+    "migrate": false,
+    "settings_write": false,
+    "explicit_login": false
+  }
+}

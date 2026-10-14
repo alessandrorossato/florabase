@@ -93,8 +93,9 @@ test("navigates, validates row issues, retries and explicitly confirms the revie
   });
 
   render(<App />);
+  await user.click(await screen.findByRole("link", { name: "Settings" }));
   await user.click(
-    await screen.findByRole("button", { name: "Import / Export" }),
+    await screen.findByRole("link", { name: "Import / Export" }),
   );
   expect(
     await screen.findByRole("heading", { name: "Import / Export" }),
@@ -211,8 +212,9 @@ test("shows validation progress and a recoverable file error", async () => {
   });
 
   render(<App />);
+  await user.click(await screen.findByRole("link", { name: "Settings" }));
   await user.click(
-    await screen.findByRole("button", { name: "Import / Export" }),
+    await screen.findByRole("link", { name: "Import / Export" }),
   );
   await user.upload(
     screen.getByLabelText(/CSV file/),
@@ -333,8 +335,9 @@ test("guides a human Supplier import and requires a reviewed update choice", asy
   });
 
   render(<App />);
+  await user.click(await screen.findByRole("link", { name: "Settings" }));
   await user.click(
-    await screen.findByRole("button", { name: "Import / Export" }),
+    await screen.findByRole("link", { name: "Import / Export" }),
   );
   await user.selectOptions(screen.getByLabelText("Record type"), "suppliers");
   const guideToggle = screen.getByRole("button", { name: "Field guide" });

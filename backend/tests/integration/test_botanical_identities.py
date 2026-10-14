@@ -98,6 +98,7 @@ def test_schema_uses_native_types_named_constraints_and_only_one_botanical_table
     assert "lower((cultivar_name)::text)" in index_definition
     assert tables == {
         "alembic_version",
+        "application_settings",
         "app_metadata",
         "attachments",
         "auth_sessions",

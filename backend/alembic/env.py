@@ -3,6 +3,7 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context
+from florabase.application_settings.model import ApplicationSettings
 from florabase.attachments.model import Attachment
 from florabase.auth.model import AuthSession, LoginThrottle, User
 from florabase.botanical_identities.model import BotanicalIdentity
@@ -52,6 +53,7 @@ autogenerate_plugins = ["alembic.autogenerate.*", "alembic.ext.checkconstraint_b
 
 # Importing the mapping registers it with the shared metadata used by Alembic.
 assert BotanicalIdentity.__table__.metadata is target_metadata
+assert ApplicationSettings.__table__.metadata is target_metadata
 assert Attachment.__table__.metadata is target_metadata
 assert MediaAsset.__table__.metadata is target_metadata
 assert RecordMediaLink.__table__.metadata is target_metadata

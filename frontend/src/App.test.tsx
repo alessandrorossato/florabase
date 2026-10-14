@@ -268,7 +268,11 @@ const supplierDetail = {
 async function openSuppliers() {
   const user = userEvent.setup();
   render(<App />);
-  await user.click(await screen.findByRole("button", { name: "Suppliers" }));
+  await user.click(
+    within(
+      await screen.findByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Suppliers" }),
+  );
   return user;
 }
 
@@ -319,7 +323,11 @@ const drawerLocation = {
 async function openLocations() {
   const user = userEvent.setup();
   render(<App />);
-  await user.click(await screen.findByRole("button", { name: "Locations" }));
+  await user.click(
+    within(
+      await screen.findByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Locations" }),
+  );
   return user;
 }
 
@@ -375,7 +383,11 @@ const thailandPlace = {
 async function openGeography() {
   const user = userEvent.setup();
   render(<App />);
-  await user.click(await screen.findByRole("button", { name: "Geography" }));
+  await user.click(
+    within(
+      await screen.findByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Geography" }),
+  );
   return user;
 }
 
@@ -428,6 +440,16 @@ test("restores an existing session and recovers CSRF without a password", async 
   expect(
     within(sidebar).getByRole("button", { name: "Sign out" }),
   ).toBeInTheDocument();
+  const utilities = sidebar.querySelector(".sidebar-footer-actions");
+  expect(utilities).toContainElement(
+    within(sidebar).getByRole("link", { name: "Settings" }),
+  );
+  expect(utilities).toContainElement(
+    within(sidebar).getByRole("button", { name: /Theme preview:/ }),
+  );
+  expect(utilities).not.toContainElement(
+    within(sidebar).getByRole("button", { name: "Sign out" }),
+  );
   expect(screen.queryByLabelText("Password")).not.toBeInTheDocument();
   expect(calls.slice(0, 2)).toEqual([
     "GET /api/v1/auth/session",
@@ -452,14 +474,20 @@ test("desktop navigation hides and reopens without remounting the workspace", as
   const workspace = screen.getByRole("region", { name: "Workspace content" });
   const explore = within(sidebar).getByRole("region", { name: "Explore" });
   expect(
-    within(explore).getByRole("button", { name: "Botanical identities" }),
+    within(explore).getByRole("link", { name: "Botanical identities" }),
   ).toBeInTheDocument();
   expect(
     within(sidebar).queryByRole("region", { name: "Botany" }),
   ).not.toBeInTheDocument();
   expect(
-    within(sidebar).getByRole("region", { name: "Tools" }),
-  ).toHaveTextContent("Import / ExportLabels");
+    within(sidebar).queryByRole("region", { name: "Tools" }),
+  ).not.toBeInTheDocument();
+  expect(
+    within(sidebar).getByRole("link", { name: "Settings" }),
+  ).toHaveAttribute("href", "#/settings");
+  expect(
+    within(sidebar).getByRole("button", { name: /Theme preview:/ }),
+  ).toBeInTheDocument();
   const resize = within(sidebar).getByRole("separator", {
     name: "Resize navigation",
   });
@@ -508,7 +536,7 @@ test("desktop navigation hides and reopens without remounting the workspace", as
     name: "Hide navigation",
   });
   expect(
-    within(sidebar).getByRole("button", { name: "Dashboard" }),
+    within(sidebar).getByRole("link", { name: "Dashboard" }),
   ).toHaveAttribute("aria-current", "page");
   hideNavigation.focus();
   await user.keyboard("{Enter}");
@@ -1563,10 +1591,11 @@ test("primary navigation switches accessibly to the empty supplier directory", a
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await openSuppliers();
-  expect(screen.getByRole("button", { name: "Suppliers" })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
+  expect(
+    within(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Suppliers" }),
+  ).toHaveAttribute("aria-current", "page");
   expect(
     await screen.findByRole("heading", { name: "Suppliers" }),
   ).toBeInTheDocument();
@@ -1598,7 +1627,9 @@ test("primary navigation switches accessibly to the empty supplier directory", a
   ).not.toBeInTheDocument();
   expect(newSupplier).toHaveFocus();
   await user.click(
-    screen.getByRole("button", { name: "Botanical identities" }),
+    within(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Botanical identities" }),
   );
   expect(
     await screen.findByRole("heading", { name: "Botanical identities" }),
@@ -1936,10 +1967,11 @@ test("primary navigation opens an empty accessible location directory", async ()
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await openLocations();
-  expect(screen.getByRole("button", { name: "Locations" })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
+  expect(
+    within(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Locations" }),
+  ).toHaveAttribute("aria-current", "page");
   expect(
     await screen.findByRole("heading", { name: "Locations" }),
   ).toBeInTheDocument();
@@ -2009,7 +2041,12 @@ test("location hierarchy renders paths and supports keyboard selection", async (
     screen.queryByRole("option", { name: /Drawer A/ }),
   );
   await user.click(screen.getByRole("button", { name: "Cancel" }));
-  await user.click(screen.getByRole("link", { name: "Locations" }));
+  await user.click(
+    within(screen.getByRole("navigation", { name: "Breadcrumb" })).getByRole(
+      "link",
+      { name: "Locations" },
+    ),
+  );
   await user.click(await screen.findByRole("button", { name: /^House/i }));
   await user.click(screen.getByRole("link", { name: "Open details" }));
   await user.click(
@@ -2400,13 +2437,22 @@ test("location deletion confirms safe leaves and explains blocked parents", asyn
     /move or delete child locations/i,
   );
 
-  await user.click(screen.getByRole("link", { name: "Locations" }));
+  await user.click(
+    within(screen.getByRole("navigation", { name: "Breadcrumb" })).getByRole(
+      "link",
+      { name: "Locations" },
+    ),
+  );
   await user.click(await screen.findByRole("button", { name: /^Garden/i }));
   await user.click(screen.getByRole("link", { name: "Open details" }));
   await user.click(await screen.findByLabelText("More location actions"));
   await user.click(screen.getByRole("button", { name: "Delete location" }));
   expect(await screen.findByText(/Garden was deleted/)).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "Locations" }));
+  await user.click(
+    within(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Locations" }),
+  );
   expect(
     screen.queryByRole("button", { name: /^Garden/i }),
   ).not.toBeInTheDocument();
@@ -2484,10 +2530,11 @@ test("Geography navigation loads, filters, and selects broad and country canonic
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await openGeography();
-  expect(screen.getByRole("button", { name: "Geography" })).toHaveAttribute(
-    "aria-current",
-    "page",
-  );
+  expect(
+    within(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Geography" }),
+  ).toHaveAttribute("aria-current", "page");
   expect(
     await screen.findByRole("heading", { name: "Geography" }),
   ).toBeInTheDocument();
@@ -2806,7 +2853,11 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
     </StrictMode>,
   );
 
-  await user.click(await screen.findByRole("button", { name: "Locations" }));
+  await user.click(
+    within(
+      await screen.findByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Locations" }),
+  );
   const newLocation = await screen.findByRole("button", {
     name: "New location",
   });
@@ -2836,7 +2887,11 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
   await user.keyboard("{Escape}");
   expect(editLocation).toHaveFocus();
 
-  await user.click(screen.getByRole("button", { name: "Suppliers" }));
+  await user.click(
+    within(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Suppliers" }),
+  );
   const newSupplier = await screen.findByRole("button", {
     name: "New supplier",
   });
@@ -2862,7 +2917,11 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
   await user.keyboard("{Escape}");
   expect(editSupplier).toHaveFocus();
 
-  await user.click(screen.getByRole("button", { name: "Geography" }));
+  await user.click(
+    within(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Geography" }),
+  );
   const newPlace = await screen.findByRole("button", {
     name: "New local place",
   });
@@ -3314,16 +3373,9 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     within(nav)
       .getAllByRole("region")
       .map((group) => group.getAttribute("aria-label")),
-  ).toEqual([
-    "Overview",
-    "Collection",
-    "Activity",
-    "Explore",
-    "Sourcing",
-    "Tools",
-  ]);
+  ).toEqual(["Overview", "Collection", "Activity", "Explore", "Sourcing"]);
   expect(within(nav).getAllByRole("button", { expanded: true })).toHaveLength(
-    6,
+    5,
   );
   expect(within(nav).getByText("Maps")).toHaveClass("sidebar-subsection");
   expect(
@@ -3348,18 +3400,17 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "Collection origins",
     "Suppliers",
     "Orders",
-    "Import / Export",
-    "Labels",
   ];
   expect(
     within(nav)
-      .getAllByRole("button")
+      .getAllByRole("link")
       .filter((button) => button.classList.contains("navigation-link"))
       .map((button) => button.textContent),
   ).toEqual(destinations);
-  expect(
-    within(nav).getByRole("button", { name: "Dashboard" }),
-  ).toHaveAttribute("aria-current", "page");
+  expect(within(nav).getByRole("link", { name: "Dashboard" })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
   await user.click(
     within(
       screen.getByRole("navigation", { name: "Mobile primary navigation" }),
@@ -3367,9 +3418,26 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
   );
   expect(
     within(screen.getByRole("navigation", { name: "More navigation" }))
-      .getAllByRole("button")
+      .getAllByRole("link")
       .map((button) => button.textContent),
-  ).toEqual(destinations.slice(4));
+  ).toEqual(destinations);
+  const account = screen
+    .getByRole("dialog", { name: "Navigation" })
+    .querySelector(".mobile-navigation-account");
+  expect(account).toContainElement(
+    within(screen.getByRole("dialog", { name: "Navigation" })).getByRole(
+      "link",
+      { name: "Settings" },
+    ),
+  );
+  const mobileSignOut = within(
+    screen.getByRole("dialog", { name: "Navigation" }),
+  ).getByRole("button", { name: "Sign out" });
+  expect(account).toContainElement(mobileSignOut);
+  expect(
+    account?.querySelector(".sidebar-footer-actions"),
+  ).not.toContainElement(mobileSignOut);
+  await user.click(screen.getByRole("button", { name: "Close navigation" }));
   const routes = [
     "dashboard",
     "seeds",
@@ -3389,8 +3457,6 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "map",
     "suppliers",
     "orders",
-    "import-export",
-    "labels",
   ];
   const categories = [
     "Overview",
@@ -3411,16 +3477,14 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "Explore",
     "Sourcing",
     "Sourcing",
-    "Tools",
-    "Tools",
   ];
   for (const [index, destination] of destinations.entries()) {
-    await user.click(within(nav).getByRole("button", { name: destination }));
+    await user.click(within(nav).getByRole("link", { name: destination }));
     await waitFor(() => {
       expect(window.location.hash).toBe(`#/${routes[index]}`);
     });
     expect(
-      within(nav).getByRole("button", { name: destination }),
+      within(nav).getByRole("link", { name: destination }),
     ).toHaveAttribute("aria-current", "page");
     const heading = await screen.findByRole("heading", {
       name: destination === "Taxonomy" ? "Collection taxonomy" : destination,
@@ -3460,7 +3524,7 @@ test("sidebar disclosures support keyboard, persist preferences and expand activ
     "aria-expanded",
     "true",
   );
-  expect(within(nav).getByRole("button", { name: "History" })).toHaveAttribute(
+  expect(within(nav).getByRole("link", { name: "History" })).toHaveAttribute(
     "aria-current",
     "page",
   );
@@ -3469,7 +3533,7 @@ test("sidebar disclosures support keyboard, persist preferences and expand activ
     "false",
   );
   expect(
-    within(nav).queryByRole("button", { name: "Geography" }),
+    within(nav).queryByRole("link", { name: "Geography" }),
   ).not.toBeInTheDocument();
   const collection = within(nav).getByRole("button", { name: "Collection" });
   collection.focus();
@@ -3477,7 +3541,7 @@ test("sidebar disclosures support keyboard, persist preferences and expand activ
   expect(collection).toHaveFocus();
   expect(collection).toHaveAttribute("aria-expanded", "false");
   expect(
-    within(nav).queryByRole("button", { name: "Seeds" }),
+    within(nav).queryByRole("link", { name: "Seeds" }),
   ).not.toBeInTheDocument();
   expect(
     JSON.parse(
@@ -3492,7 +3556,7 @@ test("sidebar disclosures support keyboard, persist preferences and expand activ
   ).toHaveAttribute("aria-expanded", "false");
   await user.click(within(nav).getByRole("button", { name: "Activity" }));
   expect(
-    within(nav).queryByRole("button", { name: "Journal" }),
+    within(nav).queryByRole("link", { name: "Journal" }),
   ).not.toBeInTheDocument();
   act(() => {
     window.history.pushState(null, "", "#/events?category=status");
@@ -3505,7 +3569,7 @@ test("sidebar disclosures support keyboard, persist preferences and expand activ
     "aria-expanded",
     "true",
   );
-  expect(within(nav).getByRole("button", { name: "Journal" })).toHaveAttribute(
+  expect(within(nav).getByRole("link", { name: "Journal" })).toHaveAttribute(
     "aria-current",
     "page",
   );
@@ -3517,7 +3581,7 @@ test("sidebar disclosures support keyboard, persist preferences and expand activ
     }),
   ).toBeVisible();
   await user.click(within(nav).getByRole("button", { name: "Collection" }));
-  expect(within(nav).getByRole("button", { name: "Seeds" })).toBeVisible();
+  expect(within(nav).getByRole("link", { name: "Seeds" })).toBeVisible();
   view.unmount();
 });
 
@@ -3537,7 +3601,7 @@ test.each(["invalid JSON", '{"Collection":true}'])(
       name: "Primary navigation",
     });
     expect(within(nav).getAllByRole("button", { expanded: true })).toHaveLength(
-      6,
+      5,
     );
   },
 );

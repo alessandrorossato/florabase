@@ -192,3 +192,26 @@ Compact dimension summaries are removable and reset preserves query and local re
 Content-sized Activity drawers cap at the viewport and scroll fields while keeping their footer
 reachable. All dismissal routes restore focus to Filters. This is a narrow Activity contract update;
 Dashboard interaction and the broader product remain unchanged.
+
+## Labels, Settings and frozen workspace navigation
+
+Labels is a document-flow workspace with Print as the final primary action. The chooser/selected
+list keeps useful recorded context and hides UUIDs. Physical sheets contain only exact-record QR,
+scientific botanical name, optional roman cultivar/common name and a tiny category glyph.
+Operational metadata and classification hierarchy do not print or contribute to overflow warnings.
+Presets explicitly define cell/type/QR dimensions; paper scales on screen while print retains mm.
+
+Settings is one focused page with General and Tools; Labels → Print format retains explicit Set as
+default / Default. Public QR URL stays server persisted in General. Labels → QR destination Edit
+opens a small TaskDialog for the same setting, with shared validation/save, pending/dirty dismissal
+protection and return focus. Save updates QR in place without losing the batch or temporary preset.
+
+Primary navigation remains Overview, Collection, Activity, Explore and Sourcing. Maps is a plain
+subgroup with three children; plant groups and Stored material stay local modes. The footer places
+signed-in identity above labelled gear Settings and a quiet icon-only Theme preview cycler, then
+separate Sign out. Hidden/collapsed desktop navigation reopens access; mobile More retains the same
+controls and shared preview state. Modified-click links and existing route semantics remain.
+
+Theme cycles monitor → sun → moon → monitor, updating only SVG/title/accessibility text. Every
+state explicitly says switching is not enabled. There is no popover, visible explanatory paragraph,
+color/token change, backend write or theme persistence. Actual theming remains a later increment.

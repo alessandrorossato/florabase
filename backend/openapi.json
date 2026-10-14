@@ -89,6 +89,37 @@
         "title": "ApplicationResponse",
         "type": "object"
       },
+      "ApplicationSettingsValue": {
+        "additionalProperties": false,
+        "properties": {
+          "default_label_preset": {
+            "enum": [
+              "small",
+              "medium",
+              "large"
+            ],
+            "title": "Default Label Preset",
+            "type": "string"
+          },
+          "public_qr_base_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Public Qr Base Url"
+          }
+        },
+        "required": [
+          "public_qr_base_url",
+          "default_label_preset"
+        ],
+        "title": "ApplicationSettingsValue",
+        "type": "object"
+      },
       "ApplyWrite": {
         "additionalProperties": false,
         "properties": {
@@ -14906,6 +14937,84 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/application-settings": {
+      "get": {
+        "operationId": "getApplicationSettings",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationSettingsValue"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Read",
+        "tags": [
+          "application-settings"
+        ]
+      },
+      "put": {
+        "operationId": "saveApplicationSettings",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-CSRF-Token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplicationSettingsValue"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplicationSettingsValue"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save",
+        "tags": [
+          "application-settings"
+        ]
+      }
+    },
     "/api/v1/attachments": {
       "post": {
         "operationId": "createAttachment",

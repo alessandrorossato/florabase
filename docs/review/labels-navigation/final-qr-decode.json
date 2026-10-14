@@ -1,0 +1,139 @@
+{
+  "decoder": "ZXing-C++ 3.1.1",
+  "assertions": 48,
+  "samples": [
+    {
+      "preset": "small",
+      "kind": "seed-lot",
+      "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+      "qrMm": 15.9990234375,
+      "glyph": "adjacent",
+      "qr_300dpi": true,
+      "blur_0_4px": true,
+      "complete_label_300dpi": true,
+      "qr_200dpi": true
+    },
+    {
+      "preset": "small",
+      "kind": "plant",
+      "url": "https://flora.example/#/plants/01a13939-ecc5-759b-927b-4e701496bcff",
+      "qrMm": 15.9990234375,
+      "glyph": "adjacent",
+      "qr_300dpi": true,
+      "blur_0_4px": true,
+      "complete_label_300dpi": true,
+      "qr_200dpi": true
+    },
+    {
+      "preset": "small",
+      "kind": "plant-group",
+      "url": "https://flora.example/#/plant-groups/01a13939-ecd1-74e0-b097-28a83ed36c61",
+      "qrMm": 15.9990234375,
+      "glyph": "adjacent",
+      "qr_300dpi": true,
+      "blur_0_4px": true,
+      "complete_label_300dpi": true,
+      "qr_200dpi": true
+    },
+    {
+      "preset": "small",
+      "kind": "stored-material",
+      "url": "https://flora.example/#/harvests/01a13939-ece2-74d3-99f6-44bb95506616?inventory=01a13939-edd7-7526-8e78-12993218cecc",
+      "qrMm": 15.9990234375,
+      "glyph": "adjacent",
+      "qr_300dpi": true,
+      "blur_0_4px": true,
+      "complete_label_300dpi": true,
+      "qr_200dpi": true
+    },
+    {
+      "preset": "medium",
+      "kind": "seed-lot",
+      "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+      "qrMm": 23.99853515625,
+      "glyph": "inset",
+      "qr_300dpi": true,
+      "blur_0_4px": true,
+      "complete_label_300dpi": true,
+      "qr_200dpi": true
+    },
+    {
+      "preset": "medium",
+      "kind": "plant",
+      "url": "https://flora.example/#/plants/01a13939-ecc5-759b-927b-4e701496bcff",
+      "qrMm": 23.99853515625,
+      "glyph": "inset",
+      "qr_300dpi": true,
+      "blur_0_4px": true,
+      "complete_label_300dpi": true,
+      "qr_200dpi": true
+    },
+    {
+      "preset": "medium",
+      "kind": "plant-group",
+      "url": "https://flora.example/#/plant-groups/01a13939-ecd1-74e0-b097-28a83ed36c61",
+      "qrMm": 23.99853515625,
+      "glyph": "inset",
+      "qr_300dpi": true,
+      "blur_0_4px": true,
+      "complete_label_300dpi": true,
+      "qr_200dpi": true
+    },
+    {
+      "preset": "medium",
+      "kind": "stored-material",
+      "url": "https://flora.example/#/harvests/01a13939-ece2-74d3-99f6-44bb95506616?inventory=01a13939-edd7-7526-8e78-12993218cecc",
+      "qrMm": 23.99853515625,
+      "glyph": "inset",
+      "qr_300dpi": true,
+      "blur_0_4px": true,
+      "complete_label_300dpi": true,
+      "qr_200dpi": true
+    },
+    {
+      "preset": "large",
+      "kind": "seed-lot",
+      "url": "https://flora.example/#/seeds/01a13939-ecb0-73e7-9f5c-9541d2250d62",
+      "qrMm": 31.998046875,
+      "glyph": "inset",
+      "qr_300dpi": true,
+      "blur_0_4px": true,
+      "complete_label_300dpi": true,
+      "qr_200dpi": true
+    },
+    {
+      "preset": "large",
+      "kind": "plant",
+      "url": "https://flora.example/#/plants/01a13939-ecc5-759b-927b-4e701496bcff",
+      "qrMm": 31.998046875,
+      "glyph": "inset",
+      "qr_300dpi": true,
+      "blur_0_4px": true,
+      "complete_label_300dpi": true,
+      "qr_200dpi": true
+    },
+    {
+      "preset": "large",
+      "kind": "plant-group",
+      "url": "https://flora.example/#/plant-groups/01a13939-ecd1-74e0-b097-28a83ed36c61",
+      "qrMm": 31.998046875,
+      "glyph": "inset",
+      "qr_300dpi": true,
+      "blur_0_4px": true,
+      "complete_label_300dpi": true,
+      "qr_200dpi": true
+    },
+    {
+      "preset": "large",
+      "kind": "stored-material",
+      "url": "https://flora.example/#/harvests/01a13939-ece2-74d3-99f6-44bb95506616?inventory=01a13939-edd7-7526-8e78-12993218cecc",
+      "qrMm": 31.998046875,
+      "glyph": "inset",
+      "qr_300dpi": true,
+      "blur_0_4px": true,
+      "complete_label_300dpi": true,
+      "qr_200dpi": true
+    }
+  ],
+  "physical_source": "Actual Chromium named-page PDF rasterized at 300/200 dpi; includes full quiet zone and physical label."
+}

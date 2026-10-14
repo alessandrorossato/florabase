@@ -320,7 +320,11 @@ async function openPlants(waitForReady = true) {
   setViewportMatches(true);
   const user = userEvent.setup();
   render(<App />);
-  await user.click(await screen.findByRole("button", { name: "Plants" }));
+  await user.click(
+    within(
+      await screen.findByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Plants" }),
+  );
   if (waitForReady) {
     await screen.findByRole(
       "heading",

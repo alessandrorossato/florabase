@@ -186,7 +186,11 @@ async function openSowings() {
   setViewportMatches(true);
   const user = userEvent.setup();
   render(<App />);
-  await user.click(await screen.findByRole("button", { name: "Sowings" }));
+  await user.click(
+    within(
+      await screen.findByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Sowings" }),
+  );
   await screen.findByRole("heading", { name: "Sowings", level: 2 });
   return user;
 }
