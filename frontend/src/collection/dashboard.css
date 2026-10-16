@@ -2,8 +2,9 @@
   display: block;
   overflow: visible;
 }
-.workspace--dashboard .page-header {
+.app-content .workspace--dashboard .page-header {
   margin: 0 0 var(--space-4);
+  align-items: center;
 }
 .workspace--dashboard .page-header p {
   margin: 0;
@@ -33,16 +34,17 @@ body:has(.workspace--dashboard dialog[open]) {
 }
 .dashboard-toolbar {
   display: flex;
-  align-items: end;
+  align-items: center;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-bottom: var(--space-6);
+  margin: 0;
 }
 .dashboard-toolbar .dashboard-search-controls {
   display: contents;
 }
 .dashboard-toolbar .dashboard-search-field {
   flex: 1 1 18rem;
+  margin: 0;
 }
 .dashboard-toolbar :is(button, input) {
   min-height: 2.75rem;
@@ -75,8 +77,8 @@ body:has(.workspace--dashboard dialog[open]) {
 }
 .dashboard-content {
   display: grid;
-  gap: var(--space-6);
-  padding-bottom: var(--space-6);
+  gap: var(--space-4);
+  padding-bottom: var(--space-4);
 }
 .dashboard-content section {
   min-width: 0;
@@ -108,8 +110,8 @@ body:has(.workspace--dashboard dialog[open]) {
 }
 .dashboard-columns {
   display: grid;
-  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-  gap: var(--space-8);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6);
 }
 .dashboard-attention {
   border: 1px solid var(--border);
@@ -153,7 +155,7 @@ body:has(.workspace--dashboard dialog[open]) {
   display: flex;
   justify-content: space-between;
   gap: var(--space-3);
-  padding-block: var(--space-3);
+  padding-block: var(--space-2);
   border-top: 1px solid var(--border);
 }
 .dashboard-rows article,
@@ -198,45 +200,17 @@ body:has(.workspace--dashboard dialog[open]) {
   flex-wrap: wrap;
   gap: var(--space-3);
 }
-.dashboard-support {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-6);
-  border-top: 1px solid var(--border);
-  padding-top: var(--space-6);
-}
-.dashboard-support .ui-section-header h3 {
-  font: var(--type-h3);
-}
-.dashboard-facts {
-  margin: var(--space-3) 0;
-}
-.dashboard-facts > div {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--space-3);
-  margin-block: var(--space-2);
-}
-.dashboard-facts dt {
-  font: var(--type-body);
-}
-.dashboard-facts dd {
-  margin: 0;
-  font: var(--type-h3);
-  font-variant-numeric: tabular-nums;
-}
 /* Native modal focus containment, styled as a right-side advanced-filter drawer. */
 .task-dialog.dashboard-filter-drawer {
   inset: 0;
   margin: 0 0 0 auto;
-  width: min(40rem, 100%);
+  width: clamp(40rem, 62vw, 60rem);
   max-width: 100%;
   height: 100dvh;
   max-height: 100dvh;
   box-sizing: border-box;
   overflow-y: auto;
-  padding: var(--space-6);
+  padding: var(--space-4) var(--space-6);
   border: 0;
   border-left: 1px solid var(--border);
   border-radius: 0;
@@ -245,7 +219,7 @@ body:has(.workspace--dashboard dialog[open]) {
   box-shadow: var(--elevation-overlay);
 }
 .dashboard-filter-drawer .section-heading {
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-2);
 }
 .dashboard-filter-drawer h3,
 .saved-views-dialog h3 {
@@ -253,26 +227,27 @@ body:has(.workspace--dashboard dialog[open]) {
 }
 .dashboard-drawer-fields {
   display: grid;
-  gap: var(--space-4);
-  margin-bottom: var(--space-4);
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
 }
 .dashboard-filter-drawer .dashboard-kind-filters {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3) var(--space-6);
+  grid-template-columns: minmax(0, 1.4fr) repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-4);
   margin: 0;
+  align-items: start;
 }
 .dashboard-filter-drawer .dashboard-kind-filters > div {
   gap: var(--space-1);
 }
 .dashboard-filter-drawer .dashboard-kind-filters > div:first-of-type {
-  grid-column: 1 / -1;
+  grid-row: span 2;
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .dashboard-filter-drawer .dashboard-kind-filters > div:first-of-type > strong {
   grid-column: 1 / -1;
 }
 .dashboard-filter-drawer .dashboard-kind-filters label {
-  min-height: 2rem;
+  min-height: var(--control-height);
   font: var(--type-body);
 }
 .dashboard-filter-group {
@@ -284,6 +259,9 @@ body:has(.workspace--dashboard dialog[open]) {
   border: 0;
   border-top: 1px solid var(--border);
   min-width: 0;
+}
+.dashboard-filter-group--geography {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .dashboard-filter-group legend {
   padding-right: var(--space-2);
@@ -301,6 +279,38 @@ body:has(.workspace--dashboard dialog[open]) {
 }
 .dashboard-filter-details:empty {
   display: none;
+}
+.dashboard-filter-drawer .dashboard-drawer-fields .reference-picker {
+  margin: 0;
+}
+.dashboard-metrics .ui-metric {
+  padding: var(--space-3);
+  gap: var(--space-1);
+}
+@media (min-width: 48.01rem) {
+  .dashboard-metrics .ui-metric {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: baseline;
+  }
+  .dashboard-metrics .ui-metric__context {
+    grid-column: 1 / -1;
+  }
+}
+.dashboard-recent .dashboard-rows article {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+}
+.dashboard-recent .dashboard-activity-heading {
+  margin: 0;
+}
+.dashboard-recent .dashboard-row-title {
+  flex: 1 1 10rem;
+}
+.dashboard-recent .dashboard-rows p {
+  flex-basis: 100%;
+  margin: 0;
 }
 .dashboard-drawer-actions {
   display: flex;
@@ -338,10 +348,6 @@ body:has(.workspace--dashboard dialog[open]) {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: var(--space-4);
   }
-  .dashboard-support {
-    grid-template-columns: 1fr;
-    gap: var(--space-4);
-  }
 }
 @media (max-width: 48rem) {
   .dashboard-toolbar .dashboard-search-field {
@@ -361,8 +367,12 @@ body:has(.workspace--dashboard dialog[open]) {
   .dashboard-filter-drawer .dashboard-kind-filters,
   .dashboard-filter-drawer .dashboard-kind-filters > div:first-of-type,
   .dashboard-filter-group,
+  .dashboard-filter-group--geography,
   .dashboard-filter-drawer .dashboard-filter-details {
     grid-template-columns: minmax(0, 1fr);
+  }
+  .dashboard-filter-drawer .dashboard-kind-filters > div:first-of-type {
+    grid-row: auto;
   }
   .dashboard-columns {
     grid-template-columns: 1fr;

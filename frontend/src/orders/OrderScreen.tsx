@@ -1,3 +1,5 @@
+import { FieldLabel } from "../components/FieldLabel";
+import { DirectoryTools } from "../components/DirectoryTools";
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -41,6 +43,8 @@ function OrderForm({
   const [supplier, setSupplier] = useState(initial?.supplier_id ?? "");
   const [date, setDate] = useState(initial?.ordered_on ?? null);
   const [dirty, setDirty] = useState(false);
+  const [hasPrice, setHasPrice] = useState(Boolean(initial?.total_price));
+  const [hasCurrency, setHasCurrency] = useState(Boolean(initial?.currency));
   function cancel() {
     if (!dirty || window.confirm("Discard unsaved Order changes?")) onCancel();
   }
@@ -76,7 +80,7 @@ function OrderForm({
           separately.
         </p>
         <ReferencePicker
-          label="Supplier (optional)"
+          label="Supplier"
           choices={suppliers.map((item) => ({
             id: item.id,
             label: item.name,
@@ -99,7 +103,7 @@ function OrderForm({
           }}
         />
         <div className="field">
-          <label htmlFor="order-reference">Order reference (optional)</label>
+          <label htmlFor="order-reference">Order reference</label>
           <input
             id="order-reference"
             name="reference"
@@ -109,9 +113,15 @@ function OrderForm({
         </div>
         <div className="form-grid">
           <div className="field">
-            <label htmlFor="order-price">Total price (optional)</label>
+            <FieldLabel htmlFor="order-price" required={hasCurrency}>
+              Total price
+            </FieldLabel>
             <input
               id="order-price"
+              aria-required={hasCurrency || undefined}
+              onChange={(event) => {
+                setHasPrice(Boolean(event.currentTarget.value.trim()));
+              }}
               name="price"
               type="text"
               inputMode="decimal"
@@ -121,9 +131,15 @@ function OrderForm({
             />
           </div>
           <div className="field">
-            <label htmlFor="order-currency">Currency</label>
+            <FieldLabel htmlFor="order-currency" required={hasPrice}>
+              Currency
+            </FieldLabel>
             <input
               id="order-currency"
+              aria-required={hasPrice || undefined}
+              onChange={(event) => {
+                setHasCurrency(Boolean(event.currentTarget.value.trim()));
+              }}
               name="currency"
               maxLength={3}
               pattern="[A-Z]{3}"
@@ -138,7 +154,7 @@ function OrderForm({
           leave both blank. This is the total transaction price.
         </p>
         <div className="field">
-          <label htmlFor="order-notes">Notes (optional)</label>
+          <label htmlFor="order-notes">Notes</label>
           <textarea
             id="order-notes"
             name="notes"
@@ -165,7 +181,10 @@ function OrderForm({
   );
 }
 
-export function OrderScreen({ initialId }: { initialId?: string } = {}) {
+export function OrderScreen({
+  initialId,
+  startCreating = false,
+}: { initialId?: string; startCreating?: boolean } = {}) {
   const auth = useAuth();
   const [offset, setOffset] = useState(0);
   const [lotOffset, setLotOffset] = useState(0);
@@ -180,7 +199,7 @@ export function OrderScreen({ initialId }: { initialId?: string } = {}) {
   const [loadError, setLoadError] = useState("");
   const [suppliersError, setSuppliersError] = useState("");
   const [loadedKey, setLoadedKey] = useState("");
-  const [formOpen, setFormOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(startCreating);
   const [linking, setLinking] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [pending, setPending] = useState(false);
@@ -309,20 +328,99 @@ export function OrderScreen({ initialId }: { initialId?: string } = {}) {
         title={initialId ? (detail ? orderTitle(detail) : "Order") : "Orders"}
         titleId="orders-title"
         description="Track purchase transactions and the physical seed lots acquired through them."
-        actions={
-          initialId ? (
-            <a href="#/orders">All Orders</a>
-          ) : (
-            <button
-              type="button"
-              disabled={!suppliers}
-              onClick={() => {
-                setError("");
-                setFormOpen(true);
+        actions={initialId ? <a href="#/orders">All Orders</a> : undefined}
+        tools={
+          !initialId && (
+            <DirectoryTools
+              onReset={() => {
+                view.update("supplier_id", "");
+                setOffset(0);
               }}
-            >
-              + New Order
-            </button>
+              name="Orders"
+              search={
+                <DirectorySearch
+                  id="order-search"
+                  label="Search Orders"
+                  placeholder="Reference, Supplier or notes"
+                  value={view.state.q}
+                  onChange={(value) => {
+                    view.update("q", value);
+                    setOffset(0);
+                  }}
+                />
+              }
+              savedViews={
+                <SavedViews
+                  presentation="dialog"
+                  surface="orders"
+                  state={view.savedState}
+                />
+              }
+              actions={
+                initialId ? (
+                  <a href="#/orders">All Orders</a>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={!suppliers}
+                    onClick={() => {
+                      setError("");
+                      setFormOpen(true);
+                    }}
+                  >
+                    + New Order
+                  </button>
+                )
+              }
+              filters={
+                <>
+                  <div className="field">
+                    <label htmlFor="orders-supplier">Supplier</label>
+                    <select
+                      id="orders-supplier"
+                      value={view.state.supplier_id}
+                      onChange={(event) => {
+                        view.update("supplier_id", event.currentTarget.value);
+                        setOffset(0);
+                      }}
+                    >
+                      <option value="">All Suppliers</option>
+                      {view.state.supplier_id &&
+                        !suppliers?.some(
+                          (item) => item.id === view.state.supplier_id,
+                        ) && (
+                          <option value={view.state.supplier_id}>
+                            Unavailable Supplier — {view.state.supplier_id}
+                          </option>
+                        )}
+                      {suppliers?.map((item) => (
+                        <option value={item.id} key={item.id}>
+                          {item.name}
+                          {item.retired_at ? " (retired)" : ""}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              }
+              activeFilters={
+                view.state.supplier_id
+                  ? [
+                      {
+                        label: "Supplier",
+                        value:
+                          suppliers?.find(
+                            (item) => item.id === view.state.supplier_id,
+                          )?.name ?? "Unavailable supplier",
+                        onRemove: () => {
+                          view.update("supplier_id", "");
+                          setOffset(0);
+                        },
+                      },
+                    ]
+                  : []
+              }
+            />
           )
         }
       />
@@ -436,7 +534,7 @@ export function OrderScreen({ initialId }: { initialId?: string } = {}) {
                 Acquisition; unlink in SeedLot edit.
               </p>
               {detail.seed_lots_total === 0 ? (
-                <p className="empty-state">No seed lots linked yet.</p>
+                <p className="detail-empty-message">No seed lots linked yet.</p>
               ) : (
                 <ul className="order-list">
                   {detail.seed_lots.map((lot) => (
@@ -483,46 +581,6 @@ export function OrderScreen({ initialId }: { initialId?: string } = {}) {
         )
       ) : (
         <>
-          <SavedViews surface="orders" state={view.savedState} />
-          <div className="order-controls">
-            <DirectorySearch
-              id="order-search"
-              label="Search Orders"
-              placeholder="Reference, Supplier or notes"
-              value={view.state.q}
-              onChange={(value) => {
-                view.update("q", value);
-                setOffset(0);
-              }}
-            />
-            <div className="field">
-              <label htmlFor="orders-supplier">Supplier</label>
-              <select
-                id="orders-supplier"
-                value={view.state.supplier_id}
-                onChange={(event) => {
-                  view.update("supplier_id", event.currentTarget.value);
-                  setOffset(0);
-                }}
-              >
-                <option value="">All Suppliers</option>
-                {view.state.supplier_id &&
-                  !suppliers?.some(
-                    (item) => item.id === view.state.supplier_id,
-                  ) && (
-                    <option value={view.state.supplier_id}>
-                      Unavailable Supplier — {view.state.supplier_id}
-                    </option>
-                  )}
-                {suppliers?.map((item) => (
-                  <option value={item.id} key={item.id}>
-                    {item.name}
-                    {item.retired_at ? " (retired)" : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
           {!page ? (
             <p role="status">Loading Orders…</p>
           ) : (

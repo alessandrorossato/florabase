@@ -1,0 +1,230 @@
+[
+  {
+    "state": "dashboard",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "bodyOverflow": "visible",
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1425,
+    "height": 844,
+    "media": null,
+    "panel": null,
+    "save": null,
+    "url": "#/dashboard",
+    "width": 1440
+  },
+  {
+    "state": "dashboard",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675,
+      "kind": "effective-space proxy, not browser zoom"
+    },
+    "bodyOverflow": "visible",
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1137,
+    "height": 675,
+    "media": null,
+    "panel": null,
+    "save": null,
+    "url": "#/dashboard",
+    "width": 1152
+  },
+  {
+    "state": "dashboard",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563,
+      "kind": "effective-space proxy, not browser zoom"
+    },
+    "bodyOverflow": "visible",
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 945,
+    "height": 563,
+    "media": null,
+    "panel": null,
+    "save": null,
+    "url": "#/dashboard",
+    "width": 960
+  },
+  {
+    "state": "dashboard",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "bodyOverflow": "visible",
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1009,
+    "height": 844,
+    "media": null,
+    "panel": null,
+    "save": null,
+    "url": "#/dashboard",
+    "width": 1024
+  },
+  {
+    "state": "dashboard",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675,
+      "kind": "effective-space proxy, not browser zoom"
+    },
+    "bodyOverflow": "visible",
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 804,
+    "height": 675,
+    "media": null,
+    "panel": null,
+    "save": null,
+    "url": "#/dashboard",
+    "width": 819
+  },
+  {
+    "state": "dashboard",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "bodyOverflow": "visible",
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 375,
+    "height": 844,
+    "media": null,
+    "panel": null,
+    "save": null,
+    "url": "#/dashboard",
+    "width": 390
+  },
+  {
+    "state": "seed-overview",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "bodyOverflow": "visible",
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1425,
+    "height": 844,
+    "media": null,
+    "panel": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170",
+    "width": 1440
+  },
+  {
+    "state": "seed-overview",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675,
+      "kind": "effective-space proxy, not browser zoom"
+    },
+    "bodyOverflow": "visible",
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1137,
+    "height": 675,
+    "media": null,
+    "panel": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170",
+    "width": 1152
+  },
+  {
+    "state": "seed-overview",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563,
+      "kind": "effective-space proxy, not browser zoom"
+    },
+    "bodyOverflow": "visible",
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 945,
+    "height": 563,
+    "media": null,
+    "panel": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170",
+    "width": 960
+  },
+  {
+    "state": "seed-overview",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "bodyOverflow": "visible",
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1009,
+    "height": 844,
+    "media": null,
+    "panel": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170",
+    "width": 1024
+  },
+  {
+    "state": "seed-overview",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675,
+      "kind": "effective-space proxy, not browser zoom"
+    },
+    "bodyOverflow": "visible",
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 804,
+    "height": 675,
+    "media": null,
+    "panel": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170",
+    "width": 819
+  },
+  {
+    "state": "seed-overview",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "bodyOverflow": "visible",
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 375,
+    "height": 844,
+    "media": null,
+    "panel": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170",
+    "width": 390
+  }
+]

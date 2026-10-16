@@ -1,3 +1,4 @@
+import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -265,7 +266,9 @@ export function IdentityTaxonomyPanel({
               }}
             >
               <label className="taxonomy-search">
-                Search WFO names
+                <FieldLabel as="span" required>
+                  Search WFO names
+                </FieldLabel>
                 <input
                   value={query}
                   minLength={2}

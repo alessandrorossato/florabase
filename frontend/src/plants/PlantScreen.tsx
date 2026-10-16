@@ -1,3 +1,7 @@
+import {
+  DirectoryTools,
+  DirectoryFilterSelect,
+} from "../components/DirectoryTools";
 import { UpcomingActivities } from "../schedule/UpcomingActivities";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
@@ -35,7 +39,11 @@ import {
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
-import { DirectorySearch, RecordPreview } from "../components/ReferenceUI";
+import {
+  BotanicalName,
+  DirectorySearch,
+  RecordPreview,
+} from "../components/ReferenceUI";
 import { setRecordRoute } from "../components/recordNavigation";
 import {
   Breadcrumbs,
@@ -802,6 +810,16 @@ export function PlantScreen({
     status: "loading",
   });
   const [references, setReferences] = useState<References | null>(null);
+  const scientificNames = useMemo(
+    () =>
+      new Map<string, string>(
+        references?.identities.map((identity) => [
+          identity.id,
+          identity.scientific_name,
+        ]) ?? [],
+      ),
+    [references],
+  );
   usePublishRecordIdentities(references?.identities);
   const [attempt, setAttempt] = useState(0);
   const [detailAttempt, setDetailAttempt] = useState(0);
@@ -1631,20 +1649,113 @@ export function PlantScreen({
         contextOnly={mobileDetail || editing}
         {...plantPage}
         actions={
-          !editing && (
-            <button
-              type="button"
-              ref={creationTriggerRef}
-              aria-expanded={creationExpanded}
-              aria-controls="new-plant-panel"
-              disabled={references.identities.length === 0}
-              onClick={() => {
-                if (creationExpanded) focusCreation();
-                else startCreate();
+          mobileDetail
+            ? !editing && (
+                <button
+                  type="button"
+                  ref={creationTriggerRef}
+                  aria-expanded={creationExpanded}
+                  aria-controls="new-plant-panel"
+                  disabled={references.identities.length === 0}
+                  onClick={() => {
+                    if (creationExpanded) focusCreation();
+                    else startCreate();
+                  }}
+                >
+                  + New plant or group
+                </button>
+              )
+            : undefined
+        }
+        tools={
+          !(mobileDetail || editing) && (
+            <DirectoryTools
+              onReset={() => {
+                view.replace({ ...view.state, lifecycle: "all", type: "all" });
               }}
-            >
-              + New plant or group
-            </button>
+              name="Plants"
+              search={
+                <DirectorySearch
+                  hideLabel
+                  id="plant-search"
+                  label="Search Plants"
+                  placeholder="Search records, identity or location"
+                  value={search}
+                  onChange={setSearch}
+                />
+              }
+              savedViews={
+                <SavedViews
+                  presentation="dialog"
+                  surface="plants"
+                  state={view.savedState}
+                />
+              }
+              filters={
+                <>
+                  <DirectoryFilterSelect
+                    label="Lifecycle"
+                    value={lifecycleFilter}
+                    onChange={setLifecycleFilter}
+                    options={[
+                      { value: "active", label: "Active" },
+                      { value: "history", label: "History" },
+                      { value: "all", label: "All" },
+                    ]}
+                  />
+                  <DirectoryFilterSelect
+                    label="Record type"
+                    value={typeFilter}
+                    onChange={setTypeFilter}
+                    options={[
+                      { value: "all", label: "All" },
+                      { value: "plant", label: "Plants" },
+                      { value: "group", label: "Groups" },
+                    ]}
+                  />
+                </>
+              }
+              activeFilters={[
+                ...(lifecycleFilter !== "all"
+                  ? [
+                      {
+                        label: "Lifecycle",
+                        value:
+                          lifecycleFilter === "active" ? "Active" : "History",
+                        onRemove: () => {
+                          setLifecycleFilter("all");
+                        },
+                      },
+                    ]
+                  : []),
+                ...(typeFilter !== "all"
+                  ? [
+                      {
+                        label: "Record type",
+                        value: typeFilter === "plant" ? "Plants" : "Groups",
+                        onRemove: () => {
+                          setTypeFilter("all");
+                        },
+                      },
+                    ]
+                  : []),
+              ]}
+              actions={
+                <button
+                  type="button"
+                  ref={creationTriggerRef}
+                  aria-expanded={creationExpanded}
+                  aria-controls="new-plant-panel"
+                  disabled={references.identities.length === 0}
+                  onClick={() => {
+                    if (creationExpanded) focusCreation();
+                    else startCreate();
+                  }}
+                >
+                  + New plant or group
+                </button>
+              }
+            />
           )
         }
       />
@@ -1668,69 +1779,6 @@ export function PlantScreen({
               Plants collection
             </h3>
           </div>
-          <SavedViews
-            surface="plants"
-            state={view.savedState}
-            utilityActions={
-              <BulkSelect
-                selection={bulk}
-                visible={bulkChoices}
-                onStart={() => {
-                  setSelectedKey(null);
-                  setMobileDetail(false);
-                  setDetail({ status: "idle" });
-                }}
-              />
-            }
-          />
-          <div className="seed-controls">
-            <DirectorySearch
-              hideLabel
-              id="plant-search"
-              label="Search Plants"
-              placeholder="Search records, identity or location"
-              value={search}
-              onChange={setSearch}
-            />
-            <fieldset className="lifecycle-filter">
-              <legend className="sr-only">Lifecycle</legend>
-              {(["active", "history", "all"] as const).map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  aria-pressed={lifecycleFilter === item}
-                  onClick={() => {
-                    setLifecycleFilter(item);
-                  }}
-                >
-                  {item === "active"
-                    ? "Active"
-                    : item === "history"
-                      ? "History"
-                      : "All"}
-                </button>
-              ))}
-            </fieldset>
-            <fieldset className="lifecycle-filter">
-              <legend>Record type</legend>
-              {(["all", "plant", "group"] as const).map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  aria-pressed={typeFilter === item}
-                  onClick={() => {
-                    setTypeFilter(item);
-                  }}
-                >
-                  {item === "all"
-                    ? "All"
-                    : item === "plant"
-                      ? "Plants"
-                      : "Groups"}
-                </button>
-              ))}
-            </fieldset>
-          </div>
           <BulkToolbar
             selection={bulk}
             visible={bulkChoices}
@@ -1742,7 +1790,20 @@ export function PlantScreen({
             }}
           />
           {collection.status === "ready" && (
-            <DirectoryResults count={visible.length} />
+            <DirectoryResults
+              count={visible.length}
+              actions={
+                <BulkSelect
+                  selection={bulk}
+                  visible={bulkChoices}
+                  onStart={() => {
+                    setSelectedKey(null);
+                    setMobileDetail(false);
+                    setDetail({ status: "idle" });
+                  }}
+                />
+              }
+            />
           )}
           {records.length === 0 ? (
             <div className="profile-empty">
@@ -1809,7 +1870,12 @@ export function PlantScreen({
                             )}
                           </strong>
                           <small>
-                            {value.botanical_identity.display_label}
+                            <BotanicalName
+                              label={value.botanical_identity.display_label}
+                              scientificName={scientificNames.get(
+                                value.botanical_identity_id,
+                              )}
+                            />
                           </small>
                         </span>
                       </span>
@@ -1971,6 +2037,7 @@ export function PlantScreen({
                     : "Multiple individuals of one botanical identity managed together. Keep an uncertain count approximate or unknown."}
                 </p>
                 <FormSections
+                  mode={selected ? "edit" : "create"}
                   disabled={pending}
                   error={save.status === "error" ? save : undefined}
                   errorFields={[
@@ -2021,6 +2088,7 @@ export function PlantScreen({
                             choices={references.identities.map((identity) => ({
                               id: identity.id,
                               label: identity.display_label,
+                              scientificName: identity.scientific_name,
                             }))}
                           />
                           <PlantEssentialsFields
@@ -2167,9 +2235,6 @@ export function PlantScreen({
                                   <div className="field">
                                     <label htmlFor="plant-supplier">
                                       Supplier{" "}
-                                      <span className="optional">
-                                        (optional)
-                                      </span>
                                     </label>
                                     <select
                                       aria-describedby="plant-supplier-help"
@@ -2209,9 +2274,6 @@ export function PlantScreen({
                                   <div className="field">
                                     <label htmlFor="plant-provenance">
                                       Material provenance{" "}
-                                      <span className="optional">
-                                        (optional)
-                                      </span>
                                     </label>
                                     <select
                                       aria-describedby="plant-provenance-help"
@@ -2249,9 +2311,6 @@ export function PlantScreen({
                                   <div className="field">
                                     <label htmlFor="plant-provenance-site">
                                       Precise provenance site{" "}
-                                      <span className="optional">
-                                        (optional)
-                                      </span>
                                     </label>
                                     <select
                                       id="plant-provenance-site"
@@ -2893,9 +2952,7 @@ export function PlantScreen({
                 onChange={setTransferDate}
               />
               <div className="field">
-                <label htmlFor="transfer-recipient">
-                  Recipient <span className="optional">(optional)</span>
-                </label>
+                <label htmlFor="transfer-recipient">Recipient</label>
                 <input
                   id="transfer-recipient"
                   autoFocus
@@ -2908,9 +2965,7 @@ export function PlantScreen({
                 />
               </div>
               <div className="field">
-                <label htmlFor="transfer-notes">
-                  Notes <span className="optional">(optional)</span>
-                </label>
+                <label htmlFor="transfer-notes">Notes</label>
                 <textarea
                   id="transfer-notes"
                   value={transferNotes}

@@ -75,8 +75,8 @@ export function LineagePanel({ kind, id }: { kind: Kind; id: string }) {
     );
   if (state.value.ancestors.length === 0)
     return (
-      <div className="empty-state">
-        <p>No explicit upstream lineage is recorded.</p>
+      <div className="detail-empty-message">
+        <p>No recorded upstream material lineage.</p>
       </div>
     );
   return (

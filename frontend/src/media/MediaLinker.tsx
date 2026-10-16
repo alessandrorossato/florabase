@@ -1,3 +1,4 @@
+import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useState, type SyntheticEvent } from "react";
 import { useAuth } from "../auth/context";
 import { ApiError } from "../auth/api";
@@ -183,9 +184,9 @@ export function MediaLinker({
           />
         </div>
         <div className="field">
-          <label htmlFor="media-record-order">
+          <FieldLabel required htmlFor="media-record-order">
             Display order for this record
-          </label>
+          </FieldLabel>
           <input
             id="media-record-order"
             name="display_order"

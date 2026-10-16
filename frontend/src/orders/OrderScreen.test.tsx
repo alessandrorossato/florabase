@@ -151,6 +151,7 @@ test("directory preserves exact price, partial date and authoritative count with
   fireEvent.change(screen.getByLabelText("Search Orders"), {
     target: { value: "ABC" },
   });
+  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
   fireEvent.change(screen.getByLabelText("Supplier", { selector: "select" }), {
     target: { value: supplierId },
   });
@@ -195,14 +196,21 @@ test("create keeps unknown date and price absent, sends exact text when supplied
   await screen.findByRole("link", { name: "REF-1" });
   await user.click(screen.getByRole("button", { name: "+ New Order" }));
   const dialog = screen.getByRole("dialog", { name: "New Order" });
+  expect(within(dialog).getByLabelText("Total price")).not.toBeRequired();
+  expect(within(dialog).getByLabelText("Currency")).not.toBeRequired();
+  expect(
+    within(dialog).getByRole("combobox", { name: "Supplier" }),
+  ).not.toBeRequired();
+  await user.type(within(dialog).getByLabelText("Order reference"), "NEW");
   await user.type(
-    within(dialog).getByLabelText("Order reference (optional)"),
-    "NEW",
-  );
-  await user.type(
-    within(dialog).getByLabelText("Total price (optional)"),
+    within(dialog).getByLabelText("Total price"),
     "0.010000000000000001",
   );
+  expect(within(dialog).getByLabelText("Currency")).toBeRequired();
+  await user.type(within(dialog).getByLabelText("Currency"), "USD");
+  expect(within(dialog).getByLabelText("Total price")).toBeRequired();
+  await user.clear(within(dialog).getByLabelText("Currency"));
+  expect(within(dialog).getByLabelText("Total price")).not.toBeRequired();
   await user.type(within(dialog).getByLabelText("Currency"), "USD");
   await user.click(
     within(dialog).getByRole("button", { name: "Create Order" }),
@@ -248,9 +256,7 @@ test("edit preserves values, reports domain conflicts inside the modal", async (
   const user = userEvent.setup();
   mount(id);
   await user.click(await screen.findByRole("button", { name: "Edit Order" }));
-  expect(screen.getByLabelText("Total price (optional)")).toHaveValue(
-    "42.5000",
-  );
+  expect(screen.getByLabelText("Total price")).toHaveValue("42.5000");
   vi.mocked(saveOrder).mockRejectedValueOnce(
     new ApiError(409, null, {
       detail: { message: "Supplier conflicts with a linked SeedLot" },
@@ -387,4 +393,35 @@ test("Order detail links an existing physical lot through shared preview and ref
     expect(vi.mocked(getOrder).mock.calls.length).toBeGreaterThan(calls);
   });
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+
+test("the explicit create route supports a real Order with all descriptive facts unknown", async () => {
+  const user = userEvent.setup();
+  render(
+    <AuthContext.Provider value={auth}>
+      <OrderScreen startCreating />
+    </AuthContext.Provider>,
+  );
+  const dialog = await screen.findByRole("dialog", { name: "New Order" });
+  expect(
+    within(dialog).getByRole("group", { name: "Order date" }),
+  ).toHaveTextContent("Unknown");
+  expect(saveOrder).not.toHaveBeenCalled();
+  await user.click(
+    within(dialog).getByRole("button", { name: "Create Order" }),
+  );
+  await waitFor(() => {
+    expect(saveOrder).toHaveBeenCalledWith(
+      undefined,
+      {
+        supplier_id: null,
+        ordered_on: null,
+        order_reference: null,
+        total_price: null,
+        currency: null,
+        notes: null,
+      },
+      "csrf",
+    );
+  });
 });

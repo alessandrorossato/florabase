@@ -92,8 +92,9 @@ function Harness({
 }
 async function openMove() {
   const user = userEvent.setup();
-  await user.click(screen.getByRole("button", { name: "Select" }));
+  await user.click(screen.getByRole("button", { name: "Select records" }));
   await user.click(screen.getByRole("button", { name: "Select visible" }));
+  await user.click(screen.getByRole("button", { name: "Bulk actions" }));
   await user.click(screen.getByRole("button", { name: "Move to location" }));
   const dialog = screen.getByRole("dialog", { name: "Move to location" });
   await user.click(
@@ -131,13 +132,23 @@ test("selection is explicit, counts changes, excludes historical rows and clears
   const user = userEvent.setup();
   render(<Harness />);
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "Select" }));
+  await user.click(screen.getByRole("button", { name: "Select records" }));
   expect(screen.getByText("0 selected")).toBeVisible();
+  await waitFor(() => {
+    expect(
+      screen.getByRole("button", { name: "Select visible" }),
+    ).toHaveFocus();
+  });
+  expect(screen.getByRole("button", { name: "Bulk actions" })).toBeDisabled();
+  expect(
+    screen.queryByRole("button", { name: "Move to location" }),
+  ).not.toBeInTheDocument();
   const checkbox = screen.getByRole("checkbox", {
     name: "Select Plant · Basil",
   });
   await user.click(checkbox);
   expect(screen.getByText("1 selected")).toBeVisible();
+  expect(screen.getByRole("button", { name: "Bulk actions" })).toBeEnabled();
   await user.click(checkbox);
   expect(screen.getByText("0 selected")).toBeVisible();
   expect(
@@ -145,11 +156,13 @@ test("selection is explicit, counts changes, excludes historical rows and clears
   ).toBeDisabled();
   await user.click(screen.getByRole("button", { name: "Select visible" }));
   expect(screen.getByText("2 selected")).toBeVisible();
-  await user.click(screen.getByRole("button", { name: "Clear selection" }));
+  await user.click(screen.getByRole("button", { name: "Clear" }));
   expect(screen.getByText("0 selected")).toBeVisible();
-  await user.click(screen.getByRole("button", { name: "Done" }));
+  await user.click(screen.getByRole("button", { name: "Exit selection" }));
   await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Select" })).toHaveFocus();
+    expect(
+      screen.getByRole("button", { name: "Select records" }),
+    ).toHaveFocus();
   });
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
 });
@@ -162,7 +175,7 @@ test("100-record bound never truncates Select visible and allows explicit indivi
     label: `Plant ${String(index)}`,
   }));
   render(<Harness rows={rows} />);
-  await user.click(screen.getByRole("button", { name: "Select" }));
+  await user.click(screen.getByRole("button", { name: "Select records" }));
   expect(screen.getByRole("button", { name: "Select visible" })).toBeDisabled();
   for (const checkbox of screen.getAllByRole("checkbox").slice(0, 100))
     await user.click(checkbox);
@@ -179,14 +192,14 @@ test("100-record bound never truncates Select visible and allows explicit indivi
 test("filters, visible membership and reopening an identical Saved View reset selection", async () => {
   const user = userEvent.setup();
   const view = render(<Harness />);
-  await user.click(screen.getByRole("button", { name: "Select" }));
+  await user.click(screen.getByRole("button", { name: "Select records" }));
   await user.click(screen.getByRole("button", { name: "Select visible" }));
   view.rerender(<Harness scope="plants?q=Basil" />);
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "Select" }));
+  await user.click(screen.getByRole("button", { name: "Select records" }));
   view.rerender(<Harness scope="plants?q=Basil" rows={choices.slice(0, 1)} />);
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "Select" }));
+  await user.click(screen.getByRole("button", { name: "Select records" }));
   act(() => {
     openDirectoryRoute("#/plants?q=Basil");
   });
@@ -307,9 +320,7 @@ test("keyboard focus stays in dialog and Escape returns to Move trigger", async 
   expect(cancel).toHaveFocus();
   await user.keyboard("{Escape}");
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  expect(
-    screen.getByRole("button", { name: "Move to location" }),
-  ).toHaveFocus();
+  expect(screen.getByRole("button", { name: "Bulk actions" })).toHaveFocus();
   expect(screen.getByText("2 selected")).toBeVisible();
 });
 
@@ -317,8 +328,9 @@ test("Location failure can retry without applying and only shared eligible scope
   vi.mocked(listLocations).mockRejectedValueOnce(new Error("offline"));
   render(<Harness />);
   const user = userEvent.setup();
-  await user.click(screen.getByRole("button", { name: "Select" }));
+  await user.click(screen.getByRole("button", { name: "Select records" }));
   await user.click(screen.getByRole("button", { name: "Select visible" }));
+  await user.click(screen.getByRole("button", { name: "Bulk actions" }));
   await user.click(screen.getByRole("button", { name: "Move to location" }));
   await user.click(
     await screen.findByRole("button", { name: "Retry Locations" }),
@@ -423,9 +435,7 @@ test("only a direct backdrop click dismisses safely and restores the Move trigge
   expect(dialog).toBeInTheDocument();
   fireEvent.click(dialog, { clientX: 10, clientY: 10 });
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  expect(
-    screen.getByRole("button", { name: "Move to location" }),
-  ).toHaveFocus();
+  expect(screen.getByRole("button", { name: "Bulk actions" })).toHaveFocus();
   expect(screen.getByText("2 selected")).toBeVisible();
   expect(applyLocation).not.toHaveBeenCalled();
 });

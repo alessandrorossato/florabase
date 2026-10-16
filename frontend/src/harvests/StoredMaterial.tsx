@@ -498,11 +498,7 @@ export function StoredMaterialDirectory() {
       <p>
         Current stored remainder from explicitly tracked Harvest material lines.
       </p>
-      <SavedViews
-        surface="stored_material"
-        state={view.savedState}
-        utilityActions={<BulkSelect selection={bulk} visible={bulkChoices} />}
-      />
+      <SavedViews surface="stored_material" state={view.savedState} />
       <div className="harvest-filters">
         <DirectorySearch
           hideLabel
@@ -595,7 +591,10 @@ export function StoredMaterialDirectory() {
       {!rows && !error && <p role="status">Loading stored material…</p>}
       {filtered && (
         <>
-          <DirectoryResults count={filtered.length} />
+          <DirectoryResults
+            count={filtered.length}
+            actions={<BulkSelect selection={bulk} visible={bulkChoices} />}
+          />
           {!filtered.length ? (
             <p className="empty-state">
               {rows?.length

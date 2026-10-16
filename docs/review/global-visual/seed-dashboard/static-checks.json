@@ -1,0 +1,37 @@
+{
+  "source": "/home/alessandro/.codex/worktrees/996d/florabase",
+  "branch": "feat/global-visual-001",
+  "baseHead": "cd63c185f7bcb0544cd9c3cff984b29564e6bc84",
+  "dirty": true,
+  "strictTypeScript": "passed",
+  "eslint": {
+    "status": "passed",
+    "maxWarnings": 0,
+    "files": [
+      "src/seed-lots/SeedLotScreen.tsx",
+      "src/seed-lots/SeedLotScreen.test.tsx",
+      "src/seed-lots/ReferencePicker.tsx",
+      "src/seed-lots/ReferencePicker.test.tsx",
+      "src/photos/PhotosSection.tsx",
+      "src/photos/PhotosSection.test.tsx"
+    ]
+  },
+  "prettier": {
+    "status": "passed",
+    "files": 8
+  },
+  "productionBuild": "passed",
+  "bundles": {
+    "SeedLotScreen": {
+      "kB": 45.38,
+      "gzipKB": 12.42
+    },
+    "main": {
+      "kB": 228.15,
+      "gzipKB": 70.91
+    }
+  },
+  "diffWhitespace": "passed",
+  "stagedDiff": "empty",
+  "canonicalFeatureVerify": "not run - explicit boundary"
+}

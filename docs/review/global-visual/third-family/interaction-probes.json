@@ -1,0 +1,30 @@
+{
+  "modalProof": {
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "focus": "Seeds",
+    "focusInside": true,
+    "nativeModal": true
+  },
+  "shiftTab": "Save changes",
+  "afterBack": {
+    "focus": "Edit seed lot",
+    "modal": false,
+    "photos": "true",
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=photos"
+  },
+  "dirtyBackdrop": "Discard unsaved seed lot changes? prompt observed; dialog was resolved before a refusal outcome could be captured. Unit tests cover refused and accepted paths.",
+  "writes": "Temporary Order unlink discarded; photo metadata editor cancelled. One normal unchanged Basil save succeeded after normal reload; version/time metadata may update. No new Order, media, link, primary or unlink operation persisted.",
+  "savedContext": {
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=photos",
+    "modal": false,
+    "fallback": false,
+    "focus": "Edit seed lot",
+    "photos": "true",
+    "message": "Seed lot changes were saved."
+  },
+  "directEditFallback": {
+    "modal": false,
+    "fallback": true
+  }
+}

@@ -255,69 +255,6 @@ export function DashboardOverview() {
           )}
         </section>
       </div>
-      <div className="dashboard-support">
-        <section aria-labelledby="propagation-title">
-          <SectionHeader id="propagation-title" title="Propagation">
-            <a href="#/sowings">View sowings</a>
-          </SectionHeader>
-          <p className="dashboard-context">
-            Germination counts in active sowings
-          </p>
-          <dl className="dashboard-facts">
-            <div>
-              <dt>No count recorded</dt>
-              <dd>{data.sowings_unknown_germination}</dd>
-            </div>
-            <div>
-              <dt>Germination recorded</dt>
-              <dd>{data.sowings_with_germination}</dd>
-            </div>
-            <div>
-              <dt>Zero recorded</dt>
-              <dd>{data.sowings_zero_germination}</dd>
-            </div>
-          </dl>
-          <p className="dashboard-context">
-            Unknown and zero counts do not establish a failed or final outcome.
-          </p>
-        </section>
-        <section aria-labelledby="sourcing-title">
-          <SectionHeader id="sourcing-title" title="Sourcing">
-            <a href="#/orders">View Orders</a>
-          </SectionHeader>
-          <dl className="dashboard-facts">
-            <div>
-              <dt>Purchase packets without Order link</dt>
-              <dd>{data.purchase_packets_without_order}</dd>
-            </div>
-          </dl>
-          <p className="dashboard-context">
-            Active purchased seed lots. Review links if useful; a missing link
-            is not an outstanding order.
-          </p>
-        </section>
-        <section aria-labelledby="coverage-title">
-          <SectionHeader id="coverage-title" title="Botanical coverage">
-            <a href="#/identities">View identities</a>
-          </SectionHeader>
-          <p className="dashboard-context">
-            Among {data.current_identities} current identities
-          </p>
-          <dl className="dashboard-facts">
-            <div>
-              <dt>With confirmed WFO link</dt>
-              <dd>{data.identities_with_wfo}</dd>
-            </div>
-            <div>
-              <dt>With profile content</dt>
-              <dd>{data.identities_with_profile}</dd>
-            </div>
-          </dl>
-          <p className="dashboard-context">
-            Stored links and content, not a completeness score.
-          </p>
-        </section>
-      </div>
     </div>
   );
 }
@@ -331,29 +268,31 @@ export function DashboardScreen() {
         titleId="dashboard-title"
         eyebrow="Overview"
         description="Current holdings, planned work and recent activity."
+        tools={
+          <div
+            className="dashboard-toolbar"
+            role="group"
+            aria-label="Dashboard controls"
+          >
+            {search.header}
+            <SavedViews
+              surface="global_search"
+              state={search.savedState}
+              allSurfaces
+              presentation="dialog"
+            />
+            <OverflowMenu label="Quick add ▾" ariaLabel="Quick add">
+              <nav className="dashboard-quick-add" aria-label="Quick actions">
+                {actions.map(([label, href]) => (
+                  <a key={label} href={href}>
+                    {label}
+                  </a>
+                ))}
+              </nav>
+            </OverflowMenu>
+          </div>
+        }
       />
-      <div
-        className="dashboard-toolbar"
-        role="group"
-        aria-label="Dashboard controls"
-      >
-        {search.header}
-        <SavedViews
-          surface="global_search"
-          state={search.savedState}
-          allSurfaces
-          presentation="dialog"
-        />
-        <OverflowMenu label="Quick add ▾" ariaLabel="Quick add">
-          <nav className="dashboard-quick-add" aria-label="Quick actions">
-            {actions.map(([label, href]) => (
-              <a key={label} href={href}>
-                {label}
-              </a>
-            ))}
-          </nav>
-        </OverflowMenu>
-      </div>
       {search.content}
       {!search.active && <DashboardOverview />}
     </Page>

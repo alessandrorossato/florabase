@@ -1,3 +1,4 @@
+import { DirectoryFilterSelect } from "../components/DirectoryTools";
 import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -190,25 +191,16 @@ export function SpeciesDistributionScreen() {
         range.
       </p>
       <SavedViews surface="species_distribution" state={view.savedState} />
-      <div
-        role="group"
-        aria-label="Collection representation scope"
-        className="distribution-scopes"
-      >
-        {scopes.map((item) => (
-          <button
-            type="button"
-            key={item.value}
-            aria-pressed={scope === item.value}
-            className={scope === item.value ? "" : "button--secondary"}
-            onClick={() => {
-              setOffset(0);
-              view.update("scope", item.value);
-            }}
-          >
-            {item.label}
-          </button>
-        ))}
+      <div className="representation-filter">
+        <DirectoryFilterSelect
+          label="Collection representation"
+          value={scope}
+          options={scopes}
+          onChange={(scope) => {
+            setOffset(0);
+            view.update("scope", scope);
+          }}
+        />
       </div>
       <p className="field-help">
         Living includes active Plants and Plant groups. Current also includes

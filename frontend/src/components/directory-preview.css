@@ -1,0 +1,8 @@
+/* Seeds and Sowings share the established directory/inspection proportions. */
+@media (min-width: 48.01rem) {
+  .app-content
+    .operational-layout.directory-preview-layout:not(.is-detail-view) {
+    grid-template-columns: minmax(0, 1.3fr) minmax(16rem, 0.8fr);
+    gap: var(--space-8);
+  }
+}

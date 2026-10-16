@@ -1,0 +1,17 @@
+{
+  "backgroundHidden": "true",
+  "backgroundInert": true,
+  "bodyOverflow": "hidden",
+  "focusInEditor": true,
+  "nativeModal": true,
+  "workspaceOverflow": "hidden",
+  "shiftTab": "Save changes",
+  "tab": "Seeds",
+  "afterCancel": {
+    "focus": "Edit",
+    "hash": "#/seeds?q=Basil",
+    "modalOpen": false,
+    "preview": true,
+    "search": "Basil"
+  }
+}

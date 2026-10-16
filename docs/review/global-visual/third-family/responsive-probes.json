@@ -1,0 +1,6332 @@
+[
+  {
+    "state": "dashboard",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": null,
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1425,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "",
+    "width": 1440,
+    "workspace": {
+      "bottom": 852.734375,
+      "clientHeight": 853,
+      "height": 852.734375,
+      "left": 248,
+      "right": 1425,
+      "scrollHeight": 853,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 1177
+    }
+  },
+  {
+    "state": "dashboard",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": null,
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1137,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 675,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "",
+    "width": 1152,
+    "workspace": {
+      "bottom": 1001.703125,
+      "clientHeight": 1002,
+      "height": 1001.703125,
+      "left": 248,
+      "right": 1137,
+      "scrollHeight": 1002,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 889
+    }
+  },
+  {
+    "state": "dashboard",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": null,
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 945,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 563,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "",
+    "width": 960,
+    "workspace": {
+      "bottom": 1869.671875,
+      "clientHeight": 1870,
+      "height": 1869.671875,
+      "left": 248,
+      "right": 945,
+      "scrollHeight": 1870,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 697
+    }
+  },
+  {
+    "state": "dashboard",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": null,
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1009,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "",
+    "width": 1024,
+    "workspace": {
+      "bottom": 1851.6875,
+      "clientHeight": 1852,
+      "height": 1851.6875,
+      "left": 248,
+      "right": 1009,
+      "scrollHeight": 1852,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 761
+    }
+  },
+  {
+    "state": "dashboard",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": null,
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 804,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 675,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "",
+    "width": 819,
+    "workspace": {
+      "bottom": 2009.59375,
+      "clientHeight": 2010,
+      "height": 2009.59375,
+      "left": 248,
+      "right": 804,
+      "scrollHeight": 2010,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 556
+    }
+  },
+  {
+    "state": "dashboard",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": null,
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 375,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "",
+    "width": 390,
+    "workspace": {
+      "bottom": 2145.640625,
+      "clientHeight": 2070,
+      "height": 2070.453125,
+      "left": 0,
+      "right": 375,
+      "scrollHeight": 2070,
+      "scrollTop": 0,
+      "top": 75.1875,
+      "width": 375
+    }
+  },
+  {
+    "state": "seeds-preview",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": null,
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1425,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": null,
+    "preview": {
+      "bottom": 681.484375,
+      "clientHeight": 522,
+      "height": 523.5,
+      "left": 972.421875,
+      "right": 1400.984375,
+      "scrollHeight": 522,
+      "scrollTop": 0,
+      "top": 157.984375,
+      "width": 428.5625
+    },
+    "save": null,
+    "url": "#/seeds",
+    "width": 1440,
+    "workspace": {
+      "bottom": 868.65625,
+      "clientHeight": 869,
+      "height": 868.65625,
+      "left": 220,
+      "right": 1425,
+      "scrollHeight": 869,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 1205
+    }
+  },
+  {
+    "state": "seeds-preview",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": null,
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1137,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 675,
+    "panel": null,
+    "preview": {
+      "bottom": 813.359375,
+      "clientHeight": 561,
+      "height": 563.375,
+      "left": 794.140625,
+      "right": 1113,
+      "scrollHeight": 561,
+      "scrollTop": 0,
+      "top": 249.984375,
+      "width": 318.859375
+    },
+    "save": null,
+    "url": "#/seeds",
+    "width": 1152,
+    "workspace": {
+      "bottom": 1197.9375,
+      "clientHeight": 1198,
+      "height": 1197.9375,
+      "left": 220,
+      "right": 1137,
+      "scrollHeight": 1198,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 917
+    }
+  },
+  {
+    "state": "seeds-preview",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": null,
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 945,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 563,
+    "panel": null,
+    "preview": {
+      "bottom": 1459,
+      "clientHeight": 529,
+      "height": 531,
+      "left": 665,
+      "right": 921,
+      "scrollHeight": 623,
+      "scrollTop": 0,
+      "top": 928,
+      "width": 256
+    },
+    "save": null,
+    "url": "#/seeds",
+    "width": 960,
+    "workspace": {
+      "bottom": 1926.015625,
+      "clientHeight": 1926,
+      "height": 1926.015625,
+      "left": 220,
+      "right": 945,
+      "scrollHeight": 1926,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 725
+    }
+  },
+  {
+    "state": "seeds-preview",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": null,
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1009,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": null,
+    "preview": {
+      "bottom": 1491.375,
+      "clientHeight": 561,
+      "height": 563.375,
+      "left": 714.890625,
+      "right": 985,
+      "scrollHeight": 561,
+      "scrollTop": 0,
+      "top": 928,
+      "width": 270.109375
+    },
+    "save": null,
+    "url": "#/seeds",
+    "width": 1024,
+    "workspace": {
+      "bottom": 1900.984375,
+      "clientHeight": 1901,
+      "height": 1900.984375,
+      "left": 220,
+      "right": 1009,
+      "scrollHeight": 1901,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 789
+    }
+  },
+  {
+    "state": "seeds-preview",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": null,
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 804,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 675,
+    "panel": null,
+    "preview": {
+      "bottom": 1515.375,
+      "clientHeight": 585,
+      "height": 587.375,
+      "left": 524,
+      "right": 780,
+      "scrollHeight": 585,
+      "scrollTop": 0,
+      "top": 928,
+      "width": 256
+    },
+    "save": null,
+    "url": "#/seeds",
+    "width": 819,
+    "workspace": {
+      "bottom": 2435.71875,
+      "clientHeight": 2436,
+      "height": 2435.71875,
+      "left": 220,
+      "right": 804,
+      "scrollHeight": 2436,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 584
+    }
+  },
+  {
+    "state": "seeds-preview",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": null,
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 375,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": null,
+    "preview": {
+      "bottom": 0,
+      "clientHeight": 0,
+      "height": 0,
+      "left": 0,
+      "right": 0,
+      "scrollHeight": 0,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 0
+    },
+    "save": null,
+    "url": "#/seeds",
+    "width": 390,
+    "workspace": {
+      "bottom": 1500,
+      "clientHeight": 1425,
+      "height": 1424.8125,
+      "left": 0,
+      "right": 375,
+      "scrollHeight": 1425,
+      "scrollTop": 0,
+      "top": 75.1875,
+      "width": 375
+    }
+  },
+  {
+    "state": "edit-from-preview",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 793.359375,
+      "clientHeight": 741,
+      "height": 742.71875,
+      "left": 240,
+      "right": 1200,
+      "scrollHeight": 741,
+      "scrollTop": 0,
+      "top": 50.640625,
+      "width": 960
+    },
+    "documentOverflow": false,
+    "documentWidth": 1440,
+    "editorTabs": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 265,
+          "right": 358.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 93.8125
+        },
+        "selected": "true",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 364.40625,
+          "right": 456.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 461.828125,
+          "right": 563.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 101.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 568.65625,
+          "right": 637.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 643.203125,
+          "right": 750.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": {
+      "bottom": 707.359375,
+      "clientHeight": 414,
+      "height": 414.109375,
+      "left": 265,
+      "right": 1175,
+      "scrollHeight": 414,
+      "scrollTop": 0,
+      "top": 293.25,
+      "width": 910
+    },
+    "preview": {
+      "bottom": 656.484375,
+      "clientHeight": 522,
+      "height": 523.5,
+      "left": 981.703125,
+      "right": 1416,
+      "scrollHeight": 522,
+      "scrollTop": 0,
+      "top": 132.984375,
+      "width": 434.296875
+    },
+    "save": {
+      "bottom": 764.359375,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 1062.0625,
+      "right": 1175,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 720.359375,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 1440,
+    "workspace": {
+      "bottom": 843.65625,
+      "clientHeight": 869,
+      "height": 868.65625,
+      "left": 220,
+      "right": 1440,
+      "scrollHeight": 869,
+      "scrollTop": 0,
+      "top": -25,
+      "width": 1220
+    }
+  },
+  {
+    "state": "edit-from-preview",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 634.5,
+      "clientHeight": 592,
+      "height": 594,
+      "left": 96,
+      "right": 1056,
+      "scrollHeight": 592,
+      "scrollTop": 0,
+      "top": 40.5,
+      "width": 960
+    },
+    "documentOverflow": false,
+    "documentWidth": 1152,
+    "editorTabs": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 121,
+          "right": 214.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 93.8125
+        },
+        "selected": "true",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 220.40625,
+          "right": 312.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 317.828125,
+          "right": 419.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 101.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 424.65625,
+          "right": 493.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 499.203125,
+          "right": 606.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 675,
+    "panel": {
+      "bottom": 548.5,
+      "clientHeight": 265,
+      "height": 265.390625,
+      "left": 121,
+      "right": 1031,
+      "scrollHeight": 265,
+      "scrollTop": 0,
+      "top": 283.109375,
+      "width": 910
+    },
+    "preview": {
+      "bottom": 788.359375,
+      "clientHeight": 561,
+      "height": 563.375,
+      "left": 803.421875,
+      "right": 1128,
+      "scrollHeight": 561,
+      "scrollTop": 0,
+      "top": 224.984375,
+      "width": 324.578125
+    },
+    "save": {
+      "bottom": 605.5,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 918.0625,
+      "right": 1031,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 561.5,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 1152,
+    "workspace": {
+      "bottom": 1172.9375,
+      "clientHeight": 1198,
+      "height": 1197.9375,
+      "left": 220,
+      "right": 1152,
+      "scrollHeight": 1198,
+      "scrollTop": 0,
+      "top": -25,
+      "width": 932
+    }
+  },
+  {
+    "state": "edit-from-preview",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 529.21875,
+      "clientHeight": 493,
+      "height": 495.4375,
+      "left": 24,
+      "right": 936,
+      "scrollHeight": 493,
+      "scrollTop": 0,
+      "top": 33.78125,
+      "width": 912
+    },
+    "documentOverflow": false,
+    "documentWidth": 960,
+    "editorTabs": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 49,
+          "right": 142.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 93.8125
+        },
+        "selected": "true",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 148.40625,
+          "right": 240.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 245.828125,
+          "right": 347.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 101.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 352.65625,
+          "right": 421.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 427.203125,
+          "right": 534.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 563,
+    "panel": {
+      "bottom": 443.21875,
+      "clientHeight": 167,
+      "height": 166.828125,
+      "left": 49,
+      "right": 911,
+      "scrollHeight": 244,
+      "scrollTop": 0,
+      "top": 276.390625,
+      "width": 862
+    },
+    "preview": {
+      "bottom": 1434,
+      "clientHeight": 529,
+      "height": 531,
+      "left": 680,
+      "right": 936,
+      "scrollHeight": 623,
+      "scrollTop": 0,
+      "top": 903,
+      "width": 256
+    },
+    "save": {
+      "bottom": 500.21875,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 798.0625,
+      "right": 911,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 456.21875,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 960,
+    "workspace": {
+      "bottom": 1901.015625,
+      "clientHeight": 1926,
+      "height": 1926.015625,
+      "left": 220,
+      "right": 960,
+      "scrollHeight": 1926,
+      "scrollTop": 0,
+      "top": -25,
+      "width": 740
+    }
+  },
+  {
+    "state": "edit-from-preview",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 793.359375,
+      "clientHeight": 741,
+      "height": 742.71875,
+      "left": 32,
+      "right": 992,
+      "scrollHeight": 741,
+      "scrollTop": 0,
+      "top": 50.640625,
+      "width": 960
+    },
+    "documentOverflow": false,
+    "documentWidth": 1024,
+    "editorTabs": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 57,
+          "right": 150.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 93.8125
+        },
+        "selected": "true",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 156.40625,
+          "right": 248.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 253.828125,
+          "right": 355.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 101.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 360.65625,
+          "right": 429.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 435.203125,
+          "right": 542.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": {
+      "bottom": 707.359375,
+      "clientHeight": 414,
+      "height": 414.109375,
+      "left": 57,
+      "right": 967,
+      "scrollHeight": 414,
+      "scrollTop": 0,
+      "top": 293.25,
+      "width": 910
+    },
+    "preview": {
+      "bottom": 1466.375,
+      "clientHeight": 561,
+      "height": 563.375,
+      "left": 724.1875,
+      "right": 1000,
+      "scrollHeight": 561,
+      "scrollTop": 0,
+      "top": 903,
+      "width": 275.8125
+    },
+    "save": {
+      "bottom": 764.359375,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 854.0625,
+      "right": 967,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 720.359375,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 1024,
+    "workspace": {
+      "bottom": 1875.984375,
+      "clientHeight": 1901,
+      "height": 1900.984375,
+      "left": 220,
+      "right": 1024,
+      "scrollHeight": 1901,
+      "scrollTop": 0,
+      "top": -25,
+      "width": 804
+    }
+  },
+  {
+    "state": "edit-from-preview",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 634.5,
+      "clientHeight": 592,
+      "height": 594,
+      "left": 24,
+      "right": 795,
+      "scrollHeight": 592,
+      "scrollTop": 0,
+      "top": 40.5,
+      "width": 771
+    },
+    "documentOverflow": false,
+    "documentWidth": 819,
+    "editorTabs": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 49,
+          "right": 142.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 93.8125
+        },
+        "selected": "true",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 148.40625,
+          "right": 240.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 245.828125,
+          "right": 347.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 101.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 352.65625,
+          "right": 421.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 427.203125,
+          "right": 534.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 675,
+    "panel": {
+      "bottom": 548.5,
+      "clientHeight": 265,
+      "height": 265.390625,
+      "left": 49,
+      "right": 770,
+      "scrollHeight": 265,
+      "scrollTop": 0,
+      "top": 283.109375,
+      "width": 721
+    },
+    "preview": {
+      "bottom": 1490.375,
+      "clientHeight": 585,
+      "height": 587.375,
+      "left": 539,
+      "right": 795,
+      "scrollHeight": 585,
+      "scrollTop": 0,
+      "top": 903,
+      "width": 256
+    },
+    "save": {
+      "bottom": 605.5,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 657.0625,
+      "right": 770,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 561.5,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 819,
+    "workspace": {
+      "bottom": 2270.515625,
+      "clientHeight": 2296,
+      "height": 2295.515625,
+      "left": 220,
+      "right": 819,
+      "scrollHeight": 2296,
+      "scrollTop": 0,
+      "top": -25,
+      "width": 599
+    }
+  },
+  {
+    "state": "edit-from-preview",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 844,
+      "clientHeight": 842,
+      "height": 844,
+      "left": 0,
+      "right": 390,
+      "scrollHeight": 842,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 390
+    },
+    "documentOverflow": false,
+    "documentWidth": 390,
+    "editorTabs": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 13,
+          "right": 98.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 85.8125
+        },
+        "selected": "true",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 102.8125,
+          "right": 186.640625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 83.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 190.640625,
+          "right": 283.875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 93.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 287.875,
+          "right": 348.828125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 60.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 307.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 13,
+          "right": 112.265625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 263.609375,
+          "width": 99.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": {
+      "bottom": 762,
+      "clientHeight": 437,
+      "height": 437.390625,
+      "left": 13,
+      "right": 377,
+      "scrollHeight": 437,
+      "scrollTop": 0,
+      "top": 324.609375,
+      "width": 364
+    },
+    "preview": {
+      "bottom": 0,
+      "clientHeight": 0,
+      "height": 0,
+      "left": 0,
+      "right": 0,
+      "scrollHeight": 0,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 0
+    },
+    "save": {
+      "bottom": 819,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 264.0625,
+      "right": 377,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 775,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 390,
+    "workspace": {
+      "bottom": 1475,
+      "clientHeight": 1425,
+      "height": 1424.8125,
+      "left": 0,
+      "right": 390,
+      "scrollHeight": 1425,
+      "scrollTop": 0,
+      "top": 50.1875,
+      "width": 390
+    }
+  },
+  {
+    "state": "acquisition-linked",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 793.359375,
+      "clientHeight": 741,
+      "height": 742.71875,
+      "left": 240,
+      "right": 1200,
+      "scrollHeight": 741,
+      "scrollTop": 0,
+      "top": 50.640625,
+      "width": 960
+    },
+    "documentOverflow": false,
+    "documentWidth": 1440,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 265,
+          "right": 358.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 93.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 364.40625,
+          "right": 456.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 461.828125,
+          "right": 563.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 101.234375
+        },
+        "selected": "true",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 568.65625,
+          "right": 637.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 643.203125,
+          "right": 750.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": {
+      "bottom": 707.359375,
+      "clientHeight": 414,
+      "height": 414.109375,
+      "left": 265,
+      "right": 1175,
+      "scrollHeight": 414,
+      "scrollTop": 0,
+      "top": 293.25,
+      "width": 910
+    },
+    "preview": {
+      "bottom": 656.484375,
+      "clientHeight": 522,
+      "height": 523.5,
+      "left": 981.703125,
+      "right": 1416,
+      "scrollHeight": 522,
+      "scrollTop": 0,
+      "top": 132.984375,
+      "width": 434.296875
+    },
+    "save": {
+      "bottom": 764.359375,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 1062.0625,
+      "right": 1175,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 720.359375,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 1440,
+    "workspace": {
+      "bottom": 843.65625,
+      "clientHeight": 869,
+      "height": 868.65625,
+      "left": 220,
+      "right": 1440,
+      "scrollHeight": 869,
+      "scrollTop": 0,
+      "top": -25,
+      "width": 1220
+    }
+  },
+  {
+    "state": "acquisition-linked",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 634.5,
+      "clientHeight": 592,
+      "height": 594,
+      "left": 96,
+      "right": 1056,
+      "scrollHeight": 592,
+      "scrollTop": 0,
+      "top": 40.5,
+      "width": 960
+    },
+    "documentOverflow": false,
+    "documentWidth": 1152,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 121,
+          "right": 214.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 93.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 220.40625,
+          "right": 312.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 317.828125,
+          "right": 419.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 101.234375
+        },
+        "selected": "true",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 424.65625,
+          "right": 493.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 499.203125,
+          "right": 606.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 675,
+    "panel": {
+      "bottom": 548.5,
+      "clientHeight": 265,
+      "height": 265.390625,
+      "left": 121,
+      "right": 1031,
+      "scrollHeight": 382,
+      "scrollTop": 0,
+      "top": 283.109375,
+      "width": 910
+    },
+    "preview": {
+      "bottom": 788.359375,
+      "clientHeight": 561,
+      "height": 563.375,
+      "left": 803.421875,
+      "right": 1128,
+      "scrollHeight": 561,
+      "scrollTop": 0,
+      "top": 224.984375,
+      "width": 324.578125
+    },
+    "save": {
+      "bottom": 605.5,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 918.0625,
+      "right": 1031,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 561.5,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 1152,
+    "workspace": {
+      "bottom": 1172.9375,
+      "clientHeight": 1198,
+      "height": 1197.9375,
+      "left": 220,
+      "right": 1152,
+      "scrollHeight": 1198,
+      "scrollTop": 0,
+      "top": -25,
+      "width": 932
+    }
+  },
+  {
+    "state": "acquisition-linked",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 529.21875,
+      "clientHeight": 493,
+      "height": 495.4375,
+      "left": 24,
+      "right": 936,
+      "scrollHeight": 493,
+      "scrollTop": 0,
+      "top": 33.78125,
+      "width": 912
+    },
+    "documentOverflow": false,
+    "documentWidth": 960,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 49,
+          "right": 142.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 93.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 148.40625,
+          "right": 240.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 245.828125,
+          "right": 347.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 101.234375
+        },
+        "selected": "true",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 352.65625,
+          "right": 421.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 427.203125,
+          "right": 534.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 563,
+    "panel": {
+      "bottom": 443.21875,
+      "clientHeight": 167,
+      "height": 166.828125,
+      "left": 49,
+      "right": 911,
+      "scrollHeight": 382,
+      "scrollTop": 0,
+      "top": 276.390625,
+      "width": 862
+    },
+    "preview": {
+      "bottom": 1434,
+      "clientHeight": 529,
+      "height": 531,
+      "left": 680,
+      "right": 936,
+      "scrollHeight": 623,
+      "scrollTop": 0,
+      "top": 903,
+      "width": 256
+    },
+    "save": {
+      "bottom": 500.21875,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 798.0625,
+      "right": 911,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 456.21875,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 960,
+    "workspace": {
+      "bottom": 1901.015625,
+      "clientHeight": 1926,
+      "height": 1926.015625,
+      "left": 220,
+      "right": 960,
+      "scrollHeight": 1926,
+      "scrollTop": 0,
+      "top": -25,
+      "width": 740
+    }
+  },
+  {
+    "state": "acquisition-linked",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 793.359375,
+      "clientHeight": 741,
+      "height": 742.71875,
+      "left": 32,
+      "right": 992,
+      "scrollHeight": 741,
+      "scrollTop": 0,
+      "top": 50.640625,
+      "width": 960
+    },
+    "documentOverflow": false,
+    "documentWidth": 1024,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 57,
+          "right": 150.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 93.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 156.40625,
+          "right": 248.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 253.828125,
+          "right": 355.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 101.234375
+        },
+        "selected": "true",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 360.65625,
+          "right": 429.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 435.203125,
+          "right": 542.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": {
+      "bottom": 707.359375,
+      "clientHeight": 414,
+      "height": 414.109375,
+      "left": 57,
+      "right": 967,
+      "scrollHeight": 414,
+      "scrollTop": 0,
+      "top": 293.25,
+      "width": 910
+    },
+    "preview": {
+      "bottom": 1466.375,
+      "clientHeight": 561,
+      "height": 563.375,
+      "left": 724.1875,
+      "right": 1000,
+      "scrollHeight": 561,
+      "scrollTop": 0,
+      "top": 903,
+      "width": 275.8125
+    },
+    "save": {
+      "bottom": 764.359375,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 854.0625,
+      "right": 967,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 720.359375,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 1024,
+    "workspace": {
+      "bottom": 1875.984375,
+      "clientHeight": 1901,
+      "height": 1900.984375,
+      "left": 220,
+      "right": 1024,
+      "scrollHeight": 1901,
+      "scrollTop": 0,
+      "top": -25,
+      "width": 804
+    }
+  },
+  {
+    "state": "acquisition-linked",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 634.5,
+      "clientHeight": 592,
+      "height": 594,
+      "left": 24,
+      "right": 795,
+      "scrollHeight": 592,
+      "scrollTop": 0,
+      "top": 40.5,
+      "width": 771
+    },
+    "documentOverflow": false,
+    "documentWidth": 819,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 49,
+          "right": 142.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 93.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 148.40625,
+          "right": 240.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 245.828125,
+          "right": 347.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 101.234375
+        },
+        "selected": "true",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 352.65625,
+          "right": 421.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 427.203125,
+          "right": 534.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 675,
+    "panel": {
+      "bottom": 548.5,
+      "clientHeight": 265,
+      "height": 265.390625,
+      "left": 49,
+      "right": 770,
+      "scrollHeight": 382,
+      "scrollTop": 0,
+      "top": 283.109375,
+      "width": 721
+    },
+    "preview": {
+      "bottom": 1490.375,
+      "clientHeight": 585,
+      "height": 587.375,
+      "left": 539,
+      "right": 795,
+      "scrollHeight": 585,
+      "scrollTop": 0,
+      "top": 903,
+      "width": 256
+    },
+    "save": {
+      "bottom": 605.5,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 657.0625,
+      "right": 770,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 561.5,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 819,
+    "workspace": {
+      "bottom": 2270.515625,
+      "clientHeight": 2296,
+      "height": 2295.515625,
+      "left": 220,
+      "right": 819,
+      "scrollHeight": 2296,
+      "scrollTop": 0,
+      "top": -25,
+      "width": 599
+    }
+  },
+  {
+    "state": "acquisition-linked",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 844,
+      "clientHeight": 842,
+      "height": 844,
+      "left": 0,
+      "right": 390,
+      "scrollHeight": 842,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 390
+    },
+    "documentOverflow": false,
+    "documentWidth": 390,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 13,
+          "right": 98.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 85.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 102.8125,
+          "right": 186.640625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 83.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 190.640625,
+          "right": 283.875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 93.234375
+        },
+        "selected": "true",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 287.875,
+          "right": 348.828125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 60.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 307.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 13,
+          "right": 112.265625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 263.609375,
+          "width": 99.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": {
+      "bottom": 762,
+      "clientHeight": 437,
+      "height": 437.390625,
+      "left": 13,
+      "right": 377,
+      "scrollHeight": 700,
+      "scrollTop": 0,
+      "top": 324.609375,
+      "width": 364
+    },
+    "preview": {
+      "bottom": 0,
+      "clientHeight": 0,
+      "height": 0,
+      "left": 0,
+      "right": 0,
+      "scrollHeight": 0,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 0
+    },
+    "save": {
+      "bottom": 819,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 264.0625,
+      "right": 377,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 775,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 390,
+    "workspace": {
+      "bottom": 1475,
+      "clientHeight": 1425,
+      "height": 1424.8125,
+      "left": 0,
+      "right": 390,
+      "scrollHeight": 1425,
+      "scrollTop": 0,
+      "top": 50.1875,
+      "width": 390
+    }
+  },
+  {
+    "state": "acquisition-no-order",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 793.359375,
+      "clientHeight": 741,
+      "height": 742.71875,
+      "left": 240,
+      "right": 1200,
+      "scrollHeight": 741,
+      "scrollTop": 0,
+      "top": 50.640625,
+      "width": 960
+    },
+    "documentOverflow": false,
+    "documentWidth": 1440,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 265,
+          "right": 358.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 93.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 364.40625,
+          "right": 456.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 461.828125,
+          "right": 563.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 101.234375
+        },
+        "selected": "true",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 568.65625,
+          "right": 637.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 643.203125,
+          "right": 750.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": {
+      "bottom": 707.359375,
+      "clientHeight": 414,
+      "height": 414.109375,
+      "left": 265,
+      "right": 1175,
+      "scrollHeight": 414,
+      "scrollTop": 0,
+      "top": 293.25,
+      "width": 910
+    },
+    "preview": {
+      "bottom": 656.484375,
+      "clientHeight": 522,
+      "height": 523.5,
+      "left": 992.375,
+      "right": 1415.984375,
+      "scrollHeight": 522,
+      "scrollTop": 0,
+      "top": 132.984375,
+      "width": 423.609375
+    },
+    "save": {
+      "bottom": 764.359375,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 1062.0625,
+      "right": 1175,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 720.359375,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-b085-746c-986b-ae3f78f3be50?tab=edit",
+    "width": 1440,
+    "workspace": {
+      "bottom": 843.65625,
+      "clientHeight": 869,
+      "height": 868.65625,
+      "left": 248,
+      "right": 1440,
+      "scrollHeight": 869,
+      "scrollTop": 0,
+      "top": -25,
+      "width": 1192
+    }
+  },
+  {
+    "state": "acquisition-no-order",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 634.5,
+      "clientHeight": 592,
+      "height": 594,
+      "left": 96,
+      "right": 1056,
+      "scrollHeight": 592,
+      "scrollTop": 0,
+      "top": 40.5,
+      "width": 960
+    },
+    "documentOverflow": false,
+    "documentWidth": 1152,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 121,
+          "right": 214.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 93.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 220.40625,
+          "right": 312.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 317.828125,
+          "right": 419.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 101.234375
+        },
+        "selected": "true",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 424.65625,
+          "right": 493.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 499.203125,
+          "right": 606.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 675,
+    "panel": {
+      "bottom": 548.5,
+      "clientHeight": 265,
+      "height": 265.390625,
+      "left": 121,
+      "right": 1031,
+      "scrollHeight": 387,
+      "scrollTop": 0,
+      "top": 283.109375,
+      "width": 910
+    },
+    "preview": {
+      "bottom": 772.484375,
+      "clientHeight": 546,
+      "height": 547.5,
+      "left": 814.09375,
+      "right": 1128,
+      "scrollHeight": 546,
+      "scrollTop": 0,
+      "top": 224.984375,
+      "width": 313.90625
+    },
+    "save": {
+      "bottom": 605.5,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 918.0625,
+      "right": 1031,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 561.5,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-b085-746c-986b-ae3f78f3be50?tab=edit",
+    "width": 1152,
+    "workspace": {
+      "bottom": 1172.9375,
+      "clientHeight": 1198,
+      "height": 1197.9375,
+      "left": 248,
+      "right": 1152,
+      "scrollHeight": 1198,
+      "scrollTop": 0,
+      "top": -25,
+      "width": 904
+    }
+  },
+  {
+    "state": "acquisition-no-order",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 529.21875,
+      "clientHeight": 493,
+      "height": 495.4375,
+      "left": 24,
+      "right": 936,
+      "scrollHeight": 493,
+      "scrollTop": 0,
+      "top": 33.78125,
+      "width": 912
+    },
+    "documentOverflow": false,
+    "documentWidth": 960,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 49,
+          "right": 142.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 93.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 148.40625,
+          "right": 240.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 245.828125,
+          "right": 347.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 101.234375
+        },
+        "selected": "true",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 352.65625,
+          "right": 421.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 427.203125,
+          "right": 534.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 563,
+    "panel": {
+      "bottom": 443.21875,
+      "clientHeight": 167,
+      "height": 166.828125,
+      "left": 49,
+      "right": 911,
+      "scrollHeight": 387,
+      "scrollTop": 0,
+      "top": 276.390625,
+      "width": 862
+    },
+    "preview": {
+      "bottom": 1434,
+      "clientHeight": 529,
+      "height": 531,
+      "left": 680,
+      "right": 936,
+      "scrollHeight": 592,
+      "scrollTop": 0,
+      "top": 903,
+      "width": 256
+    },
+    "save": {
+      "bottom": 500.21875,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 798.0625,
+      "right": 911,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 456.21875,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-b085-746c-986b-ae3f78f3be50?tab=edit",
+    "width": 960,
+    "workspace": {
+      "bottom": 1923.3125,
+      "clientHeight": 1948,
+      "height": 1948.3125,
+      "left": 248,
+      "right": 960,
+      "scrollHeight": 1948,
+      "scrollTop": 0,
+      "top": -25,
+      "width": 712
+    }
+  },
+  {
+    "state": "acquisition-no-order",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 793.359375,
+      "clientHeight": 741,
+      "height": 742.71875,
+      "left": 32,
+      "right": 992,
+      "scrollHeight": 741,
+      "scrollTop": 0,
+      "top": 50.640625,
+      "width": 960
+    },
+    "documentOverflow": false,
+    "documentWidth": 1024,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 57,
+          "right": 150.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 93.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 156.40625,
+          "right": 248.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 253.828125,
+          "right": 355.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 101.234375
+        },
+        "selected": "true",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 360.65625,
+          "right": 429.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 435.203125,
+          "right": 542.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": {
+      "bottom": 707.359375,
+      "clientHeight": 414,
+      "height": 414.109375,
+      "left": 57,
+      "right": 967,
+      "scrollHeight": 414,
+      "scrollTop": 0,
+      "top": 293.25,
+      "width": 910
+    },
+    "preview": {
+      "bottom": 1450.5,
+      "clientHeight": 546,
+      "height": 547.5,
+      "left": 734.84375,
+      "right": 1000,
+      "scrollHeight": 546,
+      "scrollTop": 0,
+      "top": 903,
+      "width": 265.15625
+    },
+    "save": {
+      "bottom": 764.359375,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 854.0625,
+      "right": 967,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 720.359375,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-b085-746c-986b-ae3f78f3be50?tab=edit",
+    "width": 1024,
+    "workspace": {
+      "bottom": 1875.984375,
+      "clientHeight": 1901,
+      "height": 1900.984375,
+      "left": 248,
+      "right": 1024,
+      "scrollHeight": 1901,
+      "scrollTop": 0,
+      "top": -25,
+      "width": 776
+    }
+  },
+  {
+    "state": "acquisition-no-order",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 634.5,
+      "clientHeight": 592,
+      "height": 594,
+      "left": 24,
+      "right": 795,
+      "scrollHeight": 592,
+      "scrollTop": 0,
+      "top": 40.5,
+      "width": 771
+    },
+    "documentOverflow": false,
+    "documentWidth": 819,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 49,
+          "right": 142.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 93.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 148.40625,
+          "right": 240.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 245.828125,
+          "right": 347.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 101.234375
+        },
+        "selected": "true",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 352.65625,
+          "right": 421.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 427.203125,
+          "right": 534.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 675,
+    "panel": {
+      "bottom": 548.5,
+      "clientHeight": 265,
+      "height": 265.390625,
+      "left": 49,
+      "right": 770,
+      "scrollHeight": 387,
+      "scrollTop": 0,
+      "top": 283.109375,
+      "width": 721
+    },
+    "preview": {
+      "bottom": 1450.5,
+      "clientHeight": 546,
+      "height": 547.5,
+      "left": 539,
+      "right": 795,
+      "scrollHeight": 546,
+      "scrollTop": 0,
+      "top": 903,
+      "width": 256
+    },
+    "save": {
+      "bottom": 605.5,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 657.0625,
+      "right": 770,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 561.5,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-b085-746c-986b-ae3f78f3be50?tab=edit",
+    "width": 819,
+    "workspace": {
+      "bottom": 2518.234375,
+      "clientHeight": 2543,
+      "height": 2543.234375,
+      "left": 248,
+      "right": 819,
+      "scrollHeight": 2543,
+      "scrollTop": 0,
+      "top": -25,
+      "width": 571
+    }
+  },
+  {
+    "state": "acquisition-no-order",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": null,
+    "dialog": {
+      "bottom": 844,
+      "clientHeight": 842,
+      "height": 844,
+      "left": 0,
+      "right": 390,
+      "scrollHeight": 842,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 390
+    },
+    "documentOverflow": false,
+    "documentWidth": 390,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 13,
+          "right": 98.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 85.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 102.8125,
+          "right": 186.640625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 83.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 190.640625,
+          "right": 283.875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 93.234375
+        },
+        "selected": "true",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 287.875,
+          "right": 348.828125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 60.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 307.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 13,
+          "right": 112.265625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 263.609375,
+          "width": 99.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": {
+      "bottom": 762,
+      "clientHeight": 437,
+      "height": 437.390625,
+      "left": 13,
+      "right": 377,
+      "scrollHeight": 575,
+      "scrollTop": 0,
+      "top": 324.609375,
+      "width": 364
+    },
+    "preview": {
+      "bottom": 0,
+      "clientHeight": 0,
+      "height": 0,
+      "left": 0,
+      "right": 0,
+      "scrollHeight": 0,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 0
+    },
+    "save": {
+      "bottom": 819,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 264.0625,
+      "right": 377,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 775,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-b085-746c-986b-ae3f78f3be50?tab=edit",
+    "width": 390,
+    "workspace": {
+      "bottom": 1475,
+      "clientHeight": 1425,
+      "height": 1424.8125,
+      "left": 0,
+      "right": 390,
+      "scrollHeight": 1425,
+      "scrollTop": 0,
+      "top": 50.1875,
+      "width": 390
+    }
+  },
+  {
+    "state": "seed-overview",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 831.40625,
+      "clientHeight": 795,
+      "height": 795.40625,
+      "left": 244,
+      "right": 1401,
+      "scrollHeight": 795,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 1157
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1425,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170",
+    "width": 1440,
+    "workspace": {
+      "bottom": 855.40625,
+      "clientHeight": 855,
+      "height": 855.40625,
+      "left": 220,
+      "right": 1425,
+      "scrollHeight": 855,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 1205
+    }
+  },
+  {
+    "state": "seed-overview",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 913.40625,
+      "clientHeight": 877,
+      "height": 877.40625,
+      "left": 244,
+      "right": 1113,
+      "scrollHeight": 877,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 869
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1137,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 675,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170",
+    "width": 1152,
+    "workspace": {
+      "bottom": 937.40625,
+      "clientHeight": 937,
+      "height": 937.40625,
+      "left": 220,
+      "right": 1137,
+      "scrollHeight": 937,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 917
+    }
+  },
+  {
+    "state": "seed-overview",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 953.40625,
+      "clientHeight": 917,
+      "height": 917.40625,
+      "left": 244,
+      "right": 921,
+      "scrollHeight": 917,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 677
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 945,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 563,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170",
+    "width": 960,
+    "workspace": {
+      "bottom": 977.40625,
+      "clientHeight": 977,
+      "height": 977.40625,
+      "left": 220,
+      "right": 945,
+      "scrollHeight": 977,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 725
+    }
+  },
+  {
+    "state": "seed-overview",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 953.40625,
+      "clientHeight": 917,
+      "height": 917.40625,
+      "left": 244,
+      "right": 985,
+      "scrollHeight": 917,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 741
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1009,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170",
+    "width": 1024,
+    "workspace": {
+      "bottom": 977.40625,
+      "clientHeight": 977,
+      "height": 977.40625,
+      "left": 220,
+      "right": 1009,
+      "scrollHeight": 977,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 789
+    }
+  },
+  {
+    "state": "seed-overview",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 1054.59375,
+      "clientHeight": 1019,
+      "height": 1018.59375,
+      "left": 244,
+      "right": 780,
+      "scrollHeight": 1019,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 536
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 804,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 675,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170",
+    "width": 819,
+    "workspace": {
+      "bottom": 1078.59375,
+      "clientHeight": 1079,
+      "height": 1078.59375,
+      "left": 220,
+      "right": 804,
+      "scrollHeight": 1079,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 584
+    }
+  },
+  {
+    "state": "seed-overview",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 1398.984375,
+      "clientHeight": 1292,
+      "height": 1291.796875,
+      "left": 16,
+      "right": 359,
+      "scrollHeight": 1292,
+      "scrollTop": 0,
+      "top": 107.1875,
+      "width": 343
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 375,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170",
+    "width": 390,
+    "workspace": {
+      "bottom": 1494.984375,
+      "clientHeight": 1420,
+      "height": 1419.796875,
+      "left": 0,
+      "right": 375,
+      "scrollHeight": 1420,
+      "scrollTop": 0,
+      "top": 75.1875,
+      "width": 375
+    }
+  },
+  {
+    "state": "seed-gallery",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 627.328125,
+      "clientHeight": 591,
+      "height": 591.328125,
+      "left": 244,
+      "right": 1416,
+      "scrollHeight": 591,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 1172
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1440,
+    "editorTabs": [],
+    "firstTile": {
+      "bottom": 627.328125,
+      "clientHeight": 282,
+      "height": 283.609375,
+      "left": 244,
+      "right": 525,
+      "scrollHeight": 282,
+      "scrollTop": 0,
+      "top": 343.71875,
+      "width": 281
+    },
+    "gallery": {
+      "bottom": 627.328125,
+      "clientHeight": 284,
+      "height": 283.609375,
+      "left": 244,
+      "right": 1416,
+      "scrollHeight": 284,
+      "scrollTop": 0,
+      "top": 343.71875,
+      "width": 1172
+    },
+    "height": 844,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=photos",
+    "width": 1440,
+    "workspace": {
+      "bottom": 651.328125,
+      "clientHeight": 651,
+      "height": 651.328125,
+      "left": 220,
+      "right": 1440,
+      "scrollHeight": 651,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 1220
+    }
+  },
+  {
+    "state": "seed-gallery",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 629.578125,
+      "clientHeight": 594,
+      "height": 593.578125,
+      "left": 244,
+      "right": 1128,
+      "scrollHeight": 594,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 884
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1152,
+    "editorTabs": [],
+    "firstTile": {
+      "bottom": 629.578125,
+      "clientHeight": 284,
+      "height": 285.859375,
+      "left": 244,
+      "right": 528,
+      "scrollHeight": 284,
+      "scrollTop": 0,
+      "top": 343.71875,
+      "width": 284
+    },
+    "gallery": {
+      "bottom": 629.578125,
+      "clientHeight": 286,
+      "height": 285.859375,
+      "left": 244,
+      "right": 1128,
+      "scrollHeight": 286,
+      "scrollTop": 0,
+      "top": 343.71875,
+      "width": 884
+    },
+    "height": 675,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=photos",
+    "width": 1152,
+    "workspace": {
+      "bottom": 653.578125,
+      "clientHeight": 654,
+      "height": 653.578125,
+      "left": 220,
+      "right": 1152,
+      "scrollHeight": 654,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 932
+    }
+  },
+  {
+    "state": "seed-gallery",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 720.453125,
+      "clientHeight": 684,
+      "height": 684.453125,
+      "left": 244,
+      "right": 921,
+      "scrollHeight": 684,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 677
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 945,
+    "editorTabs": [],
+    "firstTile": {
+      "bottom": 720.453125,
+      "clientHeight": 319,
+      "height": 320.734375,
+      "left": 244,
+      "right": 574.5,
+      "scrollHeight": 319,
+      "scrollTop": 0,
+      "top": 399.71875,
+      "width": 330.5
+    },
+    "gallery": {
+      "bottom": 720.453125,
+      "clientHeight": 321,
+      "height": 320.734375,
+      "left": 244,
+      "right": 921,
+      "scrollHeight": 321,
+      "scrollTop": 0,
+      "top": 399.71875,
+      "width": 677
+    },
+    "height": 563,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=photos",
+    "width": 960,
+    "workspace": {
+      "bottom": 744.453125,
+      "clientHeight": 744,
+      "height": 744.453125,
+      "left": 220,
+      "right": 945,
+      "scrollHeight": 744,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 725
+    }
+  },
+  {
+    "state": "seed-gallery",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 653.5625,
+      "clientHeight": 618,
+      "height": 617.5625,
+      "left": 244,
+      "right": 1000,
+      "scrollHeight": 618,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 756
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1024,
+    "editorTabs": [],
+    "firstTile": {
+      "bottom": 653.5625,
+      "clientHeight": 252,
+      "height": 253.84375,
+      "left": 244,
+      "right": 485.328125,
+      "scrollHeight": 252,
+      "scrollTop": 0,
+      "top": 399.71875,
+      "width": 241.328125
+    },
+    "gallery": {
+      "bottom": 653.5625,
+      "clientHeight": 254,
+      "height": 253.84375,
+      "left": 244,
+      "right": 1000,
+      "scrollHeight": 254,
+      "scrollTop": 0,
+      "top": 399.71875,
+      "width": 756
+    },
+    "height": 844,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=photos",
+    "width": 1024,
+    "workspace": {
+      "bottom": 677.5625,
+      "clientHeight": 678,
+      "height": 677.5625,
+      "left": 220,
+      "right": 1024,
+      "scrollHeight": 678,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 804
+    }
+  },
+  {
+    "state": "seed-gallery",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 685.765625,
+      "clientHeight": 650,
+      "height": 649.765625,
+      "left": 244,
+      "right": 780,
+      "scrollHeight": 650,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 536
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 804,
+    "editorTabs": [],
+    "firstTile": {
+      "bottom": 685.765625,
+      "clientHeight": 266,
+      "height": 267.859375,
+      "left": 244,
+      "right": 504,
+      "scrollHeight": 266,
+      "scrollTop": 0,
+      "top": 417.90625,
+      "width": 260
+    },
+    "gallery": {
+      "bottom": 685.765625,
+      "clientHeight": 268,
+      "height": 267.859375,
+      "left": 244,
+      "right": 780,
+      "scrollHeight": 268,
+      "scrollTop": 0,
+      "top": 417.90625,
+      "width": 536
+    },
+    "height": 675,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=photos",
+    "width": 819,
+    "workspace": {
+      "bottom": 709.765625,
+      "clientHeight": 710,
+      "height": 709.765625,
+      "left": 220,
+      "right": 804,
+      "scrollHeight": 710,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 584
+    }
+  },
+  {
+    "state": "seed-gallery",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 979.203125,
+      "clientHeight": 872,
+      "height": 872.015625,
+      "left": 16,
+      "right": 359,
+      "scrollHeight": 872,
+      "scrollTop": 0,
+      "top": 107.1875,
+      "width": 343
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 375,
+    "editorTabs": [],
+    "firstTile": {
+      "bottom": 979.203125,
+      "clientHeight": 328,
+      "height": 330.109375,
+      "left": 16,
+      "right": 359,
+      "scrollHeight": 328,
+      "scrollTop": 0,
+      "top": 649.09375,
+      "width": 343
+    },
+    "gallery": {
+      "bottom": 979.203125,
+      "clientHeight": 330,
+      "height": 330.109375,
+      "left": 16,
+      "right": 359,
+      "scrollHeight": 330,
+      "scrollTop": 0,
+      "top": 649.09375,
+      "width": 343
+    },
+    "height": 844,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=photos",
+    "width": 390,
+    "workspace": {
+      "bottom": 1075.203125,
+      "clientHeight": 1000,
+      "height": 1000.015625,
+      "left": 0,
+      "right": 375,
+      "scrollHeight": 1000,
+      "scrollTop": 0,
+      "top": 75.1875,
+      "width": 375
+    }
+  },
+  {
+    "state": "edit-from-details-focus",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": {
+      "bottom": 627.328125,
+      "clientHeight": 591,
+      "height": 591.328125,
+      "left": 244,
+      "right": 1416,
+      "scrollHeight": 591,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 1172
+    },
+    "dialog": {
+      "bottom": 793.359375,
+      "clientHeight": 741,
+      "height": 742.71875,
+      "left": 240,
+      "right": 1200,
+      "scrollHeight": 741,
+      "scrollTop": 0,
+      "top": 50.640625,
+      "width": 960
+    },
+    "documentOverflow": false,
+    "documentWidth": 1440,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 265,
+          "right": 358.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 93.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 364.40625,
+          "right": 456.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 461.828125,
+          "right": 563.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 101.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 568.65625,
+          "right": 637.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 643.203125,
+          "right": 750.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 107.265625
+        },
+        "selected": "true",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": {
+      "bottom": 627.328125,
+      "clientHeight": 282,
+      "height": 283.609375,
+      "left": 244,
+      "right": 525,
+      "scrollHeight": 282,
+      "scrollTop": 0,
+      "top": 343.71875,
+      "width": 281
+    },
+    "gallery": {
+      "bottom": 627.328125,
+      "clientHeight": 284,
+      "height": 283.609375,
+      "left": 244,
+      "right": 1416,
+      "scrollHeight": 284,
+      "scrollTop": 0,
+      "top": 343.71875,
+      "width": 1172
+    },
+    "height": 844,
+    "panel": {
+      "bottom": 707.359375,
+      "clientHeight": 414,
+      "height": 414.109375,
+      "left": 265,
+      "right": 1175,
+      "scrollHeight": 414,
+      "scrollTop": 0,
+      "top": 293.25,
+      "width": 910
+    },
+    "preview": null,
+    "save": {
+      "bottom": 764.359375,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 1062.0625,
+      "right": 1175,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 720.359375,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 1440,
+    "workspace": {
+      "bottom": 651.328125,
+      "clientHeight": 651,
+      "height": 651.328125,
+      "left": 220,
+      "right": 1440,
+      "scrollHeight": 651,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 1220
+    }
+  },
+  {
+    "state": "edit-from-details-focus",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": {
+      "bottom": 629.578125,
+      "clientHeight": 594,
+      "height": 593.578125,
+      "left": 244,
+      "right": 1128,
+      "scrollHeight": 594,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 884
+    },
+    "dialog": {
+      "bottom": 634.5,
+      "clientHeight": 592,
+      "height": 594,
+      "left": 96,
+      "right": 1056,
+      "scrollHeight": 592,
+      "scrollTop": 0,
+      "top": 40.5,
+      "width": 960
+    },
+    "documentOverflow": false,
+    "documentWidth": 1152,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 121,
+          "right": 214.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 93.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 220.40625,
+          "right": 312.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 317.828125,
+          "right": 419.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 101.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 424.65625,
+          "right": 493.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 499.203125,
+          "right": 606.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 107.265625
+        },
+        "selected": "true",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": {
+      "bottom": 629.578125,
+      "clientHeight": 284,
+      "height": 285.859375,
+      "left": 244,
+      "right": 528,
+      "scrollHeight": 284,
+      "scrollTop": 0,
+      "top": 343.71875,
+      "width": 284
+    },
+    "gallery": {
+      "bottom": 629.578125,
+      "clientHeight": 286,
+      "height": 285.859375,
+      "left": 244,
+      "right": 1128,
+      "scrollHeight": 286,
+      "scrollTop": 0,
+      "top": 343.71875,
+      "width": 884
+    },
+    "height": 675,
+    "panel": {
+      "bottom": 548.5,
+      "clientHeight": 265,
+      "height": 265.390625,
+      "left": 121,
+      "right": 1031,
+      "scrollHeight": 279,
+      "scrollTop": 0,
+      "top": 283.109375,
+      "width": 910
+    },
+    "preview": null,
+    "save": {
+      "bottom": 605.5,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 918.0625,
+      "right": 1031,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 561.5,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 1152,
+    "workspace": {
+      "bottom": 653.578125,
+      "clientHeight": 654,
+      "height": 653.578125,
+      "left": 220,
+      "right": 1152,
+      "scrollHeight": 654,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 932
+    }
+  },
+  {
+    "state": "edit-from-details-focus",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": {
+      "bottom": 726.078125,
+      "clientHeight": 690,
+      "height": 690.078125,
+      "left": 244,
+      "right": 936,
+      "scrollHeight": 690,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 692
+    },
+    "dialog": {
+      "bottom": 529.21875,
+      "clientHeight": 493,
+      "height": 495.4375,
+      "left": 24,
+      "right": 936,
+      "scrollHeight": 493,
+      "scrollTop": 0,
+      "top": 33.78125,
+      "width": 912
+    },
+    "documentOverflow": false,
+    "documentWidth": 960,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 49,
+          "right": 142.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 93.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 148.40625,
+          "right": 240.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 245.828125,
+          "right": 347.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 101.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 352.65625,
+          "right": 421.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 427.203125,
+          "right": 534.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 107.265625
+        },
+        "selected": "true",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": {
+      "bottom": 726.078125,
+      "clientHeight": 324,
+      "height": 326.359375,
+      "left": 244,
+      "right": 582,
+      "scrollHeight": 324,
+      "scrollTop": 0,
+      "top": 399.71875,
+      "width": 338
+    },
+    "gallery": {
+      "bottom": 726.078125,
+      "clientHeight": 326,
+      "height": 326.359375,
+      "left": 244,
+      "right": 936,
+      "scrollHeight": 326,
+      "scrollTop": 0,
+      "top": 399.71875,
+      "width": 692
+    },
+    "height": 563,
+    "panel": {
+      "bottom": 443.21875,
+      "clientHeight": 167,
+      "height": 166.828125,
+      "left": 49,
+      "right": 911,
+      "scrollHeight": 279,
+      "scrollTop": 0,
+      "top": 276.390625,
+      "width": 862
+    },
+    "preview": null,
+    "save": {
+      "bottom": 500.21875,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 798.0625,
+      "right": 911,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 456.21875,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 960,
+    "workspace": {
+      "bottom": 750.078125,
+      "clientHeight": 750,
+      "height": 750.078125,
+      "left": 220,
+      "right": 960,
+      "scrollHeight": 750,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 740
+    }
+  },
+  {
+    "state": "edit-from-details-focus",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": {
+      "bottom": 653.5625,
+      "clientHeight": 618,
+      "height": 617.5625,
+      "left": 244,
+      "right": 1000,
+      "scrollHeight": 618,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 756
+    },
+    "dialog": {
+      "bottom": 793.359375,
+      "clientHeight": 741,
+      "height": 742.71875,
+      "left": 32,
+      "right": 992,
+      "scrollHeight": 741,
+      "scrollTop": 0,
+      "top": 50.640625,
+      "width": 960
+    },
+    "documentOverflow": false,
+    "documentWidth": 1024,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 57,
+          "right": 150.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 93.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 156.40625,
+          "right": 248.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 253.828125,
+          "right": 355.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 101.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 360.65625,
+          "right": 429.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 435.203125,
+          "right": 542.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 107.265625
+        },
+        "selected": "true",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": {
+      "bottom": 653.5625,
+      "clientHeight": 252,
+      "height": 253.84375,
+      "left": 244,
+      "right": 485.328125,
+      "scrollHeight": 252,
+      "scrollTop": 0,
+      "top": 399.71875,
+      "width": 241.328125
+    },
+    "gallery": {
+      "bottom": 653.5625,
+      "clientHeight": 254,
+      "height": 253.84375,
+      "left": 244,
+      "right": 1000,
+      "scrollHeight": 254,
+      "scrollTop": 0,
+      "top": 399.71875,
+      "width": 756
+    },
+    "height": 844,
+    "panel": {
+      "bottom": 707.359375,
+      "clientHeight": 414,
+      "height": 414.109375,
+      "left": 57,
+      "right": 967,
+      "scrollHeight": 414,
+      "scrollTop": 0,
+      "top": 293.25,
+      "width": 910
+    },
+    "preview": null,
+    "save": {
+      "bottom": 764.359375,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 854.0625,
+      "right": 967,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 720.359375,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 1024,
+    "workspace": {
+      "bottom": 677.5625,
+      "clientHeight": 678,
+      "height": 677.5625,
+      "left": 220,
+      "right": 1024,
+      "scrollHeight": 678,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 804
+    }
+  },
+  {
+    "state": "edit-from-details-focus",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": {
+      "bottom": 691.390625,
+      "clientHeight": 655,
+      "height": 655.390625,
+      "left": 244,
+      "right": 795,
+      "scrollHeight": 655,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 551
+    },
+    "dialog": {
+      "bottom": 634.5,
+      "clientHeight": 592,
+      "height": 594,
+      "left": 24,
+      "right": 795,
+      "scrollHeight": 592,
+      "scrollTop": 0,
+      "top": 40.5,
+      "width": 771
+    },
+    "documentOverflow": false,
+    "documentWidth": 819,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 49,
+          "right": 142.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 93.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 148.40625,
+          "right": 240.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 245.828125,
+          "right": 347.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 101.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 352.65625,
+          "right": 421.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 427.203125,
+          "right": 534.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 107.265625
+        },
+        "selected": "true",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": {
+      "bottom": 691.390625,
+      "clientHeight": 271,
+      "height": 273.484375,
+      "left": 244,
+      "right": 511.5,
+      "scrollHeight": 271,
+      "scrollTop": 0,
+      "top": 417.90625,
+      "width": 267.5
+    },
+    "gallery": {
+      "bottom": 691.390625,
+      "clientHeight": 273,
+      "height": 273.484375,
+      "left": 244,
+      "right": 795,
+      "scrollHeight": 273,
+      "scrollTop": 0,
+      "top": 417.90625,
+      "width": 551
+    },
+    "height": 675,
+    "panel": {
+      "bottom": 548.5,
+      "clientHeight": 265,
+      "height": 265.390625,
+      "left": 49,
+      "right": 770,
+      "scrollHeight": 307,
+      "scrollTop": 0,
+      "top": 283.109375,
+      "width": 721
+    },
+    "preview": null,
+    "save": {
+      "bottom": 605.5,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 657.0625,
+      "right": 770,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 561.5,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 819,
+    "workspace": {
+      "bottom": 715.390625,
+      "clientHeight": 715,
+      "height": 715.390625,
+      "left": 220,
+      "right": 819,
+      "scrollHeight": 715,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 599
+    }
+  },
+  {
+    "state": "edit-from-details-focus",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": {
+      "bottom": 990.453125,
+      "clientHeight": 883,
+      "height": 883.265625,
+      "left": 16,
+      "right": 374,
+      "scrollHeight": 883,
+      "scrollTop": 0,
+      "top": 107.1875,
+      "width": 358
+    },
+    "dialog": {
+      "bottom": 844,
+      "clientHeight": 842,
+      "height": 844,
+      "left": 0,
+      "right": 390,
+      "scrollHeight": 842,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 390
+    },
+    "documentOverflow": false,
+    "documentWidth": 390,
+    "editorTabs": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 13,
+          "right": 98.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 85.8125
+        },
+        "selected": "false",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 102.8125,
+          "right": 186.640625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 83.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 190.640625,
+          "right": 283.875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 93.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 287.875,
+          "right": 348.828125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 60.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 307.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 13,
+          "right": 112.265625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 263.609375,
+          "width": 99.265625
+        },
+        "selected": "true",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": {
+      "bottom": 990.453125,
+      "clientHeight": 339,
+      "height": 341.359375,
+      "left": 16,
+      "right": 374,
+      "scrollHeight": 339,
+      "scrollTop": 0,
+      "top": 649.09375,
+      "width": 358
+    },
+    "gallery": {
+      "bottom": 990.453125,
+      "clientHeight": 341,
+      "height": 341.359375,
+      "left": 16,
+      "right": 374,
+      "scrollHeight": 341,
+      "scrollTop": 0,
+      "top": 649.09375,
+      "width": 358
+    },
+    "height": 844,
+    "panel": {
+      "bottom": 762,
+      "clientHeight": 437,
+      "height": 437.390625,
+      "left": 13,
+      "right": 377,
+      "scrollHeight": 437,
+      "scrollTop": 0,
+      "top": 324.609375,
+      "width": 364
+    },
+    "preview": null,
+    "save": {
+      "bottom": 819,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 264.0625,
+      "right": 377,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 775,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 390,
+    "workspace": {
+      "bottom": 1086.453125,
+      "clientHeight": 1011,
+      "height": 1011.265625,
+      "left": 0,
+      "right": 390,
+      "scrollHeight": 1011,
+      "scrollTop": 0,
+      "top": 75.1875,
+      "width": 390
+    }
+  },
+  {
+    "state": "edit-first-tab-focus",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": {
+      "bottom": 627.328125,
+      "clientHeight": 591,
+      "height": 591.328125,
+      "left": 244,
+      "right": 1416,
+      "scrollHeight": 591,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 1172
+    },
+    "dialog": {
+      "bottom": 793.359375,
+      "clientHeight": 741,
+      "height": 742.71875,
+      "left": 240,
+      "right": 1200,
+      "scrollHeight": 741,
+      "scrollTop": 0,
+      "top": 50.640625,
+      "width": 960
+    },
+    "documentOverflow": false,
+    "documentWidth": 1440,
+    "editorTabs": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 265,
+          "right": 358.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 93.8125
+        },
+        "selected": "true",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 364.40625,
+          "right": 456.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 461.828125,
+          "right": 563.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 101.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 568.65625,
+          "right": 637.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 643.203125,
+          "right": 750.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": {
+      "bottom": 627.328125,
+      "clientHeight": 282,
+      "height": 283.609375,
+      "left": 244,
+      "right": 525,
+      "scrollHeight": 282,
+      "scrollTop": 0,
+      "top": 343.71875,
+      "width": 281
+    },
+    "gallery": {
+      "bottom": 627.328125,
+      "clientHeight": 284,
+      "height": 283.609375,
+      "left": 244,
+      "right": 1416,
+      "scrollHeight": 284,
+      "scrollTop": 0,
+      "top": 343.71875,
+      "width": 1172
+    },
+    "height": 844,
+    "panel": {
+      "bottom": 707.359375,
+      "clientHeight": 414,
+      "height": 414.109375,
+      "left": 265,
+      "right": 1175,
+      "scrollHeight": 414,
+      "scrollTop": 0,
+      "top": 293.25,
+      "width": 910
+    },
+    "preview": null,
+    "save": {
+      "bottom": 764.359375,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 1062.0625,
+      "right": 1175,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 720.359375,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 1440,
+    "workspace": {
+      "bottom": 651.328125,
+      "clientHeight": 651,
+      "height": 651.328125,
+      "left": 220,
+      "right": 1440,
+      "scrollHeight": 651,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 1220
+    }
+  },
+  {
+    "state": "edit-first-tab-focus",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": {
+      "bottom": 629.578125,
+      "clientHeight": 594,
+      "height": 593.578125,
+      "left": 244,
+      "right": 1128,
+      "scrollHeight": 594,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 884
+    },
+    "dialog": {
+      "bottom": 634.5,
+      "clientHeight": 592,
+      "height": 594,
+      "left": 96,
+      "right": 1056,
+      "scrollHeight": 592,
+      "scrollTop": 0,
+      "top": 40.5,
+      "width": 960
+    },
+    "documentOverflow": false,
+    "documentWidth": 1152,
+    "editorTabs": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 121,
+          "right": 214.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 93.8125
+        },
+        "selected": "true",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 220.40625,
+          "right": 312.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 317.828125,
+          "right": 419.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 101.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 424.65625,
+          "right": 493.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 499.203125,
+          "right": 606.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": {
+      "bottom": 629.578125,
+      "clientHeight": 284,
+      "height": 285.859375,
+      "left": 244,
+      "right": 528,
+      "scrollHeight": 284,
+      "scrollTop": 0,
+      "top": 343.71875,
+      "width": 284
+    },
+    "gallery": {
+      "bottom": 629.578125,
+      "clientHeight": 286,
+      "height": 285.859375,
+      "left": 244,
+      "right": 1128,
+      "scrollHeight": 286,
+      "scrollTop": 0,
+      "top": 343.71875,
+      "width": 884
+    },
+    "height": 675,
+    "panel": {
+      "bottom": 548.5,
+      "clientHeight": 265,
+      "height": 265.390625,
+      "left": 121,
+      "right": 1031,
+      "scrollHeight": 265,
+      "scrollTop": 0,
+      "top": 283.109375,
+      "width": 910
+    },
+    "preview": null,
+    "save": {
+      "bottom": 605.5,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 918.0625,
+      "right": 1031,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 561.5,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 1152,
+    "workspace": {
+      "bottom": 653.578125,
+      "clientHeight": 654,
+      "height": 653.578125,
+      "left": 220,
+      "right": 1152,
+      "scrollHeight": 654,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 932
+    }
+  },
+  {
+    "state": "edit-first-tab-focus",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": {
+      "bottom": 726.078125,
+      "clientHeight": 690,
+      "height": 690.078125,
+      "left": 244,
+      "right": 936,
+      "scrollHeight": 690,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 692
+    },
+    "dialog": {
+      "bottom": 529.21875,
+      "clientHeight": 493,
+      "height": 495.4375,
+      "left": 24,
+      "right": 936,
+      "scrollHeight": 493,
+      "scrollTop": 0,
+      "top": 33.78125,
+      "width": 912
+    },
+    "documentOverflow": false,
+    "documentWidth": 960,
+    "editorTabs": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 49,
+          "right": 142.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 93.8125
+        },
+        "selected": "true",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 148.40625,
+          "right": 240.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 245.828125,
+          "right": 347.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 101.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 352.65625,
+          "right": 421.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.390625,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 427.203125,
+          "right": 534.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.390625,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": {
+      "bottom": 726.078125,
+      "clientHeight": 324,
+      "height": 326.359375,
+      "left": 244,
+      "right": 582,
+      "scrollHeight": 324,
+      "scrollTop": 0,
+      "top": 399.71875,
+      "width": 338
+    },
+    "gallery": {
+      "bottom": 726.078125,
+      "clientHeight": 326,
+      "height": 326.359375,
+      "left": 244,
+      "right": 936,
+      "scrollHeight": 326,
+      "scrollTop": 0,
+      "top": 399.71875,
+      "width": 692
+    },
+    "height": 563,
+    "panel": {
+      "bottom": 443.21875,
+      "clientHeight": 167,
+      "height": 166.828125,
+      "left": 49,
+      "right": 911,
+      "scrollHeight": 244,
+      "scrollTop": 0,
+      "top": 276.390625,
+      "width": 862
+    },
+    "preview": null,
+    "save": {
+      "bottom": 500.21875,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 798.0625,
+      "right": 911,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 456.21875,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 960,
+    "workspace": {
+      "bottom": 750.078125,
+      "clientHeight": 750,
+      "height": 750.078125,
+      "left": 220,
+      "right": 960,
+      "scrollHeight": 750,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 740
+    }
+  },
+  {
+    "state": "edit-first-tab-focus",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": {
+      "bottom": 653.5625,
+      "clientHeight": 618,
+      "height": 617.5625,
+      "left": 244,
+      "right": 1000,
+      "scrollHeight": 618,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 756
+    },
+    "dialog": {
+      "bottom": 793.359375,
+      "clientHeight": 741,
+      "height": 742.71875,
+      "left": 32,
+      "right": 992,
+      "scrollHeight": 741,
+      "scrollTop": 0,
+      "top": 50.640625,
+      "width": 960
+    },
+    "documentOverflow": false,
+    "documentWidth": 1024,
+    "editorTabs": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 57,
+          "right": 150.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 93.8125
+        },
+        "selected": "true",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 156.40625,
+          "right": 248.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 253.828125,
+          "right": 355.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 101.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 360.65625,
+          "right": 429.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 276.25,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 435.203125,
+          "right": 542.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 232.25,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": {
+      "bottom": 653.5625,
+      "clientHeight": 252,
+      "height": 253.84375,
+      "left": 244,
+      "right": 485.328125,
+      "scrollHeight": 252,
+      "scrollTop": 0,
+      "top": 399.71875,
+      "width": 241.328125
+    },
+    "gallery": {
+      "bottom": 653.5625,
+      "clientHeight": 254,
+      "height": 253.84375,
+      "left": 244,
+      "right": 1000,
+      "scrollHeight": 254,
+      "scrollTop": 0,
+      "top": 399.71875,
+      "width": 756
+    },
+    "height": 844,
+    "panel": {
+      "bottom": 707.359375,
+      "clientHeight": 414,
+      "height": 414.109375,
+      "left": 57,
+      "right": 967,
+      "scrollHeight": 414,
+      "scrollTop": 0,
+      "top": 293.25,
+      "width": 910
+    },
+    "preview": null,
+    "save": {
+      "bottom": 764.359375,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 854.0625,
+      "right": 967,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 720.359375,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 1024,
+    "workspace": {
+      "bottom": 677.5625,
+      "clientHeight": 678,
+      "height": 677.5625,
+      "left": 220,
+      "right": 1024,
+      "scrollHeight": 678,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 804
+    }
+  },
+  {
+    "state": "edit-first-tab-focus",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": {
+      "bottom": 691.390625,
+      "clientHeight": 655,
+      "height": 655.390625,
+      "left": 244,
+      "right": 795,
+      "scrollHeight": 655,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 551
+    },
+    "dialog": {
+      "bottom": 634.5,
+      "clientHeight": 592,
+      "height": 594,
+      "left": 24,
+      "right": 795,
+      "scrollHeight": 592,
+      "scrollTop": 0,
+      "top": 40.5,
+      "width": 771
+    },
+    "documentOverflow": false,
+    "documentWidth": 819,
+    "editorTabs": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 49,
+          "right": 142.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 93.8125
+        },
+        "selected": "true",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 148.40625,
+          "right": 240.234375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 91.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 245.828125,
+          "right": 347.0625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 101.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 352.65625,
+          "right": 421.609375,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 68.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 266.109375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 427.203125,
+          "right": 534.46875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 222.109375,
+          "width": 107.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": {
+      "bottom": 691.390625,
+      "clientHeight": 271,
+      "height": 273.484375,
+      "left": 244,
+      "right": 511.5,
+      "scrollHeight": 271,
+      "scrollTop": 0,
+      "top": 417.90625,
+      "width": 267.5
+    },
+    "gallery": {
+      "bottom": 691.390625,
+      "clientHeight": 273,
+      "height": 273.484375,
+      "left": 244,
+      "right": 795,
+      "scrollHeight": 273,
+      "scrollTop": 0,
+      "top": 417.90625,
+      "width": 551
+    },
+    "height": 675,
+    "panel": {
+      "bottom": 548.5,
+      "clientHeight": 265,
+      "height": 265.390625,
+      "left": 49,
+      "right": 770,
+      "scrollHeight": 265,
+      "scrollTop": 0,
+      "top": 283.109375,
+      "width": 721
+    },
+    "preview": null,
+    "save": {
+      "bottom": 605.5,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 657.0625,
+      "right": 770,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 561.5,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 819,
+    "workspace": {
+      "bottom": 715.390625,
+      "clientHeight": 715,
+      "height": 715.390625,
+      "left": 220,
+      "right": 819,
+      "scrollHeight": 715,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 599
+    }
+  },
+  {
+    "state": "edit-first-tab-focus",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": true,
+    "bodyOverflow": "hidden",
+    "detail": {
+      "bottom": 990.453125,
+      "clientHeight": 883,
+      "height": 883.265625,
+      "left": 16,
+      "right": 374,
+      "scrollHeight": 883,
+      "scrollTop": 0,
+      "top": 107.1875,
+      "width": 358
+    },
+    "dialog": {
+      "bottom": 844,
+      "clientHeight": 842,
+      "height": 844,
+      "left": 0,
+      "right": 390,
+      "scrollHeight": 842,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 390
+    },
+    "documentOverflow": false,
+    "documentWidth": 390,
+    "editorTabs": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 13,
+          "right": 98.8125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 85.8125
+        },
+        "selected": "true",
+        "text": "Essentials"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 102.8125,
+          "right": 186.640625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 83.828125
+        },
+        "selected": "false",
+        "text": "Inventory"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 190.640625,
+          "right": 283.875,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 93.234375
+        },
+        "selected": "false",
+        "text": "Acquisition"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 259.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 287.875,
+          "right": 348.828125,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 215.609375,
+          "width": 60.953125
+        },
+        "selected": "false",
+        "text": "Origin"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "rect": {
+          "bottom": 307.609375,
+          "clientHeight": 42,
+          "height": 44,
+          "left": 13,
+          "right": 112.265625,
+          "scrollHeight": 42,
+          "scrollTop": 0,
+          "top": 263.609375,
+          "width": 99.265625
+        },
+        "selected": "false",
+        "text": "Seed details"
+      }
+    ],
+    "firstTile": {
+      "bottom": 990.453125,
+      "clientHeight": 339,
+      "height": 341.359375,
+      "left": 16,
+      "right": 374,
+      "scrollHeight": 339,
+      "scrollTop": 0,
+      "top": 649.09375,
+      "width": 358
+    },
+    "gallery": {
+      "bottom": 990.453125,
+      "clientHeight": 341,
+      "height": 341.359375,
+      "left": 16,
+      "right": 374,
+      "scrollHeight": 341,
+      "scrollTop": 0,
+      "top": 649.09375,
+      "width": 358
+    },
+    "height": 844,
+    "panel": {
+      "bottom": 762,
+      "clientHeight": 437,
+      "height": 437.390625,
+      "left": 13,
+      "right": 377,
+      "scrollHeight": 437,
+      "scrollTop": 0,
+      "top": 324.609375,
+      "width": 364
+    },
+    "preview": null,
+    "save": {
+      "bottom": 819,
+      "clientHeight": 42,
+      "height": 44,
+      "left": 264.0625,
+      "right": 377,
+      "scrollHeight": 42,
+      "scrollTop": 0,
+      "top": 775,
+      "width": 112.9375
+    },
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=edit",
+    "width": 390,
+    "workspace": {
+      "bottom": 1086.453125,
+      "clientHeight": 1011,
+      "height": 1011.265625,
+      "left": 0,
+      "right": 390,
+      "scrollHeight": 1011,
+      "scrollTop": 0,
+      "top": 75.1875,
+      "width": 390
+    }
+  },
+  {
+    "state": "seed-lineage-root",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 327.78125,
+      "clientHeight": 292,
+      "height": 291.78125,
+      "left": 244,
+      "right": 1416,
+      "scrollHeight": 292,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 1172
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1440,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=lineage",
+    "width": 1440,
+    "workspace": {
+      "bottom": 351.78125,
+      "clientHeight": 352,
+      "height": 351.78125,
+      "left": 220,
+      "right": 1440,
+      "scrollHeight": 352,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 1220
+    }
+  },
+  {
+    "state": "seed-lineage-root",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 327.78125,
+      "clientHeight": 292,
+      "height": 291.78125,
+      "left": 244,
+      "right": 1128,
+      "scrollHeight": 292,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 884
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1152,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 675,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=lineage",
+    "width": 1152,
+    "workspace": {
+      "bottom": 351.78125,
+      "clientHeight": 352,
+      "height": 351.78125,
+      "left": 220,
+      "right": 1152,
+      "scrollHeight": 352,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 932
+    }
+  },
+  {
+    "state": "seed-lineage-root",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 383.78125,
+      "clientHeight": 348,
+      "height": 347.78125,
+      "left": 244,
+      "right": 936,
+      "scrollHeight": 348,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 692
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 960,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 563,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=lineage",
+    "width": 960,
+    "workspace": {
+      "bottom": 407.78125,
+      "clientHeight": 408,
+      "height": 407.78125,
+      "left": 220,
+      "right": 960,
+      "scrollHeight": 408,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 740
+    }
+  },
+  {
+    "state": "seed-lineage-root",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 383.78125,
+      "clientHeight": 348,
+      "height": 347.78125,
+      "left": 244,
+      "right": 1000,
+      "scrollHeight": 348,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 756
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 1024,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=lineage",
+    "width": 1024,
+    "workspace": {
+      "bottom": 407.78125,
+      "clientHeight": 408,
+      "height": 407.78125,
+      "left": 220,
+      "right": 1024,
+      "scrollHeight": 408,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 804
+    }
+  },
+  {
+    "state": "seed-lineage-root",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675,
+      "kind": "effective-space proxy only"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 383.78125,
+      "clientHeight": 348,
+      "height": 347.78125,
+      "left": 244,
+      "right": 795,
+      "scrollHeight": 348,
+      "scrollTop": 0,
+      "top": 36,
+      "width": 551
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 819,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 675,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=lineage",
+    "width": 819,
+    "workspace": {
+      "bottom": 407.78125,
+      "clientHeight": 408,
+      "height": 407.78125,
+      "left": 220,
+      "right": 819,
+      "scrollHeight": 408,
+      "scrollTop": 0,
+      "top": 0,
+      "width": 599
+    }
+  },
+  {
+    "state": "seed-lineage-root",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844,
+      "kind": "normal viewport"
+    },
+    "backgroundInert": false,
+    "bodyOverflow": "visible",
+    "detail": {
+      "bottom": 578.96875,
+      "clientHeight": 472,
+      "height": 471.78125,
+      "left": 16,
+      "right": 374,
+      "scrollHeight": 472,
+      "scrollTop": 0,
+      "top": 107.1875,
+      "width": 358
+    },
+    "dialog": null,
+    "documentOverflow": false,
+    "documentWidth": 390,
+    "editorTabs": [],
+    "firstTile": null,
+    "gallery": null,
+    "height": 844,
+    "panel": null,
+    "preview": null,
+    "save": null,
+    "url": "#/seeds/01a13b20-af33-71a1-926f-5056e3415170?tab=lineage",
+    "width": 390,
+    "workspace": {
+      "bottom": 674.96875,
+      "clientHeight": 600,
+      "height": 599.78125,
+      "left": 0,
+      "right": 390,
+      "scrollHeight": 600,
+      "scrollTop": 0,
+      "top": 75.1875,
+      "width": 390
+    }
+  }
+]

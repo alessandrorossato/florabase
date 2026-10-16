@@ -15,6 +15,8 @@
   --warning: #a66a16;
   --warning-text: #85520c;
   --danger: #b54747;
+  --danger-subtle: #fbefef;
+  --warning-subtle: #fbf4e7;
   --info: #3d6f8e;
   --focus-ring: #3d6f8e;
   --on-primary: #ffffff;
@@ -41,6 +43,9 @@
   --radius-small: 6px;
   --radius-normal: 10px;
   --radius-large: 14px;
+  --control-height: 2.75rem;
+  --form-width: 56rem;
+  --overlay-backdrop: rgb(30 38 33 / 55%);
   --elevation-overlay: 0 8px 32px rgb(30 38 33 / 16%);
 
   /* Compatibility aliases for existing pages; new UI uses semantic names above. */

@@ -1,0 +1,9 @@
+/* The caption keeps its accessible name; native/ARIA state announces requiredness. */
+.required-mark {
+  color: var(--text-muted);
+  font: var(--type-label);
+  margin-inline-start: var(--space-1);
+}
+.required-mark::after {
+  content: "*";
+}

@@ -1,0 +1,401 @@
+{
+  "source": "Static React DOM from isolated unit-test fixtures with candidate CSS; no authenticated UAT interaction",
+  "zoom": "Actual tab zoom unsupported: Ctrl+plus twice left innerWidth 1440 and devicePixelRatio 1; viewport probes are not zoom proof",
+  "probes": [
+    {
+      "fixture": "seeds-directory",
+      "controls": [
+        {
+          "height": 44,
+          "label": "seed-search",
+          "width": 335.59375
+        },
+        {
+          "height": 44,
+          "label": "Filters (1)",
+          "width": 86.8125
+        },
+        {
+          "height": 44,
+          "label": "Saved views",
+          "width": 104.9609375
+        },
+        {
+          "height": 44,
+          "label": "_r_9p_",
+          "width": 65.6484375
+        },
+        {
+          "height": 44,
+          "label": "+ New seed lot",
+          "width": 118.890625
+        }
+      ],
+      "documentWidth": 390,
+      "height": 844,
+      "width": 390
+    },
+    {
+      "fixture": "plants-form",
+      "controls": [
+        {
+          "height": 44,
+          "label": "_r_1f_",
+          "width": 309
+        },
+        {
+          "height": 44,
+          "label": "plant-label",
+          "width": 309
+        },
+        {
+          "height": 44,
+          "label": "plant-location",
+          "width": 309
+        }
+      ],
+      "documentWidth": 375,
+      "height": 844,
+      "width": 390
+    },
+    {
+      "fixture": "botanical-identities-directory",
+      "controls": [
+        {
+          "height": 44,
+          "label": "identity-filter",
+          "width": 335.59375
+        },
+        {
+          "height": 44,
+          "label": "Saved views",
+          "width": 104.9609375
+        },
+        {
+          "height": 44,
+          "label": "+ New botanical identity",
+          "width": 182.0625
+        }
+      ],
+      "documentWidth": 390,
+      "height": 844,
+      "width": 390
+    },
+    {
+      "fixture": "seeds-directory",
+      "controls": [
+        {
+          "height": 44,
+          "label": "seed-search",
+          "width": 205.171875
+        },
+        {
+          "height": 44,
+          "label": "Filters (1)",
+          "width": 86.8125
+        },
+        {
+          "height": 44,
+          "label": "Saved views",
+          "width": 104.9609375
+        },
+        {
+          "height": 44,
+          "label": "_r_9p_",
+          "width": 65.6484375
+        },
+        {
+          "height": 44,
+          "label": "+ New seed lot",
+          "width": 118.890625
+        }
+      ],
+      "documentWidth": 805,
+      "height": 844,
+      "width": 820
+    },
+    {
+      "fixture": "plants-form",
+      "controls": [
+        {
+          "height": 44,
+          "label": "_r_1f_",
+          "width": 225
+        },
+        {
+          "height": 44,
+          "label": "plant-label",
+          "width": 225
+        },
+        {
+          "height": 44,
+          "label": "plant-location",
+          "width": 225
+        }
+      ],
+      "documentWidth": 820,
+      "height": 844,
+      "width": 820
+    },
+    {
+      "fixture": "botanical-identities-directory",
+      "controls": [
+        {
+          "height": 44,
+          "label": "identity-filter",
+          "width": 373.6328125
+        },
+        {
+          "height": 44,
+          "label": "Saved views",
+          "width": 104.9609375
+        },
+        {
+          "height": 44,
+          "label": "+ New botanical identity",
+          "width": 182.0625
+        }
+      ],
+      "documentWidth": 805,
+      "height": 844,
+      "width": 820
+    },
+    {
+      "fixture": "seeds-directory",
+      "controls": [
+        {
+          "height": 44,
+          "label": "seed-search",
+          "width": 207.5
+        },
+        {
+          "height": 44,
+          "label": "Filters (1)",
+          "width": 86.8125
+        },
+        {
+          "height": 44,
+          "label": "Saved views",
+          "width": 104.9609375
+        },
+        {
+          "height": 44,
+          "label": "_r_9p_",
+          "width": 65.6484375
+        },
+        {
+          "height": 44,
+          "label": "+ New seed lot",
+          "width": 118.890625
+        }
+      ],
+      "documentWidth": 1009,
+      "height": 844,
+      "width": 1024
+    },
+    {
+      "fixture": "plants-form",
+      "controls": [
+        {
+          "height": 44,
+          "label": "_r_1f_",
+          "width": 327
+        },
+        {
+          "height": 44,
+          "label": "plant-label",
+          "width": 327
+        },
+        {
+          "height": 44,
+          "label": "plant-location",
+          "width": 327
+        }
+      ],
+      "documentWidth": 1024,
+      "height": 844,
+      "width": 1024
+    },
+    {
+      "fixture": "botanical-identities-directory",
+      "controls": [
+        {
+          "height": 44,
+          "label": "identity-filter",
+          "width": 207.5
+        },
+        {
+          "height": 44,
+          "label": "Saved views",
+          "width": 104.9609375
+        },
+        {
+          "height": 44,
+          "label": "+ New botanical identity",
+          "width": 182.0625
+        }
+      ],
+      "documentWidth": 1009,
+      "height": 844,
+      "width": 1024
+    },
+    {
+      "fixture": "seeds-directory",
+      "controls": [
+        {
+          "height": 44,
+          "label": "seed-search",
+          "width": 347.9453125
+        },
+        {
+          "height": 44,
+          "label": "Filters (1)",
+          "width": 86.8125
+        },
+        {
+          "height": 44,
+          "label": "Saved views",
+          "width": 104.9609375
+        },
+        {
+          "height": 44,
+          "label": "_r_9p_",
+          "width": 65.6484375
+        },
+        {
+          "height": 44,
+          "label": "+ New seed lot",
+          "width": 118.890625
+        }
+      ],
+      "documentWidth": 1440,
+      "height": 844,
+      "width": 1440
+    },
+    {
+      "fixture": "plants-form",
+      "controls": [
+        {
+          "height": 44,
+          "label": "_r_1f_",
+          "width": 411
+        },
+        {
+          "height": 44,
+          "label": "plant-label",
+          "width": 411
+        },
+        {
+          "height": 44,
+          "label": "plant-location",
+          "width": 411
+        }
+      ],
+      "documentWidth": 1440,
+      "height": 844,
+      "width": 1440
+    },
+    {
+      "fixture": "botanical-identities-directory",
+      "controls": [
+        {
+          "height": 44,
+          "label": "identity-filter",
+          "width": 453.234375
+        },
+        {
+          "height": 44,
+          "label": "Saved views",
+          "width": 104.9609375
+        },
+        {
+          "height": 44,
+          "label": "+ New botanical identity",
+          "width": 182.0625
+        }
+      ],
+      "documentWidth": 1440,
+      "height": 844,
+      "width": 1440
+    },
+    {
+      "fixture": "seeds-directory",
+      "controls": [
+        {
+          "height": 44,
+          "label": "seed-search",
+          "width": 667.9453125
+        },
+        {
+          "height": 44,
+          "label": "Filters (1)",
+          "width": 86.8125
+        },
+        {
+          "height": 44,
+          "label": "Saved views",
+          "width": 104.9609375
+        },
+        {
+          "height": 44,
+          "label": "_r_9p_",
+          "width": 65.6484375
+        },
+        {
+          "height": 44,
+          "label": "+ New seed lot",
+          "width": 118.890625
+        }
+      ],
+      "documentWidth": 1920,
+      "height": 1080,
+      "width": 1920
+    },
+    {
+      "fixture": "plants-form",
+      "controls": [
+        {
+          "height": 44,
+          "label": "_r_1f_",
+          "width": 411
+        },
+        {
+          "height": 44,
+          "label": "plant-label",
+          "width": 411
+        },
+        {
+          "height": 44,
+          "label": "plant-location",
+          "width": 411
+        }
+      ],
+      "documentWidth": 1920,
+      "height": 1080,
+      "width": 1920
+    },
+    {
+      "fixture": "botanical-identities-directory",
+      "controls": [
+        {
+          "height": 44,
+          "label": "identity-filter",
+          "width": 773.234375
+        },
+        {
+          "height": 44,
+          "label": "Saved views",
+          "width": 104.9609375
+        },
+        {
+          "height": 44,
+          "label": "+ New botanical identity",
+          "width": 182.0625
+        }
+      ],
+      "documentWidth": 1920,
+      "height": 1080,
+      "width": 1920
+    }
+  ]
+}

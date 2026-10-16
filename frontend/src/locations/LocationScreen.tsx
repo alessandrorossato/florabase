@@ -1,8 +1,11 @@
+import { FieldLabel } from "../components/FieldLabel";
+import { DirectoryTools } from "../components/DirectoryTools";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import {
   useEffect,
+  useId,
   useMemo,
   useRef,
   useState,
@@ -179,10 +182,17 @@ function ScopeFields({
   disabled: boolean;
 }) {
   const selectedScopes = selected ? scopesOf(selected) : allScopes;
+  const helpId = useId();
   return (
-    <fieldset className="scope-fields" disabled={disabled}>
-      <legend>Used for</legend>
-      <p className="field-help">
+    <fieldset
+      className="scope-fields"
+      disabled={disabled}
+      aria-describedby={helpId}
+    >
+      <FieldLabel as="legend" required>
+        Used for
+      </FieldLabel>
+      <p className="field-help" id={helpId}>
         Choose at least one. Scopes are explicit and do not inherit.
       </p>
       {allScopes.map((scope) => (
@@ -615,7 +625,7 @@ export function LocationScreen({
   return (
     <section
       aria-labelledby={initialId ? undefined : "locations-title"}
-      className="workspace"
+      className="workspace locations-workspace"
     >
       {!initialId && (
         <PageHeader
@@ -623,20 +633,83 @@ export function LocationScreen({
           titleId="locations-title"
           eyebrow="Collection"
           description="Manage where seeds, sowings, plants, groups, and harvested material are kept."
-          actions={
-            <button
-              type="button"
-              ref={creationTriggerRef}
-              aria-haspopup="dialog"
-              onClick={() => {
-                setCreateNameValue("");
-                setCreateParentId("");
-                setSave({ status: "idle" });
-                openCreation();
+          tools={
+            <DirectoryTools
+              onReset={() => {
+                setScopeFilter("all");
               }}
-            >
-              New location
-            </button>
+              name="Locations"
+              search={
+                <DirectorySearch
+                  hideLabel
+                  id="location-search"
+                  label="Search locations"
+                  placeholder="Name or path"
+                  value={query}
+                  onChange={setQuery}
+                />
+              }
+              savedViews={
+                <SavedViews
+                  presentation="dialog"
+                  surface="locations"
+                  state={view.savedState}
+                />
+              }
+              filters={
+                <div className="field location-scope-filter">
+                  <label htmlFor="location-scope">Usage scope</label>
+                  <select
+                    id="location-scope"
+                    value={scopeFilter}
+                    onChange={(event) => {
+                      setScopeFilter(
+                        event.currentTarget.value as typeof scopeFilter,
+                      );
+                    }}
+                  >
+                    <option value="all">All locations</option>
+                    <option value="seed_lots">Seeds</option>
+                    <option value="sowings">Sowings</option>
+                    <option value="plants">Plants</option>
+                    <option value="harvest_inventory">Stored material</option>
+                  </select>
+                </div>
+              }
+              activeFilters={
+                scopeFilter !== "all"
+                  ? [
+                      {
+                        label: "Usage scope",
+                        value: {
+                          seed_lots: "Seeds",
+                          sowings: "Sowings",
+                          plants: "Plants",
+                          harvest_inventory: "Stored material",
+                        }[scopeFilter],
+                        onRemove: () => {
+                          setScopeFilter("all");
+                        },
+                      },
+                    ]
+                  : []
+              }
+              actions={
+                <button
+                  type="button"
+                  ref={creationTriggerRef}
+                  aria-haspopup="dialog"
+                  onClick={() => {
+                    setCreateNameValue("");
+                    setCreateParentId("");
+                    setSave({ status: "idle" });
+                    openCreation();
+                  }}
+                >
+                  New location
+                </button>
+              }
+            />
           }
         />
       )}
@@ -652,33 +725,7 @@ export function LocationScreen({
               <h3 className="sr-only" id="location-directory-title">
                 Location directory
               </h3>
-              <SavedViews surface="locations" state={view.savedState} />
-              <DirectorySearch
-                hideLabel
-                id="location-search"
-                label="Search locations"
-                placeholder="Name or path"
-                value={query}
-                onChange={setQuery}
-              />
-              <div className="field location-scope-filter">
-                <label htmlFor="location-scope">Usage scope</label>
-                <select
-                  id="location-scope"
-                  value={scopeFilter}
-                  onChange={(event) => {
-                    setScopeFilter(
-                      event.currentTarget.value as typeof scopeFilter,
-                    );
-                  }}
-                >
-                  <option value="all">All locations</option>
-                  <option value="seed_lots">Seeds</option>
-                  <option value="sowings">Sowings</option>
-                  <option value="plants">Plants</option>
-                  <option value="harvest_inventory">Stored material</option>
-                </select>
-              </div>
+
               {directory.status === "ready" && (
                 <DirectoryResults count={matching.length} />
               )}
@@ -979,7 +1026,9 @@ export function LocationScreen({
                     >
                       <h4>Edit location</h4>
                       <div className="field">
-                        <label htmlFor="edit-location-name">Name</label>
+                        <FieldLabel required htmlFor="edit-location-name">
+                          Name
+                        </FieldLabel>
                         <input
                           id="edit-location-name"
                           name="name"
@@ -1066,7 +1115,9 @@ export function LocationScreen({
             >
               <h3>Create a location</h3>
               <div className="field">
-                <label htmlFor="new-location-name">Name</label>
+                <FieldLabel required htmlFor="new-location-name">
+                  Name
+                </FieldLabel>
                 <input
                   id="new-location-name"
                   name="name"

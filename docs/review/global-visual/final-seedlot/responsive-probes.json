@@ -1,0 +1,1635 @@
+[
+  {
+    "state": "create-top",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "form": {
+      "width": 1157,
+      "x": 244
+    },
+    "invalid": [
+      "_r_1d_"
+    ],
+    "overflow": false,
+    "pageWidth": 1425,
+    "panels": [
+      {
+        "client": 200,
+        "id": "essentials",
+        "scroll": 200
+      },
+      {
+        "client": 361,
+        "id": "inventory",
+        "scroll": 361
+      },
+      {
+        "client": 450,
+        "id": "acquisition",
+        "scroll": 450
+      },
+      {
+        "client": 182,
+        "id": "origin",
+        "scroll": 182
+      },
+      {
+        "client": 334,
+        "id": "details",
+        "scroll": 334
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "create-actions",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "form": {
+      "width": 1157,
+      "x": 244
+    },
+    "invalid": [
+      "_r_1d_"
+    ],
+    "overflow": false,
+    "pageWidth": 1425,
+    "panels": [
+      {
+        "client": 200,
+        "id": "essentials",
+        "scroll": 200
+      },
+      {
+        "client": 361,
+        "id": "inventory",
+        "scroll": 361
+      },
+      {
+        "client": 450,
+        "id": "acquisition",
+        "scroll": 450
+      },
+      {
+        "client": 182,
+        "id": "origin",
+        "scroll": 182
+      },
+      {
+        "client": 334,
+        "id": "details",
+        "scroll": 334
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "create-top",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675
+    },
+    "form": {
+      "width": 869,
+      "x": 244
+    },
+    "invalid": [
+      "_r_1d_"
+    ],
+    "overflow": false,
+    "pageWidth": 1137,
+    "panels": [
+      {
+        "client": 200,
+        "id": "essentials",
+        "scroll": 200
+      },
+      {
+        "client": 361,
+        "id": "inventory",
+        "scroll": 361
+      },
+      {
+        "client": 450,
+        "id": "acquisition",
+        "scroll": 450
+      },
+      {
+        "client": 200,
+        "id": "origin",
+        "scroll": 200
+      },
+      {
+        "client": 334,
+        "id": "details",
+        "scroll": 334
+      }
+    ],
+    "viewport": {
+      "height": 675,
+      "width": 1152
+    }
+  },
+  {
+    "state": "create-actions",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675
+    },
+    "form": {
+      "width": 869,
+      "x": 244
+    },
+    "invalid": [
+      "_r_1d_"
+    ],
+    "overflow": false,
+    "pageWidth": 1137,
+    "panels": [
+      {
+        "client": 200,
+        "id": "essentials",
+        "scroll": 200
+      },
+      {
+        "client": 361,
+        "id": "inventory",
+        "scroll": 361
+      },
+      {
+        "client": 450,
+        "id": "acquisition",
+        "scroll": 450
+      },
+      {
+        "client": 200,
+        "id": "origin",
+        "scroll": 200
+      },
+      {
+        "client": 334,
+        "id": "details",
+        "scroll": 334
+      }
+    ],
+    "viewport": {
+      "height": 675,
+      "width": 1152
+    }
+  },
+  {
+    "state": "create-top",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563
+    },
+    "form": {
+      "width": 677,
+      "x": 244
+    },
+    "invalid": [
+      "_r_1d_"
+    ],
+    "overflow": false,
+    "pageWidth": 945,
+    "panels": [
+      {
+        "client": 200,
+        "id": "essentials",
+        "scroll": 200
+      },
+      {
+        "client": 397,
+        "id": "inventory",
+        "scroll": 397
+      },
+      {
+        "client": 450,
+        "id": "acquisition",
+        "scroll": 450
+      },
+      {
+        "client": 200,
+        "id": "origin",
+        "scroll": 200
+      },
+      {
+        "client": 334,
+        "id": "details",
+        "scroll": 334
+      }
+    ],
+    "viewport": {
+      "height": 563,
+      "width": 960
+    }
+  },
+  {
+    "state": "create-actions",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563
+    },
+    "form": {
+      "width": 677,
+      "x": 244
+    },
+    "invalid": [
+      "_r_1d_"
+    ],
+    "overflow": false,
+    "pageWidth": 945,
+    "panels": [
+      {
+        "client": 200,
+        "id": "essentials",
+        "scroll": 200
+      },
+      {
+        "client": 397,
+        "id": "inventory",
+        "scroll": 397
+      },
+      {
+        "client": 450,
+        "id": "acquisition",
+        "scroll": 450
+      },
+      {
+        "client": 200,
+        "id": "origin",
+        "scroll": 200
+      },
+      {
+        "client": 334,
+        "id": "details",
+        "scroll": 334
+      }
+    ],
+    "viewport": {
+      "height": 563,
+      "width": 960
+    }
+  },
+  {
+    "state": "create-top",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844
+    },
+    "form": {
+      "width": 741,
+      "x": 244
+    },
+    "invalid": [
+      "_r_1d_"
+    ],
+    "overflow": false,
+    "pageWidth": 1009,
+    "panels": [
+      {
+        "client": 200,
+        "id": "essentials",
+        "scroll": 200
+      },
+      {
+        "client": 379,
+        "id": "inventory",
+        "scroll": 379
+      },
+      {
+        "client": 450,
+        "id": "acquisition",
+        "scroll": 450
+      },
+      {
+        "client": 200,
+        "id": "origin",
+        "scroll": 200
+      },
+      {
+        "client": 334,
+        "id": "details",
+        "scroll": 334
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 1024
+    }
+  },
+  {
+    "state": "create-actions",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844
+    },
+    "form": {
+      "width": 741,
+      "x": 244
+    },
+    "invalid": [
+      "_r_1d_"
+    ],
+    "overflow": false,
+    "pageWidth": 1009,
+    "panels": [
+      {
+        "client": 200,
+        "id": "essentials",
+        "scroll": 200
+      },
+      {
+        "client": 379,
+        "id": "inventory",
+        "scroll": 379
+      },
+      {
+        "client": 450,
+        "id": "acquisition",
+        "scroll": 450
+      },
+      {
+        "client": 200,
+        "id": "origin",
+        "scroll": 200
+      },
+      {
+        "client": 334,
+        "id": "details",
+        "scroll": 334
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 1024
+    }
+  },
+  {
+    "state": "create-top",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675
+    },
+    "form": {
+      "width": 536,
+      "x": 244
+    },
+    "invalid": [
+      "_r_1d_"
+    ],
+    "overflow": false,
+    "pageWidth": 804,
+    "panels": [
+      {
+        "client": 218,
+        "id": "essentials",
+        "scroll": 218
+      },
+      {
+        "client": 397,
+        "id": "inventory",
+        "scroll": 397
+      },
+      {
+        "client": 450,
+        "id": "acquisition",
+        "scroll": 450
+      },
+      {
+        "client": 200,
+        "id": "origin",
+        "scroll": 200
+      },
+      {
+        "client": 334,
+        "id": "details",
+        "scroll": 334
+      }
+    ],
+    "viewport": {
+      "height": 675,
+      "width": 819
+    }
+  },
+  {
+    "state": "create-actions",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675
+    },
+    "form": {
+      "width": 536,
+      "x": 244
+    },
+    "invalid": [
+      "_r_1d_"
+    ],
+    "overflow": false,
+    "pageWidth": 804,
+    "panels": [
+      {
+        "client": 218,
+        "id": "essentials",
+        "scroll": 218
+      },
+      {
+        "client": 397,
+        "id": "inventory",
+        "scroll": 397
+      },
+      {
+        "client": 450,
+        "id": "acquisition",
+        "scroll": 450
+      },
+      {
+        "client": 200,
+        "id": "origin",
+        "scroll": 200
+      },
+      {
+        "client": 334,
+        "id": "details",
+        "scroll": 334
+      }
+    ],
+    "viewport": {
+      "height": 675,
+      "width": 819
+    }
+  },
+  {
+    "state": "create-top",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844
+    },
+    "form": {
+      "width": 343,
+      "x": 16
+    },
+    "invalid": [
+      "_r_1d_"
+    ],
+    "overflow": false,
+    "pageWidth": 375,
+    "panels": [
+      {
+        "client": 282,
+        "id": "essentials",
+        "scroll": 282
+      },
+      {
+        "client": 519,
+        "id": "inventory",
+        "scroll": 519
+      },
+      {
+        "client": 646,
+        "id": "acquisition",
+        "scroll": 646
+      },
+      {
+        "client": 282,
+        "id": "origin",
+        "scroll": 282
+      },
+      {
+        "client": 450,
+        "id": "details",
+        "scroll": 450
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  {
+    "state": "create-actions",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844
+    },
+    "form": {
+      "width": 343,
+      "x": 16
+    },
+    "invalid": [
+      "_r_1d_"
+    ],
+    "overflow": false,
+    "pageWidth": 375,
+    "panels": [
+      {
+        "client": 282,
+        "id": "essentials",
+        "scroll": 282
+      },
+      {
+        "client": 519,
+        "id": "inventory",
+        "scroll": 519
+      },
+      {
+        "client": 646,
+        "id": "acquisition",
+        "scroll": 646
+      },
+      {
+        "client": 282,
+        "id": "origin",
+        "scroll": 282
+      },
+      {
+        "client": 450,
+        "id": "details",
+        "scroll": 450
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  {
+    "state": "edit-acquisition-unknown",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "form": {
+      "width": 958,
+      "x": 241
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1440,
+    "panels": [
+      {
+        "client": 414,
+        "id": "acquisition",
+        "scroll": 414
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "edit-acquisition-unknown",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675
+    },
+    "form": {
+      "width": 958,
+      "x": 97
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1152,
+    "panels": [
+      {
+        "client": 265,
+        "id": "acquisition",
+        "scroll": 391
+      }
+    ],
+    "viewport": {
+      "height": 675,
+      "width": 1152
+    }
+  },
+  {
+    "state": "edit-acquisition-unknown",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563
+    },
+    "form": {
+      "width": 910,
+      "x": 25
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 960,
+    "panels": [
+      {
+        "client": 167,
+        "id": "acquisition",
+        "scroll": 391
+      }
+    ],
+    "viewport": {
+      "height": 563,
+      "width": 960
+    }
+  },
+  {
+    "state": "edit-acquisition-unknown",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844
+    },
+    "form": {
+      "width": 958,
+      "x": 33
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1024,
+    "panels": [
+      {
+        "client": 414,
+        "id": "acquisition",
+        "scroll": 414
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 1024
+    }
+  },
+  {
+    "state": "edit-acquisition-unknown",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675
+    },
+    "form": {
+      "width": 769,
+      "x": 25
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 819,
+    "panels": [
+      {
+        "client": 265,
+        "id": "acquisition",
+        "scroll": 391
+      }
+    ],
+    "viewport": {
+      "height": 675,
+      "width": 819
+    }
+  },
+  {
+    "state": "edit-acquisition-unknown",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844
+    },
+    "form": {
+      "width": 388,
+      "x": 1
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 390,
+    "panels": [
+      {
+        "client": 437,
+        "id": "acquisition",
+        "scroll": 587
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  {
+    "state": "edit-acquisition-year",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "form": {
+      "width": 958,
+      "x": 241
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1440,
+    "panels": [
+      {
+        "client": 414,
+        "id": "acquisition",
+        "scroll": 469
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "edit-acquisition-year",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675
+    },
+    "form": {
+      "width": 958,
+      "x": 97
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1152,
+    "panels": [
+      {
+        "client": 265,
+        "id": "acquisition",
+        "scroll": 469
+      }
+    ],
+    "viewport": {
+      "height": 675,
+      "width": 1152
+    }
+  },
+  {
+    "state": "edit-acquisition-year",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563
+    },
+    "form": {
+      "width": 910,
+      "x": 25
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 960,
+    "panels": [
+      {
+        "client": 167,
+        "id": "acquisition",
+        "scroll": 469
+      }
+    ],
+    "viewport": {
+      "height": 563,
+      "width": 960
+    }
+  },
+  {
+    "state": "edit-acquisition-year",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844
+    },
+    "form": {
+      "width": 958,
+      "x": 33
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1024,
+    "panels": [
+      {
+        "client": 414,
+        "id": "acquisition",
+        "scroll": 469
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 1024
+    }
+  },
+  {
+    "state": "edit-acquisition-year",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675
+    },
+    "form": {
+      "width": 769,
+      "x": 25
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 819,
+    "panels": [
+      {
+        "client": 265,
+        "id": "acquisition",
+        "scroll": 469
+      }
+    ],
+    "viewport": {
+      "height": 675,
+      "width": 819
+    }
+  },
+  {
+    "state": "edit-acquisition-year",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844
+    },
+    "form": {
+      "width": 388,
+      "x": 1
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 390,
+    "panels": [
+      {
+        "client": 437,
+        "id": "acquisition",
+        "scroll": 665
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  {
+    "state": "edit-acquisition-month",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "form": {
+      "width": 958,
+      "x": 241
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1440,
+    "panels": [
+      {
+        "client": 414,
+        "id": "acquisition",
+        "scroll": 469
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "edit-acquisition-month",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675
+    },
+    "form": {
+      "width": 958,
+      "x": 97
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1152,
+    "panels": [
+      {
+        "client": 265,
+        "id": "acquisition",
+        "scroll": 469
+      }
+    ],
+    "viewport": {
+      "height": 675,
+      "width": 1152
+    }
+  },
+  {
+    "state": "edit-acquisition-month",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563
+    },
+    "form": {
+      "width": 910,
+      "x": 25
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 960,
+    "panels": [
+      {
+        "client": 167,
+        "id": "acquisition",
+        "scroll": 469
+      }
+    ],
+    "viewport": {
+      "height": 563,
+      "width": 960
+    }
+  },
+  {
+    "state": "edit-acquisition-month",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844
+    },
+    "form": {
+      "width": 958,
+      "x": 33
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1024,
+    "panels": [
+      {
+        "client": 414,
+        "id": "acquisition",
+        "scroll": 469
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 1024
+    }
+  },
+  {
+    "state": "edit-acquisition-month",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675
+    },
+    "form": {
+      "width": 769,
+      "x": 25
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 819,
+    "panels": [
+      {
+        "client": 265,
+        "id": "acquisition",
+        "scroll": 469
+      }
+    ],
+    "viewport": {
+      "height": 675,
+      "width": 819
+    }
+  },
+  {
+    "state": "edit-acquisition-month",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844
+    },
+    "form": {
+      "width": 388,
+      "x": 1
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 390,
+    "panels": [
+      {
+        "client": 437,
+        "id": "acquisition",
+        "scroll": 665
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  {
+    "state": "edit-acquisition-day",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "form": {
+      "width": 958,
+      "x": 241
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1440,
+    "panels": [
+      {
+        "client": 414,
+        "id": "acquisition",
+        "scroll": 469
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "edit-acquisition-day",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675
+    },
+    "form": {
+      "width": 958,
+      "x": 97
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1152,
+    "panels": [
+      {
+        "client": 265,
+        "id": "acquisition",
+        "scroll": 469
+      }
+    ],
+    "viewport": {
+      "height": 675,
+      "width": 1152
+    }
+  },
+  {
+    "state": "edit-acquisition-day",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563
+    },
+    "form": {
+      "width": 910,
+      "x": 25
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 960,
+    "panels": [
+      {
+        "client": 167,
+        "id": "acquisition",
+        "scroll": 469
+      }
+    ],
+    "viewport": {
+      "height": 563,
+      "width": 960
+    }
+  },
+  {
+    "state": "edit-acquisition-day",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844
+    },
+    "form": {
+      "width": 958,
+      "x": 33
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1024,
+    "panels": [
+      {
+        "client": 414,
+        "id": "acquisition",
+        "scroll": 469
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 1024
+    }
+  },
+  {
+    "state": "edit-acquisition-day",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675
+    },
+    "form": {
+      "width": 769,
+      "x": 25
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 819,
+    "panels": [
+      {
+        "client": 265,
+        "id": "acquisition",
+        "scroll": 469
+      }
+    ],
+    "viewport": {
+      "height": 675,
+      "width": 819
+    }
+  },
+  {
+    "state": "edit-acquisition-day",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844
+    },
+    "form": {
+      "width": 388,
+      "x": 1
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 390,
+    "panels": [
+      {
+        "client": 437,
+        "id": "acquisition",
+        "scroll": 665
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  {
+    "state": "edit-acquisition-linked",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "form": {
+      "width": 958,
+      "x": 241
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1440,
+    "panels": [
+      {
+        "client": 414,
+        "id": "acquisition",
+        "scroll": 414
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "edit-acquisition-linked",
+    "case": {
+      "name": "1440-125-proxy",
+      "width": 1152,
+      "height": 675
+    },
+    "form": {
+      "width": 958,
+      "x": 97
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1152,
+    "panels": [
+      {
+        "client": 265,
+        "id": "acquisition",
+        "scroll": 382
+      }
+    ],
+    "viewport": {
+      "height": 675,
+      "width": 1152
+    }
+  },
+  {
+    "state": "edit-acquisition-linked",
+    "case": {
+      "name": "1440-150-proxy",
+      "width": 960,
+      "height": 563
+    },
+    "form": {
+      "width": 910,
+      "x": 25
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 960,
+    "panels": [
+      {
+        "client": 167,
+        "id": "acquisition",
+        "scroll": 382
+      }
+    ],
+    "viewport": {
+      "height": 563,
+      "width": 960
+    }
+  },
+  {
+    "state": "edit-acquisition-linked",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844
+    },
+    "form": {
+      "width": 958,
+      "x": 33
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1024,
+    "panels": [
+      {
+        "client": 414,
+        "id": "acquisition",
+        "scroll": 414
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 1024
+    }
+  },
+  {
+    "state": "edit-acquisition-linked",
+    "case": {
+      "name": "1024-125-proxy",
+      "width": 819,
+      "height": 675
+    },
+    "form": {
+      "width": 769,
+      "x": 25
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 819,
+    "panels": [
+      {
+        "client": 265,
+        "id": "acquisition",
+        "scroll": 382
+      }
+    ],
+    "viewport": {
+      "height": 675,
+      "width": 819
+    }
+  },
+  {
+    "state": "edit-acquisition-linked",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844
+    },
+    "form": {
+      "width": 388,
+      "x": 1
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 390,
+    "panels": [
+      {
+        "client": 437,
+        "id": "acquisition",
+        "scroll": 700
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  {
+    "state": "edit-first-tab-focus",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "form": {
+      "width": 958,
+      "x": 241
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1440,
+    "panels": [
+      {
+        "client": 414,
+        "id": "essentials",
+        "scroll": 414
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "edit-last-tab-focus",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "form": {
+      "width": 958,
+      "x": 241
+    },
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1440,
+    "panels": [
+      {
+        "client": 414,
+        "id": "details",
+        "scroll": 414
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "sowings",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "form": null,
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1440,
+    "panels": [],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "lineage-empty",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "form": null,
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1440,
+    "panels": [],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "lineage-empty",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844
+    },
+    "form": null,
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1024,
+    "panels": [],
+    "viewport": {
+      "height": 844,
+      "width": 1024
+    }
+  },
+  {
+    "state": "lineage-empty",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844
+    },
+    "form": null,
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 390,
+    "panels": [],
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  {
+    "state": "photos-protected",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "form": null,
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1440,
+    "panels": [],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "external-default",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "form": null,
+    "invalid": [
+      "",
+      "",
+      ""
+    ],
+    "overflow": false,
+    "pageWidth": 1440,
+    "panels": [],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "external-reference-choice",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "form": null,
+    "invalid": [
+      "",
+      "",
+      ""
+    ],
+    "overflow": false,
+    "pageWidth": 1440,
+    "panels": [],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "overview",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "form": null,
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1440,
+    "panels": [],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "overview",
+    "case": {
+      "name": "1024-100",
+      "width": 1024,
+      "height": 844
+    },
+    "form": null,
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1009,
+    "panels": [],
+    "viewport": {
+      "height": 844,
+      "width": 1024
+    }
+  },
+  {
+    "state": "overview",
+    "case": {
+      "name": "390-100",
+      "width": 390,
+      "height": 844
+    },
+    "form": null,
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 375,
+    "panels": [],
+    "viewport": {
+      "height": 844,
+      "width": 390
+    }
+  },
+  {
+    "state": "shared-order-create",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "form": null,
+    "invalid": [],
+    "overflow": false,
+    "pageWidth": 1440,
+    "panels": [],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "seeds-quantity",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "overflow": false,
+    "pageWidth": 1425,
+    "panels": [],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  },
+  {
+    "state": "shared-order-month",
+    "case": {
+      "name": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    "overflow": false,
+    "pageWidth": 1440,
+    "panels": [],
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  }
+]

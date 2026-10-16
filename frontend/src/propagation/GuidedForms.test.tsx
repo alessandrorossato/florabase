@@ -121,23 +121,22 @@ test("guided sowing retains shared section values and submits one atomic transit
   expect(
     screen.getAllByRole("link", { name: "Okra Burgundy" }).length,
   ).toBeGreaterThan(0);
-  await user.type(
-    screen.getByLabelText("Sowing label (optional)"),
-    "Shared draft",
-  );
+  await user.type(screen.getByLabelText("Sowing label"), "Shared draft");
   await user.click(screen.getByRole("button", { name: "Next" }));
+  expect(screen.getByLabelText("Amount")).toBeRequired();
   await user.type(screen.getByLabelText("Amount"), "10");
   await user.click(screen.getByRole("tab", { name: "Cultivation" }));
-  await user.type(screen.getByLabelText("Substrate (optional)"), "Coir");
+  await user.type(screen.getByLabelText("Substrate"), "Coir");
   await user.click(screen.getByRole("button", { name: "Back" }));
   expect(screen.getByLabelText("Amount")).toHaveValue("10");
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
-  expect(screen.getByLabelText("Sowing label (optional)")).toHaveValue(
-    "Shared draft",
-  );
+  expect(screen.getByLabelText("Sowing label")).toHaveValue("Shared draft");
   expect(posts).toHaveLength(0);
   await user.click(screen.getByRole("tab", { name: "Notes" }));
-  await user.type(screen.getByLabelText("Notes (optional)"), "Keep moist");
+  await user.type(
+    screen.getByLabelText("Notes", { selector: "textarea" }),
+    "Keep moist",
+  );
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   await user.click(screen.getByLabelText(/Use part of the lot/));
   expect(posts).toHaveLength(0);
@@ -185,6 +184,14 @@ test("guided sowing keeps unknown quantity and explicit no-adjustment semantics"
   const { user, posts } = setup({ quantity: null });
   seedWizard();
   await screen.findByRole("heading", { name: "Source seed lot" });
+  await user.click(screen.getByRole("tab", { name: "Material & location" }));
+  expect(screen.queryByLabelText("Amount")).not.toBeInTheDocument();
+  expect(screen.getByLabelText("Kind")).not.toBeRequired();
+  await user.selectOptions(screen.getByLabelText("Kind"), "weight");
+  expect(screen.getByLabelText("Amount")).toBeRequired();
+  expect(screen.getByLabelText("Unit")).toBeRequired();
+  await user.selectOptions(screen.getByLabelText("Kind"), "unknown");
+  expect(screen.queryByLabelText("Amount")).not.toBeInTheDocument();
   await user.click(screen.getByRole("tab", { name: "Notes" }));
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   await user.click(screen.getByRole("button", { name: "Start sowing" }));
@@ -210,9 +217,11 @@ for (const kind of ["plant", "group"] as const)
     });
     const path = screen.getByRole("region", { name: "Propagation path" });
     expect(within(path).getAllByText("Okra Burgundy")).toHaveLength(2);
-    await user.type(screen.getByLabelText("Label (optional)"), "New result");
+    await user.type(screen.getByLabelText("Label"), "New result");
     if (kind === "group") {
+      expect(screen.queryByLabelText("Count")).not.toBeInTheDocument();
       await user.selectOptions(screen.getByLabelText("Kind"), "approximate");
+      expect(screen.getByLabelText("Count")).toBeRequired();
       await user.type(screen.getByLabelText("Count"), "8");
     }
     await user.click(screen.getByRole("button", { name: "Next" }));
@@ -220,10 +229,13 @@ for (const kind of ["plant", "group"] as const)
       "Okra Burgundy",
     );
     await user.click(screen.getByRole("button", { name: "Back" }));
-    expect(screen.getByLabelText("Label (optional)")).toHaveValue("New result");
+    expect(screen.getByLabelText("Label")).toHaveValue("New result");
     expect(posts).toHaveLength(0);
     await user.click(screen.getByRole("tab", { name: "Lifecycle & notes" }));
-    await user.type(screen.getByLabelText("Notes (optional)"), "Result note");
+    await user.type(
+      screen.getByLabelText("Notes", { selector: "textarea" }),
+      "Result note",
+    );
     await user.click(screen.getByLabelText(/Complete Sowing/));
     await user.click(
       screen.getByRole("button", {

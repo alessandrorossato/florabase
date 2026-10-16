@@ -1,4 +1,6 @@
+import { FieldLabel } from "../components/FieldLabel";
 import {
+  Fragment,
   useEffect,
   useId,
   useRef,
@@ -8,6 +10,9 @@ import {
 } from "react";
 
 import { ApiError } from "../auth/api";
+import { OverflowMenu } from "../components/ReferenceUI";
+import { saveLocalCopy } from "../media/api";
+import { ExternalCopyChoice } from "../media/ExternalCopyChoice";
 import { MediaPicker } from "../media/MediaPicker";
 import { useAuth } from "../auth/context";
 import {
@@ -113,36 +118,65 @@ function messageFor(error: unknown): string {
 function ExternalPreview({
   photo,
   alt,
+  compact = false,
+  detailsHref,
 }: {
   photo: ExternalImage;
   alt: string;
+  compact?: boolean;
+  detailsHref?: string;
 }) {
   const [state, setState] = useState<"hidden" | "loading" | "loaded" | "error">(
     "hidden",
   );
   if (photo.thumbnail_url && state === "error")
     return <p role="status">The saved local image is unavailable.</p>;
+  const ImageLink = detailsHref ? "a" : Fragment;
+  const imageLinkProps = detailsHref
+    ? {
+        href: detailsHref,
+        "aria-label": `Open media details for ${alt}`,
+        className: "gallery-image-link",
+      }
+    : {};
   if (photo.thumbnail_url)
     return (
-      <img
-        alt={alt}
-        className="collection-photo-image"
-        decoding="async"
-        loading="lazy"
-        src={photo.thumbnail_url}
-        onError={() => {
-          setState("error");
-        }}
-      />
+      <ImageLink {...imageLinkProps}>
+        <img
+          alt={alt}
+          className="collection-photo-image"
+          decoding="async"
+          loading="lazy"
+          src={photo.thumbnail_url}
+          onError={() => {
+            setState("error");
+          }}
+        />
+        {detailsHref && (
+          <span className="gallery-open-label" aria-hidden="true">
+            Open
+          </span>
+        )}
+      </ImageLink>
     );
   if (state === "hidden")
     return (
       <div className="external-preview-disclosure">
-        <p>
-          Loading this image contacts {new URL(photo.image_url).hostname} and
-          exposes normal network information, including your IP address, to that
-          host.
-        </p>
+        {compact ? (
+          <>
+            <strong>External image</strong>
+            <span>{new URL(photo.image_url).hostname}</span>
+            <p className="field-help">
+              Preview contacts this host and shares your IP address.
+            </p>
+          </>
+        ) : (
+          <p>
+            Loading this image contacts {new URL(photo.image_url).hostname} and
+            exposes normal network information, including your IP address, to
+            that host.
+          </p>
+        )}
         <button
           type="button"
           onClick={() => {
@@ -169,21 +203,32 @@ function ExternalPreview({
     );
   return (
     <div>
-      {state === "loading" && <p role="status">Loading external image…</p>}
-      <img
-        alt={alt}
-        className="collection-photo-image"
-        decoding="async"
-        loading="lazy"
-        referrerPolicy="no-referrer"
-        src={photo.image_url}
-        onLoad={() => {
-          setState("loaded");
-        }}
-        onError={() => {
-          setState("error");
-        }}
-      />
+      {state === "loading" && (
+        <p role="status" className={compact ? "gallery-loading" : undefined}>
+          Loading external image…
+        </p>
+      )}
+      <ImageLink {...imageLinkProps}>
+        <img
+          alt={alt}
+          className="collection-photo-image"
+          decoding="async"
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          src={photo.image_url}
+          onLoad={() => {
+            setState("loaded");
+          }}
+          onError={() => {
+            setState("error");
+          }}
+        />
+        {detailsHref && (
+          <span className="gallery-open-label" aria-hidden="true">
+            Open
+          </span>
+        )}
+      </ImageLink>
     </div>
   );
 }
@@ -194,12 +239,14 @@ export function PhotosSection({
   targetLabel,
   primaryPhoto = null,
   onPrimaryChanged,
+  presentation = "standard",
 }: {
   target: PhotoTarget;
   targetId: string;
   targetLabel: string;
   primaryPhoto?: PrimaryPhoto | null;
   onPrimaryChanged?: (photo: PrimaryPhoto | null) => void;
+  presentation?: "standard" | "compact";
 }) {
   const auth = useAuth();
   const headingId = useId();
@@ -211,6 +258,7 @@ export function PhotosSection({
   const [pending, setPending] = useState(false);
   const [linking, setLinking] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [failedCopy, setFailedCopy] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [brokenLocal, setBrokenLocal] = useState<Set<string>>(new Set());
   const [primaryOverride, setPrimaryOverride] = useState<
@@ -322,7 +370,7 @@ export function PhotosSection({
           csrfToken,
         );
       } else if (editor === "external") {
-        await createExternalImage(
+        const reference = await createExternalImage(
           target,
           targetId,
           {
@@ -333,6 +381,18 @@ export function PhotosSection({
           },
           csrfToken,
         );
+        if (data.get("save_local_copy") === "on" && reference.media_asset_id) {
+          try {
+            await saveLocalCopy(reference.media_asset_id, csrfToken);
+          } catch (failure) {
+            setFailedCopy(reference.media_asset_id);
+            setEditor(null);
+            await refresh("External reference saved.");
+            if (failure instanceof ApiError && failure.status === 401)
+              auth.sessionExpired();
+            return;
+          }
+        }
       } else if (editor.kind === "local") {
         await updateLocalPhoto(
           editor.id,
@@ -357,17 +417,50 @@ export function PhotosSection({
         );
       }
       setEditor(null);
-      await refresh(
-        editor === "local" || editor === "external"
-          ? "Photo was added."
-          : "Photo details were saved.",
-      );
+      try {
+        await refresh(
+          editor === "local" || editor === "external"
+            ? "Photo was added."
+            : "Photo details were saved.",
+        );
+      } catch (failure) {
+        if (failure instanceof ApiError && failure.status === 401)
+          auth.sessionExpired();
+        else
+          setError(
+            "Photo was saved, but Photos could not refresh. Reload this record.",
+          );
+      }
     } catch (saveError: unknown) {
       if (saveError instanceof ApiError && saveError.status === 401) {
         auth.sessionExpired();
         return;
       }
       setError(messageFor(saveError));
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function retryCopy() {
+    if (!failedCopy || pending) return;
+    setPending(true);
+    setError(null);
+    let saved = false;
+    try {
+      await saveLocalCopy(failedCopy, csrfToken);
+      saved = true;
+      setFailedCopy(null);
+      await refresh("Local copy saved.", true);
+    } catch (failure) {
+      if (failure instanceof ApiError && failure.status === 401)
+        auth.sessionExpired();
+      else
+        setError(
+          saved
+            ? "Local copy saved, but Photos could not refresh. Reload this record."
+            : "Local copy could not be downloaded. The external reference remains saved.",
+        );
     } finally {
       setPending(false);
     }
@@ -427,18 +520,31 @@ export function PhotosSection({
     }
   }
 
+  const MediaContainer = presentation === "compact" ? "div" : Fragment;
   const editing =
     editor && editor !== "local" && editor !== "external" ? editor : null;
   const externalEditor = editor === "external" || editing?.kind === "external";
 
   return (
-    <section className="photos-section" aria-labelledby={headingId}>
+    <section
+      className={`photos-section${presentation === "compact" ? " photos-section--compact" : ""}`}
+      aria-labelledby={headingId}
+    >
       <div className="photos-heading">
         <div>
-          <p className="eyebrow">
-            {target === "supplier" ? "Supplier imagery" : "Collection evidence"}
-          </p>
-          <h4 id={headingId}>Photos</h4>
+          {presentation !== "compact" && (
+            <p className="eyebrow">
+              {target === "supplier"
+                ? "Supplier imagery"
+                : "Collection evidence"}
+            </p>
+          )}
+          <h4
+            id={headingId}
+            className={presentation === "compact" ? "sr-only" : undefined}
+          >
+            Photos
+          </h4>
         </div>
         <div className="actions">
           <button
@@ -448,7 +554,7 @@ export function PhotosSection({
               setError(null);
             }}
           >
-            Add new media
+            {presentation === "compact" ? "Add media" : "Add new media"}
           </button>
           <button
             className="button--secondary"
@@ -457,7 +563,9 @@ export function PhotosSection({
               setLinking(true);
             }}
           >
-            Link existing media
+            {presentation === "compact"
+              ? "Link existing"
+              : "Link existing media"}
           </button>
           <button
             className="button--secondary"
@@ -467,15 +575,17 @@ export function PhotosSection({
               setError(null);
             }}
           >
-            Add external image
+            {presentation === "compact" ? "External" : "Add external image"}
           </button>
         </div>
       </div>
-      <p className="field-help">
-        Uploaded photos and saved local copies stay in protected Florabase
-        storage. External references need Preview once to load remotely; manage
-        saved copies in media details.
-      </p>
+      {presentation !== "compact" && (
+        <p className="field-help">
+          Uploaded photos and saved local copies stay in protected Florabase
+          storage. External references need Preview once to load remotely;
+          manage saved copies in media details.
+        </p>
+      )}
       {notice && (
         <p className="notice notice--success" role="status">
           {notice}
@@ -511,128 +621,252 @@ export function PhotosSection({
             const alt = photo.caption ?? `Photo for ${targetLabel}`;
             return (
               <article className="photo-card" key={`${photo.kind}:${photo.id}`}>
-                <p className="card-type">
-                  {photo.kind === "local"
-                    ? "Uploaded photo"
-                    : photo.content_url
-                      ? "External reference · local copy saved"
-                      : "External reference · not stored locally"}
-                  {currentPrimary?.kind === photo.kind &&
-                    currentPrimary.photo_id === photo.id && (
-                      <span className="primary-photo-badge">Primary</span>
-                    )}
-                </p>
-                {photo.kind === "local" ? (
-                  photo.deletion_pending ? (
-                    <div className="notice notice--error">
-                      <p>
-                        Deletion is pending. The protected image is no longer
-                        available.
-                      </p>
-                    </div>
-                  ) : brokenLocal.has(photo.id) ? (
-                    <div className="notice notice--error" role="alert">
-                      The uploaded image content is unavailable.
-                    </div>
-                  ) : (
-                    <img
-                      alt={alt}
-                      className="collection-photo-image"
-                      decoding="async"
-                      loading="lazy"
-                      src={
-                        photo.media_asset_id
-                          ? `/api/v1/media-assets/${photo.media_asset_id}/thumbnail`
-                          : `/api/v1/collection-photos/local/${photo.id}/thumbnail`
-                      }
-                      onError={() => {
-                        setBrokenLocal((ids) => new Set(ids).add(photo.id));
-                      }}
-                    />
-                  )
-                ) : (
-                  <ExternalPreview
-                    key={photo.thumbnail_url ?? photo.image_url}
-                    photo={photo}
-                    alt={alt}
-                  />
+                {presentation !== "compact" && (
+                  <>
+                    <p className="card-type">
+                      {photo.kind === "local"
+                        ? "Uploaded photo"
+                        : photo.content_url
+                          ? "External reference · local copy saved"
+                          : "External reference · not stored locally"}
+                      {currentPrimary?.kind === photo.kind &&
+                        currentPrimary.photo_id === photo.id && (
+                          <span className="primary-photo-badge">Primary</span>
+                        )}
+                    </p>
+                  </>
                 )}
-                {photo.caption && (
-                  <p className="photo-caption">{photo.caption}</p>
-                )}
-                {photo.attribution && (
-                  <p>
-                    <strong>Attribution:</strong> {photo.attribution}
-                  </p>
-                )}
-                {photo.kind === "external" && (
-                  <p>
-                    <a
-                      href={photo.source_url}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      Source: {new URL(photo.source_url).hostname}
-                    </a>
-                  </p>
-                )}
-                <div className="actions">
-                  {photo.media_asset_id && (
-                    <a href={`#/media/${photo.media_asset_id}`}>
-                      Open media details
-                    </a>
-                  )}
-                  {supportsPrimary &&
-                    (currentPrimary?.kind === photo.kind &&
-                    currentPrimary.photo_id === photo.id ? (
-                      <button
-                        className="button--secondary"
-                        type="button"
-                        disabled={pending}
-                        aria-label={`Remove primary designation from ${photo.caption ?? `${photo.kind} photo`}`}
-                        onClick={() => void choosePrimary(null)}
+                <MediaContainer
+                  {...(presentation === "compact"
+                    ? { className: "attached-media-preview" }
+                    : {})}
+                >
+                  {photo.kind === "local" ? (
+                    photo.deletion_pending ? (
+                      <div className="notice notice--error">
+                        <p>
+                          Deletion is pending. The protected image is no longer
+                          available.
+                        </p>
+                      </div>
+                    ) : brokenLocal.has(photo.id) ? (
+                      <div className="notice notice--error" role="alert">
+                        The uploaded image content is unavailable.
+                      </div>
+                    ) : presentation === "compact" && photo.media_asset_id ? (
+                      <a
+                        href={`#/media/${photo.media_asset_id}`}
+                        className="gallery-image-link"
+                        aria-label={`Open media details for ${alt}`}
                       >
-                        Remove primary
-                      </button>
+                        <img
+                          alt={alt}
+                          className="collection-photo-image"
+                          decoding="async"
+                          loading="lazy"
+                          src={`/api/v1/media-assets/${photo.media_asset_id}/thumbnail`}
+                          onError={() => {
+                            setBrokenLocal((ids) => new Set(ids).add(photo.id));
+                          }}
+                        />
+                        <span className="gallery-open-label" aria-hidden="true">
+                          Open
+                        </span>
+                      </a>
                     ) : (
-                      (photo.kind === "external" ||
-                        !photo.deletion_pending) && (
-                        <button
-                          className="button--secondary"
-                          type="button"
-                          disabled={pending}
-                          aria-label={`Set ${photo.caption ?? `${photo.kind} photo`} as primary`}
-                          onClick={() => void choosePrimary(photo)}
-                        >
-                          Set as primary
-                        </button>
-                      )
-                    ))}
-                  {(photo.kind === "external" || !photo.deletion_pending) && (
-                    <button
-                      className="button--secondary"
-                      type="button"
-                      onClick={() => {
-                        setEditor(photo);
-                        setError(null);
-                      }}
-                    >
-                      Edit details
-                    </button>
+                      <img
+                        alt={alt}
+                        className="collection-photo-image"
+                        decoding="async"
+                        loading="lazy"
+                        src={
+                          photo.media_asset_id
+                            ? `/api/v1/media-assets/${photo.media_asset_id}/thumbnail`
+                            : `/api/v1/collection-photos/local/${photo.id}/thumbnail`
+                        }
+                        onError={() => {
+                          setBrokenLocal((ids) => new Set(ids).add(photo.id));
+                        }}
+                      />
+                    )
+                  ) : (
+                    <ExternalPreview
+                      key={photo.thumbnail_url ?? photo.image_url}
+                      photo={photo}
+                      alt={alt}
+                      compact={presentation === "compact"}
+                      detailsHref={
+                        presentation === "compact" && photo.media_asset_id
+                          ? `#/media/${photo.media_asset_id}`
+                          : undefined
+                      }
+                    />
                   )}
-                  <button
-                    className="button--danger"
-                    type="button"
-                    onClick={() => {
-                      setRemoving(photo);
-                      setError(null);
-                    }}
-                  >
-                    {photo.kind === "local" && photo.deletion_pending
-                      ? "Unlink unavailable media"
-                      : "Unlink from this record"}
-                  </button>
-                </div>
+                </MediaContainer>
+                <MediaContainer
+                  {...(presentation === "compact"
+                    ? { className: "attached-media-body" }
+                    : {})}
+                >
+                  {presentation === "compact" && (
+                    <>
+                      <p className="card-type">
+                        {photo.kind === "local" ? "Uploaded" : "External"}
+                        {photo.kind === "external" && photo.content_url && (
+                          <span> · Local copy</span>
+                        )}
+                        {currentPrimary?.kind === photo.kind &&
+                          currentPrimary.photo_id === photo.id && (
+                            <span className="primary-photo-badge">Primary</span>
+                          )}
+                      </p>
+                    </>
+                  )}
+                  {photo.caption && (
+                    <p className="photo-caption">{photo.caption}</p>
+                  )}
+                  {presentation !== "compact" && photo.attribution && (
+                    <p>
+                      <strong>Attribution:</strong> {photo.attribution}
+                    </p>
+                  )}
+                  {presentation !== "compact" && photo.kind === "external" && (
+                    <p>
+                      <a
+                        href={photo.source_url}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        Source: {new URL(photo.source_url).hostname}
+                      </a>
+                    </p>
+                  )}
+                  <div className="actions">
+                    {presentation !== "compact" && photo.media_asset_id && (
+                      <a href={`#/media/${photo.media_asset_id}`}>
+                        Open media details
+                      </a>
+                    )}
+                    {presentation === "compact" ? (
+                      <OverflowMenu
+                        label="⋯"
+                        ariaLabel={`Actions for ${alt}`}
+                        disabled={pending}
+                      >
+                        {photo.media_asset_id && (
+                          <a href={`#/media/${photo.media_asset_id}`}>
+                            Open media details
+                          </a>
+                        )}
+                        {supportsPrimary &&
+                          (currentPrimary?.kind === photo.kind &&
+                          currentPrimary.photo_id === photo.id ? (
+                            <button
+                              className="button--secondary"
+                              type="button"
+                              disabled={pending}
+                              aria-label={`Remove primary designation from ${photo.caption ?? `${photo.kind} photo`}`}
+                              onClick={() => void choosePrimary(null)}
+                            >
+                              Remove primary
+                            </button>
+                          ) : (
+                            (photo.kind === "external" ||
+                              !photo.deletion_pending) && (
+                              <button
+                                className="button--secondary"
+                                type="button"
+                                disabled={pending}
+                                aria-label={`Set ${photo.caption ?? `${photo.kind} photo`} as primary`}
+                                onClick={() => void choosePrimary(photo)}
+                              >
+                                Set as primary
+                              </button>
+                            )
+                          ))}
+                        {(photo.kind === "external" ||
+                          !photo.deletion_pending) && (
+                          <button
+                            className="button--secondary"
+                            type="button"
+                            onClick={() => {
+                              setEditor(photo);
+                              setError(null);
+                            }}
+                          >
+                            Edit details
+                          </button>
+                        )}
+                        <button
+                          className="button--danger"
+                          type="button"
+                          onClick={() => {
+                            setRemoving(photo);
+                            setError(null);
+                          }}
+                        >
+                          {photo.kind === "local" && photo.deletion_pending
+                            ? "Unlink unavailable media"
+                            : "Unlink from this record"}
+                        </button>
+                      </OverflowMenu>
+                    ) : (
+                      <>
+                        {supportsPrimary &&
+                          (currentPrimary?.kind === photo.kind &&
+                          currentPrimary.photo_id === photo.id ? (
+                            <button
+                              className="button--secondary"
+                              type="button"
+                              disabled={pending}
+                              aria-label={`Remove primary designation from ${photo.caption ?? `${photo.kind} photo`}`}
+                              onClick={() => void choosePrimary(null)}
+                            >
+                              Remove primary
+                            </button>
+                          ) : (
+                            (photo.kind === "external" ||
+                              !photo.deletion_pending) && (
+                              <button
+                                className="button--secondary"
+                                type="button"
+                                disabled={pending}
+                                aria-label={`Set ${photo.caption ?? `${photo.kind} photo`} as primary`}
+                                onClick={() => void choosePrimary(photo)}
+                              >
+                                Set as primary
+                              </button>
+                            )
+                          ))}
+                        {(photo.kind === "external" ||
+                          !photo.deletion_pending) && (
+                          <button
+                            className="button--secondary"
+                            type="button"
+                            onClick={() => {
+                              setEditor(photo);
+                              setError(null);
+                            }}
+                          >
+                            Edit details
+                          </button>
+                        )}
+                        <button
+                          className="button--danger"
+                          type="button"
+                          onClick={() => {
+                            setRemoving(photo);
+                            setError(null);
+                          }}
+                        >
+                          {photo.kind === "local" && photo.deletion_pending
+                            ? "Unlink unavailable media"
+                            : "Unlink from this record"}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </MediaContainer>
               </article>
             );
           })}
@@ -656,6 +890,19 @@ export function PhotosSection({
           }}
         />
       )}
+      {failedCopy && (
+        <div className="notice notice--error" role="alert">
+          <p>External reference saved. Local copy could not be downloaded.</p>
+          <button
+            type="button"
+            className="button--secondary"
+            disabled={pending}
+            onClick={() => void retryCopy()}
+          >
+            Retry save
+          </button>
+        </div>
+      )}
       {editor && (
         <PhotoDialog
           className="photo-dialog"
@@ -673,7 +920,9 @@ export function PhotosSection({
           <form onSubmit={(event) => void submit(event)}>
             {editor === "local" && (
               <label>
-                Image file
+                <FieldLabel as="span" required>
+                  Image file
+                </FieldLabel>
                 <input
                   ref={fileInput}
                   name="file"
@@ -686,7 +935,9 @@ export function PhotosSection({
             {externalEditor && (
               <>
                 <label>
-                  HTTPS image URL
+                  <FieldLabel as="span" required>
+                    HTTPS image URL
+                  </FieldLabel>
                   <input
                     name="image_url"
                     type="url"
@@ -698,7 +949,9 @@ export function PhotosSection({
                   />
                 </label>
                 <label>
-                  HTTPS source/page URL
+                  <FieldLabel as="span" required>
+                    HTTPS source/page URL
+                  </FieldLabel>
                   <input
                     name="source_url"
                     type="url"
@@ -712,7 +965,7 @@ export function PhotosSection({
               </>
             )}
             <label>
-              Caption <span className="field-help">optional</span>
+              Caption
               <textarea
                 name="caption"
                 maxLength={2000}
@@ -720,10 +973,9 @@ export function PhotosSection({
               />
             </label>
             <label>
-              Attribution (shared media){" "}
-              <span className="field-help">
-                {externalEditor ? "required" : "optional"}
-              </span>
+              <FieldLabel as="span" required={externalEditor}>
+                Attribution (shared media)
+              </FieldLabel>
               <textarea
                 name="attribution"
                 maxLength={2000}
@@ -731,9 +983,12 @@ export function PhotosSection({
                 required={externalEditor}
               />
             </label>
+            {editor === "external" && <ExternalCopyChoice disabled={pending} />}
             {editing && (
               <label>
-                Display order for this record
+                <FieldLabel as="span" required>
+                  Display order for this record
+                </FieldLabel>
                 <input
                   name="display_order"
                   type="number"
@@ -757,7 +1012,11 @@ export function PhotosSection({
             )}
             <div className="actions">
               <button disabled={pending} type="submit">
-                {pending ? "Saving…" : "Save"}
+                {pending
+                  ? "Saving…"
+                  : editor === "external"
+                    ? "Add image"
+                    : "Save"}
               </button>
               <button
                 className="button--secondary"

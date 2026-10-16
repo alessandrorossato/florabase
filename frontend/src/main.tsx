@@ -9,6 +9,7 @@ import "@fontsource-variable/source-serif-4";
 import "@fontsource-variable/source-serif-4/wght-italic.css";
 import "./styles.css";
 import "./styles/foundation.css";
+import "./styles/normalization.css";
 
 const root = document.getElementById("root");
 

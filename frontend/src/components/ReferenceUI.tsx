@@ -8,6 +8,23 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 
+/** Format only a structured scientific name; retain the operator-facing label verbatim. */
+export function BotanicalName({
+  label,
+  scientificName,
+}: {
+  label: string;
+  scientificName?: string;
+}) {
+  if (!scientificName || !label.startsWith(scientificName)) return <>{label}</>;
+  return (
+    <>
+      <i className="scientific-name">{scientificName}</i>
+      {label.slice(scientificName.length)}
+    </>
+  );
+}
+
 /** Small layout vocabulary, proven by the BotanicalIdentity reference. */
 export function PageHeader({
   title,
@@ -32,7 +49,7 @@ export function PageHeader({
         {description && <p>{description}</p>}
       </div>
       {tools && <div className="page-tools">{tools}</div>}
-      {actions}
+      {actions && <div className="page-actions">{actions}</div>}
     </header>
   );
 }
@@ -164,10 +181,12 @@ export function OverflowMenu({
   label = "More",
   ariaLabel,
   children,
+  disabled = false,
 }: {
   label?: string;
   ariaLabel?: string;
   children: ReactNode;
+  disabled?: boolean;
 }) {
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
@@ -264,6 +283,7 @@ export function OverflowMenu({
         className="overflow-trigger button--secondary"
         ref={trigger}
         type="button"
+        disabled={disabled}
         aria-label={ariaLabel}
         aria-expanded={open}
         aria-controls={open ? id : undefined}

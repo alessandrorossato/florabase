@@ -735,6 +735,7 @@ function ApplicationShell() {
                 <OrderScreen
                   key={route.recordId ?? "directory"}
                   initialId={route.recordId}
+                  startCreating={route.action === "create"}
                 />
               ) : route.section === "media" ? (
                 <MediaScreen
@@ -744,7 +745,7 @@ function ApplicationShell() {
               ) : route.section === "seeds" ? (
                 <SeedLotScreen
                   initialId={route.recordId}
-                  initialTab={route.tab}
+                  initialTab={route.action === "edit" ? "edit" : route.tab}
                   initialIdentityId={route.identityId}
                   initialOrderId={route.orderId}
                   startCreating={route.action === "create"}

@@ -1,0 +1,38 @@
+{
+  "success": true,
+  "numPassedTests": 94,
+  "numFailedTests": 0,
+  "numTotalTests": 94,
+  "suites": [
+    {
+      "file": "src/components/FormSections.test.tsx",
+      "tests": 6,
+      "failed": []
+    },
+    {
+      "file": "src/lineage/LineagePanel.test.tsx",
+      "tests": 4,
+      "failed": []
+    },
+    {
+      "file": "src/media/MediaScreen.test.tsx",
+      "tests": 22,
+      "failed": []
+    },
+    {
+      "file": "src/photos/PhotosSection.test.tsx",
+      "tests": 15,
+      "failed": []
+    },
+    {
+      "file": "src/seed-lots/PartialDateField.test.tsx",
+      "tests": 1,
+      "failed": []
+    },
+    {
+      "file": "src/seed-lots/SeedLotScreen.test.tsx",
+      "tests": 46,
+      "failed": []
+    }
+  ]
+}

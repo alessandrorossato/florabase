@@ -1,0 +1,27 @@
+{
+  "backend_media": {
+    "result": "passed",
+    "tests": 69,
+    "scope": [
+      "tests/test_media.py",
+      "tests/test_media_copies.py",
+      "tests/test_media_fetch.py"
+    ],
+    "runner": "guarded Review compose run --rm --no-deps backend pytest --no-cov -m \"not integration\"",
+    "external_network": "controlled fetches only"
+  },
+  "postgres_media": {
+    "result": "passed",
+    "tests": 15,
+    "warnings": 4,
+    "scope": [
+      "backend/tests/integration/test_external_media_copies.py"
+    ],
+    "runner": "scripts/test-integration.sh with exact suite selection",
+    "cleanup": "RESOURCE_CLEANUP_PASSED; zero residual containers/networks/volumes; built image removed; shared build cache retained",
+    "external_network": "controlled fetches only"
+  },
+  "canonical_feature_verify": "not run",
+  "api_schema": "unchanged; no API-generation/drift run required",
+  "migration": "unchanged; existing head 20261013_0042"
+}

@@ -23,8 +23,10 @@ export function FormSections({
   error,
   errorFields = [],
   label = "Form sections",
+  mode = "create",
 }: {
   label?: string;
+  mode?: "create" | "edit" | "page";
   panels: FormPanel[];
   submit: ReactNode;
   cancel: ReactNode;
@@ -79,7 +81,7 @@ export function FormSections({
 
   return (
     <div
-      className="form-sections"
+      className={`form-sections form-sections--${mode}`}
       ref={root}
       onInvalidCapture={(event) => {
         // Reveal the first native-invalid field before the browser tries to focus it.
@@ -94,60 +96,68 @@ export function FormSections({
         if (first) reveal(first);
       }}
     >
-      <div role="tablist" aria-label={label} className="form-section-tabs">
-        {panels.map(({ id, label }, position) => (
-          <button
-            key={id}
-            type="button"
-            role="tab"
-            id={`${prefix}-tab-${id}`}
-            aria-controls={`${prefix}-panel-${id}`}
-            aria-selected={position === index}
-            tabIndex={position === index ? 0 : -1}
-            data-index={position}
-            disabled={disabled}
-            onClick={() => {
-              navigate(position);
-            }}
-            onKeyDown={(event) => {
-              const next =
-                event.key === "ArrowRight"
-                  ? (position + 1) % panels.length
-                  : event.key === "ArrowLeft"
-                    ? (position + panels.length - 1) % panels.length
-                    : event.key === "Home"
-                      ? 0
-                      : event.key === "End"
-                        ? panels.length - 1
-                        : null;
-              if (next !== null) {
-                event.preventDefault();
-                navigate(next);
-              }
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      {panels.map(({ id, content }, position) => (
+      {mode !== "page" && (
+        <div role="tablist" aria-label={label} className="form-section-tabs">
+          {panels.map(({ id, label }, position) => (
+            <button
+              key={id}
+              type="button"
+              role="tab"
+              id={`${prefix}-tab-${id}`}
+              aria-controls={`${prefix}-panel-${id}`}
+              aria-selected={position === index}
+              tabIndex={position === index ? 0 : -1}
+              data-index={position}
+              disabled={disabled}
+              onClick={() => {
+                navigate(position);
+              }}
+              onKeyDown={(event) => {
+                const next =
+                  event.key === "ArrowRight"
+                    ? (position + 1) % panels.length
+                    : event.key === "ArrowLeft"
+                      ? (position + panels.length - 1) % panels.length
+                      : event.key === "Home"
+                        ? 0
+                        : event.key === "End"
+                          ? panels.length - 1
+                          : null;
+                if (next !== null) {
+                  event.preventDefault();
+                  navigate(next);
+                }
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+      {panels.map(({ id, label: panelLabel, content }, position) => (
         <div
           key={id}
-          role="tabpanel"
+          role={mode === "page" ? "region" : "tabpanel"}
           id={`${prefix}-panel-${id}`}
-          aria-labelledby={`${prefix}-tab-${id}`}
+          aria-labelledby={`${prefix}-${mode === "page" ? "heading" : "tab"}-${id}`}
           data-form-panel={id}
           data-panel-index={position}
-          hidden={position !== index}
+          hidden={mode !== "page" && position !== index}
           tabIndex={-1}
           className="form-section-panel"
         >
+          {mode === "page" && (
+            <h3 id={`${prefix}-heading-${id}`}>{panelLabel}</h3>
+          )}
+          {mode === "page" && error && errorSelector && position === index && (
+            <p className="notice notice--error">{error.messages[0]}</p>
+          )}
           {content}
         </div>
       ))}
       <div className="form-section-footer">
         <div className="form-section-footer__return">
-          {index > 0 && (
+          {mode === "create" && index > 0 && (
             <button
               type="button"
               className="button--secondary"
@@ -161,7 +171,7 @@ export function FormSections({
           )}
           {cancel}
         </div>
-        {index === panels.length - 1 ? (
+        {mode !== "create" || index === panels.length - 1 ? (
           <span key="submit" className="form-final-action">
             {submit}
           </span>

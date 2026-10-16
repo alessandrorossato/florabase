@@ -1807,20 +1807,30 @@ button:disabled {
   grid-template-columns: repeat(3, minmax(4rem, 1fr));
   gap: 0.5rem;
 }
-.reference-picker {
+.reference-control {
   position: relative;
+  min-width: 0;
+}
+.reference-control > input {
+  display: block;
 }
 .reference-menu {
   position: absolute;
   z-index: 10;
-  top: 100%;
+  top: calc(100% + var(--space-1));
+  inset-inline-start: 0;
   width: 100%;
   max-height: 16rem;
+  overscroll-behavior: contain;
   overflow: auto;
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-small);
   box-shadow: 0 0.8rem 2rem rgb(20 58 43 / 18%);
+}
+.reference-menu[data-placement="above"] {
+  top: auto;
+  bottom: calc(100% + var(--space-1));
 }
 .reference-menu ul {
   margin: 0;
@@ -8451,11 +8461,6 @@ button:disabled {
   width: min(calc(100% - 2rem), 48rem);
   min-height: min(34rem, calc(100dvh - 2rem));
   max-height: calc(100dvh - 2rem);
-}
-.bulk-move-dialog .reference-menu {
-  position: static;
-  max-height: min(22rem, 42dvh);
-  margin-top: 0.3rem;
 }
 .bulk-selection-row {
   display: flex;

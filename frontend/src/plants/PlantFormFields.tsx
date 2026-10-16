@@ -1,3 +1,4 @@
+import { FieldLabel } from "../components/FieldLabel";
 import { FieldHelp } from "../components/ContextualHelp";
 import { locationsForScope, type LocationResponse } from "../locations/api";
 import { PartialDateField } from "../seed-lots/PartialDateField";
@@ -29,9 +30,7 @@ export function PlantEssentialsFields({
   return (
     <>
       <div className="field">
-        <label htmlFor="plant-label">
-          Label <span className="optional">(optional)</span>
-        </label>
+        <label htmlFor="plant-label">Label</label>
         <input
           id="plant-label"
           value={form.label}
@@ -46,9 +45,7 @@ export function PlantEssentialsFields({
           aria-describedby="plant-group-quantity-help"
           className="quantity-field"
         >
-          <legend>
-            Quantity <span className="optional">(optional)</span>
-          </legend>
+          <legend>Quantity</legend>
           <div className="field">
             <label htmlFor="plant-quantity-kind">Kind</label>
             <select
@@ -68,9 +65,12 @@ export function PlantEssentialsFields({
           </div>
           {form.quantityKind !== "unknown" && (
             <div className="field">
-              <label htmlFor="plant-quantity-value">Count</label>
+              <FieldLabel htmlFor="plant-quantity-value" required>
+                Count
+              </FieldLabel>
               <input
                 id="plant-quantity-value"
+                aria-required="true"
                 inputMode="numeric"
                 value={form.quantityValue}
                 disabled={pending}
@@ -87,9 +87,7 @@ export function PlantEssentialsFields({
         </fieldset>
       )}
       <div className="field">
-        <label htmlFor="plant-location">
-          Current location <span className="optional">(optional)</span>
-        </label>
+        <label htmlFor="plant-location">Current location</label>
         <select
           aria-describedby="plant-location-help"
           id="plant-location"
@@ -125,7 +123,7 @@ export function PlantEntryDateField({ form, pending, updateForm }: FieldProps) {
   return (
     <PartialDateField
       id="plant-entry-date"
-      label="Collection-entry date (optional)"
+      label="Collection-entry date"
       value={form.collectionEntryDate}
       disabled={pending}
       onChange={(value) => {
@@ -137,9 +135,7 @@ export function PlantEntryDateField({ form, pending, updateForm }: FieldProps) {
 export function PlantNotesField({ form, pending, updateForm }: FieldProps) {
   return (
     <div className="field field--full">
-      <label htmlFor="plant-notes">
-        Notes <span className="optional">(optional)</span>
-      </label>
+      <label htmlFor="plant-notes">Notes</label>
       <textarea
         id="plant-notes"
         value={form.notes}

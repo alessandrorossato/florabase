@@ -1,3 +1,4 @@
+import { FieldLabel } from "../components/FieldLabel";
 import type { ReactNode } from "react";
 import type { FormPanel } from "../components/FormSections";
 import { FieldHelp } from "../components/ContextualHelp";
@@ -61,9 +62,7 @@ export function sowingFormPanels({
         <>
           {source}
           <div className="field">
-            <label htmlFor="sowing-label">
-              Sowing label <span className="optional">(optional)</span>
-            </label>
+            <label htmlFor="sowing-label">Sowing label</label>
             <input
               id="sowing-label"
               value={form.label}
@@ -75,7 +74,7 @@ export function sowingFormPanels({
           </div>
           <PartialDateField
             id="sowing-date"
-            label="Sowing date (optional)"
+            label="Sowing date"
             value={form.sowingDate}
             disabled={pending}
             onChange={(value) => {
@@ -94,9 +93,7 @@ export function sowingFormPanels({
             aria-describedby="sowing-quantity-help"
             className="quantity-field"
           >
-            <legend>
-              Quantity sown <span className="optional">(optional)</span>
-            </legend>
+            <legend>Quantity sown</legend>
             <div className="field">
               <label htmlFor="sowing-quantity-kind">Kind</label>
               <select
@@ -119,9 +116,12 @@ export function sowingFormPanels({
             {form.quantityKind !== "unknown" && (
               <div className="quantity-controls sowing-quantity-controls">
                 <div className="field">
-                  <label htmlFor="sowing-quantity-value">Amount</label>
+                  <FieldLabel htmlFor="sowing-quantity-value" required>
+                    Amount
+                  </FieldLabel>
                   <input
                     id="sowing-quantity-value"
+                    aria-required="true"
                     inputMode="decimal"
                     value={form.quantityValue}
                     disabled={pending}
@@ -132,9 +132,12 @@ export function sowingFormPanels({
                 </div>
                 {form.quantityKind === "weight" && (
                   <div className="field">
-                    <label htmlFor="sowing-quantity-unit">Unit</label>
+                    <FieldLabel htmlFor="sowing-quantity-unit" required>
+                      Unit
+                    </FieldLabel>
                     <select
                       id="sowing-quantity-unit"
+                      aria-required="true"
                       value={form.quantityUnit}
                       disabled={pending}
                       onChange={(event) => {
@@ -173,9 +176,7 @@ export function sowingFormPanels({
           </fieldset>
 
           <div className="field">
-            <label htmlFor="sowing-location">
-              Current location <span className="optional">(optional)</span>
-            </label>
+            <label htmlFor="sowing-location">Current location</label>
             <select
               aria-describedby="sowing-location-help"
               id="sowing-location"
@@ -217,9 +218,7 @@ export function sowingFormPanels({
       content: (
         <>
           <div className="field">
-            <label htmlFor="sowing-substrate">
-              Substrate <span className="optional">(optional)</span>
-            </label>
+            <label htmlFor="sowing-substrate">Substrate</label>
             <input
               id="sowing-substrate"
               value={form.substrate}
@@ -230,9 +229,7 @@ export function sowingFormPanels({
             />
           </div>
           <div className="field">
-            <label htmlFor="sowing-method">
-              Method / container <span className="optional">(optional)</span>
-            </label>
+            <label htmlFor="sowing-method">Method / container</label>
             <input
               id="sowing-method"
               value={form.methodContainer}
@@ -243,9 +240,7 @@ export function sowingFormPanels({
             />
           </div>
           <div className="field">
-            <label htmlFor="sowing-pretreatment">
-              Pretreatment <span className="optional">(optional)</span>
-            </label>
+            <label htmlFor="sowing-pretreatment">Pretreatment</label>
             <input
               id="sowing-pretreatment"
               value={form.pretreatment}
@@ -256,9 +251,7 @@ export function sowingFormPanels({
             />
           </div>
           <fieldset className="temperature-field">
-            <legend>
-              Temperature <span className="optional">(optional, °C)</span>
-            </legend>
+            <legend>Temperature (°C)</legend>
             <div className="temperature-controls">
               <div className="field">
                 <label htmlFor="temperature-min">Minimum °C</label>
@@ -289,7 +282,6 @@ export function sowingFormPanels({
           <div className="field field--full">
             <label htmlFor="sowing-environment">
               Environment / conditions{" "}
-              <span className="optional">(optional)</span>
             </label>
             <textarea
               id="sowing-environment"
@@ -309,9 +301,7 @@ export function sowingFormPanels({
       content: (
         <>
           <div className="field field--full">
-            <label htmlFor="sowing-notes">
-              Notes <span className="optional">(optional)</span>
-            </label>
+            <label htmlFor="sowing-notes">Notes</label>
             <textarea
               id="sowing-notes"
               value={form.notes}

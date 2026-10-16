@@ -1,3 +1,4 @@
+import { FieldLabel } from "../components/FieldLabel";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { CoordinateFields } from "./CoordinateFields";
 import { FormSections } from "../components/FormSections";
@@ -484,6 +485,7 @@ export function ProvenanceSiteManager({
               {selectedId ? "Edit provenance site" : "Create provenance site"}
             </h4>
             <FormSections
+              mode={selectedId ? "edit" : "create"}
               disabled={pending}
               error={sectionError}
               errorFields={[
@@ -507,7 +509,9 @@ export function ProvenanceSiteManager({
                   content: (
                     <>
                       <div className="field">
-                        <label htmlFor="site-name">Provenance site name</label>
+                        <FieldLabel required htmlFor="site-name">
+                          Provenance site name
+                        </FieldLabel>
                         <input
                           aria-describedby="provenance-site-name-help"
                           id="site-name"
@@ -529,9 +533,7 @@ export function ProvenanceSiteManager({
                         </FieldHelp>
                       </div>
                       <div className="field">
-                        <label htmlFor="site-place">
-                          Geographic place (optional)
-                        </label>
+                        <label htmlFor="site-place">Geographic place</label>
                         <select
                           id="site-place"
                           disabled={pending}
@@ -577,7 +579,7 @@ export function ProvenanceSiteManager({
                       />
                       <div className="field">
                         <label htmlFor="site-accuracy">
-                          Coordinate accuracy in metres (optional)
+                          Coordinate accuracy in metres
                         </label>
                         <input
                           id="site-accuracy"
@@ -603,7 +605,7 @@ export function ProvenanceSiteManager({
                   content: (
                     <>
                       <div className="field">
-                        <label htmlFor="site-notes">Notes (optional)</label>
+                        <label htmlFor="site-notes">Notes</label>
                         <textarea
                           id="site-notes"
                           disabled={pending}

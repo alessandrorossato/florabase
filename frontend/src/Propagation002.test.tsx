@@ -396,10 +396,7 @@ test("incompatible units suppress arithmetic and a conflict preserves entered de
   const user = userEvent.setup();
   render(<App />);
   await screen.findByRole("heading", { name: "Start sowing" });
-  await user.type(
-    screen.getByLabelText("Sowing label (optional)"),
-    "Keep this",
-  );
+  await user.type(screen.getByLabelText("Sowing label"), "Keep this");
   await user.click(screen.getByRole("tab", { name: "Material & location" }));
   await user.selectOptions(screen.getByLabelText("Kind"), "weight");
   await user.click(screen.getByRole("tab", { name: "Material & location" }));
@@ -424,9 +421,7 @@ test("incompatible units suppress arithmetic and a conflict preserves entered de
   );
   await user.click(screen.getByRole("button", { name: "Back to details" }));
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
-  expect(screen.getByLabelText("Sowing label (optional)")).toHaveValue(
-    "Keep this",
-  );
+  expect(screen.getByLabelText("Sowing label")).toHaveValue("Keep this");
 });
 
 test("creating a Plant from a Sowing defaults active and makes completion outcome deliberate", async () => {

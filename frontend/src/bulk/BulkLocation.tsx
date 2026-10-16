@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { TaskDialog } from "../components/TaskDialog";
+import { OverflowMenu } from "../components/ReferenceUI";
 import { listLocations, type LocationResponse } from "../locations/api";
 import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import {
@@ -70,7 +71,7 @@ export function BulkSelect({
         selection.start();
       }}
     >
-      Select
+      Select records
     </button>
   );
 }
@@ -85,6 +86,18 @@ export function BulkToolbar({
   onSuccess: (result: BulkResult) => void;
 }) {
   const [message, setMessage] = useState("");
+  const toolbar = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!selection.active) return;
+    const frame = requestAnimationFrame(() =>
+      toolbar.current
+        ?.querySelector<HTMLButtonElement>("button:not(:disabled)")
+        ?.focus(),
+    );
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [selection.active]);
   const eligibleCount = visible.filter((row) => row.eligible).length;
   if (!selection.active && !message) return null;
   return (
@@ -93,20 +106,11 @@ export function BulkToolbar({
       {selection.active && (
         <div
           className="bulk-toolbar"
+          ref={toolbar}
           role="group"
           aria-label="Selected records"
         >
           <strong role="status">{selection.selected.length} selected</strong>
-          <button
-            type="button"
-            disabled={!selection.selected.length}
-            onClick={() => {
-              setMessage("");
-              selection.openDialog();
-            }}
-          >
-            Move to location
-          </button>
           <div className="bulk-toolbar-secondary">
             <button
               type="button"
@@ -122,8 +126,26 @@ export function BulkToolbar({
               disabled={!selection.selected.length}
               onClick={selection.clear}
             >
-              Clear selection
+              Clear
             </button>
+          </div>
+          <div className="bulk-toolbar-actions">
+            <OverflowMenu
+              label="Actions ▾"
+              ariaLabel="Bulk actions"
+              disabled={!selection.selected.length}
+            >
+              <button
+                type="button"
+                className="button--quiet"
+                onClick={() => {
+                  setMessage("");
+                  selection.openDialog();
+                }}
+              >
+                Move to location
+              </button>
+            </OverflowMenu>
             <button
               type="button"
               className="bulk-secondary"
@@ -133,7 +155,7 @@ export function BulkToolbar({
                 window.setTimeout(selection.focusEntry, 0);
               }}
             >
-              Done
+              Exit selection
             </button>
           </div>
           <small>

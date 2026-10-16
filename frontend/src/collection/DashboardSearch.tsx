@@ -329,7 +329,9 @@ export function useDashboardSearch() {
     header: (
       <div className="dashboard-search-controls">
         <div className="field dashboard-search-field">
-          <label htmlFor="dashboard-search">Search your collection</label>
+          <label className="sr-only" htmlFor="dashboard-search">
+            Search your collection
+          </label>
           <input
             id="dashboard-search"
             type="search"
@@ -452,7 +454,7 @@ export function useDashboardSearch() {
                       }}
                     />
                   </fieldset>
-                  <fieldset className="dashboard-filter-group">
+                  <fieldset className="dashboard-filter-group dashboard-filter-group--geography">
                     <legend>Location & geography</legend>
                     <ReferencePicker
                       label="Collection location"

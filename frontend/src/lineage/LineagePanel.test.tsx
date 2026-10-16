@@ -97,13 +97,44 @@ test("navigation cannot show or restore a previous record's lineage during loadi
     subject: { ...extracted.subject, id: "independent" },
     ancestors: [],
   });
-  await screen.findByText("No explicit upstream lineage is recorded.");
+  await screen.findByText("No recorded upstream material lineage.");
   resolveOld(extracted);
   await Promise.resolve();
   expect(
     screen.queryByRole("link", { name: "Original group" }),
   ).not.toBeInTheDocument();
   expect(
-    screen.getByText("No explicit upstream lineage is recorded."),
+    screen.getByText("No recorded upstream material lineage."),
   ).toBeInTheDocument();
 });
+
+test.each([false, true])(
+  "SeedLot renders only explicit producer ancestry (producer=%s)",
+  async (producer) => {
+    request.mockResolvedValue({
+      subject: { ...extracted.subject, kind: "seed_lot", id: "material" },
+      ancestors: producer ? [extracted.ancestors[0]] : [],
+    });
+    render(<LineagePanel kind="seed-lots" id="material" />);
+    if (producer) {
+      expect(
+        await screen.findByRole("link", { name: "Original group" }),
+      ).toHaveAttribute("href", "#/plant-groups/original?tab=lineage");
+      expect(screen.getAllByRole("listitem")).toHaveLength(1);
+    } else {
+      expect(
+        await screen.findByText("No recorded upstream material lineage."),
+      ).toBeVisible();
+      expect(screen.queryByRole("list")).not.toBeInTheDocument();
+      expect(
+        screen
+          .getByText("No recorded upstream material lineage.")
+          .closest(".empty-state"),
+      ).toBeNull();
+    }
+    expect(request.mock.calls[0]?.[0]).toBe(
+      "/api/v1/seed-lots/material/lineage",
+    );
+    expect(request.mock.calls[0]?.[1]?.signal).toBeInstanceOf(AbortSignal);
+  },
+);

@@ -1,0 +1,23 @@
+[
+  {
+    "name": "shared-order-day",
+    "fields": [
+      {
+        "display": "block",
+        "label": "Order date",
+        "parts": [
+          "order-date-year",
+          "order-date-month",
+          "order-date-day"
+        ],
+        "precision": "day"
+      }
+    ],
+    "overflow": false,
+    "pageWidth": 1440,
+    "viewport": {
+      "height": 844,
+      "width": 1440
+    }
+  }
+]

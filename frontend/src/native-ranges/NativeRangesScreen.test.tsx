@@ -187,12 +187,14 @@ test("overview exposes distinct coverage, exact places, meaning and local-only s
   if (!coverage) throw new Error("Coverage list is missing");
   expect(within(coverage).getByText("3 identities")).toBeVisible();
   expect(screen.getByRole("link", { name: /Natural Earth/ })).toBeVisible();
-  for (const label of ["Living", "Current", "Historical", "All represented"]) {
-    await user.click(screen.getByRole("button", { name: label }));
-    expect(screen.getByRole("button", { name: label })).toHaveAttribute(
-      "aria-pressed",
-      "true",
+  for (const value of ["living", "current", "historical", "all"]) {
+    await user.selectOptions(
+      screen.getByRole("combobox", { name: "Collection representation" }),
+      value,
     );
+    expect(
+      screen.getByRole("combobox", { name: "Collection representation" }),
+    ).toHaveValue(value);
   }
   fireEvent.change(screen.getByLabelText("Search species"), {
     target: { value: "synthetic" },
@@ -482,10 +484,9 @@ test("Back/Forward restores mode/scope and selection independent of search resul
       expect.any(AbortSignal),
     );
   });
-  expect(screen.getByRole("button", { name: "Current" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  expect(
+    screen.getByRole("combobox", { name: "Collection representation" }),
+  ).toHaveValue("current");
   expect(screen.getByLabelText("Search species")).toHaveValue("");
 });
 
@@ -510,7 +511,10 @@ test("API failures remain retryable and authentication expiry uses the session b
   vi.mocked(listNativeIdentities).mockRejectedValueOnce(
     new ApiError(401, "expired"),
   );
-  await user.click(screen.getByRole("button", { name: "Living" }));
+  await user.selectOptions(
+    screen.getByRole("combobox", { name: "Collection representation" }),
+    "living",
+  );
   await waitFor(() => {
     expect(sessionExpired).toHaveBeenCalled();
   });

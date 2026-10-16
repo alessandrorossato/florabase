@@ -1,3 +1,4 @@
+import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ApiError } from "../auth/api";
@@ -431,8 +432,11 @@ export function LabelsScreen({
                     )}
                     <div className="label-entry-actions">
                       <label>
-                        Copies
+                        <FieldLabel as="span" required>
+                          Copies
+                        </FieldLabel>
                         <input
+                          aria-required="true"
                           aria-label={`Copies for ${description}`}
                           type="number"
                           min="1"

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { OrderTransaction } from "./PurchaseContext";
 import { getOrder, listOrders, orderDate, orderTitle, type Order } from "./api";
 
@@ -9,12 +9,18 @@ export function OrderPicker({
   disabled,
   supplierId = "",
   refreshKey = "",
+  independentFields,
+  retainedKnowledge,
+  reviewAction,
 }: {
   value: string;
   onChange: (id: string) => void;
   disabled: boolean;
   supplierId?: string;
   refreshKey?: string;
+  independentFields?: ReactNode;
+  retainedKnowledge?: ReactNode;
+  reviewAction?: ReactNode;
 }) {
   const [allSuppliers, setAllSuppliers] = useState(false);
   const supplierFilter = allSuppliers ? "" : supplierId;
@@ -76,26 +82,14 @@ export function OrderPicker({
       ? [selected, ...currentItems]
       : currentItems;
   return (
-    <fieldset className="form-section">
-      <legend>Purchase Order (optional)</legend>
-      <p className="field-help">
-        Selection opens a purchase-context review. Unknown sources may become
-        Purchased; known incompatible sources require explicit correction first.
-      </p>
-      {supplierId && (
-        <label className="checkbox-field">
-          <input
-            type="checkbox"
-            checked={allSuppliers}
-            disabled={disabled}
-            onChange={(event) => {
-              setAllSuppliers(event.currentTarget.checked);
-              setOffset(0);
-            }}
-          />{" "}
-          Show all Suppliers’ Orders (including unknown or conflicting
-          Suppliers)
-        </label>
+    <fieldset
+      className={`form-section${independentFields ? " acquisition-order" : ""}`}
+    >
+      <legend>Purchase Order</legend>
+      {!independentFields && (
+        <p className="field-help">
+          Linking opens a review before changing recorded knowledge.
+        </p>
       )}
       <div className="field">
         <label htmlFor="seed-order-search">Find an Order</label>
@@ -147,7 +141,9 @@ export function OrderPicker({
           ))}
         </select>
       </div>
-      {selected?.id === value && <OrderTransaction order={selected} />}
+      {selected?.id === value && !independentFields && (
+        <OrderTransaction order={selected} />
+      )}
       {value &&
         selected?.id !== value &&
         (contextError === value ? (
@@ -166,14 +162,42 @@ export function OrderPicker({
         ) : (
           <p role="status">Loading Order transaction information…</p>
         ))}
-      {value && (
-        <p className="field-help">
-          Unlinking removes only the Order relationship when saved. Confirmed
-          Source, Supplier and acquisition date remain.
-        </p>
-      )}
       {loading && <p role="status">Loading Order choices…</p>}
       <div className="actions">
+        {supplierId && (
+          <label className="checkbox-field">
+            <input
+              type="checkbox"
+              aria-label="Show all Suppliers’ Orders (including unknown or conflicting Suppliers)"
+              checked={allSuppliers}
+              disabled={disabled}
+              onChange={(event) => {
+                setAllSuppliers(event.currentTarget.checked);
+                setOffset(0);
+              }}
+            />{" "}
+            {independentFields
+              ? "All Suppliers’ Orders"
+              : "Show all Suppliers’ Orders (including unknown or conflicting Suppliers)"}
+          </label>
+        )}
+
+        <a
+          href="#/orders?action=create"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Create Order (new tab)
+        </a>
+        <button
+          type="button"
+          disabled={disabled || loading}
+          onClick={() => {
+            setAttempt((current) => current + 1);
+          }}
+        >
+          Refresh Order choices
+        </button>
         {offset > 0 && (
           <button
             type="button"
@@ -197,6 +221,42 @@ export function OrderPicker({
           </button>
         )}
       </div>
+      {independentFields &&
+        (!value ? (
+          <div className="acquisition-independent">{independentFields}</div>
+        ) : selected?.id === value ? (
+          <section
+            className="acquisition-linked"
+            aria-label="Order transaction information"
+          >
+            <dl className="acquisition-transaction-facts">
+              <div aria-label="Supplier from linked Order">
+                <dt>Supplier</dt>
+                <dd>
+                  {selected.supplier ? (
+                    <a href={`#/suppliers/${selected.supplier.id}`}>
+                      {selected.supplier.name}
+                    </a>
+                  ) : (
+                    "Not recorded"
+                  )}
+                </dd>
+                <dd className="field-help">From linked Order</dd>
+              </div>
+              <div>
+                <dt>Order date</dt>
+                <dd>{orderDate(selected.ordered_on)}</dd>
+                <dd className="field-help">From linked Order</dd>
+              </div>
+            </dl>
+            {retainedKnowledge}
+            <div className="acquisition-linked-actions">
+              <a href={`#/orders/${selected.id}`}>{orderTitle(selected)}</a>
+              {reviewAction}
+              <p className="field-help">Unlink keeps recorded lot facts.</p>
+            </div>
+          </section>
+        ) : null)}
     </fieldset>
   );
 }

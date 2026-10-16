@@ -1792,6 +1792,25 @@
       ],
       "priority": "P0",
       "status": "verified"
+    },
+    {
+      "id": "GLOBAL-VISUAL-001",
+      "category": "ux",
+      "description": "Normalize the frozen v0.1 workspace across Collection, Explore, Sourcing and shared interaction surfaces",
+      "acceptance_criteria": [
+        "A pre-change inventory covers every primary page family, important forms and detail flows with classified visual and accessibility findings",
+        "Directory headers reuse intrinsic PageIdentity and PageTools, flexible search, supported Saved views, live filter drawers, native single-select controls and removable dimension summaries while retaining URL state",
+        "Collection and Sourcing share medium-compact grouped list surfaces, readable bounded task forms, clear action hierarchy and semantic typography without changing domain behavior or navigation membership",
+        "Explore, analytical map workspaces, Media, utilities and sign-in consume shared tokens and controls, with Dashboard, Activity, Settings and physical Labels retained as regression references",
+        "Native dialogs exclude hidden, disabled, inert and negative-tab-stop controls from initial focus and keyboard containment; dismissal and focus return remain covered",
+        "Organized before/after evidence and responsive, actual browser zoom, accessibility and bundle-impact checks describe their exact scope and environmental limitations",
+        "Frontend regression, formatting, lint, strict typing, production build, feature graph and whitespace checks pass; candidate stays unstaged and uncommitted for independent visual review"
+      ],
+      "dependencies": [
+        "IA-FREEZE-001"
+      ],
+      "priority": "P0",
+      "status": "verified"
     }
   ]
 }

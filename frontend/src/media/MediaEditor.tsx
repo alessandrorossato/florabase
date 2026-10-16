@@ -1,10 +1,13 @@
+import { FieldLabel } from "../components/FieldLabel";
 import { useRef, useState, type SyntheticEvent } from "react";
+import { ExternalCopyChoice } from "./ExternalCopyChoice";
 import { PhotoDialog } from "../photos/PhotosSection";
 import { useAuth } from "../auth/context";
 import { ApiError } from "../auth/api";
 import { formText, mediaError } from "./helpers";
 import {
   createExternalMedia,
+  saveLocalCopy,
   updateMedia,
   uploadMedia,
   type MediaAsset,
@@ -25,6 +28,9 @@ export function MediaEditor({
     asset?.kind ?? "local",
   );
   const [pending, setPending] = useState(false);
+  const [createdReference, setCreatedReference] = useState<MediaAsset | null>(
+    null,
+  );
   const [error, setError] = useState<string | null>(null);
   const token =
     auth.state.status === "authenticated" ? auth.state.csrfToken : "";
@@ -44,7 +50,7 @@ export function MediaEditor({
       };
       let result: MediaAsset;
       if (asset) result = await updateMedia(asset.id, metadata, token);
-      else if (kind === "external")
+      else if (kind === "external") {
         result = await createExternalMedia(
           {
             ...metadata,
@@ -54,7 +60,11 @@ export function MediaEditor({
           },
           token,
         );
-      else {
+        if (form.get("save_local_copy") === "on") {
+          setCreatedReference(result);
+          result = await saveLocalCopy(result.id, token);
+        }
+      } else {
         const file = fileInput.current?.files?.[0];
         if (!(file instanceof File) || file.size === 0) {
           setError("Choose a JPEG, PNG or WebP image.");
@@ -76,6 +86,51 @@ export function MediaEditor({
       setPending(false);
     }
   }
+  if (createdReference && error)
+    return (
+      <PhotoDialog
+        title="External reference saved"
+        onClose={() => {
+          if (!pending) onSaved(createdReference);
+        }}
+      >
+        <p role="alert">
+          Local copy could not be downloaded. The external reference remains
+          saved.
+        </p>
+        <div className="actions">
+          <button
+            type="button"
+            disabled={pending}
+            onClick={() => {
+              setPending(true);
+              void saveLocalCopy(createdReference.id, token)
+                .then(onSaved)
+                .catch((failure: unknown) => {
+                  if (failure instanceof ApiError && failure.status === 401)
+                    auth.sessionExpired();
+                  else setError(mediaError(failure));
+                })
+                .finally(() => {
+                  setPending(false);
+                });
+            }}
+          >
+            {pending ? "Saving…" : "Retry save"}
+          </button>
+          <button
+            type="button"
+            className="button--secondary"
+            disabled={pending}
+            onClick={() => {
+              onSaved(createdReference);
+            }}
+          >
+            Keep reference only
+          </button>
+        </div>
+      </PhotoDialog>
+    );
   return (
     <PhotoDialog
       title={asset ? "Edit media details" : "Add new media"}
@@ -125,7 +180,9 @@ export function MediaEditor({
         </div>
         {!asset && kind === "local" && (
           <div className="field">
-            <label htmlFor="media-file">Image file</label>
+            <FieldLabel required htmlFor="media-file">
+              Image file
+            </FieldLabel>
             <input
               ref={fileInput}
               id="media-file"
@@ -144,7 +201,9 @@ export function MediaEditor({
         {!asset && kind === "external" && (
           <>
             <div className="field">
-              <label htmlFor="media-image-url">Image URL</label>
+              <FieldLabel required htmlFor="media-image-url">
+                Image URL
+              </FieldLabel>
               <input
                 id="media-image-url"
                 name="image_url"
@@ -155,7 +214,9 @@ export function MediaEditor({
               />
             </div>
             <div className="field">
-              <label htmlFor="media-source-url">Source page URL</label>
+              <FieldLabel required htmlFor="media-source-url">
+                Source page URL
+              </FieldLabel>
               <input
                 id="media-source-url"
                 name="source_url"
@@ -165,14 +226,16 @@ export function MediaEditor({
                 disabled={pending}
               />
             </div>
-            <p>
-              Saving an external reference does not load the image. Loading
-              requires a separate choice.
-            </p>
+            <ExternalCopyChoice disabled={pending} />
           </>
         )}
         <div className="field">
-          <label htmlFor="media-attribution">Attribution</label>
+          <FieldLabel
+            required={kind === "external"}
+            htmlFor="media-attribution"
+          >
+            Attribution
+          </FieldLabel>
           <textarea
             id="media-attribution"
             name="attribution"

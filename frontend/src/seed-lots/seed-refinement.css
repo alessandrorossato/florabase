@@ -1,0 +1,679 @@
+/* First operator refinement: keep geometry local until sibling layouts prove equivalent. */
+.app-content .seeds-workspace .seed-master-detail {
+  margin-top: var(--space-3);
+}
+.app-content .seeds-workspace .operational-layout .collection-form {
+  max-width: 60rem;
+  padding: var(--space-4) var(--space-6);
+}
+.seeds-workspace .form-section-tabs {
+  margin-block: var(--space-3);
+}
+.app-content .seeds-workspace .form-section-panel:not([hidden]) {
+  gap: var(--space-3) var(--space-6);
+}
+.seeds-workspace [data-form-panel="essentials"] > .reference-picker {
+  grid-column: 1 / -1;
+}
+.app-content .seed-overview-main .schedule-upcoming h3 {
+  font: var(--type-h3);
+  margin: 0 0 var(--space-2);
+}
+.app-content .seeds-workspace .seed-overview .seed-fact-group h4 {
+  font: var(--type-h3);
+}
+.seed-overview-main .button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.seed-overview-facts .seed-fact-group {
+  border-radius: 0;
+}
+.seeds-workspace .collection-form .field > textarea {
+  max-width: none;
+}
+.seeds-workspace .collection-form .form-section-footer {
+  padding: var(--space-3) 0;
+  background: var(--surface);
+  z-index: 1;
+}
+@media (min-height: 40rem) and (min-width: 48.01rem) {
+  html:has(.seed-form .form-sections--edit),
+  .app-content:has(.seed-form .form-sections--edit) {
+    scroll-padding-block-end: 6rem;
+  }
+  .seed-form .form-sections--edit :is(input, select, textarea) {
+    scroll-margin-block-end: 6rem;
+  }
+  .seeds-workspace .form-sections--edit > .form-section-footer {
+    position: sticky;
+    bottom: 0;
+  }
+}
+.seeds-workspace .collection-detail .detail-header {
+  align-items: center;
+}
+.seeds-workspace .collection-detail .detail-status {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.app-content .seeds-workspace .seed-overview {
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-6);
+}
+.seed-overview-main,
+.seed-overview-facts {
+  min-width: 0;
+}
+.seed-overview-facts > h3 {
+  font: var(--type-h3);
+  margin: 0 0 var(--space-4);
+}
+.seed-overview-facts dd .field-help {
+  display: block;
+}
+.app-content .seeds-workspace .edit-workspace-modal .form-section-footer {
+  position: static;
+}
+.app-content .seeds-workspace .edit-workspace-modal .collection-form {
+  max-width: none;
+  padding: var(--space-4) var(--space-6);
+}
+.acquisition-supplier-context p {
+  margin: var(--space-1) 0;
+}
+.seeds-workspace .photos-section--compact .photos-heading {
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: var(--space-2);
+  gap: var(--space-3);
+}
+.seeds-workspace .photos-section--compact .photos-heading h4 {
+  font: var(--type-h3);
+  margin: 0;
+}
+
+/* Compact attached gallery: one image area, concise identity and reachable actions. */
+.seeds-workspace .photos-section--compact .photo-gallery {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  gap: var(--space-4);
+}
+.app-content .seeds-workspace .photos-section--compact .photo-card {
+  position: relative;
+  display: block;
+  padding: 0;
+  max-width: none;
+  width: 100%;
+  overflow: visible;
+}
+.photos-section--compact
+  .photo-card
+  > :is(.attached-media-preview, .attached-media-body) {
+  margin: 0;
+}
+.photos-section--compact .attached-media-preview {
+  aspect-ratio: 4 / 3;
+  background: var(--surface-subtle);
+  border-radius: var(--radius-normal) var(--radius-normal) 0 0;
+  overflow: hidden;
+}
+.photos-section--compact .attached-media-preview > :is(a, div) {
+  height: 100%;
+}
+.photos-section--compact .gallery-image-link {
+  height: 100%;
+  display: block;
+  position: relative;
+}
+.photos-section--compact .gallery-open-label {
+  position: absolute;
+  left: var(--space-3);
+  bottom: var(--space-3);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  color: var(--primary);
+  font: var(--type-strong);
+  opacity: 0;
+  pointer-events: none;
+}
+.photos-section--compact
+  .photo-card:is(:hover, :focus-within)
+  .gallery-open-label {
+  opacity: 1;
+}
+.photos-section--compact .gallery-image-link:focus-visible {
+  outline-offset: -6px;
+}
+.app-content .photos-section--compact .collection-photo-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+  margin: 0;
+  border-radius: 0;
+}
+.photos-section--compact .attached-media-body {
+  padding: var(--space-3);
+  min-width: 0;
+}
+.photos-section--compact .attached-media-body p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.photos-section--compact .attached-media-body .card-type {
+  font: var(--type-label);
+  color: var(--text-muted);
+}
+.photos-section--compact .photo-caption {
+  font: var(--type-strong);
+  margin-top: var(--space-1);
+}
+.photos-section--compact .attached-media-body .actions {
+  position: absolute;
+  inset: var(--space-2) var(--space-2) auto;
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.photos-section--compact .attached-media-body .actions > :last-child {
+  margin-left: auto;
+}
+.photos-section--compact .external-preview-disclosure {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: start;
+  gap: var(--space-1);
+  padding: var(--space-3);
+
+  box-sizing: border-box;
+}
+.photos-section--compact .external-preview-disclosure p {
+  margin: 0;
+}
+.photos-section--compact .external-preview-disclosure span {
+  overflow-wrap: anywhere;
+  font: var(--type-small);
+}
+@media (max-width: 30rem) {
+  .app-content .seeds-workspace .edit-workspace-modal .collection-form {
+    padding: var(--space-3) var(--space-3)
+      calc(var(--space-3) + env(safe-area-inset-bottom));
+  }
+  .seeds-workspace .photos-section--compact .photo-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  }
+}
+.seed-overview-main {
+  display: grid;
+  align-content: start;
+  gap: var(--space-4);
+}
+.app-content .seed-overview-main .schedule-upcoming {
+  padding: var(--space-3) 0;
+  margin: 0;
+  min-height: 0;
+  background: transparent;
+  border: 0;
+}
+.seed-overview-facts {
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+}
+.app-content .seed-overview :is(.seed-fact-group, .seed-fact-group--notes) {
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+.seed-overview-facts .seed-fact-group + .seed-fact-group {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-3);
+  margin-top: var(--space-3);
+}
+.seeds-workspace .seed-overview-facts .seed-fact-group dl {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.seeds-workspace .seed-overview-facts .seed-fact-group h4 {
+  margin-bottom: var(--space-2);
+}
+@media (max-width: 48rem) {
+  .app-content .seeds-workspace .seed-overview {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+  .app-content .seeds-workspace .operational-layout .collection-form {
+    padding: var(--space-3);
+  }
+}
+
+/* The entity shell uses the available workspace; only prose is bounded. */
+.app-content .seeds-workspace,
+.app-content
+  .seeds-workspace
+  .operational-layout.is-detail-view
+  .seed-detail-pane {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+.seeds-workspace .detail-tab-panel > .empty-state {
+  padding: var(--space-4) 0;
+}
+.seeds-workspace .detail-tab-panel .lineage-list {
+  max-width: 65ch;
+}
+
+.seeds-workspace [data-form-panel="acquisition"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+.seeds-workspace [data-form-panel="acquisition"] > .field {
+  max-width: 24rem;
+}
+.seeds-workspace .acquisition-order {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-4);
+  min-width: 0;
+}
+.seeds-workspace
+  .acquisition-order
+  > :is(
+    .field-help,
+    .checkbox-field,
+    .actions,
+    .acquisition-independent,
+    .acquisition-linked,
+    [role="alert"],
+    [role="status"]
+  ) {
+  grid-column: 1 / -1;
+}
+.seeds-workspace .acquisition-order > .field-help {
+  margin: 0;
+}
+.seeds-workspace .acquisition-order legend {
+  font: var(--type-strong);
+  padding-bottom: var(--space-1);
+}
+.seeds-workspace .acquisition-independent,
+.seeds-workspace .acquisition-transaction-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+.seeds-workspace .acquisition-linked {
+  border-top: 1px solid var(--border);
+  padding-top: var(--space-3);
+}
+.seeds-workspace .acquisition-linked p,
+.seeds-workspace .acquisition-linked dl {
+  margin: var(--space-2) 0;
+}
+.seeds-workspace .acquisition-transaction-facts :is(dt, dd) {
+  margin: 0;
+}
+.seeds-workspace .acquisition-transaction-facts dt {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.seeds-workspace .acquisition-retained {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+@media (max-width: 40rem) {
+  .seeds-workspace .acquisition-order,
+  .seeds-workspace .acquisition-independent,
+  .seeds-workspace .acquisition-transaction-facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.seeds-workspace .acquisition-order .actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  align-items: center;
+}
+.seeds-workspace .acquisition-order .checkbox-field {
+  font: var(--type-small);
+  margin: 0;
+}
+.seeds-workspace .acquisition-order > .actions {
+  margin: 0;
+}
+.seeds-workspace .acquisition-independent .partial-date {
+  margin: 0;
+}
+
+.photos-section--compact .external-preview-disclosure > :is(strong, span) {
+  max-width: calc(100% - var(--control-height));
+}
+
+.photos-section--compact .attached-media-preview {
+  position: relative;
+}
+.photos-section--compact .gallery-loading {
+  position: absolute;
+  left: var(--space-3);
+  bottom: var(--space-3);
+  margin: 0;
+  padding: var(--space-1);
+  background: var(--surface);
+  font: var(--type-small);
+  z-index: 1;
+}
+
+.photos-section--compact .external-preview-disclosure > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Empty overlay space remains part of the image link's hit area. */
+.photos-section--compact .attached-media-body .actions {
+  pointer-events: none;
+}
+.photos-section--compact .attached-media-body .actions > button {
+  pointer-events: auto;
+}
+
+/* Override inherited fieldset/legend/action spacing in this compact acquisition task. */
+.app-content .seeds-workspace .acquisition-order {
+  margin: 0;
+}
+.app-content .seeds-workspace .acquisition-order legend {
+  margin: 0;
+  padding-bottom: var(--space-1);
+}
+.app-content .seeds-workspace .acquisition-order > .actions {
+  padding: 0;
+}
+.seeds-workspace .acquisition-linked {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--space-2) var(--space-4);
+  padding-top: var(--space-2);
+}
+.seeds-workspace .acquisition-linked .acquisition-transaction-facts,
+.seeds-workspace .acquisition-linked .acquisition-retained p {
+  margin: 0;
+}
+.seeds-workspace .acquisition-linked-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+}
+.seeds-workspace .acquisition-linked-actions p {
+  margin: 0;
+}
+@media (max-width: 40rem) {
+  .seeds-workspace .acquisition-linked {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* Record tabs retain navigation contrast under the generic button hover rule. */
+.seeds-workspace .detail-tabs [role="tab"]:hover {
+  color: var(--primary);
+  background: var(--primary-subtle);
+}
+
+/* Creation shows the whole record; editing retains contextual section navigation. */
+.app-content .seeds-workspace .seed-creation-panel .collection-form {
+  max-width: none;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.seed-creation-panel .edit-workspace-fallback {
+  width: 100%;
+  max-width: none;
+}
+.seed-create-description {
+  color: var(--text-muted);
+  margin: 0 0 var(--space-6);
+}
+.app-content .seeds-workspace .form-sections--page {
+  display: block;
+}
+.app-content .seeds-workspace .form-sections--page > .form-section-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  padding: var(--space-6) 0;
+  margin: 0;
+  border-top: 1px solid var(--border);
+}
+.form-sections--page .form-section-panel > h3 {
+  grid-column: 1 / -1;
+  margin: 0;
+  font: var(--type-h3);
+}
+.seeds-workspace
+  .form-sections--page
+  [data-form-panel="essentials"]
+  > .reference-picker {
+  grid-column: auto;
+}
+.form-sections--page .seed-task-hint {
+  display: none;
+}
+.form-sections--page :is(.acquisition-order, .partial-date-grid) {
+  grid-column: 1 / -1;
+}
+.form-sections--page [data-form-panel="details"] > .field {
+  grid-column: 1 / -1;
+}
+.app-content .seeds-workspace .form-sections--page .form-section-footer {
+  margin-top: 0;
+}
+.acquisition-date-slot {
+  min-width: 0;
+}
+/* Give both independent facts the same title/control rhythm. */
+.seeds-workspace .acquisition-independent {
+  align-items: start;
+}
+.seeds-workspace .acquisition-independent > .reference-picker {
+  padding-top: var(--space-2);
+}
+.seeds-workspace .operational-layout .seed-row .seed-quantity strong {
+  font: var(--type-strong);
+  color: var(--text);
+}
+@media (max-width: 48rem) {
+  .app-content .seeds-workspace .form-sections--page > .form-section-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* SeedLot reference grammar: one current-state band, then semantic sections. */
+.app-content .seeds-workspace .seed-overview {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+}
+.seed-overview-facts,
+.seed-overview-main {
+  grid-column: 1 / -1;
+  grid-row: auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.seed-overview .seed-current-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 0;
+  margin: 0;
+  padding: var(--space-4);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+.seed-overview .seed-current-summary > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+  min-width: 0;
+  padding-inline: var(--space-4);
+}
+.seed-overview .seed-current-summary > div:first-child {
+  padding-inline-start: 0;
+}
+.seed-overview .seed-current-summary > div:last-child {
+  padding-inline-end: 0;
+}
+.seed-overview .seed-current-summary > div + div {
+  border-inline-start: 1px solid var(--border);
+}
+.seed-overview .seed-current-summary dt {
+  order: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.seed-overview .seed-current-summary dd {
+  margin: 0;
+  font: var(--type-strong);
+  overflow-wrap: anywhere;
+}
+.seed-overview .seed-current-summary .seed-summary-quantity dd {
+  font: var(--type-h3);
+}
+.seed-summary-sections {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6) var(--space-8);
+  padding: 0;
+}
+.app-content
+  .seeds-workspace
+  .seed-summary-sections
+  > :is(.seed-fact-group, .schedule-upcoming, .seed-overview-conversion) {
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-4) 0 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+}
+.seed-summary-sections :is(h3, h4) {
+  margin: 0 0 var(--space-3);
+  font: var(--type-h3);
+}
+.seed-summary-sections p {
+  margin: var(--space-1) 0;
+  overflow-wrap: anywhere;
+}
+.seed-fact-lead {
+  font: var(--type-strong);
+}
+.seed-origin .seed-fact-lead {
+  font: var(--type-body);
+}
+.seed-secondary-fact {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.seed-overview .seed-dates dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  margin: 0;
+}
+.seed-overview .seed-dates dl > div {
+  display: grid;
+  grid-template-columns: minmax(8.5rem, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
+}
+.seed-overview .seed-dates dt {
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-muted);
+  font: var(--type-body);
+}
+.seed-overview .seed-dates dd {
+  margin: 0;
+}
+.seed-summary-sections
+  > :is(.seed-fact-group--notes, .seed-overview-conversion) {
+  grid-column: 1 / -1;
+}
+.seed-summary-sections .seed-fact-group--notes p {
+  max-width: 65ch;
+}
+@media (max-width: 64rem) {
+  .seed-summary-sections {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 40rem) {
+  .seed-overview .seed-current-summary {
+    grid-template-columns: minmax(0, 1fr);
+    padding-block: var(--space-2);
+  }
+  .seed-overview .seed-current-summary > div {
+    padding: var(--space-3) 0;
+  }
+  .seed-overview .seed-current-summary > div + div {
+    border-inline-start: 0;
+    border-top: 1px solid var(--border);
+  }
+}
+.app-content
+  .seeds-workspace
+  .form-sections--page
+  > .form-section-panel
+  > .quantity-field {
+  grid-column: auto;
+}
+.app-content .seeds-workspace .form-sections--page .quantity-controls {
+  max-width: none;
+}
+.form-sections--page .form-section-panel > .notice {
+  grid-column: 1 / -1;
+}
+/* Put the quantity directly after identity, before secondary storage context. */
+.seeds-workspace .seed-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto;
+}
+.seeds-workspace .seed-row > .seed-primary {
+  grid-column: 1;
+  grid-row: 1;
+}
+.seeds-workspace .seed-row > .lifecycle-badge {
+  grid-column: 2;
+  grid-row: 1;
+}
+.seeds-workspace .operational-layout .seed-row > .seed-quantity {
+  grid-column: 1 / -1;
+  grid-row: 2;
+}
+.seeds-workspace .operational-layout .seed-row > .seed-location {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  text-align: left;
+}
+@media (min-width: 40.01rem) {
+  .seeds-workspace .acquisition-independent > .reference-picker {
+    padding-top: 0;
+  }
+  .seeds-workspace .acquisition-independent > .reference-picker > label {
+    /* Match the date legend + precision-label slot before either control. */
+    padding-bottom: calc(1.375rem + var(--space-2));
+  }
+}

@@ -1,3 +1,4 @@
+import { DirectoryFilterSelect } from "../components/DirectoryTools";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -630,24 +631,15 @@ export function NativeRangesScreen() {
         own material.
       </p>
       <SavedViews surface="native_ranges" state={view.savedState} />
-      <div
-        className="native-controls"
-        role="group"
-        aria-label="Collection representation scope"
-      >
-        {scopes.map((item) => (
-          <button
-            key={item.value}
-            type="button"
-            aria-pressed={scope === item.value}
-            className={scope === item.value ? "" : "button--secondary"}
-            onClick={() => {
-              view.update("scope", item.value);
-            }}
-          >
-            {item.label}
-          </button>
-        ))}
+      <div className="representation-filter">
+        <DirectoryFilterSelect
+          label="Collection representation"
+          value={scope}
+          options={scopes}
+          onChange={(scope) => {
+            view.update("scope", scope);
+          }}
+        />
       </div>
       <p className="field-help">
         Living includes active Plants and Plant groups. Current also includes

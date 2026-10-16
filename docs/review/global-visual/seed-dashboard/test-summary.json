@@ -1,0 +1,60 @@
+{
+  "passed": 247,
+  "files": 13,
+  "failed": 0,
+  "suites": [
+    {
+      "file": "src/bulk/BulkLocation.test.tsx",
+      "passed": 12
+    },
+    {
+      "file": "src/components/ReferenceInteractions.test.tsx",
+      "passed": 4
+    },
+    {
+      "file": "src/labels/LabelsScreen.test.tsx",
+      "passed": 54
+    },
+    {
+      "file": "src/media/MediaScreen.test.tsx",
+      "passed": 22
+    },
+    {
+      "file": "src/orders/OrderPicker.test.tsx",
+      "passed": 4
+    },
+    {
+      "file": "src/orders/OrderScreen.test.tsx",
+      "passed": 9
+    },
+    {
+      "file": "src/photos/BotanicalIdentityCover.test.tsx",
+      "passed": 5
+    },
+    {
+      "file": "src/photos/PhotosSection.test.tsx",
+      "passed": 16
+    },
+    {
+      "file": "src/plants/PlantScreen.test.tsx",
+      "passed": 42
+    },
+    {
+      "file": "src/propagation/GuidedForms.test.tsx",
+      "passed": 5
+    },
+    {
+      "file": "src/seed-lots/ReferencePicker.test.tsx",
+      "passed": 7
+    },
+    {
+      "file": "src/seed-lots/SeedLotScreen.test.tsx",
+      "passed": 48
+    },
+    {
+      "file": "src/sowings/SowingScreen.test.tsx",
+      "passed": 19
+    }
+  ],
+  "supersededNote": "The date layout whitespace assertion was replaced with term/value assertions; the final SeedLot and ReferencePicker suites pass."
+}

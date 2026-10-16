@@ -1,3 +1,5 @@
+import { FieldLabel } from "../components/FieldLabel";
+import { DirectoryTools } from "../components/DirectoryTools";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
@@ -296,15 +298,147 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
           title="Media"
           titleId={headingId}
           description="One image, many records. Unlinked assets stay available for future use."
-          actions={
-            <button
-              type="button"
-              onClick={() => {
-                setEditor("new");
+          tools={
+            <DirectoryTools
+              onReset={() => {
+                view.replace({
+                  ...view.state,
+                  kind: "",
+                  association: "all",
+                  target: "",
+                });
+                changeFilters();
               }}
-            >
-              Add new media
-            </button>
+              name="Media"
+              search={
+                <DirectorySearch
+                  hideLabel
+                  id="media-search"
+                  label="Search media"
+                  placeholder="Title, filename or attribution"
+                  value={query}
+                  onChange={(value) => {
+                    setQuery(value);
+                    changeFilters();
+                  }}
+                />
+              }
+              savedViews={
+                <SavedViews
+                  presentation="dialog"
+                  surface="media"
+                  state={view.savedState}
+                />
+              }
+              actions={
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditor("new");
+                  }}
+                >
+                  Add new media
+                </button>
+              }
+              filters={
+                <>
+                  <div className="field">
+                    <label htmlFor="media-kind">Source</label>
+                    <select
+                      id="media-kind"
+                      value={kind}
+                      onChange={(event) => {
+                        setKind(event.target.value);
+                        changeFilters();
+                      }}
+                    >
+                      <option value="">All sources</option>
+                      <option value="local">Local images</option>
+                      <option value="external">External references</option>
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="media-association">Record links</label>
+                    <select
+                      id="media-association"
+                      value={association}
+                      onChange={(event) => {
+                        setAssociation(event.target.value);
+                        changeFilters();
+                      }}
+                    >
+                      <option value="all">All media</option>
+                      <option value="linked">Linked media</option>
+                      <option value="unlinked">Unlinked media</option>
+                    </select>
+                  </div>
+                  <div className="field">
+                    <label htmlFor="media-target-filter">Target</label>
+                    <select
+                      id="media-target-filter"
+                      value={target}
+                      onChange={(event) => {
+                        setTarget(event.target.value as MediaTargetFilter | "");
+                        changeFilters();
+                      }}
+                    >
+                      <option value="">All media</option>
+                      <option value="collection">Collection media</option>
+                      {mediaTargets.map((type) => (
+                        <option key={type.id} value={type.id}>
+                          {type.id === "plant_group"
+                            ? "Plant groups"
+                            : type.id === "seed_lot"
+                              ? "Seed lots"
+                              : `${type.label}s`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              }
+              activeFilters={[
+                ...(kind
+                  ? [
+                      {
+                        label: "Source",
+                        value:
+                          kind === "local"
+                            ? "Local images"
+                            : "External references",
+                        onRemove: () => {
+                          setKind("");
+                          changeFilters();
+                        },
+                      },
+                    ]
+                  : []),
+                ...(association !== "all"
+                  ? [
+                      {
+                        label: "Record links",
+                        value: association === "linked" ? "Linked" : "Unlinked",
+                        onRemove: () => {
+                          setAssociation("all");
+                          changeFilters();
+                        },
+                      },
+                    ]
+                  : []),
+                ...(target
+                  ? [
+                      {
+                        label: "Target",
+                        value: target.replaceAll("_", " "),
+                        onRemove: () => {
+                          setTarget("");
+                          changeFilters();
+                        },
+                      },
+                    ]
+                  : []),
+              ]}
+            />
           }
         />
       )}
@@ -564,73 +698,6 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
         )
       ) : (
         <>
-          <SavedViews surface="media" state={view.savedState} />
-          <div className="media-filters">
-            <DirectorySearch
-              hideLabel
-              id="media-search"
-              label="Search media"
-              placeholder="Title, filename or attribution"
-              value={query}
-              onChange={(value) => {
-                setQuery(value);
-                changeFilters();
-              }}
-            />
-            <div className="field">
-              <label htmlFor="media-kind">Source</label>
-              <select
-                id="media-kind"
-                value={kind}
-                onChange={(event) => {
-                  setKind(event.target.value);
-                  changeFilters();
-                }}
-              >
-                <option value="">All sources</option>
-                <option value="local">Local images</option>
-                <option value="external">External references</option>
-              </select>
-            </div>
-            <div className="field">
-              <label htmlFor="media-association">Record links</label>
-              <select
-                id="media-association"
-                value={association}
-                onChange={(event) => {
-                  setAssociation(event.target.value);
-                  changeFilters();
-                }}
-              >
-                <option value="all">All media</option>
-                <option value="linked">Linked media</option>
-                <option value="unlinked">Unlinked media</option>
-              </select>
-            </div>
-            <div className="field">
-              <label htmlFor="media-target-filter">Target</label>
-              <select
-                id="media-target-filter"
-                value={target}
-                onChange={(event) => {
-                  setTarget(event.target.value as MediaTargetFilter | "");
-                  changeFilters();
-                }}
-              >
-                <option value="">All media</option>
-                <option value="collection">Collection media</option>
-                {mediaTargets.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.id === "plant_group"
-                      ? "Plant groups"
-                      : type.id === "seed_lot"
-                        ? "Seed lots"
-                        : `${type.label}s`}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
           <p className="field-help">
             Unlinked means no record links. An identity cover may still
             reference the asset.
@@ -785,9 +852,9 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
               />
             </div>
             <div className="field">
-              <label htmlFor="media-edit-order">
+              <FieldLabel required htmlFor="media-edit-order">
                 Display order for this record
-              </label>
+              </FieldLabel>
               <input
                 id="media-edit-order"
                 name="display_order"

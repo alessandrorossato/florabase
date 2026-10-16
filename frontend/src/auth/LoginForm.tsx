@@ -1,3 +1,4 @@
+import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
 import { useAuth } from "./context";
@@ -32,7 +33,9 @@ export function LoginForm() {
       }}
     >
       <div className="field">
-        <label htmlFor="login-name">Login name</label>
+        <FieldLabel required htmlFor="login-name">
+          Login name
+        </FieldLabel>
         <input
           id="login-name"
           name="login_name"
@@ -42,7 +45,9 @@ export function LoginForm() {
         />
       </div>
       <div className="field">
-        <label htmlFor="password">Password</label>
+        <FieldLabel required htmlFor="password">
+          Password
+        </FieldLabel>
         <input
           id="password"
           name="password"

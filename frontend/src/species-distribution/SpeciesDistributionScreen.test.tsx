@@ -142,11 +142,13 @@ test("local open, scope/search/select are provider-free; explicit Load reuses MA
   ).toBeVisible();
   await screen.findByText("2 represented identities · 1 occurrence-ready");
   expect(getOccurrenceMapSummary).not.toHaveBeenCalled();
-  await user.click(screen.getByRole("button", { name: "Living" }));
-  expect(screen.getByRole("button", { name: "Living" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
+  await user.selectOptions(
+    screen.getByRole("combobox", { name: "Collection representation" }),
+    "living",
   );
+  expect(
+    screen.getByRole("combobox", { name: "Collection representation" }),
+  ).toHaveValue("living");
   fireEvent.change(screen.getByLabelText("Search species"), {
     target: { value: "ocimum" },
   });
@@ -255,8 +257,8 @@ test("refresh, back/forward and invalid URL defaults restore only local state", 
     await screen.findByRole("button", { name: "Load GBIF occurrence map" }),
   ).toBeVisible();
   expect(
-    screen.getByRole("button", { name: "All represented" }),
-  ).toHaveAttribute("aria-pressed", "true");
+    screen.getByRole("combobox", { name: "Collection representation" }),
+  ).toHaveValue("all");
   expect(getOccurrenceMapSummary).not.toHaveBeenCalled();
   window.history.pushState(
     null,

@@ -1,4 +1,7 @@
+import { selectDirectoryFilter } from "../test/directoryFilters";
 import {
+  act,
+  fireEvent,
   cleanup,
   render,
   screen,
@@ -212,6 +215,16 @@ async function openSeeds() {
   return user;
 }
 
+async function openSection(
+  user: ReturnType<typeof userEvent.setup>,
+  name: string,
+) {
+  const tab = screen.queryByRole("tab", { name });
+  if (tab) await user.click(tab);
+  else
+    expect(screen.getByRole("button", { name: "Add seed lot" })).toBeVisible();
+}
+
 async function chooseReference(
   user: ReturnType<typeof userEvent.setup>,
   label: string,
@@ -224,7 +237,7 @@ async function chooseReference(
       : label.includes("provenance")
         ? "Origin"
         : "Essentials";
-  await user.click(screen.getByRole("tab", { name: section }));
+  await openSection(user, section);
   const picker = screen.getByRole("combobox", { name: label });
   await user.click(picker);
   await user.click(await screen.findByRole("button", { name: option }));
@@ -323,14 +336,10 @@ test("inventory preserves API ordering and composes active/history/all with usef
   );
   expect(screen.queryByText("Solanum quitoense")).not.toBeInTheDocument();
 
-  await user.click(
-    within(
-      screen.getByRole("region", { name: "Seed lot inventory" }),
-    ).getByRole("button", { name: "History" }),
-  );
+  await selectDirectoryFilter(user, "Lifecycle", "history");
   expect(screen.getByText("Solanum quitoense")).toBeInTheDocument();
   expect(screen.queryByText("Clitoria ternatea")).not.toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "All" }));
+  await selectDirectoryFilter(user, "Lifecycle", "all");
   await user.type(
     screen.getByLabelText("Search seed inventory"),
     "Rare Seed House",
@@ -354,7 +363,7 @@ test("reselecting Seeds clears selection, search and lifecycle filter without re
   expect(
     screen.getByRole("complementary", { name: "Quick preview" }),
   ).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "All" }));
+  await selectDirectoryFilter(user, "Lifecycle", "all");
   await user.type(screen.getByLabelText("Search seed inventory"), "Blue");
   await user.click(
     within(
@@ -363,10 +372,9 @@ test("reselecting Seeds clears selection, search and lifecycle filter without re
   );
   expect(window.location.hash).toBe("#/seeds");
   expect(await screen.findByLabelText("Search seed inventory")).toHaveValue("");
-  expect(screen.getByRole("button", { name: "Active" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  expect(
+    screen.getByRole("button", { name: "Remove lifecycle filter" }),
+  ).toHaveTextContent("Active");
   expect(
     screen.queryByRole("complementary", { name: "Quick preview" }),
   ).not.toBeInTheDocument();
@@ -378,16 +386,14 @@ test("reselecting Seeds protects an edited form until changes are discarded", as
   const user = await openSeeds();
   await user.click(await screen.findByRole("button", { name: /Blue packet/ }));
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
-  await user.type(screen.getByLabelText("Lot label (optional)"), " changed");
+  await user.type(screen.getByLabelText("Lot label"), " changed");
   await user.click(
     within(
       screen.getByRole("navigation", { name: "Primary navigation" }),
     ).getByRole("link", { name: "Seeds" }),
   );
   expect(confirm).toHaveBeenCalledOnce();
-  expect(screen.getByLabelText("Lot label (optional)")).toHaveValue(
-    "Blue packet changed",
-  );
+  expect(screen.getByLabelText("Lot label")).toHaveValue("Blue packet changed");
   confirm.mockReturnValue(true);
   await user.click(
     within(
@@ -429,11 +435,11 @@ test("inventory and preview distinguish exact, approximate, unknown and exhauste
   mockApi(directoryHandler(records));
   const user = await openSeeds();
   setViewportMatches(false);
-  await user.click(screen.getByRole("button", { name: "All" }));
+  await selectDirectoryFilter(user, "Lifecycle", "all");
   const list = await screen.findByRole("list", { name: "Seed inventory" });
   expect(
     within(list).getByRole("button", { name: /Blue packet/ }),
-  ).toHaveTextContent("Remaining50 seeds");
+  ).toHaveTextContent("50 seeds remaining");
   expect(
     within(list).getByRole("button", { name: /Approximate packet/ }),
   ).toHaveTextContent("About 25 seeds");
@@ -442,7 +448,7 @@ test("inventory and preview distinguish exact, approximate, unknown and exhauste
   ).toHaveTextContent("Quantity unknown");
   expect(
     within(list).getByRole("button", { name: /Exhausted packet/ }),
-  ).toHaveTextContent("Recorded quantity0 seeds");
+  ).toHaveTextContent("0 seedsRecorded quantity");
   expect(list).not.toHaveTextContent(/% used/);
   await user.click(within(list).getByRole("button", { name: /Blue packet/ }));
   const preview = screen.getByRole("complementary", { name: "Quick preview" });
@@ -503,38 +509,44 @@ test("selection shows complete details without internal identifiers and opens co
     `#/sowings?action=start&seedLot=${lot().id}`,
   );
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
+  expect(screen.queryByRole("button", { name: "Save changes" })).toBeVisible();
   expect(
-    screen.queryByRole("button", { name: "Save changes" }),
+    screen.queryByRole("button", { name: "Next" }),
   ).not.toBeInTheDocument();
   expect(
     screen.getByRole("heading", { name: "Edit Blue packet" }).closest("header"),
   ).toHaveTextContent("Clitoria ternatea");
   expect(screen.getByLabelText("Lifecycle")).toHaveValue("active");
-  expect(screen.getByLabelText("Notes (optional)")).not.toBeVisible();
+  expect(
+    screen.getByRole("textbox", { name: "Notes", hidden: true }),
+  ).not.toBeVisible();
   for (const label of [
     "Essentials",
     "Inventory",
     "Acquisition",
     "Origin",
     "Seed details",
-  ])
-    expect(screen.getByRole("tab", { name: label })).toBeInTheDocument();
-  await user.click(screen.getByRole("tab", { name: "Origin" }));
-  expect(screen.getByLabelText("Material provenance (optional)")).toHaveValue(
+  ]) {
+    await user.click(screen.getByRole("tab", { name: label }));
+    expect(screen.getByRole("button", { name: "Save changes" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeVisible();
+  }
+  await openSection(user, "Origin");
+  expect(screen.getByLabelText("Material provenance")).toHaveValue(
     place.display_path,
   );
-  await user.click(screen.getByRole("tab", { name: "Inventory" }));
-  expect(screen.getByLabelText("Storage location (optional)")).toHaveValue(
+  await openSection(user, "Inventory");
+  expect(screen.getByLabelText("Storage location")).toHaveValue(
     location.display_path,
   );
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
+  await openSection(user, "Seed details");
   await user.type(
-    screen.getByLabelText("Notes (optional)"),
+    screen.getByLabelText("Notes", { selector: "textarea" }),
     "Edit retained note",
   );
-  await user.click(screen.getByRole("button", { name: "Back" }));
-  await user.click(screen.getByRole("button", { name: "Next" }));
-  expect(screen.getByLabelText("Notes (optional)")).toHaveValue(
+  await openSection(user, "Origin");
+  await openSection(user, "Seed details");
+  expect(screen.getByLabelText("Notes", { selector: "textarea" })).toHaveValue(
     "Keep dry.Edit retained note",
   );
 });
@@ -667,42 +679,42 @@ test("layered help explains ambiguous SeedLot fields without adding chrome to No
   expect(
     screen.getByRole("combobox", { name: "Botanical identity" }),
   ).toHaveAccessibleDescription(/does not establish lineage/i);
-  await user.click(screen.getByRole("tab", { name: "Inventory" }));
+  await openSection(user, "Inventory");
   expect(
     screen.getByRole("group", { name: /Quantity/ }),
   ).toHaveAccessibleDescription(
     /leave the quantity empty rather than guessing/i,
   );
-  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
+  await openSection(user, "Acquisition");
   expect(
-    screen.getByRole("combobox", { name: "Supplier (optional)" }),
+    screen.getByRole("combobox", { name: "Supplier" }),
   ).toHaveAccessibleDescription(/does not establish its biological origin/i);
-  await user.click(screen.getByRole("tab", { name: "Inventory" }));
+  await openSection(user, "Inventory");
   expect(
-    screen.getByRole("combobox", { name: "Storage location (optional)" }),
+    screen.getByRole("combobox", { name: "Storage location" }),
   ).toHaveAccessibleDescription(/currently kept.*not where it originated/i);
 
   expect(
     screen.getByText(/one seed lot represents one physical packet or bag/i),
   ).toBeInTheDocument();
 
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
-  await user.click(screen.getByRole("tab", { name: "Origin" }));
+  await openSection(user, "Seed details");
+  await openSection(user, "Origin");
   expect(
-    screen.getByRole("combobox", { name: "Material provenance (optional)" }),
+    screen.getByRole("combobox", { name: "Material provenance" }),
   ).toHaveAccessibleDescription(
     /not its Supplier or current storage location/i,
   );
-  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
+  await openSection(user, "Acquisition");
   const acquisitionDate = screen.getByRole("group", {
     name: "Acquisition date",
   });
   expect(
     within(acquisitionDate).getByLabelText("Precision"),
   ).toHaveAccessibleDescription(/do not invent a missing month or day/i);
-  expect(screen.getByLabelText("Notes (optional)")).not.toHaveAttribute(
-    "aria-describedby",
-  );
+  expect(
+    screen.getByLabelText("Notes", { selector: "textarea" }),
+  ).not.toHaveAttribute("aria-describedby");
 });
 
 test("minimal fast entry submits only known user information and uses authoritative refresh", async () => {
@@ -747,9 +759,29 @@ test("minimal fast entry submits only known user information and uses authoritat
   expect(
     screen.getByRole("combobox", { name: "Botanical identity" }),
   ).toHaveFocus();
+  expect(
+    screen.queryByRole("tablist", { name: "Form sections" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Next" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Back" }),
+  ).not.toBeInTheDocument();
+  for (const name of [
+    "Identity",
+    "Inventory",
+    "Acquisition",
+    "Origin",
+    "Seed details",
+  ])
+    expect(screen.getByRole("heading", { name })).toBeVisible();
+  expect(screen.getByLabelText("Lot label")).toBeVisible();
+  expect(
+    screen.getByLabelText("Notes", { selector: "textarea" }),
+  ).toBeVisible();
   await chooseReference(user, "Botanical identity", "Clitoria ternatea");
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
-  await user.click(screen.getByRole("button", { name: "Add to collection" }));
+  await user.click(screen.getByRole("button", { name: "Add seed lot" }));
   await screen.findByText("Seed lot was added to the collection.");
   expect(submitted).toMatchObject({
     botanical_identity_id: identity.id,
@@ -759,9 +791,19 @@ test("minimal fast entry submits only known user information and uses authoritat
     acquisition_date: null,
   });
   expect(
-    screen.getByRole("button", { name: "+ New seed lot" }),
-  ).toHaveAttribute("aria-expanded", "false");
-  expect(screen.getByRole("button", { name: "+ New seed lot" })).toHaveFocus();
+    screen.queryByRole("button", { name: "+ New seed lot" }),
+  ).not.toBeInTheDocument();
+  await waitFor(() => {
+    expect(
+      screen.getByRole("heading", { name: "Butterfly pea" }),
+    ).toHaveFocus();
+  });
+  expect(
+    within(screen.getByRole("navigation", { name: "Breadcrumb" })).getByRole(
+      "link",
+      { name: "Seeds" },
+    ),
+  ).toHaveAttribute("href", "#/seeds");
 });
 
 test("full entry maps count, approximate g/mg quantity, Other source, references, and every date precision", async () => {
@@ -792,74 +834,65 @@ test("full entry maps count, approximate g/mg quantity, Other source, references
     await screen.findByRole("button", { name: "+ New seed lot" }),
   );
   await chooseReference(user, "Botanical identity", "Clitoria ternatea");
-  await user.type(screen.getByLabelText("Lot label (optional)"), "Fresh blue");
-  await user.click(screen.getByRole("tab", { name: "Inventory" }));
+  await user.type(screen.getByLabelText("Lot label"), "Fresh blue");
+  await openSection(user, "Inventory");
   await user.type(screen.getByLabelText("Quantity value"), "2.5");
-  await user.click(screen.getByRole("tab", { name: "Inventory" }));
+  await openSection(user, "Inventory");
   await user.selectOptions(screen.getByLabelText("Quantity unit"), "g");
-  await user.click(screen.getByRole("tab", { name: "Inventory" }));
+  await openSection(user, "Inventory");
   await user.click(screen.getByLabelText("Approximately"));
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
+  await openSection(user, "Seed details");
   await user.selectOptions(screen.getByLabelText("Source"), "other");
-  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
-  await user.type(
-    screen.getByLabelText("Source detail (optional)"),
-    "Community swap",
-  );
-  await chooseReference(user, "Supplier (optional)", "Rare Seed House");
-  await chooseReference(
-    user,
-    "Storage location (optional)",
-    "Seed cabinet → Drawer A",
-  );
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
-  await chooseReference(
-    user,
-    "Material provenance (optional)",
-    place.display_path,
-  );
-  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
+  await openSection(user, "Acquisition");
+  await user.type(screen.getByLabelText("Source detail"), "Community swap");
+  await chooseReference(user, "Supplier", "Rare Seed House");
+  await chooseReference(user, "Storage location", "Seed cabinet → Drawer A");
+  await openSection(user, "Seed details");
+  await chooseReference(user, "Material provenance", place.display_path);
+  await openSection(user, "Acquisition");
   await user.selectOptions(
     screen.getByLabelText("Precision", { selector: "#acquisition-precision" }),
     "year",
   );
-  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
+  await openSection(user, "Acquisition");
   await user.clear(
     screen.getByLabelText("Year", { selector: "#acquisition-year" }),
   );
-  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
+  await openSection(user, "Acquisition");
   await user.type(
     screen.getByLabelText("Year", { selector: "#acquisition-year" }),
     "2024",
   );
-  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
+  await openSection(user, "Acquisition");
   await user.selectOptions(
     screen.getByLabelText("Precision", { selector: "#harvest-precision" }),
     "month",
   );
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
+  await openSection(user, "Seed details");
   await user.clear(
     screen.getByLabelText("Year", { selector: "#harvest-year" }),
   );
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
+  await openSection(user, "Seed details");
   await user.type(
     screen.getByLabelText("Year", { selector: "#harvest-year" }),
     "2023",
   );
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
+  await openSection(user, "Seed details");
   await user.selectOptions(
     screen.getByLabelText("Precision", { selector: "#viability-precision" }),
     "day",
   );
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
+  await openSection(user, "Seed details");
   await user.type(
-    screen.getByLabelText("Notes (optional)"),
+    screen.getByLabelText("Notes", { selector: "textarea" }),
     "Cool dry storage",
   );
-  await user.click(screen.getByRole("tab", { name: "Essentials" }));
-  expect(screen.getByLabelText("Notes (optional)")).not.toBeVisible();
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
-  expect(screen.getByLabelText("Notes (optional)")).toHaveValue(
+  await openSection(user, "Essentials");
+  expect(
+    screen.getByLabelText("Notes", { selector: "textarea" }),
+  ).toBeVisible();
+  await openSection(user, "Seed details");
+  expect(screen.getByLabelText("Notes", { selector: "textarea" })).toHaveValue(
     "Cool dry storage",
   );
   expect(
@@ -868,8 +901,8 @@ test("full entry maps count, approximate g/mg quantity, Other source, references
   expect(
     screen.getByLabelText("Year", { selector: "#acquisition-year" }),
   ).toHaveValue(2024);
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
-  await user.click(screen.getByRole("button", { name: "Add to collection" }));
+  await openSection(user, "Seed details");
+  await user.click(screen.getByRole("button", { name: "Add seed lot" }));
   await screen.findByText("Seed lot was added to the collection.");
   expect(screen.getByRole("link", { name: "Rare Seed House" })).toHaveAttribute(
     "href",
@@ -911,24 +944,19 @@ test("milligram weight maps cleanly and leaving Other clears its detail", async 
     await screen.findByRole("button", { name: "+ New seed lot" }),
   );
   await chooseReference(user, "Botanical identity", "Clitoria ternatea");
-  await user.click(screen.getByRole("tab", { name: "Inventory" }));
+  await openSection(user, "Inventory");
   await user.type(screen.getByLabelText("Quantity value"), "125");
-  await user.click(screen.getByRole("tab", { name: "Inventory" }));
+  await openSection(user, "Inventory");
   await user.selectOptions(screen.getByLabelText("Quantity unit"), "mg");
-  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
+  await openSection(user, "Acquisition");
   await user.selectOptions(screen.getByLabelText("Source"), "other");
-  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
-  await user.type(
-    screen.getByLabelText("Source detail (optional)"),
-    "Old note",
-  );
-  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
+  await openSection(user, "Acquisition");
+  await user.type(screen.getByLabelText("Source detail"), "Old note");
+  await openSection(user, "Acquisition");
   await user.selectOptions(screen.getByLabelText("Source"), "purchased");
-  expect(
-    screen.queryByLabelText("Source detail (optional)"),
-  ).not.toBeInTheDocument();
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
-  await user.click(screen.getByRole("button", { name: "Add to collection" }));
+  expect(screen.queryByLabelText("Source detail")).not.toBeInTheDocument();
+  await openSection(user, "Seed details");
+  await user.click(screen.getByRole("button", { name: "Add seed lot" }));
   await screen.findByText("Seed lot was added to the collection.");
   expect(submitted).toMatchObject({
     quantity: {
@@ -974,10 +1002,10 @@ test("historical exhausted zero is valid while active zero is explained before s
     await screen.findByRole("button", { name: "+ New seed lot" }),
   );
   await chooseReference(user, "Botanical identity", "Clitoria ternatea");
-  await user.click(screen.getByRole("tab", { name: "Inventory" }));
+  await openSection(user, "Inventory");
   await user.type(screen.getByLabelText("Quantity value"), "0");
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
-  await user.click(screen.getByRole("button", { name: "Add to collection" }));
+  await openSection(user, "Seed details");
+  await user.click(screen.getByRole("button", { name: "Add seed lot" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "only valid for an exhausted lot",
   );
@@ -986,10 +1014,10 @@ test("historical exhausted zero is valid while active zero is explained before s
   ).not.toBeInTheDocument();
   expect(screen.getByLabelText("Quantity value")).toHaveValue("0");
   expect(postCalls).toBe(0);
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
+  await openSection(user, "Seed details");
   await user.selectOptions(screen.getByLabelText("Lifecycle"), "exhausted");
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
-  await user.click(screen.getByRole("button", { name: "Add to collection" }));
+  await openSection(user, "Seed details");
+  await user.click(screen.getByRole("button", { name: "Add seed lot" }));
   await screen.findByText("Seed lot was added to the collection.");
   expect(postCalls).toBe(1);
 });
@@ -1014,33 +1042,29 @@ test("one PUT supports lost to active and exhausted zero to active positive corr
     }),
   );
   const user = await openSeeds();
-  await user.click(
-    within(
-      screen.getByRole("region", { name: "Seed lot inventory" }),
-    ).getByRole("button", { name: "History" }),
-  );
+  await selectDirectoryFilter(user, "Lifecycle", "history");
   await user.click(
     await screen.findByRole("button", { name: /Clitoria ternatea/ }),
   );
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   await user.selectOptions(screen.getByLabelText("Lifecycle"), "active");
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
+  await openSection(user, "Seed details");
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   await screen.findByText("Seed lot changes were saved.");
   expect(updates[0]).toMatchObject({ lifecycle: "active", quantity: null });
 
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   await user.selectOptions(screen.getByLabelText("Lifecycle"), "exhausted");
-  await user.click(screen.getByRole("tab", { name: "Inventory" }));
+  await openSection(user, "Inventory");
   await user.clear(screen.getByLabelText("Quantity value"));
-  await user.click(screen.getByRole("tab", { name: "Inventory" }));
+  await openSection(user, "Inventory");
   await user.type(screen.getByLabelText("Quantity value"), "0");
   await user.selectOptions(screen.getByLabelText("Lifecycle"), "active");
-  await user.click(screen.getByRole("tab", { name: "Inventory" }));
+  await openSection(user, "Inventory");
   await user.clear(screen.getByLabelText("Quantity value"));
-  await user.click(screen.getByRole("tab", { name: "Inventory" }));
+  await openSection(user, "Inventory");
   await user.type(screen.getByLabelText("Quantity value"), "15");
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
+  await openSection(user, "Seed details");
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   expect(updates[1]).toMatchObject({
     lifecycle: "active",
@@ -1101,10 +1125,7 @@ test("contextual creators auto-select references, preserve unsaved lot data, and
   await user.click(
     await screen.findByRole("button", { name: "+ New seed lot" }),
   );
-  await user.type(
-    screen.getByLabelText("Lot label (optional)"),
-    "Unsaved packet",
-  );
+  await user.type(screen.getByLabelText("Lot label"), "Unsaved packet");
 
   const identityPicker = screen.getByRole("combobox", {
     name: "Botanical identity",
@@ -1118,13 +1139,11 @@ test("contextual creators auto-select references, preserve unsaved lot data, and
   await waitFor(() => {
     expect(identityPicker).toHaveValue("Passiflora edulis");
   });
-  expect(screen.getByLabelText("Lot label (optional)")).toHaveValue(
-    "Unsaved packet",
-  );
+  expect(screen.getByLabelText("Lot label")).toHaveValue("Unsaved packet");
 
-  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
+  await openSection(user, "Acquisition");
   const supplierPicker = screen.getByRole("combobox", {
-    name: "Supplier (optional)",
+    name: "Supplier",
   });
   await user.type(supplierPicker, "Local swap");
   await user.click(
@@ -1135,9 +1154,9 @@ test("contextual creators auto-select references, preserve unsaved lot data, and
     expect(supplierPicker).toHaveValue("Local swap");
   });
 
-  await user.click(screen.getByRole("tab", { name: "Inventory" }));
+  await openSection(user, "Inventory");
   const locationPicker = screen.getByRole("combobox", {
-    name: "Storage location (optional)",
+    name: "Storage location",
   });
   await user.type(locationPicker, "Drawer B");
   await user.click(
@@ -1148,10 +1167,10 @@ test("contextual creators auto-select references, preserve unsaved lot data, and
     expect(locationPicker).toHaveValue("Seed cabinet → Drawer B");
   });
 
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
-  await user.click(screen.getByRole("tab", { name: "Origin" }));
+  await openSection(user, "Seed details");
+  await openSection(user, "Origin");
   const provenancePicker = screen.getByRole("combobox", {
-    name: "Material provenance (optional)",
+    name: "Material provenance",
   });
   await user.type(provenancePicker, "Chiang Mai");
   await user.click(
@@ -1163,7 +1182,7 @@ test("contextual creators auto-select references, preserve unsaved lot data, and
     expect(provenancePicker).toHaveValue(`${place.display_path} → Chiang Mai`);
   });
 
-  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
+  await openSection(user, "Acquisition");
   await user.click(supplierPicker);
   await user.click(screen.getByRole("button", { name: /Create supplier/ }));
   const dialogInput = screen.getByRole("dialog").querySelector("input");
@@ -1194,7 +1213,7 @@ test("duplicate and failed contextual creation keep the seed form intact", async
   await user.click(
     await screen.findByRole("button", { name: "+ New seed lot" }),
   );
-  await user.type(screen.getByLabelText("Lot label (optional)"), "Still here");
+  await user.type(screen.getByLabelText("Lot label"), "Still here");
   await user.type(
     screen.getByRole("combobox", { name: "Botanical identity" }),
     "Clitoria ternatea",
@@ -1211,9 +1230,9 @@ test("duplicate and failed contextual creation keep the seed form intact", async
       screen.getByRole("combobox", { name: "Botanical identity" }),
     ).toHaveValue("Clitoria ternatea");
   });
-  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
+  await openSection(user, "Acquisition");
   await user.type(
-    screen.getByRole("combobox", { name: "Supplier (optional)" }),
+    screen.getByRole("combobox", { name: "Supplier" }),
     "Broken supplier",
   );
   await user.click(screen.getByRole("button", { name: /Create supplier/ }));
@@ -1226,9 +1245,7 @@ test("duplicate and failed contextual creation keep the seed form intact", async
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "seed lot details are still here",
   );
-  expect(screen.getByLabelText("Lot label (optional)")).toHaveValue(
-    "Still here",
-  );
+  expect(screen.getByLabelText("Lot label")).toHaveValue("Still here");
 });
 
 test("retired current references remain visible in edit while ordinary retired choices are omitted", async () => {
@@ -1244,26 +1261,22 @@ test("retired current references remain visible in edit while ordinary retired c
     throw new Error(`Unexpected request: ${path} ${init?.method ?? "GET"}`);
   });
   const user = await openSeeds();
-  await user.click(
-    within(
-      screen.getByRole("region", { name: "Seed lot inventory" }),
-    ).getByRole("button", { name: "History" }),
-  );
+  await selectDirectoryFilter(user, "Lifecycle", "history");
   await user.click(
     await screen.findByRole("button", { name: /Clitoria ternatea/ }),
   );
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
-  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
-  expect(
-    screen.getByRole("combobox", { name: "Supplier (optional)" }),
-  ).toHaveValue(supplier.name);
-  expect(
-    screen.getByLabelText("Supplier (optional)"),
-  ).toHaveAccessibleDescription(/retired/i);
-  await user.click(screen.getByRole("tab", { name: "Inventory" }));
-  expect(
-    screen.getByLabelText("Storage location (optional)"),
-  ).toHaveAccessibleDescription(/retired/i);
+  await openSection(user, "Acquisition");
+  expect(screen.getByRole("combobox", { name: "Supplier" })).toHaveValue(
+    supplier.name,
+  );
+  expect(screen.getByLabelText("Supplier")).toHaveAccessibleDescription(
+    /retired/i,
+  );
+  await openSection(user, "Inventory");
+  expect(screen.getByLabelText("Storage location")).toHaveAccessibleDescription(
+    /retired/i,
+  );
 });
 
 test("load, validation, forbidden, update, network, and session-expiry failures are explicit", async () => {
@@ -1312,30 +1325,27 @@ test("load, validation, forbidden, update, network, and session-expiry failures 
     await screen.findByRole("button", { name: "+ New seed lot" }),
   );
   await chooseReference(user, "Botanical identity", "Clitoria ternatea");
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
-  await user.click(screen.getByRole("button", { name: "Add to collection" }));
+  await openSection(user, "Seed details");
+  await user.click(screen.getByRole("button", { name: "Add seed lot" }));
   expect(await screen.findByRole("alert")).toHaveTextContent("zero quantity");
   await waitFor(() => {
-    expect(screen.getByRole("tab", { name: "Inventory" })).toHaveAttribute(
-      "aria-selected",
-      "true",
-    );
+    expect(screen.getByLabelText("Quantity value")).toHaveFocus();
   });
   mode = "forbidden";
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
-  await user.click(screen.getByRole("button", { name: "Add to collection" }));
+  await openSection(user, "Seed details");
+  await user.click(screen.getByRole("button", { name: "Add seed lot" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "could not authorize",
   );
   mode = "network";
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
-  await user.click(screen.getByRole("button", { name: "Add to collection" }));
+  await openSection(user, "Seed details");
+  await user.click(screen.getByRole("button", { name: "Add seed lot" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "Check the connection",
   );
   mode = "session";
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
-  await user.click(screen.getByRole("button", { name: "Add to collection" }));
+  await openSection(user, "Seed details");
+  await user.click(screen.getByRole("button", { name: "Add seed lot" }));
   expect(
     await screen.findByRole("button", { name: "Sign in" }),
   ).toBeInTheDocument();
@@ -1372,21 +1382,16 @@ test("update and stale-reference failures retain the editable lot", async () => 
     await screen.findByRole("button", { name: /Clitoria ternatea/ }),
   );
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
-  await user.clear(screen.getByLabelText("Lot label (optional)"));
-  await user.type(
-    screen.getByLabelText("Lot label (optional)"),
-    "Unsaved correction",
-  );
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
+  await user.clear(screen.getByLabelText("Lot label"));
+  await user.type(screen.getByLabelText("Lot label"), "Unsaved correction");
+  await openSection(user, "Seed details");
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "Storage location no longer exists",
   );
-  expect(screen.getByLabelText("Lot label (optional)")).toHaveValue(
-    "Unsaved correction",
-  );
+  expect(screen.getByLabelText("Lot label")).toHaveValue("Unsaved correction");
   responseKind = "server";
-  await user.click(screen.getByRole("tab", { name: "Seed details" }));
+  await openSection(user, "Seed details");
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "could not save or refresh",
@@ -1421,11 +1426,12 @@ test("desktop selection offers a compact preview before opening SeedLot detail",
   await user.click(
     within(preview).getByRole("button", { name: "Open details" }),
   );
+  expect(screen.getByLabelText("Current inventory")).toBeInTheDocument();
   expect(
-    screen.getByRole("heading", { name: "Inventory" }),
-  ).toBeInTheDocument();
-  expect(
-    screen.getByRole("button", { name: "← Back to seed lots" }),
+    within(screen.getByRole("navigation", { name: "Breadcrumb" })).getByRole(
+      "link",
+      { name: "Seeds" },
+    ),
   ).toBeInTheDocument();
 });
 
@@ -1437,11 +1443,11 @@ test("BULK-001 seed selection is transient, visible-only and reset by search", a
   expect(screen.getByLabelText("Directory results")).toHaveTextContent(
     "2 records",
   );
-  expect(screen.getByRole("button", { name: "Select" }).parentElement).toBe(
-    screen.getByRole("button", { name: "Saved views" }).parentElement,
-  );
+  expect(
+    screen.getByRole("button", { name: "Select records" }).parentElement,
+  ).toBe(screen.getByLabelText("Directory results").parentElement);
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "Select" }));
+  await user.click(screen.getByRole("button", { name: "Select records" }));
   await user.click(screen.getByRole("button", { name: "Select visible" }));
   expect(screen.getByText("2 selected")).toBeVisible();
   expect(
@@ -1455,7 +1461,7 @@ test("BULK-001 seed selection is transient, visible-only and reset by search", a
   expect(screen.getByLabelText("Directory results")).toHaveTextContent(
     "1 record",
   );
-  expect(screen.getByRole("button", { name: "Select" })).toBeEnabled();
+  expect(screen.getByRole("button", { name: "Select records" })).toBeEnabled();
 });
 
 test("BULK-001 successful move refreshes the directory, clears preview and retains filters", async () => {
@@ -1526,8 +1532,9 @@ test("BULK-001 successful move refreshes the directory, clears preview and retai
     "Blue",
   );
   const hash = window.location.hash;
-  await user.click(screen.getByRole("button", { name: "Select" }));
+  await user.click(screen.getByRole("button", { name: "Select records" }));
   await user.click(screen.getByRole("button", { name: "Select visible" }));
+  await user.click(screen.getByRole("button", { name: "Bulk actions" }));
   await user.click(screen.getByRole("button", { name: "Move to location" }));
   const dialog = screen.getByRole("dialog", { name: "Move to location" });
   await user.click(
@@ -1607,12 +1614,9 @@ test.each([
     await user.click(
       await screen.findByRole("button", { name: "Edit seed lot" }),
     );
-    await user.clear(screen.getByLabelText("Lot label (optional)"));
-    await user.type(
-      screen.getByLabelText("Lot label (optional)"),
-      "Retained draft",
-    );
-    await user.click(screen.getByRole("tab", { name: "Seed details" }));
+    await user.clear(screen.getByLabelText("Lot label"));
+    await user.type(screen.getByLabelText("Lot label"), "Retained draft");
+    await openSection(user, "Seed details");
     await user.click(screen.getByRole("button", { name: "Save changes" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(message);
     await waitFor(() => {
@@ -1627,9 +1631,7 @@ test.each([
     expect(screen.getByLabelText("Order", { selector: "select" })).toHaveValue(
       purchaseOrder.id,
     );
-    expect(screen.getByLabelText("Lot label (optional)")).toHaveValue(
-      "Retained draft",
-    );
+    expect(screen.getByLabelText("Lot label")).toHaveValue("Retained draft");
   },
 );
 
@@ -1686,20 +1688,23 @@ test("create from Order prefills only truthful purchase context in the normal Se
   expect(
     await screen.findByRole("combobox", { name: "Botanical identity" }),
   ).toHaveValue("");
-  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
+  await openSection(user, "Acquisition");
   expect(screen.getByLabelText("Source")).toHaveValue("purchased");
   expect(
-    screen.getByRole("combobox", { name: "Supplier (optional)" }),
-  ).toHaveValue(supplier.name);
+    await screen.findByLabelText("Supplier from linked Order"),
+  ).toHaveTextContent(supplier.name);
+  expect(
+    screen.queryByRole("combobox", { name: "Supplier" }),
+  ).not.toBeInTheDocument();
   expect(
     await screen.findByLabelText("Order", { selector: "select" }),
   ).toHaveValue(purchaseOrder.id);
   expect(
-    screen.getByRole("group", { name: "Acquisition date" }),
-  ).toHaveTextContent("Unknown");
-  await user.click(screen.getByRole("tab", { name: "Origin" }));
+    await screen.findByLabelText("Recorded seed lot knowledge"),
+  ).toHaveTextContent("Acquisition date: Unknown");
+  await openSection(user, "Origin");
   expect(
-    screen.getByRole("combobox", { name: "Material provenance (optional)" }),
+    screen.getByRole("combobox", { name: "Material provenance" }),
   ).toHaveValue("");
 });
 
@@ -1795,12 +1800,9 @@ test("SeedLot selection previews without mutating; Apply updates acquisition onl
   await user.click(
     await screen.findByRole("button", { name: "Edit seed lot" }),
   );
-  await user.clear(screen.getByLabelText("Lot label (optional)"));
-  await user.type(
-    screen.getByLabelText("Lot label (optional)"),
-    "Unsaved identity draft",
-  );
-  await user.click(screen.getByRole("tab", { name: "Acquisition" }));
+  await user.clear(screen.getByLabelText("Lot label"));
+  await user.type(screen.getByLabelText("Lot label"), "Unsaved identity draft");
+  await openSection(user, "Acquisition");
   await screen.findByRole("option", { name: /PO-SEEDS/ });
   await user.selectOptions(
     screen.getByLabelText("Order", { selector: "select" }),
@@ -1836,10 +1838,602 @@ test("SeedLot selection previews without mutating; Apply updates acquisition onl
     purchaseOrder.id,
   );
   expect(
-    screen.getByRole("group", { name: "Acquisition date" }),
-  ).toHaveTextContent("Unknown");
-  await user.click(screen.getByRole("tab", { name: "Essentials" }));
-  expect(screen.getByLabelText("Lot label (optional)")).toHaveValue(
+    await screen.findByLabelText("Recorded seed lot knowledge"),
+  ).toHaveTextContent("Acquisition date: Unknown");
+  await openSection(user, "Essentials");
+  expect(screen.getByLabelText("Lot label")).toHaveValue(
     "Unsaved identity draft",
   );
+});
+
+test("contextual edit retains Photos underneath, saves from any section and restores its trigger", async () => {
+  let current = lot();
+  let body: unknown;
+  mockApi(
+    directoryHandler([], (path, init) => {
+      if (path === "/api/v1/seed-lots") return json([current]);
+      if (path.includes("/photos")) return json([]);
+      if (path.includes("/api/v1/seed-lots/") && init?.method === "PUT") {
+        body = JSON.parse(requestBody(init)) as unknown;
+        current = lot({ label: "Edited packet" });
+        return json(current);
+      }
+    }),
+  );
+  window.history.replaceState(null, "", `#/seeds/${current.id}?tab=photos`);
+  const user = userEvent.setup();
+  render(<App />);
+  const trigger = await screen.findByRole("button", { name: "Edit seed lot" });
+  const background = document.querySelector("#panel-photos");
+  await user.click(trigger);
+  const dialog = screen.getByRole("dialog", { name: "Edit Blue packet" });
+  expect(document.querySelector("#panel-photos")).toBe(background);
+  expect(document.querySelector(".seed-context-page")).toHaveAttribute("inert");
+  expect(document.querySelector(".seed-context-page")).toHaveAttribute(
+    "aria-hidden",
+    "true",
+  );
+  expect(window.location.hash).toBe(`#/seeds/${current.id}?tab=edit`);
+  expect(dialog).toContainElement(document.activeElement as HTMLElement);
+  await user.clear(within(dialog).getByLabelText("Lot label"));
+  await user.type(within(dialog).getByLabelText("Lot label"), "Edited packet");
+  for (const section of [
+    "Essentials",
+    "Inventory",
+    "Acquisition",
+    "Origin",
+    "Seed details",
+  ]) {
+    await user.click(within(dialog).getByRole("tab", { name: section }));
+    expect(
+      within(dialog).getByRole("button", { name: "Save changes" }),
+    ).toBeVisible();
+    expect(
+      within(dialog).queryByRole("button", { name: "Next" }),
+    ).not.toBeInTheDocument();
+  }
+  await user.click(within(dialog).getByRole("tab", { name: "Acquisition" }));
+  await user.click(
+    within(dialog).getByRole("button", { name: "Save changes" }),
+  );
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("dialog", { name: "Edit Blue packet" }),
+    ).not.toBeInTheDocument();
+  });
+  expect(window.location.hash).toBe(`#/seeds/${current.id}?tab=photos`);
+  expect(screen.getByRole("tab", { name: "Photos" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  expect(document.querySelector("#panel-photos")).toBe(background);
+  expect(screen.getByRole("button", { name: "Edit seed lot" })).toHaveFocus();
+  expect(body).toMatchObject({
+    supplier_id: supplier.id,
+    acquisition_date: { precision: "year", year: 2024 },
+  });
+  expect(screen.getByRole("status")).toHaveTextContent(
+    "Seed lot changes were saved",
+  );
+});
+
+test("directory modal cancellation retains search, inspector and focus; Escape protects dirty values", async () => {
+  mockApi(directoryHandler([lot()]));
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  const user = await openSeeds();
+  setViewportMatches(false);
+  await user.type(
+    screen.getByRole("searchbox", { name: "Search seed inventory" }),
+    "Blue",
+  );
+  await user.click(screen.getByRole("button", { name: /Blue packet/ }));
+  const trigger = within(
+    screen.getByRole("complementary", { name: "Quick preview" }),
+  ).getByRole("button", { name: "Edit" });
+  const oldHash = window.location.hash;
+  await user.click(trigger);
+  const dialog = screen.getByRole("dialog", { name: "Edit Blue packet" });
+  const first = within(dialog).getByRole("link", { name: "Seeds" });
+  expect(first).toHaveFocus();
+  await user.keyboard("{Shift>}{Tab}{/Shift}");
+  expect(
+    within(dialog).getByRole("button", { name: "Save changes" }),
+  ).toHaveFocus();
+  await user.keyboard("{Tab}");
+  expect(first).toHaveFocus();
+  await user.type(within(dialog).getByLabelText("Lot label"), " draft");
+  await user.keyboard("{Escape}");
+  expect(confirm).toHaveBeenCalledWith("Discard unsaved seed lot changes?");
+  expect(within(dialog).getByLabelText("Lot label")).toHaveValue(
+    "Blue packet draft",
+  );
+  confirm.mockReturnValue(true);
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("dialog", { name: "Edit Blue packet" }),
+    ).not.toBeInTheDocument();
+  });
+  expect(window.location.hash).toBe(oldHash);
+  expect(
+    screen.getByRole("searchbox", { name: "Search seed inventory" }),
+  ).toHaveValue("Blue");
+  expect(
+    screen.getByRole("complementary", { name: "Quick preview" }),
+  ).toBeVisible();
+  expect(trigger).toHaveFocus();
+});
+
+test("browser Back closes a clean edit before leaving its detail context", async () => {
+  mockApi(directoryHandler([lot()]));
+  window.history.replaceState(null, "", `#/seeds/${lot().id}`);
+  const user = userEvent.setup();
+  render(<App />);
+  const trigger = await screen.findByRole("button", { name: "Edit seed lot" });
+  await user.click(trigger);
+  expect(
+    screen.getByRole("dialog", { name: "Edit Blue packet" }),
+  ).toBeVisible();
+  act(() => {
+    window.history.back();
+  });
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("dialog", { name: "Edit Blue packet" }),
+    ).not.toBeInTheDocument();
+  });
+  expect(window.location.hash).toBe(`#/seeds/${lot().id}`);
+  expect(screen.getByRole("region", { name: "Seed lot detail" })).toBeVisible();
+  expect(trigger).toHaveFocus();
+});
+
+test.each(["tab=edit", "action=edit"])(
+  "direct edit %s is the same full-page editor without a fabricated background",
+  async (query) => {
+    mockApi(directoryHandler([lot()]));
+    window.history.replaceState(null, "", `#/seeds/${lot().id}?${query}`);
+    const user = userEvent.setup();
+    render(<App />);
+    expect(await screen.findByLabelText("Lot label")).toHaveValue(
+      "Blue packet",
+    );
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      document.querySelector(".edit-workspace-fallback"),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(
+      await screen.findByRole("button", { name: "Edit seed lot" }),
+    ).toBeVisible();
+    expect(window.location.hash).toBe(`#/seeds/${lot().id}`);
+  },
+);
+
+test.each(["known", "unknown", "no-order"])(
+  "Acquisition adapts Supplier for %s Order without changing persisted knowledge or dates",
+  async (mode) => {
+    const order = {
+      ...purchaseOrder,
+      supplier_id: mode === "known" ? supplier.id : null,
+      supplier: mode === "known" ? purchaseOrder.supplier : null,
+      ordered_on: null,
+    };
+    let current = lot({ order_id: mode === "no-order" ? null : order.id });
+    let body: unknown;
+    mockApi(
+      directoryHandler([], (path, init) => {
+        if (path === "/api/v1/seed-lots") return json([current]);
+        if (path.startsWith(`/api/v1/orders/${order.id}`)) return json(order);
+        if (path.startsWith("/api/v1/orders?"))
+          return json({ items: [order], total: 1, offset: 0, limit: 50 });
+        if (path.includes("/api/v1/seed-lots/") && init?.method === "PUT") {
+          body = JSON.parse(requestBody(init)) as unknown;
+          current = lot({ order_id: null });
+          return json(current);
+        }
+      }),
+    );
+    window.history.replaceState(null, "", `#/seeds/${current.id}?tab=edit`);
+    const user = userEvent.setup();
+    render(<App />);
+    await screen.findByLabelText("Lot label");
+    await openSection(user, "Acquisition");
+    if (mode !== "no-order") {
+      expect(
+        await screen.findByLabelText("Supplier from linked Order"),
+      ).toHaveTextContent(mode === "known" ? supplier.name : "Not recorded");
+      expect(
+        screen.queryByRole("combobox", { name: "Supplier" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("group", { name: "Acquisition date" }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByLabelText("Recorded seed lot knowledge"),
+      ).toHaveTextContent(
+        `Supplier: ${supplier.name} · Acquisition date: 2024`,
+      );
+    } else {
+      expect(
+        await screen.findByRole("combobox", { name: "Supplier" }),
+      ).toHaveValue(supplier.name);
+      expect(
+        within(
+          screen.getByRole("group", { name: "Acquisition date" }),
+        ).getByLabelText("Year"),
+      ).toHaveValue(2024);
+    }
+    if (mode !== "no-order") {
+      expect(
+        screen.getByRole("region", { name: "Order transaction information" }),
+      ).toHaveTextContent("Date unknown");
+      await user.selectOptions(
+        screen.getByLabelText("Order", { selector: "select" }),
+        "",
+      );
+      expect(screen.getByRole("combobox", { name: "Supplier" })).toHaveValue(
+        supplier.name,
+      );
+      expect(
+        within(
+          screen.getByRole("group", { name: "Acquisition date" }),
+        ).getByLabelText("Year"),
+      ).toHaveValue(2024);
+    }
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+    await screen.findByRole("button", { name: "Edit seed lot" });
+    expect(body).toMatchObject({
+      order_id: null,
+      source_kind: "purchased",
+      supplier_id: supplier.id,
+      acquisition_date: { precision: "year", year: 2024 },
+    });
+  },
+);
+
+test("dirty browser Back refuses departure without losing the draft or adding a replacement entry", async () => {
+  mockApi(directoryHandler([lot()]));
+  window.history.replaceState(null, "", `#/seeds/${lot().id}`);
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  const user = userEvent.setup();
+  render(<App />);
+  await user.click(
+    await screen.findByRole("button", { name: "Edit seed lot" }),
+  );
+  await user.type(screen.getByLabelText("Lot label"), " draft");
+  const length = window.history.length;
+  act(() => {
+    window.history.back();
+  });
+  await waitFor(() => {
+    expect(confirm).toHaveBeenCalledWith("Discard unsaved seed lot changes?");
+  });
+  await waitFor(() => {
+    expect(window.location.hash).toBe(`#/seeds/${lot().id}?tab=edit`);
+  });
+  expect(window.history.length).toBe(length);
+  expect(screen.getByLabelText("Lot label")).toHaveValue("Blue packet draft");
+  confirm.mockReturnValue(true);
+  act(() => {
+    window.history.back();
+  });
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("dialog", { name: "Edit Blue packet" }),
+    ).not.toBeInTheDocument();
+  });
+  expect(window.location.hash).toBe(`#/seeds/${lot().id}`);
+});
+
+test("an Order and SeedLot with unknown Supplier retain truthful absence", async () => {
+  const order = {
+    ...purchaseOrder,
+    supplier_id: null,
+    supplier: null,
+    ordered_on: null,
+  };
+  const current = lot({
+    supplier_id: null,
+    supplier: null,
+    order_id: order.id,
+  });
+  mockApi(
+    directoryHandler([current], (path) => {
+      if (path.startsWith(`/api/v1/orders/${order.id}`)) return json(order);
+    }),
+  );
+  window.history.replaceState(null, "", `#/seeds/${current.id}?tab=edit`);
+  const user = userEvent.setup();
+  render(<App />);
+  await screen.findByLabelText("Lot label");
+  await openSection(user, "Acquisition");
+  expect(
+    await screen.findByLabelText("Supplier from linked Order"),
+  ).toHaveTextContent("Not recorded");
+  expect(
+    screen.queryByRole("combobox", { name: "Supplier" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("region", { name: "Order transaction information" }),
+  ).toHaveTextContent("Date unknown");
+  expect(
+    screen.getByLabelText("Recorded seed lot knowledge"),
+  ).toHaveTextContent("Supplier: Not recorded · Acquisition date: 2024");
+  expect(
+    screen.queryByRole("group", { name: "Acquisition date" }),
+  ).not.toBeInTheDocument();
+});
+
+test("hash-route departure also closes contextual edit and dirty editor links require confirmation", async () => {
+  mockApi(directoryHandler([lot()]));
+  window.history.replaceState(null, "", `#/seeds/${lot().id}`);
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  const user = userEvent.setup();
+  render(<App />);
+  await user.click(
+    await screen.findByRole("button", { name: "Edit seed lot" }),
+  );
+  const dialog = screen.getByRole("dialog", { name: "Edit Blue packet" });
+  await user.type(within(dialog).getByLabelText("Lot label"), " draft");
+  await user.click(within(dialog).getByRole("link", { name: "Seeds" }));
+  expect(confirm).toHaveBeenCalledOnce();
+  expect(window.location.hash).toBe(`#/seeds/${lot().id}?tab=edit`);
+  expect(dialog).toBeVisible();
+  await user.clear(within(dialog).getByLabelText("Lot label"));
+  await user.type(within(dialog).getByLabelText("Lot label"), "Blue packet");
+  act(() => {
+    window.history.replaceState(null, "", `#/seeds/${lot().id}`);
+    window.dispatchEvent(new HashChangeEvent("hashchange"));
+  });
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("dialog", { name: "Edit Blue packet" }),
+    ).not.toBeInTheDocument();
+  });
+  expect(screen.getByRole("button", { name: "Edit seed lot" })).toHaveFocus();
+});
+
+test("successful edit closes immediately and restores its explicit invoker even without click focus or history events", async () => {
+  const current = lot();
+  mockApi(
+    directoryHandler([current], (path, init) => {
+      if (path.includes("/api/v1/seed-lots/") && init?.method === "PUT")
+        return json(current);
+    }),
+  );
+  window.history.replaceState(null, "", `#/seeds/${current.id}`);
+  const user = userEvent.setup();
+  render(<App />);
+  const trigger = await screen.findByRole("button", { name: "Edit seed lot" });
+  fireEvent.click(trigger);
+  const dialog = screen.getByRole("dialog", { name: "Edit Blue packet" });
+  const back = vi
+    .spyOn(window.history, "back")
+    .mockImplementation(() => undefined);
+  await user.click(
+    within(dialog).getByRole("button", { name: "Save changes" }),
+  );
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("dialog", { name: "Edit Blue packet" }),
+    ).not.toBeInTheDocument();
+  });
+  expect(back).toHaveBeenCalledOnce();
+  expect(
+    document.querySelector(".edit-workspace-fallback"),
+  ).not.toBeInTheDocument();
+  expect(trigger).toHaveFocus();
+  expect(document.querySelector(".seed-context-page")).not.toHaveAttribute(
+    "inert",
+  );
+});
+
+test.each([false, true])(
+  "backdrop uses the same dismissal guard and returns to Details (dirty=%s)",
+  async (dirty) => {
+    mockApi(directoryHandler([lot()]));
+    window.history.replaceState(null, "", `#/seeds/${lot().id}?tab=photos`);
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const user = userEvent.setup();
+    render(<App />);
+    const trigger = await screen.findByRole("button", {
+      name: "Edit seed lot",
+    });
+    await user.click(trigger);
+    const dialog = screen.getByRole("dialog", { name: "Edit Blue packet" });
+    vi.spyOn(dialog, "getBoundingClientRect").mockReturnValue({
+      left: 100,
+      top: 100,
+      right: 1060,
+      bottom: 800,
+      width: 960,
+      height: 700,
+      x: 100,
+      y: 100,
+      toJSON: () => ({}),
+    });
+    if (dirty)
+      await user.type(within(dialog).getByLabelText("Lot label"), " draft");
+    fireEvent.click(dialog, { clientX: 20, clientY: 20 });
+    if (dirty) {
+      expect(confirm).toHaveBeenCalledWith("Discard unsaved seed lot changes?");
+      expect(dialog).toBeInTheDocument();
+      expect(within(dialog).getByLabelText("Lot label")).toHaveValue(
+        "Blue packet draft",
+      );
+      confirm.mockReturnValue(true);
+      fireEvent.click(dialog, { clientX: 20, clientY: 20 });
+    } else expect(confirm).not.toHaveBeenCalled();
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole("tab", { name: "Photos" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(trigger).toHaveFocus();
+  },
+);
+
+test("Overview keeps current-state facts and Sowings has one canonical start action", async () => {
+  const record = lot({
+    harvest_date: { precision: "month", year: 2024, month: 6 },
+    expected_viability_until: { precision: "year", year: 2027 },
+    provenance_site: {
+      id: "site-id",
+      name: "Garden bed",
+      geographic_place_path: "Thailand",
+    },
+  });
+  mockApi(
+    directoryHandler([record], (path) =>
+      path === "/api/v1/sowings"
+        ? json([
+            {
+              id: "sowing-id",
+              seed_lot_id: record.id,
+              label: "Tray A",
+              lifecycle: "active",
+              sowing_date: { precision: "day", year: 2026, month: 10, day: 1 },
+              quantity: {
+                kind: "seed_count",
+                value: "12",
+                unit: null,
+                is_approximate: false,
+              },
+              germinated_count: 7,
+              location: null,
+            },
+          ])
+        : undefined,
+    ),
+  );
+  const user = await openSeeds();
+  await user.click(await screen.findByRole("button", { name: /Blue packet/ }));
+  const inventory = screen.getByLabelText("Current inventory");
+  expect(screen.getByRole("heading", { name: "At a glance" })).toBeVisible();
+  expect(
+    within(inventory)
+      .getAllByRole("term")
+      .map((node) => node.textContent),
+  ).toEqual(["Lifecycle", "Remaining", "Storage"]);
+  expect(within(inventory).getAllByRole("definition")).toHaveLength(3);
+  expect(screen.getByRole("region", { name: "Acquisition" })).toHaveTextContent(
+    "Purchased",
+  );
+  expect(screen.getByRole("region", { name: "Origin" })).toHaveTextContent(
+    "Thailand",
+  );
+  expect(inventory).toHaveTextContent("Active");
+  expect(inventory).toHaveTextContent("50 seeds");
+  expect(
+    within(inventory).getByRole("link", { name: location.display_path }),
+  ).toHaveAttribute("href", `#/locations/${location.id}`);
+  expect(screen.getByRole("link", { name: supplier.name })).toHaveAttribute(
+    "href",
+    `#/suppliers/${supplier.id}`,
+  );
+  expect(
+    screen.getByRole("link", { name: "Thailand → Garden bed" }),
+  ).toHaveAttribute("href", "#/geography/site-id");
+  expect(
+    screen.getByRole("link", { name: place.display_path }),
+  ).toHaveAttribute("href", `#/geography?place=${place.id}`);
+  const dates = screen.getByRole("region", { name: "Dates & condition" });
+  expect(
+    within(dates)
+      .getAllByRole("term")
+      .map((node) => node.textContent),
+  ).toEqual(["Acquired", "Harvested", "Expected viability"]);
+  expect(
+    within(dates)
+      .getAllByRole("definition")
+      .map((node) => node.textContent),
+  ).toEqual(["2024", "2024-06", "2027"]);
+  expect(screen.getByRole("region", { name: "Notes" })).toHaveTextContent(
+    "Keep dry.",
+  );
+  expect(
+    screen.getByRole("heading", { name: "Upcoming activities" }),
+  ).toBeVisible();
+  await user.click(screen.getByRole("tab", { name: "Sowings" }));
+  expect(await screen.findByRole("link", { name: /Tray A/ })).toHaveAttribute(
+    "href",
+    "#/sowings/sowing-id",
+  );
+  expect(screen.getByRole("tabpanel")).toHaveTextContent("12 seeds used");
+  expect(screen.getByRole("tabpanel")).toHaveTextContent("7 germinated");
+  expect(screen.getAllByRole("link", { name: "Start sowing" })).toHaveLength(1);
+  expect(
+    screen.queryByRole("link", { name: "Start another sowing" }),
+  ).not.toBeInTheDocument();
+});
+
+test("Details empty Sowings and Lineage are plain messages while Photos retains its workspace", async () => {
+  mockApi(
+    directoryHandler([lot()], (path) => {
+      if (path === "/api/v1/sowings" || path.endsWith("/photos"))
+        return json([]);
+      if (path.endsWith("/lineage"))
+        return json({
+          subject: { kind: "seed_lot", id: lot().id },
+          ancestors: [],
+        });
+      return undefined;
+    }),
+  );
+  const user = await openSeeds();
+  await user.click(await screen.findByRole("button", { name: /Blue packet/ }));
+  await user.click(screen.getByRole("tab", { name: "Sowings" }));
+  expect(
+    (await screen.findByText("No sowings use this seed lot yet.")).closest(
+      ".empty-state",
+    ),
+  ).toBeNull();
+  expect(screen.getByRole("link", { name: "Start sowing" })).toBeVisible();
+  await user.click(screen.getByRole("tab", { name: "Lineage" }));
+  expect(
+    (await screen.findByText("No recorded upstream material lineage.")).closest(
+      ".empty-state",
+    ),
+  ).toBeNull();
+  await user.click(screen.getByRole("tab", { name: "Photos" }));
+  expect(
+    (
+      await screen.findByText("No photos or external image references yet.")
+    ).closest(".empty-state"),
+  ).toBeInTheDocument();
+  for (const name of ["Add media", "Link existing", "External"])
+    expect(screen.getByRole("button", { name })).toBeVisible();
+});
+
+test("Create labels expose the real required identity and keep optional acquisition facts optional", async () => {
+  mockApi(directoryHandler([]));
+  const user = await openSeeds();
+  await user.click(screen.getByRole("button", { name: "+ New seed lot" }));
+  expect(
+    screen.getByRole("combobox", { name: "Botanical identity" }),
+  ).toBeRequired();
+  for (const label of ["Lot label", "Storage location", "Supplier", "Notes"])
+    expect(screen.getByLabelText(label)).not.toBeRequired();
+  expect(screen.queryByText(/\(optional\)/)).not.toBeInTheDocument();
+  expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+  await user.selectOptions(screen.getByLabelText("Source"), "purchased");
+  expect(screen.getByRole("combobox", { name: "Supplier" })).not.toBeRequired();
+  expect(
+    screen.getByLabelText("Precision", { selector: "#acquisition-precision" }),
+  ).not.toBeRequired();
+  await user.selectOptions(
+    screen.getByLabelText("Precision", { selector: "#acquisition-precision" }),
+    "month",
+  );
+  expect(
+    screen.getByLabelText("Year", { selector: "#acquisition-year" }),
+  ).toBeRequired();
+  expect(
+    screen.getByLabelText("Month", { selector: "#acquisition-month" }),
+  ).toBeRequired();
+  expect(
+    screen.queryByLabelText("Day", { selector: "#acquisition-day" }),
+  ).not.toBeInTheDocument();
 });

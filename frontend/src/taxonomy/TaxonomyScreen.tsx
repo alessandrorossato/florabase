@@ -1,3 +1,4 @@
+import { DirectoryFilterSelect } from "../components/DirectoryTools";
 import { useEffect, useMemo, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -219,7 +220,7 @@ function CollectionTree({
   return (
     <div className="taxonomy-workspace">
       <section aria-label="Taxonomic tree" className="taxonomy-panel">
-        <h2>Taxonomic tree</h2>
+        <h3>Taxonomic tree</h3>
         <label className="taxonomy-ranks">
           <input
             type="checkbox"
@@ -270,7 +271,7 @@ function CollectionTree({
           </p>
         ) : (
           <>
-            <h2>{selected.taxon.scientific_name}</h2>
+            <h3>{selected.taxon.scientific_name}</h3>
             <p>
               {selected.taxon.rank} · {selected.taxon.source_taxon_id}
             </p>
@@ -279,7 +280,7 @@ function CollectionTree({
               {selected.counts.living} Living · {selected.counts.current}{" "}
               Current · {selected.counts.historical} Historical
             </p>
-            <h3>Source classification</h3>
+            <h4>Source classification</h4>
             <ol className="taxonomy-path">
               {(() => {
                 const path: Node[] = [];
@@ -308,7 +309,7 @@ function CollectionTree({
             </ol>
             {genera.length > 0 && (
               <>
-                <h3>Represented genera</h3>
+                <h4>Represented genera</h4>
                 <ul>
                   {genera.map((node) => (
                     <li key={node.taxon.source_taxon_id}>
@@ -326,7 +327,7 @@ function CollectionTree({
                 </ul>
               </>
             )}
-            <h3>Represented identities</h3>
+            <h4>Represented identities</h4>
             <IdentityList identities={detail} />
           </>
         )}
@@ -426,19 +427,15 @@ export function TaxonomyScreen() {
         Classification describes taxonomy. It does not measure genetic distance
         or recorded material Lineage.
       </p>
-      <div className="actions" aria-label="Collection representation">
-        {scopes.map((scope) => (
-          <button
-            key={scope.value}
-            type="button"
-            aria-pressed={state.scope === scope.value}
-            onClick={() => {
-              update({ ...state, scope: scope.value });
-            }}
-          >
-            {scope.label}
-          </button>
-        ))}
+      <div className="representation-filter">
+        <DirectoryFilterSelect
+          label="Collection representation"
+          value={state.scope}
+          options={scopes}
+          onChange={(scope) => {
+            update({ ...state, scope });
+          }}
+        />
       </div>
       <fieldset className="taxonomy-categories">
         <legend>Collection records</legend>
@@ -546,7 +543,7 @@ export function TaxonomyScreen() {
               className="taxonomy-panel"
               aria-label="Unresolved taxonomy"
             >
-              <h2>Unresolved taxonomy ({data.unresolved})</h2>
+              <h3>Unresolved taxonomy ({data.unresolved})</h3>
               <IdentityList
                 identities={data.identities.filter(
                   (identity) => !(identity.classification_ids ?? []).length,

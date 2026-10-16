@@ -1,0 +1,31 @@
+/* Precision owns a stable column; calendar parts always appear beneath it. */
+.app-content .partial-date.partial-date--stacked {
+  display: block;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.app-content .partial-date.partial-date--stacked > legend {
+  margin: 0 0 var(--space-2);
+  padding: 0;
+}
+.app-content .collection-form .partial-date.partial-date--stacked > .field,
+.app-content .partial-date.partial-date--stacked > .field {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+.app-content .partial-date.partial-date--stacked .partial-date-parts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+  max-width: none;
+  margin-top: var(--space-2);
+  align-items: start;
+}
+.app-content .partial-date.partial-date--stacked .partial-date-parts .field {
+  min-width: 0;
+  margin: 0;
+}

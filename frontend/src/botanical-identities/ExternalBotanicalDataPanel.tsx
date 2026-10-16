@@ -1,3 +1,4 @@
+import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useState, type SyntheticEvent } from "react";
 
 import { ApiError } from "../auth/api";
@@ -239,9 +240,9 @@ export function ExternalBotanicalDataPanel({
           </InfoDisclosure>
           <form onSubmit={(event) => void runSearch(event)}>
             <div className="field">
-              <label htmlFor={`external-query-${identityId}`}>
+              <FieldLabel required htmlFor={`external-query-${identityId}`}>
                 Scientific-name search
-              </label>
+              </FieldLabel>
               <input
                 id={`external-query-${identityId}`}
                 maxLength={255}

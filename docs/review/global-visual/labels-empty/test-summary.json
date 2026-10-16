@@ -1,0 +1,147 @@
+{
+  "uniquePassedTests": 448,
+  "testFiles": 27,
+  "results": [
+    {
+      "file": "src/App.test.tsx",
+      "passed": 73,
+      "failed": 0
+    },
+    {
+      "file": "src/Propagation002.test.tsx",
+      "passed": 14,
+      "failed": 0
+    },
+    {
+      "file": "src/botanical-identities/ExternalBotanicalDataPanel.test.tsx",
+      "passed": 3,
+      "failed": 0
+    },
+    {
+      "file": "src/botanical-profiles/NativeRangeEnrichmentPanel.test.tsx",
+      "passed": 6,
+      "failed": 0
+    },
+    {
+      "file": "src/components/FieldLabel.test.tsx",
+      "passed": 2,
+      "failed": 0
+    },
+    {
+      "file": "src/components/FormSections.test.tsx",
+      "passed": 6,
+      "failed": 0
+    },
+    {
+      "file": "src/components/ReferenceInteractions.test.tsx",
+      "passed": 4,
+      "failed": 0
+    },
+    {
+      "file": "src/events/GlobalEventsScreen.test.tsx",
+      "passed": 10,
+      "failed": 0
+    },
+    {
+      "file": "src/harvests/HarvestScreen.test.tsx",
+      "passed": 10,
+      "failed": 0
+    },
+    {
+      "file": "src/harvests/StoredMaterial.test.tsx",
+      "passed": 18,
+      "failed": 0
+    },
+    {
+      "file": "src/labels/LabelsScreen.test.tsx",
+      "passed": 54,
+      "failed": 0
+    },
+    {
+      "file": "src/lineage/LineagePanel.test.tsx",
+      "passed": 4,
+      "failed": 0
+    },
+    {
+      "file": "src/media/MediaScreen.test.tsx",
+      "passed": 22,
+      "failed": 0
+    },
+    {
+      "file": "src/orders/OrderScreen.test.tsx",
+      "passed": 9,
+      "failed": 0
+    },
+    {
+      "file": "src/photos/BotanicalIdentityCover.test.tsx",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "file": "src/photos/PhotosSection.test.tsx",
+      "passed": 16,
+      "failed": 0
+    },
+    {
+      "file": "src/plants/PlantScreen.test.tsx",
+      "passed": 42,
+      "failed": 0
+    },
+    {
+      "file": "src/propagation/GuidedForms.test.tsx",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "file": "src/provenance-sites/ProvenanceSiteManager.test.tsx",
+      "passed": 4,
+      "failed": 0
+    },
+    {
+      "file": "src/schedule/ScheduleScreen.test.tsx",
+      "passed": 51,
+      "failed": 0
+    },
+    {
+      "file": "src/seed-lots/PartialDateField.test.tsx",
+      "passed": 1,
+      "failed": 0
+    },
+    {
+      "file": "src/seed-lots/ReferencePicker.test.tsx",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "file": "src/seed-lots/SeedLotScreen.test.tsx",
+      "passed": 48,
+      "failed": 0
+    },
+    {
+      "file": "src/settings/SettingsScreen.test.tsx",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "file": "src/sowings/SowingScreen.test.tsx",
+      "passed": 19,
+      "failed": 0
+    },
+    {
+      "file": "src/suppliers/SupplierScreen.test.tsx",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "file": "src/taxonomy/TaxonomyScreen.test.tsx",
+      "passed": 7,
+      "failed": 0
+    }
+  ],
+  "supersededRunNote": "Initial five Notes query ambiguities were corrected with specific control/region queries; all affected suites pass on rerun.",
+  "finalLocationRegression": {
+    "passed": 15,
+    "failed": 0,
+    "note": "Filtered App Location tests after final fieldset legend/description change; other App tests were skipped in this rerun only."
+  }
+}

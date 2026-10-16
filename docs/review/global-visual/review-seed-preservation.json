@@ -1,0 +1,18 @@
+{
+  "scope": "Docker identity, volumes, networks and primary Git metadata; no UAT record/media reads",
+  "protected_metadata_unchanged": {
+    "florabase": true,
+    "florabase-preview": true,
+    "florabase-prod": true,
+    "florabase-uat-preview": true,
+    "primary_git": true
+  },
+  "review_owner_credentials_unchanged": true,
+  "live_repeat_seed_fixture_tests": 21,
+  "fixture_version": 4,
+  "fixture_records": 66,
+  "candidate_source": "/home/alessandro/.codex/worktrees/996d/florabase",
+  "candidate_branch": "feat/global-visual-001",
+  "base_head": "cd63c185f7bcb0544cd9c3cff984b29564e6bc84",
+  "dirty": true
+}
