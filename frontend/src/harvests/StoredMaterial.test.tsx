@@ -467,7 +467,7 @@ it("BULK-001 selects only active Stored material and clears on search", async ()
   wrap(<StoredMaterialDirectory />);
   const user = userEvent.setup();
   await screen.findByText("1 record");
-  await user.click(screen.getByRole("button", { name: "Select" }));
+  await user.click(screen.getByRole("button", { name: "Select records" }));
   await user.click(screen.getByRole("button", { name: "Select visible" }));
   expect(screen.getByText("1 selected")).toBeVisible();
   expect(

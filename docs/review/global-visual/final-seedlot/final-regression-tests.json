@@ -1,0 +1,28 @@
+{
+  "success": true,
+  "numPassedTests": 48,
+  "numFailedTests": 0,
+  "numTotalTests": 48,
+  "suites": [
+    {
+      "file": "src/App.lazy.test.tsx",
+      "tests": 1,
+      "failed": []
+    },
+    {
+      "file": "src/components/FormSections.test.tsx",
+      "tests": 6,
+      "failed": []
+    },
+    {
+      "file": "src/media/MediaScreen.test.tsx",
+      "tests": 22,
+      "failed": []
+    },
+    {
+      "file": "src/sowings/SowingScreen.test.tsx",
+      "tests": 19,
+      "failed": []
+    }
+  ]
+}

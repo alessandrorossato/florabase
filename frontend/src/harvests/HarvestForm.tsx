@@ -1,3 +1,4 @@
+import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useId, useRef, useState, type SyntheticEvent } from "react";
 import { inventoryError } from "./inventoryApi";
 import { ApiError } from "../auth/api";
@@ -293,9 +294,12 @@ export function HarvestForm({
                 {line.quantity && (
                   <>
                     <div className="field">
-                      <label htmlFor={`${id}-quantity-${String(line.key)}`}>
+                      <FieldLabel
+                        required
+                        htmlFor={`${id}-quantity-${String(line.key)}`}
+                      >
                         Quantity {index + 1}
-                      </label>
+                      </FieldLabel>
                       <input
                         id={`${id}-quantity-${String(line.key)}`}
                         type="number"
@@ -356,7 +360,7 @@ export function HarvestForm({
                 )}
                 <div className="field">
                   <label htmlFor={`${id}-description-${String(line.key)}`}>
-                    Description {index + 1} (optional)
+                    Description {index + 1}
                   </label>
                   <textarea
                     rows={2}
@@ -404,7 +408,7 @@ export function HarvestForm({
           </button>
         </section>
         <div className="field">
-          <label htmlFor={`${id}-label`}>Label (optional)</label>
+          <label htmlFor={`${id}-label`}>Label</label>
           <input
             id={`${id}-label`}
             value={label}

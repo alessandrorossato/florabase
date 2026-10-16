@@ -1,3 +1,4 @@
+import { FieldLabel } from "../components/FieldLabel";
 import { ScheduleTargetLabel } from "./ScheduleTargetLabel";
 import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "../auth/api";
@@ -188,7 +189,9 @@ function ActivityDialog({
             {dialog.action === "create" || dialog.action === "edit" ? (
               <fieldset disabled={busy} className="schedule-edit-fields">
                 <label className="field schedule-field-full">
-                  Title
+                  <FieldLabel as="span" required>
+                    Title
+                  </FieldLabel>
                   <input
                     required
                     maxLength={255}
@@ -199,8 +202,11 @@ function ActivityDialog({
                   />
                 </label>
                 <label className="field">
-                  Activity kind
+                  <FieldLabel as="span" required>
+                    Activity kind
+                  </FieldLabel>
                   <select
+                    aria-required="true"
                     value={kind}
                     onChange={(e) => {
                       setKind(e.target.value as ActivityKind);
@@ -214,7 +220,9 @@ function ActivityDialog({
                   </select>
                 </label>
                 <label className="field">
-                  Due date
+                  <FieldLabel as="span" required>
+                    Due date
+                  </FieldLabel>
                   <input
                     required
                     type="date"
@@ -374,7 +382,9 @@ function ActivityDialog({
                           </select>
                         </label>
                         <label className="field">
-                          Actual occurrence date
+                          <FieldLabel as="span" required>
+                            Actual occurrence date
+                          </FieldLabel>
                           <input
                             required
                             type="date"

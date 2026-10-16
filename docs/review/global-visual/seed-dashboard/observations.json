@@ -1,0 +1,1226 @@
+[
+  {
+    "case": "overview-populated-1440",
+    "documentWidth": 1440,
+    "photos": [],
+    "picker": null,
+    "sections": [
+      {
+        "height": 147.5859375,
+        "title": "Acquisition",
+        "width": 570,
+        "x": 244,
+        "y": 399.09375
+      },
+      {
+        "height": 147.5859375,
+        "title": "Origin",
+        "width": 570,
+        "x": 846,
+        "y": 399.09375
+      },
+      {
+        "height": 137,
+        "title": "Dates & condition",
+        "width": 570,
+        "x": 244,
+        "y": 570.6796875
+      },
+      {
+        "height": 137,
+        "title": "Upcoming activities",
+        "width": 570,
+        "x": 846,
+        "y": 570.6796875
+      },
+      {
+        "height": 73.3984375,
+        "title": "Notes",
+        "width": 1172,
+        "x": 244,
+        "y": 731.6796875
+      }
+    ],
+    "summary": {
+      "columns": "303.461px 379.336px 455.203px",
+      "metrics": [
+        {
+          "height": 45.9921875,
+          "text": "LifecycleActive",
+          "width": 303.4609375,
+          "x": 261,
+          "y": 312.1015625
+        },
+        {
+          "height": 45.9921875,
+          "text": "Remaining48 seeds",
+          "width": 379.3359375,
+          "x": 564.4609375,
+          "y": 312.1015625
+        },
+        {
+          "height": 45.9921875,
+          "text": "StoragePreview collection → Indoor seed shelf",
+          "width": 455.203125,
+          "x": 943.796875,
+          "y": 312.1015625
+        }
+      ]
+    },
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "overview-populated-1024",
+    "documentWidth": 1009,
+    "photos": [],
+    "picker": null,
+    "sections": [
+      {
+        "height": 147.5859375,
+        "title": "Acquisition",
+        "width": 741,
+        "x": 244,
+        "y": 455.09375
+      },
+      {
+        "height": 103.3984375,
+        "title": "Origin",
+        "width": 741,
+        "x": 244,
+        "y": 626.6796875
+      },
+      {
+        "height": 133.3984375,
+        "title": "Dates & condition",
+        "width": 741,
+        "x": 244,
+        "y": 754.078125
+      },
+      {
+        "height": 137,
+        "title": "Upcoming activities",
+        "width": 741,
+        "x": 244,
+        "y": 911.4765625
+      },
+      {
+        "height": 73.3984375,
+        "title": "Notes",
+        "width": 741,
+        "x": 244,
+        "y": 1072.4765625
+      }
+    ],
+    "summary": {
+      "columns": "188.531px 235.664px 282.805px",
+      "metrics": [
+        {
+          "height": 45.9921875,
+          "text": "LifecycleActive",
+          "width": 188.53125,
+          "x": 261,
+          "y": 368.1015625
+        },
+        {
+          "height": 45.9921875,
+          "text": "Remaining48 seeds",
+          "width": 235.6640625,
+          "x": 449.53125,
+          "y": 368.1015625
+        },
+        {
+          "height": 45.9921875,
+          "text": "StoragePreview collection → Indoor seed shelf",
+          "width": 282.8046875,
+          "x": 685.1953125,
+          "y": 368.1015625
+        }
+      ]
+    },
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "overview-populated-390",
+    "documentWidth": 375,
+    "photos": [],
+    "picker": null,
+    "sections": [
+      {
+        "height": 147.5859375,
+        "title": "Acquisition",
+        "width": 343,
+        "x": 16,
+        "y": 796.265625
+      },
+      {
+        "height": 103.3984375,
+        "title": "Origin",
+        "width": 343,
+        "x": 16,
+        "y": 967.8515625
+      },
+      {
+        "height": 133.3984375,
+        "title": "Dates & condition",
+        "width": 343,
+        "x": 16,
+        "y": 1095.25
+      },
+      {
+        "height": 159,
+        "title": "Upcoming activities",
+        "width": 343,
+        "x": 16,
+        "y": 1252.6484375
+      },
+      {
+        "height": 95.3984375,
+        "title": "Notes",
+        "width": 343,
+        "x": 16,
+        "y": 1435.6484375
+      }
+    ],
+    "summary": {
+      "columns": "309px",
+      "metrics": [
+        {
+          "height": 67.9921875,
+          "text": "LifecycleActive",
+          "width": 309,
+          "x": 33,
+          "y": 555.2890625
+        },
+        {
+          "height": 70.9921875,
+          "text": "Remaining48 seeds",
+          "width": 309,
+          "x": 33,
+          "y": 623.28125
+        },
+        {
+          "height": 68.9921875,
+          "text": "StoragePreview collection → Indoor seed shelf",
+          "width": 309,
+          "x": 33,
+          "y": 694.2734375
+        }
+      ]
+    },
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "overview-populated-lower-390",
+    "documentWidth": 390,
+    "photos": [],
+    "picker": null,
+    "sections": [
+      {
+        "height": 147.5859375,
+        "title": "Acquisition",
+        "width": 358,
+        "x": 16,
+        "y": 13.265625
+      },
+      {
+        "height": 103.3984375,
+        "title": "Origin",
+        "width": 358,
+        "x": 16,
+        "y": 184.8515625
+      },
+      {
+        "height": 133.3984375,
+        "title": "Dates & condition",
+        "width": 358,
+        "x": 16,
+        "y": 312.25
+      },
+      {
+        "height": 159,
+        "title": "Upcoming activities",
+        "width": 358,
+        "x": 16,
+        "y": 469.6484375
+      },
+      {
+        "height": 95.3984375,
+        "title": "Notes",
+        "width": 358,
+        "x": 16,
+        "y": 652.6484375
+      }
+    ],
+    "summary": {
+      "columns": "324px",
+      "metrics": [
+        {
+          "height": 67.9921875,
+          "text": "LifecycleActive",
+          "width": 324,
+          "x": 33,
+          "y": -227.7109375
+        },
+        {
+          "height": 70.9921875,
+          "text": "Remaining48 seeds",
+          "width": 324,
+          "x": 33,
+          "y": -159.71875
+        },
+        {
+          "height": 68.9921875,
+          "text": "StoragePreview collection → Indoor seed shelf",
+          "width": 324,
+          "x": 33,
+          "y": -88.7265625
+        }
+      ]
+    },
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "photos-populated-1440",
+    "documentWidth": 1440,
+    "photos": [
+      {
+        "actions": [
+          "Add media",
+          "Link existing",
+          "External"
+        ],
+        "hasGlobalHelper": false,
+        "headingHidden": true,
+        "height": 335.625,
+        "width": 1172,
+        "x": 244,
+        "y": 255.1015625
+      }
+    ],
+    "picker": null,
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "photos-populated-1024",
+    "documentWidth": 1024,
+    "photos": [
+      {
+        "actions": [
+          "Add media",
+          "Link existing",
+          "External"
+        ],
+        "hasGlobalHelper": false,
+        "headingHidden": true,
+        "height": 305.8671875,
+        "width": 756,
+        "x": 244,
+        "y": 311.1015625
+      }
+    ],
+    "picker": null,
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "photos-populated-390",
+    "documentWidth": 375,
+    "photos": [
+      {
+        "actions": [
+          "Add media",
+          "Link existing",
+          "External"
+        ],
+        "hasGlobalHelper": false,
+        "headingHidden": true,
+        "height": 382.125,
+        "width": 343,
+        "x": 16,
+        "y": 459.2890625
+      }
+    ],
+    "picker": null,
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "overview-long-origin-1440",
+    "documentWidth": 1440,
+    "photos": [],
+    "picker": null,
+    "sections": [
+      {
+        "height": 125.3984375,
+        "title": "Acquisition",
+        "width": 570,
+        "x": 244,
+        "y": 399.09375
+      },
+      {
+        "height": 125.3984375,
+        "title": "Origin",
+        "width": 570,
+        "x": 846,
+        "y": 399.09375
+      },
+      {
+        "height": 133.3984375,
+        "title": "Dates & condition",
+        "width": 570,
+        "x": 244,
+        "y": 548.4921875
+      },
+      {
+        "height": 133.3984375,
+        "title": "Upcoming activities",
+        "width": 570,
+        "x": 846,
+        "y": 548.4921875
+      },
+      {
+        "height": 73.3984375,
+        "title": "Notes",
+        "width": 1172,
+        "x": 244,
+        "y": 705.890625
+      }
+    ],
+    "summary": {
+      "columns": "303.461px 379.336px 455.203px",
+      "metrics": [
+        {
+          "height": 45.9921875,
+          "text": "LifecycleActive",
+          "width": 303.4609375,
+          "x": 261,
+          "y": 312.1015625
+        },
+        {
+          "height": 45.9921875,
+          "text": "RemainingAbout 80 seeds",
+          "width": 379.3359375,
+          "x": 564.4609375,
+          "y": 312.1015625
+        },
+        {
+          "height": 45.9921875,
+          "text": "StoragePreview collection → Indoor seed shelf",
+          "width": 455.203125,
+          "x": 943.796875,
+          "y": 312.1015625
+        }
+      ]
+    },
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "overview-long-origin-1024",
+    "documentWidth": 1009,
+    "photos": [],
+    "picker": null,
+    "sections": [
+      {
+        "height": 125.390625,
+        "title": "Acquisition",
+        "width": 741,
+        "x": 244,
+        "y": 455.09375
+      },
+      {
+        "height": 125.3984375,
+        "title": "Origin",
+        "width": 741,
+        "x": 244,
+        "y": 604.484375
+      },
+      {
+        "height": 133.3984375,
+        "title": "Dates & condition",
+        "width": 741,
+        "x": 244,
+        "y": 753.8828125
+      },
+      {
+        "height": 97,
+        "title": "Upcoming activities",
+        "width": 741,
+        "x": 244,
+        "y": 911.28125
+      },
+      {
+        "height": 73.3984375,
+        "title": "Notes",
+        "width": 741,
+        "x": 244,
+        "y": 1032.28125
+      }
+    ],
+    "summary": {
+      "columns": "188.531px 235.664px 282.805px",
+      "metrics": [
+        {
+          "height": 45.9921875,
+          "text": "LifecycleActive",
+          "width": 188.53125,
+          "x": 261,
+          "y": 368.1015625
+        },
+        {
+          "height": 45.9921875,
+          "text": "RemainingAbout 80 seeds",
+          "width": 235.6640625,
+          "x": 449.53125,
+          "y": 368.1015625
+        },
+        {
+          "height": 45.9921875,
+          "text": "StoragePreview collection → Indoor seed shelf",
+          "width": 282.8046875,
+          "x": 685.1953125,
+          "y": 368.1015625
+        }
+      ]
+    },
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "overview-long-origin-390",
+    "documentWidth": 375,
+    "photos": [],
+    "picker": null,
+    "sections": [
+      {
+        "height": 125.390625,
+        "title": "Acquisition",
+        "width": 343,
+        "x": 16,
+        "y": 872.265625
+      },
+      {
+        "height": 147.3984375,
+        "title": "Origin",
+        "width": 343,
+        "x": 16,
+        "y": 1021.65625
+      },
+      {
+        "height": 133.3984375,
+        "title": "Dates & condition",
+        "width": 343,
+        "x": 16,
+        "y": 1193.0546875
+      },
+      {
+        "height": 97,
+        "title": "Upcoming activities",
+        "width": 343,
+        "x": 16,
+        "y": 1350.453125
+      },
+      {
+        "height": 95.3984375,
+        "title": "Notes",
+        "width": 343,
+        "x": 16,
+        "y": 1471.453125
+      }
+    ],
+    "summary": {
+      "columns": "309px",
+      "metrics": [
+        {
+          "height": 67.9921875,
+          "text": "LifecycleActive",
+          "width": 309,
+          "x": 33,
+          "y": 631.2890625
+        },
+        {
+          "height": 70.9921875,
+          "text": "RemainingAbout 80 seeds",
+          "width": 309,
+          "x": 33,
+          "y": 699.28125
+        },
+        {
+          "height": 68.9921875,
+          "text": "StoragePreview collection → Indoor seed shelf",
+          "width": 309,
+          "x": 33,
+          "y": 770.2734375
+        }
+      ]
+    },
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "overview-origin-lower-390",
+    "documentWidth": 390,
+    "photos": [],
+    "picker": null,
+    "sections": [
+      {
+        "height": 125.390625,
+        "title": "Acquisition",
+        "width": 358,
+        "x": 16,
+        "y": 243.765625
+      },
+      {
+        "height": 147.3984375,
+        "title": "Origin",
+        "width": 358,
+        "x": 16,
+        "y": 393.15625
+      },
+      {
+        "height": 133.3984375,
+        "title": "Dates & condition",
+        "width": 358,
+        "x": 16,
+        "y": 564.5546875
+      },
+      {
+        "height": 97,
+        "title": "Upcoming activities",
+        "width": 358,
+        "x": 16,
+        "y": 721.953125
+      },
+      {
+        "height": 95.3984375,
+        "title": "Notes",
+        "width": 358,
+        "x": 16,
+        "y": 842.953125
+      }
+    ],
+    "summary": {
+      "columns": "324px",
+      "metrics": [
+        {
+          "height": 67.9921875,
+          "text": "LifecycleActive",
+          "width": 324,
+          "x": 33,
+          "y": 2.7890625
+        },
+        {
+          "height": 70.9921875,
+          "text": "RemainingAbout 80 seeds",
+          "width": 324,
+          "x": 33,
+          "y": 70.78125
+        },
+        {
+          "height": 68.9921875,
+          "text": "StoragePreview collection → Indoor seed shelf",
+          "width": 324,
+          "x": 33,
+          "y": 141.7734375
+        }
+      ]
+    },
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "photos-external-privacy-1440",
+    "documentWidth": 1440,
+    "photos": [
+      {
+        "actions": [
+          "Add media",
+          "Link existing",
+          "External"
+        ],
+        "hasGlobalHelper": false,
+        "headingHidden": true,
+        "height": 313.625,
+        "width": 1172,
+        "x": 244,
+        "y": 255.1015625
+      }
+    ],
+    "picker": null,
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "photos-external-privacy-1024",
+    "documentWidth": 1024,
+    "photos": [
+      {
+        "actions": [
+          "Add media",
+          "Link existing",
+          "External"
+        ],
+        "hasGlobalHelper": false,
+        "headingHidden": true,
+        "height": 283.8671875,
+        "width": 756,
+        "x": 244,
+        "y": 311.1015625
+      }
+    ],
+    "picker": null,
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "photos-external-privacy-390",
+    "documentWidth": 375,
+    "photos": [
+      {
+        "actions": [
+          "Add media",
+          "Link existing",
+          "External"
+        ],
+        "hasGlobalHelper": false,
+        "headingHidden": true,
+        "height": 360.125,
+        "width": 343,
+        "x": 16,
+        "y": 459.2890625
+      }
+    ],
+    "picker": null,
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "photos-empty-1440",
+    "documentWidth": 1440,
+    "photos": [
+      {
+        "actions": [
+          "Add media",
+          "Link existing",
+          "External"
+        ],
+        "hasGlobalHelper": false,
+        "headingHidden": true,
+        "height": 124.25,
+        "width": 1172,
+        "x": 244,
+        "y": 255.1015625
+      }
+    ],
+    "picker": null,
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "photos-empty-1024",
+    "documentWidth": 1024,
+    "photos": [
+      {
+        "actions": [
+          "Add media",
+          "Link existing",
+          "External"
+        ],
+        "hasGlobalHelper": false,
+        "headingHidden": true,
+        "height": 124.25,
+        "width": 756,
+        "x": 244,
+        "y": 311.1015625
+      }
+    ],
+    "picker": null,
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "photos-empty-390",
+    "documentWidth": 390,
+    "photos": [
+      {
+        "actions": [
+          "Add media",
+          "Link existing",
+          "External"
+        ],
+        "hasGlobalHelper": false,
+        "headingHidden": true,
+        "height": 124.25,
+        "width": 358,
+        "x": 16,
+        "y": 514.2890625
+      }
+    ],
+    "picker": null,
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "picker-identity-1440",
+    "documentWidth": 1425,
+    "photos": [],
+    "picker": {
+      "activeDescendant": "_r_1u_-01a13b20-ae7b-74f3-874b-2979709b9907",
+      "clientHeight": 254,
+      "control": {
+        "height": 44,
+        "width": 566.5,
+        "x": 244,
+        "y": 254.8359375
+      },
+      "expanded": "true",
+      "gap": 4,
+      "label": "Botanical identity",
+      "panel": {
+        "height": 256,
+        "width": 566.5,
+        "x": 244,
+        "y": 302.8359375
+      },
+      "placement": "below",
+      "scrollHeight": 380
+    },
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "picker-storage-1440",
+    "documentWidth": 1425,
+    "photos": [],
+    "picker": {
+      "activeDescendant": "_r_22_-01a13b20-af13-71f3-aa16-dc6621549291",
+      "clientHeight": 231,
+      "control": {
+        "height": 44,
+        "width": 566.5,
+        "x": 244,
+        "y": 400
+      },
+      "expanded": "true",
+      "gap": 4,
+      "label": "Storage location",
+      "panel": {
+        "height": 233.1875,
+        "width": 566.5,
+        "x": 244,
+        "y": 448
+      },
+      "placement": "below",
+      "scrollHeight": 231
+    },
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "picker-supplier-1440",
+    "documentWidth": 1425,
+    "photos": [],
+    "picker": {
+      "activeDescendant": "_r_26_-01a13b20-af0f-75f1-bedb-b7463b23dec5",
+      "clientHeight": 143,
+      "control": {
+        "height": 44,
+        "width": 572.5,
+        "x": 244,
+        "y": 399.7890625
+      },
+      "expanded": "true",
+      "gap": 4,
+      "label": "Supplier",
+      "panel": {
+        "height": 145.1875,
+        "width": 572.5,
+        "x": 244,
+        "y": 447.7890625
+      },
+      "placement": "below",
+      "scrollHeight": 143
+    },
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "picker-identity-1024",
+    "documentWidth": 1009,
+    "photos": [],
+    "picker": {
+      "activeDescendant": "_r_1u_-01a13b20-ae76-772a-910a-df3caed9c484",
+      "clientHeight": 254,
+      "control": {
+        "height": 44,
+        "width": 358.5,
+        "x": 244,
+        "y": 254.8359375
+      },
+      "expanded": "true",
+      "gap": 4,
+      "label": "Botanical identity",
+      "panel": {
+        "height": 256,
+        "width": 358.5,
+        "x": 244,
+        "y": 302.8359375
+      },
+      "placement": "below",
+      "scrollHeight": 380
+    },
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "picker-storage-1024",
+    "documentWidth": 1009,
+    "photos": [],
+    "picker": {
+      "activeDescendant": "_r_22_-01a13b20-af13-71f3-aa16-dc6621549291",
+      "clientHeight": 231,
+      "control": {
+        "height": 44,
+        "width": 358.5,
+        "x": 244,
+        "y": 400
+      },
+      "expanded": "true",
+      "gap": 4,
+      "label": "Storage location",
+      "panel": {
+        "height": 233.1875,
+        "width": 358.5,
+        "x": 244,
+        "y": 448
+      },
+      "placement": "below",
+      "scrollHeight": 231
+    },
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "picker-supplier-1024",
+    "documentWidth": 1009,
+    "photos": [],
+    "picker": {
+      "activeDescendant": "_r_26_-01a13b20-af0f-75f1-bedb-b7463b23dec5",
+      "clientHeight": 143,
+      "control": {
+        "height": 44,
+        "width": 364.5,
+        "x": 244,
+        "y": 399.984375
+      },
+      "expanded": "true",
+      "gap": 4,
+      "label": "Supplier",
+      "panel": {
+        "height": 145.1875,
+        "width": 364.5,
+        "x": 244,
+        "y": 447.984375
+      },
+      "placement": "below",
+      "scrollHeight": 143
+    },
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "picker-identity-390",
+    "documentWidth": 375,
+    "photos": [],
+    "picker": {
+      "activeDescendant": "_r_1u_-01a13b20-b09d-7685-acb3-d61aaaec7d5b",
+      "clientHeight": 254,
+      "control": {
+        "height": 44,
+        "width": 343,
+        "x": 16,
+        "y": 326.0234375
+      },
+      "expanded": "true",
+      "gap": 4,
+      "label": "Botanical identity",
+      "panel": {
+        "height": 256,
+        "width": 343,
+        "x": 16,
+        "y": 374.0234375
+      },
+      "placement": "below",
+      "scrollHeight": 380
+    },
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "picker-storage-390",
+    "documentWidth": 375,
+    "photos": [],
+    "picker": {
+      "activeDescendant": "_r_22_-01a13b20-af13-71f3-aa16-dc6621549291",
+      "clientHeight": 231,
+      "control": {
+        "height": 44,
+        "width": 343,
+        "x": 16,
+        "y": 399.8671875
+      },
+      "expanded": "true",
+      "gap": 4,
+      "label": "Storage location",
+      "panel": {
+        "height": 233.1875,
+        "width": 343,
+        "x": 16,
+        "y": 447.8671875
+      },
+      "placement": "below",
+      "scrollHeight": 231
+    },
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "picker-supplier-390",
+    "documentWidth": 375,
+    "photos": [],
+    "picker": {
+      "activeDescendant": "_r_26_-01a13b20-af0f-75f1-bedb-b7463b23dec5",
+      "clientHeight": 143,
+      "control": {
+        "height": 44,
+        "width": 343,
+        "x": 16,
+        "y": 399.8515625
+      },
+      "expanded": "true",
+      "gap": 4,
+      "label": "Supplier",
+      "panel": {
+        "height": 145.1875,
+        "width": 343,
+        "x": 16,
+        "y": 447.8515625
+      },
+      "placement": "below",
+      "scrollHeight": 143
+    },
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "order-native-search-390",
+    "documentWidth": 375,
+    "photos": [],
+    "picker": null,
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "picker-plant-identity-1440",
+    "documentWidth": 1440,
+    "photos": [],
+    "picker": {
+      "activeDescendant": "_r_2o_-01a13b20-ae7e-7015-9e96-b0f59195c31c",
+      "clientHeight": 254,
+      "control": {
+        "height": 44,
+        "width": 411,
+        "x": 407,
+        "y": 277.421875
+      },
+      "expanded": "true",
+      "gap": 4,
+      "label": "Botanical identity",
+      "panel": {
+        "height": 256,
+        "width": 411,
+        "x": 407,
+        "y": 325.421875
+      },
+      "placement": "below",
+      "scrollHeight": 336
+    },
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "consumer-sowing-native-1440",
+    "documentWidth": 1440,
+    "photos": [],
+    "picker": null,
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "picker-short-viewport-390x400",
+    "documentWidth": 375,
+    "photos": [],
+    "picker": {
+      "activeDescendant": "_r_3b_-01a13b20-ae7e-7015-9e96-b0f59195c31c",
+      "clientHeight": 254,
+      "control": {
+        "height": 44,
+        "width": 343,
+        "x": 16,
+        "y": 326.0234375
+      },
+      "expanded": "true",
+      "gap": 4,
+      "label": "Botanical identity",
+      "panel": {
+        "height": 256,
+        "width": 343,
+        "x": 16,
+        "y": 66.0234375
+      },
+      "placement": "above",
+      "scrollHeight": 380
+    },
+    "sections": [],
+    "summary": null,
+    "viewport": {
+      "height": 400,
+      "scale": 1,
+      "width": 390
+    }
+  }
+]

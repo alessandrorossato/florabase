@@ -1,4 +1,5 @@
-import type { ReactNode, RefObject } from "react";
+import type { MouseEventHandler, ReactNode, RefObject } from "react";
+import { PageHeader } from "./ReferenceUI";
 
 export interface TabItem<TabId extends string = string> {
   id: TabId;
@@ -11,6 +12,7 @@ export function WorkspaceIntro({
   titleId,
   description,
   actions,
+  tools,
   contextOnly = false,
   contextActions,
 }: {
@@ -19,6 +21,7 @@ export function WorkspaceIntro({
   titleId: string;
   description: string;
   actions?: ReactNode;
+  tools?: ReactNode;
   contextOnly?: boolean;
   contextActions?: ReactNode;
 }) {
@@ -37,14 +40,14 @@ export function WorkspaceIntro({
       </>
     );
   return (
-    <header className="workspace-intro seed-heading">
-      <div>
-        <p className="eyebrow">{eyebrow}</p>
-        <h2 id={titleId}>{title}</h2>
-        <p>{description}</p>
-      </div>
-      {actions}
-    </header>
+    <PageHeader
+      eyebrow={eyebrow}
+      title={title}
+      titleId={titleId}
+      description={description}
+      tools={tools}
+      actions={actions}
+    />
   );
 }
 
@@ -83,7 +86,7 @@ export function DetailHeader({
   secondary?: ReactNode;
   status?: ReactNode;
   primaryActions?: ReactNode;
-  onEdit?: () => void;
+  onEdit?: MouseEventHandler<HTMLButtonElement>;
   editLabel?: string;
   overflow?: ReactNode;
   headingRef?: RefObject<HTMLHeadingElement | null>;
@@ -107,7 +110,7 @@ export function DetailHeader({
           {primaryActions}
           {onEdit && (
             <button
-              className={primaryActions ? "button--secondary" : undefined}
+              className="button--secondary"
               type="button"
               onClick={onEdit}
             >

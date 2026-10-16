@@ -1,0 +1,56 @@
+{
+  "candidate": {
+    "source": "/home/alessandro/.codex/worktrees/996d/florabase",
+    "branch": "feat/global-visual-001",
+    "base_sha": "cd63c185f7bcb0544cd9c3cff984b29564e6bc84",
+    "dirty": true
+  },
+  "frontend": {
+    "unique_passed": 270,
+    "suites": 17,
+    "evidence": [
+      "focused-tests.json",
+      "serial-tests.json",
+      "shared-tests.json",
+      "final-regression-tests.json"
+    ],
+    "historical_failed_run": "serial-tests.json has superseded cold lazy-loading failures in Sowing interaction setup; final-regression-tests.json passes all 19 Sowing tests plus separate App.lazy coverage; no weaker assertions/timeouts"
+  },
+  "backend": {
+    "unit_passed": 69,
+    "postgres_passed": 15,
+    "evidence": "backend-tests.json"
+  },
+  "static": {
+    "typescript": "passed",
+    "eslint": "passed",
+    "prettier": "passed",
+    "production-build": "passed"
+  },
+  "bundle": [
+    "dist/assets/SeedLotScreen-Dqf8aGqk.css                               15.68 kB \u2502 gzip:  3.03 kB",
+    "dist/assets/index-DuzAsMIF.css                                      198.10 kB \u2502 gzip: 37.03 kB",
+    "dist/assets/MediaScreen-lLw5XMsp.js                                  24.61 kB \u2502 gzip:  6.50 kB",
+    "dist/assets/PhotosSection-BwGZAAva.js                                25.82 kB \u2502 gzip:  6.70 kB",
+    "dist/assets/SeedLotScreen-DD3UAae-.js                                45.60 kB \u2502 gzip: 12.39 kB",
+    "dist/assets/index-C_gawn6J.js                                       227.89 kB \u2502 gzip: 70.84 kB"
+  ],
+  "responsive": {
+    "matrix_observations": 57,
+    "horizontal_document_overflow": false,
+    "actual_browser_zoom": "not available; viewport proxies clearly labelled",
+    "additional_evidence": "additional-probes.json; operator-ready.png"
+  },
+  "review": {
+    "url": "http://localhost:15174",
+    "database_revision": "20261013_0042",
+    "fixture": "v4/66 ready; existing operator additions retained",
+    "frontend_backend_db": "healthy",
+    "scope": "supported restart only; no reset/remove/reseed"
+  },
+  "canonical_feature_verify": "not run",
+  "staged": false,
+  "committed": false,
+  "pushed_or_delivered": false,
+  "api_or_migration_change": false
+}

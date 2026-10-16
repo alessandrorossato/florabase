@@ -259,6 +259,7 @@ export function BotanicalProfilePanel({
             >
               <h4>{loadState.profile ? "Edit profile" : "Add profile"}</h4>
               <FormSections
+                mode="edit"
                 error={
                   saveState.status === "error" && saveState.field
                     ? { messages: [saveState.message], field: saveState.field }

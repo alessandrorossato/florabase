@@ -454,3 +454,80 @@ def test_external_snapshot_downgrade_is_guarded(
         command.upgrade(config, "head")
         with Session(database_engine) as database:
             service.delete_asset(database, storage, asset_id)
+
+
+def test_record_photos_persist_copy_and_reflect_refresh_remove_without_remote_reads(
+    attachment_browser: tuple[tuple[str, str], AttachmentStorage],  # noqa: F811
+    database_connection: Connection,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The Photos create/save sequence keeps one link and publishes protected URLs."""
+    from florabase.seed_lots.model import SeedLot
+
+    from .test_attachment_api import request
+
+    browser, _ = attachment_browser
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as database:
+        _, _, identity = fixture(database)
+        lot = SeedLot(botanical_identity_id=identity.id)
+        database.add(lot)
+        database.commit()
+        target = f"/api/v1/collection-records/seed_lot/{lot.id}/photos"
+    created = request(
+        "POST",
+        target + "/external",
+        browser=browser,
+        mutation_headers=True,
+        body={
+            "image_url": "https://images.example.test/test.png",
+            "source_url": "https://example.test/source",
+            "attribution": "Synthetic author",
+            "caption": "Persistent external specimen",
+        },
+    )
+    assert created.status_code == 201
+    reference = created.json()
+    assert reference["thumbnail_url"] is None
+    endpoint = f"/api/v1/media-assets/{reference['media_asset_id']}"
+    calls: list[str] = []
+
+    def fetch(url: str, _limit: int) -> tuple[bytes, str]:
+        calls.append(url)
+        return png("green" if len(calls) == 1 else "red"), "image/png"
+
+    monkeypatch.setattr(copies, "fetch_image", fetch)
+    previous_thumbnail: str | None = None
+    for operation in ("save-local-copy", "refresh-local-copy"):
+        saved = request("POST", endpoint + "/" + operation, browser=browser, mutation_headers=True)
+        assert saved.status_code == 200
+        photos = request("GET", target, browser=browser).json()
+        assert len(photos) == 1
+        photo = photos[0]
+        assert photo["id"] == reference["id"]
+        assert photo["media_asset_id"] == reference["media_asset_id"]
+        # Compatibility Photos version by fetch time; MediaAsset versions by content hash.
+        assert photo["thumbnail_url"].split("?")[0] == saved.json()["thumbnail_url"].split("?")[0]
+        assert photo["thumbnail_url"] != previous_thumbnail
+        previous_thumbnail = photo["thumbnail_url"]
+        assert photo["content_url"] == saved.json()["content_url"]
+        assert photo["fetched_at"]
+        assert photo["thumbnail_url"].startswith("/api/v1/media-assets/")
+        assert request("GET", photo["thumbnail_url"]).status_code == 401
+        assert request("GET", photo["thumbnail_url"], browser=browser).status_code == 200
+        assert request("GET", photo["content_url"], browser=browser).content == png(
+            "green" if operation == "save-local-copy" else "red"
+        )
+        assert len(calls) == (1 if operation == "save-local-copy" else 2)
+    assert (
+        request(
+            "DELETE", endpoint + "/local-copy", browser=browser, mutation_headers=True
+        ).status_code
+        == 200
+    )
+    remaining = request("GET", target, browser=browser).json()
+    assert len(remaining) == 1
+    assert remaining[0]["id"] == reference["id"]
+    assert remaining[0]["thumbnail_url"] is None
+    assert remaining[0]["content_url"] is None
+    assert remaining[0]["image_url"] == reference["image_url"]
+    assert len(calls) == 2

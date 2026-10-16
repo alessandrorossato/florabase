@@ -1,3 +1,5 @@
+import "./partial-date.css";
+import { FieldLabel } from "../components/FieldLabel";
 import type { PartialDate } from "./api";
 import { FieldHelp } from "../components/ContextualHelp";
 
@@ -8,6 +10,7 @@ export function PartialDateField({
   onChange,
   disabled,
   showHelp = true,
+  helpText,
 }: {
   id: string;
   label: string;
@@ -15,6 +18,7 @@ export function PartialDateField({
   onChange: (value: PartialDate | null) => void;
   disabled: boolean;
   showHelp?: boolean;
+  helpText?: string;
 }) {
   const precision = value?.precision ?? "";
   const helpId = `${id}-precision-help`;
@@ -31,7 +35,7 @@ export function PartialDateField({
     });
   }
   return (
-    <fieldset className="partial-date">
+    <fieldset className="partial-date partial-date--stacked">
       <legend>{label}</legend>
       <div className="field">
         <label htmlFor={`${id}-precision`}>Precision</label>
@@ -53,17 +57,20 @@ export function PartialDateField({
         </select>
         {showHelp && (
           <FieldHelp id={helpId}>
-            Choose only the precision you know; do not invent a missing month or
-            day.
+            {helpText ??
+              "Choose only the precision you know; do not invent a missing month or day."}
           </FieldHelp>
         )}
       </div>
       {value && (
         <div className="partial-date-parts">
           <div className="field">
-            <label htmlFor={`${id}-year`}>Year</label>
+            <FieldLabel htmlFor={`${id}-year`} required>
+              Year
+            </FieldLabel>
             <input
               id={`${id}-year`}
+              aria-required="true"
               type="number"
               min="1"
               max="9999"
@@ -76,9 +83,12 @@ export function PartialDateField({
           </div>
           {value.precision !== "year" && (
             <div className="field">
-              <label htmlFor={`${id}-month`}>Month</label>
+              <FieldLabel htmlFor={`${id}-month`} required>
+                Month
+              </FieldLabel>
               <input
                 id={`${id}-month`}
+                aria-required="true"
                 type="number"
                 min="1"
                 max="12"
@@ -92,9 +102,12 @@ export function PartialDateField({
           )}
           {value.precision === "day" && (
             <div className="field">
-              <label htmlFor={`${id}-day`}>Day</label>
+              <FieldLabel htmlFor={`${id}-day`} required>
+                Day
+              </FieldLabel>
               <input
                 id={`${id}-day`}
+                aria-required="true"
                 type="number"
                 min="1"
                 max="31"

@@ -68,6 +68,194 @@ class EnvironmentTests(unittest.TestCase):
         git(self.primary, "worktree", "add", "--detach", str(self.feature))
         self.repo = Repository(self.feature)
 
+    def review_seed_resources(self, review: Environment) -> tuple[list[dict], list[dict]]:
+        targets = {
+            "db": {"/var/lib/postgresql": "postgres_data"},
+            "backend": {"/var/lib/florabase/attachments": "attachment_data"},
+            "frontend": {"/app/node_modules": "frontend_node_modules"},
+        }
+        containers = []
+        for service, mounts in targets.items():
+            settings = (
+                {key: review.environment()[key] for key in ("POSTGRES_DB", "POSTGRES_USER")}
+                if service == "db"
+                else {
+                    "FLORABASE_DATABASE_URL": review.environment()["FLORABASE_DATABASE_URL"],
+                    "FLORABASE_ATTACHMENT_STORAGE_ROOT": "/var/lib/florabase/attachments",
+                    "FLORABASE_CANONICAL_ORIGIN": review.url,
+                    "FLORABASE_ENVIRONMENT": "development",
+                    "FLORABASE_COOKIE_MODE": "loopback-development",
+                }
+            )
+            containers.append(
+                {
+                    "Config": {
+                        "Labels": {
+                            "com.docker.compose.project": review.project,
+                            "com.docker.compose.service": service,
+                            "com.docker.compose.project.working_dir": str(review.source),
+                            "com.docker.compose.oneoff": "False",
+                            "io.florabase.source": str(review.source),
+                            "io.florabase.role": "review",
+                        },
+                        "Env": [f"{key}={value}" for key, value in settings.items()],
+                    },
+                    "State": {"Running": True, "Health": {"Status": "healthy"}},
+                    "NetworkSettings": {"Networks": {f"{review.project}_internal": {}}},
+                    "Mounts": [
+                        {"Destination": target, "Type": "volume", "Name": f"{review.project}_{key}"}
+                        for target, key in mounts.items()
+                    ],
+                }
+            )
+        volumes = [
+            {
+                "Name": f"{review.project}_{key}",
+                "Labels": {
+                    "com.docker.compose.project": review.project,
+                    "com.docker.compose.volume": key,
+                    "io.florabase.source": str(review.source),
+                },
+            }
+            for key in ("postgres_data", "attachment_data", "frontend_node_modules")
+        ]
+        return containers, volumes
+
+    def test_review_seed_refuses_other_roles_and_projects_before_docker(self) -> None:
+        for role in ("dev", "uat", "quality", "prod", "review"):
+            env = Environment(self.repo, role)
+            if role == "review":
+                env.project = "florabase-preview"
+            with patch("workflow_environment.run") as run, patch.object(env, "compose") as compose:
+                with self.assertRaisesRegex(
+                    WorkflowError, "restricted to florabase-feature-review"
+                ):
+                    env.seed()
+                run.assert_not_called()
+                compose.assert_not_called()
+
+    def test_review_seed_accepts_owned_resources_and_never_targets_uat(self) -> None:
+        review = Environment(self.repo, "review")
+        settings = review.environment()
+        containers, volumes = self.review_seed_resources(review)
+        network = [{"Labels": {"com.docker.compose.project": review.project}}]
+        with (
+            patch.object(review, "validate"),
+            patch.object(review, "require_owner"),
+            patch.object(review, "environment", return_value=settings),
+            patch.object(review, "current", return_value=["0029"]),
+            patch(
+                "workflow_environment.run",
+                side_effect=[
+                    json.dumps(volumes),
+                    json.dumps(network),
+                    "one",
+                    json.dumps(containers),
+                ],
+            ),
+            patch.object(review, "compose") as compose,
+        ):
+            review.seed()
+        commands = [review.command(*call.args) for call in compose.call_args_list]
+        self.assertEqual(len(commands), 2)
+        self.assertTrue(all("florabase-feature-review" in command for command in commands))
+        self.assertNotIn("florabase_uat", " ".join(map(str, commands)))
+        self.assertNotIn(".uat-identity.json", " ".join(map(str, commands)))
+        self.assertIn("FLORABASE_WORKFLOW_MODE=review", commands[1])
+        self.assertIn(
+            f"{self.feature}/scripts/uat_fixture.py:/review/uat_fixture.py:ro", commands[1]
+        )
+        self.assertIn(".review-identity.json", " ".join(commands[0]))
+
+    def test_review_seed_refuses_foreign_owner_and_shared_or_wrong_media_database(self) -> None:
+        review = Environment(self.repo, "review")
+        settings = review.environment()
+        for defect in (
+            "owner",
+            "volume_owner",
+            "uat_media",
+            "uat_db",
+            "foreign_user",
+            "network",
+            "stopped",
+            "missing",
+        ):
+            containers, volumes = self.review_seed_resources(review)
+            network = [{"Labels": {"com.docker.compose.project": review.project}}]
+            if defect == "owner":
+                containers[1]["Config"]["Labels"]["io.florabase.source"] = "/other/worktree"
+            elif defect == "volume_owner":
+                volumes[0]["Labels"]["io.florabase.source"] = "/other/worktree"
+            elif defect == "uat_media":
+                containers[1]["Mounts"][0]["Name"] = "florabase-uat-preview_attachment_data"
+            elif defect == "uat_db":
+                containers[0]["Config"]["Env"] = [
+                    "POSTGRES_DB=florabase_uat",
+                    "POSTGRES_USER=florabase_uat",
+                ]
+            elif defect == "foreign_user":
+                foreign = copy.deepcopy(containers[1])
+                foreign["Config"]["Labels"]["com.docker.compose.project"] = "florabase-uat-preview"
+                containers.append(foreign)
+            elif defect == "network":
+                network[0]["Labels"]["com.docker.compose.project"] = "florabase"
+            elif defect == "stopped":
+                containers[1]["State"]["Running"] = False
+            elif defect == "missing":
+                containers.pop()
+            with (
+                self.subTest(defect=defect),
+                patch.object(review, "validate"),
+                patch.object(review, "require_owner"),
+                patch.object(review, "environment", return_value=settings),
+                patch.object(review, "compose") as compose,
+                patch(
+                    "workflow_environment.run",
+                    side_effect=[
+                        json.dumps(volumes),
+                        json.dumps(network),
+                        "one",
+                        json.dumps(containers),
+                    ],
+                ),
+            ):
+                with self.assertRaises(WorkflowError):
+                    review.seed()
+                compose.assert_not_called()
+
+    def test_review_seed_uses_existing_owner_guard_and_refuses_database_drift(self) -> None:
+        review = Environment(self.repo, "review")
+        settings = review.environment()
+        with (
+            patch.object(review, "validate"),
+            patch.object(review, "require_owner", side_effect=WorkflowError("foreign owner")),
+            patch.object(review, "compose") as compose,
+        ):
+            with self.assertRaisesRegex(WorkflowError, "foreign owner"):
+                review.seed()
+            compose.assert_not_called()
+        containers, volumes = self.review_seed_resources(review)
+        network = [{"Labels": {"com.docker.compose.project": review.project}}]
+        with (
+            patch.object(review, "validate"),
+            patch.object(review, "require_owner"),
+            patch.object(review, "current", return_value=["foreign_revision"]),
+            patch.object(review, "environment", return_value=settings),
+            patch(
+                "workflow_environment.run",
+                side_effect=[
+                    json.dumps(volumes),
+                    json.dumps(network),
+                    "one",
+                    json.dumps(containers),
+                ],
+            ),
+            patch.object(review, "compose") as compose,
+        ):
+            with self.assertRaisesRegex(WorkflowError, "DB at code head"):
+                review.seed()
+            compose.assert_not_called()
+
     def test_pointer_file_env_fallback_and_explicit_env_path(self) -> None:
         self.assertTrue((self.feature / ".git").is_file())
         self.assertEqual(self.repo.primary, self.primary)
@@ -567,6 +755,9 @@ class EnvironmentTests(unittest.TestCase):
             patch.object(review, "containers", return_value=containers),
             patch.object(review, "require_owner"),
             patch.object(review, "current", return_value=["0029"]),
+            patch.object(
+                review, "compose", return_value="Review fixture: version 4; state ready; records 66"
+            ),
             contextlib.redirect_stdout(output),
         ):
             review.status()
@@ -580,6 +771,7 @@ class EnvironmentTests(unittest.TestCase):
             "15174",
             "frontend_node_modules",
             "attachment_data",
+            "Review fixture: version 4; state ready; records 66",
         ):
             self.assertIn(value, text)
         self.assertNotIn("fixture-only-never-print", text)

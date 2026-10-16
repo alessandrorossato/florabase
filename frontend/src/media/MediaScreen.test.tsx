@@ -1,3 +1,4 @@
+import { selectDirectoryFilter } from "../test/directoryFilters";
 import {
   cleanup,
   fireEvent,
@@ -161,7 +162,7 @@ test("Gallery distinguishes source and references, uses thumbnails and filters/p
   expect(
     screen.getByRole("link", { name: "Open media details" }),
   ).toHaveAttribute("href", `#/media/${assetId}`);
-  await user.selectOptions(screen.getByLabelText("Record links"), "unlinked");
+  await selectDirectoryFilter(user, "Record links", "unlinked");
   await waitFor(() => {
     expect(fetch).toHaveBeenLastCalledWith(
       expect.stringContaining("association=unlinked"),
@@ -689,11 +690,13 @@ test("Target presets compose with source/search/pagination and keep explicit sha
   const user = userEvent.setup();
   mount(<MediaScreen />);
   await screen.findByRole("button", { name: /Supplier only/ });
+  await user.click(screen.getByRole("button", { name: /^Filters/ }));
   const filter = screen.getByRole("combobox", { name: "Target" });
   expect(
     within(filter).getByRole("option", { name: "Suppliers" }),
   ).toBeInTheDocument();
-  await user.selectOptions(filter, "collection");
+  await user.click(screen.getByRole("button", { name: "Done" }));
+  await selectDirectoryFilter(user, "Target", "collection");
   await screen.findByRole("button", { name: /Plant only/ });
   await waitFor(() => {
     expect(
@@ -703,28 +706,25 @@ test("Target presets compose with source/search/pagination and keep explicit sha
   expect(
     screen.getByRole("button", { name: /Shared Supplier \+ Plant/ }),
   ).toBeInTheDocument();
-  await user.selectOptions(filter, "supplier");
+  await selectDirectoryFilter(user, "Target", "supplier");
   await screen.findByRole("button", { name: /Supplier only/ });
   expect(
     screen.queryByRole("button", { name: /Plant only/ }),
   ).not.toBeInTheDocument();
-  await user.selectOptions(filter, "plant");
+  await selectDirectoryFilter(user, "Target", "plant");
   await screen.findByRole("button", { name: /Plant only/ });
   expect(
     screen.queryByRole("button", { name: /Supplier only/ }),
   ).not.toBeInTheDocument();
-  await user.selectOptions(filter, "seed_lot");
+  await selectDirectoryFilter(user, "Target", "seed_lot");
   await screen.findByText(/No matching media/);
-  await user.selectOptions(filter, "");
+  await selectDirectoryFilter(user, "Target", "");
   await screen.findByRole("button", { name: /Supplier only/ });
-  await user.selectOptions(filter, "supplier");
+  await selectDirectoryFilter(user, "Target", "supplier");
   fireEvent.change(screen.getByRole("searchbox"), {
     target: { value: "Shared" },
   });
-  await user.selectOptions(
-    screen.getByRole("combobox", { name: "Source" }),
-    "external",
-  );
+  await selectDirectoryFilter(user, "Source", "external");
   await waitFor(() => {
     expect(
       fetch.mock.calls.some(([input]) => {
@@ -857,3 +857,80 @@ test("changing the exact media target cancels a stale detail response", async ()
     expect(screen.queryByRole("heading", { name: "Stale target" })).toBeNull();
   });
 });
+
+test.each(["saved", "reference", "retry", "retain"] as const)(
+  "new external Media editor copy choice: %s",
+  async (outcome) => {
+    const { MediaEditor } = await import("./MediaEditor");
+    const onSaved = vi.fn<(value: MediaAsset) => void>();
+    let created = 0;
+    let attempts = 0;
+    const reference = asset({
+      kind: "external",
+      content_url: null,
+      thumbnail_url: null,
+      image_url: "https://images.example.test/image.jpg",
+      source_url: "https://example.test/source",
+    });
+    vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+      if (requestUrl(input).endsWith("/media-assets/external")) {
+        created++;
+        return Promise.resolve(json(reference, 201));
+      }
+      if (requestUrl(input).endsWith("/save-local-copy")) {
+        attempts++;
+        return Promise.resolve(
+          attempts === 1 && ["retry", "retain"].includes(outcome)
+            ? json({ detail: "Unavailable" }, 422)
+            : json(asset({ kind: "external" })),
+        );
+      }
+      throw new Error(`Unexpected request ${requestUrl(input)}`);
+    });
+    mount(<MediaEditor onClose={vi.fn()} onSaved={onSaved} />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("radio", { name: "External reference" }));
+    expect(
+      screen.getByRole("checkbox", { name: "Save a local copy in Florabase" }),
+    ).toBeChecked();
+    await user.type(
+      screen.getByLabelText("Image URL"),
+      "https://images.example.test/image.jpg",
+    );
+    await user.type(
+      screen.getByLabelText("Source page URL"),
+      "https://example.test/source",
+    );
+    await user.type(screen.getByLabelText("Attribution"), "Gardener");
+    if (outcome === "reference")
+      await user.click(
+        screen.getByRole("checkbox", {
+          name: "Save a local copy in Florabase",
+        }),
+      );
+    await user.click(screen.getByRole("button", { name: "Save media" }));
+    if (outcome === "retry" || outcome === "retain") {
+      expect(await screen.findByRole("alert")).toHaveTextContent(
+        "external reference remains saved",
+      );
+      expect(onSaved).not.toHaveBeenCalled();
+      await user.click(
+        screen.getByRole("button", {
+          name: outcome === "retry" ? "Retry save" : "Keep reference only",
+        }),
+      );
+    }
+    await waitFor(() => {
+      expect(onSaved).toHaveBeenCalledTimes(1);
+    });
+    expect(created).toBe(1);
+    expect(attempts).toBe(
+      outcome === "reference" ? 0 : outcome === "retry" ? 2 : 1,
+    );
+    expect(onSaved.mock.calls[0][0].content_url).toBe(
+      outcome === "reference" || outcome === "retain"
+        ? null
+        : asset().content_url,
+    );
+  },
+);

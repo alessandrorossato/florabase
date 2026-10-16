@@ -1,4 +1,4 @@
-"""PREVIEW-001 fixture v4. Mounted explicitly by the guarded host UAT workflow only."""
+"""PREVIEW-001 fixture v4, explicitly mounted by guarded UAT or Feature Review workflows."""
 
 from __future__ import annotations
 
@@ -99,7 +99,11 @@ from florabase.taxonomy.source import CHECKSUM as WFO_CHECKSUM
 from florabase.taxonomy.source import WfoSource
 
 VERSION = 4
-NOTE = "Synthetic UAT Preview data; no real collection or provenance claims."
+NOTE = (
+    "Synthetic Feature Review data; no real collection or provenance claims."
+    if os.environ.get("FLORABASE_WORKFLOW_MODE") == "review"
+    else "Synthetic UAT Preview data; no real collection or provenance claims."
+)
 MODELS: dict[str, type[Base]] = {
     "external_taxon": ExternalTaxonLink,
     "owner": User,
@@ -134,13 +138,53 @@ class FixtureError(RuntimeError):
     pass
 
 
+def fixture_prefix() -> str:
+    return "review" if os.environ.get("FLORABASE_WORKFLOW_MODE") == "review" else "uat"
+
+
+def repair_hint() -> str:
+    return (
+        "inspect Review state; ordinary seed will not repair it"
+        if fixture_prefix() == "review"
+        else "run guarded uat-preview-reset"
+    )
+
+
+def review_owner(database: Session) -> User:
+    owners = list(database.scalars(select(User)))
+    if len(owners) != 1 or not owners[0].owner or not owners[0].enabled:
+        raise FixtureError(
+            "Review needs exactly one enabled owner; use feature-review-bootstrap-owner"
+        )
+    return owners[0]
+
+
+def require_empty_review_collection(database: Session) -> None:
+    for model in MODELS.values():
+        if model is User:
+            continue
+        query = select(model)
+        # Canonical CLDR geography is installed by Alembic in every fresh database.
+        if model is GeographicPlace:
+            query = query.where(GeographicPlace.place_kind == "custom")
+        if database.scalar(query.limit(1)) is not None:
+            raise FixtureError("Unrecognized populated Review baseline; no data changed")
+
+
 def require_identity(settings: Settings, database: Session, *, require_marker: bool = True) -> Path:
     url = make_url(settings.database_url)
-    project = os.environ.get("FLORABASE_UAT_PROJECT", "")
-    source = os.environ.get("FLORABASE_UAT_SOURCE", "")
+    role = fixture_prefix()
+    project = os.environ.get(f"FLORABASE_{role.upper()}_PROJECT", "")
+    source = os.environ.get(f"FLORABASE_{role.upper()}_SOURCE", "")
+    database_name = "florabase_review" if role == "review" else "florabase_uat"
+    project_pattern = (
+        r"florabase-feature-review"
+        if role == "review"
+        else r"florabase-uat-preview(?:-smoke-[0-9a-f]{12})?"
+    )
     if not (
-        os.environ.get("FLORABASE_WORKFLOW_MODE") == "uat"
-        and re.fullmatch(r"florabase-uat-preview(?:-smoke-[0-9a-f]{12})?", project)
+        os.environ.get("FLORABASE_WORKFLOW_MODE") == role
+        and re.fullmatch(project_pattern, project)
         and Path(source).is_absolute()
         and settings.environment == Environment.DEVELOPMENT
         and settings.cookie_mode == CookieMode.LOOPBACK_DEVELOPMENT
@@ -156,32 +200,36 @@ def require_identity(settings: Settings, database: Session, *, require_marker: b
         and settings.attachment_storage_root == Path("/var/lib/florabase/attachments")
         and url.host == "db"
         and url.port == 5432
-        and url.database == "florabase_uat"
-        and url.username == "florabase_uat"
+        and url.database == database_name
+        and url.username == database_name
     ):
-        raise FixtureError("UAT environment identity refused; no data changed")
+        raise FixtureError(f"{role.upper()} environment identity refused; no data changed")
     root = cast(Path, settings.attachment_storage_root)
-    marker = root / ".uat-identity.json"
+    if role == "review" and any(
+        (root / name).exists() for name in (".uat-identity.json", ".uat-fixture.json")
+    ):
+        raise FixtureError("UAT bookkeeping in Review media root; refused")
+    marker = root / f".{role}-identity.json"
     expected = {
         "project": project,
         "source": source,
-        "database": "florabase_uat",
+        "database": database_name,
         "origin": settings.canonical_origin,
     }
     if (require_marker and not marker.is_file()) or (
         marker.is_file() and json.loads(marker.read_text()) != expected
     ):
         raise FixtureError(
-            "Missing/mismatched guarded UAT resource marker; use make uat-preview-seed"
+            f"Missing/mismatched guarded {role.upper()} resource marker; use the guarded seed action"
         )
     actual = database.execute(text("SELECT current_database(), current_user")).one()
-    if tuple(actual) != ("florabase_uat", "florabase_uat"):
+    if tuple(actual) != (database_name, database_name):
         raise FixtureError("Connected database identity refused; no data changed")
     return root
 
 
 def read_manifest(root: Path) -> dict[str, Any] | None:
-    path = root / ".uat-fixture.json"
+    path = root / f".{fixture_prefix()}-fixture.json"
     if not path.exists():
         return None
     try:
@@ -196,22 +244,22 @@ def read_manifest(root: Path) -> dict[str, Any] | None:
         return value
     except (ValueError, TypeError) as error:
         raise FixtureError(
-            "Preview fixture baseline is inconsistent/version incompatible; run guarded uat-preview-reset"
+            "Preview fixture baseline is inconsistent/version incompatible; " + repair_hint()
         ) from error
 
 
 def write_manifest(root: Path, value: dict[str, Any]) -> None:
-    temporary = root / ".uat-fixture.tmp"
+    temporary = root / f".{fixture_prefix()}-fixture.tmp"
     with temporary.open("w") as stream:
         json.dump(value, stream, sort_keys=True)
         stream.flush()
         os.fsync(stream.fileno())
-    temporary.replace(root / ".uat-fixture.json")
+    temporary.replace(root / f".{fixture_prefix()}-fixture.json")
 
 
 def validate_manifest(database: Session, root: Path, manifest: dict[str, Any]) -> None:
     expected = {
-        "owner:preview",
+        "owner:review" if fixture_prefix() == "review" else "owner:preview",
         "identity:Ocimum basilicum",
         "identity:Lavandula angustifolia",
         "identity:Aloe vera",
@@ -295,30 +343,29 @@ def validate_manifest(database: Session, root: Path, manifest: dict[str, Any]) -
     if manifest.get("manual_review_extension") == 1:
         expected.update({"identity:genovese", "seed:genovese", "schedule:collection"})
     if set(manifest["records"]) != expected:
-        raise FixtureError(
-            "Preview fixture baseline has missing records; run guarded uat-preview-reset"
-        )
+        raise FixtureError("Preview fixture baseline has missing records; " + repair_hint())
     for key, value in manifest["records"].items():
         model = MODELS.get(key.split(":")[0])
         if model is None or database.get(model, UUID(value)) is None:
-            raise FixtureError(
-                "Preview fixture baseline has missing records; run guarded uat-preview-reset"
-            )
+            raise FixtureError("Preview fixture baseline has missing records; " + repair_hint())
+    if (
+        fixture_prefix() == "review"
+        and str(review_owner(database).id) != manifest["records"]["owner:review"]
+    ):
+        raise FixtureError("Review fixture owner mismatch; no data changed")
     for value in manifest["records"].values():
         asset = database.get(MediaAsset, UUID(value))
         if asset is not None and asset.attachment_id is not None:
             attachment = database.get(Attachment, asset.attachment_id)
             if attachment is None:
-                raise FixtureError(
-                    "Preview media metadata is missing; run guarded uat-preview-reset"
-                )
+                raise FixtureError("Preview media metadata is missing; " + repair_hint())
             path = root / attachment.storage_key
             if (
                 not path.is_file()
                 or hashlib.sha256(path.read_bytes()).hexdigest() != attachment.sha256
             ):
                 raise FixtureError(
-                    "Preview media content is missing/inconsistent; run guarded uat-preview-reset"
+                    "Preview media content is missing/inconsistent; " + repair_hint()
                 )
 
 
@@ -333,7 +380,7 @@ def image_upload() -> UploadFile:
     buffer.seek(0)
     return UploadFile(
         file=buffer,
-        filename="uat-preview-synthetic-leaf.png",
+        filename=f"{fixture_prefix()}-preview-synthetic-leaf.png",
         headers=Headers({"content-type": "image/png"}),
     )
 
@@ -642,7 +689,10 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
         ensure_dashboard(database, root, existing)
         ensure_manual_review(database, root, existing)
         return existing
-    if (
+    owner = review_owner(database) if fixture_prefix() == "review" else None
+    if owner is not None:
+        require_empty_review_collection(database)
+    elif (
         database.scalar(select(User.id).limit(1)) is not None
         or database.scalar(select(BotanicalIdentity.id).limit(1)) is not None
     ):
@@ -655,13 +705,15 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
         manifest["records"][key] = str(result.id)
         return result
 
-    owner = remember(
-        "owner:preview",
-        bootstrap_owner(database, "preview", "uat-bootstrap-only-password", "UAT Preview"),
-    )
-    # Deliberately short public fixture password, ONLY after host + runtime + DB identity guards.
-    # Normal bootstrap validation and authenticate()/Argon2/session behavior remain unchanged.
-    owner.password_hash = password_hasher().hash("preview")
+    if owner is not None:
+        remember("owner:review", owner)
+    else:
+        owner = remember(
+            "owner:preview",
+            bootstrap_owner(database, "preview", "uat-bootstrap-only-password", "UAT Preview"),
+        )
+        # Public password is restricted to guarded UAT; Review retains the existing account.
+        owner.password_hash = password_hasher().hash("preview")
     identity = [
         remember(
             f"identity:{name}",
@@ -1088,7 +1140,7 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
             ExternalAssetCreate(
                 image_url="https://example.invalid/preview-leaf.png",
                 source_url="https://example.invalid/preview",
-                attribution="Synthetic reference-only UAT example",
+                attribution=f"Synthetic reference-only {fixture_prefix().upper()} example",
                 title="Preview — External reference (intentionally offline)",
             ),
             target="plant",
@@ -1147,20 +1199,26 @@ def main() -> int:
         with Session(get_engine()) as database:
             root = require_identity(settings, database, require_marker=args.action == "seed")
             # Shared-volume process lock spans service commits and manifest writes.
-            with (root / ".uat-fixture.lock").open("a") as lock:
+            with (root / f".{fixture_prefix()}-fixture.lock").open("a") as lock:
                 fcntl.flock(lock, fcntl.LOCK_EX)
                 manifest = seed(database, root) if args.action == "seed" else read_manifest(root)
                 if manifest is not None:
                     validate_manifest(database, root, manifest)
-                owner = database.scalar(select(User).where(User.login_name == "preview"))
+                owner = (
+                    review_owner(database)
+                    if fixture_prefix() == "review"
+                    else database.scalar(select(User).where(User.login_name == "preview"))
+                )
                 print(f"Fixture initialized: {'yes' if manifest else 'no'}; version: {VERSION}")
                 print(f"Preview owner initialized: {'yes' if owner else 'no'}")
                 if manifest:
                     print(f"Baseline records: {len(manifest['records'])}; existing edits preserved")
                 else:
-                    print("Preview dataset not initialized. Run: make uat-preview-seed")
+                    print(
+                        "Preview dataset not initialized. Run the guarded environment seed action."
+                    )
     except (FixtureError, ValueError, OSError) as error:
-        print(f"UAT fixture: {error}", file=sys.stderr)
+        print(f"{fixture_prefix().upper()} fixture: {error}", file=sys.stderr)
         return 1
     return 0
 

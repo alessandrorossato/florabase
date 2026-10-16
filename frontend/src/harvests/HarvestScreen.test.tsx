@@ -1,3 +1,4 @@
+import { selectDirectoryFilter } from "../test/directoryFilters";
 import {
   cleanup,
   fireEvent,
@@ -166,9 +167,9 @@ describe("Harvest directory and detail", () => {
       within(preview).getByRole("link", { name: "Open details" }),
     ).toHaveAttribute("href", "#/harvests/harvest-1");
     expect(within(preview).getByText("Coffee")).toBeVisible();
-    await user.selectOptions(screen.getByLabelText("Material"), "leaf");
+    await selectDirectoryFilter(user, "Material", "leaf");
     expect(screen.getByText("No Harvests match these filters.")).toBeVisible();
-    await user.selectOptions(screen.getByLabelText("Material"), "");
+    await selectDirectoryFilter(user, "Material", "");
     await user.type(screen.getByLabelText("Search Harvests"), "missing");
     expect(screen.getByText("No Harvests match these filters.")).toBeVisible();
   });
@@ -390,10 +391,12 @@ it("filters exact source identity across Plants and groups and composes search/m
   const user = userEvent.setup();
   wrap(<HarvestScreen />);
   await screen.findByRole("button", { name: /misleading title/ });
+  await user.click(screen.getByRole("button", { name: "Filters" }));
   const picker = screen.getByRole("combobox", { name: "Botanical identity" });
   expect(picker).toHaveAttribute("placeholder", "All botanical identities");
   await user.type(picker, "Coffea");
   await user.keyboard("{Enter}");
+  await user.click(screen.getByRole("button", { name: "Done" }));
   await waitFor(() => {
     expect(api.listHarvests).toHaveBeenLastCalledWith(
       expect.any(AbortSignal),
@@ -404,15 +407,16 @@ it("filters exact source identity across Plants and groups and composes search/m
     screen.queryByRole("button", { name: /misleading title/ }),
   ).not.toBeInTheDocument();
   expect(screen.getByText("2 records")).toBeVisible();
-  await user.selectOptions(screen.getByLabelText("Material"), "seed");
+  await selectDirectoryFilter(user, "Material", "seed");
   expect(screen.getByText("1 record")).toBeVisible();
-  await user.selectOptions(screen.getByLabelText("Source type"), "plant");
+  await selectDirectoryFilter(user, "Source type", "plant");
   expect(screen.getByText("No Harvests match these filters.")).toBeVisible();
-  await user.selectOptions(screen.getByLabelText("Source type"), "plant_group");
+  await selectDirectoryFilter(user, "Source type", "plant_group");
   await user.type(screen.getByLabelText("Search Harvests"), "missing");
   expect(screen.getByText("No Harvests match these filters.")).toBeVisible();
   await user.clear(screen.getByLabelText("Search Harvests"));
   expect(screen.getByText("1 record")).toBeVisible();
+  await user.click(screen.getByRole("button", { name: /^Filters/ }));
   await user.click(
     screen.getByRole("button", { name: "Clear botanical identity filter" }),
   );
@@ -420,8 +424,8 @@ it("filters exact source identity across Plants and groups and composes search/m
   expect(cleared).toHaveValue("");
   expect(cleared).toHaveFocus();
   await user.keyboard("{Escape}");
-  await user.selectOptions(screen.getByLabelText("Material"), "");
-  await user.selectOptions(screen.getByLabelText("Source type"), "");
+  await selectDirectoryFilter(user, "Material", "");
+  await selectDirectoryFilter(user, "Source type", "");
   await screen.findByRole("button", { name: /misleading title/ });
 });
 
@@ -432,6 +436,7 @@ it("distinguishes an empty collection from an empty identity result and retains 
   const user = userEvent.setup();
   const view = wrap(<HarvestScreen />);
   await screen.findByRole("button", { name: /Coffee — Fruit harvest/ });
+  await user.click(screen.getByRole("button", { name: /^Filters/ }));
   await user.type(
     screen.getByRole("combobox", { name: "Botanical identity" }),
     "Coffea",
@@ -449,7 +454,7 @@ it("BULK-001 does not expose multi-selection for historical Harvest occurrences"
   wrap(<HarvestScreen />);
   await screen.findByRole("button", { name: /Coffee — Fruit harvest/ });
   expect(
-    screen.queryByRole("button", { name: "Select" }),
+    screen.queryByRole("button", { name: "Select records" }),
   ).not.toBeInTheDocument();
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
 });

@@ -1,0 +1,91 @@
+{
+  "captured_by": "make uat-preview-status from delivered UAT owner via current repository helper; read-only docker inspect/volume inspect/network inspect",
+  "status_at_capture": "all four owner containers stopped; status verified db/media/dependencies remain retained",
+  "uat": {
+    "project": "florabase-uat-preview",
+    "url": "http://localhost:15174",
+    "source": "/home/alessandro/.codex/worktrees/4ff7/florabase",
+    "sha": "b9d62033c9873373e461cc29ea2179c0bb6bb256",
+    "branch": "detached",
+    "dirty": false,
+    "code_head": "20261013_0042",
+    "fixture": "v4/66, ready",
+    "database_revision": "unavailable at this capture because DB is stopped; last live UAT inspection earlier in this review recorded 0042"
+  },
+  "original_containers": {
+    "frontend": {
+      "container_id": "5d4d83a074bca2a65eb0e4f09a3cab4206f6d18fd15ac514c188a3d173d27f0f",
+      "state": "exited",
+      "configured_image": "florabase-uat-preview-frontend-development",
+      "image_id": "sha256:e6ba8b33a999d84b2a62bb75e84d71f809eed3bbe3c9e0d92b434065efa7d5f5",
+      "created": "2026-10-14T11:32:40.085405617Z",
+      "published": "127.0.0.1:15174 -> 5173/tcp",
+      "mounts": [
+        {
+          "type": "bind",
+          "source": "/home/alessandro/.codex/worktrees/4ff7/florabase/frontend",
+          "destination": "/app",
+          "rw": true
+        },
+        {
+          "type": "volume",
+          "name": "florabase-uat-preview_frontend_node_modules",
+          "destination": "/app/node_modules",
+          "rw": true
+        },
+        {
+          "type": "bind",
+          "source": "/home/alessandro/.codex/worktrees/4ff7/florabase/backend/openapi.json",
+          "destination": "/backend/openapi.json",
+          "rw": false
+        }
+      ]
+    },
+    "backend": {
+      "container_id": "9b6cb5744c88009fb33a79c15e960ff93ce952780450ef905ef2133baea55706",
+      "state": "exited",
+      "image_id": "sha256:a1268575c1d53da4b53a964797593c40e5cea8bb9ee05486f51ad8835ea7a609",
+      "created": "2026-10-14T11:12:57.665687416Z"
+    },
+    "db": {
+      "container_id": "402d0e2fde49ec43988ecde3e4c1cfed9f85d89e987ba490f025dafa13c1fed9",
+      "state": "exited",
+      "image_id": "sha256:c293117fcecda7344b5480222e813b9f673d7abd69b1dd95eff239b768b04f59",
+      "created": "2026-10-14T11:12:57.156275079Z"
+    }
+  },
+  "volumes": [
+    {
+      "name": "florabase-uat-preview_postgres_data",
+      "created": "2026-10-13T20:59:17+02:00",
+      "driver": "local",
+      "config_hash": "87b413798dcc9815ca16e2ddad8bf83abce07b6e1881ecffe505c6af4e8c60c7"
+    },
+    {
+      "name": "florabase-uat-preview_attachment_data",
+      "created": "2026-10-13T20:59:25+02:00",
+      "driver": "local",
+      "config_hash": "0d3d637bacb0191e26662132968932e9860b123949a66916d820dc6dd1fb38f9"
+    },
+    {
+      "name": "florabase-uat-preview_frontend_node_modules",
+      "created": "2026-10-13T20:59:25+02:00",
+      "driver": "local",
+      "config_hash": "a7027638cb518406a390fef35a2b7f96e4af41cda5b26dccd10cdb9d85a87b24"
+    }
+  ],
+  "network": {
+    "name": "florabase-uat-preview_internal",
+    "id": "afe1b1cb906380b2cb4cde44b8f049c0432e575a41039995c4f2fa5b44b6507f",
+    "created": "2026-10-13T20:59:17.053316593+02:00"
+  },
+  "candidate": {
+    "source": "/home/alessandro/.codex/worktrees/996d/florabase",
+    "branch": "feat/global-visual-001",
+    "head": "cd63c185f7bcb0544cd9c3cff984b29564e6bc84",
+    "state": "dirty",
+    "frontend_source_fingerprint": "5a587a94c635fc018a384974f5c9764d702122b209cf6219513a417bd18eeffa",
+    "served": false
+  },
+  "result": "No service or UAT resource was changed in this authorization turn. Original frontend container and source bind remain intact and stopped. Repository UAT lifecycle currently has no frontend-only replace/start operation; make uat-preview-up rebuilds and starts backend and frontend together. Therefore only the repository-supported safe path has not been executed."
+}

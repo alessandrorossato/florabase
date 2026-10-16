@@ -1,3 +1,13 @@
+import { FieldLabel } from "../components/FieldLabel";
+import "../components/directory-preview.css";
+import { useEditRoute } from "../components/useEditRoute";
+import "./seed-refinement.css";
+import { EditWorkspace } from "../components/EditWorkspace";
+import { TaskDialog } from "../components/TaskDialog";
+import {
+  DirectoryTools,
+  DirectoryFilterSelect,
+} from "../components/DirectoryTools";
 import { UpcomingActivities } from "../schedule/UpcomingActivities";
 import { PurchaseContextDialog } from "../orders/PurchaseContext";
 import {
@@ -25,6 +35,8 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type MouseEventHandler,
+  type RefObject,
   type SyntheticEvent,
 } from "react";
 
@@ -32,7 +44,11 @@ import { ApiError } from "../auth/api";
 import { labelComposerHref } from "../labels/labelData";
 import { useAuth } from "../auth/context";
 import { useCreationDisclosure } from "../components/useCreationDisclosure";
-import { DirectorySearch, QuickPreview } from "../components/ReferenceUI";
+import {
+  BotanicalName,
+  DirectorySearch,
+  QuickPreview,
+} from "../components/ReferenceUI";
 import { setRecordRoute } from "../components/recordNavigation";
 import {
   Breadcrumbs,
@@ -239,7 +255,7 @@ function SeedLotPreview({
 }: {
   lot: SeedLotResponse;
   onOpen: () => void;
-  onEdit: () => void;
+  onEdit: MouseEventHandler<HTMLButtonElement>;
 }) {
   const recordName = useRecordName();
 
@@ -335,52 +351,11 @@ function ContextDialog({
   onClose: () => void;
   children: ReactNode;
 }) {
-  const dialog = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    dialog.current
-      ?.querySelector<HTMLElement>("input, select, button")
-      ?.focus();
-  }, []);
   return (
-    <div
-      className="dialog-backdrop"
-      role="presentation"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <div
-        className="context-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="context-dialog-title"
-        ref={dialog}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            onClose();
-            return;
-          }
-          if (event.key !== "Tab" || !dialog.current) return;
-          const focusable = Array.from(
-            dialog.current.querySelectorAll<HTMLElement>(
-              "button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])",
-            ),
-          );
-          const first = focusable.at(0);
-          const last = focusable.at(-1);
-          if (event.shiftKey && document.activeElement === first) {
-            event.preventDefault();
-            last?.focus();
-          } else if (!event.shiftKey && document.activeElement === last) {
-            event.preventDefault();
-            first?.focus();
-          }
-        }}
-      >
-        <h3 id="context-dialog-title">{title}</h3>
-        {children}
-      </div>
-    </div>
+    <TaskDialog title={title} onClose={onClose} className="seed-context-dialog">
+      <h3>{title}</h3>
+      {children}
+    </TaskDialog>
   );
 }
 
@@ -406,8 +381,8 @@ function RelatedSowings({ seedLotId }: { seedLotId: string }) {
   if (sowings === null) return <p role="status">Loading Sowings…</p>;
   if (!sowings.length)
     return (
-      <div className="empty-state">
-        <p>No Sowings use this SeedLot.</p>
+      <div className="detail-empty-message">
+        <p>No sowings use this seed lot yet.</p>
       </div>
     );
   return (
@@ -443,14 +418,42 @@ function Detail({
   onPrimaryChanged,
   onConversionChanged,
   initialTab,
+  headingRef,
+  scientificName,
 }: {
   lot: SeedLotResponse;
-  onEdit: () => void;
+  onEdit: MouseEventHandler<HTMLButtonElement>;
   onPrimaryChanged?: (photo: PrimaryPhoto | null) => void;
   onConversionChanged?: () => void;
   initialTab?: string;
+  headingRef?: RefObject<HTMLHeadingElement | null>;
+  scientificName?: string;
 }) {
   const recordName = useRecordName();
+  const auth = useAuth();
+  const [transaction, setTransaction] = useState<OrderDetail | null>(null);
+  useEffect(() => {
+    if (!lot.order_id) return;
+    const controller = new AbortController();
+    getOrder(lot.order_id, 0, controller.signal)
+      .then((order) => {
+        if (!controller.signal.aborted) setTransaction(order);
+      })
+      .catch((error: unknown) => {
+        if (
+          !controller.signal.aborted &&
+          error instanceof ApiError &&
+          error.status === 401
+        )
+          auth.sessionExpired();
+      });
+    return () => {
+      controller.abort();
+    };
+  }, [lot.order_id, lot.updated_at, auth]);
+  const linkedTransaction =
+    transaction?.id === lot.order_id ? transaction : null;
+  const summarySupplier = linkedTransaction?.supplier ?? lot.supplier;
 
   const [tab, setTab] = useState(
     initialTab &&
@@ -470,6 +473,7 @@ function Detail({
         ]}
       />
       <DetailHeader
+        headingRef={headingRef}
         visual={
           lot.primary_photo && (
             <div className="collection-primary-detail">
@@ -485,18 +489,12 @@ function Detail({
         eyebrow="Seed lot"
         title={recordName(lot, "Unlabelled seed lot")}
         secondary={
-          <DetailContext
-            items={[
-              {
-                label: "Botanical identity",
-                value: (
-                  <a href={`#/identities/${lot.botanical_identity.id}`}>
-                    {lot.botanical_identity.display_label}
-                  </a>
-                ),
-              },
-            ]}
-          />
+          <a href={`#/identities/${lot.botanical_identity.id}`}>
+            <BotanicalName
+              label={lot.botanical_identity.display_label}
+              scientificName={scientificName}
+            />
+          </a>
         }
         status={
           <>
@@ -565,48 +563,24 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-overview"
         >
-          <UpcomingActivities
-            kind={"seed_lot"}
-            id={lot.id}
-            current={lot.lifecycle === "active"}
-          />
-          {lot.harvest_conversion_id && (
-            <ConversionHistory
-              kind="seed_lot_id"
-              id={lot.id}
-              onChanged={onConversionChanged}
-            />
-          )}
-          {lot.order && (
-            <section
-              className="seed-fact-group"
-              aria-label="Purchase transaction"
-            >
-              <h4>Purchase Order</h4>
-              <a href={`#/orders/${lot.order.id}`}>
-                {lot.order.order_reference ?? "Purchase order"}
-              </a>
-              <p className="field-help">
-                Transaction context; acquisition date and material origin remain
-                recorded separately below.
-              </p>
-            </section>
-          )}
-          <section
-            aria-labelledby="seed-overview-inventory"
-            className="seed-fact-group"
-          >
-            <h4 id="seed-overview-inventory">Inventory</h4>
-            <dl>
-              <div>
+          <div className="seed-overview-facts">
+            <h3>At a glance</h3>
+            <dl className="seed-current-summary" aria-label="Current inventory">
+              <div className="seed-summary-lifecycle">
                 <dt>Lifecycle</dt>
-                <dd>{lifecycleLabels[lot.lifecycle]}</dd>
+                <dd>
+                  <span
+                    className={`lifecycle-badge lifecycle-badge--${lot.lifecycle}`}
+                  >
+                    {lifecycleLabels[lot.lifecycle]}
+                  </span>
+                </dd>
               </div>
-              <div>
+              <div className="seed-summary-quantity">
                 <dt>{inventoryLabel(lot)}</dt>
                 <dd>{quantityLabel(lot)}</dd>
               </div>
-              <div>
+              <div className="seed-summary-storage">
                 <dt>Storage</dt>
                 <dd>
                   {lot.location ? (
@@ -619,90 +593,117 @@ function Detail({
                 </dd>
               </div>
             </dl>
-          </section>
-          <section
-            aria-labelledby="seed-overview-source"
-            className="seed-fact-group"
-          >
-            <h4 id="seed-overview-source">Source &amp; origin</h4>
-            <dl>
-              <div>
-                <dt>Source</dt>
-                <dd>
-                  {sourceLabels[lot.source_kind]}
-                  {lot.source_detail ? ` — ${lot.source_detail}` : ""}
-                </dd>
-              </div>
-              <div>
-                <dt>Supplier</dt>
-                <dd>
-                  {lot.supplier ? (
-                    <a href={`#/suppliers/${lot.supplier.id}`}>
-                      {lot.supplier.name}
-                    </a>
-                  ) : (
-                    "Not recorded"
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt>Material provenance</dt>
-                <dd>
-                  {lot.material_provenance ? (
-                    <a href={`#/geography?place=${lot.material_provenance.id}`}>
-                      {lot.material_provenance.display_path}
-                    </a>
-                  ) : (
-                    "Not recorded"
-                  )}
-                </dd>
-              </div>
-              <div>
-                <dt>Provenance site</dt>
-                <dd>
-                  {lot.provenance_site ? (
-                    <a href={`#/geography/${lot.provenance_site.id}`}>
-                      {lot.provenance_site.geographic_place_path
-                        ? `${lot.provenance_site.geographic_place_path} → `
-                        : ""}
-                      {lot.provenance_site.name}
-                    </a>
-                  ) : (
-                    "Not recorded"
-                  )}
-                </dd>
-              </div>
-            </dl>
-          </section>
-          <section
-            aria-labelledby="seed-overview-dates"
-            className="seed-fact-group"
-          >
-            <h4 id="seed-overview-dates">Dates &amp; condition</h4>
-            <dl>
-              <div>
-                <dt>Acquired</dt>
-                <dd>{dateLabel(lot.acquisition_date)}</dd>
-              </div>
-              <div>
-                <dt>Harvested</dt>
-                <dd>{dateLabel(lot.harvest_date)}</dd>
-              </div>
-              <div>
-                <dt>Expected viability</dt>
-                <dd>{dateLabel(lot.expected_viability_until)}</dd>
-              </div>
-            </dl>
-          </section>
-          {lot.notes && (
+          </div>
+          <div className="seed-overview-main seed-summary-sections">
             <section
-              aria-labelledby="seed-overview-notes"
-              className="seed-fact-group seed-fact-group--notes"
+              className="seed-fact-group"
+              aria-labelledby="seed-overview-acquisition"
             >
-              <h4 id="seed-overview-notes">Notes</h4>
-              <p className="preserve-lines">{lot.notes}</p>
+              <h4 id="seed-overview-acquisition">Acquisition</h4>
+              <p className="seed-fact-lead">
+                {sourceLabels[lot.source_kind]}
+                {lot.source_detail ? ` — ${lot.source_detail}` : ""}
+              </p>
+              <p>
+                {summarySupplier ? (
+                  <a href={`#/suppliers/${summarySupplier.id}`}>
+                    {summarySupplier.name}
+                  </a>
+                ) : (
+                  "Supplier not recorded"
+                )}
+              </p>
+              {lot.order_id && (
+                <small className="field-help">
+                  {linkedTransaction?.supplier
+                    ? "From linked Order"
+                    : linkedTransaction
+                      ? "Recorded on this seed lot; Order Supplier not recorded"
+                      : "Recorded on this seed lot"}
+                </small>
+              )}
+              <p className="seed-secondary-fact">
+                Order:{" "}
+                {lot.order ? (
+                  <a href={`#/orders/${lot.order.id}`}>
+                    {lot.order.order_reference ?? "Purchase order"}
+                  </a>
+                ) : (
+                  "Not linked"
+                )}
+              </p>
             </section>
-          )}
+            <section
+              className="seed-fact-group seed-origin"
+              aria-labelledby="seed-overview-source"
+            >
+              <h4 id="seed-overview-source">Origin</h4>
+              <p className="seed-fact-lead">
+                {lot.provenance_site ? (
+                  <a href={`#/geography/${lot.provenance_site.id}`}>
+                    {lot.provenance_site.geographic_place_path
+                      ? `${lot.provenance_site.geographic_place_path} → `
+                      : ""}
+                    {lot.provenance_site.name}
+                  </a>
+                ) : (
+                  "Provenance site not recorded"
+                )}
+              </p>
+              <p>
+                {lot.material_provenance ? (
+                  <a href={`#/geography?place=${lot.material_provenance.id}`}>
+                    {lot.material_provenance.display_path}
+                  </a>
+                ) : (
+                  "Material provenance not recorded"
+                )}
+              </p>
+            </section>
+            <section
+              className="seed-fact-group seed-dates"
+              aria-labelledby="seed-overview-dates"
+            >
+              <h4 id="seed-overview-dates">Dates &amp; condition</h4>
+              <dl>
+                <div>
+                  <dt>Acquired</dt>
+                  <dd>{dateLabel(lot.acquisition_date)}</dd>
+                </div>
+                <div>
+                  <dt>Harvested</dt>
+                  <dd>{dateLabel(lot.harvest_date)}</dd>
+                </div>
+                <div>
+                  <dt>Expected viability</dt>
+                  <dd>{dateLabel(lot.expected_viability_until)}</dd>
+                </div>
+              </dl>
+            </section>
+            <UpcomingActivities
+              kind={"seed_lot"}
+              id={lot.id}
+              current={lot.lifecycle === "active"}
+            />
+            {lot.harvest_conversion_id && (
+              <div className="seed-overview-conversion">
+                <ConversionHistory
+                  kind="seed_lot_id"
+                  id={lot.id}
+                  onChanged={onConversionChanged}
+                />
+              </div>
+            )}
+            {lot.notes && (
+              <section
+                aria-labelledby="seed-overview-notes"
+                className="seed-fact-group seed-fact-group--notes"
+              >
+                <h4 id="seed-overview-notes">Notes</h4>
+                <p className="preserve-lines">{lot.notes}</p>
+              </section>
+            )}
+          </div>
         </div>
       )}
       {tab === "sowings" && (
@@ -712,16 +713,6 @@ function Detail({
           role="tabpanel"
           aria-labelledby="tab-sowings"
         >
-          {lot.lifecycle === "active" && (
-            <div className="actions contextual-actions">
-              <a
-                className="button-link"
-                href={`#/sowings?action=start&seedLot=${lot.id}`}
-              >
-                Start another sowing
-              </a>
-            </div>
-          )}
           <RelatedSowings seedLotId={lot.id} />
         </div>
       )}
@@ -744,6 +735,7 @@ function Detail({
         >
           <PhotosSection
             key={lot.id}
+            presentation="compact"
             target="seed_lot"
             targetId={lot.id}
             targetLabel={recordName(lot, "Unlabelled seed lot")}
@@ -783,12 +775,23 @@ export function SeedLotScreen({
     status: "loading",
   });
   const [references, setReferences] = useState<References | null>(null);
+  const scientificNames = useMemo(
+    () =>
+      new Map<string, string>(
+        references?.identities.map((identity) => [
+          identity.id,
+          identity.scientific_name,
+        ]) ?? [],
+      ),
+    [references],
+  );
   usePublishRecordIdentities(references?.identities);
   const [attempt, setAttempt] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(
     initialId ?? null,
   );
   const [detailOpen, setDetailOpen] = useState(Boolean(initialId));
+  const detailHeading = useRef<HTMLHeadingElement>(null);
   const view = useDirectoryView("seed_lots", () => {
     setSelectedId(null);
     setDetailOpen(false);
@@ -803,18 +806,6 @@ export function SeedLotScreen({
   };
 
   const [editing, setEditing] = useState(false);
-  const lastRouteId = useRef(initialId);
-  useEffect(() => {
-    if (lastRouteId.current === initialId) return;
-    lastRouteId.current = initialId;
-    const timeout = window.setTimeout(() => {
-      if (initialId) setSelectedId(initialId);
-      setDetailOpen(Boolean(initialId));
-    }, 0);
-    return () => {
-      window.clearTimeout(timeout);
-    };
-  }, [initialId]);
   const [form, setForm] = useState<FormState>(blankForm);
   const [save, setSave] = useState<SaveState>({ status: "idle" });
   const [context, setContext] = useState<{
@@ -835,6 +826,47 @@ export function SeedLotScreen({
     "csrfToken" in auth.state ? auth.state.csrfToken : undefined;
   const [orderContext, setOrderContext] = useState<OrderDetail | null>(null);
   const [orderContextError, setOrderContextError] = useState(false);
+  const editBaseline = useRef("");
+  const editTrigger = useRef<HTMLButtonElement | null>(null);
+  const directEditHandled = useRef(false);
+  const edit = useEditRoute({
+    routeIsEdit: initialTab === "edit",
+    canDismiss: () => {
+      if (
+        save.status === "saving" ||
+        contextSaving ||
+        context ||
+        candidateOrderId
+      )
+        return false;
+      return (
+        JSON.stringify(form) === editBaseline.current ||
+        window.confirm("Discard unsaved seed lot changes?")
+      );
+    },
+    onDismiss: () => {
+      setEditing(false);
+      setSave((current) =>
+        current.status === "success" ? current : { status: "idle" },
+      );
+      if (!edit.modal && selectedId)
+        setRecordRoute(`#/seeds/${selectedId}`, true);
+    },
+  });
+  const lastRouteId = useRef(initialId);
+  useEffect(() => {
+    if (lastRouteId.current === initialId) return;
+    lastRouteId.current = initialId;
+    if (edit.modal) return;
+    const timeout = window.setTimeout(() => {
+      if (initialId) setSelectedId(initialId);
+      setDetailOpen(Boolean(initialId));
+    }, 0);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [initialId, edit.modal]);
+
   useEffect(() => {
     if (!initialOrderId || !startCreating || !creationCsrf) return;
     const controller = new AbortController();
@@ -953,6 +985,31 @@ export function SeedLotScreen({
     [inventory],
   );
   const selected = lots.find(({ id }) => id === selectedId) ?? null;
+  useEffect(() => {
+    if (initialTab !== "edit") {
+      directEditHandled.current = false;
+      return;
+    }
+    if (edit.modal) {
+      // This edit entry already belongs to the contextual workspace. Closing it
+      // must not reopen the fallback while the browser processes history.back().
+      directEditHandled.current = true;
+      return;
+    }
+    if (directEditHandled.current || !selected) return;
+    directEditHandled.current = true;
+    const timeout = window.setTimeout(() => {
+      const values = formFrom(selected);
+      editBaseline.current = JSON.stringify(values);
+      setForm(values);
+      setEditing(true);
+      setDetailOpen(true);
+    }, 0);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [initialTab, edit.modal, selected]);
+
   const visible = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     return lots.filter((lot) => {
@@ -1038,14 +1095,18 @@ export function SeedLotScreen({
     setSave({ status: "idle" });
     openCreation();
   }
-  function startEdit(lot: SeedLotResponse) {
+  function startEdit(lot: SeedLotResponse, trigger: HTMLButtonElement) {
+    editTrigger.current = trigger;
+    directEditHandled.current = true;
     setPurchaseConfirmation(null);
     setCandidateOrderId("");
     if (creationExpanded) closeCreation({ returnFocus: false });
     setSelectedId(lot.id);
     setEditing(true);
-    setDetailOpen(true);
-    setForm(formFrom(lot));
+    const values = formFrom(lot);
+    editBaseline.current = JSON.stringify(values);
+    setForm(values);
+    edit.open(`#/seeds/${lot.id}?tab=edit`);
     setSave({ status: "idle" });
   }
   function openContext(kind: ContextKind, query: string) {
@@ -1133,9 +1194,13 @@ export function SeedLotScreen({
             )
           : await createSeedLot(payload, csrfToken);
       await refreshLots(lot);
-      setEditing(false);
-      setDetailOpen(true);
-      if (wasCreating) closeCreation();
+      if (edit.modal) edit.close(true);
+      else {
+        setEditing(false);
+        setDetailOpen(true);
+        if (initialTab === "edit") setRecordRoute(`#/seeds/${lot.id}`, true);
+      }
+      if (wasCreating) closeCreation({ returnFocus: false });
       setSave({
         status: "success",
         message: selected
@@ -1143,6 +1208,8 @@ export function SeedLotScreen({
           : "Seed lot was added to the collection.",
       });
       if (wasCreating) setRecordRoute(`#/seeds/${lot.id}`);
+      if (!edit.modal)
+        window.setTimeout(() => detailHeading.current?.focus(), 0);
     } catch (error: unknown) {
       const orderError =
         error instanceof ApiError ? seedLotOrderError(error) : undefined;
@@ -1299,565 +1366,353 @@ export function SeedLotScreen({
     }
   }
 
-  return (
-    <section
-      className="workspace seeds-workspace"
-      aria-labelledby="seeds-title"
-    >
-      <WorkspaceIntro
-        contextActions={
-          detailOpen &&
-          !editing && (
-            <button
-              className="operational-back button--secondary"
-              type="button"
-              onClick={() => {
-                setDetailOpen(false);
-                setRecordRoute("#/seeds", true);
-              }}
-            >
-              ← Back to seed lots
-            </button>
-          )
-        }
-        contextOnly={detailOpen || editing}
-        {...seedPage}
-        actions={
-          !editing && (
-            <button
-              type="button"
-              ref={creationTriggerRef}
-              aria-expanded={creationExpanded}
-              aria-controls="new-seed-lot-panel"
-              onClick={() => {
-                if (creationExpanded) focusCreation();
-                else startCreate();
-              }}
-            >
-              + New seed lot
-            </button>
-          )
-        }
-      />
-      {orderContextError && (
-        <div role="alert" className="notice notice--error">
-          <p>Could not load the Order context. No seed lot has been created.</p>
-          <button
-            type="button"
-            onClick={() => {
-              setAttempt((value) => value + 1);
-            }}
-          >
-            Retry Order context
-          </button>
-        </div>
-      )}
-      {initialOrderId &&
-        startCreating &&
-        !orderContext &&
-        !orderContextError && <p role="status">Loading Order context…</p>}
-      <div
-        className={`seed-master-detail operational-layout${detailOpen || editing ? " is-detail-view" : ""}`}
+  const lifecycleField = (
+    <div className="field">
+      <label htmlFor="lifecycle">Lifecycle</label>
+      <select
+        id="lifecycle"
+        value={form.lifecycle}
+        disabled={pending || selected?.lifecycle === "reversed"}
+        onChange={(event) => {
+          const lifecycle = event.currentTarget.value as SeedLotLifecycle;
+          setForm((current) => ({
+            ...current,
+            lifecycle,
+          }));
+        }}
       >
-        <section className="seed-master" aria-labelledby="seed-inventory-title">
-          <h3 className="sr-only" id="seed-inventory-title">
-            Seed lot inventory
-          </h3>
-          <SavedViews
-            surface="seed_lots"
-            state={view.savedState}
-            utilityActions={
-              <BulkSelect
-                selection={bulk}
-                visible={bulkChoices}
-                onStart={() => {
-                  setSelectedId(null);
-                  setDetailOpen(false);
-                }}
-              />
-            }
-          />
-          <div className="seed-controls">
-            <DirectorySearch
-              hideLabel
-              id="seed-search"
-              label="Search seed inventory"
-              placeholder="Search lots, identity or location"
-              value={search}
-              onChange={setSearch}
-            />
-            <fieldset className="lifecycle-filter">
-              <legend className="sr-only">Show lots</legend>
-              {(["active", "history", "all"] as const).map((item) => (
-                <button
-                  type="button"
-                  aria-pressed={filter === item}
-                  key={item}
-                  onClick={() => {
-                    setFilter(item);
-                  }}
-                >
-                  {item === "active"
-                    ? "Active"
-                    : item === "history"
-                      ? "History"
-                      : "All"}
-                </button>
-              ))}
-            </fieldset>
-          </div>
-          <BulkToolbar
-            selection={bulk}
-            visible={bulkChoices}
-            onSuccess={() => {
-              setSelectedId(null);
-              setDetailOpen(false);
-              setAttempt((value) => value + 1);
-            }}
-          />
-          {inventory.status === "ready" && (
-            <DirectoryResults count={visible.length} />
-          )}
-          {lots.length === 0 ? (
-            <div className="empty-state">
-              <h3>No seeds recorded yet</h3>
-              <p>
-                Add a seed lot with only its botanical identity; everything
-                unknown can remain unknown.
-              </p>
-            </div>
-          ) : visible.length === 0 ? (
-            <div className="empty-state">
-              <h3>No matching seed lots</h3>
-              <p>
-                Try another search or lifecycle view. Historical records remain
-                available under History or All.
-              </p>
-            </div>
-          ) : (
-            <ul className="seed-list" aria-label="Seed inventory" tabIndex={0}>
-              {visible.map((lot, bulkIndex) => (
-                <li
-                  key={lot.id}
-                  className={bulk.active ? "bulk-selection-row" : undefined}
-                  data-selected={
-                    bulk.checked({ kind: "seed_lot", id: lot.id }) || undefined
-                  }
-                >
-                  <BulkCheckbox
-                    selection={bulk}
-                    choice={bulkChoices[bulkIndex]}
-                  />
-                  <button
-                    type="button"
-                    className="seed-row"
-                    aria-pressed={selectedId === lot.id}
-                    onClick={() => {
-                      if (bulk.active) {
-                        bulk.toggle(bulkChoices[bulkIndex]);
-                        return;
-                      }
-                      if (creationExpanded)
-                        closeCreation({ returnFocus: false });
-                      setSelectedId(lot.id);
-                      const isMobile =
-                        window.matchMedia("(max-width: 48rem)").matches;
-                      setDetailOpen(isMobile);
-                      if (isMobile) setRecordRoute(`#/seeds/${lot.id}`);
-                      setEditing(false);
-                      setSave({ status: "idle" });
-                    }}
-                  >
-                    <span className="seed-primary">
-                      <RecordVisual
-                        photo={lot.primary_photo ?? null}
-                        label={recordName(lot, "Seed lot")}
-                        compact
+        {Object.entries(lifecycleLabels)
+          .filter(
+            ([value]) =>
+              value !== "reversed" || selected?.lifecycle === "reversed",
+          )
+          .map(([value, label]) => (
+            <option value={value} key={value}>
+              {label}
+            </option>
+          ))}
+      </select>
+      <small>
+        Use Exhausted for an exact known zero quantity. Historical lots remain
+        editable.
+      </small>
+    </div>
+  );
 
-                        identity={lot.botanical_identity}
-                        kind={"seed"}
-                      />
-                      <span className="seed-primary__text">
-                        <strong>
-                          {recordName(lot, "Unlabelled seed lot")}
-                        </strong>
-                        <small>{lot.botanical_identity.display_label}</small>
-                      </span>
-                    </span>
-                    <span className="seed-quantity">
-                      <small>{inventoryLabel(lot)}</small>
-                      <strong>{quantityLabel(lot)}</strong>
-                    </span>
-                    <span className="seed-location">
-                      {lot.location?.display_path ?? "Storage not recorded"}
-                    </span>
-                    <span
-                      className={`lifecycle-badge lifecycle-badge--${lot.lifecycle}`}
-                    >
-                      {lifecycleLabels[lot.lifecycle]}
-                    </span>
-                  </button>
-                </li>
+  const editor = editing ? (
+    <EditWorkspace
+      returnFocusTo={editTrigger}
+      modal={edit.modal && Boolean(selected)}
+      title={
+        selected ? `Edit ${recordName(selected, "seed lot")}` : "Add seed lot"
+      }
+      onClose={() => {
+        edit.close();
+      }}
+    >
+      <form
+        className="seed-form collection-form"
+        onClickCapture={(event) => {
+          if (!selected || !(event.target instanceof Element)) return;
+          const link = event.target.closest<HTMLAnchorElement>('a[href^="#"]');
+          if (
+            link &&
+            link.target !== "_blank" &&
+            link.hash !== window.location.hash &&
+            !edit.prepareDeparture()
+          )
+            event.preventDefault();
+        }}
+        onSubmit={(event) => void submit(event)}
+        noValidate
+      >
+        <Breadcrumbs
+          items={[
+            ...(!selected
+              ? [{ label: "Collection", href: "#/dashboard" }]
+              : []),
+            { label: "Seeds", href: "#/seeds" },
+            { label: selected ? "Edit seed lot" : "New" },
+          ]}
+        />
+        <DetailHeader
+          eyebrow="Seed lot"
+          title={
+            selected
+              ? `Edit ${recordName(selected, "seed lot")}`
+              : "Add seed lot"
+          }
+          secondary={
+            selected && (
+              <DetailContext
+                items={[
+                  {
+                    label: "Botanical identity",
+                    value: selected.botanical_identity.display_label,
+                  },
+                ]}
+              />
+            )
+          }
+        />
+        {!selected && (
+          <p className="seed-create-description">
+            Record a physical seed lot in the collection.
+          </p>
+        )}
+        {save.status === "error" && (
+          <div
+            className="notice notice--error"
+            role="alert"
+            tabIndex={-1}
+            ref={feedback}
+          >
+            <ul>
+              {save.messages.map((message) => (
+                <li key={message}>{message}</li>
               ))}
             </ul>
-          )}
-        </section>
-        <section
-          id={creationExpanded ? "new-seed-lot-panel" : undefined}
-          className={
-            creationExpanded
-              ? "seed-detail-pane seed-creation-panel"
-              : "seed-detail-pane"
-          }
-          ref={creationExpanded ? creationPanelRef : undefined}
-          aria-label="Seed lot detail and editor"
-        >
-          {save.status === "success" && (
-            <div className="notice notice--success" role="status">
-              {save.message}
-            </div>
-          )}
-          {editing ? (
-            <form
-              className="seed-form collection-form"
-              onSubmit={(event) => void submit(event)}
-              noValidate
-            >
-              <Breadcrumbs
-                items={[
-                  { label: "Seeds", href: "#/seeds" },
-                  { label: selected ? "Edit seed lot" : "New seed lot" },
-                ]}
-              />
-              <DetailHeader
-                eyebrow="Seed lot"
-                title={
-                  selected
-                    ? `Edit ${recordName(selected, "seed lot")}`
-                    : "Add seed lot"
-                }
-                secondary={
-                  selected && (
-                    <DetailContext
-                      items={[
-                        {
-                          label: "Botanical identity",
-                          value: selected.botanical_identity.display_label,
-                        },
-                      ]}
+          </div>
+        )}
+        <FormSections
+          mode={selected ? "edit" : "page"}
+          disabled={pending}
+          error={save.status === "error" ? save : undefined}
+          errorFields={[
+            { match: /order/i, selector: "#seed-order" },
+            {
+              match: /location|storage/i,
+              selector: '[data-form-panel="inventory"] [role="combobox"]',
+            },
+            {
+              match: /supplier/i,
+              selector: '[data-form-panel="acquisition"] [role="combobox"]',
+            },
+            {
+              match: /provenance site/i,
+              selector:
+                '[data-form-panel="origin"] .field:last-child [role="combobox"]',
+            },
+            {
+              match: /provenance/i,
+              selector: '[data-form-panel="origin"] [role="combobox"]',
+            },
+            { match: /identity/i, selector: '[role="combobox"]' },
+            {
+              match: /quantity|seed count/i,
+              selector: '[aria-label="Quantity value"]',
+            },
+            { match: /label/i, selector: "#lot-label" },
+            { match: /source detail/i, selector: "#source-detail" },
+            { match: /source/i, selector: "#source-kind" },
+            { match: /acquisition/i, selector: "#acquisition-year" },
+            { match: /harvest/i, selector: "#harvest-year" },
+            { match: /viability/i, selector: "#viability-year" },
+            { match: /notes/i, selector: "#seed-notes" },
+            { match: /lifecycle/i, selector: "#lifecycle" },
+          ]}
+          panels={[
+            {
+              id: "essentials",
+              label: selected ? "Essentials" : "Identity",
+              content: (
+                <>
+                  <ReferencePicker
+                    label="Botanical identity"
+                    help="A shared botanical identity keeps the botanical name consistent across records; it does not establish lineage."
+                    required
+                    disabled={pending}
+                    choices={references.identities.map((item) => ({
+                      id: item.id,
+                      label: item.display_label,
+                      scientificName: item.scientific_name,
+                    }))}
+                    value={form.botanicalIdentityId}
+                    onChange={(id) => {
+                      setForm((current) => ({
+                        ...current,
+                        botanicalIdentityId: id,
+                      }));
+                    }}
+                    onCreate={(query) => {
+                      openContext("identity", query);
+                    }}
+                    createLabel="Create identity"
+                  />
+                  {!selected && (
+                    <p className="field-help seed-task-hint">
+                      One seed lot represents one physical packet or bag. Add
+                      another record for a separate packet, even of the same
+                      taxon.
+                    </p>
+                  )}
+
+                  <div className="field">
+                    <label htmlFor="lot-label">Lot label</label>
+                    <input
+                      id="lot-label"
+                      value={form.label}
+                      disabled={pending}
+                      onChange={(event) => {
+                        const value = event.currentTarget.value;
+                        setForm((current) => ({
+                          ...current,
+                          label: value,
+                        }));
+                      }}
                     />
-                  )
-                }
-              />
-              <FormSections
-                disabled={pending}
-                error={save.status === "error" ? save : undefined}
-                errorFields={[
-                  { match: /order/i, selector: "#seed-order" },
-                  {
-                    match: /location|storage/i,
-                    selector: '[data-form-panel="inventory"] [role="combobox"]',
-                  },
-                  {
-                    match: /supplier/i,
-                    selector:
-                      '[data-form-panel="acquisition"] [role="combobox"]',
-                  },
-                  {
-                    match: /provenance site/i,
-                    selector:
-                      '[data-form-panel="origin"] .field:last-child [role="combobox"]',
-                  },
-                  {
-                    match: /provenance/i,
-                    selector: '[data-form-panel="origin"] [role="combobox"]',
-                  },
-                  { match: /identity/i, selector: '[role="combobox"]' },
-                  {
-                    match: /quantity|seed count/i,
-                    selector: '[aria-label="Quantity value"]',
-                  },
-                  { match: /label/i, selector: "#lot-label" },
-                  { match: /source detail/i, selector: "#source-detail" },
-                  { match: /source/i, selector: "#source-kind" },
-                  { match: /acquisition/i, selector: "#acquisition-year" },
-                  { match: /harvest/i, selector: "#harvest-year" },
-                  { match: /viability/i, selector: "#viability-year" },
-                  { match: /notes/i, selector: "#seed-notes" },
-                  { match: /lifecycle/i, selector: "#lifecycle" },
-                ]}
-                panels={[
-                  {
-                    id: "essentials",
-                    label: "Essentials",
-                    content: (
-                      <>
-                        <ReferencePicker
-                          label="Botanical identity"
-                          help="A shared botanical identity keeps the botanical name consistent across records; it does not establish lineage."
-                          required
-                          disabled={pending}
-                          choices={references.identities.map((item) => ({
-                            id: item.id,
-                            label: item.display_label,
-                          }))}
-                          value={form.botanicalIdentityId}
-                          onChange={(id) => {
+                  </div>
+                  {selected && lifecycleField}
+                </>
+              ),
+            },
+            {
+              id: "inventory",
+              label: "Inventory",
+              content: (
+                <>
+                  <fieldset
+                    aria-describedby="seed-quantity-help"
+                    className="quantity-field"
+                  >
+                    <legend>Quantity</legend>
+                    <div className="quantity-controls">
+                      <input
+                        aria-label="Quantity value"
+                        inputMode="decimal"
+                        value={form.quantityValue}
+                        disabled={pending}
+                        onChange={(event) => {
+                          const value = event.currentTarget.value;
+                          setForm((current) => ({
+                            ...current,
+                            quantityValue: value,
+                          }));
+                        }}
+                      />
+                      <select
+                        aria-label="Quantity unit"
+                        value={form.quantityUnit}
+                        disabled={pending}
+                        onChange={(event) => {
+                          const value = event.currentTarget
+                            .value as FormState["quantityUnit"];
+                          setForm((current) => ({
+                            ...current,
+                            quantityUnit: value,
+                          }));
+                        }}
+                      >
+                        <option value="seeds">seeds</option>
+                        <option value="g">g</option>
+                        <option value="mg">mg</option>
+                      </select>
+                      <label className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={form.quantityApproximate}
+                          disabled={pending || !form.quantityValue}
+                          onChange={(event) => {
+                            const checked = event.currentTarget.checked;
                             setForm((current) => ({
                               ...current,
-                              botanicalIdentityId: id,
+                              quantityApproximate: checked,
                             }));
                           }}
-                          onCreate={(query) => {
-                            openContext("identity", query);
-                          }}
-                          createLabel="Create identity"
                         />
-                        {!selected && (
-                          <p className="field-help seed-task-hint">
-                            One seed lot represents one physical packet or bag.
-                            Add another record for a separate packet, even of
-                            the same taxon.
-                          </p>
-                        )}
+                        Approximately
+                      </label>
+                    </div>
+                    <FieldHelp id="seed-quantity-help">
+                      Enter a value only when known, mark estimates as
+                      approximate, and leave the quantity empty rather than
+                      guessing.
+                    </FieldHelp>
+                  </fieldset>
 
-                        <div className="field">
-                          <label htmlFor="lot-label">
-                            Lot label{" "}
-                            <span className="optional">(optional)</span>
-                          </label>
-                          <input
-                            id="lot-label"
-                            value={form.label}
-                            disabled={pending}
-                            onChange={(event) => {
-                              const value = event.currentTarget.value;
-                              setForm((current) => ({
-                                ...current,
-                                label: value,
-                              }));
-                            }}
-                          />
-                        </div>
-                        <div className="field">
-                          <label htmlFor="lifecycle">Lifecycle</label>
-                          <select
-                            id="lifecycle"
-                            value={form.lifecycle}
-                            disabled={
-                              pending || selected?.lifecycle === "reversed"
-                            }
-                            onChange={(event) => {
-                              const lifecycle = event.currentTarget
-                                .value as SeedLotLifecycle;
-                              setForm((current) => ({
-                                ...current,
-                                lifecycle,
-                              }));
-                            }}
-                          >
-                            {Object.entries(lifecycleLabels)
-                              .filter(
-                                ([value]) =>
-                                  value !== "reversed" ||
-                                  selected?.lifecycle === "reversed",
-                              )
-                              .map(([value, label]) => (
-                                <option value={value} key={value}>
-                                  {label}
-                                </option>
-                              ))}
-                          </select>
-                          <small>
-                            Use Exhausted for an exact known zero quantity.
-                            Historical lots remain editable.
-                          </small>
-                        </div>
-                      </>
-                    ),
-                  },
-                  {
-                    id: "inventory",
-                    label: "Inventory",
-                    content: (
+                  {!selected && lifecycleField}
+                  <ReferencePicker
+                    label="Storage location"
+                    help="Where this SeedLot is currently kept in your collection, not where it originated."
+                    disabled={pending}
+                    choices={locationsForScope(
+                      references.locations,
+                      "seed_lots",
+                    ).map((item) => ({
+                      id: item.id,
+                      label: item.display_path,
+                      retired: Boolean(item.retired_at),
+                    }))}
+                    value={form.locationId}
+                    onChange={(id) => {
+                      setForm((current) => ({
+                        ...current,
+                        locationId: id,
+                      }));
+                    }}
+                    onCreate={(query) => {
+                      openContext("location", query);
+                    }}
+                    createLabel="Create location"
+                  />
+                </>
+              ),
+            },
+            {
+              id: "acquisition",
+              label: "Acquisition",
+              content: (
+                <>
+                  <div className="field">
+                    <label htmlFor="source-kind">Source</label>
+                    <select
+                      id="source-kind"
+                      value={form.sourceKind}
+                      disabled={
+                        pending || Boolean(selected?.harvest_conversion_id)
+                      }
+                      onChange={(event) => {
+                        setPurchaseConfirmation(null);
+                        const value = event.currentTarget
+                          .value as SeedLotSourceKind;
+                        setForm((current) => ({
+                          ...current,
+                          sourceKind: value,
+                          sourceDetail:
+                            value === "other" ? current.sourceDetail : "",
+                        }));
+                      }}
+                    >
+                      {Object.entries(sourceLabels).map(([value, label]) => (
+                        <option value={value} key={value}>
+                          {label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {form.sourceKind === "other" && (
+                    <div className="field">
+                      <label htmlFor="source-detail">Source detail </label>
+                      <input
+                        id="source-detail"
+                        value={form.sourceDetail}
+                        disabled={pending}
+                        onChange={(event) => {
+                          const value = event.currentTarget.value;
+                          setForm((current) => ({
+                            ...current,
+                            sourceDetail: value,
+                          }));
+                        }}
+                      />
+                    </div>
+                  )}
+                  <OrderPicker
+                    independentFields={
                       <>
-                        <fieldset
-                          aria-describedby="seed-quantity-help"
-                          className="quantity-field"
-                        >
-                          <legend>
-                            Quantity{" "}
-                            <span className="optional">(optional)</span>
-                          </legend>
-                          <div className="quantity-controls">
-                            <input
-                              aria-label="Quantity value"
-                              inputMode="decimal"
-                              value={form.quantityValue}
-                              disabled={pending}
-                              onChange={(event) => {
-                                const value = event.currentTarget.value;
-                                setForm((current) => ({
-                                  ...current,
-                                  quantityValue: value,
-                                }));
-                              }}
-                            />
-                            <select
-                              aria-label="Quantity unit"
-                              value={form.quantityUnit}
-                              disabled={pending}
-                              onChange={(event) => {
-                                const value = event.currentTarget
-                                  .value as FormState["quantityUnit"];
-                                setForm((current) => ({
-                                  ...current,
-                                  quantityUnit: value,
-                                }));
-                              }}
-                            >
-                              <option value="seeds">seeds</option>
-                              <option value="g">g</option>
-                              <option value="mg">mg</option>
-                            </select>
-                            <label className="checkbox-label">
-                              <input
-                                type="checkbox"
-                                checked={form.quantityApproximate}
-                                disabled={pending || !form.quantityValue}
-                                onChange={(event) => {
-                                  const checked = event.currentTarget.checked;
-                                  setForm((current) => ({
-                                    ...current,
-                                    quantityApproximate: checked,
-                                  }));
-                                }}
-                              />
-                              Approximately
-                            </label>
-                          </div>
-                          <FieldHelp id="seed-quantity-help">
-                            Enter a value only when known, mark estimates as
-                            approximate, and leave the quantity empty rather
-                            than guessing.
-                          </FieldHelp>
-                        </fieldset>
-
                         <ReferencePicker
-                          label="Storage location (optional)"
-                          help="Where this SeedLot is currently kept in your collection, not where it originated."
-                          disabled={pending}
-                          choices={locationsForScope(
-                            references.locations,
-                            "seed_lots",
-                          ).map((item) => ({
-                            id: item.id,
-                            label: item.display_path,
-                            retired: Boolean(item.retired_at),
-                          }))}
-                          value={form.locationId}
-                          onChange={(id) => {
-                            setForm((current) => ({
-                              ...current,
-                              locationId: id,
-                            }));
-                          }}
-                          onCreate={(query) => {
-                            openContext("location", query);
-                          }}
-                          createLabel="Create location"
-                        />
-                      </>
-                    ),
-                  },
-                  {
-                    id: "acquisition",
-                    label: "Acquisition",
-                    content: (
-                      <>
-                        <div className="field">
-                          <label htmlFor="source-kind">Source</label>
-                          <select
-                            id="source-kind"
-                            value={form.sourceKind}
-                            disabled={
-                              pending ||
-                              Boolean(selected?.harvest_conversion_id)
-                            }
-                            onChange={(event) => {
-                              setPurchaseConfirmation(null);
-                              const value = event.currentTarget
-                                .value as SeedLotSourceKind;
-                              setForm((current) => ({
-                                ...current,
-                                sourceKind: value,
-                                sourceDetail:
-                                  value === "other" ? current.sourceDetail : "",
-                              }));
-                            }}
-                          >
-                            {Object.entries(sourceLabels).map(
-                              ([value, label]) => (
-                                <option value={value} key={value}>
-                                  {label}
-                                </option>
-                              ),
-                            )}
-                          </select>
-                        </div>
-                        {form.sourceKind === "other" && (
-                          <div className="field">
-                            <label htmlFor="source-detail">
-                              Source detail{" "}
-                              <span className="optional">(optional)</span>
-                            </label>
-                            <input
-                              id="source-detail"
-                              value={form.sourceDetail}
-                              disabled={pending}
-                              onChange={(event) => {
-                                const value = event.currentTarget.value;
-                                setForm((current) => ({
-                                  ...current,
-                                  sourceDetail: value,
-                                }));
-                              }}
-                            />
-                          </div>
-                        )}
-                        <OrderPicker
-                          value={form.orderId}
-                          supplierId={form.supplierId}
-                          refreshKey={
-                            purchaseConfirmation?.expected_order_updated_at
-                          }
-                          disabled={pending}
-                          onChange={(id) => {
-                            if (id) setCandidateOrderId(id);
-                            else {
-                              setForm((current) => ({
-                                ...current,
-                                orderId: "",
-                              }));
-                              setPurchaseConfirmation(null);
-                            }
-                          }}
-                        />
-                        {form.orderId && (
-                          <button
-                            type="button"
-                            className="button--secondary"
-                            disabled={pending}
-                            onClick={() => {
-                              setCandidateOrderId(form.orderId);
-                            }}
-                          >
-                            Review purchase context / use Order date
-                          </button>
-                        )}
-                        <ReferencePicker
-                          label="Supplier (optional)"
-                          help="Who or what supplied this material; a Supplier does not establish its biological origin."
+                          label="Supplier"
+                          help="Supplier does not establish its biological origin."
                           disabled={pending}
                           choices={references.suppliers.map((item) => ({
                             id: item.id,
@@ -1877,10 +1732,11 @@ export function SeedLotScreen({
                           }}
                           createLabel="Create supplier"
                         />
-                        <div className="field--full">
+                        <div className="acquisition-date-slot">
                           <PartialDateField
                             id="acquisition"
                             label="Acquisition date"
+                            helpText="Do not invent a missing month or day."
                             value={form.acquisitionDate}
                             onChange={(value) => {
                               setForm((current) => ({
@@ -1893,212 +1749,507 @@ export function SeedLotScreen({
                           />
                         </div>
                       </>
-                    ),
-                  },
-                  {
-                    id: "origin",
-                    label: "Origin",
-                    content: (
-                      <>
-                        <ReferencePicker
-                          label="Material provenance (optional)"
-                          help="Where the biological material originated, not its Supplier or current storage location."
-                          disabled={pending}
-                          choices={references.places.map((item) => ({
-                            id: item.id,
-                            label: item.display_path,
-                            retired: Boolean(item.retired_at),
-                          }))}
-                          value={form.materialProvenancePlaceId}
-                          onChange={(id) => {
-                            setForm((current) => ({
-                              ...current,
-                              materialProvenancePlaceId: id,
-                            }));
-                          }}
-                          onCreate={(query) => {
-                            openContext("place", query);
-                          }}
-                          createLabel="Create local place"
-                        />
-                        <ReferencePicker
-                          label="Precise provenance site (optional)"
-                          disabled={pending}
-                          choices={references.sites.map((site) => ({
-                            id: site.id,
-                            label: `${site.geographic_place_path ? `${site.geographic_place_path} → ` : ""}${site.name}`,
-                          }))}
-                          value={form.provenanceSiteId}
-                          onChange={(id) => {
-                            setForm((current) => ({
-                              ...current,
-                              provenanceSiteId: id,
-                            }));
-                          }}
-                        />
-                      </>
-                    ),
-                  },
-                  {
-                    id: "details",
-                    label: "Seed details",
-                    content: (
-                      <>
-                        <div className="partial-date-grid">
-                          <PartialDateField
-                            id="harvest"
-                            label="Harvest date"
-                            showHelp={false}
-                            value={form.harvestDate}
-                            onChange={(value) => {
-                              setForm((current) => ({
-                                ...current,
-                                harvestDate: value,
-                              }));
-                            }}
-                            disabled={pending}
-                          />
-                          <PartialDateField
-                            id="viability"
-                            label="Expected viability until"
-                            showHelp={false}
-                            value={form.expectedViabilityUntil}
-                            onChange={(value) => {
-                              setForm((current) => ({
-                                ...current,
-                                expectedViabilityUntil: value,
-                              }));
-                            }}
-                            disabled={pending}
-                          />
-                        </div>
-
-                        <div className="field">
-                          <label htmlFor="seed-notes">
-                            Notes <span className="optional">(optional)</span>
-                          </label>
-                          <textarea
-                            id="seed-notes"
-                            rows={4}
-                            value={form.notes}
-                            disabled={pending}
-                            onChange={(event) => {
-                              const value = event.currentTarget.value;
-                              setForm((current) => ({
-                                ...current,
-                                notes: value,
-                              }));
-                            }}
-                          />
-                        </div>
-                      </>
-                    ),
-                  },
-                ]}
-                submit={
-                  <button type="submit" disabled={pending}>
-                    {pending
-                      ? "Saving…"
-                      : selected
-                        ? "Save changes"
-                        : "Add to collection"}
-                  </button>
-                }
-                cancel={
-                  <button
-                    type="button"
-                    className="button--secondary"
-                    onClick={() => {
-                      setEditing(false);
-                      setSave({ status: "idle" });
-                      if (!selected) {
-                        setForm(blankForm());
-                        closeCreation();
-                        setDetailOpen(false);
+                    }
+                    retainedKnowledge={
+                      <div
+                        className="acquisition-retained"
+                        aria-label="Recorded seed lot knowledge"
+                      >
+                        <strong>Recorded on this seed lot</strong>
+                        <p>
+                          Supplier:{" "}
+                          {references.suppliers.find(
+                            (item) => item.id === form.supplierId,
+                          )?.name ??
+                            (form.supplierId
+                              ? ((selected?.supplier_id === form.supplierId
+                                  ? selected.supplier?.name
+                                  : null) ?? "Recorded Supplier")
+                              : "Not recorded")}{" "}
+                          · Acquisition date: {dateLabel(form.acquisitionDate)}
+                        </p>
+                      </div>
+                    }
+                    reviewAction={
+                      <button
+                        type="button"
+                        className="button--secondary"
+                        disabled={pending}
+                        onClick={() => {
+                          setCandidateOrderId(form.orderId);
+                        }}
+                      >
+                        Review purchase context / use Order date
+                      </button>
+                    }
+                    value={form.orderId}
+                    supplierId={form.supplierId}
+                    refreshKey={purchaseConfirmation?.expected_order_updated_at}
+                    disabled={pending}
+                    onChange={(id) => {
+                      if (id) setCandidateOrderId(id);
+                      else {
+                        setForm((current) => ({
+                          ...current,
+                          orderId: "",
+                        }));
+                        setPurchaseConfirmation(null);
                       }
                     }}
+                  />
+                </>
+              ),
+            },
+            {
+              id: "origin",
+              label: "Origin",
+              content: (
+                <>
+                  <ReferencePicker
+                    label="Material provenance"
+                    help="Where the biological material originated, not its Supplier or current storage location."
+                    disabled={pending}
+                    choices={references.places.map((item) => ({
+                      id: item.id,
+                      label: item.display_path,
+                      retired: Boolean(item.retired_at),
+                    }))}
+                    value={form.materialProvenancePlaceId}
+                    onChange={(id) => {
+                      setForm((current) => ({
+                        ...current,
+                        materialProvenancePlaceId: id,
+                      }));
+                    }}
+                    onCreate={(query) => {
+                      openContext("place", query);
+                    }}
+                    createLabel="Create local place"
+                  />
+                  <ReferencePicker
+                    label="Precise provenance site"
+                    disabled={pending}
+                    choices={references.sites.map((site) => ({
+                      id: site.id,
+                      label: `${site.geographic_place_path ? `${site.geographic_place_path} → ` : ""}${site.name}`,
+                    }))}
+                    value={form.provenanceSiteId}
+                    onChange={(id) => {
+                      setForm((current) => ({
+                        ...current,
+                        provenanceSiteId: id,
+                      }));
+                    }}
+                  />
+                </>
+              ),
+            },
+            {
+              id: "details",
+              label: "Seed details",
+              content: (
+                <>
+                  <div className="partial-date-grid">
+                    <PartialDateField
+                      id="harvest"
+                      label="Harvest date"
+                      showHelp={false}
+                      value={form.harvestDate}
+                      onChange={(value) => {
+                        setForm((current) => ({
+                          ...current,
+                          harvestDate: value,
+                        }));
+                      }}
+                      disabled={pending}
+                    />
+                    <PartialDateField
+                      id="viability"
+                      label="Expected viability until"
+                      showHelp={false}
+                      value={form.expectedViabilityUntil}
+                      onChange={(value) => {
+                        setForm((current) => ({
+                          ...current,
+                          expectedViabilityUntil: value,
+                        }));
+                      }}
+                      disabled={pending}
+                    />
+                  </div>
+
+                  <div className="field">
+                    <label htmlFor="seed-notes">Notes</label>
+                    <textarea
+                      id="seed-notes"
+                      rows={4}
+                      value={form.notes}
+                      disabled={pending}
+                      onChange={(event) => {
+                        const value = event.currentTarget.value;
+                        setForm((current) => ({
+                          ...current,
+                          notes: value,
+                        }));
+                      }}
+                    />
+                  </div>
+                </>
+              ),
+            },
+          ]}
+          submit={
+            <button type="submit" disabled={pending}>
+              {pending ? "Saving…" : selected ? "Save changes" : "Add seed lot"}
+            </button>
+          }
+          cancel={
+            <button
+              type="button"
+              className="button--secondary"
+              onClick={() => {
+                if (selected) {
+                  edit.close();
+                  return;
+                }
+                setEditing(false);
+                setSave({ status: "idle" });
+                setForm(blankForm());
+                closeCreation();
+                setDetailOpen(false);
+              }}
+            >
+              Cancel
+            </button>
+          }
+        />
+      </form>
+    </EditWorkspace>
+  ) : null;
+
+  return (
+    <section
+      className="workspace seeds-workspace"
+      aria-labelledby="seeds-title"
+    >
+      <div
+        className="seed-context-page"
+        inert={edit.modal}
+        aria-hidden={edit.modal || undefined}
+      >
+        <WorkspaceIntro
+          contextOnly={detailOpen || (editing && !edit.modal)}
+          {...seedPage}
+          tools={
+            !(detailOpen || (editing && !edit.modal)) && (
+              <DirectoryTools
+                onReset={() => {
+                  setFilter("all");
+                }}
+                name="Seeds"
+                search={
+                  <DirectorySearch
+                    hideLabel
+                    id="seed-search"
+                    label="Search seed inventory"
+                    placeholder="Search lots, identity or location"
+                    value={search}
+                    onChange={setSearch}
+                  />
+                }
+                savedViews={
+                  <SavedViews
+                    presentation="dialog"
+                    surface="seed_lots"
+                    state={view.savedState}
+                  />
+                }
+                filters={
+                  <>
+                    <DirectoryFilterSelect
+                      label="Lifecycle"
+                      value={filter}
+                      onChange={setFilter}
+                      options={[
+                        { value: "active", label: "Active" },
+                        { value: "history", label: "History" },
+                        { value: "all", label: "All" },
+                      ]}
+                    />
+                  </>
+                }
+                activeFilters={[
+                  ...(filter !== "all"
+                    ? [
+                        {
+                          label: "Lifecycle",
+                          value: filter === "active" ? "Active" : "History",
+                          onRemove: () => {
+                            setFilter("all");
+                          },
+                        },
+                      ]
+                    : []),
+                ]}
+                actions={
+                  <button
+                    type="button"
+                    ref={creationTriggerRef}
+                    aria-expanded={creationExpanded}
+                    aria-controls="new-seed-lot-panel"
+                    onClick={() => {
+                      if (creationExpanded) focusCreation();
+                      else startCreate();
+                    }}
                   >
-                    Cancel
+                    + New seed lot
                   </button>
                 }
               />
-              {save.status === "error" && (
-                <div
-                  className="notice notice--error"
-                  role="alert"
-                  tabIndex={-1}
-                  ref={feedback}
-                >
-                  <ul>
-                    {save.messages.map((message) => (
-                      <li key={message}>{message}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </form>
-          ) : selected ? (
-            detailOpen ? (
-              <div className="selected-seed">
-                <Detail
-                  lot={selected}
-                  onConversionChanged={() => {
-                    void listSeedLots()
-                      .then((lots) => {
-                        setInventory({ status: "ready", lots });
-                      })
-                      .catch((failure: unknown) => {
-                        if (
-                          failure instanceof ApiError &&
-                          failure.status === 401
-                        )
-                          auth.sessionExpired();
-                        else setInventory({ status: "error" });
-                      });
-                  }}
-                  initialTab={initialTab}
-                  onPrimaryChanged={(photo) => {
-                    setInventory((current) =>
-                      current.status === "ready"
-                        ? {
-                            status: "ready",
-                            lots: current.lots.map((lot) =>
-                              lot.id === selected.id
-                                ? { ...lot, primary_photo: photo }
-                                : lot,
-                            ),
-                          }
-                        : current,
-                    );
-                  }}
-                  onEdit={() => {
-                    startEdit(selected);
-                  }}
-                />
+            )
+          }
+        />
+        {orderContextError && (
+          <div role="alert" className="notice notice--error">
+            <p>
+              Could not load the Order context. No seed lot has been created.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setAttempt((value) => value + 1);
+              }}
+            >
+              Retry Order context
+            </button>
+          </div>
+        )}
+        {initialOrderId &&
+          startCreating &&
+          !orderContext &&
+          !orderContextError && <p role="status">Loading Order context…</p>}
+        <div
+          className={`seed-master-detail operational-layout directory-preview-layout${detailOpen || (editing && !edit.modal) ? " is-detail-view" : ""}`}
+        >
+          <section
+            className="seed-master"
+            aria-labelledby="seed-inventory-title"
+          >
+            <h3 className="sr-only" id="seed-inventory-title">
+              Seed lot inventory
+            </h3>
+            <BulkToolbar
+              selection={bulk}
+              visible={bulkChoices}
+              onSuccess={() => {
+                setSelectedId(null);
+                setDetailOpen(false);
+                setAttempt((value) => value + 1);
+              }}
+            />
+            {inventory.status === "ready" && (
+              <DirectoryResults
+                count={visible.length}
+                actions={
+                  <BulkSelect
+                    selection={bulk}
+                    visible={bulkChoices}
+                    onStart={() => {
+                      setSelectedId(null);
+                      setDetailOpen(false);
+                    }}
+                  />
+                }
+              />
+            )}
+            {lots.length === 0 ? (
+              <div className="empty-state">
+                <h3>No seeds recorded yet</h3>
+                <p>
+                  Add a seed lot with only its botanical identity; everything
+                  unknown can remain unknown.
+                </p>
+              </div>
+            ) : visible.length === 0 ? (
+              <div className="empty-state">
+                <h3>No matching seed lots</h3>
+                <p>
+                  Try another search or lifecycle view. Historical records
+                  remain available under History or All.
+                </p>
               </div>
             ) : (
-              <SeedLotPreview
-                lot={selected}
-                onOpen={() => {
-                  setDetailOpen(true);
-                  setRecordRoute(`#/seeds/${selected.id}`);
-                }}
-                onEdit={() => {
-                  startEdit(selected);
-                }}
-              />
-            )
-          ) : (
-            <div className="empty-state seed-detail-empty">
-              <h3>Select a seed lot</h3>
-              <p>
-                Choose a lot from the inventory to inspect or edit it without
-                losing your place in the list.
-              </p>
-            </div>
-          )}
-        </section>
+              <ul
+                className="seed-list"
+                aria-label="Seed inventory"
+                tabIndex={0}
+              >
+                {visible.map((lot, bulkIndex) => (
+                  <li
+                    key={lot.id}
+                    className={bulk.active ? "bulk-selection-row" : undefined}
+                    data-selected={
+                      bulk.checked({ kind: "seed_lot", id: lot.id }) ||
+                      undefined
+                    }
+                  >
+                    <BulkCheckbox
+                      selection={bulk}
+                      choice={bulkChoices[bulkIndex]}
+                    />
+                    <button
+                      type="button"
+                      className="seed-row"
+                      aria-pressed={selectedId === lot.id}
+                      onClick={() => {
+                        if (bulk.active) {
+                          bulk.toggle(bulkChoices[bulkIndex]);
+                          return;
+                        }
+                        if (creationExpanded)
+                          closeCreation({ returnFocus: false });
+                        setSelectedId(lot.id);
+                        const isMobile =
+                          window.matchMedia("(max-width: 48rem)").matches;
+                        setDetailOpen(isMobile);
+                        if (isMobile) setRecordRoute(`#/seeds/${lot.id}`);
+                        setEditing(false);
+                        setSave({ status: "idle" });
+                      }}
+                    >
+                      <span className="seed-primary">
+                        <RecordVisual
+                          photo={lot.primary_photo ?? null}
+                          label={recordName(lot, "Seed lot")}
+                          compact
+
+                          identity={lot.botanical_identity}
+                          kind={"seed"}
+                        />
+                        <span className="seed-primary__text">
+                          <strong>
+                            {recordName(lot, "Unlabelled seed lot")}
+                          </strong>
+                          <small>
+                            <BotanicalName
+                              label={lot.botanical_identity.display_label}
+                              scientificName={scientificNames.get(
+                                lot.botanical_identity_id,
+                              )}
+                            />
+                          </small>
+                        </span>
+                      </span>
+                      <span className="seed-quantity">
+                        <strong>
+                          {quantityLabel(lot)}
+                          {lot.quantity && lot.lifecycle === "active"
+                            ? " remaining"
+                            : ""}
+                        </strong>
+                        {lot.lifecycle !== "active" && (
+                          <small>Recorded quantity</small>
+                        )}
+                      </span>
+                      <span className="seed-location">
+                        {lot.location?.display_path ?? "Storage not recorded"}
+                      </span>
+                      <span
+                        className={`lifecycle-badge lifecycle-badge--${lot.lifecycle}`}
+                      >
+                        {lifecycleLabels[lot.lifecycle]}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+          <section
+            id={creationExpanded ? "new-seed-lot-panel" : undefined}
+            className={
+              creationExpanded
+                ? "seed-detail-pane seed-creation-panel"
+                : "seed-detail-pane"
+            }
+            ref={creationExpanded ? creationPanelRef : undefined}
+            aria-label="Seed lot detail and editor"
+          >
+            {save.status === "success" && (
+              <div className="notice notice--success" role="status">
+                {save.message}
+              </div>
+            )}
+            {editing && !edit.modal ? (
+              editor
+            ) : selected ? (
+              detailOpen ? (
+                <div className="selected-seed">
+                  <Detail
+                    lot={selected}
+                    headingRef={detailHeading}
+                    scientificName={scientificNames.get(
+                      selected.botanical_identity_id,
+                    )}
+                    onConversionChanged={() => {
+                      void listSeedLots()
+                        .then((lots) => {
+                          setInventory({ status: "ready", lots });
+                        })
+                        .catch((failure: unknown) => {
+                          if (
+                            failure instanceof ApiError &&
+                            failure.status === 401
+                          )
+                            auth.sessionExpired();
+                          else setInventory({ status: "error" });
+                        });
+                    }}
+                    initialTab={initialTab}
+                    onPrimaryChanged={(photo) => {
+                      setInventory((current) =>
+                        current.status === "ready"
+                          ? {
+                              status: "ready",
+                              lots: current.lots.map((lot) =>
+                                lot.id === selected.id
+                                  ? { ...lot, primary_photo: photo }
+                                  : lot,
+                              ),
+                            }
+                          : current,
+                      );
+                    }}
+                    onEdit={(event) => {
+                      startEdit(selected, event.currentTarget);
+                    }}
+                  />
+                </div>
+              ) : (
+                <SeedLotPreview
+                  lot={selected}
+                  onOpen={() => {
+                    setDetailOpen(true);
+                    setRecordRoute(`#/seeds/${selected.id}`);
+                  }}
+                  onEdit={(event) => {
+                    startEdit(selected, event.currentTarget);
+                  }}
+                />
+              )
+            ) : (
+              <div className="empty-state seed-detail-empty">
+                <h3>Select a seed lot</h3>
+                <p>
+                  Choose a lot from the inventory to inspect or edit it without
+                  losing your place in the list.
+                </p>
+              </div>
+            )}
+          </section>
+        </div>
       </div>
+      {edit.modal && editor}
       {candidateOrderId && (
         <PurchaseContextDialog
           orderId={candidateOrderId}
@@ -2128,6 +2279,7 @@ export function SeedLotScreen({
             setPurchaseConfirmation(result.confirmation);
             if (result.seed_lot) {
               const authoritative = result.seed_lot;
+              editBaseline.current = JSON.stringify(formFrom(authoritative));
               setInventory((current) =>
                 current.status === "ready"
                   ? {
@@ -2166,9 +2318,9 @@ export function SeedLotScreen({
             {context.kind === "identity" ? (
               <>
                 <div className="field">
-                  <label htmlFor="context-scientific-name">
+                  <FieldLabel required htmlFor="context-scientific-name">
                     Scientific name
-                  </label>
+                  </FieldLabel>
                   <input
                     id="context-scientific-name"
                     name="scientific_name"
@@ -2177,22 +2329,20 @@ export function SeedLotScreen({
                   />
                 </div>
                 <div className="field">
-                  <label htmlFor="context-cultivar">
-                    Cultivar <span className="optional">(optional)</span>
-                  </label>
+                  <label htmlFor="context-cultivar">Cultivar</label>
                   <input id="context-cultivar" name="cultivar_name" />
                 </div>
                 <div className="field">
-                  <label htmlFor="context-common">
-                    Common name <span className="optional">(optional)</span>
-                  </label>
+                  <label htmlFor="context-common">Common name</label>
                   <input id="context-common" name="common_name" />
                 </div>
               </>
             ) : context.kind === "supplier" ? (
               <>
                 <div className="field">
-                  <label htmlFor="context-name">Name</label>
+                  <FieldLabel required htmlFor="context-name">
+                    Name
+                  </FieldLabel>
                   <input
                     id="context-name"
                     name="name"
@@ -2224,9 +2374,7 @@ export function SeedLotScreen({
                   />
                 </div>
                 <ReferencePicker
-                  label={
-                    context.kind === "location" ? "Parent (optional)" : "Parent"
-                  }
+                  label={"Parent"}
                   required={context.kind === "place"}
                   choices={
                     context.kind === "location"

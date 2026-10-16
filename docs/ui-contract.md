@@ -1,8 +1,8 @@
 # Florabase UI Foundation v0.1
 
-Authoritative contract for new UI. Dashboard is the pilot; legacy screens migrate only in
-explicit later increments. Implementation: `frontend/src/styles/tokens.css` (single token source),
-`foundation.css` (base/shell/primitives), `ReferenceUI.tsx` and `WorkspaceUI.tsx`.
+Authoritative contract for Florabase UI. Dashboard and Activity establish the reference grammar;
+GLOBAL-VISUAL-001 extends it to the frozen v0.1 directories and task surfaces. Implementation: `frontend/src/styles/tokens.css` (single token source),
+`foundation.css` (base/shell/primitives), `normalization.css` (shared screen grammar), `ReferenceUI.tsx` and `WorkspaceUI.tsx`.
 
 > New Florabase UI must consume semantic design tokens and shared primitives.
 > Feature implementations must not invent local colors, typography scales,
@@ -116,7 +116,8 @@ errors offer retry and authentication expiry returns to the existing session flo
 | Utility Workspace   | Focused inputs, operation and result                          |
 | Compare / Review    | Source/target evidence, explicit selection/apply              |
 
-These are future review contracts; this increment does not rebuild them all.
+These archetypes guide page organization; analytical maps and trees retain their specialized
+workspaces within the common visual grammar.
 
 ## Interaction surfaces
 
@@ -131,6 +132,13 @@ These are future review contracts; this increment does not rebuild them all.
   TaskDialog's native modal handling in a right-side drawer; choices apply immediately, reset
   preserves search text, and Escape/backdrop/Close return focus without reverting filters.
 - Full page: important deep-linkable objects, many fields, independent state or substantial work.
+- Contextual edit workspace: SeedLot proves a substantial native modal above its existing directory
+  or canonical Details page. Preserve the mounted background, active tab, filters and trigger; block
+  background scrolling and scroll long form panels inside bounded desktop geometry. Keep direct
+  section tabs and Cancel/Save available. Narrow mobile may use the viewport above bottom navigation.
+  Dirty/pending dismissal is guarded; Back closes the edit entry before departing. Direct edit URLs
+  and reloads use the same full-page editor without a fabricated background. Reuse EditWorkspace and
+  the normal record-route helper only for equivalent editors selected in a later pass.
 - Inline disclosure: small local secondary information. Native details/summary is appropriate.
 
 ## Accessibility
@@ -150,8 +158,8 @@ content panels. Its sidebar remains sticky on desktop. The toolbar orders flexib
 Filters, Saved views, Quick add and wraps on mobile. Quick add reuses OverflowMenu; SavedViews
 can use its optional compact dialog presentation with the same state/routing and CRUD behavior. Mobile uses the existing
 shell navigation, reachable actions and naturally growing rows. Inspect representative old
-Directory, Detail and Schedule screens whenever global base/shell styles change; fix introduced
-regressions only. Full cross-product visual migration is a separate feature.
+Directory, Detail and Schedule screens whenever global base/shell styles change. GLOBAL-VISUAL-001
+normalizes their shared screen grammar while retaining the specialized workflows.
 
 ## Do / don't
 
@@ -215,3 +223,134 @@ controls and shared preview state. Modified-click links and existing route seman
 Theme cycles monitor → sun → moon → monitor, updating only SVG/title/accessibility text. Every
 state explicitly says switching is not enabled. There is no popover, visible explanatory paragraph,
 color/token change, backend write or theme persistence. Actual theming remains a later increment.
+
+## Directory and task normalization
+
+Collection, Botanical identities, Geography and Sourcing use the same intrinsic PageHeader tools
+slot. WorkspaceIntro delegates to PageHeader while retaining its context-only detail header mode.
+DirectoryTools owns presentation only: pages retain search, filter, pagination, URL and Saved View
+state. Search flexes from a practical 14rem basis; Filters, supported Saved views and
+one primary creation action wrap naturally. Saved views uses its existing compact dialog mode.
+Single-select lifecycle/type/scope controls use labelled native selects. Advanced directory filters
+use a native right drawer with live application, removable dimension chips, Reset filters and Done;
+reset clears every dimension together while preserving search. No unsupported filter or Saved View
+capability is added for symmetry.
+
+A directory is one white grouped surface with row dividers and a subtle selected inset edge.
+Rich Media summaries retain thumbnail cards; maps retain their analytical area. Directories and
+reference workspaces use document flow; the desktop sidebar remains sticky and its destination list
+scrolls independently. A preview may remain sticky with its own bounded height. Important task forms
+use one white surface with a 56rem default maximum (60rem for the proven SeedLot editor), existing semantic sections and tabs, two columns where
+reading order permits and one column on mobile. Date/quantity/currency controls use narrower widths.
+Edit is a secondary action; Save/Create/Complete remain primary, and destructive intent uses danger.
+
+Existing BULK directories place **Select records** beside their result count. Selection mode reveals
+checkboxes and a visible toolbar: selected count, Select visible, Clear, Actions and Exit selection.
+Actions contains only supported operations (currently Move to location); future operations can join
+the menu without changing mode entry/exit. Zero selection disables actions, historical eligibility
+and the 100-record bound remain authoritative, and scope/membership/navigation changes clear and exit
+the mode. Entry focuses a usable toolbar control; exit restores the directory entry control.
+
+Sectioned **create** workflows may use Back/Next/Create when progression helps. Sectioned **edit**
+workflows use direct tabs with Cancel and Save changes on every editable section, retaining drafts
+and revealing the exact invalid/error section. `FormSections` opts into edit mode explicitly; create
+wizards and coordinators with independently saved nested sections retain their existing behavior.
+SeedLot edit proves a restrained sticky footer inside the form at sufficient viewport height, with
+scroll clearance for fields/focus; shorter viewports use an ordinary reachable action row. This sticky
+geometry and SeedLot detail's main/facts grid remain local pending equivalent sibling visual proof.
+
+Shared controls retain a 44px minimum target and the existing radius/space/type scales. Page and
+ordinary section titles use UI sans; serif/italic remains for structured scientific names. Inputs and
+search use border-strong; overlays use elevation-overlay and overlay-backdrop. Danger/warning subtle
+surfaces are semantic tokens. Physical label geometry and print typography remain owned by Labels.
+Native dialog focus excludes inactive hidden panels, disabled fieldsets, inert descendants and
+negative tab stops. Sign-in and recovery use the same quiet surfaces and type hierarchy.
+
+Actual themes remain deferred. Legacy capability CSS and third-party map/tile colors still require a
+separate theme audit; tokenizing these shared surfaces does not claim complete dark-mode support.
+
+## SeedLot family refinement
+
+Seeds and Sowings share the existing proportional directory/Quick Preview split through
+`directory-preview-layout`; the list remains primary and mobile retains its existing adaptation.
+SeedLot Details uses the available content width, with readable internal prose/summary columns.
+Other detail families remain unchanged pending independent visual review.
+
+The contextual SeedLot editor treats backdrop, Cancel, Escape and Back as the same guarded dismissal.
+Section navigation reserves intrinsic wrapped height and focus clearance; subtle selected/hovered
+navigation stays visually subordinate to Save. Only panels scroll in the bounded editor.
+
+SeedLot attached media uses the opted-in compact image gallery: stable 4:3 cover thumbnails, concise
+identity/badges, image-to-details links, and an always reachable named overflow for keyboard/touch.
+Hover/focus adds a quiet Open hint. External references disclose host/privacy and require Preview
+once before creating a remote image. Default Photos consumers retain their current presentation.
+
+### SeedLot create, dates and Overview reference
+
+SeedLot **Create** is a canonical full-page workspace with one ordered form: Identity, Inventory,
+Acquisition, Origin and Seed details. All sections stay visible, the persisted optional lot label is
+secondary to Botanical identity, and Cancel / Add seed lot end the form. It opts into `FormSections`
+page mode; other existing create coordinators retain their progression. **Edit** remains a contextual
+modal with direct section navigation and persistent actions; a direct edit URL retains its full-page
+fallback. Both presentations share the same controlled values, validation and domain payload.
+
+Shared PartialDate controls reserve one precision column and place Year / Month / Day parts beneath
+it in fixed slots. Precision changes must not move adjacent fields horizontally or infer omitted
+parts. Independent SeedLot Supplier and acquisition date use aligned title/control slots. Normal
+Unknown and linked-Order Acquisition fit the desktop editor; known parts can scroll inside its panel.
+
+Candidate reusable principle: **entity Overview = small current-state dashboard, not a read-only edit
+form**. SeedLot proves a compact lifecycle / remaining quantity / storage summary, readable Acquisition
+and Origin context, and inline Dates & condition. Upcoming activities and Notes have natural height.
+This principle is documented for later Plant/Sowing/Supplier/Order review; their Overviews are unchanged.
+Quantity progress requires an authoritative persisted baseline. SeedLot has only current quantity, so
+its directory uses exact / approximate / unknown remaining quantities without a denominator or ratio.
+
+New external images created through Photos or the Media editor default to **Save a local copy in
+Florabase**. Explicit opt-out retains a reference only. Creation reuses existing reference/link and
+safe-copy operations; failed downloads retain the saved reference and offer Retry save. A saved copy
+renders through protected same-origin thumbnails/content; Preview once remains an explicit remote
+browser-only choice for references. Historical references are unchanged until explicit copy saving.
+
+### Detail empties and form labels
+
+Informational Details tabs with no records use a concise message aligned to the normal content gutter,
+without a border, card, minimum height or filler illustration. SeedLot Sowings and root Lineage are the
+reference examples. A visible empty workspace is appropriate when the area itself explains an
+interactive or visual collection: Photos retains a restrained gallery placeholder and its Add media,
+Link existing and External actions. Map canvases and upload workspaces retain their meaningful surfaces.
+
+Form captions use `Label *` only when that field is required by the existing domain validation in the
+current form state. Optional captions use `Label`, without an optional suffix. The shared `FieldLabel`
+renders a quiet semantic-token marker; controls independently expose native `required` or
+`aria-required`. Do not add native validation merely to obtain a marker or turn required captions into
+errors. Preserve explanatory prose about unusual optional semantics.
+
+Conditional captions follow their controls: known PartialDate parts, explicit quantity amounts/units,
+Order price/currency pairing, movement destinations and external-media attribution. SeedLot identity
+is required; its defaulted Source/Lifecycle and nullable Supplier remain unmarked, including Purchased
+source. Create and Edit share these rules. A checkbox group requiring at least one choice marks its legend
+and exposes the existing rule through its group description; do not require every checkbox. No
+repetitive required-field legend is necessary.
+
+
+### SeedLot dashboard and transient picker reference
+
+The refined SeedLot Overview is the candidate grammar for later entity pages: one current-state band
+with stronger values above quieter explanatory labels; then semantic information sections and
+operational context, followed by natural-width notes. Desktop uses three summary metrics and a
+restrained two-column lower grid, with dividers rather than individual cards. Narrow screens collapse
+the sections; mobile stacks the band and content. Full origin paths wrap at body size. Date terms and
+values preserve exact/partial/unknown knowledge. Other Overviews await their own product review.
+
+Compact SeedLot Photos uses the tab as its visible title and retains an accessible section name. Its
+right-aligned media action row precedes the gallery without global helper prose. Privacy/remote-load
+explanation belongs to the individual external tile and Preview once action; local media needs no
+repeat warning. The gallery-empty workspace remains the intentional exception to plain detail empties.
+
+ReferencePicker popups anchor to a control-only wrapper, with a 4px separation, input-aligned width,
+existing transient-surface styling and bounded internal scroll. They fit the available viewport or
+clipping panel and can open above the input. Help text and field grid stretch must never determine
+popup position. Preserve label association, listbox IDs, required/expanded/active-descendant state,
+Arrow/Enter selection and focus. Escape first dismisses an open picker before its enclosing task.
+Native selects remain native; this normalization does not introduce another picker framework.

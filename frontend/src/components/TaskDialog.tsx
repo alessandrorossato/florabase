@@ -1,4 +1,19 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode, type RefObject } from "react";
+
+function focusableControls(element: HTMLDialogElement | null) {
+  return Array.from(
+    element?.querySelectorAll<HTMLElement>(
+      "a[href], button, input, select, textarea, [tabindex]",
+    ) ?? [],
+  ).filter(
+    (control) =>
+      control.tabIndex >= 0 &&
+      !control.matches(":disabled, input[type='hidden']") &&
+      !control.closest("[hidden], [inert], [aria-hidden='true']") &&
+      getComputedStyle(control).display !== "none" &&
+      getComputedStyle(control).visibility !== "hidden",
+  );
+}
 
 /** Native modal focus handling, Escape, and return to the invoking control. */
 export function TaskDialog({
@@ -8,6 +23,7 @@ export function TaskDialog({
   children,
   className,
   dismissOnBackdrop = false,
+  returnFocusTo,
 }: {
   id?: string;
   title: string;
@@ -15,6 +31,7 @@ export function TaskDialog({
   children: ReactNode;
   className?: string;
   dismissOnBackdrop?: boolean;
+  returnFocusTo?: RefObject<HTMLElement | null>;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
@@ -23,20 +40,19 @@ export function TaskDialog({
     const element = dialog.current;
     if (!element) return;
     returnFocus.current =
-      document.activeElement instanceof HTMLElement
+      returnFocusTo?.current ??
+      (document.activeElement instanceof HTMLElement
         ? document.activeElement
-        : null;
+        : null);
     if (typeof element.showModal === "function") element.showModal();
     else element.setAttribute("open", "");
-    element
-      .querySelector<HTMLElement>("input, select, textarea, button, a[href]")
-      ?.focus();
+    focusableControls(element)[0]?.focus();
     return () => {
       if (typeof element.close === "function") element.close();
       else element.removeAttribute("open");
       returnFocus.current?.focus();
     };
-  }, []);
+  }, [returnFocusTo]);
 
   return (
     <dialog
@@ -65,11 +81,7 @@ export function TaskDialog({
           onClose();
         }
         if (event.key !== "Tab") return;
-        const focusable = Array.from(
-          dialog.current?.querySelectorAll<HTMLElement>(
-            "a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])",
-          ) ?? [],
-        );
+        const focusable = focusableControls(dialog.current);
         const first = focusable.at(0);
         const last = focusable.at(-1);
         if (event.shiftKey && document.activeElement === first) {

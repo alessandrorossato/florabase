@@ -1,3 +1,5 @@
+import { FieldLabel } from "../components/FieldLabel";
+import { DirectoryTools } from "../components/DirectoryTools";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
@@ -372,9 +374,12 @@ function IdentityDetails({
                         >
                           <FormSection title="Botanical name">
                             <div className="field field--full">
-                              <label htmlFor="edit-scientific-name">
+                              <FieldLabel
+                                required
+                                htmlFor="edit-scientific-name"
+                              >
                                 Scientific name
-                              </label>
+                              </FieldLabel>
                               <input
                                 aria-invalid={
                                   Boolean(editFieldError("Scientific name")) ||
@@ -820,7 +825,7 @@ function IdentityDetails({
                           ))}
                         </div>
                       ) : (
-                        <div className="empty-state">
+                        <div className="detail-empty-message">
                           <p>No seed lots use this identity.</p>
                         </div>
                       )}
@@ -881,7 +886,7 @@ function IdentityDetails({
                               ))}
                           </div>
                         ) : (
-                          <div className="empty-state">
+                          <div className="detail-empty-message">
                             <p>
                               Record an active seed lot before starting a
                               sowing.
@@ -919,7 +924,7 @@ function IdentityDetails({
                             ))}
                           </div>
                         ) : (
-                          <div className="empty-state">
+                          <div className="detail-empty-message">
                             <p>No recorded sowings for this identity.</p>
                           </div>
                         )}
@@ -994,7 +999,7 @@ function IdentityDetails({
                         </div>
                       )}
                       {counts.sowings.length === 0 && (
-                        <div className="empty-state">
+                        <div className="detail-empty-message">
                           <p>
                             No source sowings are recorded yet. Start from a
                             seed lot to preserve propagation lineage.
@@ -1044,7 +1049,7 @@ function IdentityDetails({
                           ))}
                         </div>
                       ) : (
-                        <div className="empty-state">
+                        <div className="detail-empty-message">
                           <p>No plants or plant groups use this identity.</p>
                         </div>
                       )}
@@ -1062,7 +1067,7 @@ function IdentityDetails({
                   {counts.events.length ? (
                     <EventFeed events={counts.events} />
                   ) : (
-                    <div className="empty-state">
+                    <div className="detail-empty-message">
                       <p>
                         No events belong to plants or plant groups with this
                         identity.
@@ -1371,24 +1376,50 @@ export function BotanicalIdentityScreen({
         titleId="botanical-identities-title"
         eyebrow="Explore"
         description="Manage the botanical identities that connect collection records and reference data."
-        actions={
-          <button
-            type="button"
-            ref={creationTriggerRef}
-            aria-expanded={creationExpanded}
-            aria-haspopup="dialog"
-            onClick={() => {
-              if (creationExpanded) {
-                focusCreation();
-                return;
-              }
-              formRef.current?.reset();
-              setCreateState({ status: "idle" });
-              openCreation();
-            }}
-          >
-            + New botanical identity
-          </button>
+        tools={
+          <DirectoryTools
+            name="Botanical identities"
+            search={
+              <DirectorySearch
+                hideLabel
+                id="identity-filter"
+                label="Search botanical identities"
+                placeholder="Search names and cultivars"
+                value={filter}
+                onChange={setFilter}
+                disabled={
+                  directory.status !== "ready" ||
+                  directory.identities.length === 0
+                }
+              />
+            }
+            savedViews={
+              <SavedViews
+                presentation="dialog"
+                surface="botanical_identities"
+                state={view.savedState}
+              />
+            }
+            actions={
+              <button
+                type="button"
+                ref={creationTriggerRef}
+                aria-expanded={creationExpanded}
+                aria-haspopup="dialog"
+                onClick={() => {
+                  if (creationExpanded) {
+                    focusCreation();
+                    return;
+                  }
+                  formRef.current?.reset();
+                  setCreateState({ status: "idle" });
+                  openCreation();
+                }}
+              >
+                + New botanical identity
+              </button>
+            }
+          />
         }
       />
       {createState.status === "created" && (
@@ -1405,22 +1436,7 @@ export function BotanicalIdentityScreen({
             <h3 className="sr-only" id="identity-directory-title">
               Identity directory
             </h3>
-            <SavedViews
-              surface="botanical_identities"
-              state={view.savedState}
-            />
-            <DirectorySearch
-              hideLabel
-              id="identity-filter"
-              label="Search botanical identities"
-              placeholder="Search names and cultivars"
-              value={filter}
-              onChange={setFilter}
-              disabled={
-                directory.status !== "ready" ||
-                directory.identities.length === 0
-              }
-            />
+
             {directory.status === "ready" && (
               <DirectoryResults count={filteredIdentities.length} />
             )}
@@ -1513,7 +1529,9 @@ export function BotanicalIdentityScreen({
                 >
                   <FormSection title="Botanical name">
                     <div className="field field--full">
-                      <label htmlFor="scientific-name">Scientific name</label>
+                      <FieldLabel required htmlFor="scientific-name">
+                        Scientific name
+                      </FieldLabel>
                       <input
                         aria-describedby={
                           fieldError("Scientific name")

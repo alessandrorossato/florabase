@@ -1,3 +1,4 @@
+import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
 import { ApiError } from "../auth/api";
@@ -414,7 +415,9 @@ export function GerminationSection({ sowingId }: { sowingId: string }) {
             ) : (
               <form onSubmit={(event) => void submit(event)}>
                 <div className="field">
-                  <label htmlFor="germination-observed-on">Date</label>
+                  <FieldLabel required htmlFor="germination-observed-on">
+                    Date
+                  </FieldLabel>
                   <input
                     id="germination-observed-on"
                     type="date"
@@ -427,9 +430,9 @@ export function GerminationSection({ sowingId }: { sowingId: string }) {
                   />
                 </div>
                 <div className="field">
-                  <label htmlFor="germination-new-count">
+                  <FieldLabel required htmlFor="germination-new-count">
                     Newly germinated
-                  </label>
+                  </FieldLabel>
                   <input
                     id="germination-new-count"
                     aria-describedby="germination-new-count-help"

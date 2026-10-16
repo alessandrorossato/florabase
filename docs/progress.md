@@ -4099,3 +4099,337 @@ not the current delivery state.
 - IA-FREEZE-001 is **verified** and **FUNCTIONAL_IA_FREEZE_READY**. Commit, protected delivery and
   conservative finish are the remaining lifecycle steps. See
   [the verified handoff](labels-navigation-ia-handoff.md).
+
+## 2026-10-14 — GLOBAL-VISUAL-001 normalization candidate
+
+- Audited all **22 primary route states** on the preserved delivered UAT before production edits;
+  inspected important Collection detail/edit flows and creation forms. Classified blockers,
+  normalization and polish in [the visual inventory](review/global-visual/audit.md).
+- Shared PageHeader/DirectoryTools align search, supported Saved Views, live filter drawers, native
+  single-select choices and removable summaries. Collection, Explore and Sourcing now use grouped
+  operational rows, bounded forms, consistent controls, action hierarchy and botanical typography.
+  Taxonomy heading hierarchy and native-dialog focus containment were corrected. Dashboard, Activity,
+  Settings, Labels, domains, routes and frozen navigation remain regression references.
+- Frontend **666/666 across 64 files** passed with unchanged repository Vitest configuration, one
+  file per process to bound host memory. After the final Taxonomy heading/surface correction, its
+  focused suite passed **7/7**. Final labelled touch-target CSS is covered by subsequent strict
+  TypeScript, zero-warning ESLint, Prettier and Vite production build checks, all passed. Feature graph
+  **104 valid** and `git diff --check` passed. Exact scopes are recorded in the evidence JSON.
+- Baseline `make check` passed backend formatting (**392 files**) then stopped at exact-lockfile
+  frontend dependency installation due npm registry timeout. Existing locked UAT dependencies were
+  copied read-only; no manifest/lock changes. Backend, integration and API drift stages were not run
+  for this frontend-only change. Canonical `make feature-verify` was explicitly prohibited and not run.
+- Baseline/final bundle comparison: initial JS **+107 gzip bytes**, all JS **+2,530 gzip bytes**,
+  CSS **+2019 gzip bytes**, font assets unchanged. No runtime resource benchmark is claimed.
+- Evidence includes 16 before screenshots, real candidate sign-in, isolated test-layout screenshots,
+  **15** width probes with no horizontal overflow and **9** passing semantic contrast pairs. Isolated
+  fixtures differ from UAT and do not prove authenticated candidate behavior; exact capture dimensions
+  and scope are documented. True browser zoom was unavailable in the enabled browser surface.
+- Feature Review resources belong to `a165`; preserved UAT belongs to `4ff7` (revision **0042**,
+  fixture **v4/66**). Automatic approval review rejected fabricated CSRF success and temporary
+  replacement of the other owner's frontend. Neither rejected command ran. The user explicitly authorized authenticated candidate review, but the supported UAT helper has no
+  frontend-only replacement command: `make uat-preview-up` rebuilds and starts both backend and frontend.
+  The exact original frontend image/container/source mount, backend/database container images, volume
+  creation identities and network ID are recorded in `review/global-visual/uat-frontend-restoration-baseline.json`.
+  No replacement ran because it would violate the requirement to keep backend unchanged and use only
+  repository-supported scoped actions. UAT remains stopped with DB/media/dependencies preserved; no
+  seed/reset/source sync, volume deletion or operator-record edit occurred. Temporary previews/tabs were closed.
+- GLOBAL-VISUAL-001 remains **in_progress**, with a concrete unstaged/uncommitted candidate and
+  [implementation handoff](global-visual-001-handoff.md). No stage, commit, push, delivery, dependency
+  update, actual theming or domain/IA redesign occurred. Full visual acceptance remains outstanding.
+
+## 2026-10-14 — GLOBAL-VISUAL-001 supported Feature Review fixture path
+
+- The operator authorized removal of stopped, obsolete `a165` Review state through guarded
+  `feature-review-remove`, after exact ownership/foreign-user and primary-Git checks. Candidate `996d`
+  now owns healthy Feature Review at localhost:15174, schema **0042**, with its existing `owner`.
+- Added `make feature-review-seed`, reusing the v4/manual-review fixture/domain services. Exact role,
+  project, worktree, volume/network ownership/users, live DB/media mounts, health and migration-head
+  checks precede writes. Runtime checks independently restrict it to `florabase_review` and Review
+  bookkeeping. Existing owner credentials/sessions remain intact; no UAT data/media is copied or read.
+- Review persists separate `.review-*` identity/ledger/lock files. Managed IDs/media are validated on
+  repeat seed; edits survive, additive extensions run once, and ambiguous/interrupted or missing state
+  refuses. The expected shared coverage is **v4/66**, or **68** with the optional approved WFO snapshot.
+- Focused checks pass: environment **33**, UAT workflow/source **19 + 15**, Review fixture **21**
+  (20 guards and live persistence), existing additive fixture **5**, Ruff lint/format and strict typing
+  for five related helper files. The live read-only current-Review preflight passes. Canonical
+  verification and real disposable Compose smoke were not run.
+- After initial automatic approval rejection of the attached authorization, the operator directly
+  authorized the scoped seed in chat. The first permitted run refused Alembic's canonical geographic
+  references before collection writes; corrected/tested the guard to allow canonical references and
+  still reject custom/operator data. Supported seed and repeat seed now pass at **v4/66**, ready.
+  Live tests verify managed IDs/counts/media and rollback-only operator edit preservation; the owner
+  identity/credential hash matches before seeding. Normal browser sign-in with `owner` succeeds.
+- Browser inspection confirms populated Dashboard, Seeds, Journal, botanical identities and Orders;
+  Settings/Labels/tools remain reachable. Authenticated screenshots and preservation evidence are in
+  `docs/review/global-visual/`. The optional WFO snapshot is absent and the QR base URL remains blank;
+  source setup and printing configuration retain their normal operator requirements.
+- Review remains healthy/running for manual inspection. Protected UAT/DEV/Stable Preview/production
+  resource metadata and primary Git match the pre-seed snapshot; no UAT records/media were accessed.
+  Updated workflow documentation and [handoff](global-visual-001-handoff.md). All candidate changes remain
+  unstaged/uncommitted; no canonical gate, delivery or product/visual edits occurred in this addition.
+
+## 2026-10-14 — GLOBAL-VISUAL-001 first operator page-family refinement
+
+- Dashboard search/tools now occupy the shared PageHeader row and wrap responsively. Compacted
+  metrics/activity/spacing preserve readable type and 44px controls. Default desktop filters use a
+  wider responsive drawer and compact related grids, fitting 1440×844 without vertical scrolling.
+- Seeds uses explicit Select records/Exit selection, count/Select visible/Clear and an Actions menu
+  containing only Move to location. Existing eligibility, scope resets, atomic move and 100-record
+  bound remain. The shared pattern propagates to existing Sowings/Plants/groups/Stored material only.
+- Shared FormSections distinguishes create progression from direct edit/save on every section;
+  equivalent Sowing, Plant/group, site and profile edits opt in. SeedLot alone gains a comfortable
+  60rem workspace, restrained height-dependent sticky actions and focus scroll clearance.
+- SeedLot breadcrumb/identity/actions are unified; creation remains in the directory. Overview uses
+  a main content column and grouped facts surface, compact empty Upcoming and existing tabs/media.
+  Other detail families retain their different content hierarchy; no mechanical grid propagation.
+- Authenticated Review browser checks cover the requested first-family states, normal desktop/mobile
+  dimensions and explicit effective-space proxies. A normal Acquisition save of unchanged fixture
+  values succeeded. Sibling edits were cancelled and accepted Journal/Settings/Labels checked read-only.
+  Actual 125%/150% browser zoom remains unverified after unavailable/stalled shortcuts.
+- Focused tests pass: first family/primitives **65**, current consumers **118**, Activity/Settings/Labels
+  **129**; final SeedLot/form/bulk rerun **48** and bulk focus assertion rerun **12** overlap those counts.
+  Final TypeScript, targeted ESLint, formatting, Vite build and diff whitespace checks pass; staged
+  diff is empty. Final mobile inspection resolved footer overlap with fixed navigation by limiting
+  sticky actions to taller desktop viewports; normal mobile actions are fully reachable by scrolling.
+- Following an interruption, Review frontend/backend were stopped with its DB healthy. Supported
+  `feature-review-up` recovered candidate-owned Review, preserving owner/session, DB **0042** and
+  fixture **v4/66 ready**. No seed/reset/remove or UAT operation ran in this refinement.
+  [Handoff](global-visual-001-handoff.md) and [evidence index](review/global-visual/first-family/README.md)
+  distinguish initial normalization evidence from this refinement. Feature remains **in_progress**;
+  no canonical gate, stage, commit or delivery.
+
+## 2026-10-14 — GLOBAL-VISUAL-001 second refinement acquisition decision boundary
+
+- Inspected the operator's requested Dashboard/SeedLot continuation and ORDER-001 contracts,
+  backend services/integration assertions, Supplier consumers, existing routing/dialog and form paths.
+  **NEEDS_PRODUCT_DECISION**: Order-derived commercial Supplier requires an explicit preservation
+  policy for existing purchased lots without Orders, known lot Suppliers on unknown/unlinked Orders,
+  and Order Supplier corrections currently blocked by linked independent Supplier knowledge.
+- Unknown Order date/Supplier/reference/total already fit the existing nullable/PartialDate model;
+  no invented date, automatic Order or placeholder domain is needed. No application or schema
+  implementation began at the requested ambiguity boundary.
+- Recorded the unscheduled post-v0.1/v1.0 Dashboard review in the roadmap. The requested v0.1 module
+  removal, modal edit and detail/media refinement await the decision; no placeholder UI was added.
+- Read-only Review status confirms candidate-owned healthy frontend/backend/DB, revision **0042**,
+  fixture **v4/66 ready**. No Review reset/remove/reseed/restart, UAT action, stage, commit, delivery or
+  canonical gate. [Handoff](global-visual-001-handoff.md) records evidence and exact pending decisions;
+  this inspection claims no new runtime test or visual acceptance.
+
+## 2026-10-14 — GLOBAL-VISUAL-001 second refinement after Supplier decision
+
+- The operator resolved the boundary: Order Supplier is contextual UI authority only when known and
+  linked. SeedLot Supplier remains independent persisted knowledge/fallback. No ORDER-001 persistence,
+  reconciliation, acquisition-date, unlink or conflicting-Order-correction rule changes; no migration.
+- Removed only Dashboard's Propagation/Sourcing/Botanical coverage rendering and unused CSS. The
+  existing services/data remain, with a later configurable-module review recorded in the roadmap.
+- SeedLot Edit now uses a native contextual workspace above the mounted Details tab or directory
+  inspector/search/filter state, with bounded desktop geometry, internal panel scrolling and actions.
+  Dirty Escape/Cancel/Back and pending/subtask dismissal are guarded; focus returns to Edit. Direct
+  edit URLs/reload use the same full-page fallback; no other entity editor is migrated.
+- Acquisition shows known linked Supplier read-only, retains independent editing for no/unknown
+  Order Supplier and exposes existing explicit Order creation in a new tab plus choice refresh.
+  Unknown date/price/Supplier facts are preserved and nothing is silently created or copied.
+- Overview groups Inventory/Acquisition/Origin/Dates under At a glance; Purchase Order belongs inside
+  Acquisition. SeedLot opts into compact attached Photos with explicit details link and overflow
+  management; uploads, protected copies, external privacy and unlink confirmation remain supported.
+- Focused tests pass **73** across SeedLot, Dashboard, Photos, purchase-context UI and Orders. Coverage
+  includes backgrounds/tabs, route fallback, every-section Save, dirty history refusal without added
+  entries, focus, Supplier adaptation/unlink/date retention and an explicitly created unknown Order.
+  Serial reruns resolved transient loading timeouts during exhausted host swap without weaker checks.
+- Review recovery uses only supported `feature-review-up` after services stopped; existing DB remains
+  at **0042**. No reset/remove/reseed, UAT action, stage/commit/push/delivery or canonical gate. The
+  [handoff](global-visual-001-handoff.md) records the resolved product decision and this pass's scope.
+
+## 2026-10-15 — GLOBAL-VISUAL-001 second refinement review handoff
+
+- Final focused validation: **107 tests** across nine suites (73 core and 34 shared regressions),
+  strict TypeScript, targeted zero-warning ESLint, Prettier, production Vite build and diff whitespace
+  pass. DashboardSearch's recurring first-load module-transformation timeout is resolved by awaiting
+  the real lazy-module import in suite setup; assertions/timeouts and production routing are unchanged.
+- Second-family evidence covers seven states at six viewports, native modal focus/scroll, authenticated
+  Save to retained Photos, browser Back and directory-context return. Actual browser zoom remains an
+  operator check. Acquisition screenshots precede the final checkbox alignment rule; a browser URL
+  policy rejection prevented refresh. These limits are explicit, with no claim of visual acceptance.
+- Supported Review recovery after interruption preserved the existing owner/session, revision **0042**
+  and synthetic **v4/66 ready** data. Final status is healthy at localhost:15174. No reset/remove/reseed,
+  UAT/DEV/Stable/production change, canonical gate, staging, commit, push or delivery. Candidate remains
+  **in_progress**, unstaged/uncommitted, ready for operator inspection. Updated handoff and evidence.
+
+## 2026-10-15 — GLOBAL-VISUAL-001 consolidated SeedLot family refinement
+
+- Shared the existing Sowings directory split with Seeds, removing the local narrow preview cap;
+  SeedLot Details now uses the available workspace width while prose remains bounded. No Sowing or
+  Plant visual review/redesign began. Dashboard's final four-section scope and wide drawer remain.
+- Added guarded native backdrop dismissal and explicit subtle tab hover/selection. Navigation reserves
+  intrinsic wrapped height and focus clearance; the scrolling panel now has focus padding on all sides.
+- Acquisition conditionally shows independent Supplier/PartialDate inputs only without an Order.
+  Linked transaction facts are read-only, with independent lot knowledge retained and visible. Existing
+  reconciliation, explicit date copy, unlink retention and stale/version safeguards remain unchanged.
+- SeedLot Photos is now an image-first 4:3 mini-gallery with asset details links, named always-reachable
+  overflow, hover/focus Open hint, concise metadata and a compact opt-in external privacy placeholder.
+  Default Photos consumers retain their existing presentation. Lineage capability/semantics remain.
+- Initial focused tests pass 64 and shared regressions 138. Fresh live visual acceptance is pending a
+  new authenticated HTTP browser tab because retained error-page tabs are refused by browser policy;
+  no workaround or new screenshot claims. Handoff records the full remaining responsive/zoom checklist.
+- Review status remains healthy, candidate-owned, revision 0042 and v4/66 ready. No reset/remove/reseed,
+  UAT/DEV/Stable/production action, canonical gate, stage/commit/push/delivery. All work stays dirty.
+
+- Final code validation passes **202 tests in 14 suites**, TypeScript, zero-warning targeted ESLint,
+  formatting, production build and whitespace. [Third-family evidence index](review/global-visual/third-family/README.md)
+  records exact scopes and pending fresh browser review; no new visual acceptance is claimed.
+
+## 2026-10-15 — GLOBAL-VISUAL-001 consolidated live review completion
+
+- Fresh authenticated HTTP Review access resolved the retained error-tab block. Captured ten states
+  at six viewport sizes (60 probes/screenshots), plus native focus, gallery/menu/direct-route and
+  read-only Sowings/History/Settings/Labels evidence. Saved probes show no horizontal overflow.
+- Live Acquisition inspection found inherited fieldset/legend/action spacing. Scoped spacing and
+  transaction/fallback-facts grouping now fit both ordinary states at 1440x844 with no panel scroll
+  (414px client/scroll height). Shorter viewports retain safe internal scrolling and visible actions.
+- First/last editor tab focus rings and mobile controls remain intact. Gallery first row fits with
+  header/tabs/tools; keyboard/touch overflow, cancelled metadata edit and exact media navigation work.
+  Clean Back and a normal unchanged save restore Photos and the Edit trigger. Native dirty backdrop
+  prompt was observed; live refusal and actual browser zoom remain operator acceptance.
+- Strengthened the missing-history-event regression and fixed a close/fallback timing race: a
+  contextual edit entry cannot reopen as a direct editor while browser Back is processing. Concise
+  date/Supplier help retains explicit no-invented-date/origin semantics. No persistence/API change.
+- No new fixtures or links were added. The reviewed SeedLot lacks external gallery/producer states;
+  these have focused tests, with live fixture limits recorded. Normal CSRF refresh after the temporary
+  direct-link tab used page reload; no session fabrication. One unchanged save may update metadata.
+- Review stays running, revision 0042 and managed fixture v4/66 ready. All candidate work remains
+  unstaged/uncommitted; no canonical verification, delivery or protected-environment operation.
+
+- Final serial SeedLot rerun passes 45, including the strengthened fallback/focus regression. Across
+  the current focused reports, **202 unique tests in 14 suites pass**. Source typing, zero-warning
+  targeted ESLint, production build and whitespace pass. Host swap pressure caused intermediate
+  unrelated timeouts; the serial rerun passed without weaker assertions/timeouts. Evidence is ready
+  for operator inspection, with actual zoom and unavailable fixture states explicitly unclaimed.
+
+## 2026-10-16 — GLOBAL-VISUAL-001 final SeedLot-family refinement
+
+- Create SeedLot is one full-width ordered page with shared fields/validation, optional secondary lot
+  label, visible section errors and final Cancel / Add seed lot. Edit retains its contextual modal,
+  guarded dismissal, quiet tabs and direct-URL fallback. No broad Sowing/Plant redesign began.
+- Shared PartialDate precision now stacks above fixed calendar-part slots. Independent Acquisition
+  controls align horizontally; normal Unknown/linked states fit the desktop panel, and known parts
+  scroll safely within it. Order, collection, Journal, Harvest and native Schedule dates retain their
+  semantics. Sowing interaction tests preload their component; separate lazy-loading coverage remains.
+- SeedLot Overview is a compact current-state dashboard: lifecycle/quantity/storage, readable
+  Acquisition/Origin and inline date facts, beside natural-height Upcoming/Notes. Removed the duplicate
+  Sowings-tab action, aligned compact empty Lineage, and emphasized exact/approximate/unknown remaining
+  quantity. No persisted baseline exists, so no ratio/progress denominator was invented.
+- New Photos/Media external images default to the existing guarded local-copy operation, with explicit
+  reference-only opt-out and retained-reference retry after failure. Protected thumbnail/content paths,
+  explicit primary selection and all fetch-safety rules remain. Controlled HTTP/PostgreSQL proof covers
+  save/reload/refresh/remove without read-time remote fetches; no live arbitrary host was contacted.
+- Focused/shared frontend checks pass **270 unique tests in 17 suites**; media backend checks pass
+  **69 unit + 15 PostgreSQL tests**, with disposable cleanup verified. Intermediate cold Sowing import
+  timeouts were resolved in interaction setup without weaker assertions/timeouts; the loading test passes.
+- [Final SeedLot evidence](review/global-visual/final-seedlot/README.md) retains 57 responsive observations
+  without horizontal overflow, additional Order Day evidence and exact validation summaries. Reduced
+  viewport zoom proxies are labelled; actual zoom and native dirty-prompt handling remain operator checks.
+  Browser automation stalled during an unsaved Order cancellation; it is not claimed as a passed check.
+- Review stopped during the pause and was restarted only through its supported guarded workflow. The
+  same owner/password, volumes and v4/66 dataset remain; schema is 20261013_0042. No reset/remove/reseed,
+  UAT/DEV/Stable/production action, canonical gate, stage, commit, push or delivery. Candidate stays dirty
+  and GLOBAL-VISUAL-001 remains in_progress for operator visual review.
+
+- Final source checks pass strict TypeScript, zero-warning targeted ESLint, Prettier, production build
+  and diff whitespace; staged diff is empty. SeedLot bundle is 45.60 kB / 12.39 kB gzip, main
+  227.89 kB / 70.84 kB gzip. Supported Review status confirms frontend/backend/DB healthy and v4/66
+  ready. Viewport overrides are reset and authenticated Overview remains available for manual review.
+
+
+### 2026-10-16 — GLOBAL-VISUAL-001 detail empties and form labels (candidate)
+
+- Informational Details empties now use the normal tab gutter and natural message height without
+  borders; SeedLot Sowings and root Lineage establish the grammar, with safe related-record reuse.
+  Photos retains its restrained gallery placeholder and all media actions.
+- Added a small caption-only FieldLabel with a muted semantic-token asterisk. Removed optional-label
+  suffixes while preserving explanatory prose. Audited actual schemas: SeedLot identity is required;
+  defaulted Source/Lifecycle and nullable Supplier remain unmarked, including Purchased.
+- Native/ARIA semantics follow existing requirements, including selected date parts, explicit quantity
+  modes, Order price/currency pairing, media attribution and movement destinations. Location's Used for
+  legend exposes its existing at-least-one rule through the group description; individual checkboxes
+  remain independently optional. All 54 existing native/reference required expressions are unchanged.
+- Focused/shared/sibling frontend validation passes **448 unique tests across 27 files**. The final
+  Location group-caption change additionally passes **15 focused Location tests**. Five intermediate
+  Notes query ambiguities were resolved by selecting the intended textarea/region, without weaker
+  product assertions. Coverage includes conditional states, unchanged payloads, accessible names,
+  keyboard/focus behavior, lightweight empties and the Photos exception.
+- [Labels/empty-state evidence](review/global-visual/labels-empty/README.md) records **29 observations**
+  across 1440x844, 1024x844 and 390x844 at 100%, with no horizontal document overflow: empty Details
+  tabs, full-page Create, Edit Essentials/Acquisition and selected Month precision. No product records
+  were saved. The operator resolved one browser stall while discarding an unsaved inspection draft;
+  automated native-prompt handling is not certified. Viewport override is reset.
+- Supported Review status confirms the same candidate owner, healthy frontend/backend/DB, schema
+  20261013_0042 and existing managed v4/66 ready dataset. No reset/remove/reseed or UAT/DEV/Stable/
+  production operation. GLOBAL-VISUAL-001 stays in_progress and all candidate edits remain unstaged/
+  uncommitted; canonical verification, stage, commit, push and delivery remain unperformed.
+- Final strict TypeScript and production build pass. SeedLot JS is 45.14 kB / 12.40 kB gzip; main
+  is 228.15 kB / 70.92 kB gzip. New evidence and validation summaries are retained with the handoff.
+- Final targeted ESLint passes with zero warnings, all 47 touched frontend files pass Prettier,
+  whitespace checks pass and the staged diff is empty. Canonical feature-verify remains unrun.
+
+
+## 2026-10-16 — GLOBAL-VISUAL-001 SeedLot dashboard / Photos / picker reference
+
+- SeedLot Overview now has one subtle three-column current-state band, stronger values above quieter
+  labels, then Acquisition/Origin and Dates/Upcoming in a semantic desktop grid. Restrained dividers
+  separate groups; notes occupy the final row at natural reading width. Narrow/mobile layouts collapse
+  without tiny columns. Existing facts, links, PartialDate/unknown/quantity semantics and conversion
+  context remain; no other entity Overview was migrated.
+- Compact Photos removes the repeated visible heading and global helper, retaining an accessible
+  section name. Right-aligned actions precede the accepted gallery/empty placeholder. Live existing
+  external media retains tile-specific host/privacy/Preview once; no remote image was fetched.
+- Shared ReferencePicker now anchors to the control alone: the original 45.984px field/help gap becomes
+  4px at matched width. Bounded menus fit viewport/clipping panels and can open above; keyboard active
+  options scroll internally, selection restores focus and Escape first dismisses an open picker.
+  Native Order/Plant/Sowing selects remain native, with no form redesign.
+- Focused baseline passes 21 tests; final SeedLot, Photos/Media, shared picker and representative
+  Order/Plant/Sowing/Bulk/Labels coverage passes **247 unique tests across 13 files**. Updated date
+  assertions check semantic terms/values rather than layout whitespace. Strict TypeScript,
+  zero-warning targeted ESLint, eight-file Prettier, production build and whitespace checks pass.
+  SeedLot JS: 45.38 kB / 12.42 kB gzip; main: 228.15 kB / 70.91 kB gzip.
+- [Dashboard/picker evidence](review/global-visual/seed-dashboard/README.md) retains **30 observations**:
+  all requested views at 1440x844, 1024x844 and 390x844 at 100%, representative shared/native consumers
+  and one additional short-viewport menu fit. No horizontal overflow; all measured menus match input
+  width and 4px separation. No records/media were saved, linked, removed or fetched remotely.
+- Existing Review stays running/authenticated on the same candidate: frontend/backend/DB healthy,
+  schema 20261013_0042, managed v4/66 ready data preserved. Viewport override reset; normal-size
+  operator-ready capture retained. No reset/remove/reseed, UAT/DEV/Stable/production operation,
+  canonical feature-verify, stage, commit, push or delivery. Candidate remains dirty and in_progress.
+
+## 2026-10-16 — GLOBAL-VISUAL-001 operator acceptance and independent QA checkpoint
+
+- The operator completed the authenticated Feature Review walkthrough and accepted the reviewed
+  scope, with SeedLot as the Collection-family reference. Independent review inspected the complete
+  candidate diff by feature area and representative Dashboard, Seeds, mobile, SeedLot Overview and
+  external-image privacy captures. No material production, domain, navigation, accessibility or
+  workflow defect was found.
+- Independent focused Quality frontend validation passes **378 tests across 23 files**, including
+  App/navigation, Dashboard, SeedLot and Order reconciliation, Plant/Sowing, media/Photos, Lineage,
+  Labels, shared forms, pickers and filters. The new Review fixture guard suite passes **20 tests**;
+  its one live Review preservation probe is intentionally skipped in this offline focused run. The
+  existing environment ownership suite passes **33 tests**. The direct host invocation of the Review
+  fixture tests was not counted because system Python 3.12 lacks the repository's UUIDv7 API; the
+  valid project Python 3.14 container run passed.
+- `make workflow-resources` reports Feature Review running on this candidate with its three own
+  volumes; UAT containers are stopped with their three persistent volumes retained. DEV's database
+  is running from its primary source; its application containers are stopped. Unknown legacy
+  resources and shared BuildKit cache are retained. The repository verification plan selects FULL
+  backend, frontend, integration and build scopes.
+- 125%/150% evidence remains labelled viewport proxies. Actual tab zoom was not automatable through
+  the available browser surface; the operator's completed visual review is the acceptance evidence
+  for the reviewed scope, and this tooling limitation remains explicit.
+- Canonical `make feature-verify` passed on the corrected candidate tree. The first attempt caught one
+  Prettier-only issue in `PlantScreen.tsx`; the repository Quality formatter corrected that file, and
+  the complete gate was rerun. FULL results: backend **939 passed** (735 integration deselected in
+  unit run), frontend **707 passed across 66 files**, PostgreSQL integration **735 passed** (939
+  unit tests deselected), environment workflow **33 passed**, Review fixture guards **20 passed / 1
+  expected live-probe skip**, migration cycle passed at `20261013_0042`, generated API check clean,
+  Ruff/ESLint/Prettier/mypy/TypeScript clean, production backend and frontend images built, whitespace
+  checks clean, and the verified-tree receipt recorded. Disposable verification resources were
+  cleaned by their registered owners; persistent Feature Review remains running. Staging, commit,
+  delivery and finish are the next authorized steps.

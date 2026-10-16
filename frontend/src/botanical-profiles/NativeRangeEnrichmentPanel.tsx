@@ -1,3 +1,4 @@
+import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useRef, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -245,9 +246,9 @@ export function NativeRangeEnrichmentPanel({
                 }}
               >
                 <div className="field">
-                  <label htmlFor={`wcvp-query-${identityId}`}>
+                  <FieldLabel required htmlFor={`wcvp-query-${identityId}`}>
                     WCVP scientific name (literal prefix)
-                  </label>
+                  </FieldLabel>
                   <input
                     ref={search}
                     id={`wcvp-query-${identityId}`}

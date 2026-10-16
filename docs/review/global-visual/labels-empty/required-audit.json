@@ -1,0 +1,277 @@
+{
+  "native_or_reference_required_expressions_before": 54,
+  "native_or_reference_required_expressions_after": 54,
+  "all_expressions_unchanged": true,
+  "controls": [
+    {
+      "file": "frontend/src/auth/LoginForm.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/auth/LoginForm.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/botanical-identities/BotanicalIdentityScreen.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/botanical-identities/BotanicalIdentityScreen.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/botanical-identities/ExternalBotanicalDataPanel.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/botanical-profiles/NativeRangeEnrichmentPanel.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/bulk/BulkLocation.tsx",
+      "tag": "ReferencePicker",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/events/EventJournal.tsx",
+      "tag": "select",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/geographic-places/GeographyScreen.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/geographic-places/GeographyScreen.tsx",
+      "tag": "select",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/geographic-places/GeographyScreen.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/geographic-places/GeographyScreen.tsx",
+      "tag": "select",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/harvests/ConversionDialog.tsx",
+      "tag": "ReferencePicker",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/harvests/HarvestForm.tsx",
+      "tag": "ReferencePicker",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/harvests/HarvestForm.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/harvests/InventoryDialog.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/locations/LocationScreen.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/locations/LocationScreen.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/media/MediaEditor.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/media/MediaEditor.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/media/MediaEditor.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/media/MediaEditor.tsx",
+      "tag": "textarea",
+      "required": "required={kind === \"external\"}"
+    },
+    {
+      "file": "frontend/src/media/MediaLinker.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/media/MediaPicker.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/media/MediaScreen.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/photos/BotanicalIdentityCover.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/photos/BotanicalIdentityCover.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/photos/BotanicalIdentityCover.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/photos/BotanicalIdentityCover.tsx",
+      "tag": "textarea",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/photos/BotanicalIdentityCover.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/photos/PhotosSection.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/photos/PhotosSection.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/photos/PhotosSection.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/photos/PhotosSection.tsx",
+      "tag": "textarea",
+      "required": "required={externalEditor}"
+    },
+    {
+      "file": "frontend/src/photos/PhotosSection.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/plants/PlantScreen.tsx",
+      "tag": "ReferencePicker",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/plants/PlantScreen.tsx",
+      "tag": "ReferencePicker",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/provenance-sites/ProvenanceSiteManager.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/schedule/ScheduleScreen.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/schedule/ScheduleScreen.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/schedule/ScheduleScreen.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/schedule/ScheduleTargetPicker.tsx",
+      "tag": "ReferencePicker",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/seed-lots/ReferencePicker.tsx",
+      "tag": "input",
+      "required": "required={required && !value}"
+    },
+    {
+      "file": "frontend/src/seed-lots/SeedLotScreen.tsx",
+      "tag": "ReferencePicker",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/seed-lots/SeedLotScreen.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/seed-lots/SeedLotScreen.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/seed-lots/SeedLotScreen.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/seed-lots/SeedLotScreen.tsx",
+      "tag": "ReferencePicker",
+      "required": "required={context.kind === \"place\"}"
+    },
+    {
+      "file": "frontend/src/sowings/GerminationSection.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/sowings/GerminationSection.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/sowings/SowingScreen.tsx",
+      "tag": "select",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/suppliers/SupplierScreen.tsx",
+      "tag": "input",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/suppliers/SupplierScreen.tsx",
+      "tag": "select",
+      "required": "required"
+    },
+    {
+      "file": "frontend/src/taxonomy/IdentityTaxonomyPanel.tsx",
+      "tag": "input",
+      "required": "required"
+    }
+  ]
+}

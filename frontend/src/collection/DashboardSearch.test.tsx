@@ -8,7 +8,7 @@ import {
   within,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, expect, test, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, expect, test, vi } from "vitest";
 
 import { App } from "../App";
 
@@ -80,6 +80,12 @@ function setup(
   });
   return calls;
 }
+
+beforeAll(async () => {
+  // These assertions exercise Dashboard behavior after routing. Load the lazy module
+  // before rendering so first-use Vite transformation is not part of a DOM wait.
+  await import("./DashboardScreen");
+});
 
 beforeEach(() => {
   window.history.replaceState(null, "", "#/dashboard");
@@ -172,6 +178,26 @@ test("Dashboard keeps its counts, actions, and chronological Event context", asy
     screen.getByRole("searchbox", { name: "Search your collection" }),
   ).toBeEnabled();
   expect(screen.getByRole("button", { name: "Filters" })).toBeEnabled();
+});
+
+test("Dashboard identity and all search tools share the PageHeader grammar", async () => {
+  setup(() => json({ items: [], total: 0, offset: 0, limit: 50 }));
+  render(<App />);
+  const search = await screen.findByRole("searchbox", {
+    name: "Search your collection",
+  });
+  const header = screen
+    .getByRole("heading", { name: "Dashboard" })
+    .closest(".page-header");
+  expect(header).toHaveClass("page-header--with-tools");
+  expect(header).toContainElement(search);
+  const tools = within(
+    screen.getByRole("group", { name: "Dashboard controls" }),
+  );
+  expect(tools.getByRole("button", { name: "Filters" })).toBeVisible();
+  expect(tools.getByRole("button", { name: "Saved views" })).toBeVisible();
+  expect(tools.getByRole("button", { name: "Quick add" })).toBeVisible();
+  expect(search.closest(".page-tools")).toBeInTheDocument();
 });
 
 test("Dashboard search replaces overview, groups results, and restores the normal route", async () => {

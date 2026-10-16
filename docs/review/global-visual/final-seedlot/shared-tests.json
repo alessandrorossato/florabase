@@ -1,0 +1,58 @@
+{
+  "suites": [
+    {
+      "file": "src/events/EventFeed.test.tsx",
+      "tests": 5,
+      "result": "passed"
+    },
+    {
+      "file": "src/events/GlobalEventsScreen.test.tsx",
+      "tests": 10,
+      "result": "passed"
+    },
+    {
+      "file": "src/harvests/HarvestScreen.test.tsx",
+      "tests": 10,
+      "result": "passed"
+    },
+    {
+      "file": "src/harvests/StoredMaterial.test.tsx",
+      "tests": 18,
+      "result": "passed"
+    },
+    {
+      "file": "src/orders/OrderPicker.test.tsx",
+      "tests": 4,
+      "result": "passed"
+    },
+    {
+      "file": "src/orders/OrderScreen.test.tsx",
+      "tests": 9,
+      "result": "passed"
+    },
+    {
+      "file": "src/orders/PurchaseContext.test.tsx",
+      "tests": 7,
+      "result": "passed"
+    },
+    {
+      "file": "src/plants/PlantScreen.test.tsx",
+      "tests": 42,
+      "result": "passed"
+    },
+    {
+      "file": "src/schedule/ScheduleScreen.test.tsx",
+      "tests": 51,
+      "result": "passed"
+    }
+  ],
+  "sowings": {
+    "result": "passed",
+    "tests": 19,
+    "evidence": "final-regression-tests.json",
+    "setup": "preload interaction component; App.lazy.test.tsx separately proves chunk loading; original assertions/timeouts preserved"
+  },
+  "passed_excluding_sowings": 156,
+  "evidence": "observed aggregate regression run in preceding active task segment; transient raw report did not survive pause",
+  "unique_shared_passed": 175
+}

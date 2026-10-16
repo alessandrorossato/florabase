@@ -1,3 +1,4 @@
+import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useId, useRef, useState, type SyntheticEvent } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -88,7 +89,9 @@ export function QuantityFields({
             </select>
           </div>
           <div className="field">
-            <label htmlFor={`${id}-amount`}>{label} amount</label>
+            <FieldLabel required htmlFor={`${id}-amount`}>
+              {label} amount
+            </FieldLabel>
             <input
               id={`${id}-amount`}
               inputMode="decimal"

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PageHeader } from "../components/ReferenceUI";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -167,16 +168,12 @@ export function ImportExportScreen() {
 
   return (
     <div className="import-workspace" aria-labelledby="import-title">
-      <header className="page-header">
-        <div>
-          <p className="eyebrow">Tools</p>
-          <h2 id="import-title">Import / Export</h2>
-          <p>
-            Exchange collection data using Florabase&apos;s supported CSV
-            workflows.
-          </p>
-        </div>
-      </header>
+      <PageHeader
+        eyebrow="Tools"
+        title="Import / Export"
+        titleId="import-title"
+        description="Exchange collection data using Florabase's supported CSV workflows."
+      />
       <div className="import-workspace__grid">
         <section
           className="card import-workspace__primary"

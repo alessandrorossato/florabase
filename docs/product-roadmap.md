@@ -155,6 +155,10 @@ added. This establishes **FUNCTIONAL_IA_FREEZE_READY** for workflow/structure, n
 
 ### Global page-by-page visual review and normalization
 
+GLOBAL-VISUAL-001 records the current implementation candidate and its pre-change inventory in
+[the visual handoff](global-visual-001-handoff.md). Acceptance remains pending authenticated candidate
+review and true-browser zoom evidence; static test-layout captures are explicitly separate.
+
 Use a review matrix with page/state, viewport, finding, severity, shared-contract correction and
 recheck evidence. Cover at least:
 
@@ -255,6 +259,11 @@ increment is selected and its queue priority is reviewed.
 | LATER / INTEGRATION | 12             | Calendar export / reminders                 | REMINDER-001                                                   |
 | LATER / INTEGRATION | 13             | Portable export enhancements                | TRANSFER-001, beyond IMPORT-001 CSV.                           |
 | LATER / INTEGRATION | 14             | User-imported phylogeny                     | Separate future source/import contract; not global-source GO.  |
+
+An unscheduled post-v0.1 / v1.0 Dashboard review should reassess operational value after actual use.
+Potential directions include configurable modules, operator-selected widgets and additional
+summaries/metrics. No customization or placeholder controls belong to the current v0.1 refinement;
+select a bounded increment and its data/accessibility contracts before implementation.
 
 ### 1. Material lineage
 

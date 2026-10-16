@@ -131,6 +131,15 @@ test("classification expansion, selection, distinct counts and unresolved identi
   render(<TaxonomyScreen />);
   await screen.findByRole("button", { name: "Ocimum genus · 1 identity" });
   expect(
+    screen.getByRole("heading", { name: "Collection taxonomy", level: 2 }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole("heading", { name: "Taxonomic tree", level: 3 }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole("heading", { name: "Unresolved taxonomy (1)", level: 3 }),
+  ).toBeVisible();
+  expect(
     screen.queryByRole("button", {
       name: "Ocimum basilicum species · 1 identity",
     }),
@@ -167,7 +176,10 @@ test("scope and category OR filters, search, URL restoration and unavailable sel
   const user = userEvent.setup();
   render(<TaxonomyScreen />);
   await screen.findByText("2 represented identities · 1 unresolved taxonomy");
-  await user.click(screen.getByRole("button", { name: "Living" }));
+  await user.selectOptions(
+    screen.getByRole("combobox", { name: "Collection representation" }),
+    "living",
+  );
   await user.click(screen.getByRole("checkbox", { name: "Seeds" }));
   await user.click(screen.getByRole("checkbox", { name: "Plants" }));
   await user.type(
@@ -195,10 +207,9 @@ test("scope and category OR filters, search, URL restoration and unavailable sel
     );
     window.dispatchEvent(new PopStateEvent("popstate"));
   });
-  expect(screen.getByRole("button", { name: "Historical" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
-  );
+  expect(
+    screen.getByRole("combobox", { name: "Collection representation" }),
+  ).toHaveValue("historical");
   await screen.findByText(
     "Selected taxon is missing or no longer eligible under these filters.",
   );

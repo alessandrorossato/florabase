@@ -171,3 +171,33 @@ test("navigation dialogs include links in focus containment", async () => {
     screen.getByRole("button", { name: "Close navigation" }),
   ).toHaveFocus();
 });
+
+test("dialog focus skips inactive panels, disabled fieldsets, inert content and negative tab stops", async () => {
+  const user = userEvent.setup();
+  render(
+    <TaskDialog title="Grouped editor" onClose={() => undefined}>
+      <div hidden>
+        <input aria-label="Inactive field" />
+      </div>
+      <fieldset disabled>
+        <input aria-label="Disabled field" />
+      </fieldset>
+      <div inert>
+        <button type="button">Inert action</button>
+      </div>
+      <input aria-label="Programmatic field" tabIndex={-1} />
+      <input aria-label="Visible field" />
+      <button type="button">Save visible panel</button>
+      <div hidden>
+        <button type="button">Hidden final action</button>
+      </div>
+    </TaskDialog>,
+  );
+  expect(screen.getByLabelText("Visible field")).toHaveFocus();
+  await user.keyboard("{Shift>}{Tab}{/Shift}");
+  expect(
+    screen.getByRole("button", { name: "Save visible panel" }),
+  ).toHaveFocus();
+  await user.keyboard("{Tab}");
+  expect(screen.getByLabelText("Visible field")).toHaveFocus();
+});

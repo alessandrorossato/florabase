@@ -1,3 +1,5 @@
+import { FieldLabel } from "../components/FieldLabel";
+import { DirectoryTools } from "../components/DirectoryTools";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
@@ -316,7 +318,7 @@ function SupplierHub({
             >
               <h4 id="recent-acquisitions-title">Recent acquisitions</h4>
               {supplier.recent_acquisitions.length === 0 ? (
-                <div className="empty-state compact-empty-state">
+                <div className="detail-empty-message">
                   <p>
                     No directly linked acquisitions have a recorded acquisition
                     date.
@@ -383,7 +385,7 @@ function SupplierHub({
               Seed lots ({supplier.seed_lots.length})
             </h4>
             {supplier.seed_lots.length === 0 ? (
-              <p className="empty-state compact-empty-state">
+              <p className="detail-empty-message">
                 No Seed lots directly reference this supplier.
               </p>
             ) : (
@@ -420,7 +422,7 @@ function SupplierHub({
               Plants ({supplier.plants.length + supplier.plant_groups.length})
             </h4>
             {supplier.plants.length + supplier.plant_groups.length === 0 ? (
-              <p className="empty-state compact-empty-state">
+              <p className="detail-empty-message">
                 No directly acquired Plants or Plant groups reference this
                 supplier.
               </p>
@@ -466,6 +468,7 @@ function SupplierHub({
       {editing && (
         <TaskDialog title="Edit supplier" onClose={onCancelEdit}>
           <form
+            className="supplier-form"
             key={`${supplier.id}-${supplier.updated_at}`}
             onSubmit={onSubmitUpdate}
           >
@@ -542,9 +545,12 @@ function SupplierFields({
   return (
     <>
       <div className="field">
-        <label htmlFor={supplier ? "edit-supplier-name" : "new-supplier-name"}>
+        <FieldLabel
+          required
+          htmlFor={supplier ? "edit-supplier-name" : "new-supplier-name"}
+        >
           Name
-        </label>
+        </FieldLabel>
         <input
           id={supplier ? "edit-supplier-name" : "new-supplier-name"}
           name="name"
@@ -555,9 +561,12 @@ function SupplierFields({
         />
       </div>
       <div className="field">
-        <label htmlFor={supplier ? "edit-supplier-kind" : "new-supplier-kind"}>
+        <FieldLabel
+          required
+          htmlFor={supplier ? "edit-supplier-kind" : "new-supplier-kind"}
+        >
           Kind
-        </label>
+        </FieldLabel>
         <select
           id={supplier ? "edit-supplier-kind" : "new-supplier-kind"}
           name="kind"
@@ -899,19 +908,44 @@ export function SupplierScreen({
         titleId="suppliers-title"
         eyebrow="Sourcing"
         description="Manage the sources from which collection material was directly acquired."
-        actions={
-          <button
-            type="button"
-            ref={creationTriggerRef}
-            aria-haspopup="dialog"
-            onClick={() => {
-              createForm.current?.reset();
-              setSave({ status: "idle" });
-              openCreation();
-            }}
-          >
-            New supplier
-          </button>
+        tools={
+          <DirectoryTools
+            name="Suppliers"
+            search={
+              <DirectorySearch
+                hideLabel
+                id="supplier-filter"
+                label="Filter suppliers"
+                placeholder="Search supplier names"
+                value={filter}
+                onChange={setFilter}
+                disabled={
+                  directory.status !== "ready" || suppliers.length === 0
+                }
+              />
+            }
+            savedViews={
+              <SavedViews
+                presentation="dialog"
+                surface="suppliers"
+                state={view.savedState}
+              />
+            }
+            actions={
+              <button
+                type="button"
+                ref={creationTriggerRef}
+                aria-haspopup="dialog"
+                onClick={() => {
+                  createForm.current?.reset();
+                  setSave({ status: "idle" });
+                  openCreation();
+                }}
+              >
+                New supplier
+              </button>
+            }
+          />
         }
       />
       <div className="reference-split">
@@ -923,16 +957,7 @@ export function SupplierScreen({
             <h3 className="sr-only" id="supplier-directory-title">
               Supplier directory
             </h3>
-            <SavedViews surface="suppliers" state={view.savedState} />
-            <DirectorySearch
-              hideLabel
-              id="supplier-filter"
-              label="Filter suppliers"
-              placeholder="Search supplier names"
-              value={filter}
-              onChange={setFilter}
-              disabled={directory.status !== "ready" || suppliers.length === 0}
-            />
+
             {directory.status === "ready" && (
               <DirectoryResults count={visible.length} />
             )}
@@ -1019,7 +1044,7 @@ export function SupplierScreen({
             >
               <div ref={creationPanelRef}>
                 <form
-                  className="identity-form"
+                  className="identity-form supplier-form"
                   ref={createForm}
                   aria-busy={pending}
                   onSubmit={submitCreate}

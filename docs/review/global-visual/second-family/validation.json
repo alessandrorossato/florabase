@@ -1,0 +1,74 @@
+{
+  "source": "/home/alessandro/.codex/worktrees/996d/florabase",
+  "branch": "feat/global-visual-001",
+  "base_head": "cd63c185f7bcb0544cd9c3cff984b29564e6bc84",
+  "dirty": true,
+  "date": "2026-10-15",
+  "suites": [
+    {
+      "file": "src/bulk/BulkLocation.test.tsx",
+      "status": "passed",
+      "passed": 12,
+      "failed": 0
+    },
+    {
+      "file": "src/collection/DashboardScreen.test.tsx",
+      "status": "passed",
+      "passed": 4,
+      "failed": 0
+    },
+    {
+      "file": "src/components/FormSections.test.tsx",
+      "status": "passed",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "file": "src/components/ReferenceInteractions.test.tsx",
+      "status": "passed",
+      "passed": 4,
+      "failed": 0
+    },
+    {
+      "file": "src/orders/OrderScreen.test.tsx",
+      "status": "passed",
+      "passed": 9,
+      "failed": 0
+    },
+    {
+      "file": "src/orders/PurchaseContext.test.tsx",
+      "status": "passed",
+      "passed": 7,
+      "failed": 0
+    },
+    {
+      "file": "src/photos/PhotosSection.test.tsx",
+      "status": "passed",
+      "passed": 10,
+      "failed": 0
+    },
+    {
+      "file": "src/seed-lots/SeedLotScreen.test.tsx",
+      "status": "passed",
+      "passed": 43,
+      "failed": 0
+    },
+    {
+      "file": "src/collection/DashboardSearch.test.tsx",
+      "status": "passed",
+      "passed": 13,
+      "failed": 0
+    }
+  ],
+  "notes": [
+    "Initial combined run: 106 passed, 1 Dashboard lazy-module loading timeout. Isolated unchanged suite repeated the timeout.",
+    "DashboardSearch now awaits the real lazy-module import in beforeAll. Assertions and timeouts unchanged. Final isolated suite: 13 passed.",
+    "Source TypeScript, targeted ESLint, Prettier and production Vite build passed.",
+    "42 responsive captures; effective-space proxies are not actual browser zoom.",
+    "Acquisition captures predate final checkbox alignment rule; browser URL policy blocked refresh.",
+    "No canonical feature-verify, staging, commit or delivery.",
+    "Saved geometry JSON contains 12 Dashboard/Overview probes; 42 state/viewport screenshot files exist. No missing raw measurements were reconstructed."
+  ],
+  "passed": 107,
+  "failed": 0
+}

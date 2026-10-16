@@ -1,0 +1,68 @@
+{
+  "scope": "Calculated semantic token pairs only; not a claim of complete WCAG conformance or legacy-color audit",
+  "pairs": [
+    {
+      "foreground": "text",
+      "background": "background",
+      "ratio": 14.41,
+      "minimum": 4.5,
+      "passes": true
+    },
+    {
+      "foreground": "text-muted",
+      "background": "background",
+      "ratio": 4.781,
+      "minimum": 4.5,
+      "passes": true
+    },
+    {
+      "foreground": "text-muted",
+      "background": "surface",
+      "ratio": 5.144,
+      "minimum": 4.5,
+      "passes": true
+    },
+    {
+      "foreground": "on-primary",
+      "background": "primary",
+      "ratio": 6.534,
+      "minimum": 4.5,
+      "passes": true
+    },
+    {
+      "foreground": "primary",
+      "background": "primary-subtle",
+      "ratio": 5.616,
+      "minimum": 4.5,
+      "passes": true
+    },
+    {
+      "foreground": "danger",
+      "background": "danger-subtle",
+      "ratio": 4.724,
+      "minimum": 4.5,
+      "passes": true
+    },
+    {
+      "foreground": "warning-text",
+      "background": "warning-subtle",
+      "ratio": 5.981,
+      "minimum": 4.5,
+      "passes": true
+    },
+    {
+      "foreground": "border-strong",
+      "background": "surface",
+      "ratio": 3.654,
+      "minimum": 3,
+      "passes": true
+    },
+    {
+      "foreground": "focus-ring",
+      "background": "surface",
+      "ratio": 5.436,
+      "minimum": 3,
+      "passes": true
+    }
+  ]
+}

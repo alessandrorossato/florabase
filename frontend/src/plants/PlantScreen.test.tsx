@@ -1,3 +1,4 @@
+import { selectDirectoryFilter } from "../test/directoryFilters";
 import {
   act,
   cleanup,
@@ -513,20 +514,18 @@ test("Plants navigation exposes loading, empty, missing-identity, and failure st
 test("unified rows, search, lifecycle and type filters, detail, and Back remain accessible", async () => {
   mockApi(plantHandler([plant()], [group()]));
   const user = await openPlants();
-  const lifecycle = screen.getByRole("group", { name: "Lifecycle" });
-  const recordType = screen.getByRole("group", { name: "Record type" });
   const plantRow = await screen.findByRole("button", {
     name: /Avocado #1.*Persea americana.*Plant.*Greenhouse → Bench 4.*Purchased · Rossi Nursery/s,
   });
   expect(within(plantRow).getByText("Plant")).toBeInTheDocument();
   expect(screen.queryByText("Seedlings 2026")).not.toBeInTheDocument();
 
-  await user.click(within(lifecycle).getByRole("button", { name: "History" }));
+  await selectDirectoryFilter(user, "Lifecycle", "history");
   const groupRow = screen.getByRole("button", {
     name: /Seedlings 2026.*Cyphomandra betacea.*Group.*0 plants.*From sowing · Tray A/s,
   });
   expect(within(groupRow).getByText("Group")).toBeInTheDocument();
-  await user.click(within(lifecycle).getByRole("button", { name: "All" }));
+  await selectDirectoryFilter(user, "Lifecycle", "all");
 
   const search = screen.getByRole("searchbox", { name: "Search Plants" });
   for (const query of ["Persea", "Avocado #1", "Bench 4", "Rossi Nursery"]) {
@@ -539,16 +538,16 @@ test("unified rows, search, lifecycle and type filters, detail, and Back remain 
   expect(screen.getByText("Seedlings 2026")).toBeInTheDocument();
   await user.clear(search);
 
-  await user.click(within(recordType).getByRole("button", { name: "Plants" }));
+  await selectDirectoryFilter(user, "Record type", "plant");
   expect(screen.getByText("Avocado #1")).toBeInTheDocument();
   expect(screen.queryByText("Seedlings 2026")).not.toBeInTheDocument();
-  await user.click(within(recordType).getByRole("button", { name: "Groups" }));
+  await selectDirectoryFilter(user, "Record type", "group");
   expect(screen.getByText("Seedlings 2026")).toBeInTheDocument();
   expect(screen.queryByText("Avocado #1")).not.toBeInTheDocument();
-  await user.click(within(lifecycle).getByRole("button", { name: "Active" }));
+  await selectDirectoryFilter(user, "Lifecycle", "active");
   expect(screen.getByText(/No Plants match/)).toBeInTheDocument();
-  await user.click(within(lifecycle).getByRole("button", { name: "All" }));
-  await user.click(within(recordType).getByRole("button", { name: "Plants" }));
+  await selectDirectoryFilter(user, "Lifecycle", "all");
+  await selectDirectoryFilter(user, "Record type", "plant");
   const selectedRow = screen.getByRole("button", { name: /Avocado #1/ });
   await user.click(selectedRow);
   expect(
@@ -717,10 +716,7 @@ test("direct origin, references, partial date, Location, lifecycle, notes, and s
   );
   await chooseReference(user, "Botanical identity", "Persea americana");
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
-  await user.type(
-    screen.getByLabelText("Label (optional)"),
-    "Courtyard avocado",
-  );
+  await user.type(screen.getByLabelText("Label"), "Courtyard avocado");
   await user.click(screen.getByRole("tab", { name: "Origin" }));
   await user.click(screen.getByRole("tab", { name: "Origin" }));
   await user.selectOptions(screen.getByLabelText("Direct origin"), "other");
@@ -735,18 +731,15 @@ test("direct origin, references, partial date, Location, lifecycle, notes, and s
     screen.queryByLabelText("Other origin detail"),
   ).not.toBeInTheDocument();
   await user.click(screen.getByRole("tab", { name: "Origin" }));
-  await user.selectOptions(
-    screen.getByLabelText("Supplier (optional)"),
-    supplierId,
-  );
+  await user.selectOptions(screen.getByLabelText("Supplier"), supplierId);
   await user.click(screen.getByRole("tab", { name: "Origin" }));
   await user.selectOptions(
-    screen.getByLabelText("Material provenance (optional)"),
+    screen.getByLabelText("Material provenance"),
     placeId,
   );
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
   await user.selectOptions(
-    screen.getByLabelText("Current location (optional)"),
+    screen.getByLabelText("Current location"),
     locationId,
   );
   await user.click(screen.getByRole("tab", { name: "Origin" }));
@@ -759,7 +752,7 @@ test("direct origin, references, partial date, Location, lifecycle, notes, and s
   await user.selectOptions(screen.getByLabelText("Lifecycle"), "dead");
   await user.click(screen.getByRole("tab", { name: "Lifecycle & notes" }));
   await user.type(
-    screen.getByLabelText("Notes (optional)"),
+    screen.getByLabelText("Notes", { selector: "textarea" }),
     "Retained history.",
   );
   await user.click(screen.getByRole("tab", { name: "Lifecycle & notes" }));
@@ -819,16 +812,11 @@ test("known Sowing clears direct provenance and preserves an independently chose
   await user.click(screen.getByRole("tab", { name: "Origin" }));
   await user.selectOptions(screen.getByLabelText("Direct origin"), "purchased");
   await user.click(screen.getByRole("tab", { name: "Origin" }));
-  await user.selectOptions(
-    screen.getByLabelText("Supplier (optional)"),
-    supplierId,
-  );
+  await user.selectOptions(screen.getByLabelText("Supplier"), supplierId);
   await user.click(screen.getByRole("tab", { name: "Origin" }));
   await user.click(screen.getByLabelText("Known Sowing"));
   expect(screen.queryByLabelText("Direct origin")).not.toBeInTheDocument();
-  expect(
-    screen.queryByLabelText("Supplier (optional)"),
-  ).not.toBeInTheDocument();
+  expect(screen.queryByLabelText("Supplier")).not.toBeInTheDocument();
   await chooseReference(user, "Originating Sowing", "Tray A");
   await user.click(screen.getByRole("tab", { name: "Origin" }));
   await user.click(
@@ -992,14 +980,11 @@ test("full Plant and group PUT edits preserve form state on failure and apply co
   const user = await openPlants();
   await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
   await user.click(await screen.findByRole("button", { name: "Edit Plant" }));
-  const label = screen.getByLabelText("Label (optional)");
+  const label = screen.getByLabelText("Label");
   await user.clear(label);
   await user.type(label, "Corrected plant");
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
-  await user.selectOptions(
-    screen.getByLabelText("Current location (optional)"),
-    "",
-  );
+  await user.selectOptions(screen.getByLabelText("Current location"), "");
   await user.click(screen.getByRole("tab", { name: "Lifecycle & notes" }));
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   expect(await screen.findByRole("alert")).toHaveTextContent("could not save");
@@ -1010,12 +995,7 @@ test("full Plant and group PUT edits preserve form state on failure and apply co
     await screen.findByText("Plant changes were saved."),
   ).toBeInTheDocument();
 
-  await user.click(
-    within(screen.getByRole("group", { name: "Lifecycle" })).getByRole(
-      "button",
-      { name: "History" },
-    ),
-  );
+  await selectDirectoryFilter(user, "Lifecycle", "history");
   await user.click(screen.getByRole("button", { name: /Seedlings 2026/ }));
   await user.click(
     await screen.findByRole("button", { name: "Edit Plant group" }),
@@ -1178,9 +1158,7 @@ test("active group extraction is focused, updates exact quantity, opens the Plan
   expect(
     screen.getByRole("combobox", { name: "Botanical identity" }),
   ).toHaveValue("Cyphomandra betacea");
-  expect(screen.getByLabelText("Current location (optional)")).toHaveValue(
-    locationId,
-  );
+  expect(screen.getByLabelText("Current location")).toHaveValue(locationId);
   const extractionIdentity = screen.getByRole("combobox", {
     name: "Botanical identity",
   });
@@ -1188,12 +1166,9 @@ test("active group extraction is focused, updates exact quantity, opens the Plan
   await user.type(extractionIdentity, "Persea");
   await user.click(screen.getByRole("button", { name: "Persea americana" }));
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
-  await user.selectOptions(
-    screen.getByLabelText("Current location (optional)"),
-    "",
-  );
+  await user.selectOptions(screen.getByLabelText("Current location"), "");
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
-  await user.type(screen.getByLabelText("Label (optional)"), "Chosen one");
+  await user.type(screen.getByLabelText("Label"), "Chosen one");
   await user.click(screen.getByRole("tab", { name: "Origin" }));
   await user.selectOptions(screen.getByLabelText("Precision"), "day");
   await user.click(screen.getByRole("tab", { name: "Origin" }));
@@ -1206,7 +1181,7 @@ test("active group extraction is focused, updates exact quantity, opens the Plan
   await user.type(screen.getByLabelText("Day"), "1");
   await user.click(screen.getByRole("tab", { name: "Lifecycle & notes" }));
   await user.type(
-    screen.getByLabelText("Notes (optional)"),
+    screen.getByLabelText("Notes", { selector: "textarea" }),
     "Chosen for vigor.",
   );
   await user.click(screen.getByRole("tab", { name: "Lifecycle & notes" }));
@@ -1268,12 +1243,7 @@ test("group extraction availability and quantity explanations cover inactive, ex
     mockApi(plantHandler([], [scenario.record]));
     const user = await openPlants();
     if (!scenario.actionable) {
-      await user.click(
-        within(screen.getByRole("group", { name: "Lifecycle" })).getByRole(
-          "button",
-          { name: "History" },
-        ),
-      );
+      await selectDirectoryFilter(user, "Lifecycle", "history");
     }
     await user.click(
       await screen.findByRole("button", { name: /Seedlings 2026/ }),
@@ -1469,7 +1439,7 @@ test("extraction conflict preserves the form, refreshes the group, and does not 
   await user.click(
     await screen.findByRole("button", { name: "Extract plant" }),
   );
-  const label = screen.getByLabelText("Label (optional)");
+  const label = screen.getByLabelText("Label");
   await user.type(label, "Keep this value");
   await user.click(screen.getByRole("tab", { name: "Lifecycle & notes" }));
   await user.click(screen.getByRole("button", { name: "Extract plant" }));
@@ -1574,7 +1544,7 @@ test("explicit Plant transfer records recipient and keeps the historical detail 
   await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
   const transfer = screen.getByRole("button", { name: "Transfer" });
   expect(transfer).toHaveClass("button--secondary");
-  expect(screen.getByRole("button", { name: "Edit Plant" })).not.toHaveClass(
+  expect(screen.getByRole("button", { name: "Edit Plant" })).toHaveClass(
     "button--secondary",
   );
   await user.click(transfer);
@@ -1584,12 +1554,9 @@ test("explicit Plant transfer records recipient and keeps the historical detail 
   await user.selectOptions(screen.getByLabelText("Precision"), "year");
   await user.clear(screen.getByLabelText("Year"));
   await user.type(screen.getByLabelText("Year"), "2026");
+  await user.type(screen.getByLabelText("Recipient"), "Community garden");
   await user.type(
-    screen.getByLabelText("Recipient (optional)"),
-    "Community garden",
-  );
-  await user.type(
-    screen.getByLabelText("Notes (optional)"),
+    screen.getByLabelText("Notes", { selector: "textarea" }),
     "Healthy handoff.",
   );
   await user.click(screen.getByRole("button", { name: "Transfer Plant" }));
@@ -1772,12 +1739,7 @@ test("PlantGroup detail has the same responsive Event journal and a useful empty
     ),
   );
   const user = await openPlants();
-  await user.click(
-    within(screen.getByRole("group", { name: "Lifecycle" })).getByRole(
-      "button",
-      { name: "History" },
-    ),
-  );
+  await selectDirectoryFilter(user, "Lifecycle", "history");
   await user.click(
     await screen.findByRole("button", { name: /Seedlings 2026/ }),
   );
@@ -1813,12 +1775,7 @@ test("PlantGroup detail has the same responsive Event journal and a useful empty
     ),
   );
   const parityUser = await openPlants();
-  await parityUser.click(
-    within(screen.getByRole("group", { name: "Lifecycle" })).getByRole(
-      "button",
-      { name: "History" },
-    ),
-  );
+  await selectDirectoryFilter(parityUser, "Lifecycle", "history");
   await parityUser.click(
     await screen.findByRole("button", { name: /Seedlings 2026/ }),
   );
@@ -1878,7 +1835,10 @@ test("Event creation validates movement, explains side effects and authoritative
   expect(screen.getByLabelText("Entry type")).toHaveAccessibleDescription(
     /Choose Observation or Other for a note/i,
   );
-  await user.type(screen.getByLabelText("Notes (optional)"), "New leaf.");
+  await user.type(
+    screen.getByLabelText("Notes", { selector: "textarea" }),
+    "New leaf.",
+  );
   await user.click(
     within(screen.getByRole("dialog")).getByRole("button", {
       name: "Add entry",
@@ -2150,11 +2110,11 @@ test.each(["plant", "group"] as const)(
     ).toHaveFocus();
     await chooseReference(user, "Botanical identity", "Persea americana");
     await user.selectOptions(
-      screen.getByRole("combobox", { name: "Current location (optional)" }),
+      screen.getByRole("combobox", { name: "Current location" }),
       locationId,
     );
     expect(
-      screen.queryByRole("textbox", { name: "Notes (optional)" }),
+      screen.queryByRole("textbox", { name: "Notes" }),
     ).not.toBeInTheDocument();
     if (kind === "plant")
       expect(
@@ -2169,7 +2129,7 @@ test.each(["plant", "group"] as const)(
     );
     await user.click(screen.getByRole("tab", { name: "Lifecycle & notes" }));
     await user.type(
-      screen.getByRole("textbox", { name: "Notes (optional)" }),
+      screen.getByRole("textbox", { name: "Notes" }),
       "Keep this observation.",
     );
     await user.click(screen.getByRole("button", { name: "Back" }));
@@ -2177,12 +2137,12 @@ test.each(["plant", "group"] as const)(
       "gift_exchange",
     );
     expect(
-      screen.queryByRole("textbox", { name: "Notes (optional)" }),
+      screen.queryByRole("textbox", { name: "Notes" }),
     ).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Next" }));
-    expect(
-      screen.getByRole("textbox", { name: "Notes (optional)" }),
-    ).toHaveValue("Keep this observation.");
+    expect(screen.getByRole("textbox", { name: "Notes" })).toHaveValue(
+      "Keep this observation.",
+    );
     await user.click(
       screen.getByRole("button", {
         name: kind === "plant" ? "Record Plant" : "Record Plant group",
@@ -2309,7 +2269,7 @@ test("transfer dialog contains keyboard focus and restores the operation trigger
   await user.click(trigger);
   const dialog = screen.getByRole("dialog", { name: "Transfer" });
   expect(
-    within(dialog).getByRole("textbox", { name: "Recipient (optional)" }),
+    within(dialog).getByRole("textbox", { name: "Recipient" }),
   ).toHaveFocus();
   within(dialog).getByRole("button", { name: "Cancel" }).focus();
   await user.tab();
@@ -2365,12 +2325,7 @@ test("historical group detail labels retained location and zero count without cl
     ),
   );
   const user = await openPlants();
-  await user.click(
-    within(screen.getByRole("group", { name: "Lifecycle" })).getByRole(
-      "button",
-      { name: "History" },
-    ),
-  );
+  await selectDirectoryFilter(user, "Lifecycle", "history");
   await user.click(screen.getByRole("button", { name: /Seedlings 2026/ }));
   expect(
     screen.getByRole("region", { name: "Record summary" }),
@@ -2407,25 +2362,22 @@ test("server validation reopens additional fields and focuses the visible error"
   await chooseReference(user, "Botanical identity", "Persea americana");
   await user.click(screen.getByRole("tab", { name: "Origin" }));
   await user.click(screen.getByRole("tab", { name: "Origin" }));
-  await user.selectOptions(
-    screen.getByLabelText("Supplier (optional)"),
-    supplierId,
-  );
+  await user.selectOptions(screen.getByLabelText("Supplier"), supplierId);
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
   await user.click(screen.getByRole("tab", { name: "Lifecycle & notes" }));
   await user.click(screen.getByRole("button", { name: "Record Plant" }));
   const error = await screen.findByRole("alert");
   expect(error).toHaveTextContent("no longer exists");
   await waitFor(() => {
-    expect(screen.getByLabelText("Supplier (optional)")).toHaveFocus();
+    expect(screen.getByLabelText("Supplier")).toHaveFocus();
   });
   expect(screen.getByRole("tab", { name: "Origin" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
-  expect(
-    screen.getByRole("combobox", { name: "Supplier (optional)" }),
-  ).toHaveValue(supplierId);
+  expect(screen.getByRole("combobox", { name: "Supplier" })).toHaveValue(
+    supplierId,
+  );
 });
 
 test("Plant detail and correction share a clear record header and identity context", async () => {
@@ -2447,7 +2399,7 @@ test("Plant detail and correction share a clear record header and identity conte
   ).toHaveTextContent(
     /Record\s*Avocado #1\s*Botanical identity\s*Persea americana/,
   );
-  expect(screen.getByLabelText("Label (optional)")).toHaveValue("Avocado #1");
+  expect(screen.getByLabelText("Label")).toHaveValue("Avocado #1");
 });
 
 test("BULK-001 mixed Plant and Group directory selection retains concrete kind", async () => {
@@ -2463,7 +2415,7 @@ test("BULK-001 mixed Plant and Group directory selection retains concrete kind",
     ),
   );
   const user = await openPlants();
-  await user.click(screen.getByRole("button", { name: "Select" }));
+  await user.click(screen.getByRole("button", { name: "Select records" }));
   await user.click(screen.getByRole("button", { name: "Select visible" }));
   expect(screen.getByText("2 selected")).toBeVisible();
   const controls = screen.getAllByRole("checkbox");
@@ -2473,7 +2425,7 @@ test("BULK-001 mixed Plant and Group directory selection retains concrete kind",
   expect(screen.getByLabelText("Directory results")).toHaveTextContent(
     "2 records",
   );
-  await user.click(screen.getByRole("button", { name: "Groups" }));
+  await selectDirectoryFilter(user, "Record type", "group");
   expect(screen.getByLabelText("Directory results")).toHaveTextContent(
     "1 record",
   );
@@ -2492,7 +2444,7 @@ test("Journal editor dismisses pristine forms, protects changed notes and restor
   expect(add).toHaveFocus();
   await user.click(add);
   await user.type(
-    screen.getByLabelText("Notes (optional)"),
+    screen.getByLabelText("Notes", { selector: "textarea" }),
     "Warm nights prompted this move.",
   );
   await user.keyboard("{Escape}");
@@ -2502,7 +2454,7 @@ test("Journal editor dismisses pristine forms, protects changed notes and restor
   await user.click(
     within(discard).getByRole("button", { name: "Continue editing" }),
   );
-  expect(screen.getByLabelText("Notes (optional)")).toHaveValue(
+  expect(screen.getByLabelText("Notes", { selector: "textarea" })).toHaveValue(
     "Warm nights prompted this move.",
   );
   await user.click(screen.getByRole("button", { name: "Cancel" }));

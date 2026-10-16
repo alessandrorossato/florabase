@@ -1,3 +1,5 @@
+import { FieldLabel } from "../components/FieldLabel";
+import { DirectoryTools } from "../components/DirectoryTools";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
@@ -440,44 +442,106 @@ export function GeographyScreen({
         eyebrow="Explore"
         description="Manage named places and precise collection provenance sites."
         actions={
-          mode === "places" ? (
-            <button
-              type="button"
-              ref={creationTriggerRef}
-              aria-haspopup="dialog"
-              onClick={() => {
-                setCreateName("");
-                setCreateParentId("");
-                setSave({ status: "idle" });
-                openCreation();
-              }}
-            >
-              New local place
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                setSiteCreating(true);
-              }}
-            >
-              New provenance site
-            </button>
+          initialSiteId || initialPlaceId ? (
+            mode === "places" ? (
+              <button
+                type="button"
+                ref={creationTriggerRef}
+                aria-haspopup="dialog"
+                onClick={() => {
+                  setCreateName("");
+                  setCreateParentId("");
+                  setSave({ status: "idle" });
+                  openCreation();
+                }}
+              >
+                New local place
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setSiteCreating(true);
+                }}
+              >
+                New provenance site
+              </button>
+            )
+          ) : undefined
+        }
+        tools={
+          !initialSiteId &&
+          !initialPlaceId && (
+            <DirectoryTools
+              name="Geography"
+              search={
+                <DirectorySearch
+                  hideLabel={!initialSiteId && !initialPlaceId}
+                  id="geography-filter"
+                  label={
+                    mode === "places"
+                      ? "Search places"
+                      : "Search provenance sites"
+                  }
+                  placeholder={
+                    mode === "places" ? "Place or path" : "Provenance site"
+                  }
+                  value={filter}
+                  onChange={setFilter}
+                  className="geography-search"
+                />
+              }
+              savedViews={
+                <SavedViews
+                  presentation="dialog"
+                  surface="geography"
+                  state={view.savedState}
+                />
+              }
+              actions={
+                mode === "places" ? (
+                  <button
+                    type="button"
+                    ref={creationTriggerRef}
+                    aria-haspopup="dialog"
+                    onClick={() => {
+                      setCreateName("");
+                      setCreateParentId("");
+                      setSave({ status: "idle" });
+                      openCreation();
+                    }}
+                  >
+                    New local place
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSiteCreating(true);
+                    }}
+                  >
+                    New provenance site
+                  </button>
+                )
+              }
+            />
           )
         }
       />
-      {!initialSiteId && !initialPlaceId && (
-        <SavedViews surface="geography" state={view.savedState} />
+
+      {Boolean(initialSiteId ?? initialPlaceId) && (
+        <DirectorySearch
+          hideLabel={!initialSiteId && !initialPlaceId}
+          id="geography-filter"
+          label={
+            mode === "places" ? "Search places" : "Search provenance sites"
+          }
+          placeholder={mode === "places" ? "Place or path" : "Provenance site"}
+          value={filter}
+          onChange={setFilter}
+          className="geography-search"
+        />
       )}
-      <DirectorySearch
-        hideLabel={!initialSiteId && !initialPlaceId}
-        id="geography-filter"
-        label={mode === "places" ? "Search places" : "Search provenance sites"}
-        placeholder={mode === "places" ? "Place or path" : "Provenance site"}
-        value={filter}
-        onChange={setFilter}
-        className="geography-search"
-      />
       <nav aria-label="Geography views" className="geography-view-nav">
         <button
           type="button"
@@ -797,9 +861,12 @@ export function GeographyScreen({
                       >
                         <h4>Edit local place</h4>
                         <div className="field">
-                          <label htmlFor="edit-geographic-place-name">
+                          <FieldLabel
+                            required
+                            htmlFor="edit-geographic-place-name"
+                          >
                             Name
-                          </label>
+                          </FieldLabel>
                           <input
                             id="edit-geographic-place-name"
                             name="name"
@@ -829,9 +896,12 @@ export function GeographyScreen({
                           </select>
                         </div>
                         <div className="field">
-                          <label htmlFor="edit-geographic-place-parent">
+                          <FieldLabel
+                            required
+                            htmlFor="edit-geographic-place-parent"
+                          >
                             Parent geographic place
-                          </label>
+                          </FieldLabel>
                           <select
                             id="edit-geographic-place-parent"
                             name="parent_id"
@@ -908,7 +978,9 @@ export function GeographyScreen({
                     fabricated standard code.
                   </p>
                   <div className="field">
-                    <label htmlFor="new-geographic-place-name">Name</label>
+                    <FieldLabel required htmlFor="new-geographic-place-name">
+                      Name
+                    </FieldLabel>
                     <input
                       id="new-geographic-place-name"
                       required
@@ -941,9 +1013,9 @@ export function GeographyScreen({
                     </select>
                   </div>
                   <div className="field">
-                    <label htmlFor="new-geographic-place-parent">
+                    <FieldLabel required htmlFor="new-geographic-place-parent">
                       Parent geographic place
-                    </label>
+                    </FieldLabel>
                     <select
                       id="new-geographic-place-parent"
                       required

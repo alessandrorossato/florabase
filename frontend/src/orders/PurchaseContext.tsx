@@ -18,7 +18,13 @@ import {
   type PurchaseSeedPage,
 } from "./purchaseApi";
 
-export function OrderTransaction({ order }: { order: Order }) {
+export function OrderTransaction({
+  order,
+  showSupplier = true,
+}: {
+  order: Order;
+  showSupplier?: boolean;
+}) {
   return (
     <section
       className="order-transaction"
@@ -27,10 +33,12 @@ export function OrderTransaction({ order }: { order: Order }) {
       <h4>Order transaction information</h4>
       <a href={`#/orders/${order.id}`}>{orderTitle(order)}</a>
       <dl>
-        <div>
-          <dt>Order Supplier</dt>
-          <dd>{order.supplier?.name ?? "Supplier unknown"}</dd>
-        </div>
+        {showSupplier && (
+          <div>
+            <dt>Order Supplier</dt>
+            <dd>{order.supplier?.name ?? "Supplier unknown"}</dd>
+          </div>
+        )}
         <div>
           <dt>Order date</dt>
           <dd>{orderDate(order.ordered_on)}</dd>

@@ -1,0 +1,150 @@
+{
+  "note": "Exact image pixel sizes from the browser provider. Filename widths are requested viewport targets; they are not proof of actual tab zoom. Some provider captures differ from requested viewport dimensions.",
+  "images": [
+    {
+      "file": "before/collection-harvests.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "before/collection-locations.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "before/collection-plants.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "before/collection-seeds.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "before/collection-sowings.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "before/detail-plants.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "before/detail-seeds.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "before/explore-identities.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "before/explore-media.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "before/form-harvests.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "before/form-seed.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "before/form-suppliers.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "before/mobile-navigation.jpg",
+      "pixel_width": 390,
+      "pixel_height": 844
+    },
+    {
+      "file": "before/mobile-seeds.jpg",
+      "pixel_width": 375,
+      "pixel_height": 812
+    },
+    {
+      "file": "before/sourcing-orders.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "before/sourcing-suppliers.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "global-navigation/sign-in.jpg",
+      "pixel_width": 1280,
+      "pixel_height": 720
+    },
+    {
+      "file": "layout-fixtures/botanical-identities-directory-1024.jpg",
+      "pixel_width": 1009,
+      "pixel_height": 832
+    },
+    {
+      "file": "layout-fixtures/botanical-identities-directory-1440.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "layout-fixtures/botanical-identities-directory-390.jpg",
+      "pixel_width": 390,
+      "pixel_height": 844
+    },
+    {
+      "file": "layout-fixtures/dashboard-directory-1440.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "layout-fixtures/geography-dialog-new-local-place-1440.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "layout-fixtures/locations-dialog-new-location-1440.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "layout-fixtures/plants-directory-1440.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "layout-fixtures/plants-form-1024.jpg",
+      "pixel_width": 1024,
+      "pixel_height": 844
+    },
+    {
+      "file": "layout-fixtures/plants-form-1440.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "layout-fixtures/plants-form-390.jpg",
+      "pixel_width": 375,
+      "pixel_height": 812
+    },
+    {
+      "file": "layout-fixtures/schedule-directory-1440.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    },
+    {
+      "file": "layout-fixtures/suppliers-directory-1440.jpg",
+      "pixel_width": 1440,
+      "pixel_height": 844
+    }
+  ]
+}

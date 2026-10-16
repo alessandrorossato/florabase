@@ -1,3 +1,4 @@
+import { FieldLabel } from "../components/FieldLabel";
 import {
   useEffect,
   useMemo,
@@ -609,10 +610,13 @@ export function EventJournal({
             noValidate
           >
             <div className="field">
-              <label htmlFor={`event-kind-${targetId}`}>Entry type</label>
+              <FieldLabel htmlFor={`event-kind-${targetId}`} required>
+                Entry type
+              </FieldLabel>
               <select
                 aria-describedby={`event-kind-help-${targetId}`}
                 id={`event-kind-${targetId}`}
+                aria-required="true"
                 value={form.kind}
                 disabled={pending}
                 onChange={(event) => {
@@ -660,9 +664,9 @@ export function EventJournal({
             </p>
             {form.kind === "movement" && (
               <div className="field">
-                <label htmlFor={`event-destination-${targetId}`}>
+                <FieldLabel required htmlFor={`event-destination-${targetId}`}>
                   Destination Location
-                </label>
+                </FieldLabel>
                 <select
                   id={`event-destination-${targetId}`}
                   required
@@ -693,9 +697,7 @@ export function EventJournal({
             )}
             {form.kind === "transfer" && (
               <div className="field">
-                <label htmlFor={`event-recipient-${targetId}`}>
-                  Recipient <span className="optional">(optional)</span>
-                </label>
+                <label htmlFor={`event-recipient-${targetId}`}>Recipient</label>
                 <input
                   id={`event-recipient-${targetId}`}
                   value={form.recipient}
@@ -709,9 +711,7 @@ export function EventJournal({
               </div>
             )}
             <div className="field">
-              <label htmlFor={`event-notes-${targetId}`}>
-                Notes <span className="optional">(optional)</span>
-              </label>
+              <label htmlFor={`event-notes-${targetId}`}>Notes</label>
               <textarea
                 id={`event-notes-${targetId}`}
                 maxLength={20000}

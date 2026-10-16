@@ -31,6 +31,38 @@ const panels = [
     ),
   },
 ];
+test("edit sections expose Save changes and Cancel everywhere without wizard progression", async () => {
+  const submit = vi.fn(
+    (event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) => {
+      event.preventDefault();
+    },
+  );
+  const user = userEvent.setup();
+  render(
+    <form onSubmit={submit}>
+      <FormSections
+        mode="edit"
+        panels={panels}
+        submit={<button type="submit">Save changes</button>}
+        cancel={<button type="button">Cancel</button>}
+      />
+    </form>,
+  );
+  await user.type(screen.getByLabelText("Name"), "Okra");
+  for (const label of ["Essentials", "Notes", "Essentials"]) {
+    await user.click(screen.getByRole("tab", { name: label }));
+    expect(screen.getByRole("button", { name: "Cancel" })).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Next" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Back" }),
+    ).not.toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Save changes" }));
+  }
+  expect(submit).toHaveBeenCalledTimes(3);
+  expect(screen.getByLabelText("Name")).toHaveValue("Okra");
+});
 test("tabs and Back/Next retain native values and submit the complete form only once", async () => {
   const submit = vi.fn(
     (event: React.SyntheticEvent<HTMLFormElement, SubmitEvent>) => {
@@ -66,25 +98,29 @@ test("tabs and Back/Next retain native values and submit the complete form only 
     notes: "Keep dry",
   });
 });
-test("native validation reveals and focuses the first invalid hidden panel", async () => {
-  render(
-    <form>
-      <FormSections
-        panels={panels}
-        submit={<button>Save</button>}
-        cancel={null}
-      />
-    </form>,
-  );
-  const user = userEvent.setup();
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
-  await user.click(screen.getByRole("button", { name: "Save" }));
-  expect(screen.getByRole("tab", { name: "Essentials" })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
-  expect(screen.getByLabelText("Name")).toHaveFocus();
-});
+test.each(["create", "edit"] as const)(
+  "%s native validation reveals and focuses the first invalid hidden panel",
+  async (mode) => {
+    render(
+      <form>
+        <FormSections
+          mode={mode}
+          panels={panels}
+          submit={<button>Save</button>}
+          cancel={null}
+        />
+      </form>,
+    );
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("tab", { name: "Notes" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect(screen.getByRole("tab", { name: "Essentials" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByLabelText("Name")).toHaveFocus();
+  },
+);
 test("server validation reveals its exact field and arrow/Home/End navigation uses roving focus", async () => {
   const props = {
     panels,
@@ -120,4 +156,42 @@ test("server validation reveals its exact field and arrow/Home/End navigation us
     "aria-selected",
     "true",
   );
+});
+
+test("page mode exposes every field and final action while validation focuses without hiding sections", async () => {
+  const user = userEvent.setup();
+  const { rerender } = render(
+    <form>
+      <FormSections
+        mode="page"
+        panels={panels}
+        submit={<button>Save</button>}
+        cancel={<button type="button">Cancel</button>}
+      />
+    </form>,
+  );
+  expect(screen.queryByRole("tablist")).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Next" }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByLabelText("Profile notes")).toBeVisible();
+  await user.type(screen.getByLabelText("Profile notes"), "Retained draft");
+  rerender(
+    <form>
+      <FormSections
+        mode="page"
+        panels={panels}
+        error={{ messages: ["Check Name"], field: "name" }}
+        errorFields={[{ match: /name/i, selector: "#name" }]}
+        submit={<button>Save</button>}
+        cancel={<button type="button">Cancel</button>}
+      />
+    </form>,
+  );
+  await waitFor(() => {
+    expect(screen.getByLabelText("Name")).toHaveFocus();
+  });
+  expect(screen.getByLabelText("Profile notes")).toBeVisible();
+  expect(screen.getByLabelText("Profile notes")).toHaveValue("Retained draft");
+  expect(screen.getByRole("button", { name: "Save" })).toBeVisible();
 });

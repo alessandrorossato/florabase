@@ -1,0 +1,100 @@
+{
+  "date": "2026-10-15",
+  "source": "/home/alessandro/.codex/worktrees/996d/florabase",
+  "branch": "feat/global-visual-001",
+  "base_head": "cd63c185f7bcb0544cd9c3cff984b29564e6bc84",
+  "dirty": true,
+  "suites": [
+    {
+      "file": "src/collection/DashboardScreen.test.tsx",
+      "passed": 4,
+      "failed": 0
+    },
+    {
+      "file": "src/collection/DashboardSearch.test.tsx",
+      "passed": 13,
+      "failed": 0
+    },
+    {
+      "file": "src/components/FormSections.test.tsx",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "file": "src/components/ReferenceInteractions.test.tsx",
+      "passed": 4,
+      "failed": 0
+    },
+    {
+      "file": "src/history/HistoryScreen.test.tsx",
+      "passed": 9,
+      "failed": 0
+    },
+    {
+      "file": "src/labels/LabelsScreen.test.tsx",
+      "passed": 54,
+      "failed": 0
+    },
+    {
+      "file": "src/media/MediaScreen.test.tsx",
+      "passed": 18,
+      "failed": 0
+    },
+    {
+      "file": "src/orders/PurchaseContext.test.tsx",
+      "passed": 7,
+      "failed": 0
+    },
+    {
+      "file": "src/settings/SettingsScreen.test.tsx",
+      "passed": 5,
+      "failed": 0
+    },
+    {
+      "file": "src/sowings/SowingScreen.test.tsx",
+      "passed": 19,
+      "failed": 0
+    },
+    {
+      "file": "src/lineage/LineagePanel.test.tsx",
+      "passed": 4,
+      "failed": 0
+    },
+    {
+      "file": "src/orders/OrderPicker.test.tsx",
+      "passed": 4,
+      "failed": 0
+    },
+    {
+      "file": "src/photos/PhotosSection.test.tsx",
+      "passed": 11,
+      "failed": 0
+    },
+    {
+      "file": "src/seed-lots/SeedLotScreen.test.tsx",
+      "passed": 45,
+      "failed": 0
+    }
+  ],
+  "passed": 202,
+  "failed": 0,
+  "static": {
+    "typescript": "passed",
+    "targeted_eslint": "passed, zero warnings",
+    "prettier": "passed",
+    "vite_production_build": "passed",
+    "git_diff_check": "passed",
+    "staged_diff": "empty"
+  },
+  "live_review": "Completed 60 state/viewport cases plus interactions and read-only sibling checks; remaining operator acceptance documented.",
+  "actual_zoom": "Not available through browser tooling; proxies labelled explicitly; operator acceptance remains.",
+  "database": "20261013_0042; fixture v4/66 ready",
+  "canonical_feature_verify": "not run",
+  "notes": [
+    "Final serial SeedLot run: 45 passed. Combined live-refinement rerun: Photos 11, OrderPicker 4, Lineage 4, Sowings 19 passed. Remaining shared suites retained their passing results.",
+    "Overlapping host checks caused unrelated timeouts with nearly full 2GB swap. Final SeedLot serial rerun passed without weaker assertions or timeouts.",
+    "Live Acquisition spacing and quiet detail-tab hover fixed; contextual close cannot reopen the fallback before history Back finishes.",
+    "One normal unchanged Basil save succeeded after ordinary page reload refreshed CSRF. No new fixtures, media links, Orders, primary changes or unlink persisted.",
+    "External/multi-item gallery and producer SeedLot fixture states have focused tests but no fresh live captures. Dirty backdrop prompt was observed; refusal outcome not captured live."
+  ]
+}

@@ -1,0 +1,683 @@
+/* GLOBAL-VISUAL-001: shared screen grammar. Physical label CSS remains authoritative. */
+button,
+.button-link {
+  min-height: var(--control-height);
+  padding: var(--space-2) var(--space-3);
+  font: var(--type-strong);
+  border-radius: var(--radius-small);
+  color: var(--on-primary);
+  background: var(--primary);
+  border-color: var(--primary);
+  overflow-wrap: anywhere;
+}
+button:not(:disabled):hover,
+.button-link:hover {
+  background: var(--primary-hover);
+}
+button:disabled {
+  cursor: not-allowed;
+}
+button[aria-busy="true"] {
+  cursor: progress;
+}
+:is(button, .button-link).button--secondary,
+button.secondary {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+}
+:is(button, .button-link).button--secondary:not(:disabled):hover,
+button.secondary:not(:disabled):hover {
+  background: var(--surface-hover);
+}
+:is(button, .button-link).button--quiet {
+  color: var(--primary);
+  background: transparent;
+  border-color: transparent;
+}
+:is(button, .button-link).button--quiet:not(:disabled):hover {
+  background: var(--primary-subtle);
+}
+:is(button, .button-link).button--danger {
+  color: var(--danger);
+  background: var(--surface);
+  border-color: var(--danger);
+}
+:is(button, .button-link).button--danger:not(:disabled):hover {
+  background: var(--danger-subtle);
+}
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  min-height: var(--control-height);
+  padding: var(--space-2) var(--space-3);
+  font: var(--type-body);
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+  border-radius: var(--radius-small);
+  min-width: 0;
+  max-width: 100%;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+input:is([type="checkbox"], [type="radio"]) {
+  accent-color: var(--primary);
+}
+.field {
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+  min-width: 0;
+}
+.field > label,
+.form-section legend,
+.partial-date legend,
+.quantity-field legend {
+  font: var(--type-strong);
+  color: var(--text);
+}
+.field-help,
+.field small,
+.breadcrumbs,
+.record-preview__facts dt {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.field-error,
+.notice--error {
+  color: var(--danger);
+}
+.notice {
+  padding: var(--space-4);
+  border-radius: var(--radius-small);
+  background: var(--surface-subtle);
+}
+.notice--error {
+  background: var(--danger-subtle);
+}
+.notice--success {
+  color: var(--primary);
+  background: var(--primary-subtle);
+}
+.notice--duplicate {
+  color: var(--warning-text);
+  background: var(--warning-subtle);
+  border-color: var(--warning);
+}
+.app-content :is(.page-header, .screen-heading) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-6);
+  margin: 0 0 var(--space-6);
+}
+.app-content .page-identity {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+.app-content .page-tools {
+  flex: 2 1 38rem;
+  min-width: 0;
+}
+.app-content :is(.page-header, .screen-heading) h2 {
+  font: var(--type-h1);
+  letter-spacing: normal;
+  margin: var(--space-1) 0 var(--space-2);
+  overflow-wrap: anywhere;
+}
+.app-content .page-header p {
+  margin: 0;
+}
+.app-content .page-header .eyebrow {
+  font: var(--type-eyebrow);
+  letter-spacing: 0.08em;
+}
+.page-actions,
+.directory-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.directory-tools .directory-search {
+  flex: 1 1 14rem;
+  min-width: 0;
+  margin: 0;
+  max-width: none;
+}
+.directory-tools .saved-views,
+.directory-tools .saved-views__controls {
+  margin: 0;
+  gap: var(--space-2);
+}
+.directory-filter-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-2);
+  margin-top: var(--space-2);
+}
+.directory-filter-summary .button--quiet {
+  padding: var(--space-1) var(--space-2);
+  border-color: var(--border);
+  color: var(--text-muted);
+  font: var(--type-small);
+  background: var(--surface);
+}
+.app-content .search-control {
+  width: 100%;
+  max-width: none;
+  min-height: var(--control-height);
+  padding: 0;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-small);
+  box-shadow: none;
+}
+.app-content .search-control > span {
+  color: var(--text-muted);
+  padding-left: var(--space-3);
+}
+.app-content .search-control input {
+  border: 0;
+  border-radius: var(--radius-small);
+  background: transparent;
+}
+.app-content .search-control:has(input:focus-visible) {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+.app-content .search-control input:focus-visible {
+  outline: none;
+}
+.app-content :is(.detail-header h3, .seed-form-heading h3, .entity-title) {
+  font: var(--type-h1);
+  letter-spacing: normal;
+  overflow-wrap: anywhere;
+}
+.app-content
+  :is(
+    .overview-grid h4,
+    .form-group-heading,
+    .quick-preview h3,
+    .native-panel h3,
+    .distribution-selected h3,
+    .taxonomy-panel h2
+  ) {
+  font: var(--type-h3);
+  letter-spacing: normal;
+}
+.app-content :is(.detail-header, .section-heading) {
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
+}
+.app-content :is(.detail-secondary, .detail-status, .detail-context dt) {
+  color: var(--text-muted);
+}
+.app-content :is(.detail-context, .order-facts, .record-preview__facts) {
+  font-variant-numeric: tabular-nums;
+}
+.app-content a:not(.button-link):not(.ui-metric) {
+  color: var(--primary);
+  text-underline-offset: 3px;
+}
+.app-content
+  :is(
+    .collection-card,
+    .fact-card,
+    .seed-fact-group,
+    .sowing-fact-group,
+    .plant-fact-group,
+    .propagation-form,
+    .source-choice,
+    .order-transaction,
+    .native-panel,
+    .distribution-selected,
+    .import-workspace__secondary
+  ) {
+  background: var(--surface);
+  border-color: var(--border);
+  border-radius: var(--radius-normal);
+  box-shadow: none;
+}
+.app-content :is(.empty-state, .profile-empty, .seed-detail-empty) {
+  padding: var(--space-4);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-normal);
+  background: var(--surface-subtle);
+  color: var(--text-muted);
+}
+.app-content .quick-preview {
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+}
+/* One list surface, with dividers instead of a frame around every record. */
+.app-content .operational-layout .seed-list,
+.app-content .identity-cards,
+.app-content .supplier-directory .identity-list,
+.app-content .harvest-directory,
+.app-content .order-list {
+  gap: 0;
+  padding: 0;
+  margin-block: var(--space-3) var(--space-6);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+}
+.app-content
+  :is(
+    .identity-cards .identity-card,
+    .supplier-directory .identity-list-item,
+    .harvest-directory-row,
+    .operational-layout .seed-row
+  ) {
+  padding: var(--space-3) var(--space-4);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.app-content
+  :is(
+    .identity-cards .identity-card,
+    .supplier-directory .identity-list-item,
+    .harvest-directory-row,
+    .operational-layout .seed-row
+  ):hover {
+  background: var(--surface-hover);
+}
+.app-content
+  :is(
+    .identity-card[aria-pressed="true"],
+    .identity-list-item[aria-pressed="true"],
+    .seed-row[aria-pressed="true"],
+    .harvest-directory-row.is-selected
+  ) {
+  background: var(--primary-subtle);
+  box-shadow: inset 3px 0 var(--primary);
+}
+.app-content .identity-card {
+  grid-template-columns: 4rem minmax(0, 1fr);
+}
+.app-content .identity-card-copy strong {
+  font: var(--type-strong);
+}
+.app-content .identity-card-copy .identity-scientific-name {
+  font-family: var(--font-botanical);
+  font-style: italic;
+}
+.app-content .order-list li {
+  padding: var(--space-3) var(--space-4);
+  margin: 0;
+}
+.app-content .media-grid > button {
+  border-color: var(--border-strong);
+  border-radius: var(--radius-normal);
+  background: var(--surface);
+  color: var(--text);
+}
+.app-content .media-grid > button[aria-pressed="true"] {
+  border-color: var(--primary);
+  background: var(--primary-subtle);
+}
+/* Bounded, grouped task forms; the tabbed workflow remains unchanged. */
+.app-content .operational-layout .collection-form,
+.app-content .propagation-form {
+  max-width: var(--form-width);
+  margin-inline: auto;
+  padding: var(--space-6);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+  background: var(--surface);
+}
+.app-content .form-section-panel:not([hidden]),
+.task-dialog .form-grid {
+  gap: var(--space-4) var(--space-6);
+}
+.app-content .collection-form .form-section-panel .field {
+  align-content: start;
+  margin: 0;
+}
+.app-content .collection-form .form-section-panel .partial-date .field {
+  max-width: 16rem;
+}
+.app-content
+  .collection-form
+  .form-section-panel
+  :is(.quantity-controls, .temperature-controls) {
+  max-width: 32rem;
+}
+.app-content .collection-form select[name="lifecycle"] {
+  max-width: 18rem;
+}
+.form-section-tabs [role="tab"][aria-selected="true"] {
+  color: var(--primary);
+  background: var(--primary-subtle);
+  border-color: var(--border-strong);
+}
+.task-dialog {
+  padding: var(--space-6);
+  background: var(--surface);
+  border-radius: var(--radius-normal);
+  box-shadow: var(--elevation-overlay);
+}
+.task-dialog::backdrop {
+  background: var(--overlay-backdrop);
+}
+.task-dialog :is(h3, h4),
+.task-dialog legend {
+  font: var(--type-h2);
+  letter-spacing: normal;
+}
+.task-dialog .field {
+  margin: 0;
+}
+.task-dialog .form-section {
+  padding: 0;
+  border: 0;
+}
+.task-dialog .supplier-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.task-dialog .supplier-form > :is(h3, .notice, .actions),
+.task-dialog .supplier-form > .field:has(textarea) {
+  grid-column: 1 / -1;
+}
+.task-dialog #order-currency {
+  max-width: 8rem;
+}
+.task-dialog #order-price {
+  max-width: 18rem;
+}
+.task-dialog.directory-filter-drawer {
+  width: min(28rem, calc(100vw - 2rem));
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0 0 0 auto;
+  border-radius: 0;
+  border-block: 0;
+}
+.directory-filter-fields {
+  display: grid;
+  gap: var(--space-4);
+  margin-block: var(--space-6);
+}
+.directory-filter-fields .location-scope-filter {
+  max-width: none;
+  margin: 0;
+}
+.directory-filter-drawer .section-heading {
+  align-items: center;
+}
+.directory-filter-drawer .section-heading h3 {
+  font: var(--type-h2);
+}
+.reference-menu,
+.overflow-popover {
+  box-shadow: var(--elevation-overlay);
+  border-color: var(--border-strong);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+}
+.reference-menu li button,
+.reference-create {
+  color: var(--text);
+  background: var(--surface);
+  font: var(--type-body);
+}
+.reference-menu li button:is(:hover, .is-active) {
+  background: var(--primary-subtle);
+}
+.reference-create {
+  color: var(--primary);
+  border-color: var(--border);
+}
+.representation-filter {
+  max-width: 20rem;
+  margin-block: var(--space-4);
+}
+.app-content .import-workspace .card {
+  padding: var(--space-6);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+  box-shadow: none;
+}
+.app-content .import-workspace__secondary {
+  padding: var(--space-4);
+}
+/* Session entry uses the same calm surfaces as the authenticated workspace. */
+/* The existing BULK consumers share one explicit visible-record selection mode. */
+.bulk-toolbar {
+  padding: var(--space-3);
+  gap: var(--space-2);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-small);
+  background: var(--primary-subtle);
+}
+.bulk-toolbar-secondary,
+.bulk-toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  flex-basis: auto;
+}
+.bulk-toolbar .bulk-secondary {
+  min-height: var(--control-height);
+  padding: var(--space-2) var(--space-3);
+  font: var(--type-strong);
+  color: var(--text);
+}
+.bulk-toolbar-actions {
+  margin-left: auto;
+}
+main > .card {
+  max-width: 28rem;
+  padding: var(--space-8);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-large);
+  box-shadow: none;
+}
+main > .card h1 {
+  font: var(--type-h1);
+  color: var(--primary);
+  letter-spacing: normal;
+}
+main > .card .intro {
+  margin-block: var(--space-4) var(--space-6);
+  color: var(--text-muted);
+  font: var(--type-body);
+}
+main > .card form > button {
+  width: 100%;
+}
+/* All directories use document flow, like Dashboard/Activity. Map areas keep their size. */
+@media (min-width: 48.01rem) {
+  main:has(> .application-shell) {
+    display: block;
+    padding: 0;
+  }
+  .application-shell {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+    align-items: start;
+  }
+  .application-shell > .desktop-sidebar {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+  }
+  .application-shell > .app-content {
+    height: auto;
+    overflow: visible;
+    padding: var(--space-6);
+  }
+  .application-shell
+    > .app-content
+    > :is(.workspace, .labels-workspace, .screen) {
+    max-width: none;
+    overflow: visible;
+  }
+  .app-content .operational-layout,
+  .app-content .reference-split {
+    align-items: start;
+  }
+  .app-content .operational-layout .seed-list,
+  .app-content
+    .reference-split
+    :is(.identity-cards, .identity-list, .location-tree) {
+    max-height: none;
+    overflow: visible;
+  }
+  .app-content .reference-split .identity-directory {
+    height: auto;
+  }
+  .app-content :is(.operational-layout, .reference-split) .quick-preview {
+    position: sticky;
+    top: var(--space-4);
+    max-height: calc(100dvh - var(--space-8));
+    overflow-y: auto;
+  }
+}
+@media (max-width: 48rem) {
+  .app-content :is(.page-header, .screen-heading) {
+    align-items: stretch;
+    gap: var(--space-3);
+  }
+  .app-content :is(.page-identity, .page-tools) {
+    flex-basis: 100%;
+  }
+  .directory-tools .directory-search {
+    flex-basis: 100%;
+  }
+  .app-content .operational-layout .collection-form,
+  .app-content .propagation-form {
+    padding: var(--space-4);
+  }
+  .task-dialog {
+    padding: var(--space-4);
+  }
+  .task-dialog .supplier-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mobile-navigation-dialog .mobile-navigation-heading {
+    position: sticky;
+    top: calc(-1 * var(--space-4));
+    padding-block: var(--space-2);
+    background: var(--surface);
+    z-index: 1;
+  }
+  .mobile-navigation-groups .navigation-link[aria-current="page"] {
+    border-bottom-color: transparent;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto;
+    transition: none;
+    animation: none;
+  }
+}
+
+/* Analytical reference choices remain neutral until selected. */
+.app-content :is(.native-identity, .distribution-choice) {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border-strong);
+  border-radius: var(--radius-small);
+}
+.app-content :is(.native-identity, .distribution-choice)[aria-pressed="true"] {
+  background: var(--primary-subtle);
+  border-color: var(--primary);
+  box-shadow: inset 3px 0 var(--primary);
+}
+.app-content :is(.native-identity, .distribution-choice):hover {
+  background: var(--surface-hover);
+}
+.app-content .taxonomy-screen {
+  width: 100%;
+  min-width: 0;
+}
+/* Scientific names need a readable full row; cultivars and common names share the next row. */
+.task-dialog .identity-form .form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.task-dialog .identity-form .form-grid > .field--full {
+  grid-column: 1 / -1;
+}
+.task-dialog .identity-form .form-section {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.task-dialog .form-section legend {
+  font: var(--type-h3);
+}
+.task-dialog .supplier-form > h4 {
+  grid-column: 1 / -1;
+}
+@media (max-width: 48rem) {
+  .task-dialog .identity-form .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.app-content .taxonomy-panel {
+  background: var(--surface);
+  border-color: var(--border);
+  border-radius: var(--radius-normal);
+}
+.app-content .taxonomy-panel h3 {
+  font: var(--type-h2);
+  letter-spacing: normal;
+}
+.app-content .taxonomy-panel h4 {
+  font: var(--type-h3);
+  letter-spacing: normal;
+}
+/* The labelled checkbox/radio row is the touch target, including compact scope choices. */
+.app-content label:has(> input:is([type="checkbox"], [type="radio"])),
+.task-dialog label:has(> input:is([type="checkbox"], [type="radio"])) {
+  min-height: var(--control-height);
+}
+
+/* Counts and optional mode entry share one row only for proven directory consumers. */
+.directory-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+.directory-status .directory-results {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  text-align: start;
+}
+
+/* Informational Details tabs use a message, while Photos/maps keep a visual workspace. */
+.detail-empty-message {
+  margin: 0;
+  padding-block: var(--space-4);
+  color: var(--text-muted);
+}
+.detail-empty-message p {
+  margin: 0;
+}

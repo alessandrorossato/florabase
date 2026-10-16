@@ -1,0 +1,1917 @@
+[
+  {
+    "case": "sowings-1440",
+    "controls": [],
+    "dialog": [],
+    "documentWidth": 1440,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No sowings use this seed lot yet.",
+        "width": 1144,
+        "x": 272
+      }
+    ],
+    "labels": [],
+    "markers": [],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "photos-1440",
+    "controls": [],
+    "dialog": [],
+    "documentWidth": 1440,
+    "empty": [
+      {
+        "border": "1px dashed rgb(124, 137, 128)",
+        "height": 72.25,
+        "minHeight": "0px",
+        "text": "No photos or external image references yet.",
+        "width": 1144,
+        "x": 272
+      }
+    ],
+    "labels": [],
+    "markers": [],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "lineage-1440",
+    "controls": [],
+    "dialog": [],
+    "documentWidth": 1440,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No recorded upstream material lineage.",
+        "width": 1144,
+        "x": 272
+      }
+    ],
+    "labels": [],
+    "markers": [],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "sowings-1024",
+    "controls": [],
+    "dialog": [],
+    "documentWidth": 1024,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No sowings use this seed lot yet.",
+        "width": 728,
+        "x": 272
+      }
+    ],
+    "labels": [],
+    "markers": [],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "photos-1024",
+    "controls": [],
+    "dialog": [],
+    "documentWidth": 1024,
+    "empty": [
+      {
+        "border": "1px dashed rgb(124, 137, 128)",
+        "height": 72.25,
+        "minHeight": "0px",
+        "text": "No photos or external image references yet.",
+        "width": 728,
+        "x": 272
+      }
+    ],
+    "labels": [],
+    "markers": [],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "lineage-1024",
+    "controls": [],
+    "dialog": [],
+    "documentWidth": 1024,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No recorded upstream material lineage.",
+        "width": 728,
+        "x": 272
+      }
+    ],
+    "labels": [],
+    "markers": [],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "sowings-390",
+    "controls": [],
+    "dialog": [],
+    "documentWidth": 390,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No sowings use this seed lot yet.",
+        "width": 358,
+        "x": 16
+      }
+    ],
+    "labels": [],
+    "markers": [],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "photos-390",
+    "controls": [],
+    "dialog": [],
+    "documentWidth": 390,
+    "empty": [
+      {
+        "border": "1px dashed rgb(124, 137, 128)",
+        "height": 72.25,
+        "minHeight": "0px",
+        "text": "No photos or external image references yet.",
+        "width": 358,
+        "x": 16
+      }
+    ],
+    "labels": [],
+    "markers": [],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "lineage-390",
+    "controls": [],
+    "dialog": [],
+    "documentWidth": 390,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No recorded upstream material lineage.",
+        "width": 358,
+        "x": 16
+      }
+    ],
+    "labels": [],
+    "markers": [],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "edit-essentials-390",
+    "controls": [
+      {
+        "aria": "true",
+        "id": "_r_a_",
+        "required": false
+      }
+    ],
+    "dialog": [
+      {
+        "clientWidth": 388,
+        "height": 844,
+        "scrollWidth": 388,
+        "width": 390
+      }
+    ],
+    "documentWidth": 390,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No recorded upstream material lineage.",
+        "width": 358,
+        "x": 16
+      }
+    ],
+    "labels": [
+      {
+        "required": true,
+        "text": "Botanical identity"
+      },
+      {
+        "required": false,
+        "text": "Lot label"
+      },
+      {
+        "required": false,
+        "text": "Lifecycle"
+      }
+    ],
+    "markers": [
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "edit-acquisition-390",
+    "controls": [],
+    "dialog": [
+      {
+        "clientWidth": 388,
+        "height": 844,
+        "scrollWidth": 388,
+        "width": 390
+      }
+    ],
+    "documentWidth": 390,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No recorded upstream material lineage.",
+        "width": 358,
+        "x": 16
+      }
+    ],
+    "labels": [
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      }
+    ],
+    "markers": [],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "edit-acquisition-unlinked-390",
+    "controls": [],
+    "dialog": [
+      {
+        "clientWidth": 388,
+        "height": 844,
+        "scrollWidth": 388,
+        "width": 390
+      }
+    ],
+    "documentWidth": 390,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No recorded upstream material lineage.",
+        "width": 358,
+        "x": 16
+      }
+    ],
+    "labels": [
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      },
+      {
+        "required": false,
+        "text": "Supplier"
+      },
+      {
+        "required": false,
+        "text": "Acquisition date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      }
+    ],
+    "markers": [],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "edit-partial-date-390",
+    "controls": [
+      {
+        "aria": "true",
+        "id": "acquisition-year",
+        "required": false
+      },
+      {
+        "aria": "true",
+        "id": "acquisition-month",
+        "required": false
+      }
+    ],
+    "dialog": [
+      {
+        "clientWidth": 388,
+        "height": 844,
+        "scrollWidth": 388,
+        "width": 390
+      }
+    ],
+    "documentWidth": 390,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No recorded upstream material lineage.",
+        "width": 358,
+        "x": 16
+      }
+    ],
+    "labels": [
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      },
+      {
+        "required": false,
+        "text": "Supplier"
+      },
+      {
+        "required": false,
+        "text": "Acquisition date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": true,
+        "text": "Year"
+      },
+      {
+        "required": true,
+        "text": "Month"
+      }
+    ],
+    "markers": [
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      },
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "edit-partial-date-fields-390",
+    "controls": [
+      {
+        "aria": "true",
+        "id": "acquisition-year",
+        "required": false
+      },
+      {
+        "aria": "true",
+        "id": "acquisition-month",
+        "required": false
+      }
+    ],
+    "dialog": [
+      {
+        "clientWidth": 388,
+        "height": 844,
+        "scrollWidth": 388,
+        "width": 390
+      }
+    ],
+    "documentWidth": 390,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No recorded upstream material lineage.",
+        "width": 358,
+        "x": 16
+      }
+    ],
+    "labels": [
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      },
+      {
+        "required": false,
+        "text": "Supplier"
+      },
+      {
+        "required": false,
+        "text": "Acquisition date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": true,
+        "text": "Year"
+      },
+      {
+        "required": true,
+        "text": "Month"
+      }
+    ],
+    "markers": [
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      },
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "edit-essentials-1024",
+    "controls": [
+      {
+        "aria": "true",
+        "id": "_r_a_",
+        "required": false
+      }
+    ],
+    "dialog": [
+      {
+        "clientWidth": 958,
+        "height": 742.71875,
+        "scrollWidth": 958,
+        "width": 960
+      }
+    ],
+    "documentWidth": 1024,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No recorded upstream material lineage.",
+        "width": 756,
+        "x": 244
+      }
+    ],
+    "labels": [
+      {
+        "required": true,
+        "text": "Botanical identity"
+      },
+      {
+        "required": false,
+        "text": "Lot label"
+      },
+      {
+        "required": false,
+        "text": "Lifecycle"
+      }
+    ],
+    "markers": [
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "edit-acquisition-1024",
+    "controls": [],
+    "dialog": [
+      {
+        "clientWidth": 958,
+        "height": 742.71875,
+        "scrollWidth": 958,
+        "width": 960
+      }
+    ],
+    "documentWidth": 1024,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No recorded upstream material lineage.",
+        "width": 756,
+        "x": 244
+      }
+    ],
+    "labels": [
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      },
+      {
+        "required": false,
+        "text": "Supplier"
+      },
+      {
+        "required": false,
+        "text": "Acquisition date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      }
+    ],
+    "markers": [],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "edit-partial-date-1024",
+    "controls": [
+      {
+        "aria": "true",
+        "id": "acquisition-year",
+        "required": false
+      },
+      {
+        "aria": "true",
+        "id": "acquisition-month",
+        "required": false
+      }
+    ],
+    "dialog": [
+      {
+        "clientWidth": 958,
+        "height": 742.71875,
+        "scrollWidth": 958,
+        "width": 960
+      }
+    ],
+    "documentWidth": 1024,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No recorded upstream material lineage.",
+        "width": 756,
+        "x": 244
+      }
+    ],
+    "labels": [
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      },
+      {
+        "required": false,
+        "text": "Supplier"
+      },
+      {
+        "required": false,
+        "text": "Acquisition date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": true,
+        "text": "Year"
+      },
+      {
+        "required": true,
+        "text": "Month"
+      }
+    ],
+    "markers": [
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      },
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "edit-essentials-1440",
+    "controls": [
+      {
+        "aria": "true",
+        "id": "_r_a_",
+        "required": false
+      }
+    ],
+    "dialog": [
+      {
+        "clientWidth": 958,
+        "height": 742.71875,
+        "scrollWidth": 958,
+        "width": 960
+      }
+    ],
+    "documentWidth": 1440,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No recorded upstream material lineage.",
+        "width": 1172,
+        "x": 244
+      }
+    ],
+    "labels": [
+      {
+        "required": true,
+        "text": "Botanical identity"
+      },
+      {
+        "required": false,
+        "text": "Lot label"
+      },
+      {
+        "required": false,
+        "text": "Lifecycle"
+      }
+    ],
+    "markers": [
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "edit-acquisition-1440",
+    "controls": [],
+    "dialog": [
+      {
+        "clientWidth": 958,
+        "height": 742.71875,
+        "scrollWidth": 958,
+        "width": 960
+      }
+    ],
+    "documentWidth": 1440,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No recorded upstream material lineage.",
+        "width": 1172,
+        "x": 244
+      }
+    ],
+    "labels": [
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      },
+      {
+        "required": false,
+        "text": "Supplier"
+      },
+      {
+        "required": false,
+        "text": "Acquisition date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      }
+    ],
+    "markers": [],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "edit-partial-date-1440",
+    "controls": [
+      {
+        "aria": "true",
+        "id": "acquisition-year",
+        "required": false
+      },
+      {
+        "aria": "true",
+        "id": "acquisition-month",
+        "required": false
+      }
+    ],
+    "dialog": [
+      {
+        "clientWidth": 958,
+        "height": 742.71875,
+        "scrollWidth": 958,
+        "width": 960
+      }
+    ],
+    "documentWidth": 1440,
+    "empty": [
+      {
+        "border": "0px none rgb(102, 112, 104)",
+        "height": 54,
+        "minHeight": "0px",
+        "text": "No recorded upstream material lineage.",
+        "width": 1172,
+        "x": 244
+      }
+    ],
+    "labels": [
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      },
+      {
+        "required": false,
+        "text": "Supplier"
+      },
+      {
+        "required": false,
+        "text": "Acquisition date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": true,
+        "text": "Year"
+      },
+      {
+        "required": true,
+        "text": "Month"
+      }
+    ],
+    "markers": [
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      },
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "create-top-1440",
+    "controls": [
+      {
+        "aria": "true",
+        "id": "_r_4_",
+        "required": true
+      }
+    ],
+    "dialog": [],
+    "documentWidth": 1425,
+    "empty": [],
+    "labels": [
+      {
+        "required": true,
+        "text": "Botanical identity"
+      },
+      {
+        "required": false,
+        "text": "Lot label"
+      },
+      {
+        "required": false,
+        "text": "Quantity"
+      },
+      {
+        "required": false,
+        "text": "Approximately"
+      },
+      {
+        "required": false,
+        "text": "Lifecycle"
+      },
+      {
+        "required": false,
+        "text": "Storage location"
+      },
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      },
+      {
+        "required": false,
+        "text": "Supplier"
+      },
+      {
+        "required": false,
+        "text": "Acquisition date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Material provenance"
+      },
+      {
+        "required": false,
+        "text": "Precise provenance site"
+      },
+      {
+        "required": false,
+        "text": "Harvest date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Expected viability until"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Notes"
+      }
+    ],
+    "markers": [
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "create-acquisition-1440",
+    "controls": [
+      {
+        "aria": "true",
+        "id": "_r_4_",
+        "required": true
+      }
+    ],
+    "dialog": [],
+    "documentWidth": 1440,
+    "empty": [],
+    "labels": [
+      {
+        "required": true,
+        "text": "Botanical identity"
+      },
+      {
+        "required": false,
+        "text": "Lot label"
+      },
+      {
+        "required": false,
+        "text": "Quantity"
+      },
+      {
+        "required": false,
+        "text": "Approximately"
+      },
+      {
+        "required": false,
+        "text": "Lifecycle"
+      },
+      {
+        "required": false,
+        "text": "Storage location"
+      },
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      },
+      {
+        "required": false,
+        "text": "Supplier"
+      },
+      {
+        "required": false,
+        "text": "Acquisition date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Material provenance"
+      },
+      {
+        "required": false,
+        "text": "Precise provenance site"
+      },
+      {
+        "required": false,
+        "text": "Harvest date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Expected viability until"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Notes"
+      }
+    ],
+    "markers": [
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "create-actions-1440",
+    "controls": [
+      {
+        "aria": "true",
+        "id": "_r_4_",
+        "required": true
+      }
+    ],
+    "dialog": [],
+    "documentWidth": 1440,
+    "empty": [],
+    "labels": [
+      {
+        "required": true,
+        "text": "Botanical identity"
+      },
+      {
+        "required": false,
+        "text": "Lot label"
+      },
+      {
+        "required": false,
+        "text": "Quantity"
+      },
+      {
+        "required": false,
+        "text": "Approximately"
+      },
+      {
+        "required": false,
+        "text": "Lifecycle"
+      },
+      {
+        "required": false,
+        "text": "Storage location"
+      },
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      },
+      {
+        "required": false,
+        "text": "Supplier"
+      },
+      {
+        "required": false,
+        "text": "Acquisition date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Material provenance"
+      },
+      {
+        "required": false,
+        "text": "Precise provenance site"
+      },
+      {
+        "required": false,
+        "text": "Harvest date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Expected viability until"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Notes"
+      }
+    ],
+    "markers": [
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1440
+    }
+  },
+  {
+    "case": "create-top-1024",
+    "controls": [
+      {
+        "aria": "true",
+        "id": "_r_4_",
+        "required": true
+      }
+    ],
+    "dialog": [],
+    "documentWidth": 1009,
+    "empty": [],
+    "labels": [
+      {
+        "required": true,
+        "text": "Botanical identity"
+      },
+      {
+        "required": false,
+        "text": "Lot label"
+      },
+      {
+        "required": false,
+        "text": "Quantity"
+      },
+      {
+        "required": false,
+        "text": "Approximately"
+      },
+      {
+        "required": false,
+        "text": "Lifecycle"
+      },
+      {
+        "required": false,
+        "text": "Storage location"
+      },
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      },
+      {
+        "required": false,
+        "text": "Supplier"
+      },
+      {
+        "required": false,
+        "text": "Acquisition date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Material provenance"
+      },
+      {
+        "required": false,
+        "text": "Precise provenance site"
+      },
+      {
+        "required": false,
+        "text": "Harvest date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Expected viability until"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Notes"
+      }
+    ],
+    "markers": [
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "create-acquisition-1024",
+    "controls": [
+      {
+        "aria": "true",
+        "id": "_r_4_",
+        "required": true
+      }
+    ],
+    "dialog": [],
+    "documentWidth": 1024,
+    "empty": [],
+    "labels": [
+      {
+        "required": true,
+        "text": "Botanical identity"
+      },
+      {
+        "required": false,
+        "text": "Lot label"
+      },
+      {
+        "required": false,
+        "text": "Quantity"
+      },
+      {
+        "required": false,
+        "text": "Approximately"
+      },
+      {
+        "required": false,
+        "text": "Lifecycle"
+      },
+      {
+        "required": false,
+        "text": "Storage location"
+      },
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      },
+      {
+        "required": false,
+        "text": "Supplier"
+      },
+      {
+        "required": false,
+        "text": "Acquisition date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Material provenance"
+      },
+      {
+        "required": false,
+        "text": "Precise provenance site"
+      },
+      {
+        "required": false,
+        "text": "Harvest date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Expected viability until"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Notes"
+      }
+    ],
+    "markers": [
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "create-actions-1024",
+    "controls": [
+      {
+        "aria": "true",
+        "id": "_r_4_",
+        "required": true
+      }
+    ],
+    "dialog": [],
+    "documentWidth": 1024,
+    "empty": [],
+    "labels": [
+      {
+        "required": true,
+        "text": "Botanical identity"
+      },
+      {
+        "required": false,
+        "text": "Lot label"
+      },
+      {
+        "required": false,
+        "text": "Quantity"
+      },
+      {
+        "required": false,
+        "text": "Approximately"
+      },
+      {
+        "required": false,
+        "text": "Lifecycle"
+      },
+      {
+        "required": false,
+        "text": "Storage location"
+      },
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      },
+      {
+        "required": false,
+        "text": "Supplier"
+      },
+      {
+        "required": false,
+        "text": "Acquisition date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Material provenance"
+      },
+      {
+        "required": false,
+        "text": "Precise provenance site"
+      },
+      {
+        "required": false,
+        "text": "Harvest date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Expected viability until"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Notes"
+      }
+    ],
+    "markers": [
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 1024
+    }
+  },
+  {
+    "case": "create-top-390",
+    "controls": [
+      {
+        "aria": "true",
+        "id": "_r_4_",
+        "required": true
+      }
+    ],
+    "dialog": [],
+    "documentWidth": 375,
+    "empty": [],
+    "labels": [
+      {
+        "required": true,
+        "text": "Botanical identity"
+      },
+      {
+        "required": false,
+        "text": "Lot label"
+      },
+      {
+        "required": false,
+        "text": "Quantity"
+      },
+      {
+        "required": false,
+        "text": "Approximately"
+      },
+      {
+        "required": false,
+        "text": "Lifecycle"
+      },
+      {
+        "required": false,
+        "text": "Storage location"
+      },
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      },
+      {
+        "required": false,
+        "text": "Supplier"
+      },
+      {
+        "required": false,
+        "text": "Acquisition date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Material provenance"
+      },
+      {
+        "required": false,
+        "text": "Precise provenance site"
+      },
+      {
+        "required": false,
+        "text": "Harvest date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Expected viability until"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Notes"
+      }
+    ],
+    "markers": [
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "create-acquisition-390",
+    "controls": [
+      {
+        "aria": "true",
+        "id": "_r_4_",
+        "required": true
+      }
+    ],
+    "dialog": [],
+    "documentWidth": 390,
+    "empty": [],
+    "labels": [
+      {
+        "required": true,
+        "text": "Botanical identity"
+      },
+      {
+        "required": false,
+        "text": "Lot label"
+      },
+      {
+        "required": false,
+        "text": "Quantity"
+      },
+      {
+        "required": false,
+        "text": "Approximately"
+      },
+      {
+        "required": false,
+        "text": "Lifecycle"
+      },
+      {
+        "required": false,
+        "text": "Storage location"
+      },
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      },
+      {
+        "required": false,
+        "text": "Supplier"
+      },
+      {
+        "required": false,
+        "text": "Acquisition date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Material provenance"
+      },
+      {
+        "required": false,
+        "text": "Precise provenance site"
+      },
+      {
+        "required": false,
+        "text": "Harvest date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Expected viability until"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Notes"
+      }
+    ],
+    "markers": [
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  },
+  {
+    "case": "create-actions-390",
+    "controls": [
+      {
+        "aria": "true",
+        "id": "_r_4_",
+        "required": true
+      }
+    ],
+    "dialog": [],
+    "documentWidth": 390,
+    "empty": [],
+    "labels": [
+      {
+        "required": true,
+        "text": "Botanical identity"
+      },
+      {
+        "required": false,
+        "text": "Lot label"
+      },
+      {
+        "required": false,
+        "text": "Quantity"
+      },
+      {
+        "required": false,
+        "text": "Approximately"
+      },
+      {
+        "required": false,
+        "text": "Lifecycle"
+      },
+      {
+        "required": false,
+        "text": "Storage location"
+      },
+      {
+        "required": false,
+        "text": "Source"
+      },
+      {
+        "required": false,
+        "text": "Purchase Order"
+      },
+      {
+        "required": false,
+        "text": "Find an Order"
+      },
+      {
+        "required": false,
+        "text": "Order"
+      },
+      {
+        "required": false,
+        "text": "Supplier"
+      },
+      {
+        "required": false,
+        "text": "Acquisition date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Material provenance"
+      },
+      {
+        "required": false,
+        "text": "Precise provenance site"
+      },
+      {
+        "required": false,
+        "text": "Harvest date"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Expected viability until"
+      },
+      {
+        "required": false,
+        "text": "Precision"
+      },
+      {
+        "required": false,
+        "text": "Notes"
+      }
+    ],
+    "markers": [
+      {
+        "color": "rgb(102, 112, 104)",
+        "content": "\"*\"",
+        "fontSize": "12px"
+      }
+    ],
+    "viewport": {
+      "height": 844,
+      "scale": 1,
+      "width": 390
+    }
+  }
+]

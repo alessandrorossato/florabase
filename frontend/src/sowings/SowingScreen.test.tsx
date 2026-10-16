@@ -1,8 +1,11 @@
+import { selectDirectoryFilter } from "../test/directoryFilters";
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { App } from "../App";
+// These cases exercise Sowing interactions; App.lazy.test.tsx owns chunk loading.
+import "./SowingScreen";
 
 const identityId = "01900000-0000-7000-8000-000000000101";
 const seedLotId = "01900000-0000-7000-8000-000000000201";
@@ -400,12 +403,12 @@ test("compact summaries, search fields, lifecycle views, selection, detail, and 
   });
   expect(screen.queryByText("GA3 test")).not.toBeInTheDocument();
 
-  await user.click(screen.getByRole("button", { name: "Completed" }));
+  await selectDirectoryFilter(user, "Lifecycle", "completed");
   expect(screen.getByText("GA3 test")).toBeInTheDocument();
   expect(
     screen.getByText(/12 germinated · exact seed count unavailable/),
   ).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "All" }));
+  await selectDirectoryFilter(user, "Lifecycle", "all");
 
   const search = screen.getByRole("searchbox", { name: "Search Sowings" });
   for (const query of ["Clitoria", "Tray A", "Tray shelf", "Blue packet"]) {
@@ -495,7 +498,7 @@ test("germination progress uses only an exact positive seed-count denominator", 
   );
   const user = await openSowings();
   await screen.findByRole("list", { name: "Sowing collection" });
-  await user.click(screen.getByRole("button", { name: "All" }));
+  await selectDirectoryFilter(user, "Lifecycle", "all");
   const list = await screen.findByRole("list", { name: "Sowing collection" });
   const row = (label: string) =>
     within(list).getByRole("button", { name: new RegExp(label) });
@@ -661,7 +664,7 @@ test("full creation preserves partial dates, quantity kinds, germination, locati
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
   await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
-  await user.type(screen.getByLabelText("Sowing label (optional)"), "Heat mat");
+  await user.type(screen.getByLabelText("Sowing label"), "Heat mat");
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
   await user.selectOptions(screen.getByLabelText("Precision"), "year");
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
@@ -678,35 +681,29 @@ test("full creation preserves partial dates, quantity kinds, germination, locati
   await user.click(screen.getByLabelText("Approximate"));
   await user.click(screen.getByRole("tab", { name: "Notes" }));
   await user.click(screen.getByRole("tab", { name: "Outcome & status" }));
-  await user.type(screen.getByLabelText("Germinated count (optional)"), "12");
+  await user.type(screen.getByLabelText("Germinated count"), "12");
   await user.click(screen.getByRole("tab", { name: "Material & location" }));
   await user.selectOptions(
-    screen.getByLabelText("Current location (optional)"),
+    screen.getByLabelText("Current location"),
     locationId,
   );
   await user.click(screen.getByRole("tab", { name: "Cultivation" }));
-  await user.type(screen.getByLabelText("Substrate (optional)"), "Sand");
+  await user.type(screen.getByLabelText("Substrate"), "Sand");
   await user.click(screen.getByRole("tab", { name: "Cultivation" }));
-  await user.type(
-    screen.getByLabelText("Method / container (optional)"),
-    "Tray",
-  );
+  await user.type(screen.getByLabelText("Method / container"), "Tray");
   await user.click(screen.getByRole("tab", { name: "Cultivation" }));
-  await user.type(screen.getByLabelText("Pretreatment (optional)"), "Soaked");
+  await user.type(screen.getByLabelText("Pretreatment"), "Soaked");
   await user.click(screen.getByRole("tab", { name: "Cultivation" }));
   await user.type(screen.getByLabelText("Minimum °C"), "-2.5");
   await user.click(screen.getByRole("tab", { name: "Cultivation" }));
   await user.type(screen.getByLabelText("Maximum °C"), "24");
   await user.click(screen.getByRole("tab", { name: "Cultivation" }));
-  await user.type(
-    screen.getByLabelText("Environment / conditions (optional)"),
-    "Outside",
-  );
+  await user.type(screen.getByLabelText("Environment / conditions"), "Outside");
   await user.click(screen.getByRole("tab", { name: "Outcome & status" }));
   await user.selectOptions(screen.getByLabelText("Lifecycle"), "completed");
   await user.click(screen.getByRole("tab", { name: "Notes" }));
   await user.type(
-    screen.getByLabelText("Notes (optional)"),
+    screen.getByLabelText("Notes", { selector: "textarea" }),
     "Historical entry",
   );
   await user.click(screen.getByRole("tab", { name: "Notes" }));
@@ -798,7 +795,7 @@ test("germination and temperature validation applies only to trustworthy bounds"
   await user.type(screen.getByLabelText("Amount"), "10");
   await user.click(screen.getByRole("tab", { name: "Notes" }));
   await user.click(screen.getByRole("tab", { name: "Outcome & status" }));
-  await user.type(screen.getByLabelText("Germinated count (optional)"), "12");
+  await user.type(screen.getByLabelText("Germinated count"), "12");
   await user.click(screen.getByRole("tab", { name: "Notes" }));
   await user.click(screen.getByRole("button", { name: "Record Sowing" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -852,10 +849,7 @@ test("germination and temperature validation applies only to trustworthy bounds"
   await weightUser.type(screen.getByLabelText("Amount"), "2");
   await weightUser.click(screen.getByRole("tab", { name: "Notes" }));
   await weightUser.click(screen.getByRole("tab", { name: "Outcome & status" }));
-  await weightUser.type(
-    screen.getByLabelText("Germinated count (optional)"),
-    "12",
-  );
+  await weightUser.type(screen.getByLabelText("Germinated count"), "12");
   await weightUser.click(screen.getByRole("tab", { name: "Notes" }));
   await weightUser.click(screen.getByRole("button", { name: "Record Sowing" }));
   expect(posts).toBe(1);
@@ -890,12 +884,9 @@ test("the single full editor preserves exact values and failed edits, then chang
   expect(screen.getByLabelText("Amount")).toHaveValue("20");
   expect(screen.getByLabelText("Minimum °C")).toHaveValue("20.5");
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
-  await user.clear(screen.getByLabelText("Sowing label (optional)"));
+  await user.clear(screen.getByLabelText("Sowing label"));
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
-  await user.type(
-    screen.getByLabelText("Sowing label (optional)"),
-    "Unsaved correction",
-  );
+  await user.type(screen.getByLabelText("Sowing label"), "Unsaved correction");
   await user.click(screen.getByRole("tab", { name: "Outcome & status" }));
   await user.selectOptions(screen.getByLabelText("Lifecycle"), "failed");
   await user.click(screen.getByRole("tab", { name: "Notes" }));
@@ -903,7 +894,7 @@ test("the single full editor preserves exact values and failed edits, then chang
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "could not save or refresh",
   );
-  expect(screen.getByLabelText("Sowing label (optional)")).toHaveValue(
+  expect(screen.getByLabelText("Sowing label")).toHaveValue(
     "Unsaved correction",
   );
   fail = false;
@@ -1107,8 +1098,8 @@ test("BULK-001 Sowing selection excludes completed records and resets with filte
     ]),
   );
   const user = await openSowings();
-  await user.click(screen.getByRole("button", { name: "All" }));
-  await user.click(screen.getByRole("button", { name: "Select" }));
+  await selectDirectoryFilter(user, "Lifecycle", "all");
+  await user.click(screen.getByRole("button", { name: "Select records" }));
   await user.click(screen.getByRole("button", { name: "Select visible" }));
   expect(screen.getByText("1 selected")).toBeVisible();
   expect(
@@ -1117,7 +1108,7 @@ test("BULK-001 Sowing selection excludes completed records and resets with filte
   expect(screen.getByLabelText("Directory results")).toHaveTextContent(
     "2 records",
   );
-  await user.click(screen.getByRole("button", { name: "Active" }));
+  await selectDirectoryFilter(user, "Lifecycle", "active");
   expect(screen.getByLabelText("Directory results")).toHaveTextContent(
     "1 record",
   );

@@ -1,3 +1,4 @@
+import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useState, type SyntheticEvent } from "react";
 import { PhotoDialog } from "../photos/PhotosSection";
 import { DirectorySearch } from "../components/ReferenceUI";
@@ -178,9 +179,9 @@ export function MediaPicker({
           />
         </div>
         <div className="field">
-          <label htmlFor="media-link-order">
+          <FieldLabel required htmlFor="media-link-order">
             Display order for this record
-          </label>
+          </FieldLabel>
           <input
             id="media-link-order"
             name="display_order"

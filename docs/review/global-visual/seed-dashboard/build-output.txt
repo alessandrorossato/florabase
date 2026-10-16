@@ -1,0 +1,121 @@
+vite v8.3.4 building client environment for production...
+transforming...
+✓ 195 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                                       0.57 kB │ gzip:  0.33 kB
+dist/assets/source-sans-3-greek-ext-wght-normal-BWSLJLk6.woff2        9.78 kB
+dist/assets/source-sans-3-greek-ext-wght-italic-CsGuNfVR.woff2        9.88 kB
+dist/assets/source-sans-3-vietnamese-wght-normal-C1uRvKPU.woff2      10.32 kB
+dist/assets/source-sans-3-cyrillic-ext-wght-normal-DzyfIafT.woff2    10.67 kB
+dist/assets/source-sans-3-vietnamese-wght-italic-DnchwVcj.woff2      10.72 kB
+dist/assets/source-sans-3-cyrillic-ext-wght-italic-Bmy0yRBR.woff2    10.97 kB
+dist/assets/source-serif-4-vietnamese-wght-normal-D-yuW59g.woff2     13.44 kB
+dist/assets/source-serif-4-vietnamese-wght-italic-C3q834ic.woff2     13.93 kB
+dist/assets/source-sans-3-greek-wght-normal-C9H9m1vD.woff2           14.60 kB
+dist/assets/source-sans-3-greek-wght-italic-BfAgiArQ.woff2           14.93 kB
+dist/assets/source-serif-4-cyrillic-ext-wght-normal-cHuGMAiY.woff2   18.06 kB
+dist/assets/source-serif-4-cyrillic-ext-wght-italic-BXuSHrjR.woff2   18.33 kB
+dist/assets/source-sans-3-cyrillic-wght-normal-BMDVbyM7.woff2        18.49 kB
+dist/assets/source-sans-3-cyrillic-wght-italic-BqzjwPnH.woff2        18.72 kB
+dist/assets/source-serif-4-greek-wght-normal-ece1310W.woff2          20.22 kB
+dist/assets/source-serif-4-greek-wght-italic-F2ziEGcb.woff2          20.53 kB
+dist/assets/source-sans-3-latin-wght-italic-Bg-PIjcQ.woff2           28.53 kB
+dist/assets/source-sans-3-latin-wght-normal-BqRLTx4X.woff2           28.74 kB
+dist/assets/source-serif-4-cyrillic-wght-italic-RLIThRd4.woff2       35.04 kB
+dist/assets/source-serif-4-cyrillic-wght-normal-DwHjdM4S.woff2       36.46 kB
+dist/assets/source-serif-4-latin-ext-wght-normal-CxNHBx-q.woff2      42.04 kB
+dist/assets/source-serif-4-latin-ext-wght-italic-CpkvI5hy.woff2      44.26 kB
+dist/assets/source-serif-4-latin-wght-normal-D9elroTD.woff2          50.82 kB
+dist/assets/source-serif-4-latin-wght-italic-D2yaqPoE.woff2          51.51 kB
+dist/assets/source-sans-3-latin-ext-wght-italic-B1mMy0tD.woff2       59.49 kB
+dist/assets/source-sans-3-latin-ext-wght-normal-C8iNium2.woff2       60.08 kB
+dist/assets/directory-preview-BW4pTwRc.css                            0.18 kB │ gzip:  0.16 kB
+dist/assets/PartialDateField-DYl5qx3_.css                             0.67 kB │ gzip:  0.26 kB
+dist/assets/BotanicalIdentityScreen-C-mDhEq_.css                      0.75 kB │ gzip:  0.32 kB
+dist/assets/SpeciesDistributionScreen-DmikX6kh.css                    0.80 kB │ gzip:  0.40 kB
+dist/assets/PurchaseContext--y04NGXp.css                              1.35 kB │ gzip:  0.55 kB
+dist/assets/SettingsScreen-v5Hzx0DS.css                               1.43 kB │ gzip:  0.53 kB
+dist/assets/taxonomy-BZRa0_Z_.css                                     1.59 kB │ gzip:  0.60 kB
+dist/assets/schedule-ZVeljFuq.css                                     2.05 kB │ gzip:  0.77 kB
+dist/assets/NativeRangesScreen-pVBGu3lM.css                           3.26 kB │ gzip:  0.99 kB
+dist/assets/activity-gCrcgLIx.css                                     6.96 kB │ gzip:  1.70 kB
+dist/assets/dashboard-BhKZ8c0q.css                                    7.92 kB │ gzip:  1.77 kB
+dist/assets/ScheduleScreen-g6dwtxSc.css                               8.23 kB │ gzip:  1.81 kB
+dist/assets/LabelsScreen-CwS8Bu6c.css                                 8.50 kB │ gzip:  2.15 kB
+dist/assets/SeedLotScreen-Bo-NuhOo.css                               16.55 kB │ gzip:  3.16 kB
+dist/assets/index-DcXN-TXr.css                                      198.46 kB │ gzip: 37.16 kB
+dist/assets/rolldown-runtime-D9-fqq9M.js                              0.08 kB │ gzip:  0.08 kB
+dist/assets/api-CCv2hcBC.js                                           0.29 kB │ gzip:  0.20 kB
+dist/assets/EventTargetPhoto-FLTWcCme.js                              0.31 kB │ gzip:  0.22 kB
+dist/assets/DirectoryResults-Bym4anxX.js                              0.41 kB │ gzip:  0.28 kB
+dist/assets/api-CvHiZ51r.js                                           0.49 kB │ gzip:  0.35 kB
+dist/assets/useCreationDisclosure-Cu-81chG.js                         0.57 kB │ gzip:  0.36 kB
+dist/assets/api-Bwnr2yFN.js                                           0.59 kB │ gzip:  0.27 kB
+dist/assets/PropagationPath-Cov4Z1gL.js                               0.67 kB │ gzip:  0.35 kB
+dist/assets/taxonomy-Dxnnt53h.js                                      0.72 kB │ gzip:  0.42 kB
+dist/assets/OccurrenceDensityMap-CDPeycE8.js                          0.95 kB │ gzip:  0.56 kB
+dist/assets/WorkspaceUI-CjGcI81b.js                                   1.29 kB │ gzip:  0.51 kB
+dist/assets/useDirectoryView-6hE_xr7h.js                              1.37 kB │ gzip:  0.70 kB
+dist/assets/api-NjkNoJHQ.js                                           1.39 kB │ gzip:  0.63 kB
+dist/assets/api-BaBIc1Uh.js                                           1.59 kB │ gzip:  0.72 kB
+dist/assets/eventData-CQOKZEVb.js                                     1.61 kB │ gzip:  0.73 kB
+dist/assets/api-Bvt7EBvT.js                                           1.68 kB │ gzip:  0.83 kB
+dist/assets/LineagePanel-eeu5OQFy.js                                  1.97 kB │ gzip:  0.89 kB
+dist/assets/api-D_n_6ixS.js                                           1.98 kB │ gzip:  0.82 kB
+dist/assets/UpcomingActivities-Bj60lOUx.js                            2.03 kB │ gzip:  0.98 kB
+dist/assets/DirectoryTools-BkMTocU6.js                                2.05 kB │ gzip:  0.85 kB
+dist/assets/ContextualHelp-B7179S1y.js                                2.08 kB │ gzip:  0.84 kB
+dist/assets/RecordVisual-BnjoSP3N.js                                  2.10 kB │ gzip:  1.19 kB
+dist/assets/PartialDateField-B5JxLu4N.js                              2.12 kB │ gzip:  0.77 kB
+dist/assets/api-UYhDBV7W.js                                           2.16 kB │ gzip:  0.90 kB
+dist/assets/ProvenanceMap-BvNmVA2c.js                                 2.16 kB │ gzip:  1.10 kB
+dist/assets/ScheduleTargetPicker-5robZJ-3.js                          2.43 kB │ gzip:  1.12 kB
+dist/assets/ActivityFilters-BZuTSKy9.js                               2.57 kB │ gzip:  1.05 kB
+dist/assets/CollectionUI-Brdfw6JC.js                                  2.68 kB │ gzip:  1.11 kB
+dist/assets/api-C53_Zlws.js                                           2.71 kB │ gzip:  1.15 kB
+dist/assets/PlantFormFields-BF1Xztfk.js                               2.86 kB │ gzip:  0.98 kB
+dist/assets/formValidation-D_4fn1Fv.js                                2.88 kB │ gzip:  1.31 kB
+dist/assets/api-Dg7xo3cF.js                                           3.19 kB │ gzip:  1.08 kB
+dist/assets/EventFeed-DccUb8IS.js                                     3.32 kB │ gzip:  1.15 kB
+dist/assets/state-CmW35Sjy.js                                         3.42 kB │ gzip:  1.45 kB
+dist/assets/SettingsScreen-MT8l0u14.js                                3.55 kB │ gzip:  1.46 kB
+dist/assets/ReferencePicker-e0lHWQMP.js                               4.12 kB │ gzip:  1.84 kB
+dist/assets/ConversionHistory-Cw-GTP9q.js                             4.44 kB │ gzip:  1.76 kB
+dist/assets/GlobalEventsScreen-DSLCUCKT.js                            4.55 kB │ gzip:  1.84 kB
+dist/assets/CreationReversal-BAB1LuTj.js                              4.91 kB │ gzip:  2.06 kB
+dist/assets/ReferenceUI-BYRbWK6a.js                                   5.21 kB │ gzip:  1.87 kB
+dist/assets/HistoryScreen-Dfq_DrtC.js                                 5.57 kB │ gzip:  2.17 kB
+dist/assets/SowingFormFields-t8RtN1Jc.js                              6.14 kB │ gzip:  1.55 kB
+dist/assets/OccurrenceMapPanel-DpkMB7sG.js                            7.25 kB │ gzip:  2.54 kB
+dist/assets/SpeciesDistributionScreen-DrAhGzBC.js                     7.27 kB │ gzip:  2.55 kB
+dist/assets/SavedViews-CFXoLtbM.js                                    7.56 kB │ gzip:  2.58 kB
+dist/assets/ProvenanceMapScreen-Dh4dU6Zo.js                           7.80 kB │ gzip:  2.63 kB
+dist/assets/BulkLocation-DfZHiT6j.js                                  8.18 kB │ gzip:  2.97 kB
+dist/assets/SowingDescendantWizard-BECXlD8v.js                        8.70 kB │ gzip:  3.15 kB
+dist/assets/PurchaseContext-CyCUbkbk.js                               9.30 kB │ gzip:  3.09 kB
+dist/assets/labelData-DIjOEOMh.js                                     9.36 kB │ gzip:  3.43 kB
+dist/assets/state-C_XgY5KS.js                                         9.97 kB │ gzip:  3.36 kB
+dist/assets/TaxonomyScreen-CD30lOLn.js                               10.44 kB │ gzip:  3.47 kB
+dist/assets/ImportExportScreen-D-fIUgL6.js                           12.35 kB │ gzip:  3.90 kB
+dist/assets/OrderScreen-BdvlDT9x.js                                  12.36 kB │ gzip:  3.85 kB
+dist/assets/SeedLotSowingWizard-dN7LLJIx.js                          12.42 kB │ gzip:  4.00 kB
+dist/assets/DashboardScreen-CRODwy6T.js                              18.75 kB │ gzip:  5.55 kB
+dist/assets/LocationScreen-BnFRPszi.js                               18.99 kB │ gzip:  5.48 kB
+dist/assets/SupplierScreen-vjhRwXuN.js                               19.95 kB │ gzip:  5.32 kB
+dist/assets/NativeRangesScreen-BlKIg9ZS.js                           20.26 kB │ gzip:  6.09 kB
+dist/assets/ScheduleScreen-qPktSoPv.js                               23.67 kB │ gzip:  7.05 kB
+dist/assets/MediaScreen-Dek0u3n0.js                                  24.67 kB │ gzip:  6.52 kB
+dist/assets/PhotosSection-CQKkKL2w.js                                25.86 kB │ gzip:  6.67 kB
+dist/assets/GeographyScreen-DVvwqnQ8.js                              30.58 kB │ gzip:  8.41 kB
+dist/assets/LabelsScreen-DO44XgNz.js                                 37.87 kB │ gzip: 13.38 kB
+dist/assets/SowingScreen-DPGR0WU5.js                                 39.48 kB │ gzip: 10.41 kB
+dist/assets/HarvestScreen-B0b9_3Ca.js                                42.70 kB │ gzip: 10.41 kB
+dist/assets/SeedLotScreen-DrV5EJit.js                                45.38 kB │ gzip: 12.42 kB
+dist/assets/PlantScreen-BLWgIgAt.js                                  64.10 kB │ gzip: 16.00 kB
+dist/assets/BotanicalIdentityScreen-MCcJpzPU.js                      78.19 kB │ gzip: 18.61 kB
+dist/assets/config-BkFJXBM9.js                                      148.98 kB │ gzip: 43.53 kB
+dist/assets/world-110m-CpoHhobN.js                                  150.83 kB │ gzip: 60.46 kB
+dist/assets/index-Cc_1-agb.js                                       228.15 kB │ gzip: 70.91 kB
+
+✓ built in 1.29s

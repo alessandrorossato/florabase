@@ -121,10 +121,7 @@ test("creates, edits, and deletes a path-aware ProvenanceSite", async () => {
     "Monte Pellegrino",
   );
   await user.click(screen.getByRole("tab", { name: "Essentials" }));
-  await user.selectOptions(
-    screen.getByLabelText("Geographic place (optional)"),
-    world.id,
-  );
+  await user.selectOptions(screen.getByLabelText("Geographic place"), world.id);
   await user.click(screen.getByRole("tab", { name: "Coordinates" }));
   await user.type(
     screen.getByLabelText("Latitude (WGS84 decimal)"),
@@ -137,12 +134,12 @@ test("creates, edits, and deletes a path-aware ProvenanceSite", async () => {
   );
   await user.click(screen.getByRole("tab", { name: "Coordinates" }));
   await user.type(
-    screen.getByLabelText("Coordinate accuracy in metres (optional)"),
+    screen.getByLabelText("Coordinate accuracy in metres"),
     "25.5",
   );
   await user.click(screen.getByRole("tab", { name: "Notes" }));
   await user.type(
-    screen.getByLabelText("Notes (optional)"),
+    screen.getByLabelText("Notes", { selector: "textarea" }),
     "Historical label",
   );
   await user.click(screen.getByRole("tab", { name: "Notes" }));

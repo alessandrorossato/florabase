@@ -1,3 +1,4 @@
+import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
 import { ApiError } from "../auth/api";
@@ -348,7 +349,9 @@ export function BotanicalIdentityCover({
             >
               {editor === "local" ? (
                 <div className="field">
-                  <label htmlFor="identity-cover-file">Image file</label>
+                  <FieldLabel required htmlFor="identity-cover-file">
+                    Image file
+                  </FieldLabel>
                   <input
                     accept="image/jpeg,image/png,image/webp"
                     id="identity-cover-file"
@@ -361,7 +364,9 @@ export function BotanicalIdentityCover({
               ) : (
                 <>
                   <div className="field">
-                    <label htmlFor="identity-cover-image-url">Image URL</label>
+                    <FieldLabel required htmlFor="identity-cover-image-url">
+                      Image URL
+                    </FieldLabel>
                     <input
                       defaultValue={
                         cover?.kind === "external" ? cover.image_url : ""
@@ -374,9 +379,9 @@ export function BotanicalIdentityCover({
                     />
                   </div>
                   <div className="field">
-                    <label htmlFor="identity-cover-source-url">
+                    <FieldLabel required htmlFor="identity-cover-source-url">
                       Source/page URL
-                    </label>
+                    </FieldLabel>
                     <input
                       defaultValue={
                         cover?.kind === "external" ? cover.source_url : ""
@@ -389,9 +394,9 @@ export function BotanicalIdentityCover({
                     />
                   </div>
                   <div className="field">
-                    <label htmlFor="identity-cover-attribution">
+                    <FieldLabel required htmlFor="identity-cover-attribution">
                       Attribution
-                    </label>
+                    </FieldLabel>
                     <textarea
                       defaultValue={
                         cover?.kind === "external" ? cover.attribution : ""
@@ -405,7 +410,7 @@ export function BotanicalIdentityCover({
                   </div>
                   <div className="field">
                     <label htmlFor="identity-cover-licence-label">
-                      Licence label (optional)
+                      Licence label
                     </label>
                     <input
                       defaultValue={
@@ -420,7 +425,7 @@ export function BotanicalIdentityCover({
                   </div>
                   <div className="field">
                     <label htmlFor="identity-cover-licence-url">
-                      Licence URL (optional)
+                      Licence URL
                     </label>
                     <input
                       defaultValue={
@@ -448,12 +453,12 @@ export function BotanicalIdentityCover({
                       required
                       type="checkbox"
                     />
-                    <span>
+                    <FieldLabel as="span" required>
                       Using an external image as this identity’s cover will
                       cause your browser to contact that image host when the
                       cover is displayed. The host can see normal network
                       information such as your IP address.
-                    </span>
+                    </FieldLabel>
                   </label>
                 </>
               )}

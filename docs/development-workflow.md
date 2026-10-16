@@ -296,8 +296,9 @@ See the [INFRA-MAINT-001 handoff](infra-maint-001-handoff.md) for proof, smoke a
 
 ```bash
 make feature-review-up
+make feature-review-bootstrap-owner LOGIN=owner    # first use only; choose your Review password
+make feature-review-seed                           # representative synthetic data
 make feature-review-status
-make feature-review-bootstrap-owner LOGIN=owner
 # Open http://localhost:15174 and perform the relevant acceptance workflow.
 make feature-review-stop
 make feature-review-up       # Rebuild source; preserve and reuse Review state
@@ -313,6 +314,25 @@ Status answers "what exact code am I looking at?": source, current branch/full S
 launch SHA, health, DB current, code head, URL, project, network and all persistent volume identities.
 One Review environment is supported. Containers and volumes carry source ownership; another worktree
 cannot take over those resources, even after a normal stop. Remove from the owning worktree first.
+
+`feature-review-seed` explicitly reuses the UAT v4/manual-review fixture **code**, never UAT data or
+volumes. It requires healthy, exactly owned `florabase-feature-review` resources and a DB at code head;
+runtime guards also verify `florabase_review`, loopback development authentication, and Review's own
+media root. It refuses every other project, foreign ownership, shared resources and ambiguous state.
+One enabled Review owner must already exist; its login, password, sessions and settings are retained.
+Collection records use the application's existing single-owner collection model and domain services.
+
+The dataset has **66 managed records**, or **68** when the configured approved WFO snapshot is available:
+identities, Seeds, Sowings, Plants/PlantGroups, Locations, geography/native ranges, Stored material,
+Harvests, Suppliers/Orders, Journal/History facts, Schedule examples and generated local/shared media.
+External media uses an intentionally offline reference; occurrence evidence is not fabricated. Missing
+optional taxonomy source data remains a truthful limitation. Seed never downloads a new reference source.
+The ledger, identity and lock are `.review-fixture.json`, `.review-identity.json` and `.review-fixture.lock`
+inside Review media storage; UAT bookkeeping is separate. Status reports fixture version/state/count.
+Rerunning validates its managed IDs/media and preserves operator edits; known additive extensions run
+once. A nonempty unrecognized collection, missing managed record/media, incompatible version or
+interrupted `building` ledger refuses instead of repairing, resetting or duplicating state. Inspect such
+state before explicitly deciding whether to retain it or authorize guarded Review removal.
 
 Stop removes containers/network but **preserves DB, media and dependencies**. Destruction is separate:
 

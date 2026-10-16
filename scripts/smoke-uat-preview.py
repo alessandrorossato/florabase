@@ -486,6 +486,7 @@ def main() -> None:
                 "backend",
                 "pytest",
                 "/uat/test-uat-fixture.py",
+                "/uat/test-review-fixture.py",
                 "--no-cov",
                 "-q",
             )

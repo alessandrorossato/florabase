@@ -738,6 +738,143 @@ class Environment:
         print(f"{self.role.upper()} READY")
         self.status()
 
+    def require_review_seed(self) -> None:
+        """Prove live Review ownership and isolation before any fixture/media write."""
+        if self.role != "review" or self.project != REVIEW_PROJECT:
+            raise WorkflowError("seed is restricted to florabase-feature-review")
+        self.validate()
+        self.require_owner()
+        volumes = {
+            f"{self.project}_{key}"
+            for key in ("postgres_data", "attachment_data", "frontend_node_modules")
+        }
+        details = json.loads(run(["docker", "volume", "inspect", *sorted(volumes)], capture=True))
+        for volume in details:
+            labels = volume.get("Labels") or {}
+            key = labels.get("com.docker.compose.volume")
+            if (
+                volume["Name"] not in volumes
+                or volume["Name"] != f"{self.project}_{key}"
+                or labels.get("com.docker.compose.project") != self.project
+                or labels.get("io.florabase.source") != str(self.source)
+            ):
+                raise WorkflowError("ambiguous Review volume ownership; seed refused")
+        if {volume["Name"] for volume in details} != volumes:
+            raise WorkflowError("missing Review volumes; seed refused")
+        network = f"{self.project}_internal"
+        network_details = json.loads(run(["docker", "network", "inspect", network], capture=True))[
+            0
+        ]
+        if (network_details.get("Labels") or {}).get("com.docker.compose.project") != self.project:
+            raise WorkflowError("foreign Review network; seed refused")
+        ids = run(["docker", "ps", "-aq"], capture=True).splitlines()
+        containers = json.loads(run(["docker", "inspect", *ids], capture=True)) if ids else []
+        services: set[str] = set()
+        for item in containers:
+            labels = item["Config"].get("Labels") or {}
+            mounts = {mount["Destination"]: mount for mount in item.get("Mounts", [])}
+            networks = item.get("NetworkSettings", {}).get("Networks", {})
+            belongs = labels.get("com.docker.compose.project") == self.project
+            if not belongs:
+                if network in networks or any(m.get("Name") in volumes for m in mounts.values()):
+                    raise WorkflowError("Review resources are used outside Review; seed refused")
+                continue
+            service = labels.get("com.docker.compose.service")
+            if (
+                service not in {"db", "backend", "frontend", "dev-state-init"}
+                or service in services
+                or labels.get("io.florabase.role") != "review"
+                or labels.get("io.florabase.source") != str(self.source)
+                or labels.get("com.docker.compose.project.working_dir") != str(self.source)
+                or labels.get("com.docker.compose.oneoff", "").lower() != "false"
+                or set(networks) != {network}
+            ):
+                raise WorkflowError("ambiguous running Review identity; seed refused")
+            services.add(service)
+            targets = {
+                "db": {"/var/lib/postgresql": "postgres_data"},
+                "backend": {MEDIA_ROOT: "attachment_data"},
+                "frontend": {"/app/node_modules": "frontend_node_modules"},
+                "dev-state-init": {
+                    "/state/attachments": "attachment_data",
+                    "/app/node_modules": "frontend_node_modules",
+                },
+            }[service]
+            if any(
+                mounts.get(target, {}).get("Type") != "volume"
+                or mounts[target].get("Name") != f"{self.project}_{key}"
+                for target, key in targets.items()
+            ) or any(
+                m.get("Type") == "volume" and m.get("Name") not in volumes for m in mounts.values()
+            ):
+                raise WorkflowError("wrong Review persistent mount; seed refused")
+            settings = dict(
+                value.split("=", 1) for value in item["Config"].get("Env", []) if "=" in value
+            )
+            expected = self.environment()
+            if service == "db" and any(
+                settings.get(key) != expected[key] for key in ("POSTGRES_DB", "POSTGRES_USER")
+            ):
+                raise WorkflowError("wrong running Review database; seed refused")
+            if service == "backend" and any(
+                settings.get(key) != value
+                for key, value in {
+                    "FLORABASE_DATABASE_URL": expected["FLORABASE_DATABASE_URL"],
+                    "FLORABASE_ATTACHMENT_STORAGE_ROOT": MEDIA_ROOT,
+                    "FLORABASE_CANONICAL_ORIGIN": self.url,
+                    "FLORABASE_ENVIRONMENT": "development",
+                    "FLORABASE_COOKIE_MODE": "loopback-development",
+                }.items()
+            ):
+                raise WorkflowError("wrong running Review backend configuration; seed refused")
+            if service != "dev-state-init" and (
+                not item["State"].get("Running")
+                or item["State"].get("Health", {}).get("Status") != "healthy"
+                or item["State"].get("Paused")
+            ):
+                raise WorkflowError("Review must be healthy before seeding; run feature-review-up")
+        if not {"db", "backend", "frontend"}.issubset(services):
+            raise WorkflowError("Review is not initialized; run feature-review-up")
+        if self.current() != code_heads(migration_graph(self.source)):
+            raise WorkflowError("Review seed needs DB at code head; run feature-review-up")
+
+    def seed(self) -> None:
+        self.require_review_seed()
+        identity = json.dumps(
+            {
+                "project": self.project,
+                "source": str(self.source),
+                "database": "florabase_review",
+                "origin": self.url,
+            }
+        )
+        program = (
+            "import json,pathlib,sys; "
+            f"p=pathlib.Path({MEDIA_ROOT!r})/'.review-identity.json'; "
+            "value=json.loads(sys.argv[1]); "
+            "assert not p.exists() or json.loads(p.read_text())==value, 'Review identity marker mismatch'; "
+            "p.write_text(json.dumps(value))"
+        )
+        self.compose("exec", "-T", "backend", "python", "-c", program, identity)
+        self.compose(
+            "run",
+            "--rm",
+            "-T",
+            "--no-deps",
+            "--volume",
+            f"{self.source / 'scripts/uat_fixture.py'}:/review/uat_fixture.py:ro",
+            "--env",
+            "FLORABASE_WORKFLOW_MODE=review",
+            "--env",
+            f"FLORABASE_REVIEW_PROJECT={self.project}",
+            "--env",
+            f"FLORABASE_REVIEW_SOURCE={self.source}",
+            "backend",
+            "python",
+            "/review/uat_fixture.py",
+            "seed",
+        )
+
     def status(self) -> None:
         self.validate()
         identity = self.repo.identity()
@@ -802,6 +939,19 @@ class Environment:
             print("Database current: unavailable (database stopped)")
         if owner_error:
             raise owner_error
+        if self.role == "review" and any(
+            item["Config"].get("Labels", {}).get("com.docker.compose.service") == "backend"
+            and item["State"].get("Running")
+            for item in containers
+        ):
+            program = (
+                "import json,pathlib; "
+                f"p=pathlib.Path({MEDIA_ROOT!r})/'.review-fixture.json'; "
+                "m=json.loads(p.read_text()) if p.is_file() else {}; "
+                "print('Review fixture: version {}; state {}; records {}'.format("
+                "m.get('version','missing'),m.get('state','missing'),len(m.get('records',{}))))"
+            )
+            print(self.compose("exec", "-T", "backend", "python", "-c", program, capture=True))
 
     def stop(self, *, remove: bool = False, confirm: str = "") -> None:
         if remove and (self.role != "review" or confirm != REVIEW_PROJECT):
@@ -880,6 +1030,8 @@ def main() -> int:
             env.status()
         elif args.action == "up":
             env.up()
+        elif args.action == "seed":
+            env.seed()
         elif args.action == "upgrade":
             env.upgrade_state()
         elif args.action in {"stop", "remove"}:

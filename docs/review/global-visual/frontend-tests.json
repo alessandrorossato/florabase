@@ -1,0 +1,337 @@
+{
+  "source": "de64ae3ca190d3a6fa6ba1ad31c2e774060254f6353fe53dd3abfa8b25ad7d8c",
+  "files": 64,
+  "passed": 666,
+  "method": "Unmodified repository Vitest config and assertions, one file per process for host memory constraints; no canonical gate",
+  "scope": "All frontend tests on the prior frozen candidate, followed by the final Taxonomy heading/surface correction and its focused rerun; not a canonical verification receipt.",
+  "suites": [
+    {
+      "file": "src/App.lazy.test.tsx",
+      "passed": 1,
+      "success": true
+    },
+    {
+      "file": "src/App.test.tsx",
+      "passed": 73,
+      "success": true
+    },
+    {
+      "file": "src/App.transition.test.tsx",
+      "passed": 1,
+      "success": true
+    },
+    {
+      "file": "src/Propagation002.test.tsx",
+      "passed": 14,
+      "success": true
+    },
+    {
+      "file": "src/UX001.test.tsx",
+      "passed": 7,
+      "success": true
+    },
+    {
+      "file": "src/UX004.test.tsx",
+      "passed": 12,
+      "success": true
+    },
+    {
+      "file": "src/botanical-identities/ExternalBotanicalDataPanel.test.tsx",
+      "passed": 3,
+      "success": true
+    },
+    {
+      "file": "src/botanical-profiles/NativeRangeEnrichmentPanel.test.tsx",
+      "passed": 6,
+      "success": true
+    },
+    {
+      "file": "src/bulk/BulkLocation.test.tsx",
+      "passed": 12,
+      "success": true
+    },
+    {
+      "file": "src/bulk/api.test.ts",
+      "passed": 1,
+      "success": true
+    },
+    {
+      "file": "src/collection/DashboardScreen.test.tsx",
+      "passed": 4,
+      "success": true
+    },
+    {
+      "file": "src/collection/DashboardSearch.test.tsx",
+      "passed": 12,
+      "success": true
+    },
+    {
+      "file": "src/components/ContextualHelp.test.tsx",
+      "passed": 3,
+      "success": true
+    },
+    {
+      "file": "src/components/DirectoryResults.test.tsx",
+      "passed": 5,
+      "success": true
+    },
+    {
+      "file": "src/components/DirectoryTools.test.tsx",
+      "passed": 1,
+      "success": true
+    },
+    {
+      "file": "src/components/FormSections.test.tsx",
+      "passed": 3,
+      "success": true
+    },
+    {
+      "file": "src/components/ReferenceInteractions.test.tsx",
+      "passed": 4,
+      "success": true
+    },
+    {
+      "file": "src/components/ThemeControl.test.tsx",
+      "passed": 2,
+      "success": true
+    },
+    {
+      "file": "src/components/WorkspaceBoundary.test.tsx",
+      "passed": 3,
+      "success": true
+    },
+    {
+      "file": "src/components/recordPresentation.test.ts",
+      "passed": 2,
+      "success": true
+    },
+    {
+      "file": "src/events/EventFeed.test.tsx",
+      "passed": 5,
+      "success": true
+    },
+    {
+      "file": "src/events/EventTargetPhoto.test.tsx",
+      "passed": 2,
+      "success": true
+    },
+    {
+      "file": "src/events/GlobalEventsScreen.test.tsx",
+      "passed": 10,
+      "success": true
+    },
+    {
+      "file": "src/harvests/Conversion.test.tsx",
+      "passed": 9,
+      "success": true
+    },
+    {
+      "file": "src/harvests/HarvestScreen.test.tsx",
+      "passed": 10,
+      "success": true
+    },
+    {
+      "file": "src/harvests/StoredMaterial.test.tsx",
+      "passed": 18,
+      "success": true
+    },
+    {
+      "file": "src/harvests/api.test.ts",
+      "passed": 1,
+      "success": true
+    },
+    {
+      "file": "src/history/HistoryScreen.test.tsx",
+      "passed": 9,
+      "success": true
+    },
+    {
+      "file": "src/import-export/ImportExportScreen.test.tsx",
+      "passed": 3,
+      "success": true
+    },
+    {
+      "file": "src/labels/LabelsScreen.test.tsx",
+      "passed": 54,
+      "success": true
+    },
+    {
+      "file": "src/labels/qrCode.test.ts",
+      "passed": 10,
+      "success": true
+    },
+    {
+      "file": "src/lineage/LineagePanel.test.tsx",
+      "passed": 2,
+      "success": true
+    },
+    {
+      "file": "src/locations/api.test.ts",
+      "passed": 1,
+      "success": true
+    },
+    {
+      "file": "src/media/MediaScreen.test.tsx",
+      "passed": 18,
+      "success": true
+    },
+    {
+      "file": "src/native-ranges/NativeRangesScreen.test.tsx",
+      "passed": 14,
+      "success": true
+    },
+    {
+      "file": "src/native-ranges/geometry.test.ts",
+      "passed": 3,
+      "success": true
+    },
+    {
+      "file": "src/occurrence-map/OccurrenceDensityMap.test.tsx",
+      "passed": 1,
+      "success": true
+    },
+    {
+      "file": "src/occurrence-map/OccurrenceMapPanel.test.tsx",
+      "passed": 4,
+      "success": true
+    },
+    {
+      "file": "src/orders/OrderPicker.test.tsx",
+      "passed": 4,
+      "success": true
+    },
+    {
+      "file": "src/orders/OrderScreen.test.tsx",
+      "passed": 8,
+      "success": true
+    },
+    {
+      "file": "src/orders/PurchaseContext.test.tsx",
+      "passed": 7,
+      "success": true
+    },
+    {
+      "file": "src/photos/BotanicalIdentityCover.test.tsx",
+      "passed": 5,
+      "success": true
+    },
+    {
+      "file": "src/photos/PhotosSection.test.tsx",
+      "passed": 9,
+      "success": true
+    },
+    {
+      "file": "src/photos/PrimaryPhotoVisual.test.tsx",
+      "passed": 7,
+      "success": true
+    },
+    {
+      "file": "src/photos/RecordVisual.test.tsx",
+      "passed": 10,
+      "success": true
+    },
+    {
+      "file": "src/plants/PlantScreen.test.tsx",
+      "passed": 42,
+      "success": true
+    },
+    {
+      "file": "src/propagation/CreationReversal.test.tsx",
+      "passed": 9,
+      "success": true
+    },
+    {
+      "file": "src/propagation/GuidedForms.test.tsx",
+      "passed": 5,
+      "success": true
+    },
+    {
+      "file": "src/provenance-map/ProvenanceMapScreen.test.tsx",
+      "passed": 5,
+      "success": true
+    },
+    {
+      "file": "src/provenance-sites/CoordinateFields.test.tsx",
+      "passed": 2,
+      "success": true
+    },
+    {
+      "file": "src/provenance-sites/ProvenanceSiteManager.test.tsx",
+      "passed": 4,
+      "success": true
+    },
+    {
+      "file": "src/provenance-sites/coordinates.test.ts",
+      "passed": 15,
+      "success": true
+    },
+    {
+      "file": "src/saved-views/SavedViews.test.tsx",
+      "passed": 10,
+      "success": true
+    },
+    {
+      "file": "src/saved-views/state.test.ts",
+      "passed": 49,
+      "success": true
+    },
+    {
+      "file": "src/schedule/ScheduleScreen.test.tsx",
+      "passed": 51,
+      "success": true
+    },
+    {
+      "file": "src/schedule/api.test.ts",
+      "passed": 3,
+      "success": true
+    },
+    {
+      "file": "src/schedule/calendar.test.ts",
+      "passed": 2,
+      "success": true
+    },
+    {
+      "file": "src/seed-lots/ReferencePicker.test.tsx",
+      "passed": 4,
+      "success": true
+    },
+    {
+      "file": "src/seed-lots/SeedLotScreen.test.tsx",
+      "passed": 31,
+      "success": true
+    },
+    {
+      "file": "src/settings/SettingsScreen.test.tsx",
+      "passed": 5,
+      "success": true
+    },
+    {
+      "file": "src/sowings/SowingScreen.test.tsx",
+      "passed": 19,
+      "success": true
+    },
+    {
+      "file": "src/species-distribution/SpeciesDistributionScreen.test.tsx",
+      "passed": 5,
+      "success": true
+    },
+    {
+      "file": "src/suppliers/SupplierScreen.test.tsx",
+      "passed": 5,
+      "success": true
+    },
+    {
+      "file": "src/taxonomy/TaxonomyScreen.test.tsx",
+      "passed": 7,
+      "success": true
+    }
+  ],
+  "final_followup": {
+    "source": "5a587a94c635fc018a384974f5c9764d702122b209cf6219513a417bd18eeffa",
+    "changes_after_full_suite": "Taxonomy semantic heading hierarchy and token surface geometry; labelled checkbox/radio minimum touch target CSS",
+    "file": "src/taxonomy/TaxonomyScreen.test.tsx",
+    "passed": 7,
+    "success": true,
+    "scope": "Focused behavioral rerun after heading assertions; final CSS is covered by subsequent static checks and production build, not a new all-suite run"
+  }
+}

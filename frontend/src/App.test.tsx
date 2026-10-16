@@ -1,3 +1,4 @@
+import { selectDirectoryFilter } from "./test/directoryFilters";
 import { emptyOverview } from "./collection/dashboardFixtures";
 import {
   act,
@@ -2097,7 +2098,7 @@ test("location search keeps ancestors and scope filtering uses explicit scopes",
     screen.getByRole("button", { name: /^Drawer A/i }),
   ).toBeInTheDocument();
   await user.clear(screen.getByRole("searchbox", { name: "Search locations" }));
-  await user.selectOptions(screen.getByLabelText("Usage scope"), "plants");
+  await selectDirectoryFilter(user, "Usage scope", "plants");
   expect(
     screen.getByRole("button", { name: /^Seed cabinet/i }),
   ).toBeInTheDocument();
@@ -2108,7 +2109,7 @@ test("location search keeps ancestors and scope filtering uses explicit scopes",
   expect(
     screen.queryByRole("button", { name: /^Seed cabinet/i }),
   ).not.toBeInTheDocument();
-  await user.selectOptions(screen.getByLabelText("Usage scope"), "seed_lots");
+  await selectDirectoryFilter(user, "Usage scope", "seed_lots");
   expect(
     screen.getByRole("button", { name: /^Drawer A/i }),
   ).toBeInTheDocument();
@@ -2237,6 +2238,15 @@ test("location creation supports roots and the selected create-child shortcut", 
   });
   const user = await openLocations();
   await user.click(await screen.findByRole("button", { name: "New location" }));
+  const scopesGroup = screen.getByRole("group", { name: "Used for" });
+  expect(scopesGroup).toHaveAccessibleDescription(/Choose at least one/);
+  expect(scopesGroup.querySelector(".required-mark")).toHaveAttribute(
+    "aria-hidden",
+    "true",
+  );
+  for (const checkbox of within(scopesGroup).getAllByRole("checkbox")) {
+    expect(checkbox).not.toBeRequired();
+  }
   await user.type(await screen.findByLabelText("Name"), "House{Enter}");
   expect(
     await screen.findByRole("heading", { name: "House" }),
@@ -3119,7 +3129,7 @@ test("Location aggregates show separate Plant groups and descendant content beyo
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await openLocations();
-  await user.selectOptions(screen.getByLabelText("Usage scope"), "plants");
+  await selectDirectoryFilter(user, "Usage scope", "plants");
   const row = await screen.findByRole("button", { name: /^House/ });
   expect(
     within(row).getByText(
@@ -3255,9 +3265,11 @@ test.each([1440, 390])(
       expect(window.location.hash).toBe("#/harvests");
     });
     expect(await screen.findByLabelText("Search Harvests")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Filters" }));
     expect(
       screen.getByRole("combobox", { name: "Botanical identity" }),
     ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Done" }));
     const currentPeers = screen.getByRole("navigation", {
       name: "Harvest views",
     });

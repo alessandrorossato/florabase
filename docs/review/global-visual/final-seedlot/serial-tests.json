@@ -1,0 +1,26 @@
+{
+  "success": false,
+  "numPassedTests": 78,
+  "numFailedTests": 2,
+  "numTotalTests": 80,
+  "suites": [
+    {
+      "file": "src/photos/PhotosSection.test.tsx",
+      "tests": 15,
+      "failed": []
+    },
+    {
+      "file": "src/seed-lots/SeedLotScreen.test.tsx",
+      "tests": 46,
+      "failed": []
+    },
+    {
+      "file": "src/sowings/SowingScreen.test.tsx",
+      "tests": 19,
+      "failed": [
+        "germination tab keeps simple and dated totals distinct and supports correction",
+        "navigation exposes loading, empty, and missing-SeedLot states"
+      ]
+    }
+  ]
+}

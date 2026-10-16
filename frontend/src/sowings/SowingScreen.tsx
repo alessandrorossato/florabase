@@ -1,3 +1,9 @@
+import { FieldLabel } from "../components/FieldLabel";
+import "../components/directory-preview.css";
+import {
+  DirectoryTools,
+  DirectoryFilterSelect,
+} from "../components/DirectoryTools";
 import { UpcomingActivities } from "../schedule/UpcomingActivities";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
@@ -1141,20 +1147,91 @@ export function SowingScreen({
         contextOnly={mobileDetail || editing}
         {...sowingPage}
         actions={
-          !editing && (
-            <button
-              type="button"
-              ref={creationTriggerRef}
-              aria-expanded={creationExpanded}
-              aria-controls="new-sowing-panel"
-              disabled={references.seedLots.length === 0}
-              onClick={() => {
-                if (creationExpanded) focusCreation();
-                else startCreate();
+          mobileDetail
+            ? !editing && (
+                <button
+                  type="button"
+                  ref={creationTriggerRef}
+                  aria-expanded={creationExpanded}
+                  aria-controls="new-sowing-panel"
+                  disabled={references.seedLots.length === 0}
+                  onClick={() => {
+                    if (creationExpanded) focusCreation();
+                    else startCreate();
+                  }}
+                >
+                  + New sowing
+                </button>
+              )
+            : undefined
+        }
+        tools={
+          !(mobileDetail || editing) && (
+            <DirectoryTools
+              onReset={() => {
+                setFilter("all");
               }}
-            >
-              + New sowing
-            </button>
+              name="Sowings"
+              search={
+                <DirectorySearch
+                  hideLabel
+                  id="sowing-search"
+                  label="Search Sowings"
+                  placeholder="Search sowings, seed lots or location"
+                  value={search}
+                  onChange={setSearch}
+                />
+              }
+              savedViews={
+                <SavedViews
+                  presentation="dialog"
+                  surface="sowings"
+                  state={view.savedState}
+                />
+              }
+              filters={
+                <>
+                  <DirectoryFilterSelect
+                    label="Lifecycle"
+                    value={filter}
+                    onChange={setFilter}
+                    options={[
+                      { value: "active", label: "Active" },
+                      { value: "completed", label: "Completed" },
+                      { value: "all", label: "All" },
+                    ]}
+                  />
+                </>
+              }
+              activeFilters={[
+                ...(filter !== "all"
+                  ? [
+                      {
+                        label: "Lifecycle",
+                        value: filter === "active" ? "Active" : "Completed",
+                        onRemove: () => {
+                          setFilter("all");
+                        },
+                      },
+                    ]
+                  : []),
+              ]}
+              actions={
+                <button
+                  type="button"
+                  ref={creationTriggerRef}
+                  aria-expanded={creationExpanded}
+                  aria-controls="new-sowing-panel"
+                  disabled={references.seedLots.length === 0}
+                  onClick={() => {
+                    if (creationExpanded) focusCreation();
+                    else startCreate();
+                  }}
+                >
+                  + New sowing
+                </button>
+              }
+            />
           )
         }
       />
@@ -1167,7 +1244,7 @@ export function SowingScreen({
         </div>
       )}
       <div
-        className={`sowing-master-detail operational-layout${mobileDetail || editing ? " is-detail-view" : ""}`}
+        className={`sowing-master-detail operational-layout directory-preview-layout${mobileDetail || editing ? " is-detail-view" : ""}`}
       >
         <section
           className="seed-master sowing-master"
@@ -1176,50 +1253,6 @@ export function SowingScreen({
           <h3 className="sr-only" id="sowing-list-title">
             Sowing collection
           </h3>
-          <SavedViews
-            surface="sowings"
-            state={view.savedState}
-            utilityActions={
-              <BulkSelect
-                selection={bulk}
-                visible={bulkChoices}
-                onStart={() => {
-                  setSelectedId(null);
-                  setMobileDetail(false);
-                  setDetail({ status: "idle" });
-                }}
-              />
-            }
-          />
-          <div className="seed-controls">
-            <DirectorySearch
-              hideLabel
-              id="sowing-search"
-              label="Search Sowings"
-              placeholder="Search sowings, seed lots or location"
-              value={search}
-              onChange={setSearch}
-            />
-            <fieldset className="lifecycle-filter">
-              <legend className="sr-only">Show Sowings</legend>
-              {(["active", "completed", "all"] as const).map((item) => (
-                <button
-                  key={item}
-                  type="button"
-                  aria-pressed={filter === item}
-                  onClick={() => {
-                    setFilter(item);
-                  }}
-                >
-                  {item === "active"
-                    ? "Active"
-                    : item === "completed"
-                      ? "Completed"
-                      : "All"}
-                </button>
-              ))}
-            </fieldset>
-          </div>
           <BulkToolbar
             selection={bulk}
             visible={bulkChoices}
@@ -1231,7 +1264,20 @@ export function SowingScreen({
             }}
           />
           {collection.status === "ready" && (
-            <DirectoryResults count={visible.length} />
+            <DirectoryResults
+              count={visible.length}
+              actions={
+                <BulkSelect
+                  selection={bulk}
+                  visible={bulkChoices}
+                  onStart={() => {
+                    setSelectedId(null);
+                    setMobileDetail(false);
+                    setDetail({ status: "idle" });
+                  }}
+                />
+              }
+            />
           )}
           {sowings.length === 0 ? (
             <div className="profile-empty">
@@ -1356,6 +1402,7 @@ export function SowingScreen({
                 }
               />
               <FormSections
+                mode={selected ? "edit" : "create"}
                 disabled={pending}
                 error={save.status === "error" ? save : undefined}
                 errorFields={[
@@ -1392,7 +1439,9 @@ export function SowingScreen({
                   pending,
                   source: (
                     <div className="field">
-                      <label htmlFor="sowing-seed-lot">SeedLot</label>
+                      <FieldLabel required htmlFor="sowing-seed-lot">
+                        SeedLot
+                      </FieldLabel>
                       <select
                         aria-describedby="sowing-seed-lot-help"
                         id="sowing-seed-lot"
@@ -1434,7 +1483,6 @@ export function SowingScreen({
                       <div className="field">
                         <label htmlFor="germinated-count">
                           Germinated count{" "}
-                          <span className="optional">(optional)</span>
                         </label>
                         <input
                           id="germinated-count"

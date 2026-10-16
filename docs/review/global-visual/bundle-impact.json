@@ -1,0 +1,68 @@
+{
+  "baseline_commit": "cd63c185f7bcb0544cd9c3cff984b29564e6bc84",
+  "method": "Vite production builds using the same installed locked dependencies; bytes and independent gzip of emitted assets, not a runtime benchmark",
+  "builds": {
+    "baseline": {
+      "entry_js": {
+        "files": 2,
+        "bytes": 227631,
+        "gzip_bytes": 69908
+      },
+      "all_js": {
+        "files": 71,
+        "bytes": 1222790,
+        "gzip_bytes": 380204
+      },
+      "css": {
+        "files": 12,
+        "bytes": 227062,
+        "gzip_bytes": 46249
+      },
+      "fonts": {
+        "files": 26,
+        "bytes": 670668,
+        "gzip_bytes": 671371
+      }
+    },
+    "candidate": {
+      "entry_js": {
+        "files": 2,
+        "bytes": 227899,
+        "gzip_bytes": 70015
+      },
+      "all_js": {
+        "files": 72,
+        "bytes": 1229256,
+        "gzip_bytes": 382734
+      },
+      "css": {
+        "files": 12,
+        "bytes": 239988,
+        "gzip_bytes": 48268
+      },
+      "fonts": {
+        "files": 26,
+        "bytes": 670668,
+        "gzip_bytes": 671371
+      }
+    }
+  },
+  "delta": {
+    "entry_js": {
+      "bytes": 268,
+      "gzip_bytes": 107
+    },
+    "all_js": {
+      "bytes": 6466,
+      "gzip_bytes": 2530
+    },
+    "css": {
+      "bytes": 12926,
+      "gzip_bytes": 2019
+    },
+    "fonts": {
+      "bytes": 0,
+      "gzip_bytes": 0
+    }
+  }
+}

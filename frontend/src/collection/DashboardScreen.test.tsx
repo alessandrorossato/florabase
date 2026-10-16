@@ -41,18 +41,14 @@ test("empty collection preserves all operational areas and uses the local calend
   expect(
     await screen.findByRole("heading", { name: "Collection snapshot" }),
   ).toBeInTheDocument();
-  for (const name of [
-    "Attention & upcoming",
-    "Recent activity",
-    "Propagation",
-    "Sourcing",
-    "Botanical coverage",
-  ])
+  for (const name of ["Attention & upcoming", "Recent activity"])
     expect(screen.getByRole("heading", { name })).toBeInTheDocument();
   expect(screen.getByText(/No planned activities/)).toBeInTheDocument();
   expect(screen.getByText(/No recent activity/)).toBeInTheDocument();
   expect(get).toHaveBeenCalledWith(expect.any(AbortSignal), localDay());
   expect(get).toHaveBeenCalledTimes(1);
+  for (const name of ["Propagation", "Sourcing", "Botanical coverage"])
+    expect(screen.queryByRole("heading", { name })).not.toBeInTheDocument();
 });
 
 test("loading, recoverable failure and retry never manufacture zero metrics", async () => {
@@ -140,5 +136,7 @@ test("Journal, History, partial dates, reversal and planned work remain distingu
     "href",
     "#/schedule?window=overdue",
   );
-  expect(screen.getByText(/Unknown and zero counts/)).toBeInTheDocument();
+  expect(
+    screen.queryByRole("heading", { name: "Propagation" }),
+  ).not.toBeInTheDocument();
 });

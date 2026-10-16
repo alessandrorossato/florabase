@@ -1,0 +1,83 @@
+{
+  "source": "/home/alessandro/.codex/worktrees/996d/florabase",
+  "branch": "feat/global-visual-001",
+  "baseHead": "cd63c185f7bcb0544cd9c3cff984b29564e6bc84",
+  "dirty": true,
+  "strictTypeScript": "passed in final production build",
+  "eslint": {
+    "status": "passed",
+    "maxWarnings": 0,
+    "files": [
+      "frontend/src/App.test.tsx",
+      "frontend/src/Propagation002.test.tsx",
+      "frontend/src/auth/LoginForm.tsx",
+      "frontend/src/botanical-identities/BotanicalIdentityScreen.tsx",
+      "frontend/src/botanical-identities/ExternalBotanicalDataPanel.tsx",
+      "frontend/src/botanical-profiles/NativeRangeEnrichmentPanel.tsx",
+      "frontend/src/components/FieldLabel.test.tsx",
+      "frontend/src/components/FieldLabel.tsx",
+      "frontend/src/events/EventJournal.tsx",
+      "frontend/src/geographic-places/GeographyScreen.tsx",
+      "frontend/src/harvests/HarvestForm.tsx",
+      "frontend/src/harvests/InventoryDialog.tsx",
+      "frontend/src/labels/LabelsScreen.tsx",
+      "frontend/src/lineage/LineagePanel.test.tsx",
+      "frontend/src/lineage/LineagePanel.tsx",
+      "frontend/src/locations/LocationScreen.tsx",
+      "frontend/src/media/MediaEditor.tsx",
+      "frontend/src/media/MediaLinker.tsx",
+      "frontend/src/media/MediaPicker.tsx",
+      "frontend/src/media/MediaScreen.tsx",
+      "frontend/src/orders/OrderPicker.tsx",
+      "frontend/src/orders/OrderScreen.test.tsx",
+      "frontend/src/orders/OrderScreen.tsx",
+      "frontend/src/photos/BotanicalIdentityCover.tsx",
+      "frontend/src/photos/PhotosSection.test.tsx",
+      "frontend/src/photos/PhotosSection.tsx",
+      "frontend/src/plants/PlantFormFields.tsx",
+      "frontend/src/plants/PlantScreen.test.tsx",
+      "frontend/src/propagation/GuidedForms.test.tsx",
+      "frontend/src/provenance-sites/ProvenanceSiteManager.test.tsx",
+      "frontend/src/provenance-sites/ProvenanceSiteManager.tsx",
+      "frontend/src/schedule/ScheduleScreen.tsx",
+      "frontend/src/seed-lots/PartialDateField.test.tsx",
+      "frontend/src/seed-lots/PartialDateField.tsx",
+      "frontend/src/seed-lots/ReferencePicker.test.tsx",
+      "frontend/src/seed-lots/ReferencePicker.tsx",
+      "frontend/src/seed-lots/SeedLotScreen.test.tsx",
+      "frontend/src/seed-lots/SeedLotScreen.tsx",
+      "frontend/src/sowings/GerminationSection.tsx",
+      "frontend/src/sowings/SowingFormFields.tsx",
+      "frontend/src/sowings/SowingScreen.test.tsx",
+      "frontend/src/sowings/SowingScreen.tsx",
+      "frontend/src/suppliers/SupplierScreen.tsx",
+      "frontend/src/taxonomy/IdentityTaxonomyPanel.tsx"
+    ],
+    "finalChangedSubset": [
+      "frontend/src/locations/LocationScreen.tsx",
+      "frontend/src/App.test.tsx",
+      "frontend/src/photos/PhotosSection.test.tsx",
+      "frontend/src/orders/OrderScreen.test.tsx",
+      "frontend/src/propagation/GuidedForms.test.tsx"
+    ]
+  },
+  "prettier": {
+    "status": "passed",
+    "files": 47
+  },
+  "productionBuild": "passed",
+  "bundles": {
+    "SeedLotScreen": {
+      "kB": 45.14,
+      "gzipKB": 12.4
+    },
+    "main": {
+      "kB": 228.15,
+      "gzipKB": 70.92
+    }
+  },
+  "diffWhitespace": "passed",
+  "stagedDiff": "empty",
+  "canonicalFeatureVerify": "not run - explicit boundary",
+  "backendTests": "not rerun - this pass changes frontend presentation only"
+}
