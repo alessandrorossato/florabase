@@ -1,0 +1,1065 @@
+{
+  "zoom": "125/150 percent are effective viewport proxies; actual browser zoom remains untested",
+  "checks": [
+    {
+      "state": "group-lineage",
+      "size": "1440-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Seed lotPreview — Basil counted packetactive",
+        "SowingPreview — Spring basil trayactive",
+        "This Plant groupPreview — Basil seedlingsactive"
+      ],
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440,
+      "primaryColors": []
+    },
+    {
+      "state": "seeds-directory",
+      "size": "1440-100",
+      "activeTabs": [],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1425,
+      "width": 1440
+    },
+    {
+      "state": "seeds-directory",
+      "size": "1024-100",
+      "activeTabs": [],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024
+    },
+    {
+      "state": "seeds-directory",
+      "size": "390-100",
+      "activeTabs": [],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "sowings-directory",
+      "size": "1440-100",
+      "activeTabs": [],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "state": "sowings-directory",
+      "size": "1024-100",
+      "activeTabs": [],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024
+    },
+    {
+      "state": "sowings-directory",
+      "size": "390-100",
+      "activeTabs": [],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "plants-directory",
+      "size": "1440-100",
+      "activeTabs": [],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "state": "plants-directory",
+      "size": "1024-100",
+      "activeTabs": [],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024
+    },
+    {
+      "state": "plants-directory",
+      "size": "390-100",
+      "activeTabs": [],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "sowing-create",
+      "size": "1440-100",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 1157,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1425,
+      "width": 1440
+    },
+    {
+      "state": "sowing-create",
+      "size": "1440-125-proxy",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 869,
+      "height": 675,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1137,
+      "width": 1152
+    },
+    {
+      "state": "sowing-create",
+      "size": "1440-150-proxy",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 677,
+      "height": 563,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 945,
+      "width": 960
+    },
+    {
+      "state": "sowing-create",
+      "size": "1024-100",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 741,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024
+    },
+    {
+      "state": "sowing-create",
+      "size": "1024-125-proxy",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 536,
+      "height": 675,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 804,
+      "width": 819
+    },
+    {
+      "state": "sowing-create",
+      "size": "390-100",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 343,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "plant-create",
+      "size": "1440-100",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 1157,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1425,
+      "width": 1440
+    },
+    {
+      "state": "plant-create",
+      "size": "1440-125-proxy",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 869,
+      "height": 675,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1137,
+      "width": 1152
+    },
+    {
+      "state": "plant-create",
+      "size": "1440-150-proxy",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 677,
+      "height": 563,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 945,
+      "width": 960
+    },
+    {
+      "state": "plant-create",
+      "size": "1024-100",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 741,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024
+    },
+    {
+      "state": "plant-create",
+      "size": "1024-125-proxy",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 536,
+      "height": 675,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 804,
+      "width": 819
+    },
+    {
+      "state": "plant-create",
+      "size": "390-100",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 343,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "group-create",
+      "size": "1440-100",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 1157,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1425,
+      "width": 1440
+    },
+    {
+      "state": "group-create",
+      "size": "1440-125-proxy",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 869,
+      "height": 675,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1137,
+      "width": 1152
+    },
+    {
+      "state": "group-create",
+      "size": "1440-150-proxy",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 677,
+      "height": 563,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 945,
+      "width": 960
+    },
+    {
+      "state": "group-create",
+      "size": "1024-100",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 741,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024
+    },
+    {
+      "state": "group-create",
+      "size": "1024-125-proxy",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 536,
+      "height": 675,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 804,
+      "width": 819
+    },
+    {
+      "state": "group-create",
+      "size": "390-100",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 343,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "extract-plant",
+      "size": "1440-100",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 1157,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1425,
+      "width": 1440
+    },
+    {
+      "state": "extract-plant",
+      "size": "1440-125-proxy",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 869,
+      "height": 675,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1137,
+      "width": 1152
+    },
+    {
+      "state": "extract-plant",
+      "size": "1440-150-proxy",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 677,
+      "height": 563,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 945,
+      "width": 960
+    },
+    {
+      "state": "extract-plant",
+      "size": "1024-100",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 741,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024
+    },
+    {
+      "state": "extract-plant",
+      "size": "1024-125-proxy",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 536,
+      "height": 675,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 804,
+      "width": 819
+    },
+    {
+      "state": "extract-plant",
+      "size": "390-100",
+      "activeTabs": [],
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "formWidth": 343,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "plant-lineage",
+      "size": "1440-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Seed lotPreview — Basil counted packetactive",
+        "SowingPreview — Spring basil trayactive",
+        "This PlantPreview — Basil mother plantactive"
+      ],
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Record harvest"
+        }
+      ]
+    },
+    {
+      "state": "plant-lineage",
+      "size": "1024-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Seed lotPreview — Basil counted packetactive",
+        "SowingPreview — Spring basil trayactive",
+        "This PlantPreview — Basil mother plantactive"
+      ],
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Record harvest"
+        }
+      ]
+    },
+    {
+      "state": "plant-lineage",
+      "size": "390-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Seed lotPreview — Basil counted packetactive",
+        "SowingPreview — Spring basil trayactive",
+        "This PlantPreview — Basil mother plantactive"
+      ],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Record harvest"
+        }
+      ]
+    },
+    {
+      "state": "group-lineage",
+      "size": "1024-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Seed lotPreview — Basil counted packetactive",
+        "SowingPreview — Spring basil trayactive",
+        "This Plant groupPreview — Basil seedlingsactive"
+      ],
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024,
+      "primaryColors": []
+    },
+    {
+      "state": "group-lineage",
+      "size": "390-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Seed lotPreview — Basil counted packetactive",
+        "SowingPreview — Spring basil trayactive",
+        "This Plant groupPreview — Basil seedlingsactive"
+      ],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390,
+      "primaryColors": []
+    },
+    {
+      "state": "direct-plant-lineage",
+      "size": "1440-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Record harvest"
+        }
+      ]
+    },
+    {
+      "state": "direct-plant-lineage",
+      "size": "1024-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1024,
+      "width": 1024,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Record harvest"
+        }
+      ]
+    },
+    {
+      "state": "direct-plant-lineage",
+      "size": "390-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 390,
+      "width": 390,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Record harvest"
+        }
+      ]
+    },
+    {
+      "state": "sowing-lineage",
+      "size": "1440-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Source SeedLotPreview — Basil counted packetactive",
+        "Current SowingPreview — Spring basil trayactive",
+        "PlantPreview — Basil mother plantactive",
+        "Plant groupPreview — Basil seedlings6 · active"
+      ],
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Create Plant"
+        }
+      ]
+    },
+    {
+      "state": "sowing-lineage",
+      "size": "1024-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Source SeedLotPreview — Basil counted packetactive",
+        "Current SowingPreview — Spring basil trayactive",
+        "PlantPreview — Basil mother plantactive",
+        "Plant groupPreview — Basil seedlings6 · active"
+      ],
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Create Plant"
+        }
+      ]
+    },
+    {
+      "state": "sowing-lineage",
+      "size": "390-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Source SeedLotPreview — Basil counted packetactive",
+        "Current SowingPreview — Spring basil trayactive",
+        "PlantPreview — Basil mother plantactive",
+        "Plant groupPreview — Basil seedlings6 · active"
+      ],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Create Plant"
+        }
+      ]
+    },
+    {
+      "state": "sowing-actions",
+      "size": "1440-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Source SeedLotPreview — Basil counted packetactive",
+        "Current SowingPreview — Spring basil trayactive",
+        "PlantPreview — Basil mother plantactive",
+        "Plant groupPreview — Basil seedlings6 · active"
+      ],
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Create Plant"
+        }
+      ]
+    },
+    {
+      "state": "sowing-actions",
+      "size": "1024-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Source SeedLotPreview — Basil counted packetactive",
+        "Current SowingPreview — Spring basil trayactive",
+        "PlantPreview — Basil mother plantactive",
+        "Plant groupPreview — Basil seedlings6 · active"
+      ],
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Create Plant"
+        }
+      ]
+    },
+    {
+      "state": "sowing-actions",
+      "size": "390-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Source SeedLotPreview — Basil counted packetactive",
+        "Current SowingPreview — Spring basil trayactive",
+        "PlantPreview — Basil mother plantactive",
+        "Plant groupPreview — Basil seedlings6 · active"
+      ],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Create Plant"
+        }
+      ]
+    },
+    {
+      "state": "sowing-more",
+      "size": "1440-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Source SeedLotPreview — Basil counted packetactive",
+        "Current SowingPreview — Spring basil trayactive",
+        "PlantPreview — Basil mother plantactive",
+        "Plant groupPreview — Basil seedlings6 · active"
+      ],
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Create Plant"
+        }
+      ]
+    },
+    {
+      "state": "sowing-more",
+      "size": "1024-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Source SeedLotPreview — Basil counted packetactive",
+        "Current SowingPreview — Spring basil trayactive",
+        "PlantPreview — Basil mother plantactive",
+        "Plant groupPreview — Basil seedlings6 · active"
+      ],
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Create Plant"
+        }
+      ]
+    },
+    {
+      "state": "sowing-more",
+      "size": "390-100",
+      "activeTabs": [
+        "Lineage"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Source SeedLotPreview — Basil counted packetactive",
+        "Current SowingPreview — Spring basil trayactive",
+        "PlantPreview — Basil mother plantactive",
+        "Plant groupPreview — Basil seedlings6 · active"
+      ],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Create Plant"
+        }
+      ]
+    },
+    {
+      "state": "plant-actions",
+      "size": "1440-100",
+      "activeTabs": [
+        "Overview"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Record harvest"
+        }
+      ]
+    },
+    {
+      "state": "plant-actions",
+      "size": "1024-100",
+      "activeTabs": [
+        "Overview"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Record harvest"
+        }
+      ]
+    },
+    {
+      "state": "plant-actions",
+      "size": "390-100",
+      "activeTabs": [
+        "Overview"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Record harvest"
+        }
+      ]
+    },
+    {
+      "state": "plant-more",
+      "size": "1440-100",
+      "activeTabs": [
+        "Overview"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Record harvest"
+        }
+      ]
+    },
+    {
+      "state": "plant-more",
+      "size": "1024-100",
+      "activeTabs": [
+        "Overview"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Record harvest"
+        }
+      ]
+    },
+    {
+      "state": "plant-more",
+      "size": "390-100",
+      "activeTabs": [
+        "Overview"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390,
+      "primaryColors": [
+        {
+          "background": "rgb(47, 104, 79)",
+          "color": "rgb(255, 255, 255)",
+          "text": "Record harvest"
+        }
+      ]
+    },
+    {
+      "state": "group-actions",
+      "size": "1440-100",
+      "activeTabs": [
+        "Overview"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1425,
+      "width": 1440,
+      "primaryColors": []
+    },
+    {
+      "state": "group-actions",
+      "size": "1024-100",
+      "activeTabs": [
+        "Overview"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024,
+      "primaryColors": []
+    },
+    {
+      "state": "group-actions",
+      "size": "390-100",
+      "activeTabs": [
+        "Overview"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390,
+      "primaryColors": []
+    },
+    {
+      "state": "group-more",
+      "size": "1440-100",
+      "activeTabs": [
+        "Overview"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1425,
+      "width": 1440,
+      "primaryColors": []
+    },
+    {
+      "state": "group-more",
+      "size": "1024-100",
+      "activeTabs": [
+        "Overview"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024,
+      "primaryColors": []
+    },
+    {
+      "state": "group-more",
+      "size": "390-100",
+      "activeTabs": [
+        "Overview"
+      ],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390,
+      "primaryColors": []
+    },
+    {
+      "state": "plant-from-sowing",
+      "size": "1440-100",
+      "activeTabs": [],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Source SeedLotPreview — Basil counted packetactive",
+        "Current SowingPreview — Spring basil trayactive"
+      ],
+      "overflow": [],
+      "pageWidth": 1425,
+      "width": 1440,
+      "primaryColors": [],
+      "operationFormBackground": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "state": "plant-from-sowing",
+      "size": "390-100",
+      "activeTabs": [],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [
+        "Source SeedLotPreview — Basil counted packetactive",
+        "Current SowingPreview — Spring basil trayactive"
+      ],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390,
+      "primaryColors": [],
+      "operationFormBackground": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "state": "sowing-from-seed",
+      "size": "1440-100",
+      "activeTabs": [],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 1425,
+      "width": 1440,
+      "primaryColors": [],
+      "operationFormBackground": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "state": "sowing-from-seed",
+      "size": "390-100",
+      "activeTabs": [],
+      "formBackground": null,
+      "height": 844,
+      "lineage": [],
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390,
+      "primaryColors": [],
+      "operationFormBackground": "rgba(0, 0, 0, 0)"
+    }
+  ]
+}

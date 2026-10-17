@@ -237,7 +237,7 @@ test("Supplier detail shares Photos actions and updates/clears its representativ
   await user.click(
     within(dialog).getByRole("button", { name: "Unlink from this record" }),
   );
-  await screen.findByText("No photos or external image references yet.");
+  await screen.findByText("No photos yet.");
   expect(
     screen.queryByRole("img", { name: "Primary photo for Review nursery" }),
   ).not.toBeInTheDocument();

@@ -1,3 +1,5 @@
+import "./compact-gallery.css";
+import { DetailEmptyState } from "../components/DetailEmptyState";
 import { FieldLabel } from "../components/FieldLabel";
 import {
   Fragment,
@@ -612,9 +614,7 @@ export function PhotosSection({
           </button>
         </div>
       ) : state.photos.length === 0 ? (
-        <div className="empty-state">
-          <p>No photos or external image references yet.</p>
-        </div>
+        <DetailEmptyState>No photos yet.</DetailEmptyState>
       ) : (
         <div className="photo-gallery">
           {state.photos.map((photo) => {

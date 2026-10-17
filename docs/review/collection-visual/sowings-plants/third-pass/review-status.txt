@@ -1,0 +1,27 @@
+Environment: review
+Source: /home/alessandro/.codex/worktrees/ef73/florabase
+Branch: feat/collection-visual-001
+Sha: 1e3df6adf9afdfd4a213396666b336f6d1b5136c
+Dirty: yes
+Env source: /home/alessandro/Desktop/github/florabase/.env (isolated DB overrides)
+Compose project: florabase-feature-review
+URL: http://localhost:15174
+Database volume: florabase-feature-review_postgres_data
+Media volume: florabase-feature-review_attachment_data
+Dependencies volume: florabase-feature-review_frontend_node_modules
+Network: florabase-feature-review_internal
+frontend: healthy
+frontend running source: /home/alessandro/.codex/worktrees/ef73/florabase
+Container source: /home/alessandro/.codex/worktrees/ef73/florabase
+Launched HEAD: 1e3df6adf9afdfd4a213396666b336f6d1b5136c
+DEV/Review source binds are live; current identity above includes edits since launch.
+backend: healthy
+backend running source: /home/alessandro/.codex/worktrees/ef73/florabase
+Running media root: /var/lib/florabase/attachments
+dev-state-init: exited
+dev-state-init retained source: /home/alessandro/.codex/worktrees/ef73/florabase
+db: healthy
+db running source: /home/alessandro/.codex/worktrees/ef73/florabase
+Code head: 20261013_0042 (selected source above)
+Database current: 20261013_0042
+Review fixture: version 4; state ready; records 66

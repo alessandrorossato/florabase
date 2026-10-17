@@ -1,0 +1,62 @@
+{
+  "completed_at_utc": "2026-10-16T16:28:14.900014+00:00",
+  "source": "/home/alessandro/.codex/worktrees/ef73/florabase",
+  "branch": "feat/collection-visual-001",
+  "head": "1e3df6adf9afdfd4a213396666b336f6d1b5136c",
+  "working_tree": "unstaged and uncommitted",
+  "phase": "second operator visual pass; acceptance pending",
+  "focused_tests": {
+    "seed_lots": 49,
+    "plants": 52,
+    "sowings": 29,
+    "creation_reversal": 10,
+    "guided_forms": 5,
+    "shared": 78,
+    "distinct_total": 223,
+    "test_files": 13
+  },
+  "static": {
+    "typescript": "passed tsc -b",
+    "eslint": "passed zero warnings on all touched TS/TSX",
+    "prettier": "passed touched frontend source",
+    "frontend_production_build": "passed",
+    "feature_graph": "105 valid",
+    "whitespace": "passed"
+  },
+  "visual": {
+    "unique_checks": 90,
+    "horizontal_overflow": false,
+    "zoom": "125/150 percent are viewport proxies; actual browser zoom remains an operator check",
+    "eligible_reversal_live_fixture": "not available; safe and confirmation-required behavior tested",
+    "collection_mutations": "none"
+  },
+  "canonical_gate": "not run by explicit task boundary",
+  "delivery_receipt": false,
+  "source_sha256": {
+    "frontend/src/App.tsx": "b1422ed04f68cd09f5a4b30b729be90b44ad8eaa28b130c0eec52ea3d20b4277",
+    "frontend/src/components/DetailEmptyState.tsx": "85dd525393587d7dae6e2b38ef73efae6463e14bf5a52e905e5768921da12626",
+    "frontend/src/components/collection-directory.css": "061a536ebaae296ffbb9ed458245f7b2a1d29be606a216aeefd67dfd3da32f41",
+    "frontend/src/components/collection-visual.css": "349540d7a6744fd7de205e124c3a1aaa4f8f170aa331a25f6ec831e60c74f9ff",
+    "frontend/src/components/detail-empty-state.css": "814e7f76aa92897bfaa035a5f848c2017f1a07894249b88522962843c703894f",
+    "frontend/src/lineage/LineagePanel.test.tsx": "2725c4c7e4bb7bca26faf90bbbcd097ad68b12d9f3e0754479cb6398a10c813c",
+    "frontend/src/lineage/LineagePanel.tsx": "dd0dd710365513dca433f37e633950c3ac4068149a7ab1544c41659ff7943221",
+    "frontend/src/photos/PhotosSection.test.tsx": "0db42f3c243a5f7d058e5e86d7792192a5d9fb9a5889deff10bcee261cafca50",
+    "frontend/src/photos/PhotosSection.tsx": "0d7652c8b574c986b9b79bbd600d354a95a0e13122b227a8727f2d06796c309e",
+    "frontend/src/photos/compact-gallery.css": "14011dd6e27e4975080cfbe8260287359acfbcc6c95c9b5604f4257a04df26eb",
+    "frontend/src/plants/PlantScreen.test.tsx": "f214120599c69dba529c084f07d70c73226af5d52e6c50369393f9981f230bde",
+    "frontend/src/plants/PlantScreen.tsx": "be7432749d1b4b3dcd4e9564cf1c312decc6c9ea7f984d101e403ed808234f0a",
+    "frontend/src/propagation/CreationReversal.test.tsx": "d14276d8d69dc7f9a0a5134b5e6813dfdd9d972294090154c35e73f8359698ef",
+    "frontend/src/propagation/CreationReversal.tsx": "57ed84bfbb00caf87b35d05a61ae963214a4296386cde1c6cb20a5ec5141d90f",
+    "frontend/src/propagation/GuidedForms.test.tsx": "b98d6304524172af9536e320118a046a5d1541641a4521c9235f1cb3d56bc1bb",
+    "frontend/src/propagation/SeedLotSowingWizard.tsx": "0bd161e73c54aa60f5c8e6427586580d4e1c998a4ac4cdf7c715e362816b434b",
+    "frontend/src/propagation/SowingDescendantWizard.tsx": "9ac9f55ba2235faec431a10df5c82ce48a5c87554b3047244a9d6f713e911d6d",
+    "frontend/src/seed-lots/SeedLotScreen.test.tsx": "f144dce39dfb2a301593226b07dcaebef47560565191a78592f47609c7b7aed8",
+    "frontend/src/seed-lots/SeedLotScreen.tsx": "12a7bb21cb5f451ca72d63ce36eb7ab953b604a10439c1d745f6de73a37afacd",
+    "frontend/src/seed-lots/seed-refinement.css": "ca8af6773360eae75e553c525426f53f4f14682fa8189e72f18786a3c7cfb0e6",
+    "frontend/src/sowings/GerminationSection.tsx": "cd7a863e9ab48a55a2af0ca6b80a09b3346bdcb8138c75833047a65ac28d30a7",
+    "frontend/src/sowings/SowingScreen.test.tsx": "2332e04c68d0cd28586cc38bfebb4f59dc35f6627d821bf01fbae07752727fdd",
+    "frontend/src/sowings/SowingScreen.tsx": "200a8e153a999af5412c84dfbed6e0de55ce71931aa05ef30923610ff02d7bc3",
+    "frontend/src/test/formSections.ts": "48e1d998f8486ae621ecc63a078b25a528955933613000029ac25b76f4524d8e"
+  },
+  "evidence_status": "historical; superseded by fourth-pass/checks.json; not current-source verification"
+}

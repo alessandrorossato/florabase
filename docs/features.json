@@ -1811,6 +1811,28 @@
       ],
       "priority": "P0",
       "status": "verified"
+    },
+    {
+      "id": "COLLECTION-VISUAL-001",
+      "category": "ux",
+      "description": "Normalize Sowings and Plants using the accepted Collection visual grammar while preserving their domain semantics",
+      "acceptance_criteria": [
+        "Sowing and Plant directories retain search, live filters, supported Saved Views, explicit selection and useful proportional Quick Preview with truthful current context",
+        "Create shows a coherent full-page form and contextual Edit retains its directory or Details background, direct edit fallback, pending and dirty dismissal protection, focus containment and return",
+        "Full-width Details and current-state Overview preserve lifecycle, location, PartialDate, cultivation, explicit source and descendant relationships, Journal and existing collection operations",
+        "Germination distinguishes unrecorded and zero and uses percentages only for a trustworthy exact positive seed-count denominator",
+        "Both families reuse the accepted compact Photos gallery, privacy-safe external references, default local-copy creation and existing primary-media behavior",
+        "Minimal Seed, Sowing and Plant rows share Botanical Identity image geometry while Quick Preview retains operational context and supported Harvest access",
+        "Compact Overview recaps link to canonical Lineage; shared detail empty states and on-demand creation reversal dialogs preserve existing eligibility, confirmation and history rules",
+        "Collection directory identity typography, ancestor-to-descendant Lineage, shared Details action hierarchy, full-canvas creation and source-aware extraction preserve canonical Back/Cancel parents and accessibility",
+        "Collection page footers, semantic form columns and accessible caption cleanup follow the SeedLot canvas; guided descendants use compact source and Sowing-state controls while maintenance Transfer uses More",
+        "Focused interaction and shared regression tests, strict frontend checks, production build, responsive evidence and precise zoom limitations are recorded; operator acceptance and independent canonical verification are complete"
+      ],
+      "dependencies": [
+        "GLOBAL-VISUAL-001"
+      ],
+      "priority": "P0",
+      "status": "verified"
     }
   ]
 }

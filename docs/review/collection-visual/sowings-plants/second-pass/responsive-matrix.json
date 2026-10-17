@@ -1,0 +1,1026 @@
+{
+  "zoom": "125% and 150% are effective viewport proxies; actual browser zoom remains untested",
+  "checks": [
+    {
+      "state": "plant-overview",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "overviewBottom": 701.90625,
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440
+    },
+    {
+      "state": "seeds-directory",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1425,
+      "panels": [],
+      "width": 1440
+    },
+    {
+      "state": "seeds-directory",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "panels": [],
+      "width": 1024
+    },
+    {
+      "state": "seeds-directory",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "panels": [],
+      "width": 390
+    },
+    {
+      "state": "sowings-directory",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440
+    },
+    {
+      "state": "sowings-directory",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "panels": [],
+      "width": 1024
+    },
+    {
+      "state": "sowings-directory",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "panels": [],
+      "width": 390
+    },
+    {
+      "state": "plants-directory",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440
+    },
+    {
+      "state": "plants-directory",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "panels": [],
+      "width": 1024
+    },
+    {
+      "state": "plants-directory",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "panels": [],
+      "width": 390
+    },
+    {
+      "state": "sowing-preview",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440
+    },
+    {
+      "state": "sowing-preview",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "panels": [],
+      "width": 1024
+    },
+    {
+      "state": "plant-preview",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440
+    },
+    {
+      "state": "plant-preview",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "panels": [],
+      "width": 1024
+    },
+    {
+      "state": "group-preview",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440
+    },
+    {
+      "state": "group-preview",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "panels": [],
+      "width": 1024
+    },
+    {
+      "state": "plant-create",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1425,
+      "panels": [],
+      "width": 1440
+    },
+    {
+      "state": "plant-create",
+      "size": "1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1137,
+      "panels": [],
+      "width": 1152
+    },
+    {
+      "state": "plant-create",
+      "size": "1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 945,
+      "panels": [],
+      "width": 960
+    },
+    {
+      "state": "plant-create",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "panels": [],
+      "width": 1024
+    },
+    {
+      "state": "plant-create",
+      "size": "1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 804,
+      "panels": [],
+      "width": 819
+    },
+    {
+      "state": "plant-create",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "panels": [],
+      "width": 390
+    },
+    {
+      "state": "group-create",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1425,
+      "panels": [],
+      "width": 1440
+    },
+    {
+      "state": "group-create",
+      "size": "1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1137,
+      "panels": [],
+      "width": 1152
+    },
+    {
+      "state": "group-create",
+      "size": "1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 945,
+      "panels": [],
+      "width": 960
+    },
+    {
+      "state": "group-create",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "panels": [],
+      "width": 1024
+    },
+    {
+      "state": "group-create",
+      "size": "1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 804,
+      "panels": [],
+      "width": 819
+    },
+    {
+      "state": "group-create",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "panels": [],
+      "width": 390
+    },
+    {
+      "state": "sowing-create",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1425,
+      "panels": [],
+      "width": 1440
+    },
+    {
+      "state": "sowing-create",
+      "size": "1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1137,
+      "panels": [],
+      "width": 1152
+    },
+    {
+      "state": "sowing-create",
+      "size": "1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 945,
+      "panels": [],
+      "width": 960
+    },
+    {
+      "state": "sowing-create",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "panels": [],
+      "width": 1024
+    },
+    {
+      "state": "sowing-create",
+      "size": "1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 804,
+      "panels": [],
+      "width": 819
+    },
+    {
+      "state": "sowing-create",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "panels": [],
+      "width": 390
+    },
+    {
+      "state": "sowing-edit",
+      "size": "1440-100",
+      "dialog": "Edit Sowing",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [
+        {
+          "height": 459,
+          "name": "material",
+          "scroll": 459
+        }
+      ],
+      "width": 1440
+    },
+    {
+      "state": "sowing-edit",
+      "size": "1440-125-proxy",
+      "dialog": "Edit Sowing",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1152,
+      "panels": [
+        {
+          "height": 310,
+          "name": "material",
+          "scroll": 403
+        }
+      ],
+      "width": 1152
+    },
+    {
+      "state": "sowing-edit",
+      "size": "1440-150-proxy",
+      "dialog": "Edit Sowing",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 960,
+      "panels": [
+        {
+          "height": 211,
+          "name": "material",
+          "scroll": 403
+        }
+      ],
+      "width": 960
+    },
+    {
+      "state": "sowing-edit",
+      "size": "1024-100",
+      "dialog": "Edit Sowing",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1024,
+      "panels": [
+        {
+          "height": 459,
+          "name": "material",
+          "scroll": 459
+        }
+      ],
+      "width": 1024
+    },
+    {
+      "state": "sowing-edit",
+      "size": "1024-125-proxy",
+      "dialog": "Edit Sowing",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 819,
+      "panels": [
+        {
+          "height": 310,
+          "name": "material",
+          "scroll": 421
+        }
+      ],
+      "width": 819
+    },
+    {
+      "state": "sowing-edit",
+      "size": "390-100",
+      "dialog": "Edit Sowing",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 390,
+      "panels": [
+        {
+          "height": 490,
+          "name": "material",
+          "scroll": 490
+        }
+      ],
+      "width": 390
+    },
+    {
+      "state": "plant-edit",
+      "size": "1440-100",
+      "dialog": "Edit Plant",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [
+        {
+          "height": 459,
+          "name": "origin",
+          "scroll": 459
+        }
+      ],
+      "width": 1440
+    },
+    {
+      "state": "plant-edit",
+      "size": "1440-125-proxy",
+      "dialog": "Edit Plant",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1152,
+      "panels": [
+        {
+          "height": 310,
+          "name": "origin",
+          "scroll": 459
+        }
+      ],
+      "width": 1152
+    },
+    {
+      "state": "plant-edit",
+      "size": "1440-150-proxy",
+      "dialog": "Edit Plant",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 960,
+      "panels": [
+        {
+          "height": 211,
+          "name": "origin",
+          "scroll": 477
+        }
+      ],
+      "width": 960
+    },
+    {
+      "state": "plant-edit",
+      "size": "1024-100",
+      "dialog": "Edit Plant",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1024,
+      "panels": [
+        {
+          "height": 459,
+          "name": "origin",
+          "scroll": 459
+        }
+      ],
+      "width": 1024
+    },
+    {
+      "state": "plant-edit",
+      "size": "1024-125-proxy",
+      "dialog": "Edit Plant",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 819,
+      "panels": [
+        {
+          "height": 310,
+          "name": "origin",
+          "scroll": 477
+        }
+      ],
+      "width": 819
+    },
+    {
+      "state": "plant-edit",
+      "size": "390-100",
+      "dialog": "Edit Plant",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 390,
+      "panels": [
+        {
+          "height": 538,
+          "name": "origin",
+          "scroll": 693
+        }
+      ],
+      "width": 390
+    },
+    {
+      "state": "group-edit",
+      "size": "1440-100",
+      "dialog": "Edit Plant group",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [
+        {
+          "height": 459,
+          "name": "origin",
+          "scroll": 459
+        }
+      ],
+      "width": 1440
+    },
+    {
+      "state": "group-edit",
+      "size": "1440-125-proxy",
+      "dialog": "Edit Plant group",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1152,
+      "panels": [
+        {
+          "height": 310,
+          "name": "origin",
+          "scroll": 344
+        }
+      ],
+      "width": 1152
+    },
+    {
+      "state": "group-edit",
+      "size": "1440-150-proxy",
+      "dialog": "Edit Plant group",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 960,
+      "panels": [
+        {
+          "height": 211,
+          "name": "origin",
+          "scroll": 362
+        }
+      ],
+      "width": 960
+    },
+    {
+      "state": "group-edit",
+      "size": "1024-100",
+      "dialog": "Edit Plant group",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1024,
+      "panels": [
+        {
+          "height": 459,
+          "name": "origin",
+          "scroll": 459
+        }
+      ],
+      "width": 1024
+    },
+    {
+      "state": "group-edit",
+      "size": "1024-125-proxy",
+      "dialog": "Edit Plant group",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 819,
+      "panels": [
+        {
+          "height": 310,
+          "name": "origin",
+          "scroll": 362
+        }
+      ],
+      "width": 819
+    },
+    {
+      "state": "group-edit",
+      "size": "390-100",
+      "dialog": "Edit Plant group",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 390,
+      "panels": [
+        {
+          "height": 538,
+          "name": "origin",
+          "scroll": 538
+        }
+      ],
+      "width": 390
+    },
+    {
+      "state": "sowing-overview",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "overviewBottom": 789.46875,
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440
+    },
+    {
+      "state": "sowing-overview",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "overviewBottom": 1145.484375,
+      "pageWidth": 1009,
+      "panels": [],
+      "width": 1024
+    },
+    {
+      "state": "sowing-overview",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "overviewBottom": 1819.78125,
+      "pageWidth": 375,
+      "panels": [],
+      "width": 390
+    },
+    {
+      "state": "sowing-lineage",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440,
+      "activeTabs": [
+        "Lineage"
+      ]
+    },
+    {
+      "state": "sowing-lineage",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1024,
+      "panels": [],
+      "width": 1024,
+      "activeTabs": [
+        "Lineage"
+      ]
+    },
+    {
+      "state": "sowing-lineage",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "panels": [],
+      "width": 390,
+      "activeTabs": [
+        "Lineage"
+      ]
+    },
+    {
+      "state": "plant-overview",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "overviewBottom": 823.90625,
+      "pageWidth": 1009,
+      "panels": [],
+      "width": 1024
+    },
+    {
+      "state": "plant-overview",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "overviewBottom": 1341.640625,
+      "pageWidth": 375,
+      "panels": [],
+      "width": 390
+    },
+    {
+      "state": "plant-lineage",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440,
+      "activeTabs": [
+        "Lineage"
+      ]
+    },
+    {
+      "state": "plant-lineage",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1024,
+      "panels": [],
+      "width": 1024,
+      "activeTabs": [
+        "Lineage"
+      ]
+    },
+    {
+      "state": "plant-lineage",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 390,
+      "panels": [],
+      "width": 390,
+      "activeTabs": [
+        "Lineage"
+      ]
+    },
+    {
+      "state": "group-overview",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "overviewBottom": 860.90625,
+      "pageWidth": 1425,
+      "panels": [],
+      "width": 1440
+    },
+    {
+      "state": "group-overview",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "overviewBottom": 994.90625,
+      "pageWidth": 1009,
+      "panels": [],
+      "width": 1024
+    },
+    {
+      "state": "group-overview",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "overviewBottom": 1635.625,
+      "pageWidth": 375,
+      "panels": [],
+      "width": 390
+    },
+    {
+      "state": "group-lineage",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440,
+      "activeTabs": [
+        "Lineage"
+      ]
+    },
+    {
+      "state": "group-lineage",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1024,
+      "panels": [],
+      "width": 1024,
+      "activeTabs": [
+        "Lineage"
+      ]
+    },
+    {
+      "state": "group-lineage",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "panels": [],
+      "width": 390,
+      "activeTabs": [
+        "Lineage"
+      ]
+    },
+    {
+      "state": "plant-from-sowing-lineage",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440,
+      "activeTabs": [
+        "Lineage"
+      ]
+    },
+    {
+      "state": "plant-from-sowing-lineage",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1024,
+      "panels": [],
+      "width": 1024,
+      "activeTabs": [
+        "Lineage"
+      ]
+    },
+    {
+      "state": "plant-from-sowing-lineage",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "panels": [],
+      "width": 390,
+      "activeTabs": [
+        "Lineage"
+      ]
+    },
+    {
+      "state": "reversal-blocked",
+      "size": "1440-100",
+      "dialog": "Undo sowing creation",
+      "height": 844,
+      "overflow": [],
+      "overviewBottom": 789.46875,
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440,
+      "activeTabs": [
+        "Overview"
+      ]
+    },
+    {
+      "state": "reversal-blocked",
+      "size": "1024-100",
+      "dialog": "Undo sowing creation",
+      "height": 844,
+      "overflow": [],
+      "overviewBottom": 1145.484375,
+      "pageWidth": 1009,
+      "panels": [],
+      "width": 1024,
+      "activeTabs": [
+        "Overview"
+      ]
+    },
+    {
+      "state": "reversal-blocked",
+      "size": "390-100",
+      "dialog": "Undo sowing creation",
+      "height": 844,
+      "overflow": [],
+      "overviewBottom": 1819.78125,
+      "pageWidth": 375,
+      "panels": [],
+      "width": 390,
+      "activeTabs": [
+        "Overview"
+      ]
+    },
+    {
+      "state": "sowing-photos-empty",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440,
+      "activeTabs": [
+        "Photos"
+      ]
+    },
+    {
+      "state": "sowing-photos-empty",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 390,
+      "panels": [],
+      "width": 390,
+      "activeTabs": [
+        "Photos"
+      ]
+    },
+    {
+      "state": "seeds-selection",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1425,
+      "panels": [],
+      "width": 1440,
+      "activeTabs": []
+    },
+    {
+      "state": "seeds-selection",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "panels": [],
+      "width": 1024,
+      "activeTabs": []
+    },
+    {
+      "state": "seeds-selection",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "panels": [],
+      "width": 390,
+      "activeTabs": []
+    },
+    {
+      "state": "sowings-selection",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440,
+      "activeTabs": []
+    },
+    {
+      "state": "sowings-selection",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "panels": [],
+      "width": 1024,
+      "activeTabs": []
+    },
+    {
+      "state": "sowings-selection",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "panels": [],
+      "width": 390,
+      "activeTabs": []
+    },
+    {
+      "state": "plants-selection",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440,
+      "activeTabs": []
+    },
+    {
+      "state": "plants-selection",
+      "size": "1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "panels": [],
+      "width": 1024,
+      "activeTabs": []
+    },
+    {
+      "state": "plants-selection",
+      "size": "390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "panels": [],
+      "width": 390,
+      "activeTabs": []
+    },
+    {
+      "state": "seed-sowings-empty",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440,
+      "activeTabs": [
+        "Sowings"
+      ]
+    },
+    {
+      "state": "seed-lineage-empty",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440,
+      "activeTabs": [
+        "Lineage"
+      ]
+    },
+    {
+      "state": "seed-photos-empty",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440,
+      "activeTabs": [
+        "Photos"
+      ]
+    },
+    {
+      "state": "plant-primary-photo-preview",
+      "size": "1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "panels": [],
+      "width": 1440,
+      "activeTabs": []
+    }
+  ]
+}

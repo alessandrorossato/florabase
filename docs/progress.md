@@ -1,5 +1,27 @@
 # Engineering progress
 
+## 2026-10-17 — COLLECTION-VISUAL-001 independent review and canonical verification
+
+- Operator accepted the fourth visual pass. Independent review confirmed scope is Collection UI,
+  supporting docs and evidence only; no backend/API/schema/migration/dependency changes. Replaced
+  stale test presentation expectations with current all-visible section roles, accessible quantity
+  labels, the explicit View lineage route, and the shared Photos empty-state copy. Domain assertions
+  remain intact. Focused Sowing/Supplier regressions: **19 passed / 2 files**.
+- Canonical `make feature-verify` selected **FULL** against
+  `1e3df6adf9afdfd4a213396666b336f6d1b5136c` and passed with a working-tree receipt: feature graph
+  **105 valid**; workflow/environment suites; repository formatting, frontend lint, strict mypy
+  (**346 source files**), TypeScript and API drift; backend **939 passed / 90.22% coverage**;
+  frontend **755 passed / 68 files**; PostgreSQL integration **735 passed**; backend/frontend
+  production builds; full migration cycle at existing revision **20261013_0042**; exact-tree receipt.
+  No migration was added. All disposable integration/migration resources were cleaned by exact owner.
+- Feature status is now `verified`. Responsive evidence remains precise: true browser zoom was not
+  tested; 125%/150% were viewport proxies, guided-group measured 2px beyond the 844px viewport, and
+  the live Back observation stalled after reaching its source. Feature Review is healthy at revision
+  `0042`, fixture v4/66. The read-only inventory identifies persistent UAT as owned by worktree
+  `4ff7`; the guarded UAT status command refused this checkout, and no UAT operation was made. Its
+  volumes remain retained. The final canonical rerun follows this documentation/status change so its
+  receipt matches the complete tree; commit, protected delivery and finish remain next.
+
 ## 2026-10-10 — frontend low-risk dependency batch (implementation handoff)
 
 - From merged PR #85 main `aebe471`, updated only `@types/leaflet` **1.9.21 → 1.9.22** and
@@ -4340,7 +4362,6 @@ not the current delivery state.
   227.89 kB / 70.84 kB gzip. Supported Review status confirms frontend/backend/DB healthy and v4/66
   ready. Viewport overrides are reset and authenticated Overview remains available for manual review.
 
-
 ### 2026-10-16 — GLOBAL-VISUAL-001 detail empties and form labels (candidate)
 
 - Informational Details empties now use the normal tab gutter and natural message height without
@@ -4371,7 +4392,6 @@ not the current delivery state.
   is 228.15 kB / 70.92 kB gzip. New evidence and validation summaries are retained with the handoff.
 - Final targeted ESLint passes with zero warnings, all 47 touched frontend files pass Prettier,
   whitespace checks pass and the staged diff is empty. Canonical feature-verify remains unrun.
-
 
 ## 2026-10-16 — GLOBAL-VISUAL-001 SeedLot dashboard / Photos / picker reference
 
@@ -4433,3 +4453,136 @@ not the current delivery state.
   checks clean, and the verified-tree receipt recorded. Disposable verification resources were
   cleaned by their registered owners; persistent Feature Review remains running. Staging, commit,
   delivery and finish are the next authorized steps.
+
+## 2026-10-16 — COLLECTION-VISUAL-001 implementation for visual review
+
+- From clean PR #111 main `1e3df6a`, initialized the existing `ef73` worktree as
+  `feat/collection-visual-001`. Sowings and Plants reuse the accepted Collection directory,
+  coherent create form, contextual edit, full-width detail/Overview and compact Photos grammar.
+  PlantGroup changes stay within existing shared workflows. Client validation, payloads, quantities,
+  germination uncertainty, explicit lineage, lifecycle and server-authoritative operations remain.
+- Added guarded contextual dismissal/focus/Back and direct edit aliases/fallbacks, including correct
+  cross-record draft initialization. Shared gallery CSS now belongs to PhotosSection. Mobile record
+  tabs wrap and Schedule links retain separation. No backend/API/schema/migration/dependency or
+  global navigation change; no persistent UAT access or canonical gate.
+- Focused tests: Sowing/Plant **76**, SeedLot **48**, shared
+  Photos/Media/forms/picker/date/BULK **64**, Journal/History/Schedule/Settings **75**, and isolated
+  full Labels **54**, plus propagation/reversal **14**: **331 distinct cases / 16 files passed**.
+  Labels and five Plant timeouts under host pressure
+  passed on unchanged isolated full-file repeats; the earlier terminated combined run is not
+  counted. Strict TypeScript, targeted ESLint/Prettier, production frontend build, feature graph
+  **105 valid** and whitespace checks pass. No assertions, test timeouts or validation were weakened.
+- Live authenticated Feature Review records **72** state/viewport checks with no final horizontal
+  overflow, plus **12** contextual-create checks and representative desktop/mobile evidence. The
+  meaningful seed-usage review remains separate while its entry fields and descendant creation use
+  coherent page forms. 125%/150% measurements are explicitly
+  viewport proxies; actual browser zoom remains an operator check. Existing fixture **v4/66** covers
+  recorded/unknown/zero germination, Plants/groups, locations, relationships, Journal and media;
+  no fixture-code extension was needed.
+- The operator approved replacement of obsolete `996d` Review; supported exact-owner stop/remove
+  preceded candidate up/bootstrap/seed. After interruption, supported up restored the same candidate
+  DB/media. Review stays healthy at `http://localhost:15174`, login `owner`, DB/code **0042**, source
+  `ef73` + live unstaged changes. See [handoff](collection-visual-001-handoff.md) and
+  [evidence](review/collection-visual/sowings-plants/README.md). Feature is **implemented**, awaiting
+  operator visual acceptance and later independent canonical QA. No staging, commit, push or delivery.
+
+## 2026-10-16 — COLLECTION-VISUAL-001 second operator pass
+
+- Continued the same dirty `ef73` / `feat/collection-visual-001` candidate after the operator's
+  second-pass decisions. Minimal Seed/Sowing/Plant rows now use Botanical Identity media geometry;
+  source/date/location stay in Quick Preview and Details. Paired preview actions align; Plant/group
+  preview adds the existing Harvest route and a meaningful media area without upscaling small images.
+- CreationReversal access moved into Details headers with on-demand eligibility in a native dialog,
+  real blockers/links, required observation confirmation, pending/409 guards and focus return.
+  Overview uses compact relationship recaps; detailed paths use canonical Lineage, with Sowing's old
+  propagation alias preserved. Full-workspace create and compact contextual Edit retain validation,
+  payloads and dirty-state behavior. Shared detail empties replace large absence panels.
+- Final focused tests: **223 / 13 files passed** (SeedLot 49, Plant 52, Sowing/reversal/guided 44,
+  shared media/Photos/Lineage/forms/picker/date/BULK 78). Obsolete presentation expectations were
+  updated while preserving business assertions; no timeout, backend test or validation was weakened.
+  Strict TypeScript/production build, targeted ESLint/Prettier, feature graph **105 valid** and
+  whitespace checks pass. Payload/validation/germination/reversal-submit helpers match HEAD.
+- Current [second-pass evidence](review/collection-visual/sowings-plants/second-pass/README.md) records
+  **90 unique state/viewport checks** without measured horizontal overflow. Representative desktop
+  Origin editors fit without internal scrolling; Sowing/Plant Overviews fit, PlantGroup nearly fits.
+  Actual browser zoom remains outstanding: 125%/150% checks are clearly labelled viewport proxies.
+  Live fixtures expose blocked reversal; eligible/confirmation paths have behavioral test evidence.
+- The existing candidate Review remains healthy at `http://localhost:15174`, DB/code **0042**, fixture
+  **v4/66**. No reset, removal, reseed, collection mutation or persistent UAT/DEV/Preview/production
+  operation. No backend/API/schema/dependency changes, staging, commit, push, canonical gate or
+  delivery. **Implemented**, pending operator acceptance; the current handoff supersedes the first.
+
+## 2026-10-16 — COLLECTION-VISUAL-001 third operator pass
+
+- Continued the same dirty `ef73` candidate. Collection rows use quiet botanical serif identity and
+  italic scientific names with sans operational metadata. Plant/group Lineage reverses explicit API
+  traversal into ancestor-to-descendant order and appends the current subject, retaining the recorded
+  extracted-group step. Shared paths turn downward at narrower widths; no inferred relationships.
+- Details have at most one primary daily action, visible secondary/Edit actions and the established
+  More menu for Print label/Undo creation. The existing guarded reversal dialog returns focus to More.
+  Create/operation forms use the delivered SeedLot full canvas; extraction adds compact source/result/
+  quantity context and plain inherited Origin. In-app history establishes category/source parents;
+  Back and Cancel preserve those parents, including the source Details tab, without a global Back hook.
+- Final focused checks: **318 distinct tests / 18 files passed** (core 49, App/navigation/guided 89,
+  eight clean regression files 124, final complete Plant file 56). Fixed a duplicate extraction conflict
+  warning; focus tests wait for required heading focus before interaction. Earlier failed/terminated
+  attempts are accounted for in the evidence index. No timeout, domain assertion or validation weakened.
+  Targeted Prettier/zero-warning ESLint, strict TypeScript/production build, **105-feature** graph and
+  whitespace checks pass. Nine domain/payload/reversal-submit helpers match HEAD after whitespace
+  normalization; backend/API/schema/migration/dependencies remain unchanged.
+- Current [third-pass evidence](review/collection-visual/sowings-plants/third-pass/README.md) records
+  **67 unique state/viewport checks** without measured horizontal overflow, navigation/focus observations
+  and desktop/mobile captures. Actual browser zoom remains outstanding; enlarged-view checks are
+  labelled viewport proxies. The preserved fixture has no extracted individual, so that four-node path
+  has unit evidence rather than a claimed live capture. Prior pass evidence is marked historical.
+- Read-only Review status confirms healthy current ownership, DB/code **0042**, existing **v4/66**.
+  No reset/removal/reseed or collection mutation; no persistent environment touched. Left running at
+  `http://localhost:15174`. All work remains unstaged/uncommitted; no canonical gate or delivery.
+  Feature remains **implemented**, pending third-pass operator visual acceptance and later QA.
+
+## 2026-10-17 — COLLECTION-VISUAL-001 fourth operator pass
+
+- Continued the same dirty `ef73` candidate. Consolidated page form/grid/footer rules, removing
+  detached footer surfaces and duplicate CSS. Full-page footers share SeedLot gutters/border/padding
+  and a transparent canvas; contextual Edit keeps its bounded footer. Hidden redundant captions retain
+  meaningful accessible names for PartialDate, quantities and Origin. Sowing columns/control rows and
+  textarea heights now align deliberately. Domain rules, payloads, atomic writes and reversals remain.
+- Guided Plant/group creation uses one page identity, compact linked source context, two semantic
+  columns and four native Sowing-state radios with one selected consequence. Conditional completion
+  facts remain. Transfer moves into existing More with stable dialog focus return; daily actions/Edit
+  remain visible. Guided parent history preserves the exact source Details tab.
+- Final focused evidence: **178 tests / 11 files passed** (120 in ten clean combined files, 58 in the
+  final complete Plant repeat). Corrected an unrelated Journal date query changed too broadly during
+  test cleanup and waited for required scheduled menu focus. An interrupted repeat is not counted;
+  no timeout, domain assertion or validation weakened. Strict TypeScript/production build, targeted
+  zero-warning ESLint/Prettier, **105-feature** graph and whitespace checks pass. Nine domain/payload/
+  reversal-submit helpers match HEAD. No backend/API/schema/migration/dependency edits or full gates.
+- [Fourth-pass evidence](review/collection-visual/sowings-plants/fourth-pass/README.md) records **30**
+  form/viewport checks with continuous static footers, matching edges and no horizontal overflow;
+  mobile footers clear navigation. At real 1440×844, New Plant/group/Sowing and guided Plant fit; guided
+  group is 846px high with its footer visible. Three desktop Origin editors have no internal scroll.
+  Live More/Transfer/Undo and both guided Cancel returns were checked without mutation. Actual browser
+  zoom remains untested; enlarged-view checks are labelled viewport proxies. Real-history unit tests
+  cover Back; a live Back tool wait stalled after reaching the source, so no full live matrix is claimed.
+- On resumption Review frontend/backend were stopped; supported exact-owner `feature-review-up`
+  restored them while preserving existing DB/media, owner and **v4/66**, revision **0042**. Final status
+  is healthy and Review stays running. No reset/removal/reseed or persistent environment operation.
+  All work remains unstaged/uncommitted, no canonical gate or delivery. Feature remains implemented,
+  awaiting fourth-pass operator acceptance and later independent QA.
+
+## 2026-10-17 — COLLECTION-VISUAL-001 independent review and canonical verification
+
+- Independently reviewed the accepted candidate and its stale-test corrections. One initial full-gate
+  frontend attempt failed a timing-sensitive Stored Material focus assertion; the focused test passed
+  in isolation, and the unchanged candidate's final complete frontend suite passed **755 tests / 68
+  files**. No product behavior or test assertion was weakened.
+- Final `make feature-verify` selected FULL against `1e3df6adf9afdfd4a213396666b336f6d1b5136c` and
+  passed: feature graph **105 valid**, workflow/environment checks, formatting, lint, strict mypy
+  (**346 files**), TypeScript/API drift, backend **939 passed / 90.22%**, PostgreSQL integration
+  **735 passed**, production builds, full migration cycle and exact working-tree receipt. No migration
+  was added; all cycle points remain at `20261013_0042`.
+- Exact-owner Review status initially showed stopped app services with the database retained; supported
+  `make feature-review-up` restored health using the same candidate source and preserved database/media,
+  owner and fixture **v4/66**. Persistent UAT belongs to worktree `4ff7`; its guarded status command
+  refused this checkout. No UAT mutation occurred and its volumes remain retained. Candidate is ready
+  for commit and protected delivery.

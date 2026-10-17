@@ -75,6 +75,8 @@ export function sowingFormPanels({
           <PartialDateField
             id="sowing-date"
             label="Sowing date"
+            hidePrecisionLabel
+            helpText="Record only the date parts you know."
             value={form.sowingDate}
             disabled={pending}
             onChange={(value) => {
@@ -95,7 +97,9 @@ export function sowingFormPanels({
           >
             <legend>Quantity sown</legend>
             <div className="field">
-              <label htmlFor="sowing-quantity-kind">Kind</label>
+              <label className="sr-only" htmlFor="sowing-quantity-kind">
+                Quantity sown kind
+              </label>
               <select
                 id="sowing-quantity-kind"
                 value={form.quantityKind}
@@ -251,7 +255,7 @@ export function sowingFormPanels({
             />
           </div>
           <fieldset className="temperature-field">
-            <legend>Temperature (°C)</legend>
+            <legend className="sr-only">Temperature (°C)</legend>
             <div className="temperature-controls">
               <div className="field">
                 <label htmlFor="temperature-min">Minimum °C</label>
@@ -301,7 +305,9 @@ export function sowingFormPanels({
       content: (
         <>
           <div className="field field--full">
-            <label htmlFor="sowing-notes">Notes</label>
+            <label className="sr-only" htmlFor="sowing-notes">
+              Notes
+            </label>
             <textarea
               id="sowing-notes"
               value={form.notes}

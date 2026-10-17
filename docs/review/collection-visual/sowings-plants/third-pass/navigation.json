@@ -1,0 +1,65 @@
+[
+  {
+    "entry": "Dashboard Quick add",
+    "action": "New sowing",
+    "entered": "http://localhost:15174/#/sowings?action=create",
+    "returned": "http://localhost:15174/#/sowings",
+    "expectedParent": "#/sowings",
+    "focus": "+ New sowing"
+  },
+  {
+    "entry": "Dashboard Quick add",
+    "action": "New plant",
+    "entered": "http://localhost:15174/#/plants?action=create&kind=plant",
+    "returned": "http://localhost:15174/#/plants",
+    "expectedParent": "#/plants",
+    "focus": "+ New plant or group"
+  },
+  {
+    "entry": "Dashboard Quick add",
+    "action": "New plant group",
+    "entered": "http://localhost:15174/#/plants?action=create&kind=group",
+    "returned": "http://localhost:15174/#/plants",
+    "expectedParent": "#/plants",
+    "focus": "+ New plant or group"
+  },
+  {
+    "entry": "Dashboard Quick add",
+    "action": "New seed lot",
+    "entered": "http://localhost:15174/#/seeds?action=create",
+    "returned": "http://localhost:15174/#/seeds",
+    "expectedParent": "#/seeds",
+    "focus": "+ New seed lot"
+  },
+  {
+    "action": "Extract Plant Back",
+    "returned": "http://localhost:15174/#/plant-groups/01a14540-1fc8-7435-a770-023875ea415b?tab=lineage",
+    "focus": "Extract plant",
+    "selected": "true"
+  },
+  {
+    "action": "Extract Plant Cancel",
+    "returned": "http://localhost:15174/#/plant-groups/01a14540-1fc8-7435-a770-023875ea415b?tab=lineage",
+    "focus": "Extract plant"
+  },
+  {
+    "action": "sowing More Escape",
+    "focus": "More record actions"
+  },
+  {
+    "action": "plant More Escape",
+    "focus": "More record actions"
+  },
+  {
+    "action": "group More Escape",
+    "focus": "More record actions"
+  },
+  {
+    "action": "plant-from-sowing Cancel",
+    "returned": "http://localhost:15174/#/sowings/01a14540-1fa2-72c6-89fc-c339e09a6d96"
+  },
+  {
+    "action": "sowing-from-seed Cancel",
+    "returned": "http://localhost:15174/#/seeds/01a14540-1f79-75e0-827c-e0171c2669af"
+  }
+]

@@ -1,3 +1,7 @@
+import {
+  collectionPageParent,
+  openCollectionPage,
+} from "./components/recordNavigation";
 import { SidebarResizeHandle } from "./components/SidebarResizeHandle";
 import { sidebarWidthLimit } from "./components/sidebarWidth";
 import type { CSSProperties, MouseEvent } from "react";
@@ -248,7 +252,13 @@ function currentRoute(): Route {
     creationKind: kind === "plant" || kind === "group" ? kind : undefined,
   } as const;
   if (first === "plant-groups")
-    return { section: "plants", recordId: id, recordKind: "group", tab };
+    return {
+      section: "plants",
+      recordId: id,
+      recordKind: "group",
+      tab,
+      action: action === "edit" ? action : undefined,
+    };
   if (first === "plants")
     return {
       section: "plants",
@@ -667,6 +677,28 @@ function ApplicationShell() {
       <section
         aria-label="Workspace content"
         className="app-content"
+        onClick={(event) => {
+          if (
+            event.defaultPrevented ||
+            event.button !== 0 ||
+            event.metaKey ||
+            event.ctrlKey ||
+            event.shiftKey ||
+            event.altKey ||
+            !(event.target instanceof Element)
+          )
+            return;
+          const link = event.target.closest<HTMLAnchorElement>("a[href]");
+          if (
+            !link ||
+            link.target === "_blank" ||
+            link.origin !== window.location.origin ||
+            !collectionPageParent(link.hash)
+          )
+            return;
+          event.preventDefault();
+          openCollectionPage(link.hash);
+        }}
         onChangeCapture={(event) => {
           if (
             event.target instanceof Element &&
@@ -753,7 +785,7 @@ function ApplicationShell() {
               ) : route.section === "sowings" ? (
                 <SowingScreen
                   initialId={route.recordId}
-                  initialTab={route.tab}
+                  initialTab={route.action === "edit" ? "edit" : route.tab}
                   startCreating={route.action === "create"}
                 />
               ) : route.section === "plants" ? (
@@ -761,9 +793,12 @@ function ApplicationShell() {
                   initialId={route.recordId}
                   initialKind={route.recordKind}
                   initialTypeFilter={route.recordTypeFilter}
-                  initialTab={route.tab}
+                  initialTab={route.action === "edit" ? "edit" : route.tab}
                   initialIdentityId={route.identityId}
                   startCreating={route.action === "create"}
+                  initialExtractionId={
+                    route.action === "extract" ? route.sourceId : undefined
+                  }
                   initialCreationKind={route.creationKind}
                 />
               ) : route.section === "schedule" ? (

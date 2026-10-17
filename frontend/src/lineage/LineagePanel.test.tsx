@@ -56,13 +56,19 @@ test("recorded ancestry keeps reversed ancestors explicit and correctly linked",
     name: "Recorded upstream path",
   });
   const nodes = within(path).getAllByRole("listitem");
-  expect(nodes).toHaveLength(3);
-  expect(within(nodes[0]).getByText("reversed")).toBeInTheDocument();
-  expect(within(nodes[1]).getByText("reversed")).toBeInTheDocument();
-  expect(within(nodes[2]).getByText("exhausted")).toBeInTheDocument();
+  expect(nodes).toHaveLength(4);
+  expect(within(nodes[2]).getByText(/^reversed$/i)).toBeInTheDocument();
+  expect(within(nodes[1]).getByText(/^reversed$/i)).toBeInTheDocument();
+  expect(within(nodes[0]).getByText("exhausted")).toBeInTheDocument();
   expect(
-    within(nodes[0]).getByRole("link", { name: "Original group" }),
+    within(nodes[2]).getByRole("link", { name: /Original group/ }),
   ).toHaveAttribute("href", "#/plant-groups/original?tab=lineage");
+  expect(
+    within(nodes[3]).getByRole("link", { name: /This Plant.*Individual/ }),
+  ).toHaveAttribute("aria-current", "page");
+  expect(
+    screen.queryByText(/How this path is recorded/),
+  ).not.toBeInTheDocument();
 });
 
 test("navigation cannot show or restore a previous record's lineage during loading", async () => {
@@ -83,13 +89,13 @@ test("navigation cannot show or restore a previous record's lineage during loadi
         }),
     );
   const view = render(<LineagePanel kind="plants" id="extracted" />);
-  await screen.findByRole("link", { name: "Original group" });
+  await screen.findByRole("link", { name: /Original group/ });
   view.rerender(<LineagePanel kind="plants" id="pending-old" />);
   expect(screen.getByRole("status")).toHaveTextContent(
     "Loading recorded lineage",
   );
   expect(
-    screen.queryByRole("link", { name: "Original group" }),
+    screen.queryByRole("link", { name: /Original group/ }),
   ).not.toBeInTheDocument();
   view.rerender(<LineagePanel kind="plants" id="independent" />);
   resolveNew({
@@ -97,15 +103,13 @@ test("navigation cannot show or restore a previous record's lineage during loadi
     subject: { ...extracted.subject, id: "independent" },
     ancestors: [],
   });
-  await screen.findByText("No recorded upstream material lineage.");
+  await screen.findByText("No recorded lineage.");
   resolveOld(extracted);
   await Promise.resolve();
   expect(
-    screen.queryByRole("link", { name: "Original group" }),
+    screen.queryByRole("link", { name: /Original group/ }),
   ).not.toBeInTheDocument();
-  expect(
-    screen.getByText("No recorded upstream material lineage."),
-  ).toBeInTheDocument();
+  expect(screen.getByText("No recorded lineage.")).toBeInTheDocument();
 });
 
 test.each([false, true])(
@@ -118,23 +122,51 @@ test.each([false, true])(
     render(<LineagePanel kind="seed-lots" id="material" />);
     if (producer) {
       expect(
-        await screen.findByRole("link", { name: "Original group" }),
+        await screen.findByRole("link", { name: /Original group/ }),
       ).toHaveAttribute("href", "#/plant-groups/original?tab=lineage");
       expect(screen.getAllByRole("listitem")).toHaveLength(1);
     } else {
-      expect(
-        await screen.findByText("No recorded upstream material lineage."),
-      ).toBeVisible();
+      expect(await screen.findByText("No recorded lineage.")).toBeVisible();
       expect(screen.queryByRole("list")).not.toBeInTheDocument();
       expect(
-        screen
-          .getByText("No recorded upstream material lineage.")
-          .closest(".empty-state"),
+        screen.getByText("No recorded lineage.").closest(".empty-state"),
       ).toBeNull();
     }
     expect(request.mock.calls[0]?.[0]).toBe(
       "/api/v1/seed-lots/material/lineage",
     );
     expect(request.mock.calls[0]?.[1]?.signal).toBeInstanceOf(AbortSignal);
+  },
+);
+
+test.each(["plant", "plant_group"] as const)(
+  "%s material path reads SeedLot, Sowing, then this record",
+  async (kind) => {
+    request.mockResolvedValue({
+      subject: { ...extracted.subject, kind, label: "Current record" },
+      ancestors: [extracted.ancestors[1], extracted.ancestors[2]],
+    });
+    render(
+      <LineagePanel
+        kind={kind === "plant" ? "plants" : "plant-groups"}
+        id="extracted"
+      />,
+    );
+    const list = await screen.findByRole("list", {
+      name: "Recorded upstream path",
+    });
+    const nodes = within(list).getAllByRole("listitem");
+    expect(nodes.map((n) => n.textContent)).toEqual([
+      expect.stringContaining("Packet"),
+      expect.stringContaining("Original sowing"),
+      expect.stringContaining("Current record"),
+    ]);
+    expect(within(nodes[2]).getByRole("link")).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(
+      screen.queryByText("Same botanical identity"),
+    ).not.toBeInTheDocument();
   },
 );

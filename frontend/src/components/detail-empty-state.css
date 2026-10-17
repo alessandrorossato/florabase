@@ -1,0 +1,11 @@
+.app-content .detail-empty-message.detail-empty-state {
+  margin: 0;
+  padding: var(--space-3) 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-muted);
+}
+.app-content .detail-empty-message.detail-empty-state > p {
+  margin: 0;
+}

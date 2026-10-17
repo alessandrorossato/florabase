@@ -1,3 +1,5 @@
+import { browserBack } from "../test/history";
+import { openFormSection } from "../test/formSections";
 import { selectDirectoryFilter } from "../test/directoryFilters";
 import {
   act,
@@ -583,9 +585,9 @@ test("guided sowing distinguishes no adjustment, exact partial use and use-all",
     ),
   ).toBeInTheDocument();
   expect(screen.getByText("10 seeds")).toBeInTheDocument();
-  await user.click(screen.getByRole("tab", { name: "Material & location" }));
+  await openFormSection(user, "Material & location");
   await user.type(screen.getByLabelText("Amount"), "3");
-  await user.click(screen.getByRole("tab", { name: /^Notes$/ }));
+  await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   expect(
     screen.getByRole("radio", { name: /Keep inventory unchanged/ }),
@@ -601,11 +603,11 @@ test("guided sowing distinguishes no adjustment, exact partial use and use-all",
     screen.getByRole("radio", { name: /Use the whole lot/ }),
   ).toBeDisabled();
   await user.click(screen.getByRole("button", { name: "Back to details" }));
-  await user.click(screen.getByRole("tab", { name: "Material & location" }));
+  await openFormSection(user, "Material & location");
   await user.clear(screen.getByLabelText("Amount"));
-  await user.click(screen.getByRole("tab", { name: "Material & location" }));
+  await openFormSection(user, "Material & location");
   await user.type(screen.getByLabelText("Amount"), "10");
-  await user.click(screen.getByRole("tab", { name: /^Notes$/ }));
+  await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   await user.click(screen.getByRole("radio", { name: /Use the whole lot/ }));
   expect(screen.getByText(/source will become exhausted/)).toBeInTheDocument();
@@ -630,9 +632,9 @@ test("guided sowing asks for a resulting estimate only after approximate partial
     { name: "Source seed lot" },
     { timeout: 10_000 },
   );
-  await user.click(screen.getByRole("tab", { name: "Material & location" }));
+  await openFormSection(user, "Material & location");
   await user.type(screen.getByLabelText("Amount"), "3");
-  await user.click(screen.getByRole("tab", { name: /^Notes$/ }));
+  await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   expect(screen.queryByLabelText("Resulting estimate")).not.toBeInTheDocument();
   await user.click(screen.getByRole("radio", { name: /Use part of the lot/ }));
@@ -656,7 +658,7 @@ test("guided sowing leaves unknown source quantity unknown", async () => {
     { name: "Source seed lot" },
     { timeout: 10_000 },
   );
-  await user.click(screen.getByRole("tab", { name: /^Notes$/ }));
+  await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   await user.click(
     screen.getByRole("radio", {
@@ -1562,9 +1564,14 @@ test("BULK-001 successful move refreshes the directory, clears preview and retai
     screen.getByRole("searchbox", { name: "Search seed inventory" }),
   ).toHaveValue("Blue");
   expect(window.location.hash).toBe(hash);
+  const refreshed = screen.getByRole("button", { name: /Blue packet/ });
+  expect(refreshed).toBeVisible();
+  expect(refreshed).not.toHaveTextContent("New bench");
+  setViewportMatches(false);
+  await user.click(refreshed);
   expect(
-    screen.getByRole("button", { name: /Blue packet.*New bench/s }),
-  ).toBeVisible();
+    await screen.findByRole("complementary", { name: "Quick preview" }),
+  ).toHaveTextContent("New bench");
 });
 
 const purchaseOrder = {
@@ -2386,22 +2393,18 @@ test("Details empty Sowings and Lineage are plain messages while Photos retains 
   await user.click(await screen.findByRole("button", { name: /Blue packet/ }));
   await user.click(screen.getByRole("tab", { name: "Sowings" }));
   expect(
-    (await screen.findByText("No sowings use this seed lot yet.")).closest(
-      ".empty-state",
-    ),
+    (await screen.findByText("No sowings yet.")).closest(".empty-state"),
   ).toBeNull();
   expect(screen.getByRole("link", { name: "Start sowing" })).toBeVisible();
   await user.click(screen.getByRole("tab", { name: "Lineage" }));
   expect(
-    (await screen.findByText("No recorded upstream material lineage.")).closest(
-      ".empty-state",
-    ),
+    (await screen.findByText("No recorded lineage.")).closest(".empty-state"),
   ).toBeNull();
   await user.click(screen.getByRole("tab", { name: "Photos" }));
   expect(
-    (
-      await screen.findByText("No photos or external image references yet.")
-    ).closest(".empty-state"),
+    (await screen.findByText("No photos yet.")).closest(
+      ".detail-empty-message",
+    ),
   ).toBeInTheDocument();
   for (const name of ["Add media", "Link existing", "External"])
     expect(screen.getByRole("button", { name })).toBeVisible();
@@ -2435,5 +2438,35 @@ test("Create labels expose the real required identity and keep optional acquisit
   ).toBeRequired();
   expect(
     screen.queryByLabelText("Day", { selector: "#acquisition-day" }),
+  ).not.toBeInTheDocument();
+});
+
+test("minimal Seed row retains quantity and moves storage context to Quick Preview", async () => {
+  mockApi(directoryHandler([lot()]));
+  const user = await openSeeds();
+  setViewportMatches(false);
+  const row = await screen.findByRole("button", { name: /Blue packet/ });
+  expect(row).not.toHaveTextContent(location.display_path);
+  expect(row).toHaveTextContent("remaining");
+  await user.click(row);
+  expect(
+    screen.getByRole("complementary", { name: "Quick preview" }),
+  ).toHaveTextContent(location.display_path);
+});
+
+test("New SeedLot Back keeps the Seeds parent and restores its create action", async () => {
+  mockApi(directoryHandler([lot()]));
+  const user = await openSeeds();
+  await user.click(screen.getByRole("button", { name: "+ New seed lot" }));
+  expect(window.location.hash).toBe("#/seeds?action=create");
+  await browserBack();
+  expect(window.location.hash).toBe("#/seeds");
+  await waitFor(() => {
+    expect(
+      screen.getByRole("button", { name: "+ New seed lot" }),
+    ).toHaveFocus();
+  });
+  expect(
+    screen.queryByRole("heading", { name: "Add seed lot" }),
   ).not.toBeInTheDocument();
 });

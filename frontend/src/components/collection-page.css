@@ -1,0 +1,239 @@
+/* The delivered Add SeedLot canvas is the shared full-page Collection shell. */
+.app-content
+  :is(.seeds-workspace, .sowings-workspace, .plants-workspace)
+  .seed-creation-panel
+  .collection-form,
+.app-content
+  .propagation-workspace:is(.sowings-workspace, .plants-workspace)
+  .collection-form {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.app-content .plants-workspace .seed-creation-panel .plant-kind-actions,
+.app-content .plants-workspace .inherited-origin {
+  background: transparent;
+}
+.app-content .plants-workspace .inherited-origin {
+  padding: var(--space-2) 0;
+  color: var(--text-muted);
+}
+.extraction-source-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-2) 0;
+  padding-block: var(--space-4);
+  border-block: 1px solid var(--border);
+}
+.extraction-source-summary dt {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.extraction-source-summary dd {
+  margin: var(--space-1) 0 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 48rem) {
+  .extraction-source-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* One full-page footer: the SeedLot border/gutters, continuous with the canvas. */
+.app-content
+  :is(.seeds-workspace, .sowings-workspace, .plants-workspace)
+  .collection-form
+  .form-sections--page
+  > .form-section-footer {
+  grid-column: 1 / -1;
+  position: static;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
+  background: transparent;
+  box-shadow: none;
+}
+.app-content :is(.sowings-workspace, .plants-workspace) .form-sections--page {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--space-8);
+  align-items: start;
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .form-sections--page
+  > .form-section-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-6);
+  align-content: start;
+  margin: 0;
+  padding: var(--space-4) 0;
+  border-top: 1px solid var(--border);
+}
+.form-sections--page .form-section-panel > h3 {
+  grid-column: 1 / -1;
+  font: var(--type-h3);
+  margin: 0;
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .form-sections--page
+  [data-form-panel="essentials"]
+  > :is(.reference-picker, .field:first-of-type),
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .form-sections--page
+  :is([data-form-panel="material"], [data-form-panel="essentials"])
+  > .quantity-field {
+  grid-column: auto;
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .collection-form
+  :is(.quantity-field, .temperature-field) {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .collection-form
+  .quantity-field
+  > legend {
+  padding: 0;
+  margin: 0 0 var(--space-1);
+}
+.app-content .sowings-workspace .collection-form .temperature-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .collection-form
+  textarea {
+  min-height: 5rem;
+}
+.app-content
+  .sowings-workspace
+  .form-sections--page
+  [data-form-panel="essentials"]
+  > .partial-date {
+  grid-column: 1 / -1;
+  max-width: calc((100% - var(--space-6)) / 2);
+}
+.guided-descendant-workspace .workspace-intro {
+  margin-block: var(--space-2);
+}
+.guided-descendant-workspace .workspace-intro p {
+  margin-block: var(--space-1);
+}
+.operation-source-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-6);
+  margin: 0 0 var(--space-2);
+}
+.operation-source-summary dt {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.operation-source-summary dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.recorded-origin {
+  margin: 0;
+}
+.app-content .sowing-state-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-4);
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+.sowing-state-options label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+}
+.app-content .sowing-state-options input {
+  width: 1.125rem;
+  min-height: 1.125rem;
+  margin: 0;
+}
+@media (min-width: 64.01rem) {
+  .app-content .plants-workspace .seed-creation-panel .form-sections--page {
+    grid-template-areas: "essentials origin" "lifecycle origin" "footer footer";
+  }
+  .app-content .sowings-workspace .seed-creation-panel .form-sections--page {
+    grid-template-areas: "essentials material" "outcome cultivation" "notes cultivation" "footer footer";
+  }
+  .app-content .guided-descendant-workspace .form-sections--page {
+    grid-template-areas: "essentials origin" "lifecycle outcome" "footer footer";
+  }
+  .app-content
+    :is(.sowings-workspace, .plants-workspace)
+    :is(.seed-creation-panel, .descendant-form)
+    .form-sections--page {
+    > [data-form-panel="essentials"] {
+      grid-area: essentials;
+    }
+    > [data-form-panel="origin"] {
+      grid-area: origin;
+    }
+    > [data-form-panel="lifecycle"] {
+      grid-area: lifecycle;
+    }
+    > [data-form-panel="material"] {
+      grid-area: material;
+    }
+    > [data-form-panel="outcome"] {
+      grid-area: outcome;
+    }
+    > [data-form-panel="cultivation"] {
+      grid-area: cultivation;
+    }
+    > [data-form-panel="notes"] {
+      grid-area: notes;
+    }
+    > .form-section-footer {
+      grid-area: footer;
+    }
+  }
+}
+@media (max-width: 64rem) {
+  .app-content :is(.sowings-workspace, .plants-workspace) .form-sections--page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 48rem) {
+  .app-content
+    :is(.sowings-workspace, .plants-workspace)
+    .form-sections--page
+    > .form-section-panel,
+  .operation-source-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-content
+    .sowings-workspace
+    .form-sections--page
+    [data-form-panel="essentials"]
+    > .partial-date {
+    max-width: none;
+  }
+}

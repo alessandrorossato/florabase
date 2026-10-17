@@ -1,0 +1,149 @@
+/* Shared compact presentation; media behavior remains in PhotosSection. */
+
+.photos-section--compact .photos-heading {
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: var(--space-2);
+  gap: var(--space-3);
+}
+.photos-section--compact .photos-heading h4 {
+  font: var(--type-h3);
+  margin: 0;
+}
+
+/* Compact attached gallery: one image area, concise identity and reachable actions. */
+.photos-section--compact .photo-gallery {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  gap: var(--space-4);
+}
+.app-content .photos-section--compact .photo-card {
+  position: relative;
+  display: block;
+  padding: 0;
+  max-width: none;
+  width: 100%;
+  overflow: visible;
+}
+.photos-section--compact
+  .photo-card
+  > :is(.attached-media-preview, .attached-media-body) {
+  margin: 0;
+}
+.photos-section--compact .attached-media-preview {
+  aspect-ratio: 4 / 3;
+  background: var(--surface-subtle);
+  border-radius: var(--radius-normal) var(--radius-normal) 0 0;
+  overflow: hidden;
+}
+.photos-section--compact .attached-media-preview > :is(a, div) {
+  height: 100%;
+}
+.photos-section--compact .gallery-image-link {
+  height: 100%;
+  display: block;
+  position: relative;
+}
+.photos-section--compact .gallery-open-label {
+  position: absolute;
+  left: var(--space-3);
+  bottom: var(--space-3);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  color: var(--primary);
+  font: var(--type-strong);
+  opacity: 0;
+  pointer-events: none;
+}
+.photos-section--compact
+  .photo-card:is(:hover, :focus-within)
+  .gallery-open-label {
+  opacity: 1;
+}
+.photos-section--compact .gallery-image-link:focus-visible {
+  outline-offset: -6px;
+}
+.app-content .photos-section--compact .collection-photo-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  object-fit: cover;
+  margin: 0;
+  border-radius: 0;
+}
+.photos-section--compact .attached-media-body {
+  padding: var(--space-3);
+  min-width: 0;
+}
+.photos-section--compact .attached-media-body p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.photos-section--compact .attached-media-body .card-type {
+  font: var(--type-label);
+  color: var(--text-muted);
+}
+.photos-section--compact .photo-caption {
+  font: var(--type-strong);
+  margin-top: var(--space-1);
+}
+.photos-section--compact .attached-media-body .actions {
+  position: absolute;
+  inset: var(--space-2) var(--space-2) auto;
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.photos-section--compact .attached-media-body .actions > :last-child {
+  margin-left: auto;
+}
+.photos-section--compact .external-preview-disclosure {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: start;
+  gap: var(--space-1);
+  padding: var(--space-3);
+
+  box-sizing: border-box;
+}
+.photos-section--compact .external-preview-disclosure p {
+  margin: 0;
+}
+.photos-section--compact .external-preview-disclosure span {
+  overflow-wrap: anywhere;
+  font: var(--type-small);
+}
+
+.photos-section--compact .external-preview-disclosure > :is(strong, span) {
+  max-width: calc(100% - var(--control-height));
+}
+
+.photos-section--compact .attached-media-preview {
+  position: relative;
+}
+.photos-section--compact .gallery-loading {
+  position: absolute;
+  left: var(--space-3);
+  bottom: var(--space-3);
+  margin: 0;
+  padding: var(--space-1);
+  background: var(--surface);
+  font: var(--type-small);
+  z-index: 1;
+}
+
+.photos-section--compact .external-preview-disclosure > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Empty overlay space remains part of the image link's hit area. */
+.photos-section--compact .attached-media-body .actions {
+  pointer-events: none;
+}
+.photos-section--compact .attached-media-body .actions > button {
+  pointer-events: auto;
+}

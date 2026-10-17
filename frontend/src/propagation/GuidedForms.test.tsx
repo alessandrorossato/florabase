@@ -1,3 +1,4 @@
+import { openFormSection } from "../test/formSections";
 import {
   cleanup,
   render,
@@ -122,17 +123,21 @@ test("guided sowing retains shared section values and submits one atomic transit
     screen.getAllByRole("link", { name: "Okra Burgundy" }).length,
   ).toBeGreaterThan(0);
   await user.type(screen.getByLabelText("Sowing label"), "Shared draft");
-  await user.click(screen.getByRole("button", { name: "Next" }));
+  expect(
+    screen.queryByRole("button", { name: "Next" }),
+  ).not.toBeInTheDocument();
   expect(screen.getByLabelText("Amount")).toBeRequired();
   await user.type(screen.getByLabelText("Amount"), "10");
-  await user.click(screen.getByRole("tab", { name: "Cultivation" }));
+  await openFormSection(user, "Cultivation");
   await user.type(screen.getByLabelText("Substrate"), "Coir");
-  await user.click(screen.getByRole("button", { name: "Back" }));
+  expect(
+    screen.queryByRole("button", { name: "Back" }),
+  ).not.toBeInTheDocument();
   expect(screen.getByLabelText("Amount")).toHaveValue("10");
-  await user.click(screen.getByRole("tab", { name: "Essentials" }));
+  await openFormSection(user, "Essentials");
   expect(screen.getByLabelText("Sowing label")).toHaveValue("Shared draft");
   expect(posts).toHaveLength(0);
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
+  await openFormSection(user, "Notes");
   await user.type(
     screen.getByLabelText("Notes", { selector: "textarea" }),
     "Keep moist",
@@ -165,16 +170,16 @@ test("guided sowing retains shared section values and submits one atomic transit
   });
 });
 
-test("guided sowing reveals a hidden invalid quantity without persisting", async () => {
+test("guided sowing focuses an invalid quantity without persisting", async () => {
   const { user, posts } = setup();
   seedWizard();
   await screen.findByRole("heading", { name: "Source seed lot" });
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
+  await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   await waitFor(() => {
     expect(
-      screen.getByRole("tab", { name: "Material & location" }),
-    ).toHaveAttribute("aria-selected", "true");
+      screen.getByRole("region", { name: "Material & location" }),
+    ).toBeVisible();
   });
   expect(screen.getByLabelText("Amount")).toHaveFocus();
   expect(posts).toHaveLength(0);
@@ -184,15 +189,21 @@ test("guided sowing keeps unknown quantity and explicit no-adjustment semantics"
   const { user, posts } = setup({ quantity: null });
   seedWizard();
   await screen.findByRole("heading", { name: "Source seed lot" });
-  await user.click(screen.getByRole("tab", { name: "Material & location" }));
+  await openFormSection(user, "Material & location");
   expect(screen.queryByLabelText("Amount")).not.toBeInTheDocument();
-  expect(screen.getByLabelText("Kind")).not.toBeRequired();
-  await user.selectOptions(screen.getByLabelText("Kind"), "weight");
+  expect(screen.getByLabelText("Quantity sown kind")).not.toBeRequired();
+  await user.selectOptions(
+    screen.getByLabelText("Quantity sown kind"),
+    "weight",
+  );
   expect(screen.getByLabelText("Amount")).toBeRequired();
   expect(screen.getByLabelText("Unit")).toBeRequired();
-  await user.selectOptions(screen.getByLabelText("Kind"), "unknown");
+  await user.selectOptions(
+    screen.getByLabelText("Quantity sown kind"),
+    "unknown",
+  );
   expect(screen.queryByLabelText("Amount")).not.toBeInTheDocument();
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
+  await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Review seed usage" }));
   await user.click(screen.getByRole("button", { name: "Start sowing" }));
   await waitFor(() => {
@@ -215,23 +226,55 @@ for (const kind of ["plant", "group"] as const)
     await screen.findByRole("heading", {
       name: kind === "plant" ? "Create Plant" : "Create Plant group",
     });
-    const path = screen.getByRole("region", { name: "Propagation path" });
-    expect(within(path).getAllByText("Okra Burgundy")).toHaveLength(2);
+    expect(
+      screen.queryByRole("region", { name: "Propagation path" }),
+    ).not.toBeInTheDocument();
+    const source = screen.getByLabelText("Creating from");
+    expect(within(source).getAllByText("Okra Burgundy")).toHaveLength(2);
+    expect(
+      within(source)
+        .getAllByRole("link")
+        .map((link) => link.getAttribute("href")),
+    ).toEqual(["#/seeds/lot", "#/sowings/sowing"]);
+    expect(screen.getByLabelText("Botanical identity")).toHaveValue(
+      identity.id,
+    );
+    expect(
+      screen.getByRole("group", { name: "Resulting Sowing lifecycle" }),
+    ).toHaveClass("sowing-state-options");
     await user.type(screen.getByLabelText("Label"), "New result");
     if (kind === "group") {
       expect(screen.queryByLabelText("Count")).not.toBeInTheDocument();
-      await user.selectOptions(screen.getByLabelText("Kind"), "approximate");
+      await user.selectOptions(
+        screen.getByLabelText("Quantity kind"),
+        "approximate",
+      );
       expect(screen.getByLabelText("Count")).toBeRequired();
       await user.type(screen.getByLabelText("Count"), "8");
     }
-    await user.click(screen.getByRole("button", { name: "Next" }));
-    expect(screen.getByText(/Originating Sowing:/)).toHaveTextContent(
-      "Okra Burgundy",
+    expect(
+      screen.queryByRole("button", { name: "Next" }),
+    ).not.toBeInTheDocument();
+    expect(
+      within(screen.getByRole("region", { name: "Origin" })).getByRole("link", {
+        name: "Okra Burgundy",
+      }),
+    ).toHaveAttribute("href", "#/sowings/sowing");
+    const datePrecision = screen.getByLabelText(
+      "Collection-entry date precision",
     );
-    await user.click(screen.getByRole("button", { name: "Back" }));
+    expect(
+      document.querySelector('label[for="plant-entry-date-precision"]'),
+    ).toHaveClass("sr-only");
+    await user.selectOptions(datePrecision, "year");
+    await user.clear(screen.getByLabelText("Year"));
+    await user.type(screen.getByLabelText("Year"), "2026");
+    expect(
+      screen.queryByRole("button", { name: "Back" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByLabelText("Label")).toHaveValue("New result");
     expect(posts).toHaveLength(0);
-    await user.click(screen.getByRole("tab", { name: "Lifecycle & notes" }));
+    await openFormSection(user, "Lifecycle & notes");
     await user.type(
       screen.getByLabelText("Notes", { selector: "textarea" }),
       "Result note",
@@ -251,6 +294,8 @@ for (const kind of ["plant", "group"] as const)
         botanical_identity_id: identity.id,
         label: "New result",
         notes: "Result note",
+        collection_entry_date: { precision: "year", year: 2026 },
+        location_id: null,
         lifecycle: "active",
         ...(kind === "group"
           ? { quantity: { value: 8, is_approximate: true } }
@@ -258,3 +303,32 @@ for (const kind of ["plant", "group"] as const)
       },
     });
   });
+
+test("guided Sowing state presents four compact named choices and only the selected consequence", async () => {
+  const { user, posts } = setup();
+  render(<SowingDescendantWizard sowingId="sowing" kind="plant" />);
+  await screen.findByRole("heading", { name: "Create Plant" });
+  const group = screen.getByRole("group", {
+    name: "Resulting Sowing lifecycle",
+  });
+  expect(within(group).getAllByRole("radio")).toHaveLength(4);
+  expect(
+    within(group).getByRole("radio", { name: "Keep active" }),
+  ).toBeChecked();
+  expect(group.querySelectorAll("small")).toHaveLength(0);
+  for (const [name, state] of [
+    ["Complete Sowing", "completed"],
+    ["Mark failed", "failed"],
+    ["Abandon Sowing", "abandoned"],
+  ]) {
+    await user.click(within(group).getByRole("radio", { name }));
+    expect(document.getElementById("descendant-state-help")).toHaveTextContent(
+      `The Sowing will be marked ${state} in the same operation.`,
+    );
+  }
+  await user.click(within(group).getByRole("radio", { name: "Keep active" }));
+  expect(document.getElementById("descendant-state-help")).toHaveTextContent(
+    "counts do not complete it automatically",
+  );
+  expect(posts).toHaveLength(0);
+});

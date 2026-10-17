@@ -47,7 +47,9 @@ export function PlantEssentialsFields({
         >
           <legend>Quantity</legend>
           <div className="field">
-            <label htmlFor="plant-quantity-kind">Kind</label>
+            <label className="sr-only" htmlFor="plant-quantity-kind">
+              Quantity kind
+            </label>
             <select
               id="plant-quantity-kind"
               value={form.quantityKind}
@@ -112,8 +114,8 @@ export function PlantEssentialsFields({
           ))}
         </select>
         <FieldHelp id="plant-location-help">
-          The record's current physical collection position. Editing corrects
-          current state; record a movement in Events to retain its history.
+          Current collection position; record movements in Journal to keep their
+          history.
         </FieldHelp>
       </div>
     </>
@@ -124,6 +126,7 @@ export function PlantEntryDateField({ form, pending, updateForm }: FieldProps) {
     <PartialDateField
       id="plant-entry-date"
       label="Collection-entry date"
+      hidePrecisionLabel
       value={form.collectionEntryDate}
       disabled={pending}
       onChange={(value) => {

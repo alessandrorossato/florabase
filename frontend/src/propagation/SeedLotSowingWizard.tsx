@@ -1,3 +1,9 @@
+import "../components/collection-page.css";
+import {
+  closeCollectionPage,
+  setRecordRoute,
+} from "../components/recordNavigation";
+import "../components/collection-visual.css";
 import { firstValidationField } from "../components/formValidation";
 import { FormSections } from "../components/FormSections";
 import {
@@ -298,7 +304,7 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
           ? auth.state.csrfToken
           : "",
       );
-      window.location.hash = `/sowings/${result.sowing.id}`;
+      setRecordRoute(`#/sowings/${result.sowing.id}`, true);
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 422) {
         setValidationField(firstValidationField(error));
@@ -327,7 +333,7 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
 
   return (
     <section
-      className="workspace propagation-workspace"
+      className="workspace propagation-workspace sowings-workspace"
       aria-labelledby="guided-sowing-title"
     >
       <Breadcrumbs
@@ -384,7 +390,7 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
         </dl>
       </section>
       <form
-        className="propagation-form"
+        className="propagation-form collection-form sowing-form"
         onSubmit={(event) => void submit(event)}
         noValidate
       >
@@ -392,6 +398,7 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
           <>
             <h3>Sowing details</h3>
             <FormSections
+              mode="page"
               disabled={pending}
               error={sectionError}
               errorFields={sowingErrorFields}
@@ -417,6 +424,18 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
                 <a
                   className="button-link button--secondary"
                   href={`#/seeds/${lot.id}`}
+                  onClick={(event) => {
+                    if (
+                      event.button !== 0 ||
+                      event.ctrlKey ||
+                      event.metaKey ||
+                      event.shiftKey ||
+                      event.altKey
+                    )
+                      return;
+                    event.preventDefault();
+                    closeCollectionPage(`#/seeds/${lot.id}`);
+                  }}
                 >
                   Cancel
                 </a>
@@ -606,6 +625,18 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
               <a
                 className="button-link button--secondary"
                 href={`#/seeds/${lot.id}`}
+                onClick={(event) => {
+                  if (
+                    event.button !== 0 ||
+                    event.ctrlKey ||
+                    event.metaKey ||
+                    event.shiftKey ||
+                    event.altKey
+                  )
+                    return;
+                  event.preventDefault();
+                  closeCollectionPage(`#/seeds/${lot.id}`);
+                }}
               >
                 Cancel
               </a>

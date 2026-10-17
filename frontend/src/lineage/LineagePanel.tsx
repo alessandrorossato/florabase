@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 
 import type { components } from "../api/schema";
 import { requestJson } from "../auth/api";
+import { DetailEmptyState } from "../components/DetailEmptyState";
+import { PropagationPath } from "../propagation/PropagationPath";
 import { InfoDisclosure } from "../components/ContextualHelp";
 
 type LineageResponse = components["schemas"]["LineageResponse"];
@@ -74,11 +76,43 @@ export function LineagePanel({ kind, id }: { kind: Kind; id: string }) {
       </div>
     );
   if (state.value.ancestors.length === 0)
+    return <DetailEmptyState>No recorded lineage.</DetailEmptyState>;
+  if (kind !== "seed-lots") {
+    // The API walks nearest-first. Reverse only that explicit path for material flow.
+    const seen = new Set<string>();
+    const nodes = [...state.value.ancestors].reverse().filter((node) => {
+      const key = `${node.kind}:${node.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    const subject = state.value.subject;
     return (
-      <div className="detail-empty-message">
-        <p>No recorded upstream material lineage.</p>
-      </div>
+      <PropagationPath
+        title="Recorded lineage"
+        listLabel="Recorded upstream path"
+        stages={[
+          ...nodes.map((node) => [
+            {
+              type: labels[node.kind],
+              label: node.label ?? fallbackLabels[node.kind],
+              href: href(node.kind, node.id),
+              state: node.lifecycle,
+            },
+          ]),
+          [
+            {
+              type: `This ${labels[subject.kind]}`,
+              label: subject.label ?? fallbackLabels[subject.kind],
+              href: href(subject.kind, subject.id),
+              state: subject.lifecycle,
+              current: true,
+            },
+          ],
+        ]}
+      />
     );
+  }
   return (
     <div>
       <InfoDisclosure label="How this path is recorded">

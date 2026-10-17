@@ -257,9 +257,7 @@ test("supports zero-photo state and an accessible upload workflow", async () => 
     .mockResolvedValueOnce(json([photos[0]]));
   const user = userEvent.setup();
   renderSection();
-  expect(
-    await screen.findByText("No photos or external image references yet."),
-  ).toBeVisible();
+  expect(await screen.findByText("No photos yet.")).toBeVisible();
   await user.click(screen.getByRole("button", { name: "Add new media" }));
   const dialog = screen.getByRole("dialog", { name: "Add new media" });
   const file = new File(["png"], "leaf.png", { type: "image/png" });
@@ -689,13 +687,12 @@ test("saved external photos render protected thumbnails after reload without rem
   expect(fetch).toHaveBeenCalledTimes(1);
 });
 
-test("empty Photos keeps a visual gallery workspace and all three media actions", async () => {
+test("empty Photos uses compact detail content and keeps all three media actions", async () => {
   vi.spyOn(globalThis, "fetch").mockResolvedValue(json([]));
   renderSection();
-  const message = await screen.findByText(
-    "No photos or external image references yet.",
-  );
-  expect(message.closest(".empty-state")).toBeInTheDocument();
+  const message = await screen.findByText("No photos yet.");
+  expect(message.closest(".detail-empty-message")).toBeInTheDocument();
+  expect(message.closest(".empty-state")).toBeNull();
   expect(screen.getByRole("button", { name: "Add new media" })).toBeVisible();
   expect(
     screen.getByRole("button", { name: "Link existing media" }),
