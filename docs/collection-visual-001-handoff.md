@@ -154,7 +154,12 @@ their stated limits. Feature Review is healthy at revision `0042`, fixture v4/66
 inventory identifies persistent UAT as owned by worktree `4ff7`; the guarded UAT status command refused
 this checkout, and no UAT operation was made. Its volumes remain retained. After the gate, exact-owner
 `feature-review-up` restored Review's stopped application services while retaining DB/media, owner and
-fixture v4/66; final Review status is healthy at `20261013_0042`. This verified tree is ready for commit
-and protected delivery.
+fixture v4/66; final Review status is healthy at `20261013_0042`.
+
+PR #112 CI passed integration and production build, but its independent quality job exposed that the
+guided Sowing local validation set the error message without selecting the quantity error field. The
+candidate now supplies that field to the existing FormSections focus mapping, and the regression waits
+for its documented animation-frame focus. This is a bounded accessibility correction; the follow-up
+canonical gate and protected delivery are required before completion.
 
 READY_FOR_DELIVERY

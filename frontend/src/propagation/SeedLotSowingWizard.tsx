@@ -215,6 +215,7 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
     setValidationField(undefined);
     const errors = validateDetails();
     if (errors.length) {
+      setValidationField(errors[0]);
       setMessages(errors);
       return;
     }

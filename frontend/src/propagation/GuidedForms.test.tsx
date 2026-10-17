@@ -181,7 +181,9 @@ test("guided sowing focuses an invalid quantity without persisting", async () =>
       screen.getByRole("region", { name: "Material & location" }),
     ).toBeVisible();
   });
-  expect(screen.getByLabelText("Amount")).toHaveFocus();
+  await waitFor(() => {
+    expect(screen.getByLabelText("Amount")).toHaveFocus();
+  });
   expect(posts).toHaveLength(0);
 });
 

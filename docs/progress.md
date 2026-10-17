@@ -4586,3 +4586,8 @@ not the current delivery state.
   owner and fixture **v4/66**. Persistent UAT belongs to worktree `4ff7`; its guarded status command
   refused this checkout. No UAT mutation occurred and its volumes remain retained. Candidate is ready
   for commit and protected delivery.
+- Initial protected delivery created PR **#112**. Required `integration` and `build` passed, while
+  `quality` found one focus regression in guided Sowing local validation. That path now supplies its
+  field error to the existing accessible focus mapping, and the regression awaits the animation-frame
+  focus rather than asserting synchronously. The correction is bounded to accessibility; final
+  verification and protected delivery must be rerun for the follow-up commit.
