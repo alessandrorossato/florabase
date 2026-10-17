@@ -11,6 +11,7 @@ export function PartialDateField({
   disabled,
   showHelp = true,
   helpText,
+  hidePrecisionLabel = false,
 }: {
   id: string;
   label: string;
@@ -19,6 +20,7 @@ export function PartialDateField({
   disabled: boolean;
   showHelp?: boolean;
   helpText?: string;
+  hidePrecisionLabel?: boolean;
 }) {
   const precision = value?.precision ?? "";
   const helpId = `${id}-precision-help`;
@@ -38,7 +40,12 @@ export function PartialDateField({
     <fieldset className="partial-date partial-date--stacked">
       <legend>{label}</legend>
       <div className="field">
-        <label htmlFor={`${id}-precision`}>Precision</label>
+        <label
+          htmlFor={`${id}-precision`}
+          className={hidePrecisionLabel ? "sr-only" : undefined}
+        >
+          {hidePrecisionLabel ? `${label} precision` : "Precision"}
+        </label>
         <select
           aria-describedby={showHelp ? helpId : undefined}
           id={`${id}-precision`}

@@ -1,3 +1,10 @@
+import "../components/collection-page.css";
+import {
+  closeCollectionPage,
+  setRecordRoute,
+} from "../components/recordNavigation";
+import { FieldLabel } from "../components/FieldLabel";
+import "../components/collection-visual.css";
 import { firstValidationField } from "../components/formValidation";
 import { useMemo } from "react";
 import { FormSections } from "../components/FormSections";
@@ -29,7 +36,6 @@ import {
   type SowingLifecycle,
   type SowingResponse,
 } from "../sowings/api";
-import { PropagationPath } from "./PropagationPath";
 
 type Kind = "plant" | "group";
 
@@ -235,7 +241,7 @@ export function SowingDescendantWizard({
           { plant: common, resulting_sowing_lifecycle: resultingLifecycle },
           csrfToken,
         );
-        window.location.hash = `/plants/${result.plant.id}`;
+        setRecordRoute(`#/plants/${result.plant.id}`, true);
       } else {
         const result = await createPlantGroupFromSowing(
           sowing.id,
@@ -254,7 +260,7 @@ export function SowingDescendantWizard({
           },
           csrfToken,
         );
-        window.location.hash = `/plant-groups/${result.plant_group.id}`;
+        setRecordRoute(`#/plant-groups/${result.plant_group.id}`, true);
       }
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 422) {
@@ -278,7 +284,7 @@ export function SowingDescendantWizard({
 
   return (
     <section
-      className="workspace propagation-workspace"
+      className="workspace propagation-workspace plants-workspace guided-descendant-workspace"
       aria-labelledby="descendant-title"
     >
       <Breadcrumbs
@@ -296,22 +302,24 @@ export function SowingDescendantWizard({
       />
       <div className="workspace-intro">
         <div>
-          <p className="eyebrow">Guided propagation</p>
+          <p className="eyebrow">Sowing</p>
           <h2 id="descendant-title">
             Create {kind === "plant" ? "Plant" : "Plant group"}
           </h2>
           <p>
-            From <strong>{recordName(sowing, "Unlabelled Sowing")}</strong>. The
-            originating Sowing is stored explicitly.
+            From <strong>{recordName(sowing, "Unlabelled Sowing")}</strong>
+          </p>
+          <p className="scientific-name">
+            {sowing.seed_lot.botanical_identity_display_label}
           </p>
         </div>
       </div>
-      <PropagationPath
-        stages={[
-          [
-            {
-              type: "Source SeedLot",
-              label: recordName(
+      <dl className="operation-source-summary" aria-label="Creating from">
+        <div>
+          <dt>SeedLot</dt>
+          <dd>
+            <a href={`#/seeds/${sowing.seed_lot.id}`}>
+              {recordName(
                 {
                   label: sowing.seed_lot.label,
                   botanical_identity_id: sowing.seed_lot.botanical_identity_id,
@@ -319,29 +327,26 @@ export function SowingDescendantWizard({
                     sowing.seed_lot.botanical_identity_display_label,
                 },
                 "Unlabelled SeedLot",
-              ),
-              href: `#/seeds/${sowing.seed_lot.id}`,
-              state: sowing.seed_lot.lifecycle,
-            },
-          ],
-          [
-            {
-              type: "Current Sowing",
-              label: recordName(sowing, "Unlabelled Sowing"),
-              href: `#/sowings/${sowing.id}`,
-              state: sowing.lifecycle,
-            },
-          ],
-        ]}
-      />
+              )}
+            </a>
+          </dd>
+        </div>
+        <div>
+          <dt>Sowing</dt>
+          <dd>
+            <a href={`#/sowings/${sowing.id}`}>
+              {recordName(sowing, "Unlabelled Sowing")}
+            </a>
+          </dd>
+        </div>
+      </dl>
       <form
-        className="propagation-form"
+        className="propagation-form collection-form plant-form descendant-form"
         onSubmit={(event) => void submit(event)}
         noValidate
       >
-        <p className="eyebrow">Result</p>
-        <h3>New {kind === "plant" ? "Plant" : "Plant group"} details</h3>
         <FormSections
+          mode="page"
           disabled={pending}
           error={sectionError}
           errorFields={[
@@ -363,12 +368,13 @@ export function SowingDescendantWizard({
               content: (
                 <>
                   <div className="field">
-                    <label htmlFor="descendant-identity">
+                    <FieldLabel htmlFor="descendant-identity" required>
                       Botanical identity
-                    </label>
+                    </FieldLabel>
                     <select
                       aria-describedby="descendant-identity-help"
                       id="descendant-identity"
+                      aria-required="true"
                       value={identityId}
                       onChange={(event) => {
                         setIdentityId(event.currentTarget.value);
@@ -381,9 +387,8 @@ export function SowingDescendantWizard({
                       ))}
                     </select>
                     <FieldHelp id="descendant-identity-help">
-                      The source identity is preselected, but a valid changed
-                      identity may be chosen. Sharing an identity does not
-                      establish lineage.
+                      Preselected from the Sowing; another valid identity may be
+                      chosen.
                     </FieldHelp>
                   </div>
                   <PlantEssentialsFields
@@ -401,11 +406,11 @@ export function SowingDescendantWizard({
               label: "Origin",
               content: (
                 <>
-                  <div className="notice field--full">
-                    Originating Sowing:{" "}
-                    <strong>{recordName(sowing, "Sowing")}</strong>. This
-                    explicit link is created with the result.
-                  </div>
+                  <p className="field--full recorded-origin">
+                    <a href={`#/sowings/${sowing.id}`}>
+                      {recordName(sowing, "Sowing")}
+                    </a>
+                  </p>
                   <PlantEntryDateField
                     form={form}
                     updateForm={updateForm}
@@ -424,49 +429,51 @@ export function SowingDescendantWizard({
                     updateForm={updateForm}
                     pending={pending}
                   />
-                  <div className="field--full">
-                    {" "}
-                    <p className="eyebrow">Sowing state after creation</p>
-                    <fieldset className="choice-cards">
-                      <legend>Resulting Sowing lifecycle</legend>
-                      {(
-                        Object.keys(sowingLifecycleLabels) as Exclude<
-                          SowingLifecycle,
-                          "reversed"
-                        >[]
-                      ).map((value) => (
-                        <label key={value}>
-                          <input
-                            type="radio"
-                            name="resulting-lifecycle"
-                            checked={resultingLifecycle === value}
-                            onChange={() => {
-                              setResultingLifecycle(value);
-                            }}
-                          />
-                          <span>
-                            <strong>{sowingLifecycleLabels[value]}</strong>
-                            <small>
-                              {value === "active"
-                                ? "Default. Descendant counts never complete a Sowing automatically."
-                                : `The Sowing will be marked ${value} in the same atomic operation.`}
-                            </small>
-                          </span>
-                        </label>
-                      ))}
-                    </fieldset>
-                    {completionOutcome}
-                    <p className="field-help">
-                      Confirm to create the{" "}
-                      {kind === "plant" ? "Plant" : "Plant group"} with an
-                      explicit link to this Sowing. The Sowing will{" "}
-                      {resultingLifecycle === "active"
-                        ? "remain active"
-                        : `be marked ${resultingLifecycle}`}
-                      .
-                    </p>
-                  </div>
                 </>
+              ),
+            },
+            {
+              id: "outcome",
+              label: "Sowing after creation",
+              content: (
+                <div className="field--full">
+                  <fieldset
+                    className="sowing-state-options"
+                    aria-describedby="descendant-state-help"
+                  >
+                    <legend className="sr-only">
+                      Resulting Sowing lifecycle
+                    </legend>
+                    {(
+                      Object.keys(sowingLifecycleLabels) as Exclude<
+                        SowingLifecycle,
+                        "reversed"
+                      >[]
+                    ).map((value) => (
+                      <label key={value}>
+                        <input
+                          type="radio"
+                          name="resulting-lifecycle"
+                          checked={resultingLifecycle === value}
+                          onChange={() => {
+                            setResultingLifecycle(value);
+                          }}
+                        />
+                        {sowingLifecycleLabels[value]}
+                      </label>
+                    ))}
+                  </fieldset>
+                  <p
+                    className="field-help"
+                    id="descendant-state-help"
+                    aria-live="polite"
+                  >
+                    {resultingLifecycle === "active"
+                      ? "The Sowing stays active; descendant counts do not complete it automatically."
+                      : `The Sowing will be marked ${resultingLifecycle} in the same operation.`}
+                  </p>
+                  {completionOutcome}
+                </div>
               ),
             },
           ]}
@@ -481,6 +488,18 @@ export function SowingDescendantWizard({
             <a
               className="button-link button--secondary"
               href={`#/sowings/${sowing.id}`}
+              onClick={(event) => {
+                if (
+                  event.button !== 0 ||
+                  event.ctrlKey ||
+                  event.metaKey ||
+                  event.shiftKey ||
+                  event.altKey
+                )
+                  return;
+                event.preventDefault();
+                closeCollectionPage(`#/sowings/${sowing.id}`);
+              }}
             >
               Cancel
             </a>

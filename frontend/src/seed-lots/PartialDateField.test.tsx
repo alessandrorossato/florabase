@@ -5,13 +5,18 @@ import { afterEach, expect, test } from "vitest";
 import { PartialDateField } from "./PartialDateField";
 import type { PartialDate } from "./api";
 afterEach(cleanup);
-function Example() {
+function Example({
+  hidePrecisionLabel = false,
+}: {
+  hidePrecisionLabel?: boolean;
+}) {
   const [value, setValue] = useState<PartialDate | null>(null);
   return (
     <>
       <PartialDateField
         id="date"
         label="Acquired"
+        hidePrecisionLabel={hidePrecisionLabel}
         value={value}
         onChange={setValue}
         disabled={false}
@@ -24,32 +29,40 @@ function Example() {
     </>
   );
 }
-test("precision keeps only known components, preserves parts and leaves adjacent fields intact", async () => {
-  const user = userEvent.setup();
-  render(<Example />);
-  const group = screen.getByRole("group", { name: "Acquired" });
-  const precision = within(group).getByLabelText("Precision");
-  expect(screen.getByLabelText("Recorded date")).toHaveTextContent("null");
-  expect(precision).not.toBeRequired();
-  await user.selectOptions(precision, "day");
-  for (const part of ["Year", "Month", "Day"])
-    expect(screen.getByLabelText(part)).toBeRequired();
-  await user.clear(screen.getByLabelText("Year"));
-  await user.type(screen.getByLabelText("Year"), "2024");
-  await user.clear(screen.getByLabelText("Month"));
-  await user.type(screen.getByLabelText("Month"), "9");
-  await user.selectOptions(precision, "month");
-  expect(screen.queryByLabelText("Day")).not.toBeInTheDocument();
-  expect(screen.getByLabelText("Recorded date")).toHaveTextContent(
-    '{"precision":"month","year":2024,"month":9}',
-  );
-  await user.selectOptions(precision, "year");
-  expect(screen.queryByLabelText("Month")).not.toBeInTheDocument();
-  expect(screen.getByLabelText("Year")).toHaveValue(2024);
-  await user.selectOptions(precision, "");
-  expect(screen.getByLabelText("Recorded date")).toHaveTextContent("null");
-  expect(screen.queryByLabelText("Year")).not.toBeInTheDocument();
-  expect(screen.getByLabelText("Adjacent supplier")).toHaveValue(
-    "Retained Supplier",
-  );
-});
+test.each([false, true])(
+  "precision keeps known components and adjacent values with hidden caption %s",
+  async (hidePrecisionLabel) => {
+    const user = userEvent.setup();
+    render(<Example hidePrecisionLabel={hidePrecisionLabel} />);
+    const group = screen.getByRole("group", { name: "Acquired" });
+    const precision = within(group).getByLabelText<HTMLSelectElement>(
+      hidePrecisionLabel ? "Acquired precision" : "Precision",
+    );
+    expect(precision.labels[0].classList.contains("sr-only")).toBe(
+      hidePrecisionLabel,
+    );
+    expect(screen.getByLabelText("Recorded date")).toHaveTextContent("null");
+    expect(precision).not.toBeRequired();
+    await user.selectOptions(precision, "day");
+    for (const part of ["Year", "Month", "Day"])
+      expect(screen.getByLabelText(part)).toBeRequired();
+    await user.clear(screen.getByLabelText("Year"));
+    await user.type(screen.getByLabelText("Year"), "2024");
+    await user.clear(screen.getByLabelText("Month"));
+    await user.type(screen.getByLabelText("Month"), "9");
+    await user.selectOptions(precision, "month");
+    expect(screen.queryByLabelText("Day")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Recorded date")).toHaveTextContent(
+      '{"precision":"month","year":2024,"month":9}',
+    );
+    await user.selectOptions(precision, "year");
+    expect(screen.queryByLabelText("Month")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Year")).toHaveValue(2024);
+    await user.selectOptions(precision, "");
+    expect(screen.getByLabelText("Recorded date")).toHaveTextContent("null");
+    expect(screen.queryByLabelText("Year")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Adjacent supplier")).toHaveValue(
+      "Retained Supplier",
+    );
+  },
+);

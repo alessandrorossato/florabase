@@ -75,6 +75,7 @@ export function DetailHeader({
   secondary,
   status,
   primaryActions,
+  secondaryActions,
   onEdit,
   editLabel = "Edit",
   overflow,
@@ -86,6 +87,7 @@ export function DetailHeader({
   secondary?: ReactNode;
   status?: ReactNode;
   primaryActions?: ReactNode;
+  secondaryActions?: ReactNode;
   onEdit?: MouseEventHandler<HTMLButtonElement>;
   editLabel?: string;
   overflow?: ReactNode;
@@ -105,9 +107,14 @@ export function DetailHeader({
           {status && <div className="detail-status">{status}</div>}
         </div>
       </div>
-      {(primaryActions ?? onEdit ?? overflow) && (
-        <div className="actions detail-actions">
+      {(primaryActions ?? secondaryActions ?? onEdit ?? overflow) && (
+        <div
+          className="actions detail-actions"
+          role="group"
+          aria-label="Record actions"
+        >
           {primaryActions}
+          {secondaryActions}
           {onEdit && (
             <button
               className="button--secondary"

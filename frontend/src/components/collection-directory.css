@@ -1,0 +1,140 @@
+/* Botanical Identity rows: complete 4rem tile, identity beside it, metrics right. */
+.app-content
+  :is(.seeds-workspace, .sowings-workspace, .plants-workspace)
+  .operational-layout
+  .seed-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(7rem, auto);
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+}
+.app-content
+  :is(.seeds-workspace, .sowings-workspace, .plants-workspace)
+  .seed-row
+  > .seed-primary {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.app-content
+  :is(.seeds-workspace, .sowings-workspace, .plants-workspace)
+  .seed-row
+  .record-visual {
+  width: 4rem;
+  height: 4rem;
+  box-sizing: border-box;
+}
+.app-content
+  :is(.seeds-workspace, .sowings-workspace, .plants-workspace)
+  .operational-layout
+  .seed-row
+  > :is(.seed-quantity, .plant-row__tracking, .sowing-progress) {
+  grid-column: 2;
+  grid-row: 2;
+  text-align: right;
+  align-items: flex-end;
+  justify-self: end;
+  min-width: 0;
+  max-width: 14rem;
+}
+.app-content
+  :is(.seeds-workspace, .sowings-workspace, .plants-workspace)
+  .seed-row
+  > .lifecycle-badge {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  margin: 0;
+}
+.app-content .sowings-workspace .seed-row .seed-primary__text {
+  display: grid;
+  gap: var(--space-1);
+}
+.app-content .plants-workspace .quick-preview > .quick-preview-media {
+  width: 100%;
+  height: 12rem;
+  max-height: 12rem;
+  box-sizing: border-box;
+}
+.quick-preview-media img {
+  object-fit: scale-down;
+}
+.quick-preview-media svg {
+  width: 5rem;
+  height: 5rem;
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .record-preview__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.app-content :is(.sowings-workspace, .plants-workspace) .preview-action-group {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: var(--space-2);
+  width: 100%;
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .preview-action-group
+  > :is(button, a) {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  white-space: normal;
+}
+@media (max-width: 30rem) {
+  .app-content
+    :is(.seeds-workspace, .sowings-workspace, .plants-workspace)
+    .operational-layout
+    .seed-row {
+    gap: var(--space-2);
+    padding-inline: var(--space-2);
+    grid-template-columns: minmax(0, 1fr) minmax(5rem, 0.65fr);
+  }
+  .app-content
+    :is(.seeds-workspace, .sowings-workspace, .plants-workspace)
+    .operational-layout
+    .seed-row
+    > :is(.seed-quantity, .plant-row__tracking, .sowing-progress) {
+    max-width: 100%;
+  }
+}
+
+/* Scientific Collection identity roles; tooling, status and metrics remain UI sans. */
+.app-content
+  :is(.seeds-workspace, .sowings-workspace, .plants-workspace)
+  .seed-row
+  .seed-primary
+  strong {
+  font: 400 1.16rem/1.3 var(--font-botanical);
+}
+.app-content
+  :is(.seeds-workspace, .sowings-workspace, .plants-workspace)
+  .seed-row
+  .seed-primary
+  small {
+  font-family: var(--font-botanical);
+  font-weight: 400;
+}
+.app-content .sowings-workspace .seed-row .seed-primary small {
+  font-style: italic;
+}
+.app-content
+  :is(.seeds-workspace, .sowings-workspace, .plants-workspace)
+  .quick-preview
+  h3 {
+  font: 400 1.375rem/1.3 var(--font-botanical);
+}

@@ -1,0 +1,61 @@
+/* Explicit material direction stays identical in DOM and visual reading order. */
+.app-content .material-lineage > ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-8);
+  padding: 0;
+  margin: var(--space-4) 0;
+  list-style: none;
+}
+.app-content .material-lineage > ol > li {
+  flex: 1 1 11rem;
+  max-width: 22rem;
+  min-width: 0;
+  position: relative;
+  padding: 0;
+  border: 0;
+}
+.app-content .material-lineage > ol > li::before {
+  content: none;
+}
+.app-content .material-lineage > ol > li + li::before {
+  content: "→";
+  position: absolute;
+  left: calc(-1 * var(--space-6));
+  top: var(--space-4);
+  color: var(--text-muted);
+}
+.app-content .material-lineage .propagation-path-stage {
+  display: grid;
+  gap: var(--space-2);
+}
+.app-content .material-lineage .propagation-path-node {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.app-content .material-lineage .propagation-path-node[aria-current="page"] {
+  border-color: var(--primary);
+}
+@media (max-width: 64rem) {
+  .app-content .material-lineage > ol {
+    flex-direction: column;
+    gap: var(--space-8);
+  }
+  .app-content .material-lineage > ol > li {
+    flex: none;
+    width: 100%;
+    max-width: 28rem;
+  }
+  .app-content .material-lineage > ol > li + li::before {
+    content: "↓";
+    left: var(--space-4);
+    top: calc(-1 * var(--space-6));
+  }
+}

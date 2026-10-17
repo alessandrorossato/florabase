@@ -1,0 +1,2261 @@
+{
+  "zoom": "125/150 percent are effective viewport proxies; actual browser zoom untested",
+  "checks": [
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 807.71875,
+        "height": 69,
+        "left": 272,
+        "right": 1416,
+        "top": 738.71875,
+        "width": 1144,
+        "x": 272,
+        "y": 738.71875
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 807.71875,
+        "height": 569.703125,
+        "left": 272,
+        "right": 1416,
+        "top": 238.015625,
+        "width": 1144,
+        "x": 272,
+        "y": 238.015625
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 844,
+      "overflow": [],
+      "pageHeight": 844,
+      "pageWidth": 1440,
+      "width": 1440,
+      "state": "guided-plant",
+      "size": "1440-100",
+      "bottom": {
+        "footer": {
+          "bottom": 807.71875,
+          "height": 69,
+          "left": 272,
+          "right": 1416,
+          "top": 738.71875,
+          "width": 1144,
+          "x": 272,
+          "y": 738.71875
+        },
+        "scrollY": 0
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 861.671875,
+        "height": 69,
+        "left": 272,
+        "right": 1113,
+        "top": 792.671875,
+        "width": 841,
+        "x": 272,
+        "y": 792.671875
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 861.671875,
+        "height": 623.65625,
+        "left": 272,
+        "right": 1113,
+        "top": 238.015625,
+        "width": 841,
+        "x": 272,
+        "y": 238.015625
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 675,
+      "overflow": [],
+      "pageHeight": 886,
+      "pageWidth": 1137,
+      "width": 1152,
+      "state": "guided-plant",
+      "size": "1440-125-proxy",
+      "bottom": {
+        "footer": {
+          "bottom": 650.671875,
+          "height": 69,
+          "left": 272,
+          "right": 1113,
+          "top": 581.671875,
+          "width": 841,
+          "x": 272,
+          "y": 581.671875
+        },
+        "scrollY": 211
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 1205.28125,
+        "height": 69,
+        "left": 272,
+        "right": 921,
+        "top": 1136.28125,
+        "width": 649,
+        "x": 272,
+        "y": 1136.28125
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1205.28125,
+        "height": 967.265625,
+        "left": 272,
+        "right": 921,
+        "top": 238.015625,
+        "width": 649,
+        "x": 272,
+        "y": 238.015625
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 563,
+      "overflow": [],
+      "pageHeight": 1229,
+      "pageWidth": 945,
+      "width": 960,
+      "state": "guided-plant",
+      "size": "1440-150-proxy",
+      "bottom": {
+        "footer": {
+          "bottom": 539.28125,
+          "height": 69,
+          "left": 272,
+          "right": 921,
+          "top": 470.28125,
+          "width": 649,
+          "x": 272,
+          "y": 470.28125
+        },
+        "scrollY": 666
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 1205.28125,
+        "height": 69,
+        "left": 272,
+        "right": 985,
+        "top": 1136.28125,
+        "width": 713,
+        "x": 272,
+        "y": 1136.28125
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1205.28125,
+        "height": 967.265625,
+        "left": 272,
+        "right": 985,
+        "top": 238.015625,
+        "width": 713,
+        "x": 272,
+        "y": 238.015625
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 844,
+      "overflow": [],
+      "pageHeight": 1229,
+      "pageWidth": 1009,
+      "width": 1024,
+      "state": "guided-plant",
+      "size": "1024-100",
+      "bottom": {
+        "footer": {
+          "bottom": 820.28125,
+          "height": 69,
+          "left": 272,
+          "right": 985,
+          "top": 751.28125,
+          "width": 713,
+          "x": 272,
+          "y": 751.28125
+        },
+        "scrollY": 385
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 1205.28125,
+        "height": 69,
+        "left": 272,
+        "right": 780,
+        "top": 1136.28125,
+        "width": 508,
+        "x": 272,
+        "y": 1136.28125
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1205.28125,
+        "height": 967.265625,
+        "left": 272,
+        "right": 780,
+        "top": 238.015625,
+        "width": 508,
+        "x": 272,
+        "y": 238.015625
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 675,
+      "overflow": [],
+      "pageHeight": 1229,
+      "pageWidth": 804,
+      "width": 819,
+      "state": "guided-plant",
+      "size": "1024-125-proxy",
+      "bottom": {
+        "footer": {
+          "bottom": 651.28125,
+          "height": 69,
+          "left": 272,
+          "right": 780,
+          "top": 582.28125,
+          "width": 508,
+          "x": 272,
+          "y": 582.28125
+        },
+        "scrollY": 554
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 1461.984375,
+        "height": 69,
+        "left": 16,
+        "right": 359,
+        "top": 1392.984375,
+        "width": 343,
+        "x": 16,
+        "y": 1392.984375
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1461.984375,
+        "height": 1067.25,
+        "left": 16,
+        "right": 359,
+        "top": 394.734375,
+        "width": 343,
+        "x": 16,
+        "y": 394.734375
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 844,
+      "overflow": [],
+      "pageHeight": 1558,
+      "pageWidth": 375,
+      "width": 390,
+      "state": "guided-plant",
+      "size": "390-100",
+      "bottom": {
+        "footer": {
+          "bottom": 747.984375,
+          "height": 69,
+          "left": 16,
+          "right": 359,
+          "top": 678.984375,
+          "width": 343,
+          "x": 16,
+          "y": 678.984375
+        },
+        "scrollY": 714
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 821.703125,
+        "height": 69,
+        "left": 244,
+        "right": 1401,
+        "top": 752.703125,
+        "width": 1157,
+        "x": 244,
+        "y": 752.703125
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 821.703125,
+        "height": 583.6875,
+        "left": 244,
+        "right": 1401,
+        "top": 238.015625,
+        "width": 1157,
+        "x": 244,
+        "y": 238.015625
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 844,
+      "overflow": [],
+      "pageHeight": 846,
+      "pageWidth": 1425,
+      "width": 1440,
+      "state": "guided-group",
+      "size": "1440-100",
+      "bottom": {
+        "footer": {
+          "bottom": 819.703125,
+          "height": 69,
+          "left": 244,
+          "right": 1401,
+          "top": 750.703125,
+          "width": 1157,
+          "x": 244,
+          "y": 750.703125
+        },
+        "scrollY": 2
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 843.6875,
+        "height": 69,
+        "left": 244,
+        "right": 1113,
+        "top": 774.6875,
+        "width": 869,
+        "x": 244,
+        "y": 774.6875
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 843.6875,
+        "height": 605.671875,
+        "left": 244,
+        "right": 1113,
+        "top": 238.015625,
+        "width": 869,
+        "x": 244,
+        "y": 238.015625
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 675,
+      "overflow": [],
+      "pageHeight": 868,
+      "pageWidth": 1137,
+      "width": 1152,
+      "state": "guided-group",
+      "size": "1440-125-proxy",
+      "bottom": {
+        "footer": {
+          "bottom": 650.6875,
+          "height": 69,
+          "left": 244,
+          "right": 1113,
+          "top": 581.6875,
+          "width": 869,
+          "x": 244,
+          "y": 581.6875
+        },
+        "scrollY": 193
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 1205.28125,
+        "height": 69,
+        "left": 244,
+        "right": 921,
+        "top": 1136.28125,
+        "width": 677,
+        "x": 244,
+        "y": 1136.28125
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1205.28125,
+        "height": 967.265625,
+        "left": 244,
+        "right": 921,
+        "top": 238.015625,
+        "width": 677,
+        "x": 244,
+        "y": 238.015625
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 563,
+      "overflow": [],
+      "pageHeight": 1229,
+      "pageWidth": 945,
+      "width": 960,
+      "state": "guided-group",
+      "size": "1440-150-proxy",
+      "bottom": {
+        "footer": {
+          "bottom": 539.28125,
+          "height": 69,
+          "left": 244,
+          "right": 921,
+          "top": 470.28125,
+          "width": 677,
+          "x": 244,
+          "y": 470.28125
+        },
+        "scrollY": 666
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 1205.28125,
+        "height": 69,
+        "left": 244,
+        "right": 985,
+        "top": 1136.28125,
+        "width": 741,
+        "x": 244,
+        "y": 1136.28125
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1205.28125,
+        "height": 967.265625,
+        "left": 244,
+        "right": 985,
+        "top": 238.015625,
+        "width": 741,
+        "x": 244,
+        "y": 238.015625
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 844,
+      "overflow": [],
+      "pageHeight": 1229,
+      "pageWidth": 1009,
+      "width": 1024,
+      "state": "guided-group",
+      "size": "1024-100",
+      "bottom": {
+        "footer": {
+          "bottom": 820.28125,
+          "height": 69,
+          "left": 244,
+          "right": 985,
+          "top": 751.28125,
+          "width": 741,
+          "x": 244,
+          "y": 751.28125
+        },
+        "scrollY": 385
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 1219.265625,
+        "height": 69,
+        "left": 244,
+        "right": 780,
+        "top": 1150.265625,
+        "width": 536,
+        "x": 244,
+        "y": 1150.265625
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1219.265625,
+        "height": 981.25,
+        "left": 244,
+        "right": 780,
+        "top": 238.015625,
+        "width": 536,
+        "x": 244,
+        "y": 238.015625
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 675,
+      "overflow": [],
+      "pageHeight": 1243,
+      "pageWidth": 804,
+      "width": 819,
+      "state": "guided-group",
+      "size": "1024-125-proxy",
+      "bottom": {
+        "footer": {
+          "bottom": 651.265625,
+          "height": 69,
+          "left": 244,
+          "right": 780,
+          "top": 582.265625,
+          "width": 536,
+          "x": 244,
+          "y": 582.265625
+        },
+        "scrollY": 568
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 1585.546875,
+        "height": 69,
+        "left": 16,
+        "right": 359,
+        "top": 1516.546875,
+        "width": 343,
+        "x": 16,
+        "y": 1516.546875
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1585.546875,
+        "height": 1190.8125,
+        "left": 16,
+        "right": 359,
+        "top": 394.734375,
+        "width": 343,
+        "x": 16,
+        "y": 394.734375
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 844,
+      "overflow": [],
+      "pageHeight": 1682,
+      "pageWidth": 375,
+      "width": 390,
+      "state": "guided-group",
+      "size": "390-100",
+      "bottom": {
+        "footer": {
+          "bottom": 747.546875,
+          "height": 69,
+          "left": 16,
+          "right": 359,
+          "top": 678.546875,
+          "width": 343,
+          "x": 16,
+          "y": 678.546875
+        },
+        "scrollY": 838
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 789.5,
+        "height": 69,
+        "left": 244,
+        "right": 1416,
+        "top": 720.5,
+        "width": 1172,
+        "x": 244,
+        "y": 720.5
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 789.5,
+        "height": 765.5,
+        "left": 244,
+        "right": 1416,
+        "top": 24,
+        "width": 1172,
+        "x": 244,
+        "y": 24
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 844,
+      "overflow": [],
+      "pageHeight": 844,
+      "pageWidth": 1440,
+      "width": 1440,
+      "state": "new-plant",
+      "size": "1440-100",
+      "bottom": {
+        "footer": {
+          "bottom": 789.5,
+          "height": 69,
+          "left": 244,
+          "right": 1416,
+          "top": 720.5,
+          "width": 1172,
+          "x": 244,
+          "y": 720.5
+        },
+        "scrollY": 0
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 825.46875,
+        "height": 69,
+        "left": 244,
+        "right": 1113,
+        "top": 756.46875,
+        "width": 869,
+        "x": 244,
+        "y": 756.46875
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 825.46875,
+        "height": 801.46875,
+        "left": 244,
+        "right": 1113,
+        "top": 24,
+        "width": 869,
+        "x": 244,
+        "y": 24
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 675,
+      "overflow": [],
+      "pageHeight": 849,
+      "pageWidth": 1137,
+      "width": 1152,
+      "state": "new-plant",
+      "size": "1440-125-proxy",
+      "bottom": {
+        "footer": {
+          "bottom": 651.46875,
+          "height": 69,
+          "left": 244,
+          "right": 1113,
+          "top": 582.46875,
+          "width": 869,
+          "x": 244,
+          "y": 582.46875
+        },
+        "scrollY": 174
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 1235.234375,
+        "height": 69,
+        "left": 244,
+        "right": 921,
+        "top": 1166.234375,
+        "width": 677,
+        "x": 244,
+        "y": 1166.234375
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1235.234375,
+        "height": 1211.234375,
+        "left": 244,
+        "right": 921,
+        "top": 24,
+        "width": 677,
+        "x": 244,
+        "y": 24
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 563,
+      "overflow": [],
+      "pageHeight": 1259,
+      "pageWidth": 945,
+      "width": 960,
+      "state": "new-plant",
+      "size": "1440-150-proxy",
+      "bottom": {
+        "footer": {
+          "bottom": 539.234375,
+          "height": 69,
+          "left": 244,
+          "right": 921,
+          "top": 470.234375,
+          "width": 677,
+          "x": 244,
+          "y": 470.234375
+        },
+        "scrollY": 696
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 1235.234375,
+        "height": 69,
+        "left": 244,
+        "right": 985,
+        "top": 1166.234375,
+        "width": 741,
+        "x": 244,
+        "y": 1166.234375
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1235.234375,
+        "height": 1211.234375,
+        "left": 244,
+        "right": 985,
+        "top": 24,
+        "width": 741,
+        "x": 244,
+        "y": 24
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 844,
+      "overflow": [],
+      "pageHeight": 1259,
+      "pageWidth": 1009,
+      "width": 1024,
+      "state": "new-plant",
+      "size": "1024-100",
+      "bottom": {
+        "footer": {
+          "bottom": 820.234375,
+          "height": 69,
+          "left": 244,
+          "right": 985,
+          "top": 751.234375,
+          "width": 741,
+          "x": 244,
+          "y": 751.234375
+        },
+        "scrollY": 415
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 1253.21875,
+        "height": 69,
+        "left": 244,
+        "right": 780,
+        "top": 1184.21875,
+        "width": 536,
+        "x": 244,
+        "y": 1184.21875
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1253.21875,
+        "height": 1229.21875,
+        "left": 244,
+        "right": 780,
+        "top": 24,
+        "width": 536,
+        "x": 244,
+        "y": 24
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 675,
+      "overflow": [],
+      "pageHeight": 1277,
+      "pageWidth": 804,
+      "width": 819,
+      "state": "new-plant",
+      "size": "1024-125-proxy",
+      "bottom": {
+        "footer": {
+          "bottom": 651.21875,
+          "height": 69,
+          "left": 244,
+          "right": 780,
+          "top": 582.21875,
+          "width": 536,
+          "x": 244,
+          "y": 582.21875
+        },
+        "scrollY": 602
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 1624.421875,
+        "height": 69,
+        "left": 16,
+        "right": 359,
+        "top": 1555.421875,
+        "width": 343,
+        "x": 16,
+        "y": 1555.421875
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1624.421875,
+        "height": 1509.234375,
+        "left": 16,
+        "right": 359,
+        "top": 115.1875,
+        "width": 343,
+        "x": 16,
+        "y": 115.1875
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 844,
+      "overflow": [],
+      "pageHeight": 1720,
+      "pageWidth": 375,
+      "width": 390,
+      "state": "new-plant",
+      "size": "390-100",
+      "bottom": {
+        "footer": {
+          "bottom": 748.421875,
+          "height": 69,
+          "left": 16,
+          "right": 359,
+          "top": 679.421875,
+          "width": 343,
+          "x": 16,
+          "y": 679.421875
+        },
+        "scrollY": 876
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 803.484375,
+        "height": 69,
+        "left": 244,
+        "right": 1416,
+        "top": 734.484375,
+        "width": 1172,
+        "x": 244,
+        "y": 734.484375
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 803.484375,
+        "height": 779.484375,
+        "left": 244,
+        "right": 1416,
+        "top": 24,
+        "width": 1172,
+        "x": 244,
+        "y": 24
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 844,
+      "overflow": [],
+      "pageHeight": 844,
+      "pageWidth": 1440,
+      "width": 1440,
+      "state": "new-group",
+      "size": "1440-100",
+      "bottom": {
+        "footer": {
+          "bottom": 803.484375,
+          "height": 69,
+          "left": 244,
+          "right": 1416,
+          "top": 734.484375,
+          "width": 1172,
+          "x": 244,
+          "y": 734.484375
+        },
+        "scrollY": 0
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 825.46875,
+        "height": 69,
+        "left": 244,
+        "right": 1113,
+        "top": 756.46875,
+        "width": 869,
+        "x": 244,
+        "y": 756.46875
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 825.46875,
+        "height": 801.46875,
+        "left": 244,
+        "right": 1113,
+        "top": 24,
+        "width": 869,
+        "x": 244,
+        "y": 24
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 675,
+      "overflow": [],
+      "pageHeight": 849,
+      "pageWidth": 1137,
+      "width": 1152,
+      "state": "new-group",
+      "size": "1440-125-proxy",
+      "bottom": {
+        "footer": {
+          "bottom": 651.46875,
+          "height": 69,
+          "left": 244,
+          "right": 1113,
+          "top": 582.46875,
+          "width": 869,
+          "x": 244,
+          "y": 582.46875
+        },
+        "scrollY": 174
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 1235.234375,
+        "height": 69,
+        "left": 244,
+        "right": 921,
+        "top": 1166.234375,
+        "width": 677,
+        "x": 244,
+        "y": 1166.234375
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1235.234375,
+        "height": 1211.234375,
+        "left": 244,
+        "right": 921,
+        "top": 24,
+        "width": 677,
+        "x": 244,
+        "y": 24
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 563,
+      "overflow": [],
+      "pageHeight": 1259,
+      "pageWidth": 945,
+      "width": 960,
+      "state": "new-group",
+      "size": "1440-150-proxy",
+      "bottom": {
+        "footer": {
+          "bottom": 539.234375,
+          "height": 69,
+          "left": 244,
+          "right": 921,
+          "top": 470.234375,
+          "width": 677,
+          "x": 244,
+          "y": 470.234375
+        },
+        "scrollY": 696
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 1235.234375,
+        "height": 69,
+        "left": 244,
+        "right": 985,
+        "top": 1166.234375,
+        "width": 741,
+        "x": 244,
+        "y": 1166.234375
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1235.234375,
+        "height": 1211.234375,
+        "left": 244,
+        "right": 985,
+        "top": 24,
+        "width": 741,
+        "x": 244,
+        "y": 24
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 844,
+      "overflow": [],
+      "pageHeight": 1259,
+      "pageWidth": 1009,
+      "width": 1024,
+      "state": "new-group",
+      "size": "1024-100",
+      "bottom": {
+        "footer": {
+          "bottom": 820.234375,
+          "height": 69,
+          "left": 244,
+          "right": 985,
+          "top": 751.234375,
+          "width": 741,
+          "x": 244,
+          "y": 751.234375
+        },
+        "scrollY": 415
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 1285.1875,
+        "height": 69,
+        "left": 244,
+        "right": 780,
+        "top": 1216.1875,
+        "width": 536,
+        "x": 244,
+        "y": 1216.1875
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1285.1875,
+        "height": 1261.1875,
+        "left": 244,
+        "right": 780,
+        "top": 24,
+        "width": 536,
+        "x": 244,
+        "y": 24
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 675,
+      "overflow": [],
+      "pageHeight": 1309,
+      "pageWidth": 804,
+      "width": 819,
+      "state": "new-group",
+      "size": "1024-125-proxy",
+      "bottom": {
+        "footer": {
+          "bottom": 651.1875,
+          "height": 69,
+          "left": 244,
+          "right": 780,
+          "top": 582.1875,
+          "width": 536,
+          "x": 244,
+          "y": 582.1875
+        },
+        "scrollY": 634
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": null,
+        "sowing-location": null,
+        "sowing-method": null,
+        "sowing-pretreatment": null,
+        "sowing-quantity-kind": null,
+        "sowing-seed-lot": null,
+        "sowing-substrate": null,
+        "temperature-max": null,
+        "temperature-min": null
+      },
+      "footer": {
+        "bottom": 1765.96875,
+        "height": 69,
+        "left": 16,
+        "right": 359,
+        "top": 1696.96875,
+        "width": 343,
+        "x": 16,
+        "y": 1696.96875
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1765.96875,
+        "height": 1650.78125,
+        "left": 16,
+        "right": 359,
+        "top": 115.1875,
+        "width": 343,
+        "x": 16,
+        "y": 115.1875
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 844,
+      "overflow": [],
+      "pageHeight": 1862,
+      "pageWidth": 375,
+      "width": 390,
+      "state": "new-group",
+      "size": "390-100",
+      "bottom": {
+        "footer": {
+          "bottom": 747.96875,
+          "height": 69,
+          "left": 16,
+          "right": 359,
+          "top": 678.96875,
+          "width": 343,
+          "x": 16,
+          "y": 678.96875
+        },
+        "scrollY": 1018
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": {
+          "bottom": 232.8125,
+          "height": 44,
+          "left": 541,
+          "right": 814,
+          "top": 188.8125,
+          "width": 273,
+          "x": 541,
+          "y": 188.8125
+        },
+        "sowing-location": {
+          "bottom": 232.8125,
+          "height": 44,
+          "left": 1143,
+          "right": 1416,
+          "top": 188.8125,
+          "width": 273,
+          "x": 1143,
+          "y": 188.8125
+        },
+        "sowing-method": {
+          "bottom": 531.5625,
+          "height": 44,
+          "left": 1143,
+          "right": 1416,
+          "top": 487.5625,
+          "width": 273,
+          "x": 1143,
+          "y": 487.5625
+        },
+        "sowing-pretreatment": {
+          "bottom": 613.5625,
+          "height": 44,
+          "left": 846,
+          "right": 1119,
+          "top": 569.5625,
+          "width": 273,
+          "x": 846,
+          "y": 569.5625
+        },
+        "sowing-quantity-kind": {
+          "bottom": 232.8125,
+          "height": 44,
+          "left": 846,
+          "right": 1119,
+          "top": 188.8125,
+          "width": 273,
+          "x": 846,
+          "y": 188.8125
+        },
+        "sowing-seed-lot": {
+          "bottom": 232.8125,
+          "height": 44,
+          "left": 244,
+          "right": 517,
+          "top": 188.8125,
+          "width": 273,
+          "x": 244,
+          "y": 188.8125
+        },
+        "sowing-substrate": {
+          "bottom": 531.5625,
+          "height": 44,
+          "left": 846,
+          "right": 1119,
+          "top": 487.5625,
+          "width": 273,
+          "x": 846,
+          "y": 487.5625
+        },
+        "temperature-max": {
+          "bottom": 613.5625,
+          "height": 44,
+          "left": 1283.5,
+          "right": 1416,
+          "top": 569.5625,
+          "width": 132.5,
+          "x": 1283.5,
+          "y": 569.5625
+        },
+        "temperature-min": {
+          "bottom": 613.5625,
+          "height": 44,
+          "left": 1143,
+          "right": 1275.5,
+          "top": 569.5625,
+          "width": 132.5,
+          "x": 1143,
+          "y": 569.5625
+        }
+      },
+      "footer": {
+        "bottom": 816.5625,
+        "height": 69,
+        "left": 244,
+        "right": 1416,
+        "top": 747.5625,
+        "width": 1172,
+        "x": 244,
+        "y": 747.5625
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 816.5625,
+        "height": 792.5625,
+        "left": 244,
+        "right": 1416,
+        "top": 24,
+        "width": 1172,
+        "x": 244,
+        "y": 24
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 844,
+      "overflow": [],
+      "pageHeight": 844,
+      "pageWidth": 1440,
+      "width": 1440,
+      "state": "new-sowing",
+      "size": "1440-100",
+      "bottom": {
+        "footer": {
+          "bottom": 816.5625,
+          "height": 69,
+          "left": 244,
+          "right": 1416,
+          "top": 747.5625,
+          "width": 1172,
+          "x": 244,
+          "y": 747.5625
+        },
+        "scrollY": 0
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": {
+          "bottom": 232.8125,
+          "height": 44,
+          "left": 465.25,
+          "right": 662.5,
+          "top": 188.8125,
+          "width": 197.25,
+          "x": 465.25,
+          "y": 188.8125
+        },
+        "sowing-location": {
+          "bottom": 232.8125,
+          "height": 44,
+          "left": 915.75,
+          "right": 1113,
+          "top": 188.8125,
+          "width": 197.25,
+          "x": 915.75,
+          "y": 188.8125
+        },
+        "sowing-method": {
+          "bottom": 549.75,
+          "height": 44,
+          "left": 915.75,
+          "right": 1113,
+          "top": 505.75,
+          "width": 197.25,
+          "x": 915.75,
+          "y": 505.75
+        },
+        "sowing-pretreatment": {
+          "bottom": 631.75,
+          "height": 44,
+          "left": 694.5,
+          "right": 891.75,
+          "top": 587.75,
+          "width": 197.25,
+          "x": 694.5,
+          "y": 587.75
+        },
+        "sowing-quantity-kind": {
+          "bottom": 232.8125,
+          "height": 44,
+          "left": 694.5,
+          "right": 891.75,
+          "top": 188.8125,
+          "width": 197.25,
+          "x": 694.5,
+          "y": 188.8125
+        },
+        "sowing-seed-lot": {
+          "bottom": 232.8125,
+          "height": 44,
+          "left": 244,
+          "right": 441.25,
+          "top": 188.8125,
+          "width": 197.25,
+          "x": 244,
+          "y": 188.8125
+        },
+        "sowing-substrate": {
+          "bottom": 549.75,
+          "height": 44,
+          "left": 694.5,
+          "right": 891.75,
+          "top": 505.75,
+          "width": 197.25,
+          "x": 694.5,
+          "y": 505.75
+        },
+        "temperature-max": {
+          "bottom": 631.75,
+          "height": 44,
+          "left": 1018.375,
+          "right": 1113,
+          "top": 587.75,
+          "width": 94.625,
+          "x": 1018.375,
+          "y": 587.75
+        },
+        "temperature-min": {
+          "bottom": 631.75,
+          "height": 44,
+          "left": 915.75,
+          "right": 1010.375,
+          "top": 587.75,
+          "width": 94.625,
+          "x": 915.75,
+          "y": 587.75
+        }
+      },
+      "footer": {
+        "bottom": 834.75,
+        "height": 69,
+        "left": 244,
+        "right": 1113,
+        "top": 765.75,
+        "width": 869,
+        "x": 244,
+        "y": 765.75
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 834.75,
+        "height": 810.75,
+        "left": 244,
+        "right": 1113,
+        "top": 24,
+        "width": 869,
+        "x": 244,
+        "y": 24
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 675,
+      "overflow": [],
+      "pageHeight": 859,
+      "pageWidth": 1137,
+      "width": 1152,
+      "state": "new-sowing",
+      "size": "1440-125-proxy",
+      "bottom": {
+        "footer": {
+          "bottom": 650.75,
+          "height": 69,
+          "left": 244,
+          "right": 1113,
+          "top": 581.75,
+          "width": 869,
+          "x": 244,
+          "y": 581.75
+        },
+        "scrollY": 184
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": {
+          "bottom": 232.8125,
+          "height": 44,
+          "left": 594.5,
+          "right": 921,
+          "top": 188.8125,
+          "width": 326.5,
+          "x": 594.5,
+          "y": 188.8125
+        },
+        "sowing-location": {
+          "bottom": 513.375,
+          "height": 44,
+          "left": 594.5,
+          "right": 921,
+          "top": 469.375,
+          "width": 326.5,
+          "x": 594.5,
+          "y": 469.375
+        },
+        "sowing-method": {
+          "bottom": 873.515625,
+          "height": 44,
+          "left": 594.5,
+          "right": 921,
+          "top": 829.515625,
+          "width": 326.5,
+          "x": 594.5,
+          "y": 829.515625
+        },
+        "sowing-pretreatment": {
+          "bottom": 955.515625,
+          "height": 44,
+          "left": 244,
+          "right": 570.5,
+          "top": 911.515625,
+          "width": 326.5,
+          "x": 244,
+          "y": 911.515625
+        },
+        "sowing-quantity-kind": {
+          "bottom": 513.375,
+          "height": 44,
+          "left": 244,
+          "right": 570.5,
+          "top": 469.375,
+          "width": 326.5,
+          "x": 244,
+          "y": 469.375
+        },
+        "sowing-seed-lot": {
+          "bottom": 232.8125,
+          "height": 44,
+          "left": 244,
+          "right": 570.5,
+          "top": 188.8125,
+          "width": 326.5,
+          "x": 244,
+          "y": 188.8125
+        },
+        "sowing-substrate": {
+          "bottom": 873.515625,
+          "height": 44,
+          "left": 244,
+          "right": 570.5,
+          "top": 829.515625,
+          "width": 326.5,
+          "x": 244,
+          "y": 829.515625
+        },
+        "temperature-max": {
+          "bottom": 955.515625,
+          "height": 44,
+          "left": 761.75,
+          "right": 921,
+          "top": 911.515625,
+          "width": 159.25,
+          "x": 761.75,
+          "y": 911.515625
+        },
+        "temperature-min": {
+          "bottom": 955.515625,
+          "height": 44,
+          "left": 594.5,
+          "right": 753.75,
+          "top": 911.515625,
+          "width": 159.25,
+          "x": 594.5,
+          "y": 911.515625
+        }
+      },
+      "footer": {
+        "bottom": 1307.515625,
+        "height": 69,
+        "left": 244,
+        "right": 921,
+        "top": 1238.515625,
+        "width": 677,
+        "x": 244,
+        "y": 1238.515625
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1307.515625,
+        "height": 1283.515625,
+        "left": 244,
+        "right": 921,
+        "top": 24,
+        "width": 677,
+        "x": 244,
+        "y": 24
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 563,
+      "overflow": [],
+      "pageHeight": 1332,
+      "pageWidth": 945,
+      "width": 960,
+      "state": "new-sowing",
+      "size": "1440-150-proxy",
+      "bottom": {
+        "footer": {
+          "bottom": 538.515625,
+          "height": 69,
+          "left": 244,
+          "right": 921,
+          "top": 469.515625,
+          "width": 677,
+          "x": 244,
+          "y": 469.515625
+        },
+        "scrollY": 769
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": {
+          "bottom": 232.8125,
+          "height": 44,
+          "left": 626.5,
+          "right": 985,
+          "top": 188.8125,
+          "width": 358.5,
+          "x": 626.5,
+          "y": 188.8125
+        },
+        "sowing-location": {
+          "bottom": 513.375,
+          "height": 44,
+          "left": 626.5,
+          "right": 985,
+          "top": 469.375,
+          "width": 358.5,
+          "x": 626.5,
+          "y": 469.375
+        },
+        "sowing-method": {
+          "bottom": 873.515625,
+          "height": 44,
+          "left": 626.5,
+          "right": 985,
+          "top": 829.515625,
+          "width": 358.5,
+          "x": 626.5,
+          "y": 829.515625
+        },
+        "sowing-pretreatment": {
+          "bottom": 955.515625,
+          "height": 44,
+          "left": 244,
+          "right": 602.5,
+          "top": 911.515625,
+          "width": 358.5,
+          "x": 244,
+          "y": 911.515625
+        },
+        "sowing-quantity-kind": {
+          "bottom": 513.375,
+          "height": 44,
+          "left": 244,
+          "right": 602.5,
+          "top": 469.375,
+          "width": 358.5,
+          "x": 244,
+          "y": 469.375
+        },
+        "sowing-seed-lot": {
+          "bottom": 232.8125,
+          "height": 44,
+          "left": 244,
+          "right": 602.5,
+          "top": 188.8125,
+          "width": 358.5,
+          "x": 244,
+          "y": 188.8125
+        },
+        "sowing-substrate": {
+          "bottom": 873.515625,
+          "height": 44,
+          "left": 244,
+          "right": 602.5,
+          "top": 829.515625,
+          "width": 358.5,
+          "x": 244,
+          "y": 829.515625
+        },
+        "temperature-max": {
+          "bottom": 955.515625,
+          "height": 44,
+          "left": 809.75,
+          "right": 985,
+          "top": 911.515625,
+          "width": 175.25,
+          "x": 809.75,
+          "y": 911.515625
+        },
+        "temperature-min": {
+          "bottom": 955.515625,
+          "height": 44,
+          "left": 626.5,
+          "right": 801.75,
+          "top": 911.515625,
+          "width": 175.25,
+          "x": 626.5,
+          "y": 911.515625
+        }
+      },
+      "footer": {
+        "bottom": 1307.515625,
+        "height": 69,
+        "left": 244,
+        "right": 985,
+        "top": 1238.515625,
+        "width": 741,
+        "x": 244,
+        "y": 1238.515625
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1307.515625,
+        "height": 1283.515625,
+        "left": 244,
+        "right": 985,
+        "top": 24,
+        "width": 741,
+        "x": 244,
+        "y": 24
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 844,
+      "overflow": [],
+      "pageHeight": 1332,
+      "pageWidth": 1009,
+      "width": 1024,
+      "state": "new-sowing",
+      "size": "1024-100",
+      "bottom": {
+        "footer": {
+          "bottom": 819.515625,
+          "height": 69,
+          "left": 244,
+          "right": 985,
+          "top": 750.515625,
+          "width": 741,
+          "x": 244,
+          "y": 750.515625
+        },
+        "scrollY": 488
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": {
+          "bottom": 232.8125,
+          "height": 44,
+          "left": 524,
+          "right": 780,
+          "top": 188.8125,
+          "width": 256,
+          "x": 524,
+          "y": 188.8125
+        },
+        "sowing-location": {
+          "bottom": 531.5625,
+          "height": 44,
+          "left": 524,
+          "right": 780,
+          "top": 487.5625,
+          "width": 256,
+          "x": 524,
+          "y": 487.5625
+        },
+        "sowing-method": {
+          "bottom": 927.875,
+          "height": 44,
+          "left": 524,
+          "right": 780,
+          "top": 883.875,
+          "width": 256,
+          "x": 524,
+          "y": 883.875
+        },
+        "sowing-pretreatment": {
+          "bottom": 1009.875,
+          "height": 44,
+          "left": 244,
+          "right": 500,
+          "top": 965.875,
+          "width": 256,
+          "x": 244,
+          "y": 965.875
+        },
+        "sowing-quantity-kind": {
+          "bottom": 531.5625,
+          "height": 44,
+          "left": 244,
+          "right": 500,
+          "top": 487.5625,
+          "width": 256,
+          "x": 244,
+          "y": 487.5625
+        },
+        "sowing-seed-lot": {
+          "bottom": 232.8125,
+          "height": 44,
+          "left": 244,
+          "right": 500,
+          "top": 188.8125,
+          "width": 256,
+          "x": 244,
+          "y": 188.8125
+        },
+        "sowing-substrate": {
+          "bottom": 927.875,
+          "height": 44,
+          "left": 244,
+          "right": 500,
+          "top": 883.875,
+          "width": 256,
+          "x": 244,
+          "y": 883.875
+        },
+        "temperature-max": {
+          "bottom": 1009.875,
+          "height": 44,
+          "left": 656,
+          "right": 780,
+          "top": 965.875,
+          "width": 124,
+          "x": 656,
+          "y": 965.875
+        },
+        "temperature-min": {
+          "bottom": 1009.875,
+          "height": 44,
+          "left": 524,
+          "right": 648,
+          "top": 965.875,
+          "width": 124,
+          "x": 524,
+          "y": 965.875
+        }
+      },
+      "footer": {
+        "bottom": 1361.875,
+        "height": 69,
+        "left": 244,
+        "right": 780,
+        "top": 1292.875,
+        "width": 536,
+        "x": 244,
+        "y": 1292.875
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1361.875,
+        "height": 1337.875,
+        "left": 244,
+        "right": 780,
+        "top": 24,
+        "width": 536,
+        "x": 244,
+        "y": 24
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 675,
+      "overflow": [],
+      "pageHeight": 1386,
+      "pageWidth": 804,
+      "width": 819,
+      "state": "new-sowing",
+      "size": "1024-125-proxy",
+      "bottom": {
+        "footer": {
+          "bottom": 650.875,
+          "height": 69,
+          "left": 244,
+          "right": 780,
+          "top": 581.875,
+          "width": 536,
+          "x": 244,
+          "y": 581.875
+        },
+        "scrollY": 711
+      }
+    },
+    {
+      "controls": {
+        "sowing-label": {
+          "bottom": 433.78125,
+          "height": 44,
+          "left": 16,
+          "right": 359,
+          "top": 389.78125,
+          "width": 343,
+          "x": 16,
+          "y": 389.78125
+        },
+        "sowing-location": {
+          "bottom": 828.71875,
+          "height": 44,
+          "left": 16,
+          "right": 359,
+          "top": 784.71875,
+          "width": 343,
+          "x": 16,
+          "y": 784.71875
+        },
+        "sowing-method": {
+          "bottom": 1338.671875,
+          "height": 44,
+          "left": 16,
+          "right": 359,
+          "top": 1294.671875,
+          "width": 343,
+          "x": 16,
+          "y": 1294.671875
+        },
+        "sowing-pretreatment": {
+          "bottom": 1420.671875,
+          "height": 44,
+          "left": 16,
+          "right": 359,
+          "top": 1376.671875,
+          "width": 343,
+          "x": 16,
+          "y": 1376.671875
+        },
+        "sowing-quantity-kind": {
+          "bottom": 686.5625,
+          "height": 44,
+          "left": 16,
+          "right": 359,
+          "top": 642.5625,
+          "width": 343,
+          "x": 16,
+          "y": 642.5625
+        },
+        "sowing-seed-lot": {
+          "bottom": 324,
+          "height": 44,
+          "left": 16,
+          "right": 359,
+          "top": 280,
+          "width": 343,
+          "x": 16,
+          "y": 280
+        },
+        "sowing-substrate": {
+          "bottom": 1256.671875,
+          "height": 44,
+          "left": 16,
+          "right": 359,
+          "top": 1212.671875,
+          "width": 343,
+          "x": 16,
+          "y": 1212.671875
+        },
+        "temperature-max": {
+          "bottom": 1502.671875,
+          "height": 44,
+          "left": 191.5,
+          "right": 359,
+          "top": 1458.671875,
+          "width": 167.5,
+          "x": 191.5,
+          "y": 1458.671875
+        },
+        "temperature-min": {
+          "bottom": 1502.671875,
+          "height": 44,
+          "left": 16,
+          "right": 183.5,
+          "top": 1458.671875,
+          "width": 167.5,
+          "x": 16,
+          "y": 1458.671875
+        }
+      },
+      "footer": {
+        "bottom": 1854.671875,
+        "height": 69,
+        "left": 16,
+        "right": 359,
+        "top": 1785.671875,
+        "width": 343,
+        "x": 16,
+        "y": 1785.671875
+      },
+      "footerBackground": "rgba(0, 0, 0, 0)",
+      "footerBorder": "1px solid rgb(221, 227, 220)",
+      "footerMargin": "0px",
+      "footerPadding": "12px 0px",
+      "footerPosition": "static",
+      "form": {
+        "bottom": 1854.671875,
+        "height": 1739.484375,
+        "left": 16,
+        "right": 359,
+        "top": 115.1875,
+        "width": 343,
+        "x": 16,
+        "y": 115.1875
+      },
+      "formBackground": "rgba(0, 0, 0, 0)",
+      "height": 844,
+      "overflow": [],
+      "pageHeight": 1951,
+      "pageWidth": 375,
+      "width": 390,
+      "state": "new-sowing",
+      "size": "390-100",
+      "bottom": {
+        "footer": {
+          "bottom": 747.671875,
+          "height": 69,
+          "left": 16,
+          "right": 359,
+          "top": 678.671875,
+          "width": 343,
+          "x": 16,
+          "y": 678.671875
+        },
+        "scrollY": 1107
+      }
+    }
+  ]
+}

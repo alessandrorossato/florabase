@@ -1,0 +1,111 @@
+{
+  "completed_at_utc": "2026-10-16T17:21:35.656388+00:00",
+  "source": "/home/alessandro/.codex/worktrees/ef73/florabase",
+  "branch": "feat/collection-visual-001",
+  "head": "1e3df6adf9afdfd4a213396666b336f6d1b5136c",
+  "working_tree": "unstaged and uncommitted",
+  "phase": "third operator visual pass; acceptance pending",
+  "evidence_status": "historical; superseded by fourth-pass/checks.json; not current-source verification",
+  "focused_tests": {
+    "core": {
+      "cases": 49,
+      "files": 4
+    },
+    "app_navigation_guided": {
+      "cases": 89,
+      "files": 5
+    },
+    "eight_clean_regression_files": {
+      "cases": 124,
+      "files": 8
+    },
+    "final_isolated_plants": {
+      "cases": 56,
+      "files": 1
+    },
+    "distinct_total": 318,
+    "test_files": 18
+  },
+  "run_accounting": "Nine-file regression attempt: 178 passed and one immediate-focus Plant assertion failed. Eight other files clean (124). Corrected focus waits and duplicate conflict alert; final full Plant repeat 56 passed. Earlier terminated Seed attempt not counted; isolated Seed repeat 50 passed.",
+  "static": {
+    "typescript": "passed tsc -b in production build",
+    "frontend_production_build": "passed Vite",
+    "eslint": "All touched TS/TSX checked; only final Plant focus-test void-arrow style errors, corrected by ESLint --fix and passed at zero warnings; no other file errors",
+    "prettier": "All touched TS/TSX/CSS passed; final style-only Plant test correction reformatted and rechecked",
+    "feature_graph": "105 valid",
+    "whitespace": "passed"
+  },
+  "responsive": {
+    "unique_checks": 67,
+    "screenshots": 45,
+    "horizontal_overflow": false,
+    "zoom": "125/150 percent are effective viewport proxies; actual browser zoom not certified",
+    "extracted_individual": "No such live fixture record; explicit four-node extracted path verified with unit fixtures"
+  },
+  "review": {
+    "url": "http://localhost:15174",
+    "compose_project": "florabase-feature-review",
+    "fixture_version": 4,
+    "fixture_state": "ready",
+    "records": 66,
+    "code_and_db_revision": "20261013_0042",
+    "existing_owner_and_fixture_preserved": true,
+    "reset_remove_reseed": false,
+    "collection_mutations": false,
+    "left_running": true
+  },
+  "domain_helper_comparison": {
+    "frontend/src/sowings/SowingScreen.tsx:payloadFrom": true,
+    "frontend/src/sowings/SowingScreen.tsx:germinationProgress": true,
+    "frontend/src/sowings/SowingScreen.tsx:validate": true,
+    "frontend/src/plants/PlantScreen.tsx:commonPayload": true,
+    "frontend/src/plants/PlantScreen.tsx:plantPayload": true,
+    "frontend/src/plants/PlantScreen.tsx:groupPayload": true,
+    "frontend/src/plants/PlantScreen.tsx:validate": true,
+    "frontend/src/plants/PlantScreen.tsx:extractionQuantityExplanation": true,
+    "frontend/src/propagation/CreationReversal.tsx:submit": true
+  },
+  "canonical_gate": "not run; explicitly reserved for later authorization",
+  "staged": false,
+  "committed": false,
+  "pushed": false,
+  "delivered": false,
+  "persistent_environments_touched": false,
+  "backend_api_schema_migration_dependency_changes": false,
+  "source_sha256": {
+    "frontend/src/App.tsx": "760294ff03b31eed5a87fa34a9e0285ca91bcfc1020ab3959239ad2c6b8e48b9",
+    "frontend/src/components/CollectionUI.test.tsx": "aba306f54521febbcb2e9cad349f438a6c0212707dd1114d530f2e6b51d7f1fa",
+    "frontend/src/components/CollectionUI.tsx": "828e0b4ec404cc0717aa8ab9991c7af0511c16069e626fde314bcd89bb426c1f",
+    "frontend/src/components/DetailEmptyState.tsx": "85dd525393587d7dae6e2b38ef73efae6463e14bf5a52e905e5768921da12626",
+    "frontend/src/components/ReferenceUI.tsx": "72340c1fc7f72d7270c52b17d25eb44bf80a25aa5acecf8f64690c03006808bf",
+    "frontend/src/components/collection-directory.css": "9e8f6a2efaa8af0f92e37e0527a68506338bbbae83ada4eb5489759fd9889ce1",
+    "frontend/src/components/collection-page.css": "10873c5db6cab8d58365f82569a269e4ed6bfd7a5add15cb26552705ff589c22",
+    "frontend/src/components/collection-visual.css": "0d801c5d232184266ed3b43e562784e9cdb81713b257fdb69ac3d4dce93684a0",
+    "frontend/src/components/detail-empty-state.css": "814e7f76aa92897bfaa035a5f848c2017f1a07894249b88522962843c703894f",
+    "frontend/src/components/recordNavigation.test.ts": "0aea40f5fdd2ea2ba6d31e9ed08c575faa665d266aa3cb77afa13bea1dd3faa5",
+    "frontend/src/components/recordNavigation.ts": "dd1a24fff2834055613c9cc1f48f1d54f51bd78c8e4a8042bc477b25bc17f46f",
+    "frontend/src/components/useCollectionPageReturnFocus.ts": "68495ed513350d7d7c72de78a5c6fc5af26254c0d1196016db80866ceb99f001",
+    "frontend/src/lineage/LineagePanel.test.tsx": "6d8840b0ed38391f96028821d4527cc55cab65cc47d49dc7cc3d69bf71f08f61",
+    "frontend/src/lineage/LineagePanel.tsx": "0af2cea3f21b6b24cadf64701e2bc0b58b2d688ad6cd2f59f78691d7f063e53a",
+    "frontend/src/photos/PhotosSection.test.tsx": "0db42f3c243a5f7d058e5e86d7792192a5d9fb9a5889deff10bcee261cafca50",
+    "frontend/src/photos/PhotosSection.tsx": "0d7652c8b574c986b9b79bbd600d354a95a0e13122b227a8727f2d06796c309e",
+    "frontend/src/photos/compact-gallery.css": "14011dd6e27e4975080cfbe8260287359acfbcc6c95c9b5604f4257a04df26eb",
+    "frontend/src/plants/PlantScreen.test.tsx": "bd43a9d2a003160eae753632de0e7d19423c4fe528b6d03e2c7599a178d34d7b",
+    "frontend/src/plants/PlantScreen.tsx": "4d8aa510ecc901a4bd40747acb1ca2b1a5120ffa8e18f7f66f03c282dff986d3",
+    "frontend/src/propagation/CreationReversal.test.tsx": "fbd99eb211a5a7e626fb370649ee9b0ba70a6ea3ccf99acb390ff8605c14073c",
+    "frontend/src/propagation/CreationReversal.tsx": "cd53ac58a8602be107fc4c226cf733ffc525a22a8438d4f9a199b1b43db050e1",
+    "frontend/src/propagation/GuidedForms.test.tsx": "b98d6304524172af9536e320118a046a5d1541641a4521c9235f1cb3d56bc1bb",
+    "frontend/src/propagation/PropagationPath.tsx": "d5533e9a20a47e7e66b74ae1a0457762199325ee94cee15350ce9806d887e17b",
+    "frontend/src/propagation/SeedLotSowingWizard.tsx": "e5cdbeef9ac9bd8707d8ee215723f17d3505b781b2f82fa0e687f8c066244599",
+    "frontend/src/propagation/SowingDescendantWizard.tsx": "818c1f6c2c5b2143fb332301d7abc83a30e8b64cdb46e466ca46377cd1d809dd",
+    "frontend/src/propagation/material-lineage.css": "0716af74fd8c0a78c7c393d687c0be6ef855492809350a674055ef411a18e0ea",
+    "frontend/src/seed-lots/SeedLotScreen.test.tsx": "e667ed477387b07858e534dd3012108abada88c0b08f211cdaac1102dcf9847f",
+    "frontend/src/seed-lots/SeedLotScreen.tsx": "c9836df323ecaa4475473a64143308d7141c02e0dfb5b0cc6d905a1dbeb51482",
+    "frontend/src/seed-lots/seed-refinement.css": "ca8af6773360eae75e553c525426f53f4f14682fa8189e72f18786a3c7cfb0e6",
+    "frontend/src/sowings/GerminationSection.tsx": "cd7a863e9ab48a55a2af0ca6b80a09b3346bdcb8138c75833047a65ac28d30a7",
+    "frontend/src/sowings/SowingScreen.test.tsx": "4d969fc63a82fb55210cd163868f220578385edd9b854e8462228274b00cc434",
+    "frontend/src/sowings/SowingScreen.tsx": "5d6d2d2f5d6f2bef36327783b8cc6a850c7f47b18c327a1a4b8fdf728de1c741",
+    "frontend/src/test/formSections.ts": "48e1d998f8486ae621ecc63a078b25a528955933613000029ac25b76f4524d8e",
+    "frontend/src/test/history.ts": "d9d53bcc7e8486a26cd115b06cbf9dd03ee900c121141e068c8a3d3bfc4221a6"
+  }
+}

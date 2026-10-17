@@ -1,0 +1,90 @@
+{
+  "kind": "supplemental live contextual creation",
+  "zoom": "viewport proxies as defined in responsive-matrix.json",
+  "checks": [
+    {
+      "state": "plant-from-sowing-1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1425,
+      "width": 1440
+    },
+    {
+      "state": "plant-from-sowing-1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1137,
+      "width": 1152
+    },
+    {
+      "state": "plant-from-sowing-1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 945,
+      "width": 960
+    },
+    {
+      "state": "plant-from-sowing-1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024
+    },
+    {
+      "state": "plant-from-sowing-1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 804,
+      "width": 819
+    },
+    {
+      "state": "plant-from-sowing-390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "sowing-from-seed-1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1425,
+      "width": 1440
+    },
+    {
+      "state": "sowing-from-seed-1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1137,
+      "width": 1152
+    },
+    {
+      "state": "sowing-from-seed-1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 945,
+      "width": 960
+    },
+    {
+      "state": "sowing-from-seed-1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024
+    },
+    {
+      "state": "sowing-from-seed-1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 804,
+      "width": 819
+    },
+    {
+      "state": "sowing-from-seed-390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    }
+  ]
+}

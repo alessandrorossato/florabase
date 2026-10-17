@@ -1,0 +1,608 @@
+{
+  "kind": "live authenticated Feature Review",
+  "zoom": "100%; 125% and 150% are viewport proxies; actual browser zoom unavailable",
+  "sizes": [
+    {
+      "label": "1440-100",
+      "width": 1440,
+      "height": 844
+    },
+    {
+      "label": "1440-125-proxy",
+      "width": 1152,
+      "height": 675
+    },
+    {
+      "label": "1440-150-proxy",
+      "width": 960,
+      "height": 563
+    },
+    {
+      "label": "1024-100",
+      "width": 1024,
+      "height": 844
+    },
+    {
+      "label": "1024-125-proxy",
+      "width": 819,
+      "height": 675
+    },
+    {
+      "label": "390-100",
+      "width": 390,
+      "height": 844
+    }
+  ],
+  "checks": [
+    {
+      "state": "sowing-edit-1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "state": "sowing-edit-1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1152,
+      "width": 1152
+    },
+    {
+      "state": "sowing-edit-1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 960,
+      "width": 960
+    },
+    {
+      "state": "sowing-edit-1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1024,
+      "width": 1024
+    },
+    {
+      "state": "sowing-edit-1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 819,
+      "width": 819
+    },
+    {
+      "state": "sowing-edit-390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 390,
+      "width": 390
+    },
+    {
+      "state": "sowing-directory-1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "state": "sowing-directory-1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1137,
+      "width": 1152
+    },
+    {
+      "state": "sowing-directory-1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 945,
+      "width": 960
+    },
+    {
+      "state": "sowing-directory-1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024
+    },
+    {
+      "state": "sowing-directory-1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 804,
+      "width": 819
+    },
+    {
+      "state": "sowing-directory-390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "sowing-propagation-1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "state": "sowing-propagation-1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1137,
+      "width": 1152
+    },
+    {
+      "state": "sowing-propagation-1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 945,
+      "width": 960
+    },
+    {
+      "state": "sowing-propagation-1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1024,
+      "width": 1024
+    },
+    {
+      "state": "sowing-propagation-1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 804,
+      "width": 819
+    },
+    {
+      "state": "sowing-propagation-390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "sowing-photos-1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "state": "sowing-photos-1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1152,
+      "width": 1152
+    },
+    {
+      "state": "sowing-photos-1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 945,
+      "width": 960
+    },
+    {
+      "state": "sowing-photos-1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1024,
+      "width": 1024
+    },
+    {
+      "state": "sowing-photos-1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 804,
+      "width": 819
+    },
+    {
+      "state": "sowing-photos-390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "plant-directory-1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "state": "plant-directory-1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1137,
+      "width": 1152
+    },
+    {
+      "state": "plant-directory-1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 945,
+      "width": 960
+    },
+    {
+      "state": "plant-directory-1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024
+    },
+    {
+      "state": "plant-directory-1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 804,
+      "width": 819
+    },
+    {
+      "state": "plant-directory-390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "plant-edit-1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440,
+      "saveBounds": {
+        "bottom": 764.359375,
+        "top": 720.359375,
+        "viewport": 844
+      }
+    },
+    {
+      "state": "plant-edit-1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1152,
+      "width": 1152,
+      "saveBounds": {
+        "bottom": 605.5,
+        "top": 561.5,
+        "viewport": 675
+      }
+    },
+    {
+      "state": "plant-edit-1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 960,
+      "width": 960,
+      "saveBounds": {
+        "bottom": 500.21875,
+        "top": 456.21875,
+        "viewport": 563
+      }
+    },
+    {
+      "state": "plant-edit-1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1024,
+      "width": 1024,
+      "saveBounds": {
+        "bottom": 764.359375,
+        "top": 720.359375,
+        "viewport": 844
+      }
+    },
+    {
+      "state": "plant-edit-1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 819,
+      "width": 819,
+      "saveBounds": {
+        "bottom": 605.5,
+        "top": 561.5,
+        "viewport": 675
+      }
+    },
+    {
+      "state": "plant-edit-390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 390,
+      "width": 390,
+      "saveBounds": {
+        "bottom": 819,
+        "top": 775,
+        "viewport": 844
+      }
+    },
+    {
+      "state": "plant-overview-1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1425,
+      "width": 1440
+    },
+    {
+      "state": "plant-overview-1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1137,
+      "width": 1152
+    },
+    {
+      "state": "plant-overview-1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 945,
+      "width": 960
+    },
+    {
+      "state": "plant-overview-1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024
+    },
+    {
+      "state": "plant-overview-1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 804,
+      "width": 819
+    },
+    {
+      "state": "plant-overview-390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "plant-lineage-1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "state": "plant-lineage-1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1137,
+      "width": 1152
+    },
+    {
+      "state": "plant-lineage-1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 945,
+      "width": 960
+    },
+    {
+      "state": "plant-lineage-1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1024,
+      "width": 1024
+    },
+    {
+      "state": "plant-lineage-1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 804,
+      "width": 819
+    },
+    {
+      "state": "plant-lineage-390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "plant-photos-1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1440,
+      "width": 1440
+    },
+    {
+      "state": "plant-photos-1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1137,
+      "width": 1152
+    },
+    {
+      "state": "plant-photos-1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 945,
+      "width": 960
+    },
+    {
+      "state": "plant-photos-1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1024,
+      "width": 1024
+    },
+    {
+      "state": "plant-photos-1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 804,
+      "width": 819
+    },
+    {
+      "state": "plant-photos-390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "plant-create-1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1425,
+      "width": 1440
+    },
+    {
+      "state": "plant-create-1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1137,
+      "width": 1152
+    },
+    {
+      "state": "plant-create-1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 945,
+      "width": 960
+    },
+    {
+      "state": "plant-create-1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024
+    },
+    {
+      "state": "plant-create-1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 804,
+      "width": 819
+    },
+    {
+      "state": "plant-create-390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "sowing-overview-1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1425,
+      "width": 1440
+    },
+    {
+      "state": "sowing-overview-1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1137,
+      "width": 1152
+    },
+    {
+      "state": "sowing-overview-1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 945,
+      "width": 960
+    },
+    {
+      "state": "sowing-overview-1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024
+    },
+    {
+      "state": "sowing-overview-1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 804,
+      "width": 819
+    },
+    {
+      "state": "sowing-overview-390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    },
+    {
+      "state": "sowing-create-1440-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1425,
+      "width": 1440
+    },
+    {
+      "state": "sowing-create-1440-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 1137,
+      "width": 1152
+    },
+    {
+      "state": "sowing-create-1440-150-proxy",
+      "height": 563,
+      "overflow": [],
+      "pageWidth": 945,
+      "width": 960
+    },
+    {
+      "state": "sowing-create-1024-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 1009,
+      "width": 1024
+    },
+    {
+      "state": "sowing-create-1024-125-proxy",
+      "height": 675,
+      "overflow": [],
+      "pageWidth": 804,
+      "width": 819
+    },
+    {
+      "state": "sowing-create-390-100",
+      "height": 844,
+      "overflow": [],
+      "pageWidth": 375,
+      "width": 390
+    }
+  ],
+  "pickerChecks": [
+    {
+      "input": {
+        "bottom": 382.21875,
+        "height": 44,
+        "left": 21,
+        "right": 369,
+        "top": 338.21875,
+        "width": 348,
+        "x": 21,
+        "y": 338.21875
+      },
+      "popup": {
+        "bottom": 486.40625,
+        "height": 99.1875,
+        "left": 22,
+        "right": 368,
+        "top": 387.21875,
+        "width": 346,
+        "x": 22,
+        "y": 387.21875
+      }
+    },
+    {
+      "input": {
+        "bottom": 0,
+        "height": 0,
+        "left": 0,
+        "right": 0,
+        "top": 0,
+        "width": 0,
+        "x": 0,
+        "y": 0
+      }
+    }
+  ]
+}

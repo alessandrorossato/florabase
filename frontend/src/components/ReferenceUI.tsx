@@ -5,6 +5,7 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type RefObject,
 } from "react";
 import { createPortal } from "react-dom";
 
@@ -182,14 +183,17 @@ export function OverflowMenu({
   ariaLabel,
   children,
   disabled = false,
+  triggerRef,
 }: {
   label?: string;
   ariaLabel?: string;
   children: ReactNode;
   disabled?: boolean;
+  triggerRef?: RefObject<HTMLButtonElement | null>;
 }) {
   const id = useId();
-  const trigger = useRef<HTMLButtonElement>(null);
+  const internalTrigger = useRef<HTMLButtonElement>(null);
+  const trigger = triggerRef ?? internalTrigger;
   const panel = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [portalHost, setPortalHost] = useState<HTMLElement | null>(null);
@@ -239,7 +243,7 @@ export function OverflowMenu({
       window.removeEventListener("resize", place);
       window.removeEventListener("scroll", place, true);
     };
-  }, [open]);
+  }, [open, trigger]);
   useEffect(() => {
     if (!open) return;
     const dismiss = (event: Event) => {
@@ -276,7 +280,7 @@ export function OverflowMenu({
       document.removeEventListener("focusin", dismiss);
       document.removeEventListener("keydown", escape);
     };
-  }, [open]);
+  }, [open, trigger]);
   return (
     <>
       <button

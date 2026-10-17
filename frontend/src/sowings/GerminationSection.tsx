@@ -1,3 +1,4 @@
+import { DetailEmptyState } from "../components/DetailEmptyState";
 import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
@@ -281,9 +282,7 @@ export function GerminationSection({ sowingId }: { sowingId: string }) {
         )}
       </div>
       {detail.observations.length === 0 ? (
-        <p>
-          No dated observations yet. Basic Sowing use does not require them.
-        </p>
+        <DetailEmptyState>No observations yet.</DetailEmptyState>
       ) : (
         <table className="germination-history">
           <thead>

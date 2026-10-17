@@ -1,0 +1,422 @@
+/* Sowing and Plant siblings reuse the accepted Collection geometry. */
+.app-content :is(.sowings-workspace, .plants-workspace),
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .operational-layout.is-detail-view
+  .seed-detail-pane {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+.collection-context-page {
+  min-width: 0;
+}
+.app-content :is(.sowings-workspace, .plants-workspace) .collection-form {
+  max-width: 60rem;
+  padding: var(--space-4) var(--space-6);
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .form-section-panel:not([hidden]) {
+  gap: var(--space-3) var(--space-6);
+  align-content: start;
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .collection-form
+  textarea {
+  max-width: none;
+}
+.sowing-form [data-form-panel="essentials"] > .field:first-of-type,
+.plant-form [data-form-panel="essentials"] > .reference-picker {
+  grid-column: 1 / -1;
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .edit-workspace-modal
+  .collection-form {
+  max-width: none;
+  height: 100%;
+}
+:is(.sowings-workspace, .plants-workspace)
+  .form-sections--edit
+  .form-section-footer {
+  background: var(--surface);
+  padding-block: var(--space-3);
+}
+@media (min-height: 40rem) and (min-width: 48.01rem) {
+  :is(.sowings-workspace, .plants-workspace)
+    .edit-workspace-fallback
+    .form-sections--edit
+    > .form-section-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+  }
+  :is(.sowing-form, .plant-form)
+    .form-sections--edit
+    :is(input, select, textarea) {
+    scroll-margin-block-end: 6rem;
+  }
+}
+:is(.sowings-workspace, .plants-workspace) .detail-tabs [role="tab"]:hover {
+  background: var(--primary-subtle);
+  color: var(--primary);
+}
+.app-content :is(.sowings-workspace, .plants-workspace) .collection-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6) var(--space-8);
+  align-items: start;
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .collection-overview
+  > :is(section, .schedule-upcoming) {
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-4) 0 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+}
+.app-content .collection-overview :is(h3, h4) {
+  font: var(--type-h3);
+  margin: 0 0 var(--space-3);
+}
+.app-content .collection-overview > .collection-summary {
+  grid-column: 1 / -1;
+  padding: 0;
+  border: 0;
+}
+.collection-summary > dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--surface-subtle);
+}
+.sowings-workspace .collection-summary > dl {
+  grid-template-columns:
+    minmax(0, 0.7fr) minmax(0, 0.8fr) minmax(0, 1.4fr)
+    minmax(0, 1.1fr);
+}
+.collection-summary dl > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding-inline: var(--space-4);
+  min-width: 0;
+}
+.collection-summary dl > div:first-child {
+  padding-inline-start: 0;
+}
+.collection-summary dl > div:last-child {
+  padding-inline-end: 0;
+}
+.collection-summary dl > div + div {
+  border-inline-start: 1px solid var(--border);
+}
+.collection-summary dt {
+  order: 1;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.collection-summary dd {
+  margin: 0;
+  font: var(--type-strong);
+  overflow-wrap: anywhere;
+}
+.app-content
+  .collection-overview
+  :is(.sowing-fact-group, .plant-fact-group)
+  dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  margin: 0;
+}
+.app-content
+  .collection-overview
+  :is(.sowing-fact-group, .plant-fact-group)
+  dl
+  > div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.7fr) minmax(0, 1fr);
+  gap: var(--space-3);
+}
+.collection-overview :is(dt, dd, p) {
+  overflow-wrap: anywhere;
+}
+.collection-overview dd {
+  margin: 0;
+}
+.collection-overview-wide {
+  grid-column: 1 / -1;
+}
+:is(.sowings-workspace, .plants-workspace) .detail-tab-panel > .empty-state {
+  padding: var(--space-4) 0;
+}
+@media (max-width: 64rem) {
+  .sowings-workspace .collection-summary > dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+  .sowings-workspace .collection-summary dl > div {
+    padding-inline: 0;
+    border: 0;
+  }
+}
+@media (max-width: 48rem) {
+  .app-content :is(.sowings-workspace, .plants-workspace) .collection-form {
+    padding: var(--space-3);
+  }
+  .app-content :is(.sowings-workspace, .plants-workspace) .collection-overview,
+  .collection-summary > dl,
+  .sowings-workspace .collection-summary > dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .collection-summary dl > div {
+    border: 0;
+    padding: var(--space-3) 0;
+  }
+  .collection-summary dl > div + div {
+    border: 0;
+    border-top: 1px solid var(--border);
+  }
+  .sowings-workspace .collection-summary > dl {
+    gap: 0;
+  }
+  .sowings-workspace .collection-summary dl > div {
+    padding-block: var(--space-3);
+  }
+  .app-content
+    .collection-overview
+    :is(.sowing-fact-group, .plant-fact-group)
+    dl
+    > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+}
+/* Keep every record tab visible on narrow screens and separate Schedule links. */
+:is(.sowings-workspace, .plants-workspace) .detail-tabs {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+.collection-overview .schedule-upcoming .button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.collection-overview :is(.sowing-fact-group, .plant-fact-group) dt {
+  font: var(--type-small);
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: normal;
+}
+.propagation-form [data-form-panel="essentials"] > .field:first-of-type {
+  grid-column: 1 / -1;
+}
+
+/* Contextual propagation uses the same UI typography as direct Collection entry. */
+.app-content .propagation-workspace .workspace-intro h2 {
+  font: var(--type-h1);
+}
+.app-content .propagation-workspace .collection-form > h3 {
+  font: var(--type-h2);
+  margin-block: var(--space-3);
+}
+.app-content .propagation-workspace .seed-sowing-source > h3 {
+  font: var(--type-h3);
+}
+
+/* Full application workspace for creation; columns bound individual controls. */
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .seed-creation-panel
+  .collection-form {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  border: 0;
+  padding-inline: 0;
+}
+.app-content .plant-form .origin-mode-field {
+  border: 0;
+  background: transparent;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+.app-content .plant-form .origin-mode-field legend:not(.sr-only) {
+  margin: 0 0 var(--space-2);
+  padding: 0;
+  font: var(--type-small);
+}
+.app-content .plant-form .origin-mode-field .checkbox-label {
+  margin: 0;
+}
+.app-content .plants-workspace .edit-workspace-modal .plant-task-hint {
+  display: none;
+}
+.app-content
+  .plants-workspace
+  .edit-workspace-modal
+  .collection-form
+  > .detail-header {
+  margin-block: var(--space-2);
+  padding-block: var(--space-2);
+}
+.app-content
+  .plants-workspace
+  .edit-workspace-modal
+  .form-section-panel
+  > .partial-date-grid {
+  grid-column: auto;
+}
+.app-content :is(.sowings-workspace, .plants-workspace) .collection-overview {
+  gap: var(--space-4) var(--space-8);
+}
+.app-content .collection-overview p {
+  margin-block: var(--space-2);
+}
+.app-content
+  .collection-overview
+  :is(.sowing-fact-group, .plant-fact-group)
+  dl {
+  gap: var(--space-2);
+}
+.task-dialog.creation-reversal-dialog {
+  width: min(36rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  box-sizing: border-box;
+}
+.creation-reversal-dialog > .actions {
+  justify-content: flex-end;
+  margin-top: var(--space-6);
+}
+/* Overview recaps replace the old full-width descendants graph. */
+.app-content
+  .sowings-workspace
+  .collection-detail
+  .collection-overview
+  > [aria-labelledby="descendants-title"] {
+  grid-column: auto;
+  display: block;
+}
+.app-content
+  .sowings-workspace
+  .collection-overview
+  > [aria-labelledby="descendants-title"]
+  > * {
+  grid-column: auto;
+}
+@media (min-width: 75rem) {
+  .app-content .sowings-workspace .collection-detail .collection-overview {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .app-content
+    .sowings-workspace
+    .collection-overview
+    > .collection-overview-wide {
+    grid-column: auto;
+  }
+  .app-content
+    .sowings-workspace
+    .collection-overview
+    .sowing-fact-group
+    dl
+    > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+}
+/* A contextual editor needs a compact identity header, not a second page header. */
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .edit-workspace-modal
+  .collection-form {
+  gap: var(--space-2);
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .edit-workspace-modal
+  .collection-form
+  > .detail-header {
+  margin: 0;
+  padding: 0;
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .edit-workspace-modal
+  .detail-header
+  .eyebrow {
+  display: none;
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .edit-workspace-modal
+  .detail-header
+  h3 {
+  font: var(--type-h2);
+  margin: 0;
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .edit-workspace-modal
+  .detail-context {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-6);
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .edit-workspace-modal
+  .detail-context
+  > div {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+/* Daily actions form one toolbar; maintenance actions use the existing overflow. */
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .collection-detail
+  .detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  max-width: 100%;
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .collection-detail
+  .detail-actions
+  > :is(button, a) {
+  margin: 0;
+}
+@media (max-width: 48rem) {
+  .app-content
+    :is(.sowings-workspace, .plants-workspace)
+    .collection-detail
+    .detail-actions {
+    justify-content: flex-start;
+  }
+}
+.app-content
+  :is(.sowings-workspace, .plants-workspace)
+  .collection-detail
+  .detail-actions
+  > a.button-link:not(.button--secondary) {
+  color: var(--on-primary);
+}

@@ -333,7 +333,6 @@ source. Create and Edit share these rules. A checkbox group requiring at least o
 and exposes the existing rule through its group description; do not require every checkbox. No
 repetitive required-field legend is necessary.
 
-
 ### SeedLot dashboard and transient picker reference
 
 The refined SeedLot Overview is the candidate grammar for later entity pages: one current-state band
@@ -354,3 +353,65 @@ clipping panel and can open above the input. Help text and field grid stretch mu
 popup position. Preserve label association, listbox IDs, required/expanded/active-descendant state,
 Arrow/Enter selection and focus. Escape first dismisses an open picker before its enclosing task.
 Native selects remain native; this normalization does not introduce another picker framework.
+
+## Sowing and Plant normalization candidate
+
+COLLECTION-VISUAL-001 applies the accepted SeedLot directory split, coherent page creation and
+contextual EditWorkspace to Sowings and Plants, pending operator visual acceptance. Direct edit links
+retain the full-page fallback. Current-state Overview bands expose Sowing lifecycle/date/germination/
+location and Plant lifecycle/location/entry precision, followed by actual domain sections. Do not
+invent SeedLot-style inventory or current measurements for individual Plants. Percentages remain
+specific to exact positive Sowing seed-count denominators; null, zero and uncertain quantities retain
+their existing meanings. PlantGroup only participates in the existing shared workflows.
+
+Contextual propagation entry also shows its fields together; SeedLot's separate seed-usage review
+remains a meaningful inventory decision before its atomic operation.
+
+Both families use the same compact PhotosSection as SeedLot. Compact gallery styling now belongs to
+PhotosSection; privacy and local-copy behavior remain unchanged. Narrow record tabs wrap, modal Save
+stays reachable and returning from Edit restores its trigger without refocusing the Overview. These
+sibling geometry rules stay scoped to Sowing/Plant workspaces; other detail families await review.
+
+Second operator pass: Collection rows follow Botanical Identity's full 4rem tile and beside-tile
+identity, with only lifecycle/entity metrics on the right; source/date/Location remain in previews
+and Details. Create uses the available workspace with semantic columns; contextual Edit uses a compact
+identity header and stable action footer. Overview recaps material relationships and links to canonical
+Lineage; graphs belong on Lineage. Existing reversal eligibility lives behind a secondary header action
+and a focused native dialog. A small shared DetailEmptyState replaces large absence panels for reviewed
+Seed/Sowing/Plant detail content and shared Photos/Lineage. These refinements remain pending acceptance.
+
+### Collection third-pass candidate: pages, actions and lineage
+
+Directory identity uses the botanical serif role at quiet normal weight, scientific names use the
+botanical italic role, and operational metadata/tooling retain the UI sans role. This exception is
+scoped to Collection lists and optional Quick Preview identity, not form or Details-body typography.
+
+Full-page Collection create/operation forms share the delivered Add SeedLot canvas shell. Record
+creation has its category directory as logical history parent; an operation with an explicit source
+has that source Details page as parent. Establish the parent at in-app entry, preserve older history,
+and use a canonical Cancel fallback for direct links. Successful creation replaces the operation entry
+with its result. Ordinary Details and guarded contextual Edit retain their own navigation contracts.
+
+Details use one shared action group: at most one dominant daily action, visible secondary/Edit actions,
+and the established More menu for rare actions such as Print label and Undo creation. A sibling task
+dialog returns to the stable More trigger. Primary links must use on-primary text even in entity scopes
+with older botanical-link rules.
+
+Material diagrams read ancestor to descendant in DOM order: horizontal with rightward connectors when
+wide, vertical with downward connectors when narrow. Use only explicit authoritative relationships;
+show the current entity where helpful. API traversal order is not automatically presentation order.
+The compact empty-state grammar remains. All third-pass refinements are pending operator acceptance.
+
+### Collection fourth-pass form/workflow candidate
+
+The full-page Collection footer follows one shared canvas rule: normal flow, matching form edges,
+one top border, SeedLot padding/gutters and a transparent background. Contextual Edit retains its
+bounded footer. Meaningful field names remain visible; redundant nested captions may be visually
+hidden with their accessible field/group names retained. PartialDate exposes this as an opt-in,
+leaving date precision and unrelated families unchanged.
+
+Guided descendant creation uses compact linked source context, semantic page columns and one page
+identity. Four native Sowing-state radios show one selected consequence; conditional completion facts
+remain. Plant/group maintenance Transfer lives in More, with stable dialog focus return. The guided
+source Details tab is preserved in its canonical parent history entry. These refinements await the
+operator's visual acceptance.

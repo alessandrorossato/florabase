@@ -1,0 +1,123 @@
+[
+  {
+    "dialog": {
+      "bottom": 793.359375,
+      "height": 742.71875,
+      "left": 240,
+      "right": 1200,
+      "top": 50.640625,
+      "width": 960,
+      "x": 240,
+      "y": 50.640625
+    },
+    "footer": {
+      "bottom": 776.359375,
+      "height": 69,
+      "left": 265,
+      "right": 1175,
+      "top": 707.359375,
+      "width": 910,
+      "x": 265,
+      "y": 707.359375
+    },
+    "height": 844,
+    "kind": "plant",
+    "legend": "sr-only",
+    "panel": {
+      "clientHeight": 459,
+      "rect": {
+        "bottom": 707.359375,
+        "height": 458.5,
+        "left": 265,
+        "right": 1175,
+        "top": 248.859375,
+        "width": 910,
+        "x": 265,
+        "y": 248.859375
+      },
+      "scrollHeight": 459
+    },
+    "precisionLabel": "Collection-entry date precision",
+    "width": 1440
+  },
+  {
+    "dialog": {
+      "bottom": 793.359375,
+      "height": 742.71875,
+      "left": 240,
+      "right": 1200,
+      "top": 50.640625,
+      "width": 960,
+      "x": 240,
+      "y": 50.640625
+    },
+    "footer": {
+      "bottom": 776.359375,
+      "height": 69,
+      "left": 265,
+      "right": 1175,
+      "top": 707.359375,
+      "width": 910,
+      "x": 265,
+      "y": 707.359375
+    },
+    "height": 844,
+    "kind": "group",
+    "legend": "sr-only",
+    "panel": {
+      "clientHeight": 459,
+      "rect": {
+        "bottom": 707.359375,
+        "height": 458.5,
+        "left": 265,
+        "right": 1175,
+        "top": 248.859375,
+        "width": 910,
+        "x": 265,
+        "y": 248.859375
+      },
+      "scrollHeight": 459
+    },
+    "precisionLabel": "Collection-entry date precision",
+    "width": 1440
+  },
+  {
+    "dialog": {
+      "bottom": 793.359375,
+      "height": 742.71875,
+      "left": 240,
+      "right": 1200,
+      "top": 50.640625,
+      "width": 960,
+      "x": 240,
+      "y": 50.640625
+    },
+    "footer": {
+      "bottom": 776.359375,
+      "height": 69,
+      "left": 265,
+      "right": 1175,
+      "top": 707.359375,
+      "width": 910,
+      "x": 265,
+      "y": 707.359375
+    },
+    "height": 844,
+    "kind": "direct-plant",
+    "panel": {
+      "clientHeight": 459,
+      "rect": {
+        "bottom": 707.359375,
+        "height": 458.5,
+        "left": 265,
+        "right": 1175,
+        "top": 248.859375,
+        "width": 910,
+        "x": 265,
+        "y": 248.859375
+      },
+      "scrollHeight": 459
+    },
+    "width": 1440
+  }
+]

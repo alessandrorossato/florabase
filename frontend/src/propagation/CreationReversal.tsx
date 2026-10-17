@@ -1,9 +1,17 @@
-import { useEffect, useId, useRef, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 
 import type { components } from "../api/schema";
 import { ApiError, requestJson } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { ContextHelpDialog } from "../components/ContextualHelp";
+import { OverflowMenu } from "../components/ReferenceUI";
+import { TaskDialog } from "../components/TaskDialog";
 
 type Eligibility = components["schemas"]["PropagationReversalEligibility"];
 export type CreationReversalResponse =
@@ -25,15 +33,24 @@ export function CreationReversal({
   lifecycle,
   revision,
   onReversed,
+  inMoreMenu = false,
+  moreActions,
+  triggerRef,
 }: {
   kind: Kind;
   id: string;
   lifecycle: string;
   revision: string;
   onReversed: (result: CreationReversalResponse) => void;
+  inMoreMenu?: boolean;
+  moreActions?: ReactNode;
+  triggerRef?: RefObject<HTMLButtonElement | null>;
 }) {
   const auth = useAuth();
   const titleId = useId();
+  const [open, setOpen] = useState(false);
+  const internalTrigger = useRef<HTMLButtonElement>(null);
+  const trigger = triggerRef ?? internalTrigger;
   const [eligibility, setEligibility] = useState<Eligibility | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [error, setError] = useState("");
@@ -44,7 +61,7 @@ export function CreationReversal({
   const feedback = useRef<HTMLParagraphElement>(null);
   const url = `/api/v1/${paths[kind]}/${encodeURIComponent(id)}`;
   useEffect(() => {
-    if (lifecycle === "reversed") return;
+    if (!open || lifecycle === "reversed" || completed) return;
     const controller = new AbortController();
     void requestJson<Eligibility>(`${url}/creation-reversal`, {
       signal: controller.signal,
@@ -73,7 +90,7 @@ export function CreationReversal({
     return () => {
       controller.abort();
     };
-  }, [url, lifecycle, revision, attempt, auth]);
+  }, [url, lifecycle, revision, attempt, auth, open, completed]);
 
   async function submit() {
     if (
@@ -120,138 +137,192 @@ export function CreationReversal({
   }
 
   return (
-    <section className="notice creation-reversal" aria-labelledby={titleId}>
-      <h4 id={titleId}>Creation operation · {labels[kind]}</h4>
-      {lifecycle === "reversed" || completed ? (
-        <p role="status" tabIndex={-1} ref={feedback}>
-          Creation reversed. The source snapshot was restored. This record
-          remains in history as Reversed, with its lineage and observations, and
-          is no longer active. Repeating the forward action creates a new
-          record.
-        </p>
+    <>
+      {inMoreMenu ? (
+        <OverflowMenu ariaLabel="More record actions" triggerRef={trigger}>
+          {moreActions}
+          <button
+            type="button"
+            onClick={() => {
+              setEligibility(null);
+              setError("");
+              setConfirmed(false);
+              setOpen(true);
+            }}
+          >
+            {lifecycle === "reversed" || completed
+              ? "Creation reversed"
+              : "Undo creation"}
+          </button>
+        </OverflowMenu>
       ) : (
-        <>
-          <dl className="operation-state">
-            <div>
-              <dt>Dependency state</dt>
-              <dd>
-                {eligibility
-                  ? eligibility.status === "safe"
-                    ? "Safe to reverse"
-                    : eligibility.status === "confirmation_required"
-                      ? "Retained observations need confirmation"
-                      : "Blocked by later work"
-                  : "Checking eligibility"}
-              </dd>
-            </div>
-          </dl>
-          <details className="operation-explanation">
-            <summary>Creation details</summary>
-            <dl className="operation-facts">
-              <div>
-                <dt>What will be restored</dt>
-                <dd>
-                  {kind === "sowing"
-                    ? "The source SeedLot quantity and lifecycle snapshot"
-                    : "The source Sowing lifecycle snapshot"}
-                </dd>
-              </div>
-              <div>
-                <dt>Historical result</dt>
-                <dd>
-                  This {labels[kind]} remains as Reversed with notes and
-                  lineage.
-                </dd>
-              </div>
-            </dl>
-            <ContextHelpDialog
-              buttonLabel="Understand creation reversal"
-              title="How creation reversal works"
-            >
-              <p>
-                Undo restores the source lifecycle and quantity snapshot
-                recorded immediately before this creation. It does not
-                reconstruct values from later Events.
-              </p>
-              <p>
-                The created result is not deleted: it remains readable as
-                Reversed with its identity, lineage, notes, and Event history.
-                Later structural work can block reversal, while retained
-                observations may require explicit confirmation.
-              </p>
-            </ContextHelpDialog>
-          </details>
-          {error && <p role="alert">{error}</p>}
-          {!eligibility && !error && (
-            <p role="status">Checking reversal eligibility…</p>
-          )}
-          {error && (
-            <button
-              type="button"
-              disabled={pending}
-              onClick={() => {
-                setEligibility(null);
-                setError("");
-                setConfirmed(false);
-                setAttempt((value) => value + 1);
-              }}
-            >
-              Refresh eligibility
-            </button>
-          )}
-          {eligibility && (
+        <button
+          type="button"
+          className="button--secondary"
+          ref={trigger}
+          onClick={() => {
+            setEligibility(null);
+            setError("");
+            setConfirmed(false);
+            setOpen(true);
+          }}
+        >
+          {lifecycle === "reversed" || completed
+            ? "Creation reversed"
+            : "Undo creation"}
+        </button>
+      )}
+      {open && (
+        <TaskDialog
+          title={`Undo ${labels[kind]} creation`}
+          className="creation-reversal-dialog"
+          returnFocusTo={trigger}
+          onClose={() => {
+            if (!pending) setOpen(false);
+          }}
+        >
+          <h3 id={titleId}>Undo {labels[kind]} creation</h3>
+          {lifecycle === "reversed" || completed ? (
+            <p role="status" tabIndex={-1} ref={feedback}>
+              Creation reversed. The source snapshot was restored. This record
+              remains in history as Reversed, with its lineage and observations,
+              and is no longer active. Repeating the forward action creates a
+              new record.
+            </p>
+          ) : (
             <>
-              {eligibility.reasons.length > 0 && (
-                <ul>
-                  {eligibility.reasons.map((reason, index) => (
-                    <li key={`${reason.code}:${String(index)}`}>
-                      {reason.message}
-                      {reason.entity_id && reason.entity_type && (
-                        <>
-                          {" "}
-                          <a
-                            href={`#/${entityPaths[reason.entity_type]}/${reason.entity_id}`}
-                          >
-                            Open related record
-                          </a>
-                        </>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+              <p className="record-state">
+                {eligibility
+                  ? eligibility.status === "blocked"
+                    ? "Cannot undo"
+                    : eligibility.status === "confirmation_required"
+                      ? "Can undo with confirmation"
+                      : "Can undo"
+                  : "Checking eligibility"}
+              </p>
+              <p>
+                This restores the recorded source state and retains this{" "}
+                {labels[kind]} as reversed historical evidence.
+              </p>
+              {error && <p role="alert">{error}</p>}
+              {!eligibility && !error && (
+                <p role="status">Checking reversal eligibility…</p>
               )}
-              {eligibility.status === "confirmation_required" && (
-                <label className="retained-history-confirmation">
-                  <input
-                    type="checkbox"
-                    checked={confirmed}
-                    disabled={pending}
-                    onChange={(event) => {
-                      setConfirmed(event.currentTarget.checked);
-                    }}
-                  />
-                  I confirm that {eligibility.retained_observation_ids.length}{" "}
-                  observation, flowering, or fruiting records will remain
-                  attached to this historical result.
-                </label>
+              {error && (
+                <button
+                  type="button"
+                  disabled={pending}
+                  onClick={() => {
+                    setEligibility(null);
+                    setError("");
+                    setConfirmed(false);
+                    setAttempt((value) => value + 1);
+                  }}
+                >
+                  Refresh eligibility
+                </button>
               )}
-              <button
-                type="button"
-                disabled={
-                  pending ||
-                  eligibility.status === "blocked" ||
-                  (eligibility.status === "confirmation_required" && !confirmed)
-                }
-                onClick={() => {
-                  void submit();
-                }}
-              >
-                {pending ? "Reversing…" : `Undo ${labels[kind]} creation`}
-              </button>
+              {eligibility && (
+                <>
+                  {eligibility.reasons.length > 0 && (
+                    <ul>
+                      {eligibility.reasons.map((reason, index) => (
+                        <li key={`${reason.code}:${String(index)}`}>
+                          {reason.code === "propagation_receipt_not_found"
+                            ? "This record has no creation history that can be undone automatically."
+                            : reason.message}
+                          {reason.entity_id && reason.entity_type && (
+                            <>
+                              {" "}
+                              <a
+                                href={`#/${entityPaths[reason.entity_type]}/${reason.entity_id}`}
+                              >
+                                Open related record
+                              </a>
+                            </>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {eligibility.status === "confirmation_required" && (
+                    <label className="retained-history-confirmation">
+                      <input
+                        type="checkbox"
+                        checked={confirmed}
+                        disabled={pending}
+                        onChange={(event) => {
+                          setConfirmed(event.currentTarget.checked);
+                        }}
+                      />
+                      I confirm that{" "}
+                      {eligibility.retained_observation_ids.length} observation,
+                      flowering, or fruiting records will remain attached to
+                      this historical result.
+                    </label>
+                  )}
+                  <details className="operation-explanation">
+                    <summary>What undo preserves</summary>
+                    {eligibility.reasons
+                      .filter(
+                        (reason) =>
+                          reason.code === "propagation_receipt_not_found",
+                      )
+                      .map((reason) => (
+                        <p key={reason.code}>{reason.message}</p>
+                      ))}
+                    <p>
+                      Undo restores the source lifecycle and quantity snapshot
+                      recorded immediately before this creation. It does not
+                      reconstruct values from later Events.
+                    </p>
+                    <p>
+                      The result is not deleted: identity, lineage, notes and
+                      observations remain in history. Later structural work can
+                      block reversal.
+                    </p>
+                  </details>
+                </>
+              )}
             </>
           )}
-        </>
+          <div className="actions">
+            <button
+              type="button"
+              className="button--secondary"
+              disabled={pending}
+              onClick={() => {
+                setOpen(false);
+              }}
+            >
+              {eligibility?.status === "blocked" ||
+              lifecycle === "reversed" ||
+              completed
+                ? "Close"
+                : "Cancel"}
+            </button>
+            {eligibility &&
+              eligibility.status !== "blocked" &&
+              lifecycle !== "reversed" &&
+              !completed && (
+                <button
+                  type="button"
+                  className="button--danger"
+                  disabled={
+                    pending ||
+                    (eligibility.status === "confirmation_required" &&
+                      !confirmed)
+                  }
+                  onClick={() => {
+                    void submit();
+                  }}
+                >
+                  {pending ? "Reversing…" : `Undo ${labels[kind]} creation`}
+                </button>
+              )}
+          </div>
+        </TaskDialog>
       )}
-    </section>
+    </>
   );
 }

@@ -155,9 +155,11 @@ added. This establishes **FUNCTIONAL_IA_FREEZE_READY** for workflow/structure, n
 
 ### Global page-by-page visual review and normalization
 
-GLOBAL-VISUAL-001 records the current implementation candidate and its pre-change inventory in
-[the visual handoff](global-visual-001-handoff.md). Acceptance remains pending authenticated candidate
-review and true-browser zoom evidence; static test-layout captures are explicitly separate.
+GLOBAL-VISUAL-001 was delivered through PR #111; its accepted SeedLot family is the Collection
+reference where semantics match. [Its handoff](global-visual-001-handoff.md) records the review and
+explicit actual-zoom limitation. COLLECTION-VISUAL-001 applies that grammar to Sowings and Plants;
+[the candidate handoff](collection-visual-001-handoff.md) records focused checks and live isolated
+Feature Review evidence. Operator acceptance and later canonical verification remain separate gates.
 
 Use a review matrix with page/state, viewport, finding, severity, shared-contract correction and
 recheck evidence. Cover at least:

@@ -1,0 +1,13 @@
+{
+  "liveCancel": [
+    {
+      "kind": "plant",
+      "cancel": "http://localhost:15174/#/sowings/01a14540-1fa2-72c6-89fc-c339e09a6d96?tab=lineage"
+    },
+    {
+      "kind": "group",
+      "cancel": "http://localhost:15174/#/sowings/01a14540-1fa2-72c6-89fc-c339e09a6d96?tab=lineage"
+    }
+  ],
+  "back": "Real-history Back covered by recordNavigation.test.ts for both source tab contexts. One live browser Back returned to the source, but the browser tool wait timed out; no complete live Back matrix claimed."
+}

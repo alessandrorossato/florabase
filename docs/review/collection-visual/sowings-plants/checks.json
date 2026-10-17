@@ -1,0 +1,51 @@
+{
+  "completed_at_utc": "2026-10-16T12:39:30.904743+00:00",
+  "source": "/home/alessandro/.codex/worktrees/ef73/florabase",
+  "branch": "feat/collection-visual-001",
+  "head": "1e3df6adf9afdfd4a213396666b336f6d1b5136c",
+  "working_tree": "unstaged and uncommitted",
+  "focused_tests": {
+    "sowings": 26,
+    "plants": 50,
+    "seed_lots": 48,
+    "shared_forms_gallery_media_bulk": 64,
+    "journal_history_schedule_settings": 75,
+    "labels": 54,
+    "propagation_reversal": 14,
+    "distinct_total": 331,
+    "test_files": 16
+  },
+  "resolved_attempts": [
+    "An incomplete combined attempt was terminated and is not counted.",
+    "One Labels timeout passed on an unchanged isolated full-file repeat (54 tests).",
+    "Five Plant timeouts in the combined family run passed on an unchanged isolated full-file repeat (50 tests)."
+  ],
+  "static": {
+    "typescript": "passed via final tsc -b production build",
+    "eslint": "passed; zero warnings",
+    "prettier": "passed",
+    "frontend_production_build": "passed",
+    "feature_graph": "105 valid",
+    "whitespace": "passed"
+  },
+  "visual": {
+    "main_checks": 72,
+    "contextual_creation_checks": 12,
+    "actual_browser_zoom": "not available; 125/150 percent captures are viewport proxies",
+    "operator_acceptance": "pending"
+  },
+  "canonical_gate": "not run by explicit task boundary",
+  "delivery_receipt": false,
+  "source_sha256": {
+    "frontend/src/App.tsx": "b1422ed04f68cd09f5a4b30b729be90b44ad8eaa28b130c0eec52ea3d20b4277",
+    "frontend/src/plants/PlantScreen.tsx": "f83ab85a699798c2872e1e151ef597e2c0ee0d8933fd523fca75954fa28217b0",
+    "frontend/src/sowings/SowingScreen.tsx": "1fdebd04cd60b17a4a9b19e3ad67ddd2a9826eefa363fc92014ad192d8400f58",
+    "frontend/src/photos/PhotosSection.tsx": "a23264ea1267d0ce3562c6996fa7e6991e5cc8c74a31fd9e12b272dfe7ee3ad5",
+    "frontend/src/photos/compact-gallery.css": "14011dd6e27e4975080cfbe8260287359acfbcc6c95c9b5604f4257a04df26eb",
+    "frontend/src/seed-lots/seed-refinement.css": "ca8af6773360eae75e553c525426f53f4f14682fa8189e72f18786a3c7cfb0e6",
+    "frontend/src/components/collection-visual.css": "2e27d7f91641ab839e979bb5f1f08b035b0ef97cb11d7aaabbfec4786683649f",
+    "frontend/src/propagation/SeedLotSowingWizard.tsx": "0bd161e73c54aa60f5c8e6427586580d4e1c998a4ac4cdf7c715e362816b434b",
+    "frontend/src/propagation/SowingDescendantWizard.tsx": "9ac9f55ba2235faec431a10df5c82ce48a5c87554b3047244a9d6f713e911d6d"
+  },
+  "evidence_status": "historical; superseded by fourth-pass/checks.json; not current-source verification"
+}

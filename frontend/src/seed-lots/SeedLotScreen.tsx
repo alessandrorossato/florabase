@@ -1,3 +1,7 @@
+import "../components/collection-page.css";
+import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
+import "../components/collection-directory.css";
+import { DetailEmptyState } from "../components/DetailEmptyState";
 import { FieldLabel } from "../components/FieldLabel";
 import "../components/directory-preview.css";
 import { useEditRoute } from "../components/useEditRoute";
@@ -49,7 +53,11 @@ import {
   DirectorySearch,
   QuickPreview,
 } from "../components/ReferenceUI";
-import { setRecordRoute } from "../components/recordNavigation";
+import {
+  setRecordRoute,
+  openCollectionPage,
+  closeCollectionPage,
+} from "../components/recordNavigation";
 import {
   Breadcrumbs,
   CollectionCard,
@@ -380,11 +388,7 @@ function RelatedSowings({ seedLotId }: { seedLotId: string }) {
   }, [seedLotId]);
   if (sowings === null) return <p role="status">Loading Sowings…</p>;
   if (!sowings.length)
-    return (
-      <div className="detail-empty-message">
-        <p>No sowings use this seed lot yet.</p>
-      </div>
-    );
+    return <DetailEmptyState>No sowings yet.</DetailEmptyState>;
   return (
     <div className="card-grid">
       {sowings.map((sowing) => (
@@ -911,6 +915,18 @@ export function SeedLotScreen({
     close: closeCreation,
     focusFirst: focusCreation,
   } = useCreationDisclosure();
+  const previousCreateRoute = useRef(startCreating);
+  useEffect(() => {
+    if (previousCreateRoute.current && !startCreating && creationExpanded) {
+      setEditing(false);
+      setDetailOpen(false);
+      setSave({ status: "idle" });
+      closeCreation();
+    }
+    previousCreateRoute.current = startCreating;
+    if (!startCreating) contextualCreationStarted.current = false;
+  }, [startCreating, creationExpanded, closeCreation]);
+  useCollectionPageReturnFocus(Boolean(references) && !editing);
 
   useEffect(() => {
     if (
@@ -1086,6 +1102,7 @@ export function SeedLotScreen({
   const pending = save.status === "saving";
 
   function startCreate() {
+    openCollectionPage("#/seeds?action=create");
     setPurchaseConfirmation(null);
     setCandidateOrderId("");
     setSelectedId(null);
@@ -1207,7 +1224,7 @@ export function SeedLotScreen({
           ? "Seed lot changes were saved."
           : "Seed lot was added to the collection.",
       });
-      if (wasCreating) setRecordRoute(`#/seeds/${lot.id}`);
+      if (wasCreating) setRecordRoute(`#/seeds/${lot.id}`, true);
       if (!edit.modal)
         window.setTimeout(() => detailHeading.current?.focus(), 0);
     } catch (error: unknown) {
@@ -1917,6 +1934,7 @@ export function SeedLotScreen({
                 setForm(blankForm());
                 closeCreation();
                 setDetailOpen(false);
+                closeCollectionPage("#/seeds");
               }}
             >
               Cancel
@@ -1995,6 +2013,7 @@ export function SeedLotScreen({
                   <button
                     type="button"
                     ref={creationTriggerRef}
+                    data-collection-return="create"
                     aria-expanded={creationExpanded}
                     aria-controls="new-seed-lot-panel"
                     onClick={() => {
@@ -2151,9 +2170,7 @@ export function SeedLotScreen({
                           <small>Recorded quantity</small>
                         )}
                       </span>
-                      <span className="seed-location">
-                        {lot.location?.display_path ?? "Storage not recorded"}
-                      </span>
+
                       <span
                         className={`lifecycle-badge lifecycle-badge--${lot.lifecycle}`}
                       >

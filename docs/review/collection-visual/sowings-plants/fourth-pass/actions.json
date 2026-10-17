@@ -1,0 +1,38 @@
+[
+  {
+    "kind": "plant",
+    "before": {
+      "active": "Transfer",
+      "menu": "TransferPrint label",
+      "visibleToolbar": [
+        "Record harvest",
+        "Edit Plant",
+        "More"
+      ]
+    },
+    "escape": "More record actions",
+    "dialog": true,
+    "restored": "More record actions"
+  },
+  {
+    "kind": "group",
+    "before": {
+      "active": "Transfer group",
+      "menu": "Transfer groupPrint labelUndo creation",
+      "visibleToolbar": [
+        "Extract plant",
+        "Record harvest",
+        "Edit Plant group",
+        "More"
+      ]
+    },
+    "escape": "More record actions",
+    "dialog": true,
+    "restored": "More record actions"
+  },
+  {
+    "kind": "group-reversal",
+    "restored": "More record actions",
+    "submitted": false
+  }
+]

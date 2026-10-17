@@ -1,5 +1,15 @@
+import { browserBack } from "../test/history";
+import { openFormSection } from "../test/formSections";
 import { selectDirectoryFilter } from "../test/directoryFilters";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  waitFor,
+  cleanup,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
@@ -295,11 +305,7 @@ test("germination tab keeps simple and dated totals distinct and supports correc
     await screen.findByRole("button", { name: /Tray A.*Clitoria ternatea/s }),
   );
   await user.click(screen.getByRole("tab", { name: "Germination" }));
-  expect(
-    await screen.findByText(
-      "No dated observations yet. Basic Sowing use does not require them.",
-    ),
-  ).toBeInTheDocument();
+  expect(await screen.findByText("No observations yet.")).toBeInTheDocument();
   expect(
     screen.getByText(/add dated observations to see observed germination/i),
   ).toBeInTheDocument();
@@ -319,11 +325,7 @@ test("germination tab keeps simple and dated totals distinct and supports correc
     screen.getByText(/simple germinated total will not change/),
   ).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Delete observation" }));
-  expect(
-    await screen.findByText(
-      "No dated observations yet. Basic Sowing use does not require them.",
-    ),
-  ).toBeInTheDocument();
+  expect(await screen.findByText("No observations yet.")).toBeInTheDocument();
 });
 
 test("navigation exposes loading, empty, and missing-SeedLot states", async () => {
@@ -622,7 +624,7 @@ test("minimal creation requires only an understandable SeedLot choice", async ()
     }),
   ).toBeInTheDocument();
   await user.selectOptions(selector, seedLotId);
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
+  await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Record Sowing" }));
   expect(await screen.findByText("Sowing was recorded.")).toBeInTheDocument();
   expect(payloads[0]).toMatchObject({
@@ -661,52 +663,58 @@ test("full creation preserves partial dates, quantity kinds, germination, locati
   );
   const user = await openSowings();
   await user.click(await screen.findByRole("button", { name: "+ New sowing" }));
-  await user.click(screen.getByRole("tab", { name: "Essentials" }));
+  await openFormSection(user, "Essentials");
   await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
-  await user.click(screen.getByRole("tab", { name: "Essentials" }));
+  await openFormSection(user, "Essentials");
   await user.type(screen.getByLabelText("Sowing label"), "Heat mat");
-  await user.click(screen.getByRole("tab", { name: "Essentials" }));
-  await user.selectOptions(screen.getByLabelText("Precision"), "year");
-  await user.click(screen.getByRole("tab", { name: "Essentials" }));
+  await openFormSection(user, "Essentials");
+  await user.selectOptions(
+    screen.getByLabelText("Sowing date precision"),
+    "year",
+  );
+  await openFormSection(user, "Essentials");
   await user.clear(screen.getByLabelText("Year"));
-  await user.click(screen.getByRole("tab", { name: "Essentials" }));
+  await openFormSection(user, "Essentials");
   await user.type(screen.getByLabelText("Year"), "2024");
-  await user.click(screen.getByRole("tab", { name: "Material & location" }));
-  await user.selectOptions(screen.getByLabelText("Kind"), "weight");
-  await user.click(screen.getByRole("tab", { name: "Material & location" }));
+  await openFormSection(user, "Material & location");
+  await user.selectOptions(
+    screen.getByLabelText("Quantity sown kind"),
+    "weight",
+  );
+  await openFormSection(user, "Material & location");
   await user.type(screen.getByLabelText("Amount"), "2.50");
-  await user.click(screen.getByRole("tab", { name: "Material & location" }));
+  await openFormSection(user, "Material & location");
   await user.selectOptions(screen.getByLabelText("Unit"), "mg");
-  await user.click(screen.getByRole("tab", { name: "Material & location" }));
+  await openFormSection(user, "Material & location");
   await user.click(screen.getByLabelText("Approximate"));
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
-  await user.click(screen.getByRole("tab", { name: "Outcome & status" }));
+  await openFormSection(user, "Notes");
+  await openFormSection(user, "Outcome & status");
   await user.type(screen.getByLabelText("Germinated count"), "12");
-  await user.click(screen.getByRole("tab", { name: "Material & location" }));
+  await openFormSection(user, "Material & location");
   await user.selectOptions(
     screen.getByLabelText("Current location"),
     locationId,
   );
-  await user.click(screen.getByRole("tab", { name: "Cultivation" }));
+  await openFormSection(user, "Cultivation");
   await user.type(screen.getByLabelText("Substrate"), "Sand");
-  await user.click(screen.getByRole("tab", { name: "Cultivation" }));
+  await openFormSection(user, "Cultivation");
   await user.type(screen.getByLabelText("Method / container"), "Tray");
-  await user.click(screen.getByRole("tab", { name: "Cultivation" }));
+  await openFormSection(user, "Cultivation");
   await user.type(screen.getByLabelText("Pretreatment"), "Soaked");
-  await user.click(screen.getByRole("tab", { name: "Cultivation" }));
+  await openFormSection(user, "Cultivation");
   await user.type(screen.getByLabelText("Minimum °C"), "-2.5");
-  await user.click(screen.getByRole("tab", { name: "Cultivation" }));
+  await openFormSection(user, "Cultivation");
   await user.type(screen.getByLabelText("Maximum °C"), "24");
-  await user.click(screen.getByRole("tab", { name: "Cultivation" }));
+  await openFormSection(user, "Cultivation");
   await user.type(screen.getByLabelText("Environment / conditions"), "Outside");
-  await user.click(screen.getByRole("tab", { name: "Outcome & status" }));
+  await openFormSection(user, "Outcome & status");
   await user.selectOptions(screen.getByLabelText("Lifecycle"), "completed");
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
+  await openFormSection(user, "Notes");
   await user.type(
     screen.getByLabelText("Notes", { selector: "textarea" }),
     "Historical entry",
   );
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
+  await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Record Sowing" }));
   await screen.findByText("Sowing was recorded.");
   expect(payloads[0]).toMatchObject({
@@ -756,15 +764,18 @@ test.each([
     await user.click(
       await screen.findByRole("button", { name: "+ New sowing" }),
     );
-    await user.click(screen.getByRole("tab", { name: "Essentials" }));
+    await openFormSection(user, "Essentials");
     await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
-    await user.click(screen.getByRole("tab", { name: "Essentials" }));
-    await user.selectOptions(screen.getByLabelText("Precision"), precision);
-    await user.click(screen.getByRole("tab", { name: "Essentials" }));
+    await openFormSection(user, "Essentials");
+    await user.selectOptions(
+      screen.getByLabelText("Sowing date precision"),
+      precision,
+    );
+    await openFormSection(user, "Essentials");
     await user.clear(screen.getByLabelText("Year"));
-    await user.click(screen.getByRole("tab", { name: "Essentials" }));
+    await openFormSection(user, "Essentials");
     await user.type(screen.getByLabelText("Year"), "2024");
-    await user.click(screen.getByRole("tab", { name: "Notes" }));
+    await openFormSection(user, "Notes");
     await user.click(screen.getByRole("button", { name: "Record Sowing" }));
     await screen.findByText("Sowing was recorded.");
     expect(submitted).toMatchObject({ sowing_date: expected });
@@ -787,37 +798,40 @@ test("germination and temperature validation applies only to trustworthy bounds"
   );
   const user = await openSowings();
   await user.click(await screen.findByRole("button", { name: "+ New sowing" }));
-  await user.click(screen.getByRole("tab", { name: "Essentials" }));
+  await openFormSection(user, "Essentials");
   await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
-  await user.click(screen.getByRole("tab", { name: "Material & location" }));
-  await user.selectOptions(screen.getByLabelText("Kind"), "seed_count");
-  await user.click(screen.getByRole("tab", { name: "Material & location" }));
+  await openFormSection(user, "Material & location");
+  await user.selectOptions(
+    screen.getByLabelText("Quantity sown kind"),
+    "seed_count",
+  );
+  await openFormSection(user, "Material & location");
   await user.type(screen.getByLabelText("Amount"), "10");
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
-  await user.click(screen.getByRole("tab", { name: "Outcome & status" }));
+  await openFormSection(user, "Notes");
+  await openFormSection(user, "Outcome & status");
   await user.type(screen.getByLabelText("Germinated count"), "12");
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
+  await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Record Sowing" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "cannot exceed an exact seed count",
   );
   expect(posts).toBe(0);
 
-  await user.click(screen.getByRole("tab", { name: "Material & location" }));
+  await openFormSection(user, "Material & location");
   await user.click(screen.getByLabelText("Approximate"));
-  await user.click(screen.getByRole("tab", { name: "Cultivation" }));
+  await openFormSection(user, "Cultivation");
   await user.type(screen.getByLabelText("Minimum °C"), "30");
-  await user.click(screen.getByRole("tab", { name: "Cultivation" }));
+  await openFormSection(user, "Cultivation");
   await user.type(screen.getByLabelText("Maximum °C"), "20");
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
+  await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Record Sowing" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "Minimum temperature cannot be greater",
   );
   expect(posts).toBe(0);
-  await user.click(screen.getByRole("tab", { name: "Cultivation" }));
+  await openFormSection(user, "Cultivation");
   await user.clear(screen.getByLabelText("Minimum °C"));
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
+  await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Record Sowing" }));
   expect(posts).toBe(1);
 
@@ -837,20 +851,19 @@ test("germination and temperature validation applies only to trustworthy bounds"
   await weightUser.click(
     await screen.findByRole("button", { name: "+ New sowing" }),
   );
-  await weightUser.click(screen.getByRole("tab", { name: "Essentials" }));
+  await openFormSection(weightUser, "Essentials");
   await weightUser.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
-  await weightUser.click(
-    screen.getByRole("tab", { name: "Material & location" }),
+  await openFormSection(weightUser, "Material & location");
+  await weightUser.selectOptions(
+    screen.getByLabelText("Quantity sown kind"),
+    "weight",
   );
-  await weightUser.selectOptions(screen.getByLabelText("Kind"), "weight");
-  await weightUser.click(
-    screen.getByRole("tab", { name: "Material & location" }),
-  );
+  await openFormSection(weightUser, "Material & location");
   await weightUser.type(screen.getByLabelText("Amount"), "2");
-  await weightUser.click(screen.getByRole("tab", { name: "Notes" }));
-  await weightUser.click(screen.getByRole("tab", { name: "Outcome & status" }));
+  await openFormSection(weightUser, "Notes");
+  await openFormSection(weightUser, "Outcome & status");
   await weightUser.type(screen.getByLabelText("Germinated count"), "12");
-  await weightUser.click(screen.getByRole("tab", { name: "Notes" }));
+  await openFormSection(weightUser, "Notes");
   await weightUser.click(screen.getByRole("button", { name: "Record Sowing" }));
   expect(posts).toBe(1);
 });
@@ -883,13 +896,13 @@ test("the single full editor preserves exact values and failed edits, then chang
   await user.click(screen.getByRole("button", { name: "Edit Sowing" }));
   expect(screen.getByLabelText("Amount")).toHaveValue("20");
   expect(screen.getByLabelText("Minimum °C")).toHaveValue("20.5");
-  await user.click(screen.getByRole("tab", { name: "Essentials" }));
+  await openFormSection(user, "Essentials");
   await user.clear(screen.getByLabelText("Sowing label"));
-  await user.click(screen.getByRole("tab", { name: "Essentials" }));
+  await openFormSection(user, "Essentials");
   await user.type(screen.getByLabelText("Sowing label"), "Unsaved correction");
-  await user.click(screen.getByRole("tab", { name: "Outcome & status" }));
+  await openFormSection(user, "Outcome & status");
   await user.selectOptions(screen.getByLabelText("Lifecycle"), "failed");
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
+  await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "could not save or refresh",
@@ -898,7 +911,7 @@ test("the single full editor preserves exact values and failed edits, then chang
     "Unsaved correction",
   );
   fail = false;
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
+  await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   expect(
     await screen.findByText("Sowing changes were saved."),
@@ -936,21 +949,21 @@ test("validation, forbidden, and expired-session API failures remain explicit", 
   );
   const user = await openSowings();
   await user.click(await screen.findByRole("button", { name: "+ New sowing" }));
-  await user.click(screen.getByRole("tab", { name: "Essentials" }));
+  await openFormSection(user, "Essentials");
   await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
+  await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Record Sowing" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "Quantity sown must be greater than zero",
   );
   mode = "forbidden";
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
+  await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Record Sowing" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "could not authorize",
   );
   mode = "session";
-  await user.click(screen.getByRole("tab", { name: "Notes" }));
+  await openFormSection(user, "Notes");
   await user.click(screen.getByRole("button", { name: "Record Sowing" }));
   expect(
     await screen.findByRole("button", { name: "Sign in" }),
@@ -972,7 +985,7 @@ test("desktop Sowing selection stays compact until Open details", async () => {
     within(preview).getByRole("heading", { name: "Tray A" }),
   ).toBeInTheDocument();
   expect(
-    screen.queryByRole("tab", { name: "Propagation" }),
+    screen.queryByRole("tab", { name: "Lineage" }),
   ).not.toBeInTheDocument();
   expect(
     within(preview).getByRole("button", { name: "Open details" }),
@@ -992,7 +1005,7 @@ test("desktop Sowing selection stays compact until Open details", async () => {
   expect(
     screen.getByRole("heading", { name: "Tray A" }).closest("header"),
   ).toHaveTextContent("Clitoria ternatea");
-  expect(screen.getByRole("tab", { name: "Propagation" })).toBeInTheDocument();
+  expect(screen.getByRole("tab", { name: "Lineage" })).toBeInTheDocument();
 });
 
 test("reselecting a previewed record after narrowing the viewport opens its detail", async () => {
@@ -1010,7 +1023,7 @@ test("reselecting a previewed record after narrowing the viewport opens its deta
     screen.getByRole("button", { name: /Tray A.*Clitoria ternatea/ }),
   );
   expect(
-    await screen.findByRole("tab", { name: "Propagation" }),
+    await screen.findByRole("tab", { name: "Lineage" }),
   ).toBeInTheDocument();
   expect(screen.queryByText(/Loading .* detail/)).not.toBeInTheDocument();
 });
@@ -1062,11 +1075,18 @@ test("propagation paths distinguish direct results from retained extracted indiv
   await user.click(
     await screen.findByRole("button", { name: /Tray A.*Clitoria ternatea/s }),
   );
-  const path = await screen.findByRole("region", { name: "Propagation path" });
-  const directLink = within(path).getByRole("link", {
+  expect(
+    screen.queryByRole("region", { name: "Propagation path" }),
+  ).not.toBeInTheDocument();
+  expect(
+    await screen.findByRole("region", { name: "Descendants" }),
+  ).toHaveTextContent("1 exact individual");
+  await user.click(screen.getByRole("link", { name: "View lineage →" }));
+  const recorded = screen.getByRole("region", { name: "Recorded lineage" });
+  const directLink = within(recorded).getByRole("link", {
     name: /Direct specimen/,
   });
-  const extractedLink = within(path).getByRole("link", {
+  const extractedLink = within(recorded).getByRole("link", {
     name: /Historical extraction/,
   });
   expect(extractedLink).toHaveTextContent(
@@ -1074,8 +1094,6 @@ test("propagation paths distinguish direct results from retained extracted indiv
   );
   expect(extractedLink).toHaveTextContent("reintegrated");
   expect(directLink.closest("li")).not.toBe(extractedLink.closest("li"));
-  await user.click(screen.getByRole("tab", { name: "Propagation" }));
-  const recorded = screen.getByRole("region", { name: "Recorded propagation" });
   expect(
     within(recorded).getByRole("link", { name: /Historical extraction/ }),
   ).toHaveTextContent("Plant extracted from Original group");
@@ -1114,3 +1132,311 @@ test("BULK-001 Sowing selection excludes completed records and resets with filte
   );
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
 });
+
+test("contextual Sowing edit preserves directory, guards dismissal, traps focus and returns to its trigger", async () => {
+  mockApi(sowingHandler([sowing()]));
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  const user = await openSowings();
+  setViewportMatches(false);
+  const list = screen.getByRole("list", { name: "Sowing collection" });
+  await user.click(within(list).getAllByRole("button")[0]);
+  const preview = await screen.findByRole("complementary", {
+    name: "Quick preview",
+  });
+  const trigger = within(preview).getByRole("button", {
+    name: "Edit",
+  });
+  const oldHash = window.location.hash;
+  await user.click(trigger);
+  const dialog = screen.getByRole("dialog", { name: "Edit Sowing" });
+  expect(document.querySelector(".collection-context-page")).toHaveAttribute(
+    "inert",
+  );
+  const first = within(dialog).getByRole("link", {
+    name: "Sowings",
+  });
+  expect(first).toHaveFocus();
+  await user.keyboard("{Shift>}{Tab}{/Shift}");
+  expect(
+    within(dialog).getByRole("button", { name: "Save changes" }),
+  ).toHaveFocus();
+  await user.keyboard("{Tab}");
+  expect(first).toHaveFocus();
+  const label = within(dialog).getByLabelText("Sowing label");
+  const before = (label as HTMLInputElement).value;
+  await user.type(label, " draft");
+  await user.keyboard("{Escape}");
+  expect(confirm).toHaveBeenCalledWith("Discard unsaved sowing changes?");
+  expect(label).toHaveValue(before + " draft");
+  // Backdrop and breadcrumb use the same guard.
+  vi.spyOn(dialog, "getBoundingClientRect").mockReturnValue({
+    left: 100,
+    top: 100,
+    right: 1060,
+    bottom: 800,
+    width: 960,
+    height: 700,
+    x: 100,
+    y: 100,
+    toJSON: () => ({}),
+  });
+  fireEvent.click(dialog, { clientX: 20, clientY: 20 });
+  await user.click(first);
+  expect(dialog).toBeInTheDocument();
+  expect(window.location.hash).toContain("tab=edit");
+  confirm.mockClear();
+  act(() => {
+    window.history.back();
+  });
+  await waitFor(() => {
+    expect(confirm).toHaveBeenCalledWith("Discard unsaved sowing changes?");
+  });
+  await waitFor(() => {
+    expect(window.location.hash).toContain("tab=edit");
+  });
+  expect(label).toHaveValue(before + " draft");
+  confirm.mockReturnValue(true);
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  await waitFor(() => {
+    expect(window.location.hash).toBe(oldHash);
+  });
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("complementary", { name: "Quick preview" }),
+  ).toBeVisible();
+  expect(trigger).toHaveFocus();
+});
+
+test.each(["tab=edit", "action=edit"])(
+  "direct Sowing edit %s retains the full-page fallback and dirty Cancel",
+  async (query) => {
+    mockApi(sowingHandler([sowing()]));
+    window.history.replaceState(null, "", `#/sowings/${sowingId}?${query}`);
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const user = userEvent.setup();
+    render(<App />);
+    const label = await screen.findByLabelText("Sowing label");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      document.querySelector(".edit-workspace-fallback"),
+    ).toBeInTheDocument();
+    await user.type(label, " draft");
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect((label as HTMLInputElement).value).toContain("draft");
+    confirm.mockReturnValue(true);
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(
+      await screen.findByRole("button", { name: "Edit Sowing" }),
+    ).toBeVisible();
+    expect(window.location.hash).toBe(`#/sowings/${sowingId}`);
+  },
+);
+
+test.each(["overview", "lineage"])(
+  "Back from clean Sowing edit retains the %s detail tab and trigger",
+  async (tab) => {
+    mockApi(sowingHandler([sowing()]));
+    window.history.replaceState(null, "", `#/sowings/${sowingId}?tab=${tab}`);
+    const user = userEvent.setup();
+    render(<App />);
+    const trigger = await screen.findByRole("button", { name: "Edit Sowing" });
+    await user.click(trigger);
+    expect(screen.getByRole("dialog", { name: "Edit Sowing" })).toBeVisible();
+    act(() => {
+      window.history.back();
+    });
+    await waitFor(() => {
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    });
+    expect(
+      screen.getByRole("tab", {
+        name: tab === "overview" ? "Overview" : "Lineage",
+      }),
+    ).toHaveAttribute("aria-selected", "true");
+    expect(trigger).toHaveFocus();
+  },
+);
+
+test("direct Sowing edit waits for the routed record before loading its draft", async () => {
+  const first = sowing({ label: "First record" });
+  const second = sowing({ id: "second-record", label: "Second record" });
+  mockApi(sowingHandler([first, second]));
+  window.history.replaceState(null, "", `#/sowings/${sowingId}?tab=edit`);
+  render(<App />);
+  expect(await screen.findByLabelText("Sowing label")).toHaveValue(
+    "First record",
+  );
+  act(() => {
+    window.location.hash = "/sowings/second-record?tab=edit";
+  });
+  await waitFor(() => {
+    expect(screen.getByLabelText("Sowing label")).toHaveValue("Second record");
+  });
+});
+
+test("saving Sowing edit retains its detail tab and connected focus trigger across a new revision", async () => {
+  let current = sowing();
+  const custom: Handler = (path, init) => {
+    if (path === `/api/v1/sowings/${sowingId}` && init?.method === "PUT") {
+      current = sowing({ ...body(init), updated_at: "2026-10-16T12:30:00Z" });
+      return json(current);
+    }
+    if (path === "/api/v1/sowings" && (!init?.method || init.method === "GET"))
+      return json([current]);
+    return undefined;
+  };
+  mockApi(sowingHandler([current], custom));
+  window.history.replaceState(null, "", `#/sowings/${sowingId}?tab=lineage`);
+  const user = userEvent.setup();
+  render(<App />);
+  const trigger = await screen.findByRole("button", { name: "Edit Sowing" });
+  await user.click(trigger);
+  const label = screen.getByLabelText("Sowing label");
+  await user.clear(label);
+  await user.type(label, "Saved correction");
+  await user.click(screen.getByRole("button", { name: "Save changes" }));
+  await screen.findByText("Sowing changes were saved.");
+  await waitFor(() => {
+    expect(trigger).toHaveFocus();
+  });
+  expect(trigger.isConnected).toBe(true);
+  expect(screen.getByRole("tab", { name: "Lineage" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  expect(
+    screen.getByRole("heading", { name: "Saved correction" }),
+  ).toBeVisible();
+});
+
+test("minimal Sowing row keeps germination while Quick Preview retains source, date, location and paired actions", async () => {
+  mockApi(sowingHandler([sowing()]));
+  const user = await openSowings();
+  setViewportMatches(false);
+  const row = await screen.findByRole("button", {
+    name: /Tray A.*Clitoria ternatea/s,
+  });
+  expect(row).not.toHaveTextContent("Blue packet");
+  expect(row).not.toHaveTextContent(location.display_path);
+  expect(row).not.toHaveTextContent("2026");
+  expect(row).toHaveTextContent("germinated");
+  await user.click(row);
+  const preview = screen.getByRole("complementary", { name: "Quick preview" });
+  expect(preview).toHaveTextContent("Blue packet");
+  expect(preview).toHaveTextContent(location.display_path);
+  expect(within(preview).getByText("Sown")).toBeVisible();
+  const actions = within(preview).getByRole("group", {
+    name: "Record maintenance",
+  });
+  expect(within(actions).getByRole("button", { name: "Edit" })).toBeVisible();
+  expect(
+    within(actions).getByRole("link", { name: "Record germination" }),
+  ).toBeVisible();
+  expect(
+    within(preview).getByRole("link", { name: /^Create Plant$/ }),
+  ).toBeVisible();
+  expect(
+    within(preview).getByRole("link", { name: "Create Plant group" }),
+  ).toBeVisible();
+  expect(
+    within(preview).getByRole("button", { name: "Open details" }),
+  ).toBeVisible();
+});
+
+test("old Sowing propagation URL opens the canonical Lineage tab and empty summary", async () => {
+  mockApi(
+    sowingHandler([sowing()], (path) =>
+      path.endsWith("/propagation-summary")
+        ? json({
+            plants: [],
+            plant_groups: [],
+            exact_descendant_count: 0,
+            approximate_plant_group_count: 0,
+            unknown_plant_group_count: 0,
+          })
+        : undefined,
+    ),
+  );
+  window.location.hash = `#/sowings/${sowingId}?tab=propagation`;
+  render(<App />);
+  expect(await screen.findByRole("tab", { name: "Lineage" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  expect(window.location.hash).toBe(`#/sowings/${sowingId}?tab=lineage`);
+  expect(
+    await screen.findByText("No additional recorded lineage."),
+  ).toBeVisible();
+  const path = screen.getByRole("region", { name: "Recorded lineage" });
+  expect(
+    within(path).getByRole("link", { name: /Blue packet/ }),
+  ).toHaveAttribute("href", `#/seeds/${seedLotId}`);
+});
+
+test("Sowing Details offers Undo creation in its header without an inline operation panel", async () => {
+  mockApi(
+    sowingHandler([sowing()], (path) =>
+      path.endsWith("/creation-reversal")
+        ? json({
+            status: "blocked",
+            reasons: [
+              {
+                code: "downstream_lineage",
+                message: "A descendant depends on this Sowing.",
+                entity_type: "plant",
+                entity_id: "child",
+              },
+            ],
+            retained_observation_ids: [],
+          })
+        : undefined,
+    ),
+  );
+  const user = await openSowings();
+  await user.click(
+    await screen.findByRole("button", { name: /Tray A.*Clitoria ternatea/s }),
+  );
+  const more = screen.getByRole("button", { name: "More record actions" });
+  expect(more.closest(".detail-header")).toBeInTheDocument();
+  expect(screen.queryByText(/Creation operation/)).not.toBeInTheDocument();
+  await user.click(more);
+  await user.click(screen.getByRole("button", { name: "Undo creation" }));
+  const dialog = screen.getByRole("dialog", { name: "Undo sowing creation" });
+  expect(
+    await within(dialog).findByText("A descendant depends on this Sowing."),
+  ).toBeVisible();
+  expect(
+    within(dialog).getByRole("link", { name: "Open related record" }),
+  ).toHaveAttribute("href", "#/plants/child");
+});
+
+test.each([false, true])(
+  "New Sowing Back uses Sowings as parent (Dashboard entry=%s)",
+  async (fromDashboard) => {
+    mockApi(sowingHandler([sowing()]));
+    const user = fromDashboard ? userEvent.setup() : await openSowings();
+    if (fromDashboard) {
+      render(<App />);
+      await user.click(
+        await screen.findByRole("button", { name: "Quick add" }),
+      );
+      await user.click(screen.getByRole("link", { name: "New sowing" }));
+    } else
+      await user.click(screen.getByRole("button", { name: "+ New sowing" }));
+    await screen.findByRole("heading", { name: "Record Sowing" });
+    expect(window.location.hash).toBe("#/sowings?action=create");
+    await browserBack();
+    expect(window.location.hash).toBe("#/sowings");
+    expect(
+      await screen.findByRole("button", { name: "+ New sowing" }),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("heading", { name: "Record Sowing" }),
+    ).not.toBeInTheDocument();
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: "+ New sowing" }),
+      ).toHaveFocus();
+    });
+  },
+);
