@@ -1833,6 +1833,26 @@
       ],
       "priority": "P0",
       "status": "verified"
+    },
+    {
+      "id": "COLLECTION-VISUAL-002",
+      "category": "ux",
+      "description": "Normalize historical Harvests and hierarchical Locations using the accepted Collection visual grammar",
+      "acceptance_criteria": [
+        "Harvest directory retains search, material/source/identity filters and Saved Views with minimal serif identity rows, collected-material summaries and a privacy-safe desktop Quick Preview",
+        "Harvest creation uses the shared full-page canvas and category/source Back and Cancel parents; contextual aggregate Edit and direct full-page fallback preserve material IDs, ordering, quantities, PartialDate and guarded dismissal",
+        "Full-width one-page Harvest Details distinguishes historical Materials collected from independently managed Stored material, with retained dispositions, explicit eligible seed conversion, owned Event links and the shared Photos gallery",
+        "Location directory defaults to Active with Active/Retired/All filters retained in URL and Saved Views, preserving nested hierarchy, capped indentation, search ancestors, nonzero occupied types and useful Quick Preview",
+        "Location create/edit preserves required Name, explicit scopes, parent-cycle exclusion and lifecycle guards; contextual parent selection uses a field-width reference menu and requires an explicit parent/root choice",
+        "Full-width Location Details shows direct and inclusive record counts with active and total values, explicit zeroes, enabled scopes and navigable parent/children without implying quantity or exact filtered browse links",
+        "Isolated Feature Review retains known owner credentials and provides deterministic Review-only missing material/hierarchy examples; focused interaction, static/build and responsive evidence records actual zoom limits",
+        "Candidate remains unstaged and uncommitted for operator visual acceptance before independent review and canonical verification"
+      ],
+      "dependencies": [
+        "COLLECTION-VISUAL-001"
+      ],
+      "priority": "P0",
+      "status": "implemented"
     }
   ]
 }

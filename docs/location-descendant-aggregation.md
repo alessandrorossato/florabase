@@ -124,3 +124,25 @@ merge, commit or feature-finish is part of this handoff.
 ## BULK-001 interaction
 
 BULK-001 moves active current collection records to a concrete existing scope-compatible Location. Updated-at preconditions include the target, and normal scope/deletion guards remain authoritative. Usage projections reflect the new direct assignments without changing containment or geographic provenance. See [bulk operations](bulk-operations.md).
+
+## COLLECTION-VISUAL-002 presentation candidate
+
+The directory remains a nested, keyboard-operable hierarchy with capped deep indentation, ancestor
+retention during filtering and nonzero occupied record types. Desktop Quick Preview adds contextual
+Edit beside Open details and Create child. Small native create/edit dialogs retain the complete
+scope/parent contract. Details uses the full Collection width with a compact physical-space summary,
+explicit enabled scopes and the existing navigable hierarchy. Its usage table now labels each total
+explicitly before the active count. These remain record counts, and browse links remain general.
+See the [candidate handoff](collection-visual-002-handoff.md) for review evidence and limits.
+
+Second-pass row metrics use short nonzero category/count pairs with `incl.` whenever inclusive totals
+exceed direct assignments. Their accessible names retain both counts; Quick Preview and Details keep
+the complete comparison. Selected rows share the leading accent used by other Collection directories.
+The compact hierarchy/scopes/usage dashboard fits the ordinary root fixture at 1440×844, retaining the
+explicit non-inheritance sentence, active/total labels, navigable children and general browse links.
+
+The operator follow-up adds State: Active/Retired/All, default Active, in the standard filter drawer.
+State composes with search and explicit scopes and round-trips through URL/Saved Views. Matching counts
+exclude structural ancestors; ancestor context and full direct/inclusive facts remain truthful.
+Contextual Edit uses the shared searchable Parent location picker with bounded width and wrapping paths.
+An explicit parent/root choice is required after searching; cycle exclusions and server guards remain.

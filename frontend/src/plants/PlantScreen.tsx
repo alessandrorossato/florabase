@@ -450,6 +450,7 @@ function Detail({
             {record.kind === "plant" && (
               <a
                 className="button-link"
+                data-collection-return="harvest"
                 href={`#/harvests?action=create&sourceType=plant&source=${value.id}`}
               >
                 Record harvest
@@ -462,6 +463,7 @@ function Detail({
           record.kind === "group" && (
             <a
               className="button-link button--secondary"
+              data-collection-return="harvest"
               href={`#/harvests?action=create&sourceType=plant_group&source=${value.id}`}
             >
               Record harvest
@@ -3023,6 +3025,7 @@ export function PlantScreen({
                         {
                           <a
                             className="button-link button--secondary"
+                            data-collection-return="harvest"
                             href={`#/harvests?action=create&sourceType=${selected.kind === "plant" ? "plant" : "plant_group"}&source=${selected.value.id}`}
                           >
                             Record harvest

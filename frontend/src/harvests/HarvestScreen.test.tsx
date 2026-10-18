@@ -1,5 +1,6 @@
 import { selectDirectoryFilter } from "../test/directoryFilters";
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -152,14 +153,20 @@ beforeEach(() => {
   vi.mocked(api.saveHarvest).mockResolvedValue(harvest);
 });
 describe("Harvest directory and detail", () => {
-  it("shows source, materials and quantity in accessible directory and preview", async () => {
+  it("shows minimal historical material rows and useful source preview", async () => {
     const user = userEvent.setup();
     wrap(<HarvestScreen />);
     const row = await screen.findByRole("button", {
       name: /Coffee — Fruit harvest/,
     });
-    expect(row).toHaveTextContent("12 items");
+    expect(row).toHaveTextContent("Fruit");
+    expect(row).not.toHaveTextContent("12 items");
+    expect(
+      within(row).queryByText("Coffee", { exact: true }),
+    ).not.toBeInTheDocument();
     await user.click(row);
+    expect(row).toHaveClass("is-selected");
+    expect(row).toHaveAttribute("aria-pressed", "true");
     const preview = screen.getByRole("complementary", {
       name: "Quick preview",
     });
@@ -188,6 +195,9 @@ describe("Harvest directory and detail", () => {
       screen.getByRole("button", { name: "Set primary test image" }),
     );
     expect(screen.getByRole("img")).toHaveAttribute("src", "/safe-harvest.jpg");
+    await user.click(
+      screen.getByRole("button", { name: "More harvest actions" }),
+    );
     await user.click(screen.getByRole("button", { name: "Delete harvest" }));
     expect(
       screen.getByRole("dialog", { name: "Delete harvest" }),
@@ -220,12 +230,17 @@ describe("Atomic Harvest form", () => {
     );
     await user.clear(screen.getByLabelText("Quantity 1"));
     await user.type(screen.getByLabelText("Quantity 1"), "12");
-    await user.selectOptions(screen.getByLabelText("Precision"), "month");
+    await user.selectOptions(
+      screen.getByLabelText("Occurrence date precision"),
+      "month",
+    );
     await user.clear(screen.getByLabelText("Year"));
     await user.type(screen.getByLabelText("Year"), "2026");
     await user.clear(screen.getByLabelText("Month"));
     await user.type(screen.getByLabelText("Month"), "8");
-    await user.click(screen.getByRole("button", { name: "Save harvest" }));
+    await user.click(
+      screen.getByRole("button", { name: /Record Harvest|Save harvest/ }),
+    );
     await waitFor(() => {
       expect(api.saveHarvest).toHaveBeenCalledWith(
         null,
@@ -279,7 +294,9 @@ describe("Atomic Harvest form", () => {
       screen.getByLabelText("Quantity precision 2"),
       "approximate",
     );
-    await user.click(screen.getByRole("button", { name: "Save harvest" }));
+    await user.click(
+      screen.getByRole("button", { name: /Record Harvest|Save harvest/ }),
+    );
     await waitFor(() => {
       expect(api.saveHarvest).toHaveBeenCalledWith(
         null,
@@ -338,9 +355,18 @@ describe("Atomic Harvest form", () => {
     await user.click(
       await screen.findByRole("button", { name: /Okra Burgundy/ }),
     );
-    await user.click(screen.getByRole("button", { name: "Save harvest" }));
+    await user.click(
+      screen.getByRole("button", { name: /Record Harvest|Save harvest/ }),
+    );
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Material line 1: Quantity must be positive",
+    );
+    await waitFor(() => {
+      expect(screen.getByLabelText("Material 1")).toHaveFocus();
+    });
+    expect(screen.getByRole("tab", { name: "Materials" })).toHaveAttribute(
+      "aria-selected",
+      "true",
     );
     expect(api.saveHarvest).toHaveBeenCalledWith(
       "harvest-1",
@@ -355,8 +381,9 @@ describe("Atomic Harvest form", () => {
     wrap(<HarvestForm onClose={vi.fn()} onSaved={vi.fn()} />);
     await screen.findByRole("combobox", { name: "Harvest source" });
     fireEvent.submit(
-      screen.getByRole("button", { name: "Save harvest" }).closest("form") ??
-        document.createElement("form"),
+      screen
+        .getByRole("button", { name: /Record Harvest|Save harvest/ })
+        .closest("form") ?? document.createElement("form"),
     );
     expect(screen.getByRole("alert")).toHaveTextContent("Choose a source");
     expect(api.saveHarvest).not.toHaveBeenCalled();
@@ -457,4 +484,114 @@ it("BULK-001 does not expose multi-selection for historical Harvest occurrences"
     screen.queryByRole("button", { name: "Select records" }),
   ).not.toBeInTheDocument();
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+});
+
+it("opens generic Harvest creation as a full-page aggregate with accessible date precision", async () => {
+  window.history.replaceState(null, "", "#/harvests?action=create");
+  wrap(<HarvestScreen startCreating />);
+  expect(screen.getByRole("heading", { name: "New Harvest" })).toBeVisible();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  await screen.findByRole("combobox", { name: "Harvest source" });
+  for (const name of ["Source", "Harvest", "Materials collected", "Notes"]) {
+    expect(screen.getByRole("region", { name })).toBeVisible();
+  }
+  expect(screen.getByLabelText("Occurrence date precision")).toBeVisible();
+  expect(
+    screen.queryByText("Precision", { exact: true }),
+  ).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(window.location.hash).toBe("#/harvests");
+  expect(api.saveHarvest).not.toHaveBeenCalled();
+});
+
+it("guards every contextual Harvest editor dismissal and returns focus to Edit", async () => {
+  const user = userEvent.setup();
+  wrap(<HarvestScreen />);
+  await user.click(
+    await screen.findByRole("button", { name: /Coffee — Fruit harvest/ }),
+  );
+  const trigger = screen.getByRole("button", { name: "Edit" });
+  await user.click(trigger);
+  const dialog = screen.getByRole("dialog", { name: "Edit harvest" });
+  await within(dialog).findByRole("combobox", { name: "Harvest source" });
+  expect(screen.getByRole("list", { name: "Harvest directory" })).toBeVisible();
+  await user.type(within(dialog).getByLabelText("Label"), " corrected");
+  const confirmation = vi.spyOn(window, "confirm").mockReturnValue(false);
+  await user.keyboard("{Escape}");
+  expect(dialog).toBeVisible();
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(dialog).toBeVisible();
+  fireEvent.click(dialog, { clientX: -1, clientY: -1 });
+  expect(dialog).toBeVisible();
+  expect(confirmation).toHaveBeenCalledTimes(3);
+  confirmation.mockReturnValue(true);
+  await user.keyboard("{Escape}");
+  expect(
+    screen.queryByRole("dialog", { name: "Edit harvest" }),
+  ).not.toBeInTheDocument();
+  expect(trigger).toHaveFocus();
+  confirmation.mockRestore();
+});
+
+it("renders a direct Harvest Edit URL as a full-page fallback", async () => {
+  wrap(<HarvestScreen initialId="harvest-1" initialTab="edit" />);
+  await screen.findByRole("combobox", { name: "Harvest source" });
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(screen.getByLabelText("Material 1")).toHaveValue("fruit");
+  expect(screen.getByRole("button", { name: "Save harvest" })).toBeVisible();
+});
+
+it("guards browser Back with the same dirty draft and restores the detail Edit trigger", async () => {
+  window.history.replaceState(null, "", "#/harvests/harvest-1");
+  wrap(<HarvestScreen initialId="harvest-1" />);
+  const user = userEvent.setup();
+  const edit = await screen.findByRole("button", { name: "Edit harvest" });
+  await user.click(edit);
+  await user.type(await screen.findByLabelText("Label"), " corrected");
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  act(() => {
+    window.history.back();
+  });
+  await waitFor(() => {
+    expect(confirm).toHaveBeenCalled();
+  });
+  await waitFor(() => {
+    expect(window.location.hash).toContain("action=edit");
+  });
+  expect(screen.getByLabelText("Label")).toHaveValue(" corrected");
+  expect(screen.getByRole("dialog", { name: "Edit harvest" })).toBeVisible();
+  confirm.mockReturnValue(true);
+  act(() => {
+    window.history.back();
+  });
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("dialog", { name: "Edit harvest" }),
+    ).not.toBeInTheDocument();
+  });
+  expect(edit).toHaveFocus();
+  confirm.mockRestore();
+});
+
+it("saves contextual corrections and restores focus to the retained detail action", async () => {
+  window.history.replaceState(null, "", "#/harvests/harvest-1");
+  wrap(<HarvestScreen initialId="harvest-1" />);
+  const user = userEvent.setup();
+  const edit = await screen.findByRole("button", { name: "Edit harvest" });
+  await user.click(edit);
+  await user.type(await screen.findByLabelText("Label"), " corrected");
+  await user.click(screen.getByRole("button", { name: "Save harvest" }));
+  await screen.findByText("Harvest saved.");
+  expect(api.saveHarvest).toHaveBeenCalledWith(
+    "harvest-1",
+    expect.objectContaining({
+      label: "corrected",
+      items: [expect.objectContaining({ id: "item-1" })],
+    }),
+    "token",
+  );
+  expect(
+    screen.queryByRole("dialog", { name: "Edit harvest" }),
+  ).not.toBeInTheDocument();
+  expect(edit).toHaveFocus();
 });

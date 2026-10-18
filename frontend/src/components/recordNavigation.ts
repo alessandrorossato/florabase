@@ -42,6 +42,13 @@ export function isFreshDirectoryNavigation(event: Event): boolean {
 export function collectionPageParent(hash: string): string | null {
   const [pathname, query = ""] = hash.replace(/^#/, "").split("?", 2);
   const params = new URLSearchParams(query);
+  if (pathname === "/harvests" && params.get("action") === "create") {
+    const source = params.get("source");
+    const sourceType = params.get("sourceType");
+    return source && (sourceType === "plant" || sourceType === "plant_group")
+      ? `#/${sourceType === "plant" ? "plants" : "plant-groups"}/${encodeURIComponent(source)}`
+      : "#/harvests";
+  }
   if (
     params.get("action") === "create" &&
     ["/seeds", "/sowings", "/plants"].includes(pathname)
@@ -73,7 +80,7 @@ export function openCollectionPage(
   if (!parent) return;
   // A source operation returns to the same Details tab when entered there.
   if (
-    /^#\/(seeds|sowings|plant-groups)\/.+/.test(parent) &&
+    /^#\/(seeds|sowings|plants|plant-groups)\/.+/.test(parent) &&
     window.location.hash.split("?", 1)[0] === parent
   )
     parent = window.location.hash;
@@ -83,11 +90,16 @@ export function openCollectionPage(
   window.history.replaceState(
     {
       ...window.history.state,
-      collectionReturnFocus: parent.startsWith("#/plant-groups/")
-        ? "extract"
-        : ["#/seeds", "#/sowings", "#/plants"].includes(parent)
-          ? "create"
-          : undefined,
+      collectionReturnFocus:
+        hash.startsWith("#/harvests?action=create") && parent !== "#/harvests"
+          ? "harvest"
+          : parent.startsWith("#/plant-groups/")
+            ? "extract"
+            : ["#/seeds", "#/sowings", "#/plants", "#/harvests"].includes(
+                  parent,
+                )
+              ? "create"
+              : undefined,
     },
     "",
     parent,

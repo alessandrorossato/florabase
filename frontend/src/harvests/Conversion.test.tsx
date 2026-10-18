@@ -203,10 +203,11 @@ it("exposes creation only on tracked active seed material", async () => {
   ]) {
     vi.mocked(inventoryApi.inventoryList).mockResolvedValue([row]);
     const v = wrap(<StoredMaterialDirectory />);
-    if (row.state === "depleted")
-      await userEvent
-        .setup()
-        .selectOptions(screen.getByLabelText("State"), "depleted");
+    if (row.state === "depleted") {
+      await userEvent.click(screen.getByRole("button", { name: /^Filters/ }));
+      await userEvent.selectOptions(screen.getByLabelText("State"), "depleted");
+      await userEvent.click(screen.getByRole("button", { name: "Done" }));
+    }
     await screen.findByText("1 record");
     expect(
       screen.queryByRole("button", { name: "Create Seed lot" }),
@@ -236,10 +237,19 @@ it("shows producer, date, identity and Location context and creates an exact par
   expect(
     await screen.findByRole("combobox", { name: "Botanical identity" }),
   ).toHaveValue("Coffee");
+  expect(screen.getByText("Producer").nextElementSibling).toHaveTextContent(
+    "Plant · Mother plant",
+  );
   expect(
-    screen.getByText(/Producer: Plant · Mother plant/),
-  ).toBeInTheDocument();
-  expect(screen.getByText(/Harvest date: 2026/)).toBeInTheDocument();
+    document.querySelector(
+      'label[for="' +
+        screen.getByLabelText("Seed lot quantity precision").id +
+        '"]',
+    ),
+  ).toHaveClass("sr-only");
+  expect(screen.getByText("Harvest date").nextElementSibling).toHaveTextContent(
+    "2026",
+  );
   expect(
     screen.getByRole("combobox", { name: "Seed lot Location" }),
   ).toHaveValue("Fridge");
@@ -299,7 +309,9 @@ it("allows explicit identity and target Location choices for a Plant group", asy
   const identity = await screen.findByRole("combobox", {
     name: "Botanical identity",
   });
-  expect(screen.getByText(/Producer: Plant group/)).toBeInTheDocument();
+  expect(screen.getByText("Producer").nextElementSibling).toHaveTextContent(
+    "Plant group",
+  );
   await user.clear(identity);
   await user.type(identity, "Offspring");
   await user.click(

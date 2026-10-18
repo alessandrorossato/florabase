@@ -1,0 +1,720 @@
+[
+  {
+    "name": "1440-stored-directory",
+    "documentHeight": 844,
+    "documentWidth": 1440,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 416.84375,
+        "class": "harvest-row-content",
+        "client": 52,
+        "scroll": 52,
+        "width": 913.796875
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests?tab=stored-material",
+    "width": 1440
+  },
+  {
+    "name": "1440-location-directory-preview",
+    "documentHeight": 844,
+    "documentWidth": 1440,
+    "height": 844,
+    "panels": [],
+    "url": "http://localhost:15174/#/locations",
+    "width": 1440
+  },
+  {
+    "name": "1440-location-details",
+    "documentHeight": 844,
+    "documentWidth": 1440,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 802.90625,
+        "class": "reference-detail location-detail",
+        "client": 779,
+        "scroll": 779,
+        "width": 1172
+      }
+    ],
+    "url": "http://localhost:15174/#/locations/01a14a39-b466-707a-bfad-6dfcc72a1184",
+    "width": 1440
+  },
+  {
+    "name": "1440-harvest-directory-preview",
+    "documentHeight": 844,
+    "documentWidth": 1440,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 312.765625,
+        "class": "harvest-row-content",
+        "client": 51,
+        "scroll": 51,
+        "width": 541.546875
+      },
+      {
+        "bottom": 401.765625,
+        "class": "harvest-row-content",
+        "client": 51,
+        "scroll": 51,
+        "width": 536.640625
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests",
+    "width": 1440
+  },
+  {
+    "name": "1440-harvest-details",
+    "documentHeight": 996,
+    "documentWidth": 1425,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 766.171875,
+        "class": "record-detail-grid harvest-context-grid",
+        "client": 133,
+        "scroll": 133,
+        "width": 1157
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests/01a14a39-b582-742a-81da-828856e32091",
+    "width": 1440
+  },
+  {
+    "name": "1440-harvest-edit-details",
+    "documentHeight": 996,
+    "documentWidth": 1440,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 766.171875,
+        "class": "record-detail-grid harvest-context-grid",
+        "client": 133,
+        "scroll": 133,
+        "width": 1172
+      },
+      {
+        "bottom": 793.359375,
+        "class": "task-dialog edit-workspace-modal",
+        "client": 741,
+        "scroll": 741,
+        "width": 960
+      },
+      {
+        "bottom": 792.359375,
+        "class": "collection-form harvest-form",
+        "client": 741,
+        "scroll": 741,
+        "width": 958
+      },
+      {
+        "bottom": 715.359375,
+        "class": "form-section-panel",
+        "client": 465,
+        "scroll": 465,
+        "width": 910
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests/01a14a39-b582-742a-81da-828856e32091?action=edit",
+    "width": 1440
+  },
+  {
+    "name": "1440-harvest-edit-materials",
+    "documentHeight": 996,
+    "documentWidth": 1440,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 766.171875,
+        "class": "record-detail-grid harvest-context-grid",
+        "client": 133,
+        "scroll": 133,
+        "width": 1172
+      },
+      {
+        "bottom": 793.359375,
+        "class": "task-dialog edit-workspace-modal",
+        "client": 741,
+        "scroll": 741,
+        "width": 960
+      },
+      {
+        "bottom": 792.359375,
+        "class": "collection-form harvest-form",
+        "client": 741,
+        "scroll": 741,
+        "width": 958
+      },
+      {
+        "bottom": 715.359375,
+        "class": "form-section-panel",
+        "client": 465,
+        "scroll": 465,
+        "width": 910
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests/01a14a39-b582-742a-81da-828856e32091?action=edit",
+    "width": 1440
+  },
+  {
+    "name": "1440-seed-conversion",
+    "documentHeight": 996,
+    "documentWidth": 1440,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 793.359375,
+        "class": "task-dialog edit-workspace-modal",
+        "client": 741,
+        "scroll": 741,
+        "width": 960
+      },
+      {
+        "bottom": 792.359375,
+        "class": "collection-form inventory-form harvest-conversion-form",
+        "client": 741,
+        "scroll": 741,
+        "width": 958
+      },
+      {
+        "bottom": 473.625,
+        "class": "form-section-panel",
+        "client": 362,
+        "scroll": 362,
+        "width": 443
+      },
+      {
+        "bottom": 687.796875,
+        "class": "form-section-panel",
+        "client": 576,
+        "scroll": 576,
+        "width": 443
+      },
+      {
+        "bottom": 687.796875,
+        "class": "form-section-panel",
+        "client": 202,
+        "scroll": 202,
+        "width": 443
+      },
+      {
+        "bottom": 614.171875,
+        "class": "record-detail-grid harvest-context-grid",
+        "client": 133,
+        "scroll": 133,
+        "width": 1172
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests/01a14a39-b582-742a-81da-828856e32091",
+    "width": 1440
+  },
+  {
+    "name": "1024-seed-conversion",
+    "documentHeight": 1070,
+    "documentWidth": 1024,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 793.359375,
+        "class": "task-dialog edit-workspace-modal",
+        "client": 741,
+        "scroll": 741,
+        "width": 960
+      },
+      {
+        "bottom": 792.359375,
+        "class": "collection-form inventory-form harvest-conversion-form",
+        "client": 741,
+        "scroll": 741,
+        "width": 958
+      },
+      {
+        "bottom": 473.625,
+        "class": "form-section-panel",
+        "client": 362,
+        "scroll": 362,
+        "width": 443
+      },
+      {
+        "bottom": 687.796875,
+        "class": "form-section-panel",
+        "client": 576,
+        "scroll": 576,
+        "width": 443
+      },
+      {
+        "bottom": 687.796875,
+        "class": "form-section-panel",
+        "client": 202,
+        "scroll": 202,
+        "width": 443
+      },
+      {
+        "bottom": 670.171875,
+        "class": "record-detail-grid harvest-context-grid",
+        "client": 133,
+        "scroll": 133,
+        "width": 756
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests/01a14a39-b582-742a-81da-828856e32091",
+    "width": 1024
+  },
+  {
+    "name": "390-seed-conversion",
+    "documentHeight": 1645,
+    "documentWidth": 390,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 844,
+        "class": "task-dialog edit-workspace-modal",
+        "client": 842,
+        "scroll": 1059,
+        "width": 390
+      },
+      {
+        "bottom": 843,
+        "class": "collection-form inventory-form harvest-conversion-form",
+        "client": 842,
+        "scroll": 1287,
+        "width": 388
+      },
+      {
+        "bottom": 466.984375,
+        "class": "form-section-panel",
+        "client": 406,
+        "scroll": 406,
+        "width": 325
+      },
+      {
+        "bottom": 982.546875,
+        "class": "form-section-panel",
+        "client": 516,
+        "scroll": 516,
+        "width": 325
+      },
+      {
+        "bottom": 1202.703125,
+        "class": "form-section-panel",
+        "client": 220,
+        "scroll": 220,
+        "width": 325
+      },
+      {
+        "bottom": 1062.34375,
+        "class": "record-detail-grid harvest-context-grid",
+        "client": 258,
+        "scroll": 258,
+        "width": 358
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests/01a14a39-b582-742a-81da-828856e32091",
+    "width": 390
+  },
+  {
+    "name": "1024-harvest-details",
+    "documentHeight": 1070,
+    "documentWidth": 1009,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 670.171875,
+        "class": "record-detail-grid harvest-context-grid",
+        "client": 133,
+        "scroll": 133,
+        "width": 741
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests/01a14a39-b582-742a-81da-828856e32091",
+    "width": 1024
+  },
+  {
+    "name": "1024-harvest-edit-details",
+    "documentHeight": 1070,
+    "documentWidth": 1024,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 822.171875,
+        "class": "record-detail-grid harvest-context-grid",
+        "client": 133,
+        "scroll": 133,
+        "width": 756
+      },
+      {
+        "bottom": 793.359375,
+        "class": "task-dialog edit-workspace-modal",
+        "client": 741,
+        "scroll": 741,
+        "width": 960
+      },
+      {
+        "bottom": 792.359375,
+        "class": "collection-form harvest-form",
+        "client": 741,
+        "scroll": 741,
+        "width": 958
+      },
+      {
+        "bottom": 715.359375,
+        "class": "form-section-panel",
+        "client": 465,
+        "scroll": 465,
+        "width": 910
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests/01a14a39-b582-742a-81da-828856e32091?action=edit",
+    "width": 1024
+  },
+  {
+    "name": "1024-harvest-edit-materials",
+    "documentHeight": 1070,
+    "documentWidth": 1024,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 822.171875,
+        "class": "record-detail-grid harvest-context-grid",
+        "client": 133,
+        "scroll": 133,
+        "width": 756
+      },
+      {
+        "bottom": 793.359375,
+        "class": "task-dialog edit-workspace-modal",
+        "client": 741,
+        "scroll": 741,
+        "width": 960
+      },
+      {
+        "bottom": 792.359375,
+        "class": "collection-form harvest-form",
+        "client": 741,
+        "scroll": 741,
+        "width": 958
+      },
+      {
+        "bottom": 715.359375,
+        "class": "form-section-panel",
+        "client": 465,
+        "scroll": 465,
+        "width": 910
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests/01a14a39-b582-742a-81da-828856e32091?action=edit",
+    "width": 1024
+  },
+  {
+    "name": "390-harvest-edit-materials",
+    "documentHeight": 1645,
+    "documentWidth": 390,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 1214.34375,
+        "class": "record-detail-grid harvest-context-grid",
+        "client": 258,
+        "scroll": 258,
+        "width": 358
+      },
+      {
+        "bottom": 844,
+        "class": "task-dialog edit-workspace-modal",
+        "client": 842,
+        "scroll": 842,
+        "width": 390
+      },
+      {
+        "bottom": 843,
+        "class": "collection-form harvest-form",
+        "client": 842,
+        "scroll": 842,
+        "width": 388
+      },
+      {
+        "bottom": 766,
+        "class": "form-section-panel",
+        "client": 566,
+        "scroll": 566,
+        "width": 340
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests/01a14a39-b582-742a-81da-828856e32091?action=edit",
+    "width": 390
+  },
+  {
+    "name": "390-harvest-details",
+    "documentHeight": 1697,
+    "documentWidth": 375,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 1266.34375,
+        "class": "record-detail-grid harvest-context-grid",
+        "client": 258,
+        "scroll": 258,
+        "width": 343
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests/01a14a39-b582-742a-81da-828856e32091",
+    "width": 390
+  },
+  {
+    "name": "390-stored-directory",
+    "documentHeight": 844,
+    "documentWidth": 390,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 610.015625,
+        "class": "harvest-row-content",
+        "client": 76,
+        "scroll": 76,
+        "width": 264
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests?tab=stored-material",
+    "width": 390
+  },
+  {
+    "name": "1024-stored-directory",
+    "documentHeight": 844,
+    "documentWidth": 1024,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 644.859375,
+        "class": "harvest-row-content",
+        "client": 52,
+        "scroll": 52,
+        "width": 497.796875
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests?tab=stored-material",
+    "width": 1024
+  },
+  {
+    "name": "1024-location-details",
+    "documentHeight": 929,
+    "documentWidth": 1009,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 904.703125,
+        "class": "reference-detail location-detail",
+        "client": 881,
+        "scroll": 881,
+        "width": 741
+      }
+    ],
+    "url": "http://localhost:15174/#/locations/01a14a39-b466-707a-bfad-6dfcc72a1184",
+    "width": 1024
+  },
+  {
+    "name": "390-location-details",
+    "documentHeight": 1813,
+    "documentWidth": 375,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 1716.984375,
+        "class": "reference-detail location-detail",
+        "client": 1610,
+        "scroll": 1610,
+        "width": 343
+      }
+    ],
+    "url": "http://localhost:15174/#/locations/01a14a39-b466-707a-bfad-6dfcc72a1184",
+    "width": 390
+  },
+  {
+    "name": "390-location-directory",
+    "documentHeight": 844,
+    "documentWidth": 390,
+    "height": 844,
+    "panels": [],
+    "url": "http://localhost:15174/#/locations",
+    "width": 390
+  },
+  {
+    "name": "390-location-deep-tree",
+    "documentHeight": 1570,
+    "documentWidth": 375,
+    "height": 844,
+    "panels": [],
+    "url": "http://localhost:15174/#/locations?q=Propagation",
+    "width": 390
+  },
+  {
+    "name": "1024-location-deep-tree",
+    "documentHeight": 1649,
+    "documentWidth": 1009,
+    "height": 844,
+    "panels": [],
+    "url": "http://localhost:15174/#/locations?q=Propagation",
+    "width": 1024
+  },
+  {
+    "name": "1024-location-directory",
+    "documentHeight": 1445,
+    "documentWidth": 1009,
+    "height": 844,
+    "panels": [],
+    "url": "http://localhost:15174/#/locations",
+    "width": 1024
+  },
+  {
+    "name": "1024-harvest-directory",
+    "documentHeight": 1266,
+    "documentWidth": 1009,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 1104.78125,
+        "class": "harvest-row-content",
+        "client": 51,
+        "scroll": 51,
+        "width": 499
+      },
+      {
+        "bottom": 1193.78125,
+        "class": "harvest-row-content",
+        "client": 51,
+        "scroll": 51,
+        "width": 494.09375
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests",
+    "width": 1024
+  },
+  {
+    "name": "390-harvest-directory",
+    "documentHeight": 844,
+    "documentWidth": 390,
+    "height": 844,
+    "panels": [
+      {
+        "bottom": 507.703125,
+        "class": "harvest-row-content",
+        "client": 75,
+        "scroll": 75,
+        "width": 256
+      },
+      {
+        "bottom": 638.0625,
+        "class": "harvest-row-content",
+        "client": 75,
+        "scroll": 75,
+        "width": 256
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests",
+    "width": 390
+  },
+  {
+    "name": "125-proxy-harvest-details",
+    "documentHeight": 1014,
+    "documentWidth": 1137,
+    "height": 675,
+    "panels": [
+      {
+        "bottom": 766.171875,
+        "class": "record-detail-grid harvest-context-grid",
+        "client": 133,
+        "scroll": 133,
+        "width": 841
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests/01a14a39-b582-742a-81da-828856e32091",
+    "width": 1152
+  },
+  {
+    "name": "150-proxy-harvest-details",
+    "documentHeight": 1070,
+    "documentWidth": 945,
+    "height": 563,
+    "panels": [
+      {
+        "bottom": 822.171875,
+        "class": "record-detail-grid harvest-context-grid",
+        "client": 133,
+        "scroll": 133,
+        "width": 649
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests/01a14a39-b582-742a-81da-828856e32091",
+    "width": 960
+  },
+  {
+    "name": "125-proxy-stored-directory",
+    "documentHeight": 675,
+    "documentWidth": 1152,
+    "height": 675,
+    "panels": [
+      {
+        "bottom": 416.84375,
+        "class": "harvest-row-content",
+        "client": 52,
+        "scroll": 52,
+        "width": 597.796875
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests?tab=stored-material",
+    "width": 1152
+  },
+  {
+    "name": "150-proxy-stored-directory",
+    "documentHeight": 757,
+    "documentWidth": 945,
+    "height": 563,
+    "panels": [
+      {
+        "bottom": 644.859375,
+        "class": "harvest-row-content",
+        "client": 52,
+        "scroll": 52,
+        "width": 390.796875
+      }
+    ],
+    "url": "http://localhost:15174/#/harvests?tab=stored-material",
+    "width": 960
+  },
+  {
+    "name": "125-proxy-location-details",
+    "documentHeight": 833,
+    "documentWidth": 1137,
+    "height": 675,
+    "panels": [
+      {
+        "bottom": 809.46875,
+        "class": "reference-detail location-detail",
+        "client": 785,
+        "scroll": 785,
+        "width": 841
+      }
+    ],
+    "url": "http://localhost:15174/#/locations/01a14a39-b466-707a-bfad-6dfcc72a1184",
+    "width": 1152
+  },
+  {
+    "name": "150-proxy-location-details",
+    "documentHeight": 1010,
+    "documentWidth": 945,
+    "height": 563,
+    "panels": [
+      {
+        "bottom": 986.109375,
+        "class": "reference-detail location-detail",
+        "client": 962,
+        "scroll": 962,
+        "width": 649
+      }
+    ],
+    "url": "http://localhost:15174/#/locations/01a14a39-b466-707a-bfad-6dfcc72a1184",
+    "width": 960
+  }
+]

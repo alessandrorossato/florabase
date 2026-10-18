@@ -12,7 +12,8 @@ export function useCollectionPageReturnFocus(ready: boolean) {
     )
       return;
     const target = state.collectionReturnFocus;
-    if (target !== "create" && target !== "extract") return;
+    if (target !== "create" && target !== "extract" && target !== "harvest")
+      return;
     const frame = requestAnimationFrame(() => {
       document
         .querySelector<HTMLElement>(`[data-collection-return="${target}"]`)

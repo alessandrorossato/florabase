@@ -1,5 +1,12 @@
 import { FieldLabel } from "../components/FieldLabel";
-import { useEffect, useId, useRef, useState, type SyntheticEvent } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type RefObject,
+  type SyntheticEvent,
+} from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { TaskDialog } from "../components/TaskDialog";
@@ -28,6 +35,7 @@ export function QuantityFields({
   onChange,
   disabled,
   approximateOnly = false,
+  hidePrecisionLabel = false,
   weightUnits = ["mg", "g", "kg"],
 }: {
   label: string;
@@ -35,6 +43,7 @@ export function QuantityFields({
   onChange: (value: Quantity | null) => void;
   disabled: boolean;
   approximateOnly?: boolean;
+  hidePrecisionLabel?: boolean;
   weightUnits?: readonly string[];
 }) {
   const id = useId();
@@ -47,7 +56,12 @@ export function QuantityFields({
     <fieldset disabled={disabled} className="inventory-quantity">
       <legend>{label}</legend>
       <div className="field">
-        <label htmlFor={`${id}-precision`}>{label} precision</label>
+        <label
+          className={hidePrecisionLabel ? "sr-only" : undefined}
+          htmlFor={`${id}-precision`}
+        >
+          {label} precision
+        </label>
         <select
           id={`${id}-precision`}
           value={precision}
@@ -134,12 +148,14 @@ export function InventoryDialog({
   item,
   inventory,
   disposition = false,
+  returnFocusTo,
   onClose,
   onSaved,
 }: {
   item: HarvestItem;
   inventory?: Inventory;
   disposition?: boolean;
+  returnFocusTo?: RefObject<HTMLElement | null>;
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -242,6 +258,7 @@ export function InventoryDialog({
   }
   return (
     <TaskDialog
+      returnFocusTo={returnFocusTo}
       title={title}
       onClose={() => {
         if (!pending) onClose();

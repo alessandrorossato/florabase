@@ -138,3 +138,25 @@
   h3 {
   font: 400 1.375rem/1.3 var(--font-botanical);
 }
+
+/* Shared Collection selection: the accent belongs on the leading edge only. */
+.app-content
+  :is(
+    .seed-row,
+    .harvest-directory-row,
+    .location-directory-row
+  )[aria-pressed="true"] {
+  background: var(--primary-subtle);
+  border-color: var(--border);
+  box-shadow: inset 3px 0 var(--primary);
+  outline: none;
+}
+.app-content
+  :is(
+    .seed-row,
+    .harvest-directory-row,
+    .location-directory-row
+  ):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}

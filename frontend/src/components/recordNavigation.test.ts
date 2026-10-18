@@ -14,6 +14,15 @@ afterEach(() => {
 });
 
 test.each([
+  ["#/harvests?action=create", "#/harvests"],
+  [
+    "#/harvests?action=create&sourceType=plant&source=specimen",
+    "#/plants/specimen",
+  ],
+  [
+    "#/harvests?action=create&sourceType=plant_group&source=group",
+    "#/plant-groups/group",
+  ],
   ["#/seeds?action=create", "#/seeds"],
   ["#/sowings?action=create", "#/sowings"],
   ["#/plants?action=create&kind=plant", "#/plants"],
@@ -29,6 +38,11 @@ test.each([
     expect(window.location.hash).toBe(route);
     await browserBack();
     expect(window.location.hash).toBe(parent);
+    if (route.startsWith("#/harvests?action=create")) {
+      expect(window.history.state as unknown).toMatchObject({
+        collectionReturnFocus: parent === "#/harvests" ? "create" : "harvest",
+      });
+    }
     await browserBack();
     expect(window.location.hash).toBe("#/dashboard");
   },
@@ -52,6 +66,14 @@ test("Details, Edit and unrelated routes do not acquire a create parent", () => 
 });
 
 test.each([
+  [
+    "#/plants/specimen?tab=events",
+    "#/harvests?action=create&sourceType=plant&source=specimen",
+  ],
+  [
+    "#/plant-groups/group?tab=overview",
+    "#/harvests?action=create&sourceType=plant_group&source=group",
+  ],
   [
     "#/sowings/tray?tab=lineage",
     "#/plants?action=from-sowing&sowing=tray&kind=plant",

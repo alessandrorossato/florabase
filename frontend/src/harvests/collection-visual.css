@@ -1,0 +1,668 @@
+@import "../components/collection-directory.css";
+@import "../components/collection-visual.css";
+
+/* Complete the Collection family with historical material and physical hierarchy. */
+.app-content :is(.harvest-workspace, .locations-workspace),
+.app-content .harvest-workspace .harvest-detail,
+.app-content
+  .locations-workspace
+  :is(.identity-panel, .location-detail, .location-detail-layout) {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  min-width: 0;
+}
+.app-content .harvest-directory-layout,
+.app-content .locations-workspace .reference-split {
+  grid-template-columns: minmax(0, 2.15fr) minmax(18rem, 1fr);
+  gap: var(--space-6);
+}
+.app-content .harvest-directory > li > .harvest-directory-row {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr) minmax(7rem, auto);
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+}
+.app-content .harvest-directory .record-visual {
+  width: 4rem;
+  height: 4rem;
+  box-sizing: border-box;
+}
+.app-content .harvest-directory .harvest-row-content strong,
+.app-content .location-directory-row .location-record-name {
+  font: 400 1.16rem/1.3 var(--font-botanical);
+}
+.app-content :is(.harvest-workspace, .locations-workspace) .quick-preview h3 {
+  font: 400 1.375rem/1.3 var(--font-botanical);
+}
+.app-content .harvest-workspace .quick-preview > .record-visual {
+  width: 100%;
+  height: 12rem;
+  max-height: 12rem;
+  box-sizing: border-box;
+}
+.harvest-workspace .quick-preview > .record-visual img {
+  object-fit: scale-down;
+}
+.harvest-workspace .quick-preview > .record-visual svg {
+  width: 5rem;
+  height: 5rem;
+}
+.app-content .harvest-directory .harvest-row-meta {
+  max-width: 13rem;
+  min-width: 0;
+  font: var(--type-small);
+  overflow-wrap: anywhere;
+}
+.harvest-row-content small {
+  color: var(--text-muted);
+}
+.app-content
+  :is(.harvest-workspace, .locations-workspace)
+  .record-preview__actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+}
+.app-content :is(.harvest-detail, .location-detail) .detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+}
+.app-content .harvest-detail > section,
+.app-content .harvest-context-grid > section,
+.app-content .location-overview-grid > section {
+  min-width: 0;
+  margin-block: var(--space-4);
+  padding: var(--space-4) 0 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+}
+.app-content :is(.harvest-detail, .location-detail) h4 {
+  font: var(--type-h3);
+  margin: 0 0 var(--space-3);
+}
+.app-content :is(.harvest-detail, .location-detail) .seed-overview-band {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+.seed-overview-band > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.seed-overview-band dt {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.seed-overview-band dd {
+  font: var(--type-strong);
+  margin: var(--space-1) 0 0;
+}
+.app-content .harvest-context-grid,
+.app-content .location-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 var(--space-8);
+}
+.location-overview-grid > [aria-labelledby="location-usage-title"] {
+  grid-column: 2;
+  grid-row: 1 / 3;
+}
+.app-content .location-tree .location-directory-row {
+  gap: var(--space-1);
+  padding: var(--space-3);
+  border-radius: var(--radius-normal);
+}
+.app-content .location-tree .location-compact-usage {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  font: var(--type-small);
+}
+.app-content .location-tree-node {
+  align-items: center;
+}
+.app-content .locations-workspace .scope-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  background: transparent;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  padding: var(--space-4) 0;
+}
+.locations-workspace .scope-fields .field-help {
+  grid-column: 1 / -1;
+}
+.app-content .harvest-create-workspace .harvest-form {
+  padding: 0;
+  max-width: none;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.app-content .harvest-form .form-sections--page {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.5fr);
+  gap: 0 var(--space-8);
+  align-content: start;
+}
+.app-content .harvest-form .form-section-panel {
+  min-width: 0;
+  padding: var(--space-4) 0;
+  border-top: 1px solid var(--border);
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+}
+.app-content .harvest-form [data-form-panel="source"] {
+  grid-column: 1;
+  grid-row: 1;
+}
+.app-content .harvest-form [data-form-panel="harvest"] {
+  grid-column: 1;
+  grid-row: 2;
+}
+.app-content .harvest-form [data-form-panel="notes"] {
+  grid-column: 1;
+  grid-row: 3;
+}
+.app-content .harvest-form [data-form-panel="materials"] {
+  grid-column: 2;
+  grid-row: 1 / 4;
+}
+.app-content .harvest-form .form-section-footer {
+  grid-column: 1 / -1;
+}
+.app-content .harvest-form .harvest-line {
+  padding: var(--space-3) 0;
+  margin: 0 0 var(--space-3);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+}
+.app-content .harvest-form .harvest-line .form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0 0 var(--space-2);
+}
+.harvest-form .harvest-line-description {
+  grid-column: 1 / -1;
+}
+.harvest-form .harvest-source-context {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.harvest-source-context strong {
+  font: var(--type-strong);
+  color: var(--text);
+}
+.harvest-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
+.app-content .harvest-form .harvest-line textarea {
+  min-height: 2.75rem;
+}
+.app-content .harvest-workspace .edit-workspace-modal .harvest-form {
+  padding: var(--space-4) var(--space-6);
+}
+.harvest-edit-heading :is(h3, p) {
+  margin: 0 0 var(--space-2);
+}
+@media (max-width: 68rem) {
+  .app-content .locations-workspace .reference-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 64rem) {
+  .app-content .harvest-directory-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-content .harvest-form .form-sections--page {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-content .harvest-form [data-form-panel] {
+    grid-column: auto;
+    grid-row: auto;
+  }
+}
+@media (max-width: 48rem) {
+  .app-content .harvest-directory > li > .harvest-directory-row {
+    grid-template-columns: 4rem minmax(0, 1fr);
+    padding-inline: var(--space-2);
+  }
+  .app-content .harvest-directory .harvest-row-meta {
+    grid-column: 2;
+    width: auto;
+    max-width: none;
+    text-align: left;
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .app-content :is(.harvest-detail, .location-detail) .seed-overview-band,
+  .app-content .harvest-context-grid,
+  .app-content .location-overview-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .location-overview-grid > [aria-labelledby="location-usage-title"] {
+    grid-column: auto;
+    grid-row: auto;
+  }
+  .app-content .harvest-form .harvest-line .form-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .app-content :is(.harvest-detail, .location-detail) .detail-actions {
+    justify-content: flex-start;
+  }
+}
+.app-content .harvest-workspace .edit-workspace-modal .harvest-conversion-form {
+  overflow: auto;
+  padding: var(--space-4) var(--space-6);
+}
+.app-content .harvest-conversion-form .form-sections--page {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  flex: none;
+  gap: var(--space-4) var(--space-6);
+}
+.app-content .harvest-conversion-form .form-section-panel {
+  overflow: visible;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+}
+.harvest-conversion-form [data-form-panel="source"] {
+  grid-column: 1;
+  grid-row: 1;
+}
+.harvest-conversion-form [data-form-panel="quantity"] {
+  grid-column: 1;
+  grid-row: 2;
+}
+.harvest-conversion-form [data-form-panel="target"] {
+  grid-column: 2;
+  grid-row: 1 / 3;
+}
+.harvest-conversion-form .form-section-footer {
+  grid-column: 1 / -1;
+}
+@media (max-width: 48rem) {
+  .app-content .harvest-conversion-form .form-sections--page {
+    display: block;
+  }
+}
+
+.app-content .harvest-create-workspace > .seed-creation-panel {
+  order: 0;
+}
+.app-content .harvest-form .form-section-panel {
+  grid-template-columns: minmax(0, 1fr);
+}
+.app-content .harvest-form [data-form-panel="source"] > .form-grid {
+  grid-template-columns: minmax(7rem, 0.65fr) minmax(0, 1.35fr);
+}
+@media (max-width: 30rem) {
+  .app-content .harvest-form [data-form-panel="source"] > .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Contextual aggregate edits share the page columns with one outer scroll and visible actions. */
+.app-content
+  .harvest-workspace
+  .edit-workspace-modal
+  .harvest-form
+  .form-sections--page {
+  display: grid;
+  flex: none;
+}
+.app-content
+  .harvest-workspace
+  .edit-workspace-modal
+  .collection-form
+  .form-sections--page
+  > .form-section-footer {
+  position: sticky;
+  bottom: calc(-1 * var(--space-4));
+  z-index: 1;
+  background: var(--surface);
+  padding-block: var(--space-3);
+}
+.app-content .harvest-conversion-form .form-sections--page {
+  grid-template-rows: none;
+}
+@media (max-width: 48rem) {
+  .app-content
+    .harvest-workspace
+    .edit-workspace-modal
+    .harvest-form
+    .form-sections--page {
+    display: block;
+  }
+}
+.app-content .harvest-form .form-sections--page,
+.app-content
+  .harvest-workspace
+  .edit-workspace-modal
+  .harvest-form
+  .form-sections--page {
+  grid-template-rows: max-content max-content minmax(min-content, 1fr) auto;
+  align-items: start;
+}
+@media (max-width: 64rem) {
+  .app-content .harvest-form .form-sections--page,
+  .app-content
+    .harvest-workspace
+    .edit-workspace-modal
+    .harvest-form
+    .form-sections--page {
+    grid-template-rows: none;
+  }
+}
+
+.harvest-conversion-form [data-form-panel="source"] p {
+  margin-block: var(--space-2);
+}
+
+/* Compact material dashboard; historical and current facts retain their own sections. */
+.app-content .harvest-detail > section,
+.app-content .harvest-context-grid > section,
+.app-content .location-overview-grid > section {
+  margin-block: var(--space-3);
+  padding-top: var(--space-3);
+}
+.app-content :is(.harvest-detail, .location-detail) .seed-overview-band {
+  padding: var(--space-3) var(--space-4);
+  margin-block: var(--space-3);
+}
+.app-content .harvest-items li {
+  padding: var(--space-2) 0;
+  gap: var(--space-1) var(--space-4);
+}
+.app-content .collected-material-items li {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+.collected-material-items .collected-material-quantity {
+  grid-column: 2;
+  grid-row: 1 / 3;
+  align-self: center;
+}
+.app-content .collected-material-items li p {
+  grid-column: 1;
+}
+.app-content .stored-material-section .harvest-items > li {
+  display: block;
+}
+.stored-material-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-2) 0;
+}
+.stored-material-facts dt {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.stored-material-facts dd {
+  margin: 0;
+}
+.app-content .stored-material-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.app-content .stored-material-actions > :is(button, a) {
+  width: auto;
+}
+.app-content .harvest-context-grid p {
+  margin-block: var(--space-2);
+}
+.app-content .stored-material-directory .harvest-directory > li {
+  display: block;
+  min-width: 0;
+  border-bottom: 1px solid var(--border);
+}
+.app-content
+  .stored-material-directory
+  .harvest-directory
+  > li.bulk-selection-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+.app-content .stored-material-directory .harvest-directory-row {
+  box-sizing: border-box;
+  border-bottom: 0;
+}
+.app-content .stored-directory-actions {
+  margin: 0 0 var(--space-3) calc(4rem + var(--space-7));
+  gap: var(--space-2);
+}
+.app-content :is(.harvest-workspace, .locations-workspace) .quick-preview {
+  gap: var(--space-3);
+}
+.app-content :is(.harvest-workspace, .locations-workspace) .quick-preview > p {
+  margin-block: var(--space-2);
+}
+.app-content .locations-workspace .record-preview__actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.locations-workspace .record-preview__actions > a:first-child {
+  grid-column: 1 / -1;
+}
+.app-content .location-tree .location-compact-usage {
+  font: var(--type-small);
+  gap: var(--space-2) var(--space-4);
+  color: var(--text);
+}
+.location-compact-usage > span {
+  white-space: nowrap;
+}
+.app-content .location-overview-grid :is(p, dl, h5) {
+  margin-block: var(--space-2);
+}
+.app-content .location-overview-grid .record-link-list li {
+  padding-block: var(--space-2);
+}
+.app-content .location-usage-table :is(th, td) {
+  padding: var(--space-2);
+}
+.app-content .location-overview-grid .actions {
+  gap: var(--space-2) var(--space-4);
+  margin-block: var(--space-2);
+}
+
+/* Contextual editing uses the same tabs and fixed footer as Plants and Sowings. */
+.app-content .harvest-workspace .edit-workspace-modal .harvest-form {
+  overflow: hidden;
+}
+.app-content
+  .harvest-workspace
+  .edit-workspace-modal
+  .harvest-form
+  .form-sections--edit {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+}
+.app-content
+  .harvest-workspace
+  .edit-workspace-modal
+  .harvest-form
+  [data-form-panel] {
+  grid-column: auto;
+  grid-row: auto;
+}
+.app-content
+  .harvest-workspace
+  .edit-workspace-modal
+  .harvest-form
+  .form-section-panel:not([hidden]) {
+  overflow: auto;
+  border: 0;
+  padding: var(--space-3) 0;
+}
+.app-content .harvest-form .form-section-panel[hidden] {
+  display: none;
+}
+.app-content .harvest-form .harvest-line-material {
+  grid-column: 1 / -1;
+}
+.app-content .harvest-form .harvest-line .form-grid {
+  align-items: end;
+}
+.app-content .harvest-form .harvest-line-description {
+  grid-column: 1 / -1;
+}
+.app-content .harvest-conversion-form .form-sections--page {
+  gap: var(--space-3) var(--space-6);
+}
+.app-content .harvest-conversion-form .form-section-panel {
+  gap: var(--space-3);
+}
+.conversion-source-facts {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+.conversion-source-facts > div {
+  display: grid;
+  grid-template-columns: 7rem minmax(0, 1fr);
+  gap: var(--space-2);
+}
+.conversion-source-facts dt {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.conversion-source-facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.app-content .harvest-conversion-form textarea {
+  min-height: 4rem;
+}
+@media (max-width: 48rem) {
+  .stored-material-facts {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+  }
+  .stored-material-facts > div {
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
+  }
+  .app-content .harvest-form .harvest-line .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-content .stored-directory-actions {
+    margin-left: 0;
+    padding-inline: var(--space-2);
+  }
+}
+
+.app-content .harvest-conversion-form .inventory-quantity {
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
+.app-content .harvest-conversion-form .inventory-quantity legend {
+  font: var(--type-strong);
+  margin-bottom: var(--space-2);
+}
+.app-content .stored-material-directory .harvest-row-content strong {
+  color: var(--text);
+}
+
+/* Match the accepted Plants directory text roles and control geometry. */
+.app-content .harvest-directory-layout {
+  grid-template-columns: minmax(0, 1.3fr) minmax(16rem, 0.8fr);
+  gap: var(--space-8);
+}
+.app-content .harvest-directory .harvest-directory-row {
+  font: var(--type-body);
+  text-decoration: none;
+}
+.app-content .harvest-directory .harvest-row-content {
+  gap: var(--space-1);
+}
+.app-content .harvest-directory .harvest-row-botanical {
+  font: 400 0.8125rem/1.45 var(--font-botanical);
+  color: var(--text-muted);
+}
+.app-content .harvest-directory .harvest-row-meta {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.harvest-row-meta .lifecycle-badge {
+  justify-self: end;
+}
+.app-content .harvest-directory .harvest-row-meta small {
+  font: var(--type-small);
+}
+.app-content .stored-material-directory .stored-directory-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0 var(--space-4) var(--space-3)
+    calc(4rem + var(--space-3) + var(--space-4));
+}
+.app-content
+  :is(.stored-directory-actions, .stored-material-actions)
+  > :is(button, a),
+.app-content
+  .locations-workspace
+  :is(.location-tree-toggle, .location-directory-row) {
+  border-radius: var(--radius-normal);
+}
+.app-content .location-directory-row {
+  font: var(--type-body);
+}
+.app-content .harvest-create-workspace .harvest-line:first-child {
+  padding-top: 0;
+}
+.app-content
+  .harvest-form
+  .harvest-line[data-quantity-recorded="false"]
+  .harvest-line-quantity-kind {
+  grid-column: 1 / -1;
+}
+.location-parent-field {
+  min-width: 0;
+}
+.location-parent-field .reference-picker,
+.location-parent-field .reference-control,
+.location-parent-field .reference-menu {
+  min-width: 0;
+  max-width: 100%;
+}
+.location-parent-field .reference-menu {
+  width: 100%;
+  box-sizing: border-box;
+}
+.location-parent-field .reference-menu button {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 64rem) {
+  .app-content .harvest-directory-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 48rem) {
+  .app-content .stored-material-directory .stored-directory-actions {
+    margin-left: var(--space-2);
+  }
+}

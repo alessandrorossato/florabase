@@ -219,3 +219,20 @@ HISTORY-001 also exposes these recorded facts through the read-only [operational
 Structured Harvests supersede their owned Events there; seed conversions supersede their linked
 dispositions. Current inventory corrections and Location assignments do not fabricate occurrences.
 The existing domain details and action controls remain authoritative.
+
+## COLLECTION-VISUAL-002 presentation candidate
+
+Historical Harvest rows now use the accepted Collection identity/media hierarchy, with occurrence
+date and a concise material-kind summary. Collected quantities and stock balances stay out of the
+ordinary row; Quick Preview adds source and date without repeating every material line.
+Creation uses the full-page Collection canvas and source/category history parents. Contextual Edit
+retains the complete aggregate in guarded Details/Materials/Notes tabs; direct Edit URLs use the page fallback.
+The one-page full-width detail separates Materials collected, Stored material, Notes, related history
+and the shared Photos mini-gallery. Conversion is explicit and retains its atomic endpoint and guards.
+See the [candidate handoff](collection-visual-002-handoff.md) for evidence and acceptance limits.
+
+The second refinement keeps compact collected rows distinct from stored remainder, state and storage
+facts. Eligible seed conversion has an intrinsic-width important action, disposition is secondary, and
+print/edit/removal are per-line More operations. Stored material uses complete media/identity/metric
+columns and standard grouped filters/Saved views. Unknown remainder stays unknown. Historical source
+Location is never inferred as a Harvest filter.

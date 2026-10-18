@@ -1,7 +1,8 @@
 import { useEffect, useId, useRef, useState, type SyntheticEvent } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { TaskDialog } from "../components/TaskDialog";
+import { EditWorkspace } from "../components/EditWorkspace";
+import { FormSections } from "../components/FormSections";
 import {
   listBotanicalIdentities,
   type BotanicalIdentityResponse,
@@ -148,190 +149,253 @@ export function ConversionDialog({
     inventory.quantity && !inventory.quantity.is_approximate,
   );
   return (
-    <TaskDialog
+    <EditWorkspace
+      modal
       title="Create Seed lot from stored seeds"
       onClose={() => {
         if (!pending) onClose();
       }}
     >
       <form
-        className="record-form inventory-form"
+        className="collection-form inventory-form harvest-conversion-form"
         onSubmit={(e) => {
           void submit(e);
         }}
       >
         <h3>Create Seed lot from stored seeds</h3>
-        <section aria-label="Source seed material">
-          <h4>Source</h4>
-          <p>{inventory.harvest_title}</p>
-          <p>
-            Producer:{" "}
-            {inventory.source.type === "plant_group" ? "Plant group" : "Plant"}{" "}
-            · {inventory.source.display_name}
-          </p>
-          <p>{inventory.source.botanical_identity.display_label}</p>
-          <p>Remaining now: {remainingLabel(inventory)}</p>
-          <p>Storage: {inventory.location?.display_path ?? "Not recorded"}</p>
-          <p>
-            Harvest date:{" "}
-            {harvest ? formatPartialDate(harvest.occurred_on) : "Loading…"}
-          </p>
-        </section>
-        <div className="field">
-          <label htmlFor={`${id}-mode`}>Material leaving stock</label>
-          <select
-            id={`${id}-mode`}
-            value={mode}
-            disabled={pending}
-            onChange={(e) => {
-              const next = e.currentTarget.value as ConversionCreate["mode"];
-              setMode(next);
-              if (next === "use_all" && exact) setQuantity(inventory.quantity);
-              else if (mode === "use_all" && exact)
-                setQuantity(
-                  inventory.quantity
-                    ? { ...inventory.quantity, value: "" }
-                    : null,
-                );
-            }}
-          >
-            <option value="partial">Partial amount</option>
-            <option value="use_all">Use all remaining</option>
-          </select>
-        </div>
-        <h4>Resulting Seed lot</h4>
-        {choices ? (
-          <>
-            <ReferencePicker
-              label="Botanical identity"
-              choices={choices.identities.map((i) => ({
-                id: i.id,
-                label: i.display_label,
-              }))}
-              value={identity}
-              onChange={setIdentity}
-              disabled={pending}
-              required
-            />
-            <ReferencePicker
-              label="Seed lot Location"
-              choices={choices.locations.map((l) => ({
-                id: l.id,
-                label: l.display_path,
-                retired: Boolean(l.retired_at),
-              }))}
-              value={location}
-              onChange={setLocation}
-              disabled={pending}
-              help="Confirm where the resulting Seed lot will be stored. Remaining source material stays in its current Location."
-            />
-            {location && (
-              <button
-                type="button"
-                className="button--secondary"
-                disabled={pending}
-                onClick={() => {
-                  setLocation("");
-                }}
-              >
-                Clear Seed lot Location
-              </button>
-            )}
-          </>
-        ) : loadingError ? (
-          <p role="alert">
-            Could not load creation choices.{" "}
+        <FormSections
+          mode="page"
+          panels={[
+            {
+              id: "source",
+              label: "Source stored material",
+              content: (
+                <>
+                  {" "}
+                  <section aria-label="Source seed material">
+                    <dl className="conversion-source-facts">
+                      <div>
+                        <dt>Harvest</dt>
+                        <dd>{inventory.harvest_title}</dd>
+                      </div>
+                      <div>
+                        <dt>Producer</dt>
+                        <dd>
+                          {inventory.source.type === "plant_group"
+                            ? "Plant group"
+                            : "Plant"}{" "}
+                          · {inventory.source.display_name}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Botanical identity</dt>
+                        <dd>
+                          {inventory.source.botanical_identity.display_label}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Remaining now</dt>
+                        <dd>{remainingLabel(inventory)}</dd>
+                      </div>
+                      <div>
+                        <dt>Storage</dt>
+                        <dd>
+                          {inventory.location?.display_path ?? "Not recorded"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Harvest date</dt>
+                        <dd>
+                          {harvest
+                            ? formatPartialDate(harvest.occurred_on)
+                            : "Loading…"}
+                        </dd>
+                      </div>
+                    </dl>
+                  </section>
+                  <div className="field">
+                    <label htmlFor={`${id}-mode`}>Material leaving stock</label>
+                    <select
+                      id={`${id}-mode`}
+                      value={mode}
+                      disabled={pending}
+                      onChange={(e) => {
+                        const next = e.currentTarget
+                          .value as ConversionCreate["mode"];
+                        setMode(next);
+                        if (next === "use_all" && exact)
+                          setQuantity(inventory.quantity);
+                        else if (mode === "use_all" && exact)
+                          setQuantity(
+                            inventory.quantity
+                              ? { ...inventory.quantity, value: "" }
+                              : null,
+                          );
+                      }}
+                    >
+                      <option value="partial">Partial amount</option>
+                      <option value="use_all">Use all remaining</option>
+                    </select>
+                  </div>
+                </>
+              ),
+            },
+            {
+              id: "target",
+              label: "Resulting Seed lot",
+              content: (
+                <>
+                  {choices ? (
+                    <>
+                      <ReferencePicker
+                        label="Botanical identity"
+                        choices={choices.identities.map((i) => ({
+                          id: i.id,
+                          label: i.display_label,
+                        }))}
+                        value={identity}
+                        onChange={setIdentity}
+                        disabled={pending}
+                        required
+                      />
+                      <ReferencePicker
+                        label="Seed lot Location"
+                        choices={choices.locations.map((l) => ({
+                          id: l.id,
+                          label: l.display_path,
+                          retired: Boolean(l.retired_at),
+                        }))}
+                        value={location}
+                        onChange={setLocation}
+                        disabled={pending}
+                        help="Remaining material stays in its current Location."
+                      />
+                      {location && (
+                        <button
+                          type="button"
+                          className="button--secondary"
+                          disabled={pending}
+                          onClick={() => {
+                            setLocation("");
+                          }}
+                        >
+                          Clear Seed lot Location
+                        </button>
+                      )}
+                    </>
+                  ) : loadingError ? (
+                    <p role="alert">
+                      Could not load creation choices.{" "}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAttempt((v) => v + 1);
+                        }}
+                      >
+                        Retry choices
+                      </button>
+                    </p>
+                  ) : (
+                    <p role="status">Loading creation choices…</p>
+                  )}
+                  <div className="field">
+                    <label htmlFor={`${id}-label`}>Seed lot label</label>
+                    <input
+                      id={`${id}-label`}
+                      value={label}
+                      maxLength={255}
+                      disabled={pending}
+                      onChange={(e) => {
+                        setLabel(e.currentTarget.value);
+                      }}
+                    />
+                  </div>
+                  <PartialDateField
+                    id={`${id}-viability`}
+                    label="Expected viability until"
+                    hidePrecisionLabel
+                    showHelp={false}
+                    value={viability ?? null}
+                    onChange={setViability}
+                    disabled={pending}
+                  />
+                  <div className="field">
+                    <label htmlFor={`${id}-notes`}>Seed lot notes</label>
+                    <textarea
+                      id={`${id}-notes`}
+                      value={notes}
+                      maxLength={20000}
+                      disabled={pending}
+                      onChange={(e) => {
+                        setNotes(e.currentTarget.value);
+                      }}
+                    />
+                  </div>
+                </>
+              ),
+            },
+            {
+              id: "quantity",
+              label: "Conversion quantities",
+              content: (
+                <>
+                  {" "}
+                  <QuantityFields
+                    hidePrecisionLabel
+                    label="Seed lot quantity"
+                    value={quantity}
+                    onChange={setQuantity}
+                    disabled={pending || (mode === "use_all" && exact)}
+                    weightUnits={["mg", "g"]}
+                  />
+                  {mode === "partial" && inventory.quantity?.is_approximate && (
+                    <QuantityFields
+                      label="Confirmed remaining now"
+                      value={remainder}
+                      onChange={setRemainder}
+                      disabled={pending}
+                      approximateOnly
+                    />
+                  )}
+                  <p role="status" className="field-help">
+                    {inventory.quantity?.unit === "kg" &&
+                      "Correct the current stock measurement to g or mg before creating a Seed lot. Units are not converted. "}
+                    {mode === "use_all"
+                      ? "All remaining source material will be depleted."
+                      : !inventory.quantity
+                        ? "The source remainder stays unknown."
+                        : inventory.quantity.is_approximate
+                          ? "Confirm the approximate source remainder; it is not calculated."
+                          : "The exact target amount will be subtracted from source stock."}{" "}
+                    One new collection-produced Seed lot will retain this exact
+                    producer. No Sowing or Event is created.
+                  </p>
+                  {error && (
+                    <p role="alert" ref={alert} tabIndex={-1}>
+                      {error}
+                    </p>
+                  )}
+                </>
+              ),
+            },
+          ]}
+          submit={
+            <button disabled={pending || !choices || !harvest || !identity}>
+              {pending ? "Creating…" : "Create Seed lot"}
+            </button>
+          }
+          cancel={
             <button
               type="button"
-              onClick={() => {
-                setAttempt((v) => v + 1);
-              }}
+              className="button--secondary"
+              disabled={pending}
+              onClick={onClose}
             >
-              Retry choices
+              Cancel
             </button>
-          </p>
-        ) : (
-          <p role="status">Loading creation choices…</p>
-        )}
-        <div className="field">
-          <label htmlFor={`${id}-label`}>Seed lot label</label>
-          <input
-            id={`${id}-label`}
-            value={label}
-            maxLength={255}
-            disabled={pending}
-            onChange={(e) => {
-              setLabel(e.currentTarget.value);
-            }}
-          />
-        </div>
-        <QuantityFields
-          label="Seed lot quantity"
-          value={quantity}
-          onChange={setQuantity}
-          disabled={pending || (mode === "use_all" && exact)}
-          weightUnits={["mg", "g"]}
+          }
         />
-        {mode === "partial" && inventory.quantity?.is_approximate && (
-          <QuantityFields
-            label="Confirmed remaining now"
-            value={remainder}
-            onChange={setRemainder}
-            disabled={pending}
-            approximateOnly
-          />
-        )}
-        <PartialDateField
-          id={`${id}-viability`}
-          label="Expected viability until"
-          value={viability ?? null}
-          onChange={setViability}
-          disabled={pending}
-        />
-        <div className="field">
-          <label htmlFor={`${id}-notes`}>Seed lot notes</label>
-          <textarea
-            id={`${id}-notes`}
-            value={notes}
-            maxLength={20000}
-            disabled={pending}
-            onChange={(e) => {
-              setNotes(e.currentTarget.value);
-            }}
-          />
-        </div>
-        <p role="status" className="field-help">
-          {inventory.quantity?.unit === "kg" &&
-            "Correct the current stock measurement to g or mg before creating a Seed lot. Units are not converted. "}
-          {mode === "use_all"
-            ? "All remaining source material will be depleted."
-            : !inventory.quantity
-              ? "The source remainder stays unknown."
-              : inventory.quantity.is_approximate
-                ? "Confirm the approximate source remainder; it is not calculated."
-                : "The exact target amount will be subtracted from source stock."}{" "}
-          One new collection-produced Seed lot will retain this exact producer.
-          No Sowing or Event is created.
-        </p>
-        {error && (
-          <p role="alert" ref={alert} tabIndex={-1}>
-            {error}
-          </p>
-        )}
-        <div className="actions">
-          <button disabled={pending || !choices || !harvest || !identity}>
-            {pending ? "Creating…" : "Create Seed lot"}
-          </button>
-          <button
-            type="button"
-            className="button--secondary"
-            disabled={pending}
-            onClick={onClose}
-          >
-            Cancel
-          </button>
-        </div>
       </form>
-    </TaskDialog>
+    </EditWorkspace>
   );
 }

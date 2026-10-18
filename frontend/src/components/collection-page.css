@@ -1,6 +1,11 @@
 /* The delivered Add SeedLot canvas is the shared full-page Collection shell. */
 .app-content
-  :is(.seeds-workspace, .sowings-workspace, .plants-workspace)
+  :is(
+    .seeds-workspace,
+    .sowings-workspace,
+    .plants-workspace,
+    .harvest-workspace
+  )
   .seed-creation-panel
   .collection-form,
 .app-content
@@ -47,7 +52,12 @@
 
 /* One full-page footer: the SeedLot border/gutters, continuous with the canvas. */
 .app-content
-  :is(.seeds-workspace, .sowings-workspace, .plants-workspace)
+  :is(
+    .seeds-workspace,
+    .sowings-workspace,
+    .plants-workspace,
+    .harvest-workspace
+  )
   .collection-form
   .form-sections--page
   > .form-section-footer {

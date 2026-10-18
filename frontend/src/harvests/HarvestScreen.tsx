@@ -1,8 +1,19 @@
+import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
+import { RecordIdentities } from "../components/recordPresentation";
+import "../components/collection-page.css";
+import "./collection-visual.css";
+import { useEditRoute } from "../components/useEditRoute";
+import {
+  closeCollectionPage,
+  collectionPageParent,
+  openCollectionPage,
+  setRecordRoute,
+} from "../components/recordNavigation";
 import { DirectoryTools } from "../components/DirectoryTools";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
-import { useEffect, useId, useState } from "react";
+import { useContext, useEffect, useId, useRef, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
@@ -11,7 +22,13 @@ import {
   DetailHeader,
   WorkspaceIntro,
 } from "../components/CollectionUI";
-import { DirectorySearch, QuickPreview } from "../components/ReferenceUI";
+import {
+  BotanicalName,
+  DirectorySearch,
+  QuickPreview,
+  OverflowMenu,
+  PageHeader,
+} from "../components/ReferenceUI";
 import { TaskDialog } from "../components/TaskDialog";
 import { formatPartialDate } from "../events/eventData";
 import { PhotosSection } from "../photos/PhotosSection";
@@ -35,6 +52,12 @@ import {
   type Harvest,
 } from "./api";
 
+function directoryMaterialSummary(harvest: Harvest): string {
+  const labels = materialSummary(harvest).split(" · ");
+  return labels.length > 2
+    ? `${labels.slice(0, 2).join(" · ")} · +${String(labels.length - 2)} more`
+    : labels.join(" · ");
+}
 function sourceHref(harvest: Harvest): string {
   return `#/${harvest.source.type === "plant" ? "plants" : "plant-groups"}/${harvest.source.id}`;
 }
@@ -58,7 +81,7 @@ function Visual({
 }
 function Items({ harvest }: { harvest: Harvest }) {
   return (
-    <ol className="harvest-items">
+    <ol className="harvest-items collected-material-items">
       {harvest.items.map((item) => (
         <li key={item.id}>
           <strong>
@@ -67,7 +90,10 @@ function Items({ harvest }: { harvest: Harvest }) {
                 ?.label
             }
           </strong>
-          <span>Collected: {quantityLabel(item)}</span>
+          <span className="collected-material-quantity">
+            <span className="sr-only">Collected: </span>
+            {quantityLabel(item)}
+          </span>
           {item.description && (
             <p className="preserve-lines">{item.description}</p>
           )}
@@ -89,15 +115,16 @@ export function HarvestScreen({
   sourceType?: "plant" | "plant_group";
   sourceId?: string;
 }) {
+  const creating = startCreating;
   const storedMode = !initialId && initialTab === "stored-material";
   const auth = useAuth();
+  const recordIdentities = useContext(RecordIdentities);
   const headingId = useId();
   const [records, setRecords] = useState<Harvest[] | null>(null);
   const [detail, setDetail] = useState<Harvest | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [editor, setEditor] = useState<Harvest | "new" | null>(
-    startCreating ? "new" : null,
-  );
+  const [editor, setEditor] = useState<Harvest | null>(null);
+  const moreTrigger = useRef<HTMLButtonElement>(null);
   const [deleting, setDeleting] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -162,11 +189,99 @@ export function HarvestScreen({
         .toLocaleLowerCase()
         .includes(query.trim().toLocaleLowerCase()),
   );
+  useCollectionPageReturnFocus(Boolean(records) && !creating && !initialId);
   const selected = filtered?.find((record) => record.id === selectedId);
+  const [backgroundId, setBackgroundId] = useState<string | undefined>(
+    undefined,
+  );
+  const dismissalRef = useRef<(() => boolean) | null>(null);
+  const directEditHandled = useRef(false);
+  const edit = useEditRoute({
+    routeIsEdit: initialTab === "edit",
+    canDismiss: () => dismissalRef.current?.() ?? true,
+    onDismiss: () => {
+      setEditor(null);
+      if (!edit.modal && initialId)
+        setRecordRoute(`#/harvests/${initialId}`, true);
+    },
+  });
+  useEffect(() => {
+    if (initialTab !== "edit") directEditHandled.current = false;
+    else if (detail?.id === initialId && !directEditHandled.current) {
+      directEditHandled.current = true;
+      setEditor(detail);
+    }
+  }, [initialTab, detail, initialId]);
   function openEditor(record: Harvest | "new") {
-    setEditor(record);
     setError(null);
+    if (record === "new") openCollectionPage("#/harvests?action=create");
+    else {
+      directEditHandled.current = true;
+      setBackgroundId(initialId);
+      setEditor(record);
+      edit.open(`#/harvests/${record.id}?action=edit`);
+    }
   }
+  const displayId = editor && edit.modal ? backgroundId : initialId;
+  if (creating)
+    return (
+      <section className="harvest-workspace harvest-create-workspace">
+        <Breadcrumbs
+          items={[
+            {
+              label: sourceId ? "Source" : "Harvests",
+              href: collectionPageParent(window.location.hash) ?? "#/harvests",
+            },
+            { label: "New Harvest" },
+          ]}
+        />
+        <PageHeader
+          eyebrow="Collection"
+          titleId={headingId}
+          title="New Harvest"
+          description="Record material collected on one occurrence from a Plant or Plant group."
+        />
+        <div className="seed-creation-panel">
+          <HarvestForm
+            sourceType={sourceType}
+            sourceId={sourceId}
+            dismissalRef={dismissalRef}
+            onClose={() => {
+              if (dismissalRef.current?.() ?? true)
+                closeCollectionPage(
+                  collectionPageParent(window.location.hash) ?? "#/harvests",
+                );
+            }}
+            onSaved={(record) => {
+              setRecordRoute(`#/harvests/${record.id}`, true);
+            }}
+          />
+        </div>
+      </section>
+    );
+  if (editor && !edit.modal)
+    return (
+      <section className="harvest-workspace harvest-create-workspace">
+        <PageHeader
+          eyebrow="Collection"
+          title="Edit harvest"
+          titleId={headingId}
+        />
+        <HarvestForm
+          harvest={editor}
+          modal={false}
+          dismissalRef={dismissalRef}
+          onClose={() => {
+            edit.close();
+          }}
+          onSaved={(record) => {
+            setEditor(null);
+            setDetail(record);
+            setRecordRoute(`#/harvests/${record.id}`, true);
+          }}
+        />
+      </section>
+    );
   function choose(record: Harvest) {
     if (window.matchMedia("(max-width: 64rem)").matches)
       window.location.assign(`#/harvests/${record.id}`);
@@ -202,7 +317,7 @@ export function HarvestScreen({
         title="Harvests"
         titleId={headingId}
         description="Record material collected from Plants and Plant groups."
-        contextOnly={Boolean(initialId)}
+        contextOnly={Boolean(displayId)}
         actions={
           storedMode && (
             <button
@@ -216,7 +331,7 @@ export function HarvestScreen({
           )
         }
         tools={
-          !initialId &&
+          !displayId &&
           !storedMode && (
             <DirectoryTools
               onReset={() => {
@@ -246,9 +361,10 @@ export function HarvestScreen({
                 />
               }
               actions={
-                !initialId && (
+                !displayId && (
                   <button
                     type="button"
+                    data-collection-return="create"
                     onClick={() => {
                       openEditor("new");
                     }}
@@ -340,7 +456,7 @@ export function HarvestScreen({
           )
         }
       />
-      {!initialId && (
+      {!displayId && (
         <nav className="workspace-view-nav" aria-label="Harvest views">
           <button
             type="button"
@@ -380,8 +496,8 @@ export function HarvestScreen({
           {notice}
         </p>
       )}
-      {initialId ? (
-        detail ? (
+      {displayId ? (
+        detail?.id === displayId ? (
           <article className="collection-detail harvest-detail">
             <Breadcrumbs
               items={[
@@ -410,7 +526,16 @@ export function HarvestScreen({
                         <a
                           href={`#/identities/${detail.source.botanical_identity.id}?tab=harvests`}
                         >
-                          {detail.source.botanical_identity.display_label}
+                          <BotanicalName
+                            label={
+                              detail.source.botanical_identity.display_label
+                            }
+                            scientificName={
+                              recordIdentities.get(
+                                detail.source.botanical_identity.id,
+                              )?.scientific_name
+                            }
+                          />
                         </a>
                       ),
                     },
@@ -426,36 +551,72 @@ export function HarvestScreen({
               }}
               editLabel="Edit harvest"
               overflow={
-                <button
-                  type="button"
-                  className="button--secondary"
-                  onClick={() => {
-                    setDeleting(true);
-                  }}
+                <OverflowMenu
+                  ariaLabel="More harvest actions"
+                  triggerRef={moreTrigger}
                 >
-                  Delete harvest
-                </button>
+                  <button
+                    type="button"
+                    className="button--danger"
+                    onClick={() => {
+                      setDeleting(true);
+                    }}
+                  >
+                    Delete harvest
+                  </button>
+                </OverflowMenu>
               }
             />
-            <section aria-label="Harvest overview">
-              <h4>Harvested materials</h4>
+            <dl className="seed-overview-band" aria-label="Harvest overview">
+              <div>
+                <dt>Occurrence date</dt>
+                <dd>{formatPartialDate(detail.occurred_on)}</dd>
+              </div>
+              <div>
+                <dt>Source</dt>
+                <dd>
+                  <a href={sourceHref(detail)}>{detail.source.display_name}</a>
+                </dd>
+              </div>
+              <div>
+                <dt>Materials</dt>
+                <dd>{materialSummary(detail)}</dd>
+              </div>
+            </dl>
+            <section
+              className="record-section"
+              aria-label="Materials collected"
+            >
+              <h4>Materials collected</h4>
               <Items harvest={detail} />
-              {detail.notes && (
-                <>
-                  <h4>Notes</h4>
-                  <p className="preserve-lines">{detail.notes}</p>
-                </>
-              )}
             </section>
-            <p>
-              <a
-                href={`${sourceHref(detail)}?tab=events&event=${detail.event_id}`}
-              >
-                View owned harvest Event in source history
-              </a>{" "}
-              · <a href="#/events">Journal</a>
-            </p>
             <StoredMaterialSection harvest={detail} />
+            <div className="record-detail-grid harvest-context-grid">
+              <section className="record-section">
+                <h4>Notes</h4>
+                <p
+                  className={
+                    detail.notes ? "preserve-lines" : "detail-empty-state"
+                  }
+                >
+                  {detail.notes ?? "No notes recorded."}
+                </p>
+              </section>
+              <section className="record-section">
+                <h4>Related history</h4>
+                <p>
+                  <a
+                    href={`${sourceHref(detail)}?tab=events&event=${detail.event_id}`}
+                  >
+                    View owned harvest Event in source history
+                  </a>
+                </p>
+                <p>
+                  <a href="#/events">Journal</a> ·{" "}
+                  <a href="#/history">History</a>
+                </p>
+              </section>
+            </div>
             <PhotosSection
               key={detail.id}
               target="harvest"
@@ -502,26 +663,25 @@ export function HarvestScreen({
                             choose(record);
                           }}
                         >
-                          <Visual harvest={record} compact />
+                          <Visual harvest={record} />
                           <span className="harvest-row-content">
                             <strong>{record.display_title}</strong>
-                            <span>
-                              {record.source.botanical_identity.display_label}
-                            </span>
-                            <span>
-                              {materialSummary(record)} ·{" "}
-                              {record.items.length === 1
-                                ? quantityLabel(record.items[0])
-                                : `${String(record.items.length)} material lines`}
-                            </span>
+                            <small className="harvest-row-botanical">
+                              <BotanicalName
+                                label={
+                                  record.source.botanical_identity.display_label
+                                }
+                                scientificName={
+                                  recordIdentities.get(
+                                    record.source.botanical_identity.id,
+                                  )?.scientific_name
+                                }
+                              />
+                            </small>
                           </span>
                           <span className="harvest-row-meta">
                             <time>{formatPartialDate(record.occurred_on)}</time>
-                            <small>
-                              {record.source.type === "plant"
-                                ? "Plant"
-                                : "Plant group"}
-                            </small>
+                            <small>{directoryMaterialSummary(record)}</small>
                           </span>
                         </button>
                       </li>
@@ -533,18 +693,31 @@ export function HarvestScreen({
                 <QuickPreview>
                   <Visual harvest={selected} />
                   <h3>{selected.display_title}</h3>
-                  <p>{selected.source.botanical_identity.display_label}</p>
+                  <p>
+                    <BotanicalName
+                      label={selected.source.botanical_identity.display_label}
+                      scientificName={
+                        recordIdentities.get(
+                          selected.source.botanical_identity.id,
+                        )?.scientific_name
+                      }
+                    />
+                  </p>
                   <dl className="record-preview__facts">
                     <div>
                       <dt>Source</dt>
-                      <dd>{selected.source.display_name}</dd>
+                      <dd>
+                        <a href={sourceHref(selected)}>
+                          {selected.source.display_name}
+                        </a>
+                      </dd>
                     </div>
                     <div>
                       <dt>Date</dt>
                       <dd>{formatPartialDate(selected.occurred_on)}</dd>
                     </div>
                   </dl>
-                  <Items harvest={selected} />
+                  <p>{directoryMaterialSummary(selected)}</p>
                   <div className="actions record-preview__actions">
                     <a
                       className="button-link"
@@ -564,8 +737,12 @@ export function HarvestScreen({
                   </div>
                 </QuickPreview>
               ) : (
-                <aside className="quick-preview harvest-preview-empty">
-                  <p>Select a Harvest for a quick preview.</p>
+                <aside className="selected-seed seed-detail-empty harvest-preview-empty">
+                  <h3>Select a Harvest</h3>
+                  <p>
+                    Choose a row for a Quick Preview, then open details for
+                    photos, history and collection operations.
+                  </p>
                 </aside>
               )}
             </div>
@@ -574,14 +751,16 @@ export function HarvestScreen({
       )}
       {editor && (
         <HarvestForm
-          harvest={editor === "new" ? undefined : editor}
+          harvest={editor}
           sourceType={sourceType}
           sourceId={sourceId}
+          modal={edit.modal}
+          dismissalRef={dismissalRef}
           onClose={() => {
-            setEditor(null);
+            edit.close();
           }}
           onSaved={(record) => {
-            setEditor(null);
+            edit.close(true);
             setNotice("Harvest saved.");
             setDetail(record);
             setSelectedId(record.id);
@@ -594,6 +773,7 @@ export function HarvestScreen({
       {deleting && detail && (
         <TaskDialog
           title="Delete harvest"
+          returnFocusTo={moreTrigger}
           onClose={() => {
             if (!pending) setDeleting(false);
           }}

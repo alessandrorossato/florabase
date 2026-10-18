@@ -1,5 +1,71 @@
 # Engineering progress
 
+## 2026-10-18 — COLLECTION-VISUAL-002 operator screenshot follow-up
+
+- Matched Harvest/Stored material typography and empty preview to Plants; rounded Location row/toggle
+  controls and spaced/rounded stored-material actions. New Harvest's Material/Source controls now
+  align vertically, and its right-hand fields have consistent edges, with mobile stacking preserved.
+- Added explicit Location Active/Retired/All filtering, Active by default, with matching counts,
+  ancestor context, preserved expansion, URL/Saved Views and no stale preview. Backend scope is the
+  strict Saved Views state allowlist only; no new hierarchy query, schema or migration.
+- Contextual Edit Location uses the shared field-width searchable parent picker. Full paths wrap;
+  explicit root choice, cycle exclusions and guarded dismissal remain. An unselected search cannot
+  silently reparent to root. Live menu widths equal inputs: 558px desktop and 320px mobile.
+- Focused results: **186 frontend tests / seven files**, **85 backend contract/service tests**, plus
+  final Location/StrictMode subset, targeted ESLint/Prettier, strict production build, scoped Ruff/mypy,
+  feature graph and whitespace checks. Nine new captures are indexed in the updated handoff. No domain
+  write, Review reset/reseed, UAT operation, canonical feature-verify, staging, commit, push or delivery.
+  Candidate remains available for acceptance: **READY_FOR_VISUAL_REVIEW**.
+
+## 2026-10-17 — COLLECTION-VISUAL-002 second visual refinement
+
+- Continued the same dirty candidate and running Feature Review; no reset/reseed or UAT operation.
+  Fixed Stored material's collapsed three-column row, grouped search/filter/Saved views, and added
+  compact stock facts with primary conversion, secondary disposition and per-item More actions.
+- Shared leading-edge selection now covers Harvests and Locations. Harvest rows omit source prose;
+  Details ends its high-value Notes/History grid near 766px at 1440×844. Contextual correction uses
+  Details/Materials/Notes tabs; one-line edit and ordinary conversion have no inner desktop scrolling.
+  Root Location Details fits fully, ending near 803px, with direct/inclusive and active/total truth intact.
+- Audited filter contracts: Seeds/Sowings/Plants APIs do not support typed identity/Location parameters;
+  these remain documented gaps. Existing Harvest and stored-material filters use shared drawer/chips.
+  No speculative API or domain change. Focused results: **316 distinct tests / 15 files**; the combined
+  shared run exited 143 after three successful family suites, and the remaining eight passed separately.
+  TypeScript/production build passed; final lint/format/feature-graph/whitespace evidence is in the handoff.
+- Saved 31 second-pass captures at real desktop/tablet/mobile sizes plus explicitly labelled zoom
+  proxies. Live dirty-Escape encountered a CDP input stall; automated dismissal/Back/Save-focus checks
+  pass, while native confirmation and true zoom remain operator checks. Review remains running in a
+  fresh view; no canonical gate, staging, commit, push or delivery. **READY_FOR_VISUAL_REVIEW**.
+
+## 2026-10-17 — COLLECTION-VISUAL-002 implementation and visual-review handoff
+
+- Started the supported feature branch at requested PR #112 base `a36c6cf`. Harvests now use minimal
+  Collection rows/Quick Preview, full-canvas creation with source/category Back and Cancel, guarded
+  contextual aggregate correction and a direct full-page Edit fallback. Full-width one-page Details
+  separates Materials collected from managed Stored material and retains explicit conversion,
+  history, deletion guards and shared Photos. No domain/API/schema/dependency change.
+- Locations retain their nested/capped tree, search ancestors and nonzero occupied rows. Quick
+  Preview adds complete contextual Edit; compact create/edit keeps explicit required scope-group
+  semantics. Full-width Details labels direct/inclusive active/total record counts, enabled scopes,
+  navigable hierarchy and quiet retirement, preserving every existing lifecycle/deletion guard.
+- Replaced only the delivered candidate's disposable Review through its guarded old-owner workflow.
+  Known Review owner credentials were set interactively and supplied in chat, never in repository
+  files. Review is healthy at `20261013_0042`, fixture v4/80. Its deterministic Review-only extension
+  supplies mixed PlantGroup materials, primary media, deep hierarchy and a retired empty Location.
+  Repeat seed and 23 fixture guard/live-preservation tests pass. Persistent UAT and other operator
+  environments were not changed; a session restart retained this candidate's Review DB/media/owner.
+- Focused/shared frontend checks passed **409 distinct tests / 17 files** (overlapping reruns counted
+  once), plus strict TypeScript, targeted zero-warning ESLint, production frontend build, touched
+  formatting, scoped fixture Ruff, **106-feature** graph and whitespace checks. The live pass fixed
+  inherited panel ordering/columns and modal footer specificity; **66 responsive observations** and
+  **23 screenshots** record the final surfaces. No measured document/control horizontal overflow;
+  125%/150% remain honest viewport proxies. Large aggregates scroll and a first hidden-browser native
+  confirmation attempt stalled; component dirty-dismissal evidence and later live pristine navigation
+  are distinguished. See the [handoff](collection-visual-002-handoff.md) and
+  [evidence](review/collection-visual-002/README.md).
+- `COLLECTION-VISUAL-002` remains `implemented`, pending operator acceptance and independent canonical
+  verification. Canonical feature-verify, staging, commit, push and delivery were not run. Candidate
+  remains dirty, unstaged and uncommitted, with Feature Review running: `READY_FOR_VISUAL_REVIEW`.
+
 ## 2026-10-17 — COLLECTION-VISUAL-001 independent review and canonical verification
 
 - Operator accepted the fourth visual pass. Independent review confirmed scope is Collection UI,
