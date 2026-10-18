@@ -161,6 +161,12 @@ explicit actual-zoom limitation. COLLECTION-VISUAL-001 applies that grammar to S
 [the candidate handoff](collection-visual-001-handoff.md) records focused checks and live isolated
 Feature Review evidence. Operator acceptance and later canonical verification remain separate gates.
 
+COLLECTION-VISUAL-002 extends the accepted Collection grammar to historical Harvests and hierarchical
+Locations. It preserves collected-versus-remaining material, explicit conversion, nested Locations and
+direct/inclusive active/total record counts. The [visual handoff](collection-visual-002-handoff.md)
+records its isolated Review fixture, focused checks and responsive evidence. The candidate remains
+`implemented` until operator acceptance and independent canonical verification.
+
 Use a review matrix with page/state, viewport, finding, severity, shared-contract correction and
 recheck evidence. Cover at least:
 

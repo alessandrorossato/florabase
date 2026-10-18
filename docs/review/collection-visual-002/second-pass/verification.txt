@@ -1,0 +1,42 @@
+COLLECTION-VISUAL-002 second visual refinement — 2026-10-17
+Candidate: feat/collection-visual-002
+HEAD: a36c6cffb938c5ed20f93942e1eac1070897962c
+Worktree: /home/alessandro/.codex/worktrees/fb05/florabase
+
+Final focused frontend evidence: 316 distinct tests across 15 files.
+App.test.tsx: 78 passed.
+HarvestScreen.test.tsx: 15 passed; Back/Save tests rerun after lint-only edits: 2 passed, 13 deliberately unselected.
+StoredMaterial.test.tsx: 20 passed.
+Conversion.test.tsx: 9 passed; atomic/eligibility/quantity/undo assertions retained.
+PlantScreen.test.tsx: 58 passed.
+SeedLotScreen.test.tsx: 50 passed.
+SowingScreen.test.tsx: 31 passed.
+DashboardScreen, SavedViews, BulkLocation, ReferenceInteractions, FormSections,
+DirectoryTools, PartialDateField, recordNavigation: 55 passed across eight files.
+The combined shared command exited 143 after the three complete page-family passes;
+the eight remaining shared suites passed independently.
+
+pnpm build (tsc -b && vite build): PASS.
+Final pnpm exec tsc -b after the last test edit: PASS, exit 0.
+Targeted ESLint over every changed TS/TSX file: PASS, exit 0, zero warnings.
+Prettier check over every changed frontend file: PASS, exit 0.
+Docs/evidence Prettier: PASS; features.json keeps the existing repository format.
+python3 scripts/check-features.py: PASS, 106 features valid.
+git diff --check: PASS.
+Index: empty; HEAD unchanged; all candidate changes unstaged/uncommitted.
+
+Review status: frontend/backend/db healthy; source fb05/florabase;
+revision 20261013_0042; deterministic fixture v4 ready, 80 managed records.
+No Review reset/reseed, persistent-UAT operation or domain submission in this pass.
+No canonical make feature-verify, staging, commit, push or delivery.
+No application backend/API/schema/migration/dependency changes.
+
+31 viewport captures plus measurements.json. All measured document widths <= viewport.
+Desktop high-value Harvest content ends ~766px; Photos continues below.
+Root Location Details ends ~803px, document 844px.
+Ordinary edit panel client=scroll=465px; conversion form client=scroll=741px.
+Stored-material identity widths ~914/498/264px at 1440/1024/390.
+125%/150% are viewport proxies, not actual browser zoom.
+Native dirty-Escape stalled the browser input channel; its live confirmation,
+subsequent live Back/Save and true zoom remain operator checks.
+A fresh read-only candidate view is left open; its viewport override was reset.

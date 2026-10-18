@@ -2028,18 +2028,21 @@ test("location hierarchy renders paths and supports keyboard selection", async (
       .getAllByRole("link", { name: "Plants" })
       .some((link) => link.getAttribute("href") === "#/plants"),
   ).toBe(true);
-  expect(screen.getAllByText("2 (1 active)")).toHaveLength(2);
+  expect(screen.getAllByText("2 total (1 active)")).toHaveLength(2);
   expect(
     screen
       .getAllByLabelText("Usage scopes")
       .some((item) => item.textContent.includes("Seed lots")),
   ).toBe(true);
   await user.click(screen.getByRole("button", { name: "Edit location" }));
-  const parent = screen.getByLabelText("Parent location", {
-    selector: "#edit-location-parent",
-  });
-  expect(parent).not.toContainElement(
-    screen.queryByRole("option", { name: /Drawer A/ }),
+  const parent = screen.getByRole("combobox", { name: "Parent location" });
+  await user.clear(parent);
+  const parentOptions = screen.getByRole("listbox");
+  expect(
+    within(parentOptions).queryByRole("option", { name: /Drawer A/ }),
+  ).not.toBeInTheDocument();
+  await user.click(
+    within(screen.getByRole("option", { name: "House" })).getByRole("button"),
   );
   await user.click(screen.getByRole("button", { name: "Cancel" }));
   await user.click(
@@ -2053,12 +2056,13 @@ test("location hierarchy renders paths and supports keyboard selection", async (
   await user.click(
     await screen.findByRole("button", { name: "Edit location" }),
   );
-  const rootParent = screen.getByLabelText("Parent location", {
-    selector: "#edit-location-parent",
-  });
+  const rootParent = screen.getByRole("combobox", { name: "Parent location" });
+  await user.clear(rootParent);
   expect(
-    Array.from(rootParent.querySelectorAll("option"), (option) => option.value),
-  ).toEqual([""]);
+    within(screen.getByRole("listbox"))
+      .getAllByRole("option")
+      .map((option) => option.textContent),
+  ).toEqual(["No parent (root location)"]);
 });
 
 test("location search keeps ancestors and scope filtering uses explicit scopes", async () => {
@@ -2369,11 +2373,13 @@ test("location rename reparent retire and reactivate use hierarchy-aware control
   });
   await user.clear(name);
   await user.type(name, "Seed cupboard");
-  await user.selectOptions(
-    screen.getByLabelText("Parent location", {
-      selector: "#edit-location-parent",
-    }),
-    garden.id,
+  const parentPicker = screen.getByRole("combobox", {
+    name: "Parent location",
+  });
+  await user.clear(parentPicker);
+  await user.type(parentPicker, "Garden");
+  await user.click(
+    within(screen.getByRole("option", { name: "Garden" })).getByRole("button"),
   );
   await user.click(screen.getByRole("checkbox", { name: "Sowings" }));
   await user.click(screen.getByRole("button", { name: "Save location" }));
@@ -2895,6 +2901,11 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
     screen.getByRole("dialog", { name: "Edit location" }),
   ).toBeInTheDocument();
   await user.keyboard("{Escape}");
+  expect(
+    screen.getByRole("combobox", { name: "Parent location" }),
+  ).toHaveAttribute("aria-expanded", "false");
+  expect(screen.getByRole("dialog", { name: "Edit location" })).toBeVisible();
+  await user.keyboard("{Escape}");
   expect(editLocation).toHaveFocus();
 
   await user.click(
@@ -3029,7 +3040,7 @@ test.each([
   },
 ])(
   "Location directory, preview and detail distinguish $direct direct from $inclusive inclusive Plants",
-  async ({ direct, inclusive, text }) => {
+  async ({ direct, inclusive }) => {
     const location = {
       ...houseLocation,
       direct_usage: { plants: { active: direct, total: direct } },
@@ -3043,7 +3054,11 @@ test.each([
     });
     const user = await openLocations();
     const row = await screen.findByRole("button", { name: /^House/ });
-    expect(within(row).getByText(text)).toBeInTheDocument();
+    expect(
+      within(row).getByLabelText(
+        `Plants: ${String(inclusive)} including sublocations, ${String(direct)} directly here`,
+      ),
+    ).toBeInTheDocument();
     expect(row).toHaveAccessibleName(
       new RegExp(`Plants: ${String(inclusive)} `),
     );
@@ -3053,7 +3068,12 @@ test.each([
       ).not.toBeInTheDocument();
     row.focus();
     await user.keyboard("{Enter}");
-    expect(screen.getAllByText(text)).toHaveLength(2);
+    expect(
+      screen.getAllByLabelText(
+        `Plants: ${String(inclusive)} including sublocations, ${String(direct)} directly here`,
+      ),
+    ).toHaveLength(2);
+    expect(row).toHaveAttribute("aria-pressed", "true");
     await user.click(screen.getByRole("link", { name: "Open details" }));
     const table = await screen.findByRole("table");
     expect(
@@ -3073,8 +3093,8 @@ test.each([
         .getAllByRole("cell")
         .map((cell) => cell.textContent),
     ).toEqual([
-      `${String(direct)} (${String(direct)} active)`,
-      `${String(inclusive)} (${String(inclusive)} active)`,
+      `${String(direct)} total (${String(direct)} active)`,
+      `${String(inclusive)} total (${String(inclusive)} active)`,
     ]);
   },
 );
@@ -3109,7 +3129,7 @@ test("Location empty usage avoids repeated zeroes in directory and preview, deta
   ]);
   expect(within(table).getAllByRole("cell")).toHaveLength(10);
   for (const cell of within(table).getAllByRole("cell"))
-    expect(cell).toHaveTextContent("0 (0 active)");
+    expect(cell).toHaveTextContent("0 total (0 active)");
 });
 
 test("Location aggregates show separate Plant groups and descendant content beyond the parent's enabled scopes", async () => {
@@ -3132,13 +3152,13 @@ test("Location aggregates show separate Plant groups and descendant content beyo
   await selectDirectoryFilter(user, "Usage scope", "plants");
   const row = await screen.findByRole("button", { name: /^House/ });
   expect(
-    within(row).getByText(
-      "Plant groups: 3 including sublocations · 0 directly here",
+    within(row).getByLabelText(
+      "Plant groups: 3 including sublocations, 0 directly here",
     ),
   ).toBeInTheDocument();
   expect(
-    within(row).getByText(
-      "Sowings: 1 including sublocations · 0 directly here",
+    within(row).getByLabelText(
+      "Sowings: 1 including sublocations, 0 directly here",
     ),
   ).toBeInTheDocument();
   await user.click(row);
@@ -3173,7 +3193,11 @@ test("Deep Location hierarchy retains parent context and the full current path w
   const row = await screen.findByRole("button", { name: /^Level 12/ });
   expect(within(row).getByText("Within Level 11")).toBeInTheDocument();
   expect(row).toHaveAttribute("title", parent.display_path);
-  expect(within(row).getByText("Plants: 1 directly here")).toBeInTheDocument();
+  expect(
+    within(row).getByLabelText(
+      "Plants: 1 including sublocations, 1 directly here",
+    ),
+  ).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Collapse Level 10" }));
   expect(
     screen.queryByRole("button", { name: /^Level 12/ }),
@@ -3639,4 +3663,185 @@ test("Native ranges edit link opens the existing native-range Reference module d
   expect(
     screen.getByRole("tab", { name: "Native range", selected: true }),
   ).toBeVisible();
+});
+
+test("Location preview edits the complete location and guards dirty Escape and Cancel", async () => {
+  authenticatedThen((path) => {
+    if (path === "/api/v1/locations") return jsonResponse([houseLocation]);
+    throw new Error(`unexpected request: ${path}`);
+  });
+  const user = await openLocations();
+  await user.click(await screen.findByRole("button", { name: /^House/ }));
+  await user.click(screen.getByRole("button", { name: "Edit" }));
+  const dialog = screen.getByRole("dialog", { name: "Edit location" });
+  expect(within(dialog).getByLabelText("Parent location")).toBeVisible();
+  const group = within(dialog).getByRole("group", { name: /Used for/ });
+  expect(group).toHaveTextContent("Choose at least one");
+  for (const checkbox of within(group).getAllByRole("checkbox"))
+    expect(checkbox).not.toBeRequired();
+  await user.type(within(dialog).getByLabelText("Name"), " revised");
+  const confirmation = vi.spyOn(window, "confirm").mockReturnValue(false);
+  await user.keyboard("{Escape}");
+  expect(dialog).toBeVisible();
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(dialog).toBeVisible();
+  confirmation.mockReturnValue(true);
+  await user.keyboard("{Escape}");
+  expect(
+    screen.queryByRole("dialog", { name: "Edit location" }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Edit" })).toHaveFocus();
+  confirmation.mockRestore();
+});
+
+test.each([
+  { route: "seeds", toolbar: "Seeds", labels: ["Lifecycle"] },
+  { route: "sowings", toolbar: "Sowings", labels: ["Lifecycle"] },
+  { route: "plants", toolbar: "Plants", labels: ["Lifecycle", "Record type"] },
+  {
+    route: "harvests",
+    toolbar: "Harvests",
+    labels: ["Botanical identity", "Material", "Source type"],
+  },
+])(
+  "$toolbar filters expose only supported categories in shared tools",
+  async ({ route, toolbar, labels }) => {
+    authenticatedThen(() => jsonResponse([]));
+    window.history.replaceState(null, "", `#/${route}`);
+    render(<App />);
+    const user = userEvent.setup();
+    const tools = await screen.findByRole("group", {
+      name: `${toolbar} toolbar`,
+    });
+    expect(within(tools).getByRole("searchbox")).toBeVisible();
+    expect(
+      within(tools).getByRole("button", { name: "Saved views" }),
+    ).toBeVisible();
+    await user.click(within(tools).getByRole("button", { name: /^Filters/ }));
+    const drawer = screen.getByRole("dialog", { name: `${toolbar} filters` });
+    expect(within(drawer).getAllByRole("combobox")).toHaveLength(labels.length);
+    for (const label of labels)
+      expect(within(drawer).getByLabelText(label)).toBeVisible();
+    expect(within(drawer).queryByLabelText("Location")).not.toBeInTheDocument();
+    await user.click(within(drawer).getByRole("button", { name: "Done" }));
+    if (route !== "harvests") {
+      await user.type(within(tools).getByRole("searchbox"), "basil");
+      await user.click(
+        screen.getByRole("button", { name: "Remove lifecycle filter" }),
+      );
+      expect(within(tools).getByRole("searchbox")).toHaveValue("basil");
+      expect(
+        screen.queryByRole("group", { name: "Active filters" }),
+      ).not.toBeInTheDocument();
+    }
+  },
+);
+
+test("Location state defaults to Active, composes with search/scope and keeps retired details reachable", async () => {
+  const retired = {
+    ...cabinetLocation,
+    usage_scopes: ["seed_lots"] as LocationResponse["usage_scopes"],
+    retired_at: "2026-10-01T12:00:00Z",
+  };
+  const garden = {
+    ...houseLocation,
+    id: "01900000-0000-7000-8000-000000000399",
+    name: "Garden",
+    display_path: "Garden",
+  };
+  const livingShelf = {
+    ...cabinetLocation,
+    id: "01900000-0000-7000-8000-000000000398",
+    name: "Living shelf",
+    display_path: "House → Living shelf",
+  };
+  authenticatedThen((path) => {
+    if (path === "/api/v1/locations")
+      return jsonResponse([houseLocation, retired, garden, livingShelf]);
+    throw new Error(`unexpected request: ${path}`);
+  });
+  const user = await openLocations();
+  expect(await screen.findByText("3 records")).toBeVisible();
+  expect(
+    screen.getByRole("button", { name: "Remove state filter" }),
+  ).toHaveTextContent("State: Active");
+  expect(
+    screen.queryByRole("button", { name: /^Seed cabinet/ }),
+  ).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Expand House" }));
+  await user.click(screen.getByRole("button", { name: /^Garden/ }));
+  expect(screen.getByRole("link", { name: "Open details" })).toHaveAttribute(
+    "href",
+    `#/locations/${garden.id}`,
+  );
+  await selectDirectoryFilter(user, "State", "retired");
+  expect(
+    screen.getByRole("heading", { name: "Select a location" }),
+  ).toBeVisible();
+  expect(window.location.hash).toContain("state=retired");
+  await selectDirectoryFilter(user, "State", "active");
+  expect(screen.getByRole("button", { name: "Collapse House" })).toBeVisible();
+  await selectDirectoryFilter(user, "State", "retired");
+  const row = await screen.findByRole("button", { name: /^Seed cabinet/ });
+  expect(row).toHaveTextContent("Retired");
+  expect(screen.getByRole("button", { name: /^House/ })).toBeVisible();
+  await user.type(screen.getByLabelText("Search locations"), "Seed");
+  expect(screen.getByText("1 record")).toBeVisible();
+  await selectDirectoryFilter(user, "Usage scope", "sowings");
+  expect(
+    screen.getByText("No locations match this search and scope."),
+  ).toBeVisible();
+  await selectDirectoryFilter(user, "Usage scope", "all");
+  await user.click(
+    await screen.findByRole("button", { name: /^Seed cabinet/ }),
+  );
+  await user.click(screen.getByRole("link", { name: "Open details" }));
+  expect(
+    await screen.findByRole("heading", { name: "Seed cabinet" }),
+  ).toBeVisible();
+  expect(screen.getByRole("button", { name: "Edit location" })).toBeVisible();
+});
+
+test("Location parent search cannot silently reparent to root and explicit root remains selectable", async () => {
+  let updates = 0;
+  authenticatedThen((path, init) => {
+    if (path === "/api/v1/locations")
+      return jsonResponse([houseLocation, cabinetLocation]);
+    if (
+      path === `/api/v1/locations/${cabinetLocation.id}` &&
+      init?.method === "PUT"
+    ) {
+      updates++;
+      return jsonResponse(cabinetLocation);
+    }
+    throw new Error(`unexpected request: ${path}`);
+  });
+  const user = await openLocations();
+  await user.click(await screen.findByRole("button", { name: "Expand House" }));
+  await user.click(
+    await screen.findByRole("button", { name: /^Seed cabinet/ }),
+  );
+  await user.click(screen.getByRole("link", { name: "Open details" }));
+  await user.click(
+    await screen.findByRole("button", { name: "Edit location" }),
+  );
+  const picker = screen.getByRole("combobox", { name: "Parent location" });
+  await user.clear(picker);
+  await user.type(picker, "Missing location");
+  await user.click(screen.getByRole("button", { name: "Save location" }));
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Choose a Parent location",
+  );
+  expect(updates).toBe(0);
+  await user.clear(picker);
+  await user.click(
+    within(
+      screen.getByRole("option", { name: "No parent (root location)" }),
+    ).getByRole("button"),
+  );
+  expect(document.querySelector('input[name="parent_id"]')).toHaveValue("");
+  await user.click(screen.getByRole("button", { name: "Save location" }));
+  await waitFor(() => {
+    expect(updates).toBe(1);
+  });
 });

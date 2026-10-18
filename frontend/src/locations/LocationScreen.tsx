@@ -1,3 +1,5 @@
+import { ReferencePicker } from "../seed-lots/ReferencePicker";
+import "../harvests/collection-visual.css";
 import { FieldLabel } from "../components/FieldLabel";
 import { DirectoryTools } from "../components/DirectoryTools";
 import { DirectoryResults } from "../components/DirectoryResults";
@@ -97,7 +99,13 @@ const recordLabels = {
   harvest_inventory: "Stored material",
 };
 
-function CompactUsage({ location }: { location: LocationResponse }) {
+function CompactUsage({
+  location,
+  comparison = false,
+}: {
+  location: LocationResponse;
+  comparison?: boolean;
+}) {
   const occupied = recordKinds.filter(
     (kind) => (location.usage_including_descendants[kind]?.total ?? 0) > 0,
   );
@@ -111,12 +119,14 @@ function CompactUsage({ location }: { location: LocationResponse }) {
           const inclusive =
             location.usage_including_descendants[kind]?.total ?? 0;
           return (
-            <small key={kind}>
-              {recordLabels[kind]}: {inclusive}
-              {inclusive === direct
-                ? " directly here"
-                : ` including sublocations · ${String(direct)} directly here`}
-            </small>
+            <span
+              key={kind}
+              aria-label={`${recordLabels[kind]}: ${String(inclusive)} including sublocations, ${String(direct)} directly here`}
+            >
+              {recordLabels[kind]} <strong>{inclusive}</strong>
+              {inclusive !== direct && " incl."}
+              {comparison && <small> · {direct} directly here</small>}
+            </span>
           );
         })
       )}
@@ -129,8 +139,8 @@ function CollectionUsage({ location }: { location: LocationResponse }) {
     <section className="record-section" aria-labelledby="location-usage-title">
       <h4 id="location-usage-title">Collection usage</h4>
       <p className="field-help">
-        Current assignments, including retained historical records. Active
-        counts are shown in parentheses.
+        Record counts. Totals include retained historical records; active counts
+        are shown in parentheses.
       </p>
       <table className="location-usage-table">
         <thead>
@@ -149,7 +159,8 @@ function CollectionUsage({ location }: { location: LocationResponse }) {
                 location.usage_including_descendants,
               ].map((usage, index) => (
                 <td key={index}>
-                  {usage[kind]?.total ?? 0} ({usage[kind]?.active ?? 0} active)
+                  {usage[kind]?.total ?? 0} total ({usage[kind]?.active ?? 0}{" "}
+                  active)
                 </td>
               ))}
             </tr>
@@ -244,6 +255,7 @@ function ParentField({
   disabled: boolean;
   onChange?: (value: string) => void;
 }) {
+  const [parentValue, setParentValue] = useState(selected?.parent_id ?? "root");
   const excluded = selected
     ? new Set([selected.id, ...descendantsOf(selected.id, locations)])
     : new Set<string>();
@@ -252,6 +264,31 @@ function ParentField({
       !excluded.has(location.id) &&
       (selected?.retired_at ? true : !location.retired_at),
   );
+  if (selected)
+    return (
+      <div className="location-parent-field">
+        <input
+          type="hidden"
+          name="parent_id"
+          value={parentValue === "root" ? "" : parentValue}
+        />
+        <input type="hidden" name="parent_choice" value={parentValue} />
+        <ReferencePicker
+          label="Parent location"
+          choices={[
+            { id: "root", label: "No parent (root location)" },
+            ...candidates.map((location) => ({
+              id: location.id,
+              label: `${location.display_path}${location.retired_at ? " (retired)" : ""}`,
+            })),
+          ]}
+          value={parentValue}
+          onChange={setParentValue}
+          disabled={disabled}
+          help="This location and its descendants are excluded to prevent cycles."
+        />
+      </div>
+    );
   return (
     <div className="field">
       <label htmlFor={id}>Parent location</label>
@@ -260,7 +297,7 @@ function ParentField({
         name="parent_id"
         disabled={disabled}
         value={value}
-        defaultValue={onChange ? undefined : (selected?.parent_id ?? "")}
+        defaultValue={onChange ? undefined : ""}
         onChange={
           onChange
             ? (event) => {
@@ -277,11 +314,6 @@ function ParentField({
           </option>
         ))}
       </select>
-      {selected && (
-        <small>
-          This location and its descendants are excluded to prevent cycles.
-        </small>
-      )}
     </div>
   );
 }
@@ -340,7 +372,7 @@ function LocationTree({
               )}
               <button
                 type="button"
-                className="identity-list-item"
+                className="identity-list-item location-directory-row"
                 title={location.display_path}
                 aria-pressed={selectedId === location.id}
                 onClick={() => {
@@ -348,13 +380,18 @@ function LocationTree({
                 }}
               >
                 <span>
-                  {location.name}
+                  <strong className="location-record-name">
+                    {location.name}
+                  </strong>
                   {location.retired_at && (
                     <span className="record-state">Retired</span>
                   )}
                 </span>
                 {depth > 3 && (
-                  <small className="location-path">
+                  <small
+                    className="location-path"
+                    title={location.display_path}
+                  >
                     Within{" "}
                     {
                       locations.find((item) => item.id === location.parent_id)
@@ -362,13 +399,6 @@ function LocationTree({
                     }
                   </small>
                 )}
-                <span className="location-scope-list" aria-label="Usage scopes">
-                  {scopesOf(location).map((scope) => (
-                    <small className="location-scope" key={scope}>
-                      {scopeLabels[scope]}
-                    </small>
-                  ))}
-                </span>
                 <CompactUsage location={location} />
               </button>
             </div>
@@ -413,6 +443,7 @@ export function LocationScreen({
   const setQuery = (value: string) => {
     view.update("q", value);
   };
+  const stateFilter = view.state.state;
   const scopeFilter = view.state.scope;
   const setScopeFilter = (value: LocationUsageScope | "all") => {
     view.update("scope", value);
@@ -424,6 +455,7 @@ export function LocationScreen({
     overrides: Map<string, boolean>;
   }>({ key: "", overrides: new Map() });
   const createName = useRef<HTMLInputElement>(null);
+  const editForm = useRef<HTMLFormElement>(null);
   const feedback = useRef<HTMLDivElement>(null);
   const {
     expanded: creationExpanded,
@@ -474,17 +506,20 @@ export function LocationScreen({
     () => (directory.status === "ready" ? directory.locations : []),
     [directory],
   );
-  const selected = locations.find(({ id }) => id === selectedId) ?? null;
   const search = query.trim().toLocaleLowerCase();
   const matching = locations.filter(
     (location) =>
+      (stateFilter === "all" ||
+        Boolean(location.retired_at) === (stateFilter === "retired")) &&
       (scopeFilter === "all" || location.usage_scopes.includes(scopeFilter)) &&
       (!search ||
         location.name.toLocaleLowerCase().includes(search) ||
         location.display_path.toLocaleLowerCase().includes(search)),
   );
-  const filterActive = Boolean(search || scopeFilter !== "all");
-  const filterKey = `${scopeFilter}:${search}`;
+  const hierarchyFilter = Boolean(search || scopeFilter !== "all");
+  const filterActive = hierarchyFilter || stateFilter !== "all";
+  const autoExpandMatches = hierarchyFilter || stateFilter === "retired";
+  const filterKey = `${stateFilter}:${scopeFilter}:${search}`;
   const byId = new Map(locations.map((location) => [location.id, location]));
   const visibleIds = new Set(matching.map((location) => location.id));
   const revealedAncestors = new Set<string>();
@@ -501,10 +536,15 @@ export function LocationScreen({
   const shownLocations = filterActive
     ? locations.filter((location) => visibleIds.has(location.id))
     : locations;
-  const effectiveExpanded = filterActive
+  const selected =
+    locations.find(
+      ({ id }) =>
+        id === selectedId && (Boolean(initialId) || visibleIds.has(id)),
+    ) ?? null;
+  const effectiveExpanded = autoExpandMatches
     ? new Set(revealedAncestors)
     : expanded;
-  if (filterActive && filterExpansion.key === filterKey) {
+  if (autoExpandMatches && filterExpansion.key === filterKey) {
     for (const [id, isOpen] of filterExpansion.overrides) {
       if (isOpen) effectiveExpanded.add(id);
       else effectiveExpanded.delete(id);
@@ -612,9 +652,30 @@ export function LocationScreen({
     );
   }
 
+  function dismissEdit() {
+    if (pending) return;
+    if (selected && editForm.current) {
+      const payload = payloadFrom(editForm.current);
+      const dirty =
+        payload.name !== selected.name ||
+        (payload.parent_id ?? "") !== (selected.parent_id ?? "") ||
+        [...(payload.usage_scopes ?? [])].sort().join(",") !==
+          [...selected.usage_scopes].sort().join(",");
+      if (dirty && !window.confirm("Discard unsaved Location changes?")) return;
+    }
+    setEditing(false);
+  }
+
   function submitUpdate(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
     if (!selected || pending) return;
+    if (!new FormData(event.currentTarget).get("parent_choice")) {
+      setSave({
+        status: "validation",
+        messages: ["Choose a Parent location or No parent (root location)."],
+      });
+      return;
+    }
     const payload: LocationUpdate = payloadFrom(event.currentTarget);
     void apply(
       () => updateLocation(selected.id, payload, csrfToken),
@@ -636,7 +697,7 @@ export function LocationScreen({
           tools={
             <DirectoryTools
               onReset={() => {
-                setScopeFilter("all");
+                view.replace({ ...view.state, state: "all", scope: "all" });
               }}
               name="Locations"
               search={
@@ -657,27 +718,57 @@ export function LocationScreen({
                 />
               }
               filters={
-                <div className="field location-scope-filter">
-                  <label htmlFor="location-scope">Usage scope</label>
-                  <select
-                    id="location-scope"
-                    value={scopeFilter}
-                    onChange={(event) => {
-                      setScopeFilter(
-                        event.currentTarget.value as typeof scopeFilter,
-                      );
-                    }}
-                  >
-                    <option value="all">All locations</option>
-                    <option value="seed_lots">Seeds</option>
-                    <option value="sowings">Sowings</option>
-                    <option value="plants">Plants</option>
-                    <option value="harvest_inventory">Stored material</option>
-                  </select>
-                </div>
+                <>
+                  <div className="field">
+                    <label htmlFor="location-state">State</label>
+                    <select
+                      id="location-state"
+                      value={stateFilter}
+                      onChange={(event) => {
+                        view.update(
+                          "state",
+                          event.currentTarget.value as typeof stateFilter,
+                        );
+                      }}
+                    >
+                      <option value="active">Active</option>
+                      <option value="retired">Retired</option>
+                      <option value="all">All</option>
+                    </select>
+                  </div>
+                  <div className="field location-scope-filter">
+                    <label htmlFor="location-scope">Usage scope</label>
+                    <select
+                      id="location-scope"
+                      value={scopeFilter}
+                      onChange={(event) => {
+                        setScopeFilter(
+                          event.currentTarget.value as typeof scopeFilter,
+                        );
+                      }}
+                    >
+                      <option value="all">All locations</option>
+                      <option value="seed_lots">Seeds</option>
+                      <option value="sowings">Sowings</option>
+                      <option value="plants">Plants</option>
+                      <option value="harvest_inventory">Stored material</option>
+                    </select>
+                  </div>
+                </>
               }
-              activeFilters={
-                scopeFilter !== "all"
+              activeFilters={[
+                ...(stateFilter !== "all"
+                  ? [
+                      {
+                        label: "State",
+                        value: stateFilter === "active" ? "Active" : "Retired",
+                        onRemove: () => {
+                          view.update("state", "all");
+                        },
+                      },
+                    ]
+                  : []),
+                ...(scopeFilter !== "all"
                   ? [
                       {
                         label: "Usage scope",
@@ -692,8 +783,8 @@ export function LocationScreen({
                         },
                       },
                     ]
-                  : []
-              }
+                  : []),
+              ]}
               actions={
                 <button
                   type="button"
@@ -713,9 +804,7 @@ export function LocationScreen({
           }
         />
       )}
-      <div
-        className={initialId ? "reference-detail-layout" : "reference-split"}
-      >
+      <div className={initialId ? "location-detail-layout" : "reference-split"}>
         {!initialId && (
           <div className="directory-column">
             <section
@@ -772,7 +861,7 @@ export function LocationScreen({
                   }}
                   expanded={effectiveExpanded}
                   onToggle={(id) => {
-                    if (filterActive) {
+                    if (autoExpandMatches) {
                       const wasOpen = effectiveExpanded.has(id);
                       setFilterExpansion((current) => {
                         const overrides = new Map(
@@ -801,7 +890,7 @@ export function LocationScreen({
           <QuickPreview>
             {selected ? (
               <>
-                <h3>{selected.name}</h3>
+                <h3 className="location-record-name">{selected.name}</h3>
                 <p>{selected.display_path}</p>
                 <p>
                   {selected.retired_at ? "Retired" : "Active"} ·{" "}
@@ -809,7 +898,6 @@ export function LocationScreen({
                     .map((scope) => scopeLabels[scope])
                     .join(", ")}
                 </p>
-                <CompactUsage location={selected} />
                 <p>
                   {
                     locations.filter(
@@ -818,13 +906,24 @@ export function LocationScreen({
                   }{" "}
                   child locations
                 </p>
-                <div className="actions">
+                <CompactUsage location={selected} comparison />
+                <div className="actions record-preview__actions">
                   <a
                     className="button-link"
                     href={`#/locations/${selected.id}`}
                   >
                     Open details
                   </a>
+                  <button
+                    type="button"
+                    className="button--secondary"
+                    onClick={() => {
+                      setSave({ status: "idle" });
+                      setEditing(true);
+                    }}
+                  >
+                    Edit
+                  </button>
                   {!selected.retired_at && (
                     <button
                       type="button"
@@ -853,7 +952,7 @@ export function LocationScreen({
             {selected ? (
               <article
                 aria-label="Location detail"
-                className="reference-detail"
+                className="reference-detail location-detail"
               >
                 <Breadcrumbs
                   items={[
@@ -949,12 +1048,47 @@ export function LocationScreen({
                     Retired location remains available for historical records.
                   </p>
                 )}
-                <div className="record-detail-grid">
+                <dl
+                  className="seed-overview-band"
+                  aria-label="Location overview"
+                >
+                  <div>
+                    <dt>State</dt>
+                    <dd>{selected.retired_at ? "Retired" : "Active"}</dd>
+                  </div>
+                  <div>
+                    <dt>Parent</dt>
+                    <dd>
+                      {selected.parent_id ? (
+                        <a href={`#/locations/${selected.parent_id}`}>
+                          {
+                            locations.find(
+                              (location) => location.id === selected.parent_id,
+                            )?.name
+                          }
+                        </a>
+                      ) : (
+                        "Root location"
+                      )}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Children</dt>
+                    <dd>
+                      {
+                        locations.filter(
+                          (location) => location.parent_id === selected.id,
+                        ).length
+                      }
+                    </dd>
+                  </div>
+                </dl>
+                <div className="record-detail-grid location-overview-grid">
                   <section
                     className="record-section"
                     aria-labelledby="location-hierarchy-title"
                   >
-                    <h4 id="location-hierarchy-title">In the hierarchy</h4>
+                    <h4 id="location-hierarchy-title">Hierarchy</h4>
                     <dl className="record-facts">
                       <div>
                         <dt>Parent</dt>
@@ -1012,82 +1146,19 @@ export function LocationScreen({
                     )}
                   </section>
                   <CollectionUsage location={selected} />
+                  <section className="record-section location-enabled-scopes">
+                    <h4>Enabled scopes</h4>
+                    <p>
+                      {selected.usage_scopes
+                        .map((scope) => scopeLabels[scope])
+                        .join(" · ")}
+                    </p>
+                    <p className="field-help">
+                      Explicit assignment scopes. Scopes do not inherit from
+                      parent locations.
+                    </p>
+                  </section>
                 </div>
-                {editing && (
-                  <TaskDialog
-                    title="Edit location"
-                    onClose={() => {
-                      setEditing(false);
-                    }}
-                  >
-                    <form
-                      key={`${selected.id}-${selected.updated_at}`}
-                      onSubmit={submitUpdate}
-                    >
-                      <h4>Edit location</h4>
-                      <div className="field">
-                        <FieldLabel required htmlFor="edit-location-name">
-                          Name
-                        </FieldLabel>
-                        <input
-                          id="edit-location-name"
-                          name="name"
-                          required
-                          maxLength={255}
-                          disabled={pending}
-                          defaultValue={selected.name}
-                        />
-                      </div>
-                      <ParentField
-                        id="edit-location-parent"
-                        locations={locations}
-                        selected={selected}
-                        disabled={pending}
-                      />
-                      <ScopeFields selected={selected} disabled={pending} />
-                      {save.status === "validation" && (
-                        <div
-                          className="notice notice--error"
-                          role="alert"
-                          ref={feedback}
-                          tabIndex={-1}
-                        >
-                          <h4>Check the location</h4>
-                          <ul>
-                            {save.messages.map((message) => (
-                              <li key={message}>{message}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {save.status === "error" && (
-                        <div
-                          className="notice notice--error"
-                          role="alert"
-                          ref={feedback}
-                          tabIndex={-1}
-                        >
-                          {save.message}
-                        </div>
-                      )}
-                      <div className="actions">
-                        <button type="submit" disabled={pending}>
-                          Save location
-                        </button>
-                        <button
-                          className="button--secondary"
-                          type="button"
-                          disabled={pending}
-                          onClick={() => {
-                            setEditing(false);
-                          }}
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </form>
-                  </TaskDialog>
-                )}
               </article>
             ) : (
               <div className="empty-state">
@@ -1100,11 +1171,89 @@ export function LocationScreen({
           </div>
         )}
       </div>
+      {editing && selected && (
+        <TaskDialog
+          title="Edit location"
+          dismissOnBackdrop
+          onClose={() => {
+            dismissEdit();
+          }}
+        >
+          <form
+            ref={editForm}
+            className="location-edit-form"
+            key={`${selected.id}-${selected.updated_at}`}
+            onSubmit={submitUpdate}
+          >
+            <h4>Edit location</h4>
+            <div className="field">
+              <FieldLabel required htmlFor="edit-location-name">
+                Name
+              </FieldLabel>
+              <input
+                id="edit-location-name"
+                name="name"
+                required
+                maxLength={255}
+                disabled={pending}
+                defaultValue={selected.name}
+              />
+            </div>
+            <ParentField
+              id="edit-location-parent"
+              locations={locations}
+              selected={selected}
+              disabled={pending}
+            />
+            <ScopeFields selected={selected} disabled={pending} />
+            {save.status === "validation" && (
+              <div
+                className="notice notice--error"
+                role="alert"
+                ref={feedback}
+                tabIndex={-1}
+              >
+                <h4>Check the location</h4>
+                <ul>
+                  {save.messages.map((message) => (
+                    <li key={message}>{message}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {save.status === "error" && (
+              <div
+                className="notice notice--error"
+                role="alert"
+                ref={feedback}
+                tabIndex={-1}
+              >
+                {save.message}
+              </div>
+            )}
+            <div className="actions">
+              <button type="submit" disabled={pending}>
+                Save location
+              </button>
+              <button
+                className="button--secondary"
+                type="button"
+                disabled={pending}
+                onClick={() => {
+                  dismissEdit();
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </TaskDialog>
+      )}
       {creationExpanded && (
         <TaskDialog
           title={createParentId ? "New child location" : "New location"}
           onClose={() => {
-            closeCreation({ returnFocus: false });
+            if (!pending) closeCreation({ returnFocus: false });
           }}
         >
           <div ref={creationPanelRef}>

@@ -137,7 +137,7 @@ it("a QR inventory hash change focuses the retained record on an already-open Ha
   window.history.replaceState(null, "", "#/harvests/harvest");
   vi.mocked(api.inventoryList).mockResolvedValue([inventory]);
   wrap(<StoredMaterialSection harvest={harvest} />);
-  await screen.findByText(/Remaining now:/);
+  await screen.findByText("Remaining");
   window.history.replaceState(
     null,
     "",
@@ -148,7 +148,9 @@ it("a QR inventory hash change focuses the retained record on an already-open Ha
 });
 it("shows untracked opt-in separately from historical collection", async () => {
   wrap(<StoredMaterialSection harvest={harvest} />);
-  expect(await screen.findByText("Not tracked")).toBeVisible();
+  expect(
+    await screen.findByText("Not tracked as stored material"),
+  ).toBeVisible();
   await userEvent.click(
     screen.getByRole("button", { name: "Track stored material" }),
   );
@@ -312,6 +314,9 @@ it("retains disposition history, blocks removal and permits current correction",
     },
   ]);
   wrap(<StoredMaterialSection harvest={harvest} />);
+  await userEvent.click(
+    await screen.findByRole("button", { name: "More Seeds actions" }),
+  );
   await screen.findByRole("button", { name: "Edit stored material" });
   expect(
     screen.queryByRole("button", { name: "Record disposition" }),
@@ -324,6 +329,9 @@ it("retains disposition history, blocks removal and permits current correction",
   );
   expect(await screen.findByText("Given to a friend")).toBeVisible();
   expect(screen.getByText("After: Depleted · no material held")).toBeVisible();
+  await userEvent.click(
+    screen.getByRole("button", { name: "More Seeds actions" }),
+  );
   await userEvent.click(
     screen.getByRole("button", { name: "Edit stored material" }),
   );
@@ -348,7 +356,10 @@ it("removes never-used tracking only after explicit confirmation", async () => {
   vi.mocked(api.inventoryList).mockResolvedValue([inventory]);
   wrap(<StoredMaterialSection harvest={harvest} />);
   await userEvent.click(
-    await screen.findByRole("button", { name: "Remove tracking" }),
+    await screen.findByRole("button", { name: "More Seeds actions" }),
+  );
+  await userEvent.click(
+    screen.getByRole("button", { name: "Remove tracking" }),
   );
   const dialog = screen.getByRole("dialog", {
     name: "Remove inventory tracking",
@@ -366,9 +377,11 @@ it("directory defaults to active and retained depleted state remains reachable",
   wrap(<StoredMaterialDirectory />);
   expect(await screen.findByText("1 record")).toBeVisible();
   expect(
-    screen.getByRole("link", { name: /Open source Harvest/ }),
+    screen.getByRole("link", { name: /Coffee seed harvest.*10 items/ }),
   ).toHaveAttribute("href", "#/harvests/harvest");
+  await userEvent.click(screen.getByRole("button", { name: /^Filters/ }));
   await userEvent.selectOptions(screen.getByLabelText("State"), "depleted");
+  await userEvent.click(screen.getByRole("button", { name: "Done" }));
   expect(screen.getByText(/Depleted · no material held/)).toBeVisible();
   expect(api.dispositionHistory).not.toHaveBeenCalled();
 });
@@ -427,6 +440,7 @@ it("filters stored material by exact source identity with state, material, Locat
   const user = userEvent.setup();
   wrap(<StoredMaterialDirectory />);
   await screen.findByText("2 records");
+  await user.click(screen.getByRole("button", { name: /^Filters/ }));
   await user.type(
     screen.getByRole("combobox", { name: "Botanical identity" }),
     "Coffea",
@@ -445,11 +459,13 @@ it("filters stored material by exact source identity with state, material, Locat
     screen.getByLabelText("Storage Location"),
     "storage",
   );
+  await user.click(screen.getByRole("button", { name: "Done" }));
   await user.type(screen.getByLabelText("Search stored material"), "missing");
   expect(
     screen.getByText("No stored material matches these filters."),
   ).toBeVisible();
   await user.clear(screen.getByLabelText("Search stored material"));
+  await user.click(screen.getByRole("button", { name: /^Filters/ }));
   await user.selectOptions(screen.getByLabelText("State"), "");
   expect(screen.getByText("2 records")).toBeVisible();
   await user.click(
@@ -483,6 +499,9 @@ it("BULK-001 selects only active Stored material and clears on search", async ()
 it("each managed stored record enters the canonical label composer from its source Harvest and directory", async () => {
   vi.mocked(api.inventoryList).mockResolvedValue([inventory]);
   const view = wrap(<StoredMaterialSection harvest={harvest} />);
+  await userEvent.click(
+    await screen.findByRole("button", { name: "More Seeds actions" }),
+  );
   expect(
     await screen.findByRole("link", { name: "Print label" }),
   ).toHaveAttribute("href", "#/labels?kind=stored-material&record=inventory");
@@ -491,4 +510,60 @@ it("each managed stored record enters the canonical label composer from its sour
   expect(
     await screen.findByRole("link", { name: "Print label" }),
   ).toHaveAttribute("href", "#/labels?kind=stored-material&record=inventory");
+});
+
+it("uses complete media, identity and metric columns with grouped tools and removable filters", async () => {
+  vi.mocked(api.inventoryList).mockResolvedValue([
+    { ...inventory, quantity: null },
+  ]);
+  wrap(<StoredMaterialDirectory />);
+  const user = userEvent.setup();
+  await screen.findByText("1 record");
+  const toolbar = screen.getByRole("group", {
+    name: "Stored material toolbar",
+  });
+  expect(within(toolbar).getByRole("searchbox")).toBeVisible();
+  expect(
+    within(toolbar).getByRole("button", { name: "Saved views" }),
+  ).toBeVisible();
+  const row = within(
+    screen.getByRole("list", { name: "Stored material directory" }),
+  ).getByRole("link", { name: /Coffee seed harvest/ });
+  expect([...row.children].map((element) => element.className)).toEqual([
+    expect.stringContaining("record-visual"),
+    "harvest-row-content",
+    "harvest-row-meta",
+  ]);
+  expect(row).toHaveTextContent("Unknown quantity");
+  expect(row).toHaveTextContent("Storage Location not recorded");
+  expect(row).not.toHaveTextContent("Depleted");
+  await user.type(within(toolbar).getByRole("searchbox"), "Coffee");
+  await user.click(screen.getByRole("button", { name: "Remove state filter" }));
+  expect(within(toolbar).getByRole("searchbox")).toHaveValue("Coffee");
+  await user.click(within(toolbar).getByRole("button", { name: "Filters" }));
+  expect(
+    screen
+      .getAllByRole("combobox")
+      .map(
+        (element) =>
+          element.getAttribute("aria-label") ??
+          document.querySelector(`label[for="${element.id}"]`)?.textContent,
+      ),
+  ).toEqual(["Botanical identity", "State", "Storage Location", "Material"]);
+});
+
+it("restores focus to More after cancelling an inventory correction", async () => {
+  vi.mocked(api.inventoryList).mockResolvedValue([inventory]);
+  wrap(<StoredMaterialSection harvest={harvest} />);
+  const user = userEvent.setup();
+  const more = await screen.findByRole("button", {
+    name: "More Seeds actions",
+  });
+  await user.click(more);
+  await user.click(
+    screen.getByRole("button", { name: "Edit stored material" }),
+  );
+  const dialog = screen.getByRole("dialog", { name: "Edit stored material" });
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(more).toHaveFocus();
 });

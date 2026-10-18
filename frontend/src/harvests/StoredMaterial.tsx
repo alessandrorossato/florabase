@@ -1,3 +1,7 @@
+import { RecordIdentities } from "../components/recordPresentation";
+import { DirectoryTools } from "../components/DirectoryTools";
+import { OverflowMenu, BotanicalName } from "../components/ReferenceUI";
+import { RecordVisual } from "../photos/RecordVisual";
 import { labelComposerHref } from "../labels/labelData";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { BulkCheckbox, BulkSelect, BulkToolbar } from "../bulk/BulkLocation";
@@ -8,7 +12,7 @@ import { ConversionDialog } from "./ConversionDialog";
 import { ConversionHistory } from "./ConversionHistory";
 import type { Conversion } from "./conversionApi";
 import { BotanicalIdentityFilter } from "./BotanicalIdentityFilter";
-import { useEffect, useId, useState } from "react";
+import { useContext, useEffect, useId, useRef, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { TaskDialog } from "../components/TaskDialog";
@@ -113,6 +117,7 @@ function History({ inventory }: { inventory: Inventory }) {
   );
 }
 export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
+  const operationReturn = useRef<HTMLElement | null>(null);
   const auth = useAuth();
   const [rows, setRows] = useState<Inventory[] | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -190,11 +195,11 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
     }
   }
   return (
-    <section className="stored-material-section" aria-label="Stored material">
+    <section
+      className="stored-material-section record-section"
+      aria-label="Stored material"
+    >
       <h4>Stored material</h4>
-      <p className="field-help">
-        Remaining now is managed separately from the collected quantity.
-      </p>
       {error && (
         <p role="alert">
           {error}{" "}
@@ -234,46 +239,56 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
                 {item.description && (
                   <p className="preserve-lines">{item.description}</p>
                 )}
-                <span>
-                  {inventory
-                    ? `${inventory.state === "active" ? "Active · " : ""}Remaining now: ${remainingLabel(inventory)}`
-                    : "Not tracked"}
-                </span>
-                {inventory?.location && (
-                  <a href={`#/locations/${inventory.location.id}`}>
-                    Storage: {inventory.location.display_path}
-                  </a>
+                {inventory ? (
+                  <dl className="stored-material-facts">
+                    <div>
+                      <dt>Remaining</dt>
+                      <dd>{remainingLabel(inventory)}</dd>
+                    </div>
+                    <div>
+                      <dt>State</dt>
+                      <dd>
+                        {inventory.state === "active" ? "Active" : "Depleted"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Storage</dt>
+                      <dd>
+                        {inventory.location ? (
+                          <a href={`#/locations/${inventory.location.id}`}>
+                            {inventory.location.display_path}
+                          </a>
+                        ) : (
+                          "Not recorded"
+                        )}
+                      </dd>
+                    </div>
+                  </dl>
+                ) : (
+                  <span>Not tracked as stored material</span>
                 )}
-                {inventory?.state === "active" &&
-                  item.material_kind === "seed" && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setConverting(inventory);
-                      }}
-                    >
-                      Create Seed lot
-                    </button>
-                  )}
-                {inventory?.has_dispositions && (
-                  <ConversionHistory
-                    kind="inventory_id"
-                    id={inventory.id}
-                    refreshKey={inventory.updated_at}
-                    onChanged={() => {
-                      setAttempt((v) => v + 1);
-                    }}
-                  />
-                )}
-                <div className="actions">
-                  {inventory && (
-                    <a
-                      className="button-link button--secondary"
-                      href={labelComposerHref("stored-material", inventory.id)}
-                    >
-                      Print label
-                    </a>
-                  )}
+                <div
+                  className="actions stored-material-actions"
+                  onClickCapture={(event) => {
+                    if (event.target instanceof Element)
+                      operationReturn.current = event.target.closest(
+                        ".overflow-popover",
+                      )
+                        ? event.currentTarget.querySelector(".overflow-trigger")
+                        : event.target.closest("button,a");
+                  }}
+                >
+                  {inventory?.state === "active" &&
+                    item.material_kind === "seed" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setConverting(inventory);
+                        }}
+                      >
+                        Create Seed lot
+                      </button>
+                    )}
                   {!inventory ? (
                     <button
                       type="button"
@@ -288,6 +303,7 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
                       {inventory.state === "active" && (
                         <button
                           type="button"
+                          className="button--secondary"
                           onClick={() => {
                             setEditor({ item, inventory, disposition: true });
                           }}
@@ -295,30 +311,53 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
                           Record disposition
                         </button>
                       )}
-                      <button
-                        type="button"
-                        className="button--secondary"
-                        onClick={() => {
-                          setEditor({ item, inventory });
-                        }}
+                      <OverflowMenu
+                        ariaLabel={`More ${materials.find((m) => m.id === item.material_kind)?.label ?? "stored material"} actions`}
                       >
-                        Edit stored material
-                      </button>
-                      {!inventory.has_dispositions && (
+                        <a
+                          className="button-link button--secondary"
+                          href={labelComposerHref(
+                            "stored-material",
+                            inventory.id,
+                          )}
+                        >
+                          Print label
+                        </a>
                         <button
                           type="button"
                           className="button--secondary"
                           onClick={() => {
-                            setError(null);
-                            setRemoving(inventory);
+                            setEditor({ item, inventory });
                           }}
                         >
-                          Remove tracking
+                          Edit stored material
                         </button>
-                      )}
+                        {!inventory.has_dispositions && (
+                          <button
+                            type="button"
+                            className="button--secondary"
+                            onClick={() => {
+                              setError(null);
+                              setRemoving(inventory);
+                            }}
+                          >
+                            Remove tracking
+                          </button>
+                        )}
+                      </OverflowMenu>
                     </>
                   )}
                 </div>
+                {inventory?.has_dispositions && (
+                  <ConversionHistory
+                    kind="inventory_id"
+                    id={inventory.id}
+                    refreshKey={inventory.updated_at}
+                    onChanged={() => {
+                      setAttempt((v) => v + 1);
+                    }}
+                  />
+                )}
                 {inventory?.has_dispositions && (
                   <>
                     <p className="field-help">
@@ -349,6 +388,7 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
       )}
       {editor && (
         <InventoryDialog
+          returnFocusTo={operationReturn}
           {...editor}
           onClose={() => {
             setEditor(null);
@@ -363,6 +403,7 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
       {removing && (
         <TaskDialog
           title="Remove inventory tracking"
+          returnFocusTo={operationReturn}
           onClose={() => {
             if (!pending) setRemoving(null);
           }}
@@ -401,6 +442,7 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
 }
 
 export function StoredMaterialDirectory() {
+  const recordIdentities = useContext(RecordIdentities);
   const auth = useAuth();
   const [converting, setConverting] = useState<Inventory | null>(null);
   const [created, setCreated] = useState<Conversion | null>(null);
@@ -475,7 +517,6 @@ export function StoredMaterialDirectory() {
   ];
   return (
     <div className="stored-material-directory">
-      <h3>Stored material</h3>
       {created && (
         <p role="status">
           Seed lot created.{" "}
@@ -495,78 +536,150 @@ export function StoredMaterialDirectory() {
           }}
         />
       )}
-      <p>
-        Current stored remainder from explicitly tracked Harvest material lines.
-      </p>
-      <SavedViews surface="stored_material" state={view.savedState} />
-      <div className="harvest-filters">
-        <DirectorySearch
-          hideLabel
-          id={`${id}-search`}
-          label="Search stored material"
-          placeholder="Harvest, source or botanical identity"
-          value={query}
-          onChange={setQuery}
-        />
-        <BotanicalIdentityFilter
-          choices={identityChoices(rows?.map((row) => row.source) ?? [])}
-          value={identity}
-          onChange={setIdentity}
-        />
-        <div className="field">
-          <label htmlFor={`${id}-state`}>State</label>
-          <select
-            id={`${id}-state`}
-            value={state}
-            onChange={(event) => {
-              setState(event.currentTarget.value);
-            }}
-          >
-            <option value="active">Active material</option>
-            <option value="depleted">Depleted material</option>
-            <option value="">All states</option>
-          </select>
-        </div>
-        <div className="field">
-          <label htmlFor={`${id}-material`}>Material</label>
-          <select
-            id={`${id}-material`}
-            value={material}
-            onChange={(event) => {
-              setMaterial(event.currentTarget.value);
-            }}
-          >
-            <option value="">All materials</option>
-            {materials.map((m) => (
-              <option key={m.id} value={m.id}>
-                {m.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div className="field stored-material-location-filter">
-          <label htmlFor={`${id}-location`}>Storage Location</label>
-          <select
-            id={`${id}-location`}
-            value={location}
-            onChange={(event) => {
-              setLocation(event.currentTarget.value);
-            }}
-          >
-            <option value="">All Locations</option>
-            {location && !locations.some((item) => item.id === location) && (
-              <option value={location}>
-                Unavailable Location · {location}
-              </option>
-            )}
-            {locations.map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.display_path}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
+      <DirectoryTools
+        name="Stored material"
+        search={
+          <DirectorySearch
+            hideLabel
+            id={`${id}-search`}
+            label="Search stored material"
+            placeholder="Harvest, source or botanical identity"
+            value={query}
+            onChange={setQuery}
+          />
+        }
+        savedViews={
+          <SavedViews
+            presentation="dialog"
+            surface="stored_material"
+            state={view.savedState}
+          />
+        }
+        onReset={() => {
+          view.replace({
+            ...view.state,
+            identity_id: "",
+            state: "all",
+            location_id: "",
+            material: "",
+          });
+        }}
+        activeFilters={[
+          ...(identity
+            ? [
+                {
+                  label: "Botanical identity",
+                  value:
+                    identityChoices(rows?.map((row) => row.source) ?? []).find(
+                      (i) => i.id === identity,
+                    )?.label ?? "Selected identity",
+                  onRemove: () => {
+                    setIdentity("");
+                  },
+                },
+              ]
+            : []),
+          ...(state
+            ? [
+                {
+                  label: "State",
+                  value: state === "active" ? "Active" : "Depleted",
+                  onRemove: () => {
+                    setState("");
+                  },
+                },
+              ]
+            : []),
+          ...(location
+            ? [
+                {
+                  label: "Storage Location",
+                  value:
+                    locations.find((l) => l.id === location)?.display_path ??
+                    "Unavailable Location",
+                  onRemove: () => {
+                    setLocation("");
+                  },
+                },
+              ]
+            : []),
+          ...(material
+            ? [
+                {
+                  label: "Material",
+                  value:
+                    materials.find((m) => m.id === material)?.label ?? material,
+                  onRemove: () => {
+                    setMaterial("");
+                  },
+                },
+              ]
+            : []),
+        ]}
+        filters={
+          <>
+            <BotanicalIdentityFilter
+              choices={identityChoices(rows?.map((row) => row.source) ?? [])}
+              value={identity}
+              onChange={setIdentity}
+            />
+            <div className="field">
+              <label htmlFor={`${id}-state`}>State</label>
+              <select
+                id={`${id}-state`}
+                value={state}
+                onChange={(event) => {
+                  setState(event.currentTarget.value);
+                }}
+              >
+                <option value="active">Active material</option>
+                <option value="depleted">Depleted material</option>
+                <option value="">All states</option>
+              </select>
+            </div>
+            <div className="field stored-material-location-filter">
+              <label htmlFor={`${id}-location`}>Storage Location</label>
+              <select
+                id={`${id}-location`}
+                value={location}
+                onChange={(event) => {
+                  setLocation(event.currentTarget.value);
+                }}
+              >
+                <option value="">All Locations</option>
+                {location &&
+                  !locations.some((item) => item.id === location) && (
+                    <option value={location}>
+                      Unavailable Location · {location}
+                    </option>
+                  )}
+                {locations.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.display_path}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="field">
+              <label htmlFor={`${id}-material`}>Material</label>
+              <select
+                id={`${id}-material`}
+                value={material}
+                onChange={(event) => {
+                  setMaterial(event.currentTarget.value);
+                }}
+              >
+                <option value="">All materials</option>
+                {materials.map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
+        }
+      />
       <BulkToolbar
         selection={bulk}
         visible={bulkChoices}
@@ -629,51 +742,67 @@ export function StoredMaterialDirectory() {
                     }}
                     href={`#/harvests/${row.harvest_id}`}
                   >
+                    <RecordVisual
+                      kind="harvest"
+                      identity={row.source.botanical_identity}
+                      fallbackPhoto={row.source.primary_photo}
+                      label={row.harvest_title}
+                    />
                     <span className="harvest-row-content">
                       <strong>
                         {
                           materials.find((m) => m.id === row.material_kind)
                             ?.label
                         }{" "}
-                        · {remainingLabel(row)}
+                        · {row.harvest_title}
                       </strong>
-                      <span>{row.harvest_title}</span>
-                      <span>
-                        {row.source.botanical_identity.display_label} ·{" "}
-                        {row.source.display_name} · {row.source.lifecycle}
-                      </span>
-                      {row.description && <span>{row.description}</span>}
-                      <span>
-                        {row.location?.display_path ??
-                          "Storage Location not recorded"}
-                      </span>
+                      <small className="harvest-row-botanical">
+                        <BotanicalName
+                          label={row.source.botanical_identity.display_label}
+                          scientificName={
+                            recordIdentities.get(
+                              row.source.botanical_identity.id,
+                            )?.scientific_name
+                          }
+                        />
+                      </small>
                     </span>
                     <span className="harvest-row-meta">
-                      {row.state === "active" ? "Active" : "Depleted"}
-                      <small>Open source Harvest</small>
+                      <span
+                        className={`lifecycle-badge lifecycle-badge--${row.state}`}
+                      >
+                        {row.state === "active" ? "Active" : "Depleted"}
+                      </span>
+                      <span>{remainingLabel(row)}</span>
+                      <small>
+                        {row.location?.display_path ??
+                          "Storage Location not recorded"}
+                      </small>
                     </span>
                   </a>
-                  {!bulk.active && (
-                    <a
-                      className="button-link button--secondary"
-                      href={labelComposerHref("stored-material", row.id)}
-                    >
-                      Print label
-                    </a>
-                  )}
-                  {!bulk.active &&
-                    row.material_kind === "seed" &&
-                    row.state === "active" && (
-                      <button
-                        type="button"
-                        className="button--secondary"
-                        onClick={() => {
-                          setConverting(row);
-                        }}
+                  <div className="actions stored-directory-actions">
+                    {!bulk.active && (
+                      <a
+                        className="button-link button--secondary"
+                        href={labelComposerHref("stored-material", row.id)}
                       >
-                        Create Seed lot
-                      </button>
+                        Print label
+                      </a>
                     )}
+                    {!bulk.active &&
+                      row.material_kind === "seed" &&
+                      row.state === "active" && (
+                        <button
+                          type="button"
+                          className="button--secondary"
+                          onClick={() => {
+                            setConverting(row);
+                          }}
+                        >
+                          Create Seed lot
+                        </button>
+                      )}
+                  </div>
                 </li>
               ))}
             </ul>

@@ -146,6 +146,7 @@ class OrderState(TextState):
 
 
 class LocationState(TextState):
+    state: Literal["active", "retired", "all"] = "active"
     scope: LocationUsageScope | Literal["all"] = "all"
 
 

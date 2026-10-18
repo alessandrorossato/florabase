@@ -415,3 +415,44 @@ identity. Four native Sowing-state radios show one selected consequence; conditi
 remain. Plant/group maintenance Transfer lives in More, with stable dialog focus return. The guided
 source Details tab is preserved in its canonical parent history entry. These refinements await the
 operator's visual acceptance.
+
+## Harvest and Location normalization candidate
+
+COLLECTION-VISUAL-002 completes the primary Collection family using the accepted SeedLot, Sowing
+and Plant references. Historical Harvest rows keep identity/media on the left and occurrence date
+and a bounded material-kind summary on the right. Desktop Quick Preview uses the same 12rem media
+area, source/date context and Open details/Edit hierarchy. Collected quantity never represents stock.
+
+Substantial Harvest creation uses the existing full-page Collection canvas, semantic Source, Harvest,
+Materials collected and Notes sections, row-specific controls and the shared continuous footer.
+Contextual correction retains the aggregate in Details/Materials/Notes tabs in EditWorkspace, a stable
+footer and a direct full-page fallback;
+Escape, backdrop, Cancel and contextual history departure use the same pending/dirty guard.
+A Harvest stays a single full-width detail page, with historical collected lines and distinct current
+Stored material, Notes, related history and shared Photos. Conversion remains an explicit contextual
+operation with Source stored material, Resulting Seed lot and Conversion quantities sections.
+
+Locations remain a nested list with native expand/collapse buttons, capped indentation and full
+path/parent context for deep nodes. Names use Collection serif identity; paths, scopes, counts and
+state use UI sans. Rows and Quick Preview show only occupied record types. Small native create/edit
+dialogs retain explicit non-inherited scopes; at least one scope is required, not every checkbox.
+Full-width Details retains a semantic usage table: Directly here/Including sublocations, total/active
+record counts and explicit zeroes. Counts are never seed amounts, group membership or material mass.
+Rare maintenance/deletion actions use More. Operator visual acceptance remains pending.
+
+The second refinement uses one shared leading-edge selection rule for Harvests, Locations and the
+accepted Collection rows: primary-subtle fill, green leading accent and neutral remaining boundaries.
+Stored material supplies complete media/identity/metric columns, grouped search/Filters/Saved views,
+removable chips and a standard immediate-filter drawer. Per-line conversion is important, disposition
+secondary and print/edit/removal live in More, with stable focus return. Unknown remainder stays unknown.
+Location row metrics use explicit `incl.` when descendants contribute; preview and Details retain full
+comparisons. Typed identity/Location filters on Seeds/Sowings/Plants remain deferred because their list
+APIs do not support those parameters. No Harvest Location is inferred. See the current handoff for
+measured desktop fit and the live native-confirmation/browser-zoom acceptance limits.
+
+Harvest/Stored material list text now matches the accepted Plants directory: normal serif record title,
+light italic scientific identity, sans metrics and state badge. Row actions have normal-radius corners
+and content-aligned gutters. New Harvest aligns the first Source and Material controls and keeps unknown
+Quantity full-width. Location State defaults to Active with Retired/All available in the shared drawer;
+Saved Views records this preference. Contextual Parent location uses the existing reference picker, not
+an unbounded native options menu; full paths wrap inside the control width and root is explicit.

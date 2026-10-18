@@ -288,3 +288,24 @@ test("Journal multi-select and legacy scalar states share deterministic repeated
   );
   expect(savedViewHash("events", 1, { category: ["unknown"] })).toBeNull();
 });
+
+test("Location lifecycle state defaults to active and round trips retired/all Saved views", () => {
+  expect(readDirectoryState("locations", "#/locations")).toEqual({
+    q: "",
+    scope: "all",
+    state: "active",
+  });
+  for (const state of ["retired", "all"] as const) {
+    const hash = savedViewHash("locations", 1, { state, scope: "seed_lots" });
+    expect(hash).toBe(`#/locations?state=${state}&scope=seed_lots`);
+    expect(readDirectoryState("locations", hash ?? "")).toEqual({
+      q: "",
+      state,
+      scope: "seed_lots",
+    });
+  }
+  expect(
+    readDirectoryState("locations", "#/locations?state=invalid").state,
+  ).toBe("active");
+  expect(directoryState("locations", { state: "invalid" })).toBeNull();
+});

@@ -1,0 +1,40 @@
+COLLECTION-VISUAL-002 operator screenshot follow-up — 2026-10-18
+Worktree: /home/alessandro/.codex/worktrees/fb05/florabase
+Branch: feat/collection-visual-002
+HEAD unchanged: a36c6cffb938c5ed20f93942e1eac1070897962c
+
+Baseline: saved-state frontend adapters 49 passed before changes.
+Successful current frontend coverage: 186 distinct tests across seven files.
+App 80; HarvestScreen 15; StoredMaterial 20; saved-state adapters 50;
+SavedViews 10; ReferencePicker 7; ReferenceInteractions 4.
+Final Location/StrictMode subset: 19 passed, 61 intentionally unselected.
+Initial native-select/single-Escape and filter-fixture assertions were corrected
+for the actual parent picker and explicit scopes; no payload/cycle/focus guards weakened.
+An expansion-preservation check needed an actual visible active child in its fixture.
+
+Backend: pytest --no-cov tests/test_saved_views.py tests/test_saved_views_service.py
+85 passed. This covers the one-field Saved Views allowlist extension, not database queries.
+Ruff check/format on src/florabase/saved_views/state.py and tests/test_saved_views.py:
+PASS; two files already formatted.
+Focused mypy src/florabase/saved_views/state.py: PASS, one source file.
+Targeted frontend ESLint: PASS, zero warnings, exit 0.
+Touched-file frontend and documentation Prettier: PASS.
+Production pnpm build (tsc -b && vite build): PASS, exit 0.
+Feature graph: 106 features valid.
+git diff --check: PASS.
+Index empty; all changes unstaged and uncommitted.
+
+Review source remains fb05/florabase, fixture v4/80, revision 20261013_0042.
+Frontend/backend/db healthy. No reset/reseed, domain write, persistent-UAT operation,
+canonical feature-verify, stage, commit, push or delivery.
+No schema/migration, new Location query or generic Saved Views OpenAPI shape change.
+No PostgreSQL integration/API-generation/migration-cycle command in this pass.
+
+Live 1440x844 and 390x844 checks:
+New Harvest first Source and Material top: both 254.03125px.
+Right Material, unknown Quantity, Description: width 715.546875px, left 700.453125px.
+Parent input/menu: both 558px desktop, both 320px mobile, no horizontal overflow.
+Mobile New Harvest: 0 controls outside viewport; document width 375 <= 390.
+Stored action buttons: 10px normal-radius corners and content-aligned gutters.
+Location default Active: 10 records; Retired: 1 record; All: 11 records.
+Nine viewport screenshots retained; parent selection restored and Cancelled without saving.

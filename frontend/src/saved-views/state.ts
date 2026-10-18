@@ -83,6 +83,7 @@ export interface DirectoryStates {
   orders: { q: string; supplier_id: string };
   locations: {
     q: string;
+    state: "active" | "retired" | "all";
     scope: "all" | "plants" | "sowings" | "seed_lots" | "harvest_inventory";
   };
   geography: { q: string; mode: "places" | "sites" | "map" };
@@ -151,7 +152,7 @@ export const defaults: DirectoryStates = {
   botanical_identities: { q: "" },
   suppliers: { q: "" },
   orders: { q: "", supplier_id: "" },
-  locations: { q: "", scope: "all" },
+  locations: { q: "", state: "active", scope: "all" },
   geography: { q: "", mode: "places" },
   provenance_map: { q: "", seed_lots: true, plants: true },
 };
@@ -201,6 +202,7 @@ const choices: Partial<
     ],
   },
   locations: {
+    state: ["active", "retired", "all"],
     scope: ["all", "plants", "sowings", "seed_lots", "harvest_inventory"],
   },
   geography: { mode: ["places", "sites", "map"] },

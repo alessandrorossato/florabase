@@ -342,6 +342,8 @@ def validate_manifest(database: Session, root: Path, manifest: dict[str, Any]) -
         )
     if manifest.get("manual_review_extension") == 1:
         expected.update({"identity:genovese", "seed:genovese", "schedule:collection"})
+    if fixture_prefix() == "review" and manifest.get("collection_visual_extension") == 1:
+        expected.update(COLLECTION_VISUAL_KEYS)
     if set(manifest["records"]) != expected:
         raise FixtureError("Preview fixture baseline has missing records; " + repair_hint())
     for key, value in manifest["records"].items():
@@ -678,6 +680,102 @@ def ensure_manual_review(database: Session, root: Path, manifest: dict[str, Any]
     write_manifest(root, manifest)
 
 
+COLLECTION_VISUAL_KEYS = {
+    "harvest:group_materials",
+    "event:group_materials",
+    "link:harvest",
+    *{f"item:group_materials_{index}" for index in range(4)},
+    *{f"location:deep_{index}" for index in range(6)},
+    "location:retired_empty",
+}
+
+
+def ensure_collection_visual(database: Session, root: Path, manifest: dict[str, Any]) -> None:
+    """Review-only additive historical-material/deep-hierarchy examples; preserve all repeats."""
+    if fixture_prefix() != "review" or manifest.get("collection_visual_extension") == 1:
+        return
+    ready = manifest["state"] == "ready"
+    manifest["state"] = "building"
+    write_manifest(root, manifest)
+    collected = harvests.write_harvest(
+        database,
+        HarvestWrite.model_validate(
+            {
+                "plant_group_id": manifest["records"]["group:basil"],
+                "label": "Preview — Mixed group collection",
+                "occurred_on": None,
+                "notes": NOTE,
+                "items": [
+                    {
+                        "material_kind": "leaf",
+                        "description": "Fresh leaves",
+                        "quantity": {
+                            "kind": "weight",
+                            "value": "15",
+                            "unit": "g",
+                            "is_approximate": True,
+                        },
+                    },
+                    {"material_kind": "flower", "description": "Quantity not recorded"},
+                    {
+                        "material_kind": "seed",
+                        "quantity": {"kind": "item_count", "value": "120", "is_approximate": False},
+                    },
+                    {"material_kind": "stem_or_shoot"},
+                ],
+            }
+        ),
+    )
+    manifest["records"]["harvest:group_materials"] = str(collected.id)
+    manifest["records"]["event:group_materials"] = str(collected.event_id)
+    for index, item in enumerate(
+        database.scalars(
+            select(HarvestItem)
+            .where(HarvestItem.harvest_id == collected.id)
+            .order_by(HarvestItem.display_order)
+        )
+    ):
+        manifest["records"][f"item:group_materials_{index}"] = str(item.id)
+    link = media.create_link(
+        database,
+        "harvest",
+        collected.id,
+        UUID(manifest["records"]["asset:local"]),
+        LinkWrite(caption="Preview — explicit Harvest primary"),
+        commit=False,
+    )
+    manifest["records"]["link:harvest"] = str(link.id)
+    primary.set_primary(
+        database,
+        AttachmentStorage(root),
+        "harvest",
+        collected.id,
+        PrimaryPhotoSelection(kind="local", photo_id=link.id),
+    )
+    parent_id = UUID(manifest["records"]["location:Greenhouse bench"])
+    for index in range(6):
+        location = locations.create_location(
+            database,
+            LocationCreate(
+                name=f"Preview — Propagation shelf level {index + 1}",
+                parent_id=parent_id,
+                usage_scopes=["plants", "sowings", "seed_lots", "harvest_inventory"],
+            ),
+        )
+        manifest["records"][f"location:deep_{index}"] = str(location.id)
+        parent_id = location.id
+    retired = locations.create_location(
+        database, LocationCreate(name="Preview — Retired empty cabinet", usage_scopes=["seed_lots"])
+    )
+    locations.set_location_retired(database, retired.id, retired=True)
+    manifest["records"]["location:retired_empty"] = str(retired.id)
+    database.commit()
+    manifest["collection_visual_extension"] = 1
+    if ready:
+        manifest["state"] = "ready"
+    write_manifest(root, manifest)
+
+
 def seed(database: Session, root: Path) -> dict[str, Any]:
     existing = read_manifest(root)
     if existing is not None:
@@ -688,6 +786,7 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
         ensure_schedule_calendar(database, root, existing)
         ensure_dashboard(database, root, existing)
         ensure_manual_review(database, root, existing)
+        ensure_collection_visual(database, root, existing)
         return existing
     owner = review_owner(database) if fixture_prefix() == "review" else None
     if owner is not None:
@@ -1185,6 +1284,7 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
     ensure_schedule_calendar(database, root, manifest)
     ensure_dashboard(database, root, manifest)
     ensure_manual_review(database, root, manifest)
+    ensure_collection_visual(database, root, manifest)
     manifest["state"] = "ready"
     write_manifest(root, manifest)
     return manifest
