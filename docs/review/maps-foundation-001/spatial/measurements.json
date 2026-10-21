@@ -1,0 +1,152 @@
+[
+  {
+    "name": "overview-390",
+    "clientWidth": 375,
+    "hash": "#/native-ranges",
+    "inspector": {
+      "bottom": 0,
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "map": {
+      "bottom": 724.640625,
+      "height": 171.5,
+      "width": 343,
+      "x": 16,
+      "y": 553.140625
+    },
+    "scrollWidth": 375,
+    "scrollY": 0,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  {
+    "name": "overview-1024",
+    "clientWidth": 1009,
+    "hash": "#/native-ranges",
+    "inspector": {
+      "bottom": 0,
+      "height": 0,
+      "width": 0,
+      "x": 0,
+      "y": 0
+    },
+    "map": {
+      "bottom": 762.4375,
+      "height": 370.5,
+      "width": 741,
+      "x": 244,
+      "y": 391.9375
+    },
+    "scrollWidth": 1009,
+    "scrollY": 0,
+    "viewport": [
+      1024,
+      844
+    ]
+  },
+  {
+    "name": "overview-1440",
+    "clientWidth": 1425,
+    "hash": "#/native-ranges",
+    "inspector": {
+      "bottom": 821.953125,
+      "height": 540,
+      "width": 342.3125,
+      "x": 1058.6875,
+      "y": 281.953125
+    },
+    "map": {
+      "bottom": 681.296875,
+      "height": 399.34375,
+      "width": 798.6875,
+      "x": 244,
+      "y": 281.953125
+    },
+    "scrollWidth": 1425,
+    "scrollY": 0,
+    "viewport": [
+      1440,
+      844
+    ]
+  },
+  {
+    "name": "saved-view-1440",
+    "clientWidth": 1440,
+    "hash": "#/native-ranges?mode=species&identity=01a152df-e81e-74de-99bf-9e78a19a462d&identity=01a152df-e826-7318-86b3-eca8b6de451c",
+    "inspector": {
+      "bottom": 477.921875,
+      "height": 275.9375,
+      "width": 346.8125,
+      "x": 1069.1875,
+      "y": 201.984375
+    },
+    "map": {
+      "bottom": 606.578125,
+      "height": 404.59375,
+      "width": 809.1875,
+      "x": 244,
+      "y": 201.984375
+    },
+    "scrollWidth": 1440,
+    "scrollY": 0,
+    "viewport": [
+      1440,
+      844
+    ]
+  },
+  {
+    "name": "cultivar-search-1440",
+    "clientWidth": 1425,
+    "hash": "#/native-ranges?q=Genovese&mode=species&identity=01a152df-e81e-74de-99bf-9e78a19a462d&identity=01a152df-e826-7318-86b3-eca8b6de451c",
+    "inspector": {
+      "bottom": 441.984375,
+      "height": 240,
+      "width": 342.3125,
+      "x": 1058.6875,
+      "y": 201.984375
+    },
+    "map": {
+      "bottom": 695.328125,
+      "height": 399.34375,
+      "width": 798.6875,
+      "x": 244,
+      "y": 295.984375
+    },
+    "scrollWidth": 1425,
+    "scrollY": 0,
+    "viewport": [
+      1440,
+      844
+    ]
+  },
+  {
+    "name": "union-1440",
+    "clientWidth": 1425,
+    "hash": "#/native-ranges?mode=species&identity=01a152df-e81e-74de-99bf-9e78a19a462d&identity=01a152df-e826-7318-86b3-eca8b6de451c&identity=01a152df-e857-7174-9555-cd2a4909d222",
+    "inspector": {
+      "bottom": 706.984375,
+      "height": 540,
+      "width": 342.3125,
+      "x": 1058.6875,
+      "y": 166.984375
+    },
+    "map": {
+      "bottom": 566.328125,
+      "height": 399.34375,
+      "width": 798.6875,
+      "x": 244,
+      "y": 166.984375
+    },
+    "scrollWidth": 1425,
+    "scrollY": 35,
+    "viewport": [
+      1440,
+      844
+    ]
+  }
+]

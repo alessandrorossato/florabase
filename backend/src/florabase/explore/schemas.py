@@ -101,3 +101,21 @@ class NativeRangeSelection(BaseModel):
     identities: list[NativeRangeIdentity] = Field(max_length=20)
     missing_ids: list[UUID] = Field(max_length=20)
     territories: list[SelectedTerritoryCoverage]
+
+
+class TerritoryRangeEvidence(BaseModel):
+    source_code: str
+    name: str
+    exact_recorded: bool
+    broad_recorded_places: list[str]
+
+
+class TerritoryRangeIdentity(NativeRangeIdentity):
+    matching_territories: list[TerritoryRangeEvidence]
+
+
+class TerritoryRangeIdentityPage(BaseModel):
+    items: list[TerritoryRangeIdentity]
+    total: int
+    offset: int
+    limit: int

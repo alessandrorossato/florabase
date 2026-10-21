@@ -1,0 +1,266 @@
+[
+  {
+    "name": "overview-1440",
+    "clientWidth": 1425,
+    "focus": "\n    Florabase‹Overview▾DashboardCollection▾SeedsSowingsPlantsHarvestsLocationsActivity▾JournalHisto",
+    "map": {
+      "bottom": 755.953125,
+      "height": 460,
+      "left": 272,
+      "right": 1401,
+      "top": 295.953125,
+      "width": 1129,
+      "x": 272,
+      "y": 295.953125
+    },
+    "scrollHeight": 952,
+    "scrollWidth": 1425,
+    "scrollY": 0,
+    "viewport": [
+      1440,
+      844
+    ]
+  },
+  {
+    "name": "comparison-1440",
+    "clientWidth": 1425,
+    "focus": "Choose species",
+    "map": {
+      "bottom": 670.984375,
+      "height": 460,
+      "left": 272,
+      "right": 1401,
+      "top": 210.984375,
+      "width": 1129,
+      "x": 272,
+      "y": 210.984375
+    },
+    "scrollHeight": 911,
+    "scrollWidth": 1425,
+    "scrollY": 0,
+    "viewport": [
+      1440,
+      844
+    ]
+  },
+  {
+    "name": "overview-1024-selected-retained",
+    "clientWidth": 1009,
+    "focus": "Collection overview",
+    "map": {
+      "bottom": 811.921875,
+      "height": 460,
+      "left": 272,
+      "right": 985,
+      "top": 351.921875,
+      "width": 713,
+      "x": 272,
+      "y": 351.921875
+    },
+    "scrollHeight": 1030,
+    "scrollWidth": 1009,
+    "scrollY": 0,
+    "viewport": [
+      1024,
+      844
+    ]
+  },
+  {
+    "name": "overview-390-selected-retained",
+    "clientWidth": 375,
+    "focus": "Collection overview",
+    "map": {
+      "bottom": 772.578125,
+      "height": 171.5,
+      "left": 16,
+      "right": 359,
+      "top": 601.078125,
+      "width": 343,
+      "x": 16,
+      "y": 601.078125
+    },
+    "scrollHeight": 1220,
+    "scrollWidth": 375,
+    "scrollY": 0,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  {
+    "name": "overview-1024-final",
+    "clientWidth": 1009,
+    "focus": "Collection overview",
+    "map": {
+      "bottom": 722.421875,
+      "height": 370.5,
+      "left": 244,
+      "right": 985,
+      "top": 351.921875,
+      "width": 741,
+      "x": 244,
+      "y": 351.921875
+    },
+    "scrollHeight": 918,
+    "scrollWidth": 1009,
+    "scrollY": 0,
+    "viewport": [
+      1024,
+      844
+    ]
+  },
+  {
+    "name": "comparison-390-three-species",
+    "clientWidth": 375,
+    "focus": "Choose species",
+    "map": {
+      "bottom": 640.671875,
+      "height": 171.5,
+      "left": 16,
+      "right": 359,
+      "top": 469.171875,
+      "width": 343,
+      "x": 16,
+      "y": 469.171875
+    },
+    "scrollHeight": 1151,
+    "scrollWidth": 375,
+    "scrollY": 0,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  {
+    "name": "single-390",
+    "clientWidth": 375,
+    "focus": "Choose species",
+    "map": {
+      "bottom": 606.671875,
+      "height": 171.5,
+      "left": 16,
+      "right": 359,
+      "top": 435.171875,
+      "width": 343,
+      "x": 16,
+      "y": 435.171875
+    },
+    "scrollHeight": 1148,
+    "scrollWidth": 375,
+    "scrollY": 0,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  {
+    "name": "comparison-1024",
+    "clientWidth": 1009,
+    "focus": "\n    Florabase‹Overview▾DashboardCollection▾SeedsSowingsPlantsHarvestsLocationsActivity▾JournalHisto",
+    "map": {
+      "bottom": 589.484375,
+      "height": 356.5,
+      "left": 272,
+      "right": 985,
+      "top": 232.984375,
+      "width": 713,
+      "x": 272,
+      "y": 232.984375
+    },
+    "scrollHeight": 851,
+    "scrollWidth": 1009,
+    "scrollY": 0,
+    "viewport": [
+      1024,
+      844
+    ]
+  },
+  {
+    "name": "comparison-1440",
+    "clientWidth": 1425,
+    "focus": "\n    Florabase‹Overview▾DashboardCollection▾SeedsSowingsPlantsHarvestsLocationsActivity▾JournalHisto",
+    "map": {
+      "bottom": 670.984375,
+      "height": 460,
+      "left": 272,
+      "right": 1401,
+      "top": 210.984375,
+      "width": 1129,
+      "x": 272,
+      "y": 210.984375
+    },
+    "scrollHeight": 911,
+    "scrollWidth": 1425,
+    "scrollY": 0,
+    "viewport": [
+      1440,
+      844
+    ]
+  },
+  {
+    "name": "overview-1440-final",
+    "clientWidth": 1425,
+    "focus": "Collection overview",
+    "map": {
+      "bottom": 755.953125,
+      "height": 460,
+      "left": 272,
+      "right": 1401,
+      "top": 295.953125,
+      "width": 1129,
+      "x": 272,
+      "y": 295.953125
+    },
+    "scrollHeight": 952,
+    "scrollWidth": 1425,
+    "scrollY": 0,
+    "viewport": [
+      1440,
+      844
+    ]
+  },
+  {
+    "name": "overview-1024-final",
+    "clientWidth": 1009,
+    "focus": "Collection overview",
+    "map": {
+      "bottom": 708.421875,
+      "height": 356.5,
+      "left": 272,
+      "right": 985,
+      "top": 351.921875,
+      "width": 713,
+      "x": 272,
+      "y": 351.921875
+    },
+    "scrollHeight": 926,
+    "scrollWidth": 1009,
+    "scrollY": 0,
+    "viewport": [
+      1024,
+      844
+    ]
+  },
+  {
+    "name": "overview-390-final",
+    "clientWidth": 375,
+    "focus": "Collection overview",
+    "map": {
+      "bottom": 720.578125,
+      "height": 171.5,
+      "left": 16,
+      "right": 359,
+      "top": 549.078125,
+      "width": 343,
+      "x": 16,
+      "y": 549.078125
+    },
+    "scrollHeight": 1168,
+    "scrollWidth": 375,
+    "scrollY": 0,
+    "viewport": [
+      390,
+      844
+    ]
+  }
+]

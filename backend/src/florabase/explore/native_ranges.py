@@ -1,6 +1,7 @@
 """Read existing ranges with shared collection representation; no geometry or provider I/O."""
 
 from collections.abc import Sequence
+from typing import Literal
 from uuid import UUID
 
 from sqlalchemy import Text, cast, distinct, func, literal, select
@@ -21,6 +22,9 @@ from florabase.explore.schemas import (
     RepresentationScope,
     SelectedNativeRanges,
     SelectedTerritoryCoverage,
+    TerritoryRangeEvidence,
+    TerritoryRangeIdentity,
+    TerritoryRangeIdentityPage,
 )
 from florabase.geographic_places.model import GeographicPlace as Place
 
@@ -95,9 +99,7 @@ def _place_rows(
     ]
 
 
-def _territories(
-    database: Session, represented: Subquery, *, contributors: bool = False
-) -> list[SelectedTerritoryCoverage]:
+def _territory_ancestors() -> CTE:
     # Canonical ISO territories are fixed reference data. Ascend only canonical parents;
     # custom ranges never inherit parent polygons. No geometry is persisted or queried.
     ancestors = (
@@ -110,11 +112,17 @@ def _territories(
         .where(Place.place_kind == "canonical", Place.source_code_type == "iso_3166_1_alpha_2")
         .cte("territory_ancestors", recursive=True)
     )
-    ancestors = ancestors.union_all(
+    return ancestors.union_all(
         select(ancestors.c.territory_id, Place.id, Place.parent_id, Place.source_code_type)
         .join(ancestors, Place.id == ancestors.c.parent_id)
         .where(Place.place_kind == "canonical")
     )
+
+
+def _territories(
+    database: Session, represented: Subquery, *, contributors: bool = False
+) -> list[SelectedTerritoryCoverage]:
+    ancestors = _territory_ancestors()
     rows = database.execute(
         select(
             Place.id,
@@ -154,6 +162,12 @@ def list_identities(
     limit: int = 50,
 ) -> NativeRangeIdentityPage:
     represented = _identities(scope, q, with_range, record)
+    return _identity_page(database, represented, scope, offset, limit)
+
+
+def _identity_page(
+    database: Session, represented: Subquery, scope: RepresentationScope, offset: int, limit: int
+) -> NativeRangeIdentityPage:
     total = database.scalar(select(func.count()).select_from(represented)) or 0
     counts = _range_counts()
     # Reuse the exact response derivation, but omit occurrence-only fields in this surface.
@@ -314,4 +328,77 @@ def selection(
         identities=identities,
         missing_ids=[id_ for id_ in ids if id_ not in found],
         territories=_territories(database, represented, contributors=True),
+    )
+
+
+def territory_identities(
+    database: Session,
+    codes: Sequence[str],
+    *,
+    match: Literal["any", "all"] = "any",
+    identity_ids: Sequence[UUID] = (),
+    q: str = "",
+    scope: RepresentationScope = "all",
+    with_range: bool = False,
+    record: Sequence[CollectionRecordCategory] = (),
+    offset: int = 0,
+    limit: int = 50,
+) -> TerritoryRangeIdentityPage:
+    """Bounded union/intersection of explicit canonical drawing coverage, never occurrences."""
+    codes = sorted(set(codes))
+    ancestors = _territory_ancestors()
+    links = (
+        select(
+            NativeRange.botanical_profile_id.label("identity_id"),
+            Place.source_code.label("code"),
+            Place.name.label("name"),
+            ancestors.c.ancestor_id,
+            ancestors.c.territory_id,
+        )
+        .join(ancestors, ancestors.c.ancestor_id == NativeRange.geographic_place_id)
+        .join(Place, Place.id == ancestors.c.territory_id)
+        .where(
+            Place.source_code.in_(codes),
+            ancestors.c.ancestor_code_type.in_(("un_m49", "iso_3166_1_alpha_2")),
+        )
+        .subquery("coverage_links")
+    )
+    matching = select(links.c.identity_id).group_by(links.c.identity_id)
+    if match == "all":
+        matching = matching.having(func.count(distinct(links.c.code)) == len(codes))
+    represented = _identities(scope, q, with_range, record)
+    filtered = select(represented).where(represented.c.id.in_(matching))
+    if identity_ids:
+        filtered = filtered.where(represented.c.id.in_(identity_ids))
+    page = _identity_page(database, filtered.subquery(), scope, offset, limit)
+    evidence: dict[UUID, dict[str, TerritoryRangeEvidence]] = {item.id: {} for item in page.items}
+    if page.items:
+        # One extra read for this page only; keep broad and exact links without duplicate IDs.
+        rows = database.execute(
+            select(links, Place.name.label("recorded_name"))
+            .join(Place, Place.id == links.c.ancestor_id)
+            .where(links.c.identity_id.in_(evidence))
+            .order_by(links.c.code, Place.name)
+        )
+        for id_, code, name, ancestor_id, territory_id, recorded_name in rows:
+            item = evidence[id_].setdefault(
+                code,
+                TerritoryRangeEvidence(
+                    source_code=code, name=name, exact_recorded=False, broad_recorded_places=[]
+                ),
+            )
+            if ancestor_id == territory_id:
+                item.exact_recorded = True
+            elif recorded_name not in item.broad_recorded_places:
+                item.broad_recorded_places.append(recorded_name)
+    return TerritoryRangeIdentityPage(
+        items=[
+            TerritoryRangeIdentity(
+                **item.model_dump(), matching_territories=list(evidence[item.id].values())
+            )
+            for item in page.items
+        ],
+        total=page.total,
+        offset=offset,
+        limit=limit,
     )

@@ -4657,3 +4657,145 @@ not the current delivery state.
   field error to the existing accessible focus mapping, and the regression awaits the animation-frame
   focus rather than asserting synchronously. The correction is bounded to accessibility; final
   verification and protected delivery must be rerun for the follow-up commit.
+
+
+## 2026-10-18 — MAPS-FOUNDATION-001 architecture and Native ranges slice
+
+- Audited all three Maps workspaces before implementation; [design](maps-foundation-001-design.md)
+  records distinct occurrence/native-range/material-origin contracts, existing SVG/Leaflet renderers,
+  geometry/provider boundaries, URL/Saved Views, accessibility and reuse order. Retained the current
+  engines, APIs and geometry; Species distribution and Collection origins reuse is planning only.
+- Native ranges proves a compact map-first shell, explicit narrow-screen pane switching, precise
+  discrete legends, keyboard polygon/HTML territory inspection and synchronized selected state.
+  Comparison map precedes the selected-species list; exact broad/precise/custom places and unavailable
+  boundaries remain explicit. Existing scientific-name formatting, compact Saved Views and filters
+  preserve domain meaning, bounded selection, URL restoration, authentication and retry behavior.
+- Final focused checks: **120 frontend tests / 13 files passed** across Maps, Provenance sites and
+  Saved Views; scoped zero-warning ESLint/Prettier, strict TypeScript/Vite production build,
+  **106-feature** graph and `git diff --check` pass. Baseline was 17 tests; final new behaviors include
+  actual jsdom Back/Forward, reset preservation, polygon keyboard/clear, map/list inspection and bins.
+  Native ranges JS **24.27/7.15 kB gzip**, CSS **7.67/1.60 kB gzip**; lazy geometry remains
+  **150.83/60.46 kB gzip**. No backend, schema, API, dependencies or shared UI implementation changed.
+- [Seven synthetic offline snapshots](review/maps-foundation-001/README.md) cover 1440×844, 1024×844,
+  390×844 and tall content inspection without measured horizontal page overflow. They use real
+  components/CSS/geometry with mocked local responses and a labelled static shell; they are not live
+  Review evidence. Real browser zoom, screen reader, device touch and mobile navigation clearance
+  remain pending. Initial offline rendering/approval-service limits were resolved without bypass.
+- Reused the isolated Codex worktree `c606`; supported initialization attached `feat/maps-foundation-001`
+  to freshly fetched `origin/main` at `a36c6cf`. COLLECTION-VISUAL-002 retains its Review resources;
+  no environment start/stop/seed/adoption or persistent service change. No canonical feature-verify,
+  staging, commit, push or delivery. Feature is **implemented**, pending operator acceptance and
+  independent verification; full [handoff](maps-foundation-001-handoff.md) defines the next review.
+
+## 2026-10-19 — MAPS-FOUNDATION-001 authenticated operator review
+
+- With explicit operator approval, preserved all candidate files, fast-forwarded the existing branch
+  to main `9a73d3f` (PR #113), and reconciled backlog/progress while retaining both increments.
+  Non-overlapping candidate files were restored byte-for-byte; primary main was untouched.
+- Removed the old `fb05` Review through its guarded owning-worktree workflow, then started Maps
+  Review from `c606`. Interactive owner bootstrap and guarded synthetic seed completed. Final
+  status is healthy, fixture **v4/80**, code/DB **20261013_0042**. Credential supplied only in chat.
+  Review remains running at localhost:15174; UAT, DEV, Stable Preview and production untouched.
+- Real authenticated overview, one/two/three-species selection, territory polygon/text/keyboard
+  inspection, exact/broad/custom/unavailable/no-range evidence, empty/invalid state, Saved Views,
+  URL reload and actual Back/Forward were inspected. Mobile pane switching preserves species,
+  territory inspection and focus. A comparison Saved View remains for the operator.
+- Live mobile evidence justified local control compaction and moving supporting explanation/metadata
+  below the map. Final overview/comparison/single maps fit usefully in the first mobile viewport,
+  with no measured horizontal overflow. [Live evidence](review/maps-foundation-001/live/README.md)
+  distinguishes actual viewports from zoom proxies; no real zoom, screen-reader, physical touch or
+  live API/asset failure injection certification is claimed.
+- Final **121 tests / 13 files**, scoped zero-warning ESLint/Prettier, strict TypeScript/Vite build,
+  **107-feature** graph, whitespace and healthy exact-source Review checks pass. Interrupted local
+  runs (exit 143) were superseded by completed validation; no test or guard was weakened. No canonical
+  gate, staging, feature commit, push or delivery. Changes remain unstaged/uncommitted; operator
+  acceptance and the future map phases are detailed in the [handoff](maps-foundation-001-handoff.md).
+- Final continuation found stopped app services with the database retained. Supported Review startup
+  restored healthy frontend/backend/database from the same `c606` candidate, preserving owner login,
+  fixture v4/80 and revision `20261013_0042`. Review remains running for the operator.
+
+## 2026-10-19 — MAPS-FOUNDATION-001 overview and interaction refinement
+
+- Refined the existing dirty `c606` candidate at `9a73d3f` without branch changes. The accepted
+  PageHeader/DirectoryTools pattern puts Filters, Saved Views and Choose species on the right.
+  Five grounded KPIs lead into a full-width map; species selection uses an explicit searchable,
+  paged TaskDialog instead of a permanent rail. Selected count and compact names remain visible.
+- KPI actions open the chooser or reveal/focus textual coverage and exact places. With-range
+  browsing uses the existing durable filter; no inverse/no-range API or invented metric was added.
+  Coverage, unsupported boundaries, methodology and detailed selection/places are progressive disclosures.
+- Added hover/focus territory preview independent of committed inspection. Separated fills, fixed
+  boundaries and inward-clipped emphasis; neighboring paths can no longer erase a selected edge
+  or receive its overpaint. Selection, focus and hover keep distinct geometry; static layers are inert.
+- Authenticated desktop/tablet/mobile review confirms map prominence, no horizontal overflow,
+  modal focus/persistence, scientific/common/cultivar search, one/two/three species, exact/broad/custom/
+  no-range evidence, Saved View restoration, URL reload and actual Back/Forward.
+  [Refinement evidence](review/maps-foundation-001/refinement/README.md) supersedes the first live layout.
+- Baseline **25 tests / 4 files**; affected regressions **131 / 15**; final Native/maps rerun **30 / 4**
+  after correcting the mapped-KPI asset-failure state. Scoped zero-warning ESLint/Prettier, strict
+  TypeScript/Vite build, **107-feature** graph and whitespace pass. Final JS **29.61/8.44 kB gzip**,
+  CSS **10.34/2.13 kB gzip**; geometry remains **150.83/60.46 kB gzip**. No tests or safeguards weakened.
+- Supported Review rebuild resolved development-session module errors and retained owner/credentials,
+  v4/80 fixture, saved preset and revision `20261013_0042`. Review remains running. No seed/reset/removal,
+  UAT/DEV/Preview/production change, canonical gate, staging, commit or delivery in this pass.
+  Real zoom, screen-reader and physical-touch acceptance remain pending in the [handoff](maps-foundation-001-handoff.md).
+
+## 2026-10-20 — MAPS-FOUNDATION-001 geographic exploration refinement
+
+- Continued the same dirty `c606` / `feat/maps-foundation-001` candidate at `9a73d3f`; all work remains
+  unstaged and uncommitted. No new branch, reconciliation, canonical gate, commit, PR or delivery.
+- Adopted Collection PageHeader search beside Filters/Saved Views/Choose species. Explore all uses
+  the complete filtered collection; Compare uses explicit choices with up to five stable labelled
+  colors. SVG stripes encode all overlapping contributors while fixed boundaries and inward-clipped
+  selected/hover/focus layers remain intact. Restored 6–20-ID views retain all IDs in count mode.
+- Added independent multi-territory toggles, chips/removal/clear and a scoped union/intersection
+  inspector with exact-versus-broad evidence. A concrete overview-contract gap required one bounded
+  authenticated read API, reusing canonical ancestry and existing representation filters. Generated
+  OpenAPI/TypeScript updated; no migration, geometry, provider or dependency change.
+- Wide layout is about 70/30 map/inspector. Five names follow the canvas; mounted Map/Inspector panels
+  give direct small-screen access. About/Places replaces duplicate bottom menus; exact-place paging
+  retains the map. Native ranges remains isolated from occurrence density and collection provenance.
+- Final checks: **39 Native/maps + 101 related frontend tests = 140 / 15 files**, **6 backend unit**,
+  **10 isolated PostgreSQL integration**, scoped zero-warning lint/format, strict TypeScript/Vite,
+  Ruff/mypy, API drift, **107-feature** graph and whitespace/empty-index checks pass. An earlier host
+  combined test run ended 143 without a result; completed scoped container runs supersede it.
+- [Spatial evidence](review/maps-foundation-001/spatial/README.md) distinguishes authenticated five-ID
+  and real two-way overlap from labelled renderer-only 1/2/3/5-way polygon fixtures. No fixture rows
+  were changed. True browser zoom, actual screen reader, physical touch and operator product acceptance
+  remain pending in the [handoff](maps-foundation-001-handoff.md).
+- Supported Review startup resumed services stopped between continuations, preserving owner credential,
+  database/media/dependencies, v4/80 fixture and revision `20261013_0042`. Review remains available for
+  inspection; no reseed/removal or UAT/DEV/Stable Preview/production operation was performed.
+
+## 2026-10-21 — MAPS-FOUNDATION-001 independent review and operator acceptance
+
+- Independently reviewed the existing Native ranges implementation, API, data semantics, shared map
+  shell, renderer, Saved Views, URL/history, keyboard/focus behavior and spatial evidence. No material
+  blocker or production correction was found. Authenticated Review showed one-, two- and three-species
+  selection, union/intersection, broad versus exact evidence, and transient territory selection; the
+  selected set remained independent. Review data and saved state were preserved.
+- Operator accepted the map-first hierarchy, five-layer comparison, inspector/search density and
+  responsive map/list behavior. Existing 1440×844, 1024×844 and 390×844 captures are viewport evidence;
+  true browser zoom, actual screen-reader use and physical-device touch inspection remain open follow-up
+  checks and are not claimed complete.
+- Focused verification passed: **140 frontend tests / 15 files**, **10 backend unit tests** and
+  **10 PostgreSQL Native ranges integration tests**. During the full gate, one test-only enum typing
+  issue was fixed and the focused integration suite passed again. The subsequent full gate passed
+  strict typing, backend tests, and **797 frontend tests / 70 files**, then was interrupted while the
+  736-test PostgreSQL integration run was at 44%. It did not return a success result or receipt.
+- The final candidate remains on `feat/maps-foundation-001` at main baseline `9a73d3f`, with changes
+  unstaged and uncommitted. The canonical full gate is being rerun on the documented, accepted tree
+  before authorized commit and protected delivery. Review remains running with its v4/80 fixture at
+  `20261013_0042`; UAT, DEV, Stable Preview and production remain untouched.
+
+## 2026-10-21 — MAPS-FOUNDATION-001 canonical verification
+
+- Final canonical `make feature-verify` passed on the accepted candidate. Results: **943 backend unit
+  tests, 797 frontend tests / 70 files and 736 PostgreSQL integration tests**; workflow guards,
+  formatting, lint, strict typing, OpenAPI/TypeScript drift, backend/frontend production builds,
+  feature graph, whitespace and complete migration cycle passed. The migration cycle verified
+  `20261013_0042` at all four checkpoints; this feature adds no migration. The working-tree receipt
+  records the verified candidate against base `9a73d3f`.
+- Updated `MAPS-FOUNDATION-001` to `verified` and synchronized this handoff with the acceptance and
+  gate results. The result-only documentation change requires one more canonical gate before staging.
+  Candidate changes remain unstaged and uncommitted; protected delivery and `make feature-finish`
+  remain outstanding. Maps Review remains running; protected environments remain untouched.

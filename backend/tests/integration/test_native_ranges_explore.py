@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 
 from florabase.botanical_profiles.service import add_botanical_native_range
 from florabase.explore import native_ranges, service
+from florabase.explore.schemas import CollectionRecordCategory as Category
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.schemas import GeographicPlaceCreate, GeographicPlaceUpdate
 from florabase.geographic_places.service import create_geographic_place, update_geographic_place
@@ -214,7 +215,13 @@ def test_authenticated_api_bounds_and_no_provider(
 ) -> None:
     cookie, _ = authenticated_browser
     base = "/api/v1/explore/native-ranges"
-    for path in ("/identities", "/overview", "/selection", f"/identities/{uuid7()}"):
+    for path in (
+        "/identities",
+        "/overview",
+        "/selection",
+        "/territories/identities",
+        f"/identities/{uuid7()}",
+    ):
         assert request("GET", base + path)[0] == 401
     for path in ("/identities", "/overview"):
         assert request("GET", base + path, headers={"Cookie": cookie})[0] == 200
@@ -251,13 +258,34 @@ def test_authenticated_api_bounds_and_no_provider(
         == 422
     )
     assert asyncio.run(selection_status("identity=" + str(uuid7()) + "&record=bad")) == 422
+
+    async def territory_status(query: str) -> int:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url=ORIGIN
+        ) as client:
+            return (
+                await client.get(
+                    base + "/territories/identities?" + query, headers={"Cookie": cookie}
+                )
+            ).status_code
+
+    assert asyncio.run(territory_status("territory=BR&territory=AR&match=all")) == 200
+    for query in (
+        "",
+        "territory=brazil",
+        "territory=br",
+        "territory=BR&match=invalid",
+        "territory=BR&identity=bad",
+        "territory=BR&limit=101",
+        "territory=BR&record=bad",
+        "&".join("territory=BR" for _ in range(251)),
+    ):
+        assert asyncio.run(territory_status(query)) == 422
     provider.assert_not_called()
 
 
 def test_category_or_status_selection_and_constant_queries(database_connection: Connection) -> None:
     from itertools import combinations
-
-    from florabase.explore.schemas import CollectionRecordCategory as Category
 
     with Session(bind=database_connection, join_transaction_mode="create_savepoint") as db:
         both, seed_only, dormant, sown, grouped = [
@@ -380,3 +408,63 @@ def test_category_or_status_selection_and_constant_queries(database_connection: 
             native_ranges.overview(db, scope="all", record=[Category.STORED_MATERIAL]).represented
             == 1
         )
+
+
+def test_territory_inspector_union_intersection_and_exact_evidence(
+    database_connection: Connection,
+) -> None:
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as db:
+        broad, exact, both, custom_only, reference = [
+            identity(db, name) for name in ("Broad", "Exact", "Both", "Custom", "Reference")
+        ]
+        for taxon in (broad, exact, both, custom_only):
+            db.add(SeedLot(botanical_identity_id=taxon.id))
+        db.flush()
+        custom = create_geographic_place(
+            db, GeographicPlaceCreate(name="Custom Brazil", parent_id=place(db, "BR").id)
+        )
+        for taxon, codes in (
+            (broad, ["005"]),
+            (exact, ["BR"]),
+            (both, ["005", "BR"]),
+            (reference, ["BR"]),
+        ):
+            for code in codes:
+                add_botanical_native_range(db, taxon.id, place(db, code).id)
+        add_botanical_native_range(db, custom_only.id, custom.id)
+        statements: list[str] = []
+
+        def count(_conn: Any, _cursor: Any, sql: str, _params: Any, _ctx: Any, _many: Any) -> None:
+            if sql.lstrip().upper().startswith(("SELECT", "WITH")):
+                statements.append(sql)
+
+        event.listen(database_connection, "before_cursor_execute", count)
+        try:
+            union = native_ranges.territory_identities(db, ["BR", "AR", "BR"])
+            assert len(statements) == 3
+            assert union.total == 3
+            assert {item.id for item in union.items} == {broad.id, exact.id, both.id}
+            evidence = {item.id: item.matching_territories for item in union.items}
+            assert len(evidence[both.id]) == 2
+            brazil = next(unit for unit in evidence[both.id] if unit.source_code == "BR")
+            assert brazil.exact_recorded
+            assert brazil.broad_recorded_places == ["South America"]
+            argentina = next(unit for unit in evidence[broad.id] if unit.source_code == "AR")
+            assert not argentina.exact_recorded
+            assert argentina.broad_recorded_places == ["South America"]
+            intersection = native_ranges.territory_identities(db, ["AR", "BR"], match="all")
+            assert intersection.total == 2
+            assert {item.id for item in intersection.items} == {broad.id, both.id}
+            assert native_ranges.territory_identities(db, ["BR"], q="exact").total == 1
+            assert (
+                native_ranges.territory_identities(db, ["BR"], identity_ids=[exact.id]).total == 1
+            )
+            assert native_ranges.territory_identities(db, ["BR"], scope="living").total == 0
+            assert (
+                native_ranges.territory_identities(db, ["BR"], record=[Category.PLANT]).total == 0
+            )
+            assert native_ranges.territory_identities(db, ["ZZ"]).total == 0
+            assert native_ranges.territory_identities(db, ["BR"], offset=1, limit=1).total == 3
+            assert len(native_ranges.territory_identities(db, ["BR"], limit=1).items) == 1
+        finally:
+            event.remove(database_connection, "before_cursor_execute", count)

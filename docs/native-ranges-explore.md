@@ -77,7 +77,7 @@ operator-authored botanical facts to Natural Earth.
 
 ## Workspace and evidence semantics
 
-`#/native-ranges` has one Collection overview / Selected species workspace. It uses
+`#/native-ranges` has one Explore all / Compare species workspace. It uses
 the EXPLORE-001 All represented, Living, Current and Historical scopes and literal
 scientific/common/cultivar text search. A small optional With native range only filter
 never changes representation rules. Reference-only identities are excluded; represented
@@ -128,6 +128,14 @@ walks ancestors for the set of range places once per query, never per row. Query
 grow with identity/range count; PostgreSQL regressions measure both page sizes 1 and 50 and
 full lifecycle/inventory parity. Geometry never enters PostgreSQL; no new domain table or PostGIS.
 
+The inspector adds `GET /api/v1/explore/native-ranges/territories/identities`: repeated uppercase
+ISO `territory` (1–250), `match=any|all`, optional repeated UUID `identity` (≤20), and the existing
+filters and pagination. A bounded read was necessary because overview intentionally exposes counts
+without unbounded contributor arrays. Two reads return a distinct total/page; one extra read enriches
+nonempty pages with exact-versus-broad evidence. The same canonical ancestor CTE powers rendering
+coverage and these results. No per-row reads, geometry queries, provider I/O, table or migration.
+OpenAPI and TypeScript artifacts are regenerated together.
+
 ## URL, Saved Views and migration
 
 Canonical state: `scope`, `q`, `mode=overview|species`, sorted UUID set `identity` (maximum 20),
@@ -146,44 +154,66 @@ preserves other views. GEOGRAPHY-002 and provider contracts remain untouched.
 
 ## Presentation, accessibility and privacy
 
-The map is a noninteractive SVG image with a meaningful accessible name and description. All
-counts and exact-place precision/renderability appear in native HTML lists, so no information
-requires color perception or polygon interaction. Scope/mode buttons expose pressed state and identity checkboxes expose checked
-state, clear selection restores focus to Selected species, and errors/loading use live roles.
-Desktop uses two columns; below 850px the workspace flows vertically. Text wraps without
-fixed-width cards, including custom place paths and long cultivars. The map uses no tiles,
-geolocation, external image, provider call, geocoding or hidden network dependency. Natural Earth
-attribution is a normal outbound link, not an automatic request.
+MAPS-FOUNDATION-001 follows the delivered Seeds/Sowings/Plants PageHeader grammar: Explore eyebrow,
+Native ranges title, short subtitle, and a wide scientific/common/cultivar search beside Filters,
+Saved views and Choose species. Search uses the same durable collection query and never removes
+explicitly chosen IDs. The chooser is paged and allows five color layers; deselection stays available.
 
-`world-110m.json` is a separate lazy import reached only by Native ranges. It contains
-territory SVG drawing paths plus canonical M49 → ISO rendering primitives derived from the
-existing CLDR snapshot. The frontend also redistributes CLDR's Unicode-3.0 notice. The static
-source has 183 features grouped into 179 paths (177 coded paths and 2 unmapped background
-units; only canonical ISO matches participate in coverage). Coordinates are transformed to a
-720×360 equirectangular view and rounded to hundredths of a drawing pixel. No higher-resolution
-GIS library, runtime geometry service, cache or map editor is introduced.
+Explore all shows the complete filtered representation scope, independent of the comparison set.
+Compare species uses only the explicitly chosen IDs that match those same filters. Compact overview
+KPIs open the chooser, focus the territory inspector, or open exact-place evidence. The no-range KPI
+remains informational; no inverse filter or artificial destination is invented.
 
-Reproduce offline after obtaining the reviewed pinned official source:
+The wide workspace allocates approximately 70% to the undistorted 2:1 local map and 30% to a permanent,
+scrollable inspector. The comparison legend follows the map, with one labelled color, scientific name,
+Places action and Remove control per identity. Palette: green `#287c67`, rust `#aa562d`, blue `#5467b2`,
+mauve `#9a477a`, ochre `#81701f`. Surviving IDs retain their colors while the comparison is active;
+removed colors can be reused. Refresh may allocate colors again. One contributor uses a solid fill;
+2–5 use equal-width diagonal SVG stripes containing every contributor's color. Names/counts and
+inspector results provide a non-color equivalent. Tiny polygons cannot display every stripe at world
+scale; inspect their contributor list rather than infer finer precision from a swatch.
 
-```bash
-python3 scripts/generate_native_range_geometry.py /tmp/explore-002-map-units.geojson \
-  frontend/src/native-ranges/data/world-110m.json
-```
+Click, Enter or Space toggles a territory; no modifier is required. Multiple territories remain
+selected independently from species. Removable chips and Clear territories expose persistent choices.
+Changing species, mode or filters retains the chosen territory codes, including neutral zero-coverage
+units, until explicit removal. Names for retained zero-coverage units are display labels, not new
+range evidence. Back/Forward, Saved View navigation and reload clear this transient inspector state.
+Territory IDs, union/intersection choice, panel, preview and scroll do not extend Saved View v1.
 
-The generator refuses an unreviewed upstream SHA-256 and records source/version/license/hash and
-CLDR containment metadata with the asset. The generated minified JSON is intentionally excluded
-from Prettier, like generated API declarations. Asset/build/parse measurements and UAT evidence
-are recorded in [the handoff](explore-002-handoff.md).
+The inspector defaults to the distinct union of identities covering any chosen territory. Its explicit
+Any/All control offers intersection over the same canonical coverage relation. Explore all reads the
+whole filtered collection; Compare passes the explicit selection as an additional bound. Results show
+matched territories and distinguish explicit country records from drawing coverage inherited from
+broad recorded places. Broad and exact links may both be displayed without double-counting. The
+inspector search filters the labelled current page; Next/Previous retain the server-side scope.
 
+The SVG keeps one roving territory tab stop, arrows/Home/End navigation, transient hover/focus previews
+and Escape dismissal. Shared borders and inward-clipped selected/hover/focus outlines remain separate
+inert paint layers above fills. A polite selected-territory announcement sits outside mobile panels.
+At ≤64rem Map/Inspector controls switch mounted panes, preserving chosen territories and focus on the
+switch. The textual chooser also includes canonical places whose boundaries are unavailable.
+
+About this map opens one bounded evidence dialog for methodology, unsupported boundaries and paged
+exact broad/precise/custom places. Places beside each compared identity opens its exact evidence.
+Paging this evidence keeps the map and geographic selection mounted. There are no duplicate bottom
+coverage/selection accordions. Dialog Escape/Done restore the invoking control, with a stable chooser
+fallback if query changes replace the original KPI.
+
+No new tiles, geolocation, provider calls, geocoding or geographic precision are introduced. Natural
+Earth attribution remains beside the canvas. Loading, failure, no-range, missing/excluded identity,
+unsupported/custom place and authentication boundaries remain explicit. Actual screen-reader,
+physical-touch and true browser-zoom certification remain operator acceptance items.
+See the [design](maps-foundation-001-design.md), [current spatial evidence](review/maps-foundation-001/spatial/README.md)
+and [handoff](maps-foundation-001-handoff.md). Acceptance and canonical verification remain separate.
 
 ## Operator UAT refinement: comparison and record categories
 
 Exactly one selected species retains the exact places, map and identity/edit/occurrence links above.
-Multiple selection uses a subset choropleth of **distinct eligible selected identities per territory**,
-with contributing species listed alongside each territory, including unavailable boundaries.
-Per-species overlap is unioned before aggregation; no arbitrary species colours or abundance claims.
-Explicit row checkboxes allow at most 20 IDs, with deselection, individual Remove/View only, count and
-Clear selection. There is no query-wide selection. Missing/unrepresented IDs remain explicit;
+Color comparison uses up to five distinct eligible selected identities per territory, with labelled
+contributors including unavailable boundaries. Per-identity overlap is unioned before aggregation.
+The API and Saved View v1 still accept up to 20 IDs: restored sets of 6–20 use count-based coverage,
+retain every ID and expose explicit removal. No truncation or schema migration is introduced.
+New chooser selections stop at five, while deselection and Clear selection remain available. There is no query-wide selection. Missing/unrepresented IDs remain explicit;
 filter-excluded IDs remain selected but contribute no coverage. An empty eligible subset is explained.
 
 Collection status remains single-select. **Collection records** uses OR across `seed_lot`, `sowing`,
