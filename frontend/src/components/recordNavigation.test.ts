@@ -27,6 +27,8 @@ test.each([
   ["#/sowings?action=create", "#/sowings"],
   ["#/plants?action=create&kind=plant", "#/plants"],
   ["#/plants?action=create&kind=group", "#/plants"],
+  ["#/suppliers?action=create", "#/suppliers"],
+  ["#/orders?action=create", "#/orders"],
   ["#/plants?action=extract&source=group", "#/plant-groups/group"],
   ["#/sowings?action=start&seedLot=lot", "#/seeds/lot"],
   ["#/plants?action=from-sowing&sowing=tray&kind=plant", "#/sowings/tray"],

@@ -216,9 +216,9 @@ smoke-dev-upgrade: ## Prove upgrade image freshness/retry on unique disposable s
 	@python3 ./scripts/smoke-dev-upgrade.py
 
 workflow-check: test-dependabot-policy ## Lint, format-check and strictly type-check the new environment helpers
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff check --no-cache --isolated --select E4,E7,E9,F,I,B,UP /workflow/workflow_resources.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/feature-tree-fingerprint.py /workflow/test-verification-impact.py /workflow/test-workflow-resources.py /workflow/smoke-workflow-resources.py /workflow/smoke-migration-cycle.py /workflow/workflow_environment.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_source.py /workflow/uat_preview.py /workflow/test-uat-source.py /workflow/test-uat-preview.py /workflow/smoke-uat-preview.py /workflow/uat_fixture.py /workflow/test-uat-fixture.py /workflow/test-review-fixture.py
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff format --no-cache --check /workflow/workflow_resources.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/feature-tree-fingerprint.py /workflow/test-verification-impact.py /workflow/test-workflow-resources.py /workflow/smoke-workflow-resources.py /workflow/smoke-migration-cycle.py /workflow/workflow_environment.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_source.py /workflow/uat_preview.py /workflow/test-uat-source.py /workflow/test-uat-preview.py /workflow/smoke-uat-preview.py /workflow/uat_fixture.py /workflow/test-uat-fixture.py /workflow/test-review-fixture.py
-	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend mypy --strict --follow-imports=skip /workflow/workflow_resources.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/feature-tree-fingerprint.py /workflow/smoke-workflow-resources.py /workflow/smoke-migration-cycle.py /workflow/workflow_environment.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_source.py /workflow/uat_preview.py /workflow/smoke-uat-preview.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff check --no-cache --isolated --select E4,E7,E9,F,I,B,UP /workflow/workflow_resources.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/feature-tree-fingerprint.py /workflow/test-verification-impact.py /workflow/test-workflow-resources.py /workflow/smoke-workflow-resources.py /workflow/smoke-migration-cycle.py /workflow/workflow_environment.py /workflow/sourcing_preview.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_source.py /workflow/uat_preview.py /workflow/test-uat-source.py /workflow/test-uat-preview.py /workflow/smoke-uat-preview.py /workflow/uat_fixture.py /workflow/test-uat-fixture.py /workflow/test-review-fixture.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend ruff format --no-cache --check /workflow/workflow_resources.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/feature-tree-fingerprint.py /workflow/test-verification-impact.py /workflow/test-workflow-resources.py /workflow/smoke-workflow-resources.py /workflow/smoke-migration-cycle.py /workflow/workflow_environment.py /workflow/sourcing_preview.py /workflow/test-environment-workflow.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_source.py /workflow/uat_preview.py /workflow/test-uat-source.py /workflow/test-uat-preview.py /workflow/smoke-uat-preview.py /workflow/uat_fixture.py /workflow/test-uat-fixture.py /workflow/test-review-fixture.py
+	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" backend mypy --strict --follow-imports=skip /workflow/workflow_resources.py /workflow/smoke_lifecycle.py /workflow/disposable_workflow.py /workflow/verification_impact.py /workflow/verification_gate.py /workflow/feature-tree-fingerprint.py /workflow/smoke-workflow-resources.py /workflow/smoke-migration-cycle.py /workflow/workflow_environment.py /workflow/sourcing_preview.py /workflow/smoke-environment-workflow.py /workflow/smoke-dev-recovery.py /workflow/smoke-dev-upgrade.py /workflow/uat_source.py /workflow/uat_preview.py /workflow/smoke-uat-preview.py
 	$(DEV_COMPOSE) run --rm --no-deps -v "$(CURDIR)/scripts:/workflow:ro" -e MYPYPATH=/app/src:/workflow backend mypy --strict --follow-imports=skip /workflow/uat_fixture.py /app/scripts/verify_migration_cycle.py
 
 
@@ -244,6 +244,30 @@ uat-preview-remove: export CONFIRM_REMOVE_UAT_PREVIEW := $(CONFIRM_REMOVE_UAT_PR
 uat-preview-remove: ## Retire ONLY owning UAT state; CONFIRM_REMOVE_UAT_PREVIEW=florabase-uat-preview
 	@python3 "$(UAT_RETIREMENT_HELPER)" remove
 
+SOURCING_HELPER := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))scripts/sourcing_preview.py
+
+sourcing-preview-up: ## Build current worktree, migrate isolated Sourcing DB, wait for health
+	@python3 "$(SOURCING_HELPER)" up
+
+sourcing-preview-status: ## Show Sourcing Preview source, health, migrations and dataset coverage
+	@python3 "$(SOURCING_HELPER)" status
+
+sourcing-preview-seed: ## Seed synthetic Suppliers/Orders/SeedLots in exactly owned Sourcing Preview
+	@python3 "$(SOURCING_HELPER)" seed
+
+sourcing-preview-bootstrap-owner: ## Create the Sourcing owner: make sourcing-preview-bootstrap-owner LOGIN=owner
+	@python3 "$(SOURCING_HELPER)" bootstrap-owner --login "$(LOGIN)"
+
+sourcing-preview-stop: ## Stop Sourcing Preview, preserving database/media/dependencies
+	@python3 "$(SOURCING_HELPER)" stop
+
+sourcing-preview-remove: export CONFIRM_REMOVE_SOURCING := $(CONFIRM_REMOVE_SOURCING)
+sourcing-preview-remove: ## Retire ONLY Sourcing Preview state; CONFIRM_REMOVE_SOURCING=florabase-sourcing-preview
+	@python3 "$(SOURCING_HELPER)" remove --confirm "$(CONFIRM_REMOVE_SOURCING)"
+
+sourcing-preview-compose: ## Read-only Sourcing Compose passthrough: make sourcing-preview-compose CMD="ps"
+	@python3 "$(SOURCING_HELPER)" compose --cmd "$(CMD)"
+
 uat-preview-reset: export CONFIRM_RESET_UAT_PREVIEW := $(CONFIRM_RESET_UAT_PREVIEW)
 uat-preview-reset: ## Recreate ONLY UAT state; CONFIRM_RESET_UAT_PREVIEW=florabase-uat-preview
 	@python3 "$(UAT_HELPER)" reset
@@ -259,5 +283,7 @@ smoke-uat-preview: ## Prove UAT seed/auth/reset/persistence/ownership transition
 	@python3 ./scripts/smoke-uat-preview.py
 
 .PHONY: verify-affected verify-full verification-plan verify-build quality-status quality-clean workflow-resources test-verification-impact test-workflow-resources smoke-workflow-resources smoke-migration-cycle
+
+.PHONY: sourcing-preview-up sourcing-preview-status sourcing-preview-seed sourcing-preview-bootstrap-owner sourcing-preview-stop sourcing-preview-remove sourcing-preview-compose
 
 .PHONY: uat-preview-sync test-dependabot-policy

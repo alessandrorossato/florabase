@@ -9,6 +9,7 @@ create a second feature worktree or move the primary checkout off `main`.
 | DEV              | Primary checkout discovered through Git                     | `compose.yaml` + `compose.dev.yaml`          | `florabase`                              | `http://localhost:5173`    | Persistent DB, media, dependencies                            |
 | Feature Review   | Current feature worktree, including dirty/untracked files   | baseline + DEV + `compose.review.yaml`       | `florabase-feature-review`               | `http://localhost:15174`   | Persistent, isolated DB/media/dependencies                    |
 | UAT Preview      | Owning feature source or clean delivered detached owner     | baseline + DEV + Review + `compose.uat.yaml` | `florabase-uat-preview`                  | `http://localhost:15174`   | Persistent isolated synthetic DB/media/dependencies           |
+| Sourcing Preview | Current Sourcing worktree, including dirty/untracked files  | baseline + DEV + Review + `compose.sourcing.yaml` | `florabase-sourcing-preview`         | `http://localhost:15175`   | Persistent isolated synthetic DB/media/dependencies           |
 | Stable Preview   | Clean detached checkout of fetched `origin/main` by default | baseline + `compose.preview.yaml`            | `florabase-preview`                      | `http://localhost:15173`   | Persistent isolated DB/media, immutable frontend dependencies |
 | Quality checks   | Current feature worktree                                    | baseline + DEV                               | `florabase-quality-<metadata-path-hash>` | None started               | Isolated dependency/media volumes, no live DB required        |
 | Integration / CI | Current source / CI checkout                                | `compose.integration.yaml`                   | `florabase-integration-<random-run-id>`  | None                       | Disposable PostgreSQL tmpfs and test state                    |
@@ -19,9 +20,10 @@ builds (`florabase-verification-build-<run-id>`) and unique smoke fixtures are a
 Integration, migration and smoke register retirement before creating resources and verify zero owned
 containers/networks/volumes after success, failure, partial creation and caught INT/TERM. A cleanup
 failure fails the workflow. Images with exact ownership and no foreign tags/users retire; ambiguous
-images and shared BuildKit cache remain and are reported. DEV, Review, UAT, Stable Preview and
-production never use this automatic retirement. The fixed `florabase-perf` benchmark is explicitly
-operator-managed reusable test state, not a unique per-gate fixture; its manual stop contract remains.
+images and shared BuildKit cache remain and are reported. DEV, Review, UAT, Sourcing Preview, Stable
+Preview and production never use this automatic retirement. The fixed `florabase-perf` benchmark is
+explicitly operator-managed reusable test state, not a unique per-gate fixture; its manual stop
+contract remains.
 
 DEV deliberately retains the legacy explicit project name `florabase`. Renaming it to
 `florabase-dev` would silently select an empty database instead of the operator's existing data.
@@ -139,6 +141,8 @@ before production-like upgrades, and do not treat a database-only dump as comple
 Use **DEV** for coding/debugging with developer data, **UAT Preview** for accepting the current
 feature with synthetic data, and **production** for real collection data. **Stable Preview** is the
 engineering snapshot of an explicit stable Git ref; its `preview*` commands are unchanged.
+**Sourcing Preview** (`15175`) is a per-worktree visual-review environment for the Sourcing slice; it
+is additive and never replaces Feature Review, UAT or Stable Preview.
 
 ## UAT Preview and operator acceptance
 
@@ -365,6 +369,34 @@ pinned package cache; its temporary home supports non-default host UIDs.
 QUALITY frontend commands also build and validate that shared image before initialization.
 Fresh volumes, root-owned historical `.bin` files and changed lockfiles need no interactive TTY,
 manual `chown`, world-writable permissions or populated host dependency directory.
+
+## Sourcing Preview
+
+A persistent, per-worktree preview for the Sourcing slice (Suppliers today, Orders next). It reuses
+the Review runtime and fixture with an independent project, network, database (`florabase_sourcing`),
+media volume and dependency volume, and publishes only `127.0.0.1:15175`. It can therefore run at the
+same time as Feature Review/UAT (`15174`) and Stable Preview (`15173`) without sharing or stopping
+them.
+
+```bash
+make sourcing-preview-up                      # Build if needed, migrate, wait for health
+make sourcing-preview-bootstrap-owner LOGIN=owner
+make sourcing-preview-seed                    # Synthetic Suppliers/Orders/linked SeedLots
+make sourcing-preview-status
+make sourcing-preview-stop                    # Preserve DB, media and dependencies
+make sourcing-preview-remove CONFIRM_REMOVE_SOURCING=florabase-sourcing-preview
+```
+
+`up` builds only when the Sourcing images are missing (pass `--rebuild` via
+`python3 scripts/sourcing_preview.py up --rebuild` to force one); the shared BuildKit cache is reused
+otherwise. `bootstrap-owner` reads one password from the terminal, `--password-stdin`,
+`--password-file` or `--password`. Seeding requires an already-bootstrapped single enabled owner and
+an empty baseline; the fixture refuses any other source, project, database or marker and never
+touches DEV, Feature Review, UAT, Stable Preview or production. Owned resources carry
+`io.florabase.role=sourcing`, `io.florabase.source` and `io.florabase.sha` labels and the standard
+`io.florabase.source` volume labels, so `remove` deletes only
+`florabase-sourcing-preview_postgres_data`, `..._attachment_data`, `..._frontend_node_modules` and
+its own containers/network.
 
 ## Stable Preview
 

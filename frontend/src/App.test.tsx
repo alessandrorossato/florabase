@@ -207,7 +207,6 @@ afterEach(() => {
 
 test.each([
   ["identities", "Create a botanical identity"],
-  ["suppliers", "Create supplier"],
   ["locations", "New location"],
   ["geography", "New local place"],
 ])(
@@ -234,6 +233,31 @@ test.each([
     ).toBeInTheDocument();
   },
 );
+
+test("direct supplier creation route opens the full-width supplier form", async () => {
+  mockFetch((path) => {
+    if (path.endsWith("/auth/session")) return jsonResponse(session);
+    if (path.endsWith("/auth/csrf"))
+      return jsonResponse({ csrf_token: "csrf" });
+    if (path.endsWith("/health")) return jsonResponse({ status: "ok" });
+    return jsonResponse([]);
+  });
+  window.history.replaceState(null, "", "#/suppliers?action=create");
+  await act(async () => {
+    render(<App />);
+    await Promise.resolve();
+  });
+  await act(async () => {
+    await vi.dynamicImportSettled();
+  });
+  expect(
+    await screen.findByRole("heading", { name: "Add supplier", level: 3 }),
+  ).toBeVisible();
+  expect(screen.getByLabelText("Name")).toBeRequired();
+  expect(
+    screen.getByLabelText("Name", { selector: "#supplier-name" }),
+  ).toHaveFocus();
+});
 
 const supplier = {
   id: "01900000-0000-7000-8000-000000000200",
@@ -1600,16 +1624,19 @@ test("primary navigation switches accessibly to the empty supplier directory", a
   expect(
     await screen.findByRole("heading", { name: "Suppliers" }),
   ).toBeInTheDocument();
-  expect(await screen.findByText("No suppliers yet.")).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "New supplier" }));
   expect(
-    screen.getByLabelText("Name", { selector: "#new-supplier-name" }),
+    await screen.findByRole("heading", { name: "No suppliers yet" }),
+  ).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "+ New supplier" }));
+  expect(
+    screen.getByLabelText("Name", { selector: "#supplier-name" }),
   ).toHaveFocus();
   expect(
-    screen
-      .getByLabelText("Name", { selector: "#new-supplier-name" })
-      .closest(".task-dialog"),
-  ).not.toBeNull();
+    screen.queryByRole("dialog", { name: "Add supplier" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("heading", { name: "Add supplier", level: 3 }),
+  ).toBeVisible();
   expect(screen.getByLabelText("Name")).toBeRequired();
   expect(screen.getByLabelText("Kind").tagName).toBe("SELECT");
   for (const kind of [
@@ -1621,12 +1648,11 @@ test("primary navigation switches accessibly to the empty supplier directory", a
     "Other",
   ])
     expect(screen.getByRole("option", { name: kind })).toBeInTheDocument();
-  const newSupplier = screen.getByRole("button", { name: "New supplier" });
   await user.click(screen.getByRole("button", { name: "Cancel" }));
   expect(
-    screen.queryByRole("dialog", { name: "Create supplier" }),
+    screen.queryByRole("heading", { name: "Add supplier" }),
   ).not.toBeInTheDocument();
-  expect(newSupplier).toHaveFocus();
+  expect(screen.getByRole("button", { name: "+ New supplier" })).toHaveFocus();
   await user.click(
     within(
       screen.getByRole("navigation", { name: "Primary navigation" }),
@@ -1676,20 +1702,21 @@ test("keyboard supplier creation needs only name and kind and sends CSRF", async
   });
   const user = await openSuppliers();
   const newSupplier = await screen.findByRole("button", {
-    name: "New supplier",
+    name: "+ New supplier",
   });
   expect(
-    screen.queryByRole("dialog", { name: "Create supplier" }),
+    screen.queryByRole("heading", { name: "Add supplier" }),
   ).not.toBeInTheDocument();
   expect(
-    screen.queryByLabelText("Name", { selector: "#new-supplier-name" }),
+    screen.queryByLabelText("Name", { selector: "#supplier-name" }),
   ).not.toBeInTheDocument();
   await user.click(newSupplier);
   await user.type(await screen.findByLabelText("Name"), "Rare Palm Seeds");
   await user.keyboard("{Enter}");
-  expect(
-    await screen.findByRole("heading", { name: "Rare Palm Seeds" }),
-  ).toBeInTheDocument();
+  const heading = await screen.findByRole("heading", {
+    name: "Rare Palm Seeds",
+  });
+  expect(heading).toBeInTheDocument();
   const create = requests.find(
     ({ path, init }) => path === "/api/v1/suppliers" && init?.method === "POST",
   );
@@ -1700,9 +1727,9 @@ test("keyboard supplier creation needs only name and kind and sends CSRF", async
     "botanical-csrf",
   );
   expect(
-    screen.queryByRole("dialog", { name: "Create supplier" }),
+    screen.queryByRole("heading", { name: "Add supplier" }),
   ).not.toBeInTheDocument();
-  expect(newSupplier).toHaveFocus();
+  expect(window.location.hash).toBe(`#/suppliers/${supplier.id}`);
 });
 
 test("supplier filtering, keyboard selection, optional details, editing, and lifecycle work", async () => {
@@ -1772,7 +1799,7 @@ test("supplier filtering, keyboard selection, optional details, editing, and lif
   ).toHaveLength(1);
   await user.click(screen.getByRole("button", { name: "Edit supplier" }));
   const editName = screen.getByLabelText("Name", {
-    selector: "#edit-supplier-name",
+    selector: "#supplier-name",
   });
   await user.clear(editName);
   await user.type(editName, "Rare Palm Seeds Europe");
@@ -1880,8 +1907,8 @@ test("supplier hub links direct material, identity context, counts, dates, and h
   expect(
     await screen.findByRole("heading", { name: supplier.name }),
   ).toBeInTheDocument();
-  expect(screen.getByLabelText("Direct supplier records")).toHaveTextContent(
-    "4",
+  expect(screen.getByLabelText("Current Supplier state")).toHaveTextContent(
+    "Direct records4",
   );
   expect(
     screen.getByRole("heading", { name: "Recent acquisitions" }),
@@ -1890,7 +1917,7 @@ test("supplier hub links direct material, identity context, counts, dates, and h
     "href",
     "#/seeds/01900000-0000-7000-8000-000000000211",
   );
-  expect(screen.queryByText("Date not recorded")).not.toBeInTheDocument();
+  expect(screen.queryByText(/Date not recorded/i)).not.toBeInTheDocument();
 
   await user.click(screen.getByRole("tab", { name: "Linked material (4)" }));
   expect(
@@ -1907,7 +1934,7 @@ test("supplier hub links direct material, identity context, counts, dates, and h
     screen.getByText(/collection entry 2025 · transferred/i),
   ).toBeInTheDocument();
   expect(
-    screen.getByText(/acquired date not recorded · lost/i),
+    screen.getByText(/acquired Date not recorded · lost/i),
   ).toBeInTheDocument();
   expect(
     screen.getAllByRole("link", { name: "Clitoria ternatea" }).length,
@@ -1940,22 +1967,23 @@ test("supplier validation, forbidden saves, and session expiry are explicit", as
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await openSuppliers();
-  await user.click(await screen.findByRole("button", { name: "New supplier" }));
+  await user.click(
+    await screen.findByRole("button", { name: "+ New supplier" }),
+  );
   await user.type(await screen.findByLabelText("Name"), "Source");
-  await user.click(screen.getByRole("button", { name: "Create supplier" }));
+  await user.click(screen.getByRole("button", { name: "Add supplier" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(/check website/i);
   expect(screen.getByLabelText("Name")).toHaveValue("Source");
-  expect(screen.getByRole("button", { name: "New supplier" })).toHaveAttribute(
-    "aria-haspopup",
-    "dialog",
-  );
+  expect(
+    screen.getByRole("heading", { name: "Add supplier", level: 3 }),
+  ).toBeVisible();
   status = 403;
-  await user.click(screen.getByRole("button", { name: "Create supplier" }));
+  await user.click(screen.getByRole("button", { name: "Add supplier" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
     /could not authorize/i,
   );
   status = 401;
-  await user.click(screen.getByRole("button", { name: "Create supplier" }));
+  await user.click(screen.getByRole("button", { name: "Add supplier" }));
   expect(
     await screen.findByRole("button", { name: "Sign in" }),
   ).toBeInTheDocument();
@@ -2914,15 +2942,18 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
     ).getByRole("link", { name: "Suppliers" }),
   );
   const newSupplier = await screen.findByRole("button", {
-    name: "New supplier",
+    name: "+ New supplier",
   });
   await user.click(newSupplier);
-  await user.keyboard("{Tab}");
   expect(
-    screen.getByRole("dialog", { name: "Create supplier" }),
-  ).toBeInTheDocument();
-  await user.keyboard("{Escape}");
-  expect(newSupplier).toHaveFocus();
+    screen.getByRole("heading", { name: "Add supplier", level: 3 }),
+  ).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  await waitFor(() => {
+    expect(
+      screen.getByRole("button", { name: "+ New supplier" }),
+    ).toHaveFocus();
+  });
   await user.click(
     await screen.findByRole("button", { name: /Rare Palm Seeds/i }),
   );
@@ -2933,7 +2964,7 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
   await user.click(editSupplier);
   await user.keyboard("{Tab}");
   expect(
-    screen.getByRole("dialog", { name: "Edit supplier" }),
+    screen.getByRole("dialog", { name: "Edit Rare Palm Seeds" }),
   ).toBeInTheDocument();
   await user.keyboard("{Escape}");
   expect(editSupplier).toHaveFocus();

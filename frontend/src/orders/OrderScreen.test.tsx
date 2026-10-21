@@ -88,39 +88,41 @@ const detail: OrderDetail = {
   seed_lots_offset: 0,
   seed_lots_limit: 50,
 };
-function mount(initialId?: string) {
+const supplier = {
+  id: supplierId,
+  name: "Nursery",
+  kind: "nursery" as const,
+  website: null,
+  email: null,
+  phone: null,
+  notes: null,
+  retired_at: null,
+  created_at: detail.created_at,
+  updated_at: detail.updated_at,
+  usage_counts: {
+    seed_lots_active: 0,
+    seed_lots_total: 0,
+    plants_active: 0,
+    plants_total: 0,
+    plant_groups_active: 0,
+    plant_groups_total: 0,
+    direct_records_active: 0,
+    direct_records_total: 0,
+  },
+};
+function mount(initialId?: string, initialTab?: string) {
   return render(
     <AuthContext.Provider value={auth}>
-      <OrderScreen initialId={initialId} />
+      <OrderScreen initialId={initialId} initialTab={initialTab} />
     </AuthContext.Provider>,
   );
 }
+function orderRow() {
+  return screen.findByRole("button", { name: /REF-1/ });
+}
 beforeEach(() => {
   window.history.replaceState(null, "", "#/orders");
-  vi.mocked(listSuppliers).mockResolvedValue([
-    {
-      id: supplierId,
-      name: "Nursery",
-      kind: "nursery",
-      website: null,
-      email: null,
-      phone: null,
-      notes: null,
-      retired_at: null,
-      created_at: detail.created_at,
-      updated_at: detail.updated_at,
-      usage_counts: {
-        seed_lots_active: 0,
-        seed_lots_total: 0,
-        plants_active: 0,
-        plants_total: 0,
-        plant_groups_active: 0,
-        plant_groups_total: 0,
-        direct_records_active: 0,
-        direct_records_total: 0,
-      },
-    },
-  ]);
+  vi.mocked(listSuppliers).mockResolvedValue([supplier]);
   vi.mocked(listOrders).mockResolvedValue({
     items: [detail],
     total: 1,
@@ -133,28 +135,42 @@ beforeEach(() => {
 });
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   vi.clearAllMocks();
   window.history.replaceState(null, "", "#/dashboard");
 });
 
-test("directory preserves exact price, partial date and authoritative count with searchable Supplier state", async () => {
+test("directory exposes exact price, partial date, authoritative count and a hidden search label", async () => {
+  const user = userEvent.setup();
   mount();
-  expect(await screen.findByRole("link", { name: "REF-1" })).toHaveAttribute(
-    "href",
-    `#/orders/${id}`,
-  );
+  const row = await orderRow();
+  expect(row).toHaveAttribute("aria-pressed", "false");
   expect(screen.getByText("EUR 42.5000")).toBeVisible();
   expect(screen.getByText("2026-10 · Nursery")).toBeVisible();
   expect(screen.getByLabelText("Directory results")).toHaveTextContent(
     "1 record",
   );
+  expect(screen.getByText("Search Orders", { selector: "label" })).toHaveClass(
+    "sr-only",
+  );
+
+  await user.click(row);
+  expect(row).toHaveAttribute("aria-pressed", "true");
+  expect(screen.getByRole("link", { name: "Open details" })).toHaveAttribute(
+    "href",
+    `#/orders/${id}`,
+  );
+
   fireEvent.change(screen.getByLabelText("Search Orders"), {
     target: { value: "ABC" },
   });
-  fireEvent.click(screen.getByRole("button", { name: "Filters" }));
-  fireEvent.change(screen.getByLabelText("Supplier", { selector: "select" }), {
-    target: { value: supplierId },
+  await user.click(screen.getByRole("button", { name: "Filters" }));
+  const filters = screen.getByRole("dialog", { name: "Orders filters" });
+  const supplierControl = within(filters).getByRole("combobox", {
+    name: "Supplier",
   });
+  await user.click(supplierControl);
+  await user.click(within(filters).getByRole("button", { name: "Nursery" }));
   await waitFor(() => {
     expect(listOrders).toHaveBeenLastCalledWith(
       "ABC",
@@ -163,6 +179,9 @@ test("directory preserves exact price, partial date and authoritative count with
       expect.any(AbortSignal),
     );
   });
+  expect(
+    screen.getByRole("button", { name: "Remove supplier filter" }),
+  ).toHaveTextContent("Supplier: Nursery");
   expect(
     savedViewHash("orders", 1, { q: "ABC", supplier_id: supplierId }),
   ).toBe(`#/orders?q=ABC&supplier_id=${supplierId}`);
@@ -190,17 +209,24 @@ test("empty, loading and error states are actionable", async () => {
   ).toBeVisible();
 });
 
-test("create keeps unknown date and price absent, sends exact text when supplied", async () => {
+test("new Order keeps unknown date and absent price, then sends the exact supplied pair", async () => {
   const user = userEvent.setup();
   mount();
-  await screen.findByRole("link", { name: "REF-1" });
-  await user.click(screen.getByRole("button", { name: "+ New Order" }));
+  await orderRow();
+  const create = screen.getByRole("button", { name: "+ New Order" });
+  await user.click(create);
   const dialog = screen.getByRole("dialog", { name: "New Order" });
+  expect(dialog.querySelector(".order-form__grid")).toBeInTheDocument();
+  expect(
+    within(dialog).getByText("Order date precision", { selector: "label" }),
+  ).toHaveClass("sr-only");
+  expect(within(dialog).queryByText("Precision")).not.toBeInTheDocument();
   expect(within(dialog).getByLabelText("Total price")).not.toBeRequired();
   expect(within(dialog).getByLabelText("Currency")).not.toBeRequired();
   expect(
     within(dialog).getByRole("combobox", { name: "Supplier" }),
   ).not.toBeRequired();
+  expect(within(dialog).getByRole("button", { name: "Cancel" })).toBeVisible();
   await user.type(within(dialog).getByLabelText("Order reference"), "NEW");
   await user.type(
     within(dialog).getByLabelText("Total price"),
@@ -228,34 +254,126 @@ test("create keeps unknown date and price absent, sends exact text when supplied
       "csrf",
     );
   });
+  await waitFor(() => {
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+  expect(screen.getByRole("status")).toHaveTextContent("Order created.");
 });
 
-test("detail exposes independent seed lots, truthful transaction and Add seed lot context", async () => {
+test("pristine backdrop click closes New Order and restores focus without confirmation", async () => {
+  const user = userEvent.setup();
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+  mount();
+  await orderRow();
+  const create = screen.getByRole("button", { name: "+ New Order" });
+  await user.click(create);
+  const dialog = screen.getByRole("dialog", { name: "New Order" });
+  fireEvent.click(dialog, { clientX: 10, clientY: 10 });
+  await waitFor(() => {
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+  expect(confirm).not.toHaveBeenCalled();
+  expect(create).toHaveFocus();
+  confirm.mockRestore();
+});
+
+test("dirty New Order protects backdrop, Escape and Cancel; inside clicks never dismiss", async () => {
+  const user = userEvent.setup();
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  mount();
+  await orderRow();
+  await user.click(screen.getByRole("button", { name: "+ New Order" }));
+  const dialog = screen.getByRole("dialog", { name: "New Order" });
+  const reference = within(dialog).getByLabelText("Order reference");
+  await user.type(reference, "DIRTY");
+  fireEvent.click(reference);
+  expect(screen.getByRole("dialog", { name: "New Order" })).toBeVisible();
+
+  fireEvent.click(dialog, { clientX: 10, clientY: 10 });
+  expect(confirm).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole("dialog", { name: "New Order" })).toBeVisible();
+
+  fireEvent.keyDown(dialog, { key: "Escape" });
+  expect(confirm).toHaveBeenCalledTimes(2);
+  expect(screen.getByRole("dialog", { name: "New Order" })).toBeVisible();
+
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(confirm).toHaveBeenCalledTimes(3);
+  expect(screen.getByRole("dialog", { name: "New Order" })).toBeVisible();
+
+  confirm.mockReturnValue(true);
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  await waitFor(() => {
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+  confirm.mockRestore();
+});
+
+test("New Order dropdown clicks stay inside; Escape closes the picker before the dialog", async () => {
+  const user = userEvent.setup();
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
+  mount();
+  await orderRow();
+  await user.click(screen.getByRole("button", { name: "+ New Order" }));
+  const dialog = screen.getByRole("dialog", { name: "New Order" });
+  const supplierControl = within(dialog).getByRole("combobox", {
+    name: "Supplier",
+  });
+  expect(supplierControl).toHaveAttribute("aria-expanded", "false");
+  await user.click(supplierControl);
+  await user.click(within(dialog).getByRole("button", { name: "Nursery" }));
+  expect(dialog).toBeVisible();
+  expect(supplierControl).toHaveValue("Nursery");
+
+  await user.click(supplierControl);
+  expect(within(dialog).getByRole("listbox")).toBeVisible();
+  await user.keyboard("{Escape}");
+  expect(within(dialog).queryByRole("listbox")).not.toBeInTheDocument();
+  expect(dialog).toBeVisible();
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  confirm.mockRestore();
+});
+
+test("detail dashboard keeps partial dates, exact totals and independent seed lots", async () => {
+  const user = userEvent.setup();
   mount(id);
+  expect(await screen.findByRole("heading", { name: "REF-1" })).toBeVisible();
+  expect(screen.getByText("2026-10")).toBeVisible();
+  expect(screen.getByText("EUR 42.5000")).toBeVisible();
+  expect(screen.getByRole("link", { name: "Nursery" })).toHaveAttribute(
+    "href",
+    `#/suppliers/${supplierId}`,
+  );
+  expect(screen.getByRole("link", { name: "Add seed lot" })).toHaveAttribute(
+    "href",
+    `#/seeds?action=create&order=${id}`,
+  );
+  expect(
+    screen.getByRole("button", { name: "Link existing seed lot" }),
+  ).toBeVisible();
+  expect(screen.getByRole("button", { name: "Delete Order" })).toBeDisabled();
+  expect(screen.getByText("Known purchase")).toBeVisible();
+
+  await user.click(screen.getByRole("tab", { name: "Seed lots (2)" }));
   expect(await screen.findByRole("link", { name: "Packet A" })).toHaveAttribute(
     "href",
     `#/seeds/${detail.seed_lots[0]?.id ?? ""}`,
   );
   expect(screen.getByRole("link", { name: "Packet B" })).toBeVisible();
-  expect(screen.getByRole("link", { name: "Add seed lot" })).toHaveAttribute(
-    "href",
-    `#/seeds?action=create&order=${id}`,
+  expect(screen.getAllByText("Acquisition date unknown · Active")).toHaveLength(
+    2,
   );
-  expect(screen.getByRole("link", { name: "Nursery" })).toHaveAttribute(
-    "href",
-    `#/suppliers/${supplierId}`,
-  );
-  expect(screen.getByRole("button", { name: "Delete Order" })).toBeDisabled();
-  expect(screen.getByText("2026-10")).toBeVisible();
   expect(orderPrice({ total_price: null, currency: null })).toBe(
     "Price unknown",
   );
 });
 
-test("edit preserves values, reports domain conflicts inside the modal", async () => {
+test("edit preserves values and reports domain conflicts inside the modal", async () => {
   const user = userEvent.setup();
   mount(id);
-  await user.click(await screen.findByRole("button", { name: "Edit Order" }));
+  const edit = await screen.findByRole("button", { name: "Edit Order" });
+  await user.click(edit);
   expect(screen.getByLabelText("Total price")).toHaveValue("42.5000");
   vi.mocked(saveOrder).mockRejectedValueOnce(
     new ApiError(409, null, {
@@ -270,6 +388,28 @@ test("edit preserves values, reports domain conflicts inside the modal", async (
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   await waitFor(() => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+  await waitFor(() => {
+    expect(screen.getByRole("heading", { name: "REF-1" })).toHaveFocus();
+  });
+});
+
+test("direct edit route uses the inline fallback and returns focus to the detail heading", async () => {
+  const user = userEvent.setup();
+  window.history.replaceState(null, "", `#/orders/${id}?tab=edit`);
+  mount(id, "edit");
+  expect(
+    await screen.findByRole("heading", { name: "Edit Order" }),
+  ).toBeVisible();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(window.location.hash).toBe(`#/orders/${id}?tab=edit`);
+
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  await waitFor(() => {
+    expect(window.location.hash).toBe(`#/orders/${id}`);
+  });
+  await waitFor(() => {
+    expect(screen.getByRole("heading", { name: "REF-1" })).toHaveFocus();
   });
 });
 
@@ -381,7 +521,7 @@ test("Order detail links an existing physical lot through shared preview and ref
     await screen.findByRole("button", { name: "Link existing seed lot" }),
   );
   await userEvent.click(
-    await screen.findByRole("button", { name: "Eligible packet" }),
+    await screen.findByRole("button", { name: /Eligible packet/ }),
   );
   await screen.findByRole("dialog", { name: "Review purchase context" });
   expect(applyPurchase).not.toHaveBeenCalled();
@@ -424,4 +564,43 @@ test("the explicit create route supports a real Order with all descriptive facts
       "csrf",
     );
   });
+});
+
+test("Supplier filter popup stays anchored, wraps long names, and clears before closing the drawer", async () => {
+  const longName =
+    "Nursery-with-a-deliberately-long-name-that-must-wrap-without-overflowing";
+  vi.mocked(listSuppliers).mockResolvedValue([{ ...supplier, name: longName }]);
+  const user = userEvent.setup();
+  window.history.replaceState(null, "", `#/orders?supplier_id=${supplierId}`);
+  mount();
+  await waitFor(() => {
+    expect(listOrders).toHaveBeenCalledWith(
+      "",
+      supplierId,
+      0,
+      expect.any(AbortSignal),
+    );
+  });
+  await waitFor(() => {
+    expect(
+      screen.getByRole("button", { name: "Remove supplier filter" }),
+    ).toHaveTextContent(longName);
+  });
+  await user.click(screen.getByRole("button", { name: /^Filters/ }));
+  const filters = screen.getByRole("dialog", { name: "Orders filters" });
+  const control = within(filters).getByRole("combobox", {
+    name: "Supplier",
+  });
+  expect(control).toHaveValue(longName);
+  await user.click(control);
+  const listbox = within(filters).getByRole("listbox");
+  expect(listbox.closest(".reference-control")).toBeInTheDocument();
+  expect(within(listbox).getByRole("button", { name: longName })).toBeVisible();
+  await user.keyboard("{Escape}");
+  expect(within(filters).queryByRole("listbox")).not.toBeInTheDocument();
+  expect(filters).toBeVisible();
+  await user.keyboard("{Escape}");
+  expect(
+    screen.queryByRole("dialog", { name: "Orders filters" }),
+  ).not.toBeInTheDocument();
 });

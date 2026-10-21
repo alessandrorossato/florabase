@@ -1,0 +1,19 @@
+# Persistent per-worktree Sourcing Preview. Merge only through scripts/sourcing_preview.py
+# (compose.yaml + compose.dev.yaml + compose.review.yaml + this overlay). Never merge into DEV,
+# Feature Review, UAT, Stable Preview or production.
+#
+# The isolated database/credentials come from the Sourcing role's environment overrides; this
+# overlay only pins the public loopback endpoint so the preview can run beside Feature Review
+# (15174) and Stable Preview (15173).
+services:
+  backend:
+    environment:
+      FLORABASE_ENVIRONMENT: development
+      FLORABASE_CANONICAL_ORIGIN: http://localhost:15175
+      FLORABASE_COOKIE_MODE: loopback-development
+      FLORABASE_LOG_FORMAT: text
+      FLORABASE_CORS_ORIGINS: "[]"
+
+  frontend:
+    ports: !override
+      - "127.0.0.1:15175:5173"
