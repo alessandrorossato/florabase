@@ -107,7 +107,9 @@ function IdentityDetails({
   const [tab, setTab] = useState<IdentityTab>(
     initialTab && tabs.includes(initialTab as (typeof tabs)[number])
       ? (initialTab as IdentityTab)
-      : initialTab === "native-range" || initialTab === "taxonomy"
+      : initialTab === "native-range" ||
+          initialTab === "taxonomy" ||
+          initialTab === "source"
         ? "reference"
         : initialTab === "collection"
           ? "seeds"
@@ -118,7 +120,9 @@ function IdentityDetails({
       ? "native-range"
       : initialTab === "taxonomy"
         ? "taxonomy"
-        : "profile",
+        : initialTab === "source"
+          ? "source"
+          : "profile",
   );
   const [collection, setCollection] = useState<
     | { status: "idle" }

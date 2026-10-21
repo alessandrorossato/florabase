@@ -1,5 +1,6 @@
 from datetime import datetime
 from typing import Self
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -107,3 +108,11 @@ class OccurrenceMapSummary(BaseModel):
     attribution: str
     provider_url: str
     licensing_url: str
+
+
+class OccurrenceEvidence(BaseModel):
+    summary: OccurrenceMapSummary | None = None
+    generation: UUID | None = None
+    stale: bool = False
+    provider_error: str | None = None
+    persisted: bool = True

@@ -104,7 +104,11 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
   render(<App />);
 
   expect(
-    await screen.findByRole("heading", { name: "Dashboard" }),
+    await screen.findByRole(
+      "heading",
+      { name: "Dashboard" },
+      { timeout: 10_000 },
+    ),
   ).toBeInTheDocument();
   const snapshot = await screen.findByRole("region", {
     name: "Collection snapshot",

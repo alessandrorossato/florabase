@@ -3,18 +3,21 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid7
 
 import pytest
-from fastapi import HTTPException
+from fastapi import HTTPException, Response
 
 from florabase.auth.dependencies import AuthenticatedActor
 from florabase.core.config import CookieMode, Environment, Settings
 from florabase.external_botany.api import (
     _provider_http_error,
     _require_identity,
+    cached_occurrences,
+    clear_occurrences,
     confirm,
     occurrence_summary,
     occurrence_tile,
     read_link,
     refresh,
+    refresh_occurrences,
     remove_link,
     search,
 )
@@ -27,6 +30,7 @@ from florabase.external_botany.provider import (
 )
 from florabase.external_botany.schemas import (
     ExternalTaxonLinkCreate,
+    OccurrenceEvidence,
     OccurrenceMapSummary,
     TaxonSearchResponse,
 )
@@ -282,7 +286,7 @@ def test_occurrence_tile_validates_coordinates_and_proxies_png() -> None:
     linked = MagicMock(external_id="Q2M4")
 
     with pytest.raises(HTTPException) as invalid:
-        asyncio.run(occurrence_tile(identity_id, 3, 8, 0, actor(), database, provider))
+        asyncio.run(occurrence_tile(identity_id, 3, 8, 0, actor(), database, provider, settings()))
     assert invalid.value.status_code == 422
     provider.occurrence_tile.assert_not_called()
 
@@ -290,14 +294,163 @@ def test_occurrence_tile_validates_coordinates_and_proxies_png() -> None:
         return_value=OccurrenceTile(content=b"png", media_type="image/png")
     )
     with patch("florabase.external_botany.api._require_occurrence_link", return_value=linked):
-        response = asyncio.run(occurrence_tile(identity_id, 3, 4, 2, actor(), database, provider))
+        response = asyncio.run(
+            occurrence_tile(identity_id, 3, 4, 2, actor(), database, provider, settings())
+        )
     assert response.status_code == 200
     assert response.body == b"png"
     assert response.media_type == "image/png"
-    assert response.headers["cache-control"] == "private, max-age=3600"
+    assert response.headers["cache-control"] == "private, no-store"
     provider.occurrence_tile.assert_awaited_once_with("Q2M4", 3, 4, 2)
 
     provider.occurrence_tile = AsyncMock(return_value=None)
     with patch("florabase.external_botany.api._require_occurrence_link", return_value=linked):
-        empty = asyncio.run(occurrence_tile(identity_id, 0, 0, 0, actor(), database, provider))
+        empty = asyncio.run(
+            occurrence_tile(identity_id, 0, 0, 0, actor(), database, provider, settings())
+        )
     assert empty.status_code == 204
+
+
+def test_occurrence_tile_local_cache_generation_and_storage_failures() -> None:
+    identity_id, generation = uuid7(), uuid7()
+    database, provider = MagicMock(), MagicMock()
+    linked = MagicMock(external_id="Q2M4")
+
+    with patch("florabase.external_botany.api._require_occurrence_link", return_value=linked):
+        with pytest.raises(HTTPException) as missing_generation:
+            asyncio.run(
+                occurrence_tile(
+                    identity_id,
+                    0,
+                    0,
+                    0,
+                    actor(),
+                    database,
+                    provider,
+                    settings(),
+                    local_only=True,
+                )
+            )
+        assert missing_generation.value.status_code == 404
+        provider.occurrence_tile.assert_not_called()
+
+        with (
+            patch(
+                "florabase.external_botany.api.occurrence_cache.read",
+                return_value=OccurrenceEvidence(generation=uuid7()),
+            ),
+            pytest.raises(HTTPException) as changed,
+        ):
+            asyncio.run(
+                occurrence_tile(
+                    identity_id, 0, 0, 0, actor(), database, provider, settings(), generation
+                )
+            )
+        assert changed.value.status_code == 409
+
+        with (
+            patch(
+                "florabase.external_botany.api.occurrence_cache.read",
+                return_value=OccurrenceEvidence(generation=generation),
+            ),
+            patch("florabase.external_botany.api.TileCache") as storage_type,
+        ):
+            storage_type.return_value.read.return_value = None
+            with pytest.raises(HTTPException) as local_miss:
+                asyncio.run(
+                    occurrence_tile(
+                        identity_id,
+                        0,
+                        0,
+                        0,
+                        actor(),
+                        database,
+                        provider,
+                        settings(),
+                        generation,
+                        local_only=True,
+                    )
+                )
+        assert local_miss.value.status_code == 404
+        provider.occurrence_tile.assert_not_called()
+
+        with (
+            patch(
+                "florabase.external_botany.api.occurrence_cache.read",
+                return_value=OccurrenceEvidence(generation=generation),
+            ),
+            patch("florabase.external_botany.api.TileCache") as storage_type,
+        ):
+            storage_type.return_value.read.return_value = (
+                OccurrenceTile(content=b"cached", media_type="image/png"),
+                "2026-10-21T00:00:00Z",
+            )
+            hit = asyncio.run(
+                occurrence_tile(
+                    identity_id, 0, 0, 0, actor(), database, provider, settings(), generation
+                )
+            )
+        assert hit.body == b"cached"
+        provider.occurrence_tile.assert_not_called()
+
+        with (
+            patch(
+                "florabase.external_botany.api.occurrence_cache.read",
+                return_value=OccurrenceEvidence(generation=generation),
+            ),
+            patch("florabase.external_botany.api.TileCache") as storage_type,
+        ):
+            storage_type.return_value.read.side_effect = OSError("cache storage unavailable")
+            with pytest.raises(HTTPException) as unavailable:
+                asyncio.run(
+                    occurrence_tile(
+                        identity_id, 0, 0, 0, actor(), database, provider, settings(), generation
+                    )
+                )
+        assert unavailable.value.status_code == 503
+
+
+def test_cached_occurrence_handlers_are_local_explicit_and_owner_guarded() -> None:
+    identity_id, database = uuid7(), MagicMock()
+    linked = MagicMock(external_id="Q2M4")
+    evidence = OccurrenceEvidence()
+    response = Response()
+    with (
+        patch("florabase.external_botany.api._require_occurrence_link", return_value=linked),
+        patch("florabase.external_botany.api.occurrence_cache.read", return_value=evidence) as read,
+    ):
+        assert cached_occurrences(identity_id, actor(), database, response) is evidence
+    assert response.headers["cache-control"] == "private, no-store"
+    read.assert_called_once_with(database, linked)
+
+    provider = MagicMock()
+    with (
+        patch("florabase.external_botany.api._require_occurrence_link", return_value=linked),
+        patch(
+            "florabase.external_botany.api.occurrence_cache.refresh",
+            AsyncMock(return_value=evidence),
+        ) as refresh_cache,
+    ):
+        assert (
+            asyncio.run(refresh_occurrences(identity_id, actor(), database, provider)) is evidence
+        )
+    refresh_cache.assert_awaited_once_with(database, provider, linked)
+
+    with (
+        patch("florabase.external_botany.api._require_occurrence_link", return_value=linked),
+        patch(
+            "florabase.external_botany.api.occurrence_cache.refresh",
+            AsyncMock(side_effect=ProviderRateLimitedError()),
+        ),
+        pytest.raises(HTTPException) as rate_limited,
+    ):
+        asyncio.run(refresh_occurrences(identity_id, actor(), database, provider))
+    assert rate_limited.value.status_code == 503
+
+    with (
+        patch("florabase.external_botany.api._require_occurrence_link", return_value=linked),
+        patch("florabase.external_botany.api.TileCache") as storage_type,
+        patch("florabase.external_botany.api.occurrence_cache.clear") as clear_cache,
+    ):
+        assert clear_occurrences(identity_id, actor(), database, settings()).status_code == 204
+    clear_cache.assert_called_once_with(database, storage_type.return_value, linked)

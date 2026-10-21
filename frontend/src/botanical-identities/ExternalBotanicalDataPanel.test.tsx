@@ -4,6 +4,12 @@ import { afterEach, expect, test, vi } from "vitest";
 
 import { ExternalBotanicalDataPanel } from "./ExternalBotanicalDataPanel";
 
+const authStub = vi.hoisted(() => ({
+  state: { status: "authenticated", csrfToken: "csrf" },
+  sessionExpired: vi.fn(),
+}));
+vi.mock("../auth/context", () => ({ useAuth: () => authStub }));
+
 const identityId = "01900000-0000-7000-8000-000000000099";
 const candidate = {
   external_id: "BSJCX",
@@ -69,6 +75,15 @@ test("search exposes ambiguity and requires explicit confirmation before linking
     .spyOn(globalThis, "fetch")
     .mockImplementation((input, init) => {
       const path = requestPath(input);
+      if (path.endsWith("/occurrence-map/cache") && !init?.method)
+        return Promise.resolve(
+          json({
+            summary: null,
+            generation: null,
+            stale: false,
+            persisted: true,
+          }),
+        );
       if (path.endsWith("external-taxon-link") && !init?.method)
         return Promise.resolve(json(null));
       if (path.includes("external-taxa/search")) {
@@ -135,6 +150,15 @@ test("linked stale state refreshes, changes, and unlinks without editing identit
     .spyOn(globalThis, "fetch")
     .mockImplementation((input, init) => {
       const path = requestPath(input);
+      if (path.endsWith("/occurrence-map/cache") && !init?.method)
+        return Promise.resolve(
+          json({
+            summary: null,
+            generation: null,
+            stale: false,
+            persisted: true,
+          }),
+        );
       if (path.endsWith("external-taxon-link") && !init?.method)
         return Promise.resolve(json(stale));
       if (path.endsWith("/refresh")) return Promise.resolve(json(linked));

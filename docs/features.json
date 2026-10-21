@@ -1872,6 +1872,26 @@
       ],
       "priority": "P1",
       "status": "verified"
+    },
+    {
+      "id": "MAPS-DISTRIBUTION-001",
+      "category": "ux",
+      "description": "Normalize collection Species distribution and durably reuse explicitly loaded single-identity occurrence summaries and viewed raster tiles",
+      "acceptance_criteria": [
+        "Collection-style header search, Filters and Saved Views, grounded local readiness counts and a bounded searchable single-identity chooser prioritize the map and contextual inspector without changing representation or selection scope",
+        "Hover and keyboard previews remain transient; backdrop, Escape and internal dialog interactions preserve selection and invoking focus; URL history and v1 Saved Views restore local evidence without external provider reads",
+        "The retained Leaflet GBIF renderer handles empty 204 tiles, bounded failed-tile retries, cancellation and separate basemap errors without resetting viewport or successful tiles; one Data details disclosure scrolls in the balanced desktop inspector",
+        "Empty, missing or incompatible links, loading, provider failures, zero eligible records and missing or excluded selection remain distinct without inferring absence, abundance, native status or exact bin locations",
+        "An identity without a supported GBIF taxon link offers a keyboard-accessible Link botanical source action that opens its exact Botanical Identity Reference source module through a direct, refreshable tab=source URL without starting a GBIF request",
+        "Durable bounded summary and raster caches isolate exact taxon and refresh generation, obey upstream cache policies, retain good offline evidence on failure, and expose authenticated local reads with explicit owner refresh and clearing; no raw-record dataset or hidden external requests",
+        "Focused backend, PostgreSQL, occurrence, shared-map, Native ranges and Saved Views regressions, lint, formatting, typing, production build and API drift checks are documented alongside live Review cache evidence and remaining responsive visual acceptance limits"
+      ],
+      "dependencies": [
+        "MAPS-FOUNDATION-001",
+        "EXPLORE-001"
+      ],
+      "priority": "P1",
+      "status": "verified"
     }
   ]
 }

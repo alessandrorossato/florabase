@@ -318,6 +318,25 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/botanical-identities/{botanical_identity_id}/occurrence-map/cache": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Cached Occurrences */
+        get: operations["getCachedOccurrenceEvidence"];
+        put?: never;
+        /** Refresh Occurrences */
+        post: operations["refreshCachedOccurrenceEvidence"];
+        /** Clear Occurrences */
+        delete: operations["clearCachedOccurrenceEvidence"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/botanical-identities/{botanical_identity_id}/occurrence-map/summary": {
         parameters: {
             query?: never;
@@ -4468,6 +4487,24 @@ export interface components {
              */
             mode: "none";
         };
+        /** OccurrenceEvidence */
+        OccurrenceEvidence: {
+            /** Generation */
+            generation?: string | null;
+            /**
+             * Persisted
+             * @default true
+             */
+            persisted: boolean;
+            /** Provider Error */
+            provider_error?: string | null;
+            /**
+             * Stale
+             * @default false
+             */
+            stale: boolean;
+            summary?: components["schemas"]["OccurrenceMapSummary"] | null;
+        };
         /** OccurrenceMapSummary */
         OccurrenceMapSummary: {
             /** Attribution */
@@ -8127,6 +8164,101 @@ export interface operations {
             };
         };
     };
+    getCachedOccurrenceEvidence: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OccurrenceEvidence"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refreshCachedOccurrenceEvidence: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["OccurrenceEvidence"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    clearCachedOccurrenceEvidence: {
+        parameters: {
+            query?: never;
+            header?: {
+                "X-CSRF-Token"?: string | null;
+            };
+            path: {
+                botanical_identity_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     getBotanicalOccurrenceMapSummary: {
         parameters: {
             query?: never;
@@ -8160,7 +8292,10 @@ export interface operations {
     };
     getBotanicalOccurrenceMapTile: {
         parameters: {
-            query?: never;
+            query?: {
+                generation?: string | null;
+                local_only?: boolean;
+            };
             header?: never;
             path: {
                 botanical_identity_id: string;

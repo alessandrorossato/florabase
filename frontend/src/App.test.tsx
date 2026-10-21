@@ -3753,6 +3753,53 @@ test("Native ranges edit link opens the existing native-range Reference module d
   ).toBeVisible();
 });
 
+test("Botanical source deep link opens Reference source locally and survives reload", async () => {
+  const target = `#/identities/${botanicalIdentity.id}?tab=source`;
+  window.history.replaceState(null, "", target);
+  const requests: string[] = [];
+  mockFetch((path, init) => {
+    requests.push(path);
+    if (path.endsWith("/auth/session")) return jsonResponse(session);
+    if (path.endsWith("/auth/csrf"))
+      return jsonResponse({ csrf_token: "botanical-csrf" });
+    if (path.endsWith("/health")) return jsonResponse({ status: "ok" });
+    if (path === "/api/v1/botanical-identities")
+      return jsonResponse([botanicalIdentity]);
+    if (path.endsWith("/external-taxon-link")) return jsonResponse(null);
+    if (path.endsWith("/profile/native-ranges")) return jsonResponse([]);
+    throw new Error(`Unexpected request: ${path} ${init?.method ?? "GET"}`);
+  });
+
+  const renderIdentity = async () => {
+    render(<App />);
+    await screen.findByRole(
+      "button",
+      { name: "Search GBIF" },
+      { timeout: 10000 },
+    );
+    expect(
+      await screen.findByRole("tab", { name: "Reference" }),
+    ).toHaveAttribute("aria-selected", "true");
+    expect(
+      screen.getByRole("tab", { name: "Botanical source" }),
+    ).toHaveAttribute("aria-selected", "true");
+  };
+
+  await renderIdentity();
+  expect(screen.getByRole("button", { name: "Search GBIF" })).toBeVisible();
+  expect(window.location.hash).toBe(target);
+  expect(requests.some((path) => path.includes("external-taxa/search"))).toBe(
+    false,
+  );
+
+  cleanup();
+  await renderIdentity();
+  expect(screen.getByRole("button", { name: "Search GBIF" })).toBeVisible();
+  expect(requests.some((path) => path.includes("external-taxa/search"))).toBe(
+    false,
+  );
+});
+
 test("Location preview edits the complete location and guards dirty Escape and Cancel", async () => {
   authenticatedThen((path) => {
     if (path === "/api/v1/locations") return jsonResponse([houseLocation]);

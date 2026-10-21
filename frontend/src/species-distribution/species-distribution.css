@@ -1,18 +1,52 @@
-.distribution-scopes {
+.species-distribution .maps-workspace {
+  grid-template-columns: minmax(0, 7fr) minmax(16rem, 3fr);
+  gap: var(--space-4);
+}
+.distribution-overview {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-block: 1rem;
+  align-items: center;
+  gap: var(--space-3) var(--space-6);
+  padding-block: var(--space-3);
+  border-block: 1px solid var(--border);
 }
-.distribution-workspace {
+.distribution-overview button {
+  display: flex;
+  gap: var(--space-2);
+  align-items: baseline;
+}
+.distribution-overview strong {
+  font: var(--type-h2);
+  font-variant-numeric: tabular-nums;
+}
+.distribution-overview > span {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.distribution-map-placeholder {
+  min-height: 24rem;
+  padding: var(--space-6);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+.distribution-map-placeholder > * {
+  max-width: 38rem;
+  margin: 0;
+}
+.distribution-inspector {
   display: grid;
-  grid-template-columns: minmax(15rem, 0.7fr) minmax(0, 1.3fr);
-  gap: 1.5rem;
-  align-items: start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
-.distribution-browser,
-.distribution-selected {
-  min-width: 0;
+.distribution-inspector > * {
+  margin: 0;
+}
+.distribution-inspector code {
   overflow-wrap: anywhere;
 }
 .distribution-identities {
@@ -20,32 +54,191 @@
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 0.5rem;
+  gap: var(--space-2);
 }
 .distribution-choice {
   width: 100%;
   display: grid;
-  gap: 0.4rem;
+  gap: var(--space-1);
   text-align: left;
   white-space: normal;
 }
 .distribution-choice[aria-pressed="true"] {
-  outline: 2px solid currentColor;
+  outline: 2px solid var(--primary);
   outline-offset: -2px;
+}
+.distribution-choice:hover,
+.distribution-choice:focus-visible {
+  background: var(--surface-hover);
 }
 .distribution-context {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem 0.75rem;
-  font-size: 0.875rem;
+  gap: var(--space-1) var(--space-3);
+  font: var(--type-small);
 }
-.distribution-selected {
-  padding: 1rem;
-  border: 1px solid var(--color-border, #d6dfd3);
-  border-radius: 0.75rem;
+.distribution-chooser {
+  width: min(42rem, calc(100vw - 2 * var(--space-4)));
 }
-@media (max-width: 850px) {
-  .distribution-workspace {
+.distribution-preview {
+  padding: var(--space-3);
+  border-inline-start: 3px solid var(--focus-ring);
+  background: var(--surface-subtle);
+  font: var(--type-small);
+  min-height: 3rem;
+}
+.species-distribution .occurrence-density-map {
+  min-height: 24rem;
+  height: clamp(24rem, 52vh, 34rem);
+  background: var(--surface-subtle);
+}
+.species-distribution .map-canvas-card {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+.species-distribution .occurrence-density-legend {
+  padding: var(--space-3);
+  color: var(--text);
+  font: var(--type-small);
+}
+.species-distribution .occurrence-density-scale {
+  border-radius: 0;
+}
+.species-distribution .map-provider-note {
+  padding: 0 var(--space-3);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.distribution-evidence {
+  margin-block: var(--space-3);
+}
+.distribution-evidence > summary {
+  min-height: 2.75rem;
+  display: list-item;
+  align-content: center;
+  cursor: pointer;
+  font: var(--type-strong);
+}
+.species-distribution .occurrence-cautions {
+  background: var(--surface-subtle);
+  border-inline-start: 2px solid var(--border-strong);
+  padding: var(--space-3);
+  font: var(--type-small);
+}
+.species-distribution .detail-list > div {
+  display: block;
+}
+.species-distribution .detail-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 64rem) {
+  .species-distribution .maps-workspace {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 30rem) {
+  .species-distribution .occurrence-density-map {
+    min-height: 20rem;
+    height: 45vh;
+  }
+  .distribution-map-placeholder {
+    min-height: 20rem;
+    padding: var(--space-4);
+  }
+  .species-distribution .occurrence-density-legend {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .species-distribution .occurrence-density-scale {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+}
+.species-distribution .distribution-map-title {
+  margin: 0 0 var(--space-2);
+  font: var(--type-h3);
+}
+.species-distribution .maps-workspace__browser > section > h3 {
+  margin-block: var(--space-4) var(--space-2);
+}
+.species-distribution .detail-list {
+  gap: var(--space-3);
+}
+.species-distribution .map-canvas-card > .notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  margin: 0;
+}
+.species-distribution .map-canvas-card > .notice p {
+  flex: 1 1 15rem;
+  margin: 0;
+  font: var(--type-small);
+}
+/* Keep flexible header bases horizontal when legacy narrow-page rules apply. */
+.app-content .species-distribution .page-header {
+  flex-direction: row;
+  align-items: start;
+  margin-bottom: var(--space-3);
+}
+.app-content .species-distribution .page-identity {
+  flex: 1 1 17rem;
+}
+.app-content .species-distribution .page-tools {
+  flex: 2 1 38rem;
+}
+.species-distribution .directory-tools .directory-search {
+  flex: 1 1 18rem;
+  min-width: min(12rem, 100%);
+}
+@media (max-width: 30rem) {
+  .distribution-overview {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-1) var(--space-2);
+  }
+  .distribution-overview button {
+    padding-inline: 0;
+    text-align: start;
+    white-space: normal;
+    font: var(--type-small);
+  }
+  .distribution-overview > span {
+    grid-column: 1 / -1;
+  }
+}
+.occurrence-evidence-actions {
+  display: grid;
+  gap: var(--space-2);
+}
+.occurrence-evidence-actions p {
+  margin: 0;
+}
+.occurrence-online-basemap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  font: var(--type-small);
+}
+.occurrence-layer-status .notice {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  font: var(--type-small);
+}
+.occurrence-primary-counts {
+  margin-block: var(--space-3);
+}
+@media (min-width: 64.001rem) {
+  .species-distribution .maps-workspace__browser {
+    max-height: calc(100dvh - 17rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    padding-inline-end: var(--space-2);
   }
 }

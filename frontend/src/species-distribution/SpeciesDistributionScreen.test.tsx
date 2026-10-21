@@ -10,7 +10,10 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 import { ApiError } from "../auth/api";
 import { AuthContext, type AuthContextValue } from "../auth/context";
-import { getOccurrenceMapSummary } from "../occurrence-map/api";
+import {
+  getCachedOccurrenceEvidence,
+  refreshOccurrenceEvidence,
+} from "../occurrence-map/api";
 import { createSavedView, listSavedViews } from "../saved-views/api";
 import { savedViewHash } from "../saved-views/state";
 import {
@@ -23,7 +26,11 @@ vi.mock("./api", () => ({
   getRepresentedIdentity: vi.fn(),
   listRepresentedIdentities: vi.fn(),
 }));
-vi.mock("../occurrence-map/api", () => ({ getOccurrenceMapSummary: vi.fn() }));
+vi.mock("../occurrence-map/api", () => ({
+  getCachedOccurrenceEvidence: vi.fn(),
+  refreshOccurrenceEvidence: vi.fn(),
+  clearOccurrenceEvidence: vi.fn(),
+}));
 vi.mock("../saved-views/api", () => ({
   createSavedView: vi.fn(),
   listSavedViews: vi.fn(),
@@ -121,7 +128,20 @@ beforeEach(() => {
   vi.mocked(getRepresentedIdentity).mockImplementation((selected) =>
     Promise.resolve(selected === id ? identity : unlinked),
   );
-  vi.mocked(getOccurrenceMapSummary).mockResolvedValue(summary);
+  vi.mocked(getCachedOccurrenceEvidence).mockResolvedValue({
+    summary: null,
+    generation: null,
+    stale: false,
+    persisted: true,
+    provider_error: null,
+  });
+  vi.mocked(refreshOccurrenceEvidence).mockResolvedValue({
+    summary,
+    generation: id,
+    stale: false,
+    persisted: true,
+    provider_error: null,
+  });
   vi.mocked(listSavedViews).mockResolvedValue([]);
 });
 afterEach(() => {
@@ -140,8 +160,9 @@ test("local open, scope/search/select are provider-free; explicit Load reuses MA
       "Occurrence records show observed presence and do not establish native range.",
     ),
   ).toBeVisible();
-  await screen.findByText("2 represented identities · 1 occurrence-ready");
-  expect(getOccurrenceMapSummary).not.toHaveBeenCalled();
+  await screen.findByRole("button", { name: "2 Represented identities" });
+  expect(refreshOccurrenceEvidence).not.toHaveBeenCalled();
+  await user.click(screen.getByRole("button", { name: "Filters" }));
   await user.selectOptions(
     screen.getByRole("combobox", { name: "Collection representation" }),
     "living",
@@ -149,6 +170,7 @@ test("local open, scope/search/select are provider-free; explicit Load reuses MA
   expect(
     screen.getByRole("combobox", { name: "Collection representation" }),
   ).toHaveValue("living");
+  await user.click(screen.getByRole("button", { name: "Done" }));
   fireEvent.change(screen.getByLabelText("Search species"), {
     target: { value: "ocimum" },
   });
@@ -160,6 +182,7 @@ test("local open, scope/search/select are provider-free; explicit Load reuses MA
       expect.any(AbortSignal),
     );
   });
+  await user.click(screen.getByRole("button", { name: "Choose species" }));
   await user.click(
     await screen.findByRole("button", {
       name: /Ocimum basilicum ‘Long cultivar name’/,
@@ -171,24 +194,29 @@ test("local open, scope/search/select are provider-free; explicit Load reuses MA
   expect(window.location.hash).toBe(
     `#/species-distribution?q=ocimum&scope=living&identity=${id}`,
   );
-  expect(getOccurrenceMapSummary).not.toHaveBeenCalled();
+  expect(refreshOccurrenceEvidence).not.toHaveBeenCalled();
   expect(
     screen.getByRole("link", { name: /Botanical identity details/ }),
   ).toHaveAttribute("href", `#/identities/${id}?tab=reference`);
   await user.click(load);
   expect(await screen.findByText("Shared density map")).toBeVisible();
-  expect(getOccurrenceMapSummary).toHaveBeenCalledExactlyOnceWith(id);
+  expect(refreshOccurrenceEvidence).toHaveBeenCalledExactlyOnceWith(id, "csrf");
   expect(screen.getByLabelText("Occurrence density legend")).toBeVisible();
+  await user.click(screen.getByText("Data details", { selector: "summary" }));
   expect(screen.getByText(/Attribution: GBIF.org/)).toBeVisible();
   expect(
     screen.getByText(/PRESENT records with usable coordinates/),
   ).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Choose species" }));
   await user.click(screen.getByRole("button", { name: /Aloe vera/ }));
   expect(
     await screen.findByText(/Occurrence distribution is unavailable/),
   ).toBeVisible();
+  expect(
+    screen.getByRole("link", { name: "Link botanical source" }),
+  ).toHaveAttribute("href", `#/identities/${otherId}?tab=source`);
   expect(screen.queryByText("Shared density map")).not.toBeInTheDocument();
-  expect(getOccurrenceMapSummary).toHaveBeenCalledTimes(1);
+  expect(refreshOccurrenceEvidence).toHaveBeenCalledTimes(1);
 });
 
 test("provider failure/retry and zero eligible records keep the directory usable", async () => {
@@ -197,9 +225,15 @@ test("provider failure/retry and zero eligible records keep the directory usable
     "",
     `#/species-distribution?identity=${id}`,
   );
-  vi.mocked(getOccurrenceMapSummary)
+  vi.mocked(refreshOccurrenceEvidence)
     .mockRejectedValueOnce(new Error("provider"))
-    .mockResolvedValueOnce({ ...summary, eligible_mapped_records: 0 });
+    .mockResolvedValueOnce({
+      summary: { ...summary, eligible_mapped_records: 0 },
+      generation: id,
+      stale: false,
+      persisted: true,
+      provider_error: null,
+    });
   const user = userEvent.setup();
   show();
   await user.click(
@@ -208,10 +242,14 @@ test("provider failure/retry and zero eligible records keep the directory usable
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "temporarily unavailable",
   );
+  await user.click(screen.getByRole("button", { name: "Choose species" }));
   expect(
     await screen.findByRole("button", { name: /Aloe vera/ }),
   ).toBeEnabled();
-  await user.click(screen.getByRole("button", { name: "Retry" }));
+  await user.click(screen.getByRole("button", { name: "Close" }));
+  await user.click(
+    screen.getByRole("button", { name: "Load GBIF occurrence map" }),
+  );
   expect(await screen.findByText("No mapped occurrence records")).toBeVisible();
   expect(screen.queryByText("Shared density map")).not.toBeInTheDocument();
 });
@@ -256,10 +294,13 @@ test("refresh, back/forward and invalid URL defaults restore only local state", 
   expect(
     await screen.findByRole("button", { name: "Load GBIF occurrence map" }),
   ).toBeVisible();
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Filters" }));
   expect(
     screen.getByRole("combobox", { name: "Collection representation" }),
   ).toHaveValue("all");
-  expect(getOccurrenceMapSummary).not.toHaveBeenCalled();
+  await user.click(screen.getByRole("button", { name: "Done" }));
+  expect(refreshOccurrenceEvidence).not.toHaveBeenCalled();
   window.history.pushState(
     null,
     "",
@@ -279,10 +320,10 @@ test("refresh, back/forward and invalid URL defaults restore only local state", 
   expect(
     await screen.findByRole("button", { name: "Load GBIF occurrence map" }),
   ).toBeVisible();
-  expect(getOccurrenceMapSummary).not.toHaveBeenCalled();
+  expect(refreshOccurrenceEvidence).not.toHaveBeenCalled();
 });
 
-test("Saved View create/open restores selection, resets paging and unloads same-identity map", async () => {
+test("Saved View create/open restores selection and cached evidence without another provider load", async () => {
   window.history.replaceState(
     null,
     "",
@@ -313,6 +354,7 @@ test("Saved View create/open restores selection, resets paging and unloads same-
     await screen.findByRole("button", { name: "Load GBIF occurrence map" }),
   );
   await screen.findByText("Shared density map");
+  await user.click(screen.getByRole("button", { name: "Choose species" }));
   await user.click(await screen.findByRole("button", { name: "Next" }));
   await waitFor(() => {
     expect(listRepresentedIdentities).toHaveBeenLastCalledWith(
@@ -322,13 +364,18 @@ test("Saved View create/open restores selection, resets paging and unloads same-
       expect.any(AbortSignal),
     );
   });
+  await user.click(screen.getByRole("button", { name: "Close" }));
+  await user.click(screen.getByRole("button", { name: "Saved views" }));
   await user.click(screen.getByRole("button", { name: "Save view" }));
   await user.type(screen.getByLabelText("View name"), "Living basil");
   vi.mocked(listSavedViews).mockResolvedValue([saved]);
   await user.click(
-    within(screen.getByRole("dialog")).getByRole("button", {
-      name: "Save view",
-    }),
+    within(screen.getByRole("dialog", { name: "Save view" })).getByRole(
+      "button",
+      {
+        name: "Save view",
+      },
+    ),
   );
   await waitFor(() => {
     expect(createSavedView).toHaveBeenCalledWith(
@@ -341,14 +388,20 @@ test("Saved View create/open restores selection, resets paging and unloads same-
       "csrf",
     );
   });
+  vi.mocked(getCachedOccurrenceEvidence).mockResolvedValue({
+    summary,
+    generation: id,
+    stale: false,
+    persisted: true,
+    provider_error: null,
+  });
   await user.click(
     await screen.findByRole("button", { name: "Open Living basil" }),
   );
-  expect(
-    await screen.findByRole("button", { name: "Load GBIF occurrence map" }),
-  ).toBeVisible();
-  expect(screen.queryByText("Shared density map")).not.toBeInTheDocument();
-  expect(getOccurrenceMapSummary).toHaveBeenCalledTimes(1);
+  expect(await screen.findByText("Shared density map")).toBeVisible();
+  expect(await screen.findByText("Locally available")).toBeVisible();
+  expect(getCachedOccurrenceEvidence).toHaveBeenCalledTimes(2);
+  expect(refreshOccurrenceEvidence).toHaveBeenCalledTimes(1);
   await waitFor(() => {
     expect(listRepresentedIdentities).toHaveBeenLastCalledWith(
       "",
@@ -361,4 +414,148 @@ test("Saved View create/open restores selection, resets paging and unloads same-
     savedViewHash("species_distribution", 1, { scope: "living", identity: id }),
   ).toBe(`#/species-distribution?scope=living&identity=${id}`);
   expect(savedViewHash("species_distribution", 1, { loaded: true })).toBeNull();
+});
+
+test("chooser preview is transient and pane switching retains loaded evidence without provider reads", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    `#/species-distribution?identity=${id}`,
+  );
+  const user = userEvent.setup();
+  show();
+  await user.click(
+    await screen.findByRole("button", { name: "Load GBIF occurrence map" }),
+  );
+  const map = await screen.findByText("Shared density map");
+  await user.click(screen.getByRole("button", { name: "Inspector" }));
+  expect(screen.getByRole("button", { name: "Inspector" })).toHaveFocus();
+  const disclosure = screen.getByText("Data details", { selector: "summary" });
+  expect(
+    screen.getAllByText("Data details", { selector: "summary" }),
+  ).toHaveLength(1);
+  await user.click(disclosure);
+  expect(disclosure.parentElement).toHaveAttribute("open");
+  expect(screen.getByText(/Counts and each viewed tile/)).toBeVisible();
+  expect(screen.getByText("Shared density map")).toBe(map);
+  await user.click(screen.getByRole("button", { name: "Map & evidence" }));
+  expect(disclosure.parentElement).toHaveAttribute("open");
+  expect(screen.getByText("Shared density map")).toBe(map);
+  await user.click(screen.getByRole("button", { name: "Choose species" }));
+  const aloe = await screen.findByRole("button", { name: /Aloe vera/ });
+  await user.hover(aloe);
+  expect(screen.getByLabelText("Species preview")).toHaveTextContent(
+    "External taxon not linked",
+  );
+  expect(window.location.hash).toContain(id);
+  aloe.focus();
+  expect(screen.getByLabelText("Species preview")).toHaveTextContent(
+    "Aloe vera",
+  );
+  await user.keyboard("{Escape}");
+  expect(screen.getByRole("button", { name: "Choose species" })).toHaveFocus();
+  expect(screen.getByText("Shared density map")).toBe(map);
+  expect(refreshOccurrenceEvidence).toHaveBeenCalledTimes(1);
+});
+
+test("search resets explicit loading while retaining a selected identity excluded from results", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    `#/species-distribution?identity=${id}`,
+  );
+  const user = userEvent.setup();
+  show();
+  await user.click(
+    await screen.findByRole("button", { name: "Load GBIF occurrence map" }),
+  );
+  await screen.findByText("Shared density map");
+  vi.mocked(listRepresentedIdentities).mockResolvedValue({
+    items: [],
+    total: 0,
+    occurrence_ready: 0,
+    offset: 0,
+    limit: 50,
+  });
+  await user.type(screen.getByLabelText("Search species"), "no match");
+  expect(
+    await screen.findByRole("button", { name: "Load GBIF occurrence map" }),
+  ).toBeVisible();
+  expect(window.location.hash).toContain(id);
+  expect(screen.queryByText("Shared density map")).not.toBeInTheDocument();
+  expect(refreshOccurrenceEvidence).toHaveBeenCalledTimes(1);
+});
+
+test("unsupported local link and an empty directory never imply absence or request occurrences", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    `#/species-distribution?identity=${id}`,
+  );
+  vi.mocked(getRepresentedIdentity).mockResolvedValue({
+    ...identity,
+    occurrence_eligibility: "incompatible",
+  });
+  vi.mocked(listRepresentedIdentities).mockResolvedValue({
+    items: [],
+    total: 0,
+    occurrence_ready: 0,
+    offset: 0,
+    limit: 50,
+  });
+  const user = userEvent.setup();
+  show();
+  expect(
+    await screen.findByRole("heading", {
+      name: "External link unavailable/incompatible",
+    }),
+  ).toBeVisible();
+  expect(
+    screen.getByText(/does not mean the species has no occurrence records/),
+  ).toBeVisible();
+  expect(
+    screen.getByRole("link", { name: "Link botanical source" }),
+  ).toHaveAttribute("href", `#/identities/${id}?tab=source`);
+  await user.click(screen.getByRole("button", { name: "Choose species" }));
+  expect(
+    await screen.findByText("No represented identities match these filters."),
+  ).toBeVisible();
+  expect(refreshOccurrenceEvidence).not.toHaveBeenCalled();
+});
+
+test("chooser dismissal restores the invoking readiness metric", async () => {
+  const user = userEvent.setup();
+  show();
+  const metric = await screen.findByRole("button", {
+    name: "2 Represented identities",
+  });
+  await user.click(metric);
+  await user.keyboard("{Escape}");
+  expect(metric).toHaveFocus();
+  expect(refreshOccurrenceEvidence).not.toHaveBeenCalled();
+});
+
+test("backdrop dismisses without changing selection, while inner controls keep the chooser open", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    `#/species-distribution?identity=${id}`,
+  );
+  const user = userEvent.setup();
+  show();
+  await user.click(
+    await screen.findByRole("button", { name: "Choose species" }),
+  );
+  const dialog = screen.getByRole("dialog", { name: "Choose species" });
+  await user.click(
+    within(dialog).getByRole("heading", { name: "Choose one species" }),
+  );
+  expect(dialog).toBeVisible();
+  fireEvent.click(dialog, { clientX: -1, clientY: -1 });
+  expect(
+    screen.queryByRole("dialog", { name: "Choose species" }),
+  ).not.toBeInTheDocument();
+  expect(window.location.hash).toContain(id);
+  expect(screen.getByRole("button", { name: "Choose species" })).toHaveFocus();
+  expect(refreshOccurrenceEvidence).not.toHaveBeenCalled();
 });
