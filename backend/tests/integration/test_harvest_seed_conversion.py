@@ -352,7 +352,7 @@ def test_real_conversion_races(database_engine: Engine, race: str) -> None:
                     conversions.reverse(db, conversion_id)
                 db.commit()
                 return "accepted"
-            except EventDomainConflictError, IntegrityError, ValueError:
+            except (EventDomainConflictError, IntegrityError, ValueError) as _error:
                 db.rollback()
                 return "conflict"
             except Exception as failure:

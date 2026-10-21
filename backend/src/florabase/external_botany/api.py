@@ -13,6 +13,7 @@ from florabase.auth.dependencies import (
 from florabase.botanical_identities.service import get_botanical_identity
 from florabase.core.config import Settings, get_settings
 from florabase.db.session import get_database_session
+from florabase.external_botany import occurrence_cache
 from florabase.external_botany.model import ExternalTaxonLink
 from florabase.external_botany.provider import (
     GbifBotanicalProvider,
@@ -23,6 +24,7 @@ from florabase.external_botany.provider import (
 from florabase.external_botany.schemas import (
     ExternalTaxonLinkCreate,
     ExternalTaxonLinkResponse,
+    OccurrenceEvidence,
     OccurrenceMapSummary,
     TaxonSearchResponse,
 )
@@ -35,6 +37,7 @@ from florabase.external_botany.service import (
     search_taxa,
     unlink,
 )
+from florabase.external_botany.tile_cache import TileCache, contract_key
 
 router = APIRouter(prefix="/botanical-identities", tags=["external botanical data"])
 
@@ -238,6 +241,9 @@ async def occurrence_tile(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
     database: Annotated[Session, Depends(get_database_session)],
     provider: Annotated[GbifBotanicalProvider, Depends(get_provider)],
+    settings: Annotated[Settings, Depends(get_settings)],
+    generation: Annotated[UUID | None, Query()] = None,
+    local_only: Annotated[bool, Query()] = False,
 ) -> Response:
     tile_limit = 1 << z
     if x >= tile_limit or y >= tile_limit:
@@ -247,13 +253,89 @@ async def occurrence_tile(
         )
     link = _require_occurrence_link(database, botanical_identity_id)
     try:
-        tile = await provider.occurrence_tile(link.external_id, z, x, y)
+        if generation is None:
+            if local_only:
+                raise HTTPException(status_code=404, detail={"code": "occurrence_tile_not_cached"})
+            tile = await provider.occurrence_tile(link.external_id, z, x, y)
+        else:
+            evidence = occurrence_cache.read(database, link)
+            if evidence.generation != generation:
+                raise HTTPException(status_code=409, detail={"code": "occurrence_snapshot_changed"})
+            storage = TileCache(settings.attachment_storage_root)
+            hit = storage.read(contract_key(link.external_id), generation, z, x, y)
+            if hit is not None:
+                tile = hit[0]
+            elif local_only:
+                raise HTTPException(status_code=404, detail={"code": "occurrence_tile_not_cached"})
+            else:
+                tile = await occurrence_cache.fetch_tile(
+                    storage, provider, link.external_id, generation, z, x, y
+                )
+    except (OSError, ValueError) as error:
+        raise HTTPException(
+            status_code=503, detail={"code": "occurrence_cache_unavailable"}
+        ) from error
     except ProviderError as error:
         raise _provider_http_error(error) from error
     if tile is None:
-        return Response(status_code=status.HTTP_204_NO_CONTENT)
+        return Response(
+            status_code=status.HTTP_204_NO_CONTENT, headers={"Cache-Control": "private, no-store"}
+        )
     return Response(
         content=tile.content,
         media_type=tile.media_type,
-        headers={"Cache-Control": "private, max-age=3600"},
+        headers={"Cache-Control": "private, no-store"},
     )
+
+
+@router.get(
+    "/{botanical_identity_id}/occurrence-map/cache",
+    response_model=OccurrenceEvidence,
+    operation_id="getCachedOccurrenceEvidence",
+)
+def cached_occurrences(
+    botanical_identity_id: UUID,
+    _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
+    database: Annotated[Session, Depends(get_database_session)],
+    response: Response,
+) -> OccurrenceEvidence:
+    response.headers["Cache-Control"] = "private, no-store"
+    return occurrence_cache.read(
+        database, _require_occurrence_link(database, botanical_identity_id)
+    )
+
+
+@router.post(
+    "/{botanical_identity_id}/occurrence-map/cache",
+    response_model=OccurrenceEvidence,
+    operation_id="refreshCachedOccurrenceEvidence",
+)
+async def refresh_occurrences(
+    botanical_identity_id: UUID,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session)],
+    provider: Annotated[GbifBotanicalProvider, Depends(get_provider)],
+) -> OccurrenceEvidence:
+    require_owner(actor)
+    link = _require_occurrence_link(database, botanical_identity_id)
+    try:
+        return await occurrence_cache.refresh(database, provider, link)
+    except ProviderError as error:
+        raise _provider_http_error(error) from error
+
+
+@router.delete(
+    "/{botanical_identity_id}/occurrence-map/cache",
+    status_code=204,
+    operation_id="clearCachedOccurrenceEvidence",
+)
+def clear_occurrences(
+    botanical_identity_id: UUID,
+    actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
+    database: Annotated[Session, Depends(get_database_session)],
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> Response:
+    require_owner(actor)
+    link = _require_occurrence_link(database, botanical_identity_id)
+    occurrence_cache.clear(database, TileCache(settings.attachment_storage_root), link)
+    return Response(status_code=204)

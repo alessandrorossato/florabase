@@ -19,6 +19,7 @@ MAX_OCCURRENCE_TILE_BYTES = 2_000_000
 class OccurrenceTile:
     content: bytes
     media_type: str
+    cache_control: str | None = None
 
 
 class ProviderError(Exception):
@@ -55,6 +56,8 @@ class GbifBotanicalProvider:
             pool=settings.botanical_provider_connect_timeout_seconds,
         )
         self._transport = transport
+        self.cache_summary_allowed = True
+        self.empty_tile_cache_control: str | None = None
 
     async def search_payload(self, query: str) -> dict[str, object]:
         return await self._get(
@@ -112,6 +115,11 @@ class GbifBotanicalProvider:
                 ) as client,
                 client.stream("GET", path, params=params, headers=headers) as response,
             ):
+                policy = response.headers.get("Cache-Control", "").lower()
+                if any(
+                    directive in policy for directive in ("no-store", "no-cache", "must-revalidate")
+                ):
+                    self.cache_summary_allowed = False
                 if response.status_code == 404:
                     raise ProviderNotFoundError("GBIF taxon was not found")
                 if response.status_code == 429:
@@ -159,6 +167,7 @@ class GbifBotanicalProvider:
                 client.stream("GET", path, params=params, headers=headers) as response,
             ):
                 if response.status_code == 204:
+                    self.empty_tile_cache_control = response.headers.get("Cache-Control")
                     return None
                 if response.status_code == 429:
                     raise ProviderRateLimitedError("GBIF rate limit reached")
@@ -195,7 +204,11 @@ class GbifBotanicalProvider:
             raise ProviderError("GBIF is temporarily unavailable") from error
         if not content.startswith(b"\x89PNG\r\n\x1a\n"):
             raise ProviderResponseError("GBIF occurrence tile contained malformed PNG data")
-        return OccurrenceTile(content=bytes(content), media_type=media_type)
+        return OccurrenceTile(
+            content=bytes(content),
+            media_type=media_type,
+            cache_control=response.headers.get("Cache-Control"),
+        )
 
     def normalize_search(self, payload: Mapping[str, object]) -> list[TaxonCandidate]:
         candidates: list[TaxonCandidate] = []

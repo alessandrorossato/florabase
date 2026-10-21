@@ -207,7 +207,7 @@ def test_authenticated_explicit_link_cache_refresh_replace_and_unlink(
             )
             assert tile.status_code == 200
             assert tile.content == b"png"
-            assert tile.headers["cache-control"] == "private, max-age=3600"
+            assert tile.headers["cache-control"] == "private, no-store"
             assert provider.occurrence_tile_calls == [("A1", 2, 1, 3)]
 
             replaced = await client.put(
@@ -332,3 +332,112 @@ def test_concurrent_confirmations_converge_on_one_link_and_cache_row(
             if identity is not None:
                 database.delete(identity)
             database.commit()
+
+
+def test_occurrence_snapshots_are_local_durable_authorized_and_taxon_scoped(
+    external_api: tuple[httpx.ASGITransport, StubGbifProvider],
+    database_connection: Connection,
+    tmp_path: Any,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from datetime import UTC, datetime, timedelta
+    from io import BytesIO
+    from unittest.mock import AsyncMock
+
+    from PIL import Image
+    from sqlalchemy import update
+
+    from florabase.external_botany.tile_cache import contract_key
+
+    transport, provider = external_api
+    app.dependency_overrides[get_settings] = lambda: settings().model_copy(
+        update={"attachment_storage_root": tmp_path}
+    )
+    content = BytesIO()
+    Image.new("RGBA", (2, 2), (10, 20, 30, 255)).save(content, format="PNG")
+    tiles = AsyncMock(side_effect=[OccurrenceTile(content.getvalue(), "image/png"), None])
+    monkeypatch.setattr(provider, "occurrence_tile", tiles)
+
+    async def scenario() -> None:
+        async with httpx.AsyncClient(transport=transport, base_url=ORIGIN) as client:
+            assert (
+                await client.get(f"/api/v1/botanical-identities/{uuid7()}/occurrence-map/cache")
+            ).status_code == 401
+            login = await client.post(
+                "/api/v1/auth/login",
+                json={"login_name": "owner", "password": PASSWORD},
+                headers={"Origin": ORIGIN},
+            )
+            headers = {"Origin": ORIGIN, "X-CSRF-Token": login.json()["csrf_token"]}
+            created = await client.post(
+                "/api/v1/botanical-identities",
+                json={"scientific_name": "Local snapshot test"},
+                headers=headers,
+            )
+            base = f"/api/v1/botanical-identities/{created.json()['id']}"
+            linked = await client.put(
+                f"{base}/external-taxon-link",
+                json={"external_id": "A1", "scientific_name": "Provider A1"},
+                headers=headers,
+            )
+            assert linked.status_code == 200
+            cache = f"{base}/occurrence-map/cache"
+            assert (await client.get(cache)).json()["summary"] is None
+            assert provider.occurrence_count_calls == []
+            assert (await client.post(cache)).status_code == 403
+            first = await client.post(cache, headers=headers)
+            assert first.status_code == 200
+            generation = first.json()["generation"]
+            tile = f"{base}/occurrence-map/tiles/1/0/0.png?generation={generation}"
+            missing = await client.get(tile + "&local_only=true")
+            assert missing.status_code == 404
+            tiles.assert_not_awaited()
+            downloaded = await client.get(tile + "&local_only=false")
+            assert downloaded.status_code == 200
+            assert downloaded.content == content.getvalue()
+            assert (await client.get(tile + "&local_only=true")).content == content.getvalue()
+            empty = f"{base}/occurrence-map/tiles/1/0/1.png?generation={generation}"
+            assert (await client.get(empty + "&local_only=false")).status_code == 204
+            assert (await client.get(empty + "&local_only=true")).status_code == 204
+            assert tiles.await_count == 2
+            with Session(
+                bind=database_connection, join_transaction_mode="create_savepoint"
+            ) as database:
+                database.execute(
+                    update(ExternalProviderCache)
+                    .where(
+                        ExternalProviderCache.resource_key == "occurrence-v1:" + contract_key("A1")
+                    )
+                    .values(fetched_at=datetime.now(UTC) - timedelta(days=2))
+                )
+                database.commit()
+            cached = await client.get(cache)
+            assert cached.json()["generation"] == generation
+            assert cached.json()["stale"] is True
+            assert len(provider.occurrence_count_calls) == 2
+            original_count = provider.occurrence_count
+            monkeypatch.setattr(
+                provider, "occurrence_count", AsyncMock(side_effect=ProviderError("offline"))
+            )
+            fallback = await client.post(cache, headers=headers)
+            assert fallback.status_code == 200
+            assert fallback.json()["generation"] == generation
+            assert fallback.json()["provider_error"] == "provider_unavailable"
+            assert (await client.get(tile + "&local_only=true")).status_code == 200
+            monkeypatch.setattr(provider, "occurrence_count", original_count)
+            refreshed = await client.post(cache, headers=headers)
+            assert refreshed.json()["generation"] != generation
+            assert (await client.get(tile + "&local_only=true")).status_code == 409
+            changed = await client.put(
+                f"{base}/external-taxon-link",
+                json={"external_id": "B2", "scientific_name": "Provider B2"},
+                headers=headers,
+            )
+            assert changed.status_code == 200
+            assert (await client.get(cache)).json()["summary"] is None
+            assert (await client.get(tile + "&local_only=false")).status_code == 409
+            assert tiles.await_count == 2
+            assert (await client.delete(cache)).status_code == 403
+            assert (await client.delete(cache, headers=headers)).status_code == 204
+
+    asyncio.run(scenario())

@@ -1,4 +1,4 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 
@@ -74,123 +74,127 @@ function json(body: unknown, status = 200) {
   });
 }
 
+const authStub = vi.hoisted(() => ({
+  state: { status: "authenticated", csrfToken: "csrf" },
+  sessionExpired: vi.fn(),
+}));
+vi.mock("../auth/context", () => ({ useAuth: () => authStub }));
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
 });
-
-test("does not contact GBIF without a confirmed link or deliberate load", () => {
-  const fetch = vi.spyOn(globalThis, "fetch");
-  const { rerender } = render(
-    <OccurrenceMapPanel identityId={identityId} link={null} />,
-  );
-  expect(screen.getByText(/Confirm a GBIF taxon link above/i)).toBeVisible();
-  expect(fetch).not.toHaveBeenCalled();
-
-  rerender(<OccurrenceMapPanel identityId={identityId} link={link} />);
-  expect(
-    screen.getByRole("button", { name: "Load GBIF occurrence map" }),
-  ).toBeVisible();
-  expect(fetch).not.toHaveBeenCalled();
+const generation = "01900000-0000-7000-8000-000000000001";
+const saved = () => ({
+  summary: summary(),
+  generation,
+  stale: false,
+  provider_error: null,
+  persisted: true,
 });
 
-test("loads exact summary and exposes accessible evidence, privacy, quality, and licensing context", async () => {
-  Object.defineProperties(window, {
-    innerWidth: { configurable: true, value: 390 },
-    innerHeight: { configurable: true, value: 844 },
-  });
+test("cache miss performs only a local read, then explicit Load saves a generation", async () => {
   const fetch = vi
     .spyOn(globalThis, "fetch")
-    .mockResolvedValue(json(summary()));
+    .mockResolvedValueOnce(
+      json({ summary: null, generation: null, stale: false, persisted: true }),
+    )
+    .mockResolvedValueOnce(json(saved()));
   const user = userEvent.setup();
   render(<OccurrenceMapPanel identityId={identityId} link={link} />);
-
-  expect(
-    screen.getByText("GBIF occurrence data · not native-range data"),
-  ).toBeVisible();
   await user.click(
-    screen.getByRole("button", { name: "Occurrence evidence and privacy" }),
+    await screen.findByRole("button", { name: "Load GBIF occurrence map" }),
   );
-  expect(
-    screen.getByText(/Collection records, notes, account identity/i),
-  ).toBeVisible();
-  await user.click(
-    screen.getByRole("button", { name: "Load GBIF occurrence map" }),
-  );
-
   expect(
     await screen.findByLabelText(
       "Interactive GBIF occurrence-record density map",
     ),
   ).toBeVisible();
-  expect(screen.getByText("17")).toBeVisible();
-  expect(screen.getByText("20")).toBeVisible();
-  expect(screen.getByText(/excludes records GBIF flags/i)).toBeVisible();
-  expect(screen.getByText(/does not mean the taxon is native/i)).toBeVisible();
-  expect(screen.getByText(/not biological abundance/i)).toBeVisible();
-  expect(screen.getByText(/do not share one blanket licence/i)).toBeVisible();
+  expect(fetch.mock.calls[0][0]).toMatch(/occurrence-map\/cache$/);
+  expect(fetch.mock.calls[0][1]).not.toMatchObject({ method: "POST" });
+  expect(fetch.mock.calls[1][1]).toMatchObject({ method: "POST" });
+  await user.click(screen.getByText("Data details", { selector: "summary" }));
+  expect(screen.getByText(/excludes records GBIF flags/)).toBeVisible();
+  expect(screen.getByText(/do not share one blanket licence/)).toBeVisible();
   expect(screen.getByLabelText("Occurrence density legend")).toBeVisible();
-  expect(fetch).toHaveBeenCalledWith(
-    `/api/v1/botanical-identities/${identityId}/occurrence-map/summary`,
-    expect.objectContaining({ credentials: "same-origin", signal: undefined }),
-  );
 });
-
-test("supports zero occurrences and external-service failure without losing context", async () => {
-  vi.spyOn(globalThis, "fetch")
-    .mockResolvedValueOnce(
-      json(summary({ total_matching_records: 0, eligible_mapped_records: 0 })),
-    )
-    .mockResolvedValueOnce(
-      json({ detail: { code: "provider_unavailable" } }, 503),
-    )
-    .mockResolvedValueOnce(json(summary()));
-  const user = userEvent.setup();
-  const { rerender } = render(
+test("cached and stale evidence restore locally across remount without a provider request", async () => {
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation(() =>
+      Promise.resolve(json({ ...saved(), stale: true })),
+    );
+  const view = render(
     <OccurrenceMapPanel identityId={identityId} link={link} />,
   );
-  await user.click(
-    screen.getByRole("button", { name: "Load GBIF occurrence map" }),
-  );
-  expect(await screen.findByText("No mapped occurrence records")).toBeVisible();
   expect(
-    screen.queryByLabelText("Interactive GBIF occurrence-record density map"),
-  ).not.toBeInTheDocument();
-
-  rerender(
-    <OccurrenceMapPanel
-      key="second-link"
-      identityId="01900000-0000-7000-8000-000000000100"
-      link={{ ...link, external_id: "BSJCX" }}
-    />,
-  );
-  await user.click(
-    screen.getByRole("button", { name: "Load GBIF occurrence map" }),
-  );
-  expect(await screen.findByRole("alert")).toHaveTextContent(
-    /botanical and collection data remain available/i,
-  );
-  await user.click(screen.getByRole("button", { name: "Retry" }));
-  await waitFor(() => {
-    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
-  });
-});
-
-test("does not invent a negative excluded count when live GBIF counts change", async () => {
-  vi.spyOn(globalThis, "fetch").mockResolvedValue(
-    json(summary({ total_matching_records: 17, eligible_mapped_records: 20 })),
-  );
-  const user = userEvent.setup();
-  render(<OccurrenceMapPanel identityId={identityId} link={link} />);
-
-  await user.click(
-    screen.getByRole("button", { name: "Load GBIF occurrence map" }),
-  );
-
-  expect(
-    await screen.findByText(
-      /two live counts changed while GBIF processed them/i,
+    await screen.findByLabelText(
+      "Interactive GBIF occurrence-record density map",
     ),
   ).toBeVisible();
-  expect(screen.queryByText(/-3 matching records/i)).not.toBeInTheDocument();
+  expect(screen.getByText(/potentially outdated/)).toBeVisible();
+  view.unmount();
+  render(<OccurrenceMapPanel identityId={identityId} link={link} />);
+  await screen.findByLabelText(
+    "Interactive GBIF occurrence-record density map",
+  );
+  expect(fetch).toHaveBeenCalledTimes(2);
+  expect(fetch.mock.calls.every(([, init]) => init?.method !== "POST")).toBe(
+    true,
+  );
+});
+test("failed refresh preserves cached evidence and explicit clearing unloads it", async () => {
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValueOnce(json(saved()))
+    .mockResolvedValueOnce(
+      json({ ...saved(), provider_error: "provider_unavailable" }),
+    )
+    .mockResolvedValueOnce(new Response(null, { status: 204 }));
+  const user = userEvent.setup();
+  render(<OccurrenceMapPanel identityId={identityId} link={link} />);
+  await user.click(
+    await screen.findByRole("button", { name: "Refresh from GBIF" }),
+  );
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "Previously saved evidence",
+  );
+  expect(
+    screen.getByLabelText("Interactive GBIF occurrence-record density map"),
+  ).toBeVisible();
+  await user.click(
+    screen.getByRole("button", {
+      name: "Clear local evidence for linked taxon",
+    }),
+  );
+  expect(
+    await screen.findByRole("button", { name: "Load GBIF occurrence map" }),
+  ).toBeVisible();
+  expect(fetch.mock.calls[2][1]).toMatchObject({ method: "DELETE" });
+});
+test("no link makes no read; zero records and provider failure remain distinct", async () => {
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockResolvedValueOnce(
+      json({ ...saved(), summary: summary({ eligible_mapped_records: 0 }) }),
+    )
+    .mockResolvedValueOnce(json({ summary: null }))
+    .mockResolvedValueOnce(json({}, 503));
+  const user = userEvent.setup();
+  const view = render(
+    <OccurrenceMapPanel identityId={identityId} link={null} />,
+  );
+  expect(fetch).not.toHaveBeenCalled();
+  view.unmount();
+  const zero = render(
+    <OccurrenceMapPanel identityId={identityId} link={link} />,
+  );
+  expect(await screen.findByText("No mapped occurrence records")).toBeVisible();
+  zero.unmount();
+  render(<OccurrenceMapPanel identityId={identityId} link={link} />);
+  await user.click(
+    await screen.findByRole("button", { name: "Load GBIF occurrence map" }),
+  );
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "temporarily unavailable",
+  );
 });

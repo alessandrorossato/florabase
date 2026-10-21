@@ -4905,3 +4905,112 @@ not the current delivery state.
   gate results. The result-only documentation change requires one more canonical gate before staging.
   Candidate changes remain unstaged and uncommitted; protected delivery and `make feature-finish`
   remain outstanding. Maps Review remains running; protected environments remain untouched.
+
+
+## 2026-10-21 — MAPS-DISTRIBUTION-001 visual-review candidate
+
+- New independent `b139` / `feat/maps-distribution-001` candidate from fetched clean main
+  `9275947` includes PR #116. Reused PageHeader/DirectoryTools, TaskDialog, compact Saved Views,
+  BotanicalName and MapWorkspace for a map-first single-identity occurrence workspace.
+- Added grounded local readiness actions, searchable chooser with transient hover/focus previews,
+  contextual evidence inspector, compact qualitative legend, progressive quality/licensing details,
+  explicit partial-tile failure/retry and Leaflet resize handling for mounted responsive panes.
+  Preserved exact GBIF links, explicit Load, representation/search, URL/history and v1 Saved Views.
+  No native/abundance/absence inference, bin locations/counts, comparison or backend/API changes.
+- Completed regressions: **116 tests / 10 files** across occurrence, shared maps, Native ranges,
+  Saved Views and identity-detail consumers. After the final invoking-control focus fix, the
+  final Species distribution file passed **9 tests**. A later broad run ended 143 without a result;
+  it is not claimed passed. Affected-file zero-warning ESLint, full frontend Prettier,
+  strict TypeScript/production Vite build, **108-feature** graph and whitespace checks passed.
+- Authenticated 1440×844, 1024×844 and 390×844 review covered layout, pane persistence, cultivar
+  search, keyboard previews/focus, actual Back/Forward and Saved View save/reopen with evidence
+  unloaded. Fixed reproduced tablet header gaps. [Browser evidence](review/maps-distribution-001/README.md)
+  records live partial-tile failures and positive aggregate counts, not fabricated occurrence data.
+- Operator explicitly approved guarded replacement of the delivered Maps Review. The fresh
+  candidate-owned `florabase-feature-review` at <http://localhost:15174/#/species-distribution>
+  is healthy with its own v4/80 fixture and database head `20261013_0042`. Sourcing at 15175,
+  UAT, DEV, Stable Preview and production remain untouched. Host RAM/swap pressure and browser
+  input/capture timeouts are documented honestly; completed scoped runs supersede timed-out attempts.
+- Graph status is `implemented`. [Handoff](maps-distribution-001-handoff.md) records architecture,
+  scientific/privacy boundaries, exact checks, ownership and pending operator product, actual zoom,
+  screen-reader and touch acceptance. No canonical gate, staging, commit, push or delivery.
+
+
+## 2026-10-21 — MAPS-DISTRIBUTION-001 durable evidence refinement
+
+- Operator-requested refinement supersedes the initial no-persistence/unloaded-restoration rule.
+  Audited ExternalProviderCache, fixed GBIF summary/tile adapter, media volume/backup behavior and
+  primary GBIF rights/HTTP guidance before implementing bounded summary and viewed-raster reuse.
+  No raw occurrence ingestion, migration, new dependency or changes to Native ranges semantics.
+- Chooser uses established backdrop dismissal and invoker focus; internal interactions and Escape
+  preserve selected identity. One Data details disclosure and bounded desktop inspector keep primary
+  counts/date/Refresh compact. Responsive map/inspector switching keeps Leaflet mounted.
+- Actual incomplete-tile cause: provider 503 plus valid empty 204 decoded as an image failure and
+  latched frontend errors. Added transparent 204 success, bounded failed-visible-tile retries,
+  cancellation cleanup and separate optional online basemap errors. Local Natural Earth context
+  permits external-request-free cache playback. Existing proxy limits remain.
+- PostgreSQL summaries and durable bounded PNG/204 files share exact taxon/contract/generation keys.
+  Cache-only GET never refreshes; owner/CSRF POST and DELETE are explicit. Failed refresh retains good
+  cached evidence; successful refresh isolates a new generation; old summaries are dated/stale.
+  Storage quotas/eviction, policy exclusions, backup limits and future raw-record decision are in
+  [the audit](maps-distribution-001-cache-design.md) and [handoff](maps-distribution-001-handoff.md).
+- Focused backend suite: **33 passed**; final API transport regression rerun: **6 passed**. Ruff clean;
+  strict external_botany mypy: **8 sources clean**. PostgreSQL API integration: **3 passed**;
+  exact owned project `florabase-integration-1f2164f94bb1` cleaned with zero residual resources.
+  Generated OpenAPI and TypeScript drift check passed. Cache/chooser/renderer frontend: **21 passed
+  across 4 files**. Completed scoped frontend checks total **123 tests / 11 files** (21 occurrence/
+  distribution, 22 NativeRangesScreen, 77 shared-map/geometry/Saved Views, 3 identity consumer).
+  Zero-warning changed-file ESLint/Prettier and strict TypeScript/production build pass. Resource-
+  constrained broad attempts are explicitly not counted; completed isolated runs supersede them.
+  Feature graph **108 valid** and whitespace check pass; exact evidence is in the handoff.
+- Live existing Review HTTP verification returned Ocimum basilicum **3,783 eligible / 9,775 total**,
+  PNG 200/14,610 bytes and empty 204; each tile replayed identically cache-only and summary reopen
+  retained generation. Fixture v4/80 was preserved. Error/offline behavior uses injected tests.
+  Initial responsive captures are explicitly historical; browser transport/timeouts prevented fresh
+  expanded-details/cache navigation screenshots. Current visual acceptance remains with operator.
+- Candidate remains implemented, unstaged/uncommitted, with no canonical feature-verify or delivery.
+  Candidate Review 15174 preserved; Sourcing 15175 and all protected environments untouched.
+
+## 2026-10-21 — MAPS-DISTRIBUTION-001 source navigation and main synchronization
+
+- Fetched and inspected current `origin/main` at `4a657d8` (Sourcing PR #117), preserved the full
+  dirty/untracked Maps candidate in a Git stash, fast-forwarded only `feat/maps-distribution-001`,
+  and restored the candidate. `docs/progress.md` and `frontend/src/App.test.tsx` merged cleanly;
+  the final branch is based on the Sourcing merge and retains both feature sets.
+- Added **Link botanical source** to selected identities with missing or incompatible GBIF links.
+  `#/identities/<id>?tab=source` now opens that exact identity's Reference → Botanical source,
+  including direct load and refresh. Focused App tests assert the local route and no GBIF search;
+  species-distribution tests assert the exact selected identity URL. Native anchor behavior keeps
+  keyboard focus visible and browser Back history native.
+- Independent regression suites passed: **106 frontend Maps/App tests**, **58 frontend Sourcing,
+  order, selector, dialog and record-visual tests**, and **33 backend provider/service/API/cache
+  unit tests**. The Sourcing-preview, persistent UAT, DEV, Stable Preview and production resources
+  remain untouched; candidate-owned Feature Review is healthy at 15174 with its v4/80 fixture.
+- Corrected an existing invalid multi-exception clause in
+  `backend/tests/integration/test_harvest_seed_conversion.py`; it predates this feature and the
+  Sourcing merge. This syntax-only test correction is required for Python 3.12 to collect the full
+  suite and changes no runtime behavior.
+- The graph remains `implemented` pending the required full canonical gate, final exact-tree
+  receipt, protected delivery and post-merge DEV smoke. No stage/commit/push/delivery yet.
+
+## 2026-10-21 — MAPS-DISTRIBUTION-001 full verification
+
+- `make verify-full` passed on the candidate tree: backend **953 passed** (90.03% coverage), frontend
+  **832 passed across 71 files**, PostgreSQL integration **737 passed**, API drift, formatting,
+  lint, strict typing, migration upgrade/downgrade cycle, and backend/frontend production builds.
+  Workflow checks, feature graph (**108 valid**) and whitespace checks passed; the exact-tree
+  verification receipt was recorded. The test-only Python 3.12 syntax correction was included.
+- Candidate Feature Review at <http://localhost:15174/#/species-distribution> was restarted from
+  the guarded, worktree-owned lifecycle and is healthy on current code. Its v4/80 fixture and
+  database revision `20261013_0042` were preserved. Local reopen displayed saved occurrence counts
+  and tiles without provider traffic, identified two missing areas, and exposed explicit refresh.
+  Expanded Data details separated **3,783 eligible mapped records** from **9,775 matching present
+  records** and disclosed the data-quality, uncertainty, attribution and privacy contracts.
+- `MAPS-DISTRIBUTION-001` is `verified`. Sourcing Preview at 15175, UAT, DEV, Stable Preview, and
+  production remain untouched. Staging, commit, protected delivery, finish and post-merge DEV smoke
+  remain pending. The required final `make feature-verify` rerun passed in full mode after these
+  documentation/status edits and recorded the exact-tree receipt.
+- A later gate rerun reproduced a cold-start failure in the unrelated Dashboard default-route test:
+  the lazy workspace was still loading at the one-second query timeout. Raised that assertion's
+  wait to ten seconds (matching the route-transition regression), then the isolated UX001 suite
+  passed **7/7**. The final full gate is being rerun after this test-only reliability adjustment.

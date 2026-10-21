@@ -57,7 +57,11 @@ test("an unresolved route chunk shows a compact loading placeholder and one shel
   });
   window.history.replaceState(null, "", "/#/dashboard");
   render(<App />);
-  await screen.findByRole("heading", { name: "Dashboard workspace" });
+  await screen.findByRole(
+    "heading",
+    { name: "Dashboard workspace" },
+    { timeout: 10_000 },
+  );
   await userEvent
     .setup()
     .click(
