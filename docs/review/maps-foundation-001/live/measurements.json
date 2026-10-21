@@ -1,0 +1,476 @@
+[
+  {
+    "name": "comparison-1024",
+    "documentWidth": 1009,
+    "dpr": 1,
+    "focus": "\n    Florabase‹Overview▾DashboardCollection▾SeedsSowingsPlantsHarvestsLocationsA",
+    "map": {
+      "bottom": 731.4921875,
+      "height": 357.5,
+      "left": 272,
+      "right": 985,
+      "top": 373.9921875,
+      "width": 713,
+      "x": 272,
+      "y": 373.9921875
+    },
+    "scrollY": 0,
+    "viewport": [
+      1024,
+      844
+    ]
+  },
+  {
+    "name": "single-1024",
+    "documentWidth": 1009,
+    "dpr": 1,
+    "focus": "Selected species (1)",
+    "map": {
+      "bottom": 827.984375,
+      "height": 357.5,
+      "left": 272,
+      "right": 985,
+      "top": 470.484375,
+      "width": 713,
+      "x": 272,
+      "y": 470.484375
+    },
+    "scrollY": 0,
+    "viewport": [
+      1024,
+      844
+    ]
+  },
+  {
+    "name": "single-390",
+    "documentWidth": 375,
+    "dpr": 1,
+    "focus": "Selected species (1)",
+    "map": {
+      "bottom": 803.1796875,
+      "height": 172.5,
+      "left": 16,
+      "right": 359,
+      "top": 630.6796875,
+      "width": 343,
+      "x": 16,
+      "y": 630.6796875
+    },
+    "scrollY": 0,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  {
+    "name": "overview-1440-final",
+    "documentWidth": 1425,
+    "dpr": 1,
+    "focus": "Collection overview",
+    "map": {
+      "bottom": 797.4765625,
+      "height": 423.5,
+      "left": 244,
+      "right": 1089,
+      "top": 373.9765625,
+      "width": 845,
+      "x": 244,
+      "y": 373.9765625
+    },
+    "scrollY": 0,
+    "viewport": [
+      1440,
+      844
+    ]
+  },
+  {
+    "name": "zoom-shortcut-attempt",
+    "documentWidth": 1425,
+    "dpr": 1,
+    "focus": "Collection overview",
+    "map": {
+      "bottom": 797.4765625,
+      "height": 423.5,
+      "left": 244,
+      "right": 1089,
+      "top": 373.9765625,
+      "width": 845,
+      "x": 244,
+      "y": 373.9765625
+    },
+    "scrollY": 0,
+    "viewport": [
+      1440,
+      844
+    ]
+  },
+  {
+    "name": "1440-125-percent-viewport-proxy",
+    "documentWidth": 1137,
+    "dpr": 1,
+    "focus": "Map boundary unavailable · 3 territories",
+    "map": {
+      "bottom": 653.4765625,
+      "height": 279.5,
+      "left": 244,
+      "right": 801,
+      "top": 373.9765625,
+      "width": 557,
+      "x": 244,
+      "y": 373.9765625
+    },
+    "scrollY": 0,
+    "viewport": [
+      1152,
+      675
+    ]
+  },
+  {
+    "name": "1440-150-percent-viewport-proxy",
+    "documentWidth": 945,
+    "dpr": 1,
+    "focus": "Map boundary unavailable · 3 territories",
+    "map": {
+      "bottom": 757.4765625,
+      "height": 339.5,
+      "left": 244,
+      "right": 921,
+      "top": 417.9765625,
+      "width": 677,
+      "x": 244,
+      "y": 417.9765625
+    },
+    "scrollY": 0,
+    "viewport": [
+      960,
+      563
+    ]
+  },
+  {
+    "name": "1024-125-percent-viewport-proxy",
+    "documentWidth": 804,
+    "dpr": 1,
+    "focus": "Map boundary unavailable · 3 territories",
+    "map": {
+      "bottom": 708.9765625,
+      "height": 269,
+      "left": 244,
+      "right": 780,
+      "top": 439.9765625,
+      "width": 536,
+      "x": 244,
+      "y": 439.9765625
+    },
+    "scrollY": 0,
+    "viewport": [
+      819,
+      675
+    ]
+  },
+  {
+    "name": "overview-1024-final",
+    "documentWidth": 1009,
+    "dpr": 1,
+    "focus": "Map boundary unavailable · 3 territories",
+    "map": {
+      "bottom": 789.4765625,
+      "height": 371.5,
+      "left": 244,
+      "right": 985,
+      "top": 417.9765625,
+      "width": 741,
+      "x": 244,
+      "y": 417.9765625
+    },
+    "scrollY": 0,
+    "viewport": [
+      1024,
+      844
+    ]
+  },
+  {
+    "name": "overview-390-final",
+    "documentWidth": 375,
+    "dpr": 1,
+    "focus": "Map boundary unavailable · 3 territories",
+    "map": {
+      "bottom": 831.65625,
+      "height": 172.5,
+      "left": 16,
+      "right": 359,
+      "top": 659.15625,
+      "width": 343,
+      "x": 16,
+      "y": 659.15625
+    },
+    "scrollY": 0,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  {
+    "name": "overview-390-compact-controls",
+    "documentWidth": 375,
+    "dpr": 1,
+    "focus": "\n    Florabase‹Overview▾DashboardCollection▾SeedsSowingsPlantsHarvestsLocationsA",
+    "map": {
+      "bottom": 775.65625,
+      "height": 172.5,
+      "left": 16,
+      "right": 359,
+      "top": 603.15625,
+      "width": 343,
+      "x": 16,
+      "y": 603.15625
+    },
+    "scrollY": 0,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  {
+    "name": "final-overview-1440",
+    "documentWidth": 1425,
+    "dpr": 1,
+    "focus": "Italy · 2 identities",
+    "map": {
+      "bottom": 797.4765625,
+      "height": 423.5,
+      "left": 244,
+      "right": 1089,
+      "top": 373.9765625,
+      "width": 845,
+      "x": 244,
+      "y": 373.9765625
+    },
+    "scrollY": 0,
+    "viewport": [
+      1440,
+      844
+    ]
+  },
+  {
+    "name": "final-overview-1024",
+    "documentWidth": 1009,
+    "dpr": 1,
+    "focus": "Italy · 2 identities",
+    "map": {
+      "bottom": 789.4765625,
+      "height": 371.5,
+      "left": 244,
+      "right": 985,
+      "top": 417.9765625,
+      "width": 741,
+      "x": 244,
+      "y": 417.9765625
+    },
+    "scrollY": 0,
+    "viewport": [
+      1024,
+      844
+    ]
+  },
+  {
+    "name": "final-overview-390",
+    "documentWidth": 375,
+    "dpr": 1,
+    "focus": "Italy · 2 identities",
+    "map": {
+      "bottom": 775.65625,
+      "height": 172.5,
+      "left": 16,
+      "right": 359,
+      "top": 603.15625,
+      "width": 343,
+      "x": 16,
+      "y": 603.15625
+    },
+    "scrollY": 0,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  {
+    "name": "final-overview-125-proxy",
+    "documentWidth": 1137,
+    "dpr": 1,
+    "focus": "Italy · 2 identities",
+    "map": {
+      "bottom": 653.4765625,
+      "height": 279.5,
+      "left": 244,
+      "right": 801,
+      "top": 373.9765625,
+      "width": 557,
+      "x": 244,
+      "y": 373.9765625
+    },
+    "scrollY": 0,
+    "viewport": [
+      1152,
+      675
+    ]
+  },
+  {
+    "name": "final-overview-150-proxy",
+    "documentWidth": 945,
+    "dpr": 1,
+    "focus": "Italy · 2 identities",
+    "map": {
+      "bottom": 757.4765625,
+      "height": 339.5,
+      "left": 244,
+      "right": 921,
+      "top": 417.9765625,
+      "width": 677,
+      "x": 244,
+      "y": 417.9765625
+    },
+    "scrollY": 0,
+    "viewport": [
+      960,
+      563
+    ]
+  },
+  {
+    "name": "final-tablet-125-proxy",
+    "documentWidth": 804,
+    "dpr": 1,
+    "focus": "Italy · 2 identities",
+    "map": {
+      "bottom": 764.9765625,
+      "height": 269,
+      "left": 244,
+      "right": 780,
+      "top": 495.9765625,
+      "width": 536,
+      "x": 244,
+      "y": 495.9765625
+    },
+    "scrollY": 0,
+    "viewport": [
+      819,
+      675
+    ]
+  },
+  {
+    "name": "final-comparison-1440",
+    "documentWidth": 1425,
+    "dpr": 1,
+    "focus": "Italy · 2 identities",
+    "map": {
+      "bottom": 753.4921875,
+      "height": 423.5,
+      "left": 244,
+      "right": 1089,
+      "top": 329.9921875,
+      "width": 845,
+      "x": 244,
+      "y": 329.9921875
+    },
+    "scrollY": 0,
+    "viewport": [
+      1440,
+      844
+    ]
+  },
+  {
+    "name": "final-comparison-1024",
+    "documentWidth": 1009,
+    "dpr": 1,
+    "focus": "Italy · 2 identities",
+    "map": {
+      "bottom": 745.4921875,
+      "height": 371.5,
+      "left": 244,
+      "right": 985,
+      "top": 373.9921875,
+      "width": 741,
+      "x": 244,
+      "y": 373.9921875
+    },
+    "scrollY": 0,
+    "viewport": [
+      1024,
+      844
+    ]
+  },
+  {
+    "name": "final-comparison-390",
+    "documentWidth": 375,
+    "dpr": 1,
+    "focus": "Italy · 2 identities",
+    "map": {
+      "bottom": 717.6796875,
+      "height": 172.5,
+      "left": 16,
+      "right": 359,
+      "top": 545.1796875,
+      "width": 343,
+      "x": 16,
+      "y": 545.1796875
+    },
+    "scrollY": 0,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  {
+    "name": "final-single-390",
+    "documentWidth": 375,
+    "dpr": 1,
+    "focus": "Selected species (1)",
+    "map": {
+      "bottom": 747.1796875,
+      "height": 172.5,
+      "left": 16,
+      "right": 359,
+      "top": 574.6796875,
+      "width": 343,
+      "x": 16,
+      "y": 574.6796875
+    },
+    "scrollY": 0,
+    "viewport": [
+      390,
+      844
+    ]
+  },
+  {
+    "name": "final-single-1024",
+    "documentWidth": 1009,
+    "dpr": 1,
+    "focus": "Selected species (1)",
+    "map": {
+      "bottom": 774.9921875,
+      "height": 371.5,
+      "left": 244,
+      "right": 985,
+      "top": 403.4921875,
+      "width": 741,
+      "x": 244,
+      "y": 403.4921875
+    },
+    "scrollY": 0,
+    "viewport": [
+      1024,
+      844
+    ]
+  },
+  {
+    "name": "mobile-active-filters",
+    "documentWidth": 375,
+    "dpr": 1,
+    "focus": "",
+    "map": null,
+    "scrollY": 290,
+    "viewport": [
+      390,
+      844
+    ]
+  }
+]

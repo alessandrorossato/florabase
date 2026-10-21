@@ -855,6 +855,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/explore/native-ranges/territories/identities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Native Territory Identities */
+        get: operations["listNativeTerritoryIdentities"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/explore/species-distribution/identities": {
         parameters: {
             query?: never;
@@ -7068,6 +7085,66 @@ export interface components {
             /** Source Code */
             source_code: string;
         };
+        /** TerritoryRangeEvidence */
+        TerritoryRangeEvidence: {
+            /** Broad Recorded Places */
+            broad_recorded_places: string[];
+            /** Exact Recorded */
+            exact_recorded: boolean;
+            /** Name */
+            name: string;
+            /** Source Code */
+            source_code: string;
+        };
+        /** TerritoryRangeIdentity */
+        TerritoryRangeIdentity: {
+            /** Common Name */
+            common_name: string | null;
+            /** Cultivar Name */
+            cultivar_name: string | null;
+            /** Current Records */
+            current_records: number;
+            /** Display Label */
+            display_label: string;
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Living Records */
+            living_records: number;
+            /**
+             * Matches Filters
+             * @default true
+             */
+            matches_filters: boolean;
+            /** Matches Scope */
+            matches_scope: boolean;
+            /** Matching Territories */
+            matching_territories: components["schemas"]["TerritoryRangeEvidence"][];
+            /** Native Range Count */
+            native_range_count: number;
+            /**
+             * Representation
+             * @enum {string}
+             */
+            representation: "living" | "current" | "historical";
+            /** Retained Records */
+            retained_records: number;
+            /** Scientific Name */
+            scientific_name: string;
+        };
+        /** TerritoryRangeIdentityPage */
+        TerritoryRangeIdentityPage: {
+            /** Items */
+            items: components["schemas"]["TerritoryRangeIdentity"][];
+            /** Limit */
+            limit: number;
+            /** Offset */
+            offset: number;
+            /** Total */
+            total: number;
+        };
         /** TransferCreate */
         TransferCreate: {
             /** Notes */
@@ -9480,6 +9557,45 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NativeRangeSelection"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    listNativeTerritoryIdentities: {
+        parameters: {
+            query: {
+                territory: string[];
+                match?: "any" | "all";
+                identity?: string[] | null;
+                q?: string;
+                scope?: "all" | "living" | "current" | "historical";
+                with_range?: boolean;
+                record?: components["schemas"]["CollectionRecordCategory"][] | null;
+                offset?: number;
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TerritoryRangeIdentityPage"];
                 };
             };
             /** @description Validation Error */

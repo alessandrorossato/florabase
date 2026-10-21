@@ -1,8 +1,16 @@
-import { DirectoryFilterSelect } from "../components/DirectoryTools";
+import {
+  DirectoryFilterSelect,
+  DirectoryTools,
+} from "../components/DirectoryTools";
+import { TaskDialog } from "../components/TaskDialog";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { DirectorySearch, PageHeader } from "../components/ReferenceUI";
+import {
+  BotanicalName,
+  DirectorySearch,
+  PageHeader,
+} from "../components/ReferenceUI";
 import { SavedViews } from "../saved-views/SavedViews";
 import {
   directoryState,
@@ -15,13 +23,21 @@ import {
   getNativeComparison,
   getNativeSelection,
   listNativeIdentities,
+  type Overview,
+  type SelectedRanges,
   type Filters,
   type PlaceCoverage,
   type RangeIdentity,
   type RangePlace,
 } from "./api";
-import { loadGeometry, rangeGeometry } from "./geometry";
-import { NativeCoverageMap, type GeometryState } from "./NativeCoverageMap";
+import { loadGeometry, mapCoverage, rangeGeometry } from "./geometry";
+import {
+  NativeCoverageMap,
+  type GeometryState,
+  type TerritorySelection,
+} from "./NativeCoverageMap";
+import { reconcileColors } from "./comparison";
+import { MapWorkspace } from "../maps/MapWorkspace";
 import "./native-ranges.css";
 
 const scopes = [
@@ -128,7 +144,13 @@ function Pages({
   );
 }
 
-function Representation({ identity }: { identity: RangeIdentity }) {
+function Representation({
+  identity,
+  compact = false,
+}: {
+  identity: RangeIdentity;
+  compact?: boolean;
+}) {
   return (
     <span className="native-representation">
       <strong>
@@ -138,10 +160,12 @@ function Representation({ identity }: { identity: RangeIdentity }) {
             ? "Current"
             : "Historical"}
       </strong>
-      <span>
-        {identity.current_records} current · {identity.retained_records}{" "}
-        retained records
-      </span>
+      {!compact && (
+        <span>
+          {identity.current_records} current · {identity.retained_records}{" "}
+          retained records
+        </span>
+      )}
     </span>
   );
 }
@@ -166,13 +190,14 @@ function IdentityBrowser({
       className="native-browser"
       aria-labelledby="native-identities-title"
     >
-      <h3 id="native-identities-title">Represented species</h3>
-      <p className="field-help">
-        Select up to 20 species explicitly.{" "}
-        {selectedIds.length >= 20
-          ? "Selection limit reached; remove a species to choose another."
-          : ""}
-      </p>
+      <h3 id="native-identities-title" className="sr-only">
+        Represented species
+      </h3>
+      {selectedIds.length >= 5 && (
+        <p role="status" className="field-help">
+          Selection limit reached; remove a species to choose another.
+        </p>
+      )}
       {query.error ? (
         <ReadError retry={query.retry} label="represented species" />
       ) : !query.data ? (
@@ -195,7 +220,7 @@ function IdentityBrowser({
                       type="checkbox"
                       checked={selectedIds.includes(identity.id)}
                       disabled={
-                        selectedIds.length >= 20 &&
+                        selectedIds.length >= 5 &&
                         !selectedIds.includes(identity.id)
                       }
                       onChange={() => {
@@ -203,11 +228,16 @@ function IdentityBrowser({
                       }}
                     />
                     <span className="native-identity-content">
-                      <strong>{identity.display_label}</strong>
+                      <strong>
+                        <BotanicalName
+                          label={identity.display_label}
+                          scientificName={identity.scientific_name}
+                        />
+                      </strong>
                       {identity.common_name && (
                         <span>{identity.common_name}</span>
                       )}
-                      <Representation identity={identity} />
+                      <Representation identity={identity} compact />
                       <small>
                         {identity.native_range_count
                           ? `${String(identity.native_range_count)} recorded native-range ${identity.native_range_count === 1 ? "place" : "places"}`
@@ -291,44 +321,207 @@ function RangeList({
 }
 
 interface MapProps {
+  territorySelection?: TerritorySelection;
   geometry: GeometryState;
   retryGeometry: () => void;
 }
+function revealDetails(element: HTMLElement | null) {
+  if (!element) return;
+  element.focus();
+  element.scrollIntoView({ block: "start" });
+}
+
+function NativeMetric({
+  label,
+  value,
+  context,
+  onClick,
+}: {
+  label: string;
+  value: number | string;
+  context: string;
+  onClick?: () => void;
+}) {
+  const compactLabels: Record<string, string> = {
+    "Represented identities": "Represented",
+    "With recorded native range": "With ranges",
+    "Without structured range": "Without ranges",
+    "Mapped territories": "Territories",
+    "Exact recorded places": "Recorded places",
+  };
+  const content = (
+    <>
+      <span className="ui-metric__label native-metric-label-full">{label}</span>
+      <span
+        className="ui-metric__label native-metric-label-short"
+        aria-hidden="true"
+      >
+        {compactLabels[label] ?? label}
+      </span>
+      <strong className="ui-metric__value">{value}</strong>
+      <span className="ui-metric__context">{context}</span>
+    </>
+  );
+  return onClick ? (
+    <button
+      type="button"
+      className="ui-metric native-metric"
+      aria-label={`${label}: ${String(value)}`}
+      onClick={onClick}
+    >
+      {content}
+    </button>
+  ) : (
+    <div
+      className="ui-metric native-metric"
+      role="group"
+      aria-label={`${label}: ${String(value)}`}
+    >
+      {content}
+    </div>
+  );
+}
+
+function RecordedEvidence({
+  filters,
+  geometry,
+  id,
+}: {
+  filters: Filters;
+  geometry: GeometryState;
+  id?: string;
+}) {
+  const [offset, setOffset] = useState(0);
+  const read = useCallback(
+    (signal: AbortSignal): Promise<Overview | SelectedRanges> =>
+      id
+        ? getNativeSelection(id, filters, offset, signal)
+        : getNativeOverview(filters, offset, signal),
+    [id, filters, offset],
+  );
+  const query = useLocalRead<Overview | SelectedRanges>(read);
+  if (query.error)
+    return <ReadError retry={query.retry} label="recorded places" />;
+  if (!query.data) return <p role="status">Loading recorded places…</p>;
+  const places = "ranges" in query.data ? query.data.ranges : query.data.places;
+  const total =
+    "total" in query.data ? query.data.total : query.data.places_total;
+  return (
+    <>
+      <h4>
+        {id ? "Recorded native range" : "Exact recorded places"} · {total}{" "}
+        {id ? (total === 1 ? "place" : "places") : ""}
+      </h4>
+      <p className="field-help">
+        Explicit broad, precise and custom places remain separate evidence.
+        Counts cannot be added to infer map coverage.
+      </p>
+      <RangeList places={places} geometry={geometry} overview={!id} />
+      <Pages
+        offset={offset}
+        total={total}
+        onChange={setOffset}
+        label={id ? "Selected native-range pages" : "Recorded place pages"}
+      />
+    </>
+  );
+}
+
 function OverviewPanel({
+  territorySelection,
   filters,
   geometry,
   retryGeometry,
-}: MapProps & { filters: Filters }) {
-  const [offset, setOffset] = useState(0);
+  choose,
+}: MapProps & {
+  filters: Filters;
+  choose: (withRange?: boolean) => void;
+}) {
+  const coverage = useRef<HTMLDivElement>(null);
+  const places = useRef<HTMLButtonElement>(null);
   const read = useCallback(
-    (signal: AbortSignal) => getNativeOverview(filters, offset, signal),
-    [filters, offset],
+    (signal: AbortSignal) => getNativeOverview(filters, 0, signal),
+    [filters],
   );
   const query = useLocalRead(read);
   if (query.error)
     return <ReadError retry={query.retry} label="collection overview" />;
   if (!query.data) return <p role="status">Loading collection overview…</p>;
   const overview = query.data;
+  const mapped =
+    "data" in geometry
+      ? mapCoverage(overview.territories, geometry.data)
+      : null;
   return (
     <>
-      <h3>Collection overview</h3>
-      <dl
+      <h3 className="sr-only">Collection overview</h3>
+      <div
         className="native-statistics"
+        role="group"
         aria-label="Native-range coverage summary"
       >
-        <div>
-          <dt>Represented identities</dt>
-          <dd>{overview.represented}</dd>
-        </div>
-        <div>
-          <dt>With recorded native range</dt>
-          <dd>{overview.with_range}</dd>
-        </div>
-        <div>
-          <dt>Without structured range</dt>
-          <dd>{overview.without_range}</dd>
-        </div>
-      </dl>
+        <NativeMetric
+          label="Represented identities"
+          value={overview.represented}
+          context="Browse species →"
+          onClick={() => {
+            choose();
+          }}
+        />
+        <NativeMetric
+          label="With recorded native range"
+          value={overview.with_range}
+          context="Browse ranged species →"
+          onClick={() => {
+            choose(true);
+          }}
+        />
+        <NativeMetric
+          label="Without structured range"
+          value={overview.without_range}
+          context="Reference knowledge not recorded"
+        />
+        <NativeMetric
+          label="Mapped territories"
+          value={
+            mapped
+              ? mapped.available.length
+              : geometry.status === "error"
+                ? "—"
+                : "…"
+          }
+          context={
+            mapped
+              ? `${String(mapped.unavailable.length)} boundaries unavailable${mapped.available.length ? " · Details →" : ""}`
+              : geometry.status === "error"
+                ? "Boundaries unavailable"
+                : "Checking boundaries"
+          }
+          onClick={
+            mapped?.available.length
+              ? () => {
+                  revealDetails(coverage.current);
+                }
+              : undefined
+          }
+        />
+        <NativeMetric
+          label="Exact recorded places"
+          value={overview.places_total}
+          context={
+            overview.places_total
+              ? "Broad, precise and custom →"
+              : "No recorded places"
+          }
+          onClick={
+            overview.places_total
+              ? () => {
+                  places.current?.click();
+                }
+              : undefined
+          }
+        />
+      </div>
       {overview.represented === 0 ? (
         <p className="empty-state" role="status">
           No represented identities match this collection view. Reference-only
@@ -342,22 +535,16 @@ function OverviewPanel({
       ) : (
         <>
           <NativeCoverageMap
+            territorySelection={territorySelection}
             territories={overview.territories}
             geometry={geometry}
             retry={retryGeometry}
-          />
-          <h4>Exact recorded places · {overview.places_total}</h4>
-          <p className="field-help">
-            Counts here describe identities explicitly linked to each recorded
-            place. Broad and precise places are preserved together; these counts
-            must not be added to infer map coverage.
-          </p>
-          <RangeList places={overview.places} geometry={geometry} overview />
-          <Pages
-            offset={offset}
-            total={overview.places_total}
-            onChange={setOffset}
-            label="Recorded place pages"
+            coverageRef={coverage}
+            filters={filters}
+            evidenceRef={places}
+            evidence={
+              <RecordedEvidence filters={filters} geometry={geometry} />
+            }
           />
         </>
       )}
@@ -366,15 +553,24 @@ function OverviewPanel({
 }
 
 function SelectedPanel({
+  territorySelection,
   id,
   filters,
   geometry,
   retryGeometry,
-}: MapProps & { id: string; filters: Filters }) {
-  const [offset, setOffset] = useState(0);
+  colors,
+  remove,
+  evidenceOnly = false,
+}: MapProps & {
+  id: string;
+  filters: Filters;
+  colors?: Record<string, string>;
+  remove?: (id: string) => void;
+  evidenceOnly?: boolean;
+}) {
   const read = useCallback(
-    (signal: AbortSignal) => getNativeSelection(id, filters, offset, signal),
-    [id, filters, offset],
+    (signal: AbortSignal) => getNativeSelection(id, filters, 0, signal),
+    [id, filters],
   );
   const query = useLocalRead(read);
   if (query.error === "missing")
@@ -390,21 +586,31 @@ function SelectedPanel({
   if (query.error)
     return <ReadError retry={query.retry} label="selected species" />;
   if (!query.data) return <p role="status">Loading selected species…</p>;
-  const { identity, ranges, territories, total } = query.data;
+  const { identity, territories, total } = query.data;
+  const recorded = (
+    <RecordedEvidence filters={filters} geometry={geometry} id={id} />
+  );
+  if (evidenceOnly)
+    return (
+      <section>
+        <h3>
+          <BotanicalName
+            label={identity.display_label}
+            scientificName={identity.scientific_name}
+          />
+        </h3>
+        {recorded}
+        <a href={`#/identities/${id}?tab=native-range`}>Edit recorded range</a>
+      </section>
+    );
   return (
     <>
-      <h3>{identity.display_label}</h3>
-      {identity.common_name && <p>{identity.common_name}</p>}
-      <Representation identity={identity} />
-      <div className="actions native-links">
-        <a href={`#/identities/${id}?tab=reference`}>
-          Botanical identity details
-        </a>
-        <a href={`#/identities/${id}?tab=native-range`}>Edit recorded range</a>
-        <a href={`#/species-distribution?identity=${id}`}>
-          View occurrence distribution
-        </a>
-      </div>
+      <h3>
+        <BotanicalName
+          label={identity.display_label}
+          scientificName={identity.scientific_name}
+        />
+      </h3>
       {!identity.matches_scope || !identity.matches_filters ? (
         <p role="status" className="notice">
           The selected identity no longer matches these collection filters.
@@ -422,45 +628,57 @@ function SelectedPanel({
       ) : (
         <>
           <NativeCoverageMap
+            territorySelection={territorySelection}
             territories={territories}
             geometry={geometry}
             selected
             retry={retryGeometry}
-          />
-          <h4>
-            Recorded native range · {total} {total === 1 ? "place" : "places"}
-          </h4>
-          <RangeList places={ranges} geometry={geometry} />
-          <Pages
-            offset={offset}
-            total={total}
-            onChange={setOffset}
-            label="Selected native-range pages"
+            filters={filters}
+            identities={[identity]}
+            comparisonIds={[id]}
+            colors={colors}
+            remove={remove}
+            evidence={recorded}
           />
         </>
       )}
+      {identity.common_name && <p>{identity.common_name}</p>}
+      <Representation identity={identity} />
+      <div className="actions native-links">
+        <a href={`#/identities/${id}?tab=reference`}>
+          Botanical identity details
+        </a>
+        <a href={`#/identities/${id}?tab=native-range`}>Edit recorded range</a>
+        <a href={`#/species-distribution?identity=${id}`}>
+          View occurrence distribution
+        </a>
+      </div>
     </>
   );
 }
 
 function ComparisonPanel({
+  territorySelection,
   ids,
   filters,
   geometry,
   retryGeometry,
   remove,
   only,
+  colors,
 }: MapProps & {
   ids: string[];
   filters: Filters;
   remove: (id: string) => void;
   only: (id: string) => void;
+  colors?: Record<string, string>;
 }) {
   const read = useCallback(
     (signal: AbortSignal) => getNativeComparison(ids, filters, signal),
     [ids, filters],
   );
   const query = useLocalRead(read);
+  const [evidenceId, setEvidenceId] = useState<string | null>(null);
   if (query.error)
     return (
       <ReadError retry={query.retry} label="selected species comparison" />
@@ -479,64 +697,81 @@ function ComparisonPanel({
   );
   return (
     <>
-      <h3>Selected species comparison</h3>
-      <p>
-        Each territory counts distinct selected species that match the filters.
-        Overlapping recorded ranges count once per species.
-      </p>
-      <ul className="native-selection-list" aria-label="Selected species">
-        {identities.map((identity) => (
-          <li key={identity.id}>
-            <strong>{identity.display_label}</strong>
-            <span>
-              {!identity.matches_filters
-                ? "Excluded by current filters; no coverage contributed"
-                : identity.native_range_count
-                  ? `${String(identity.native_range_count)} recorded places`
-                  : "No structured native range recorded"}
-            </span>
-            <div className="actions">
-              <button
-                type="button"
-                className="button--secondary"
-                onClick={() => {
-                  only(identity.id);
-                }}
-              >
-                View only {identity.display_label}
-              </button>
-              <button
-                type="button"
-                className="button--secondary"
-                onClick={() => {
-                  remove(identity.id);
-                }}
-              >
-                Remove {identity.display_label}
-              </button>
-            </div>
-          </li>
-        ))}
-        {missing_ids.map((id) => (
-          <li key={id}>
-            <span>Missing or no longer represented: {id}</span>
-            <button
-              type="button"
-              onClick={() => {
-                remove(id);
-              }}
-            >
-              Remove {id}
-            </button>
-          </li>
-        ))}
-      </ul>
+      <h3 className="sr-only">Selected species comparison</h3>
+      {ids.length > 5 && (
+        <p role="status" className="notice">
+          This saved selection contains {ids.length} identities. All are
+          preserved in count-based coverage. Remove identities explicitly to use
+          five-color comparison.
+        </p>
+      )}
       <NativeCoverageMap
+        territorySelection={territorySelection}
         territories={territories}
         contributors={contributors}
         geometry={geometry}
         retry={retryGeometry}
+        filters={filters}
+        identities={identities}
+        comparisonIds={ids}
+        colors={ids.length <= 5 ? colors : undefined}
+        remove={remove}
+        showEvidence={setEvidenceId}
       />
+      <p className="field-help">
+        Each territory counts distinct selected species that match the filters.
+        Overlapping recorded ranges count once per species.
+      </p>
+      {missing_ids.map((id) => (
+        <p key={id}>
+          Missing or no longer represented: {id}{" "}
+          <button
+            type="button"
+            onClick={() => {
+              remove(id);
+            }}
+          >
+            Remove {id}
+          </button>
+        </p>
+      ))}
+      {identities.length === 1 && (
+        <button
+          type="button"
+          className="button--quiet"
+          onClick={() => {
+            only(identities[0].id);
+          }}
+        >
+          View only {identities[0].display_label}
+        </button>
+      )}
+      {evidenceId && (
+        <TaskDialog
+          title="Recorded native-range evidence"
+          className="native-evidence-dialog"
+          dismissOnBackdrop
+          onClose={() => {
+            setEvidenceId(null);
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => {
+              setEvidenceId(null);
+            }}
+          >
+            Done
+          </button>
+          <SelectedPanel
+            id={evidenceId}
+            filters={filters}
+            geometry={geometry}
+            retryGeometry={retryGeometry}
+            evidenceOnly
+          />
+        </TaskDialog>
+      )}
     </>
   );
 }
@@ -550,9 +785,15 @@ const categoryLabels: Record<RecordCategory, string> = {
 };
 
 export function NativeRangesScreen() {
+  const [territoryCodes, setTerritoryCodes] = useState<string[]>([]);
+  const territorySelection = {
+    codes: territoryCodes,
+    onChange: setTerritoryCodes,
+  };
   const [navigation, setNavigation] = useState(0);
   const reset = useCallback(() => {
     setNavigation((value) => value + 1);
+    setTerritoryCodes([]);
   }, []);
   const view = useDirectoryView("native_ranges", reset);
   const {
@@ -563,6 +804,17 @@ export function NativeRangesScreen() {
     withRange,
     record,
   } = view.state;
+  const [colorState, setColorState] = useState<{
+    ids: string;
+    colors: Record<string, string>;
+  }>({ ids: "", colors: {} });
+  const colorKey = selectedIds.join(",");
+  if (colorState.ids !== colorKey)
+    setColorState({
+      ids: colorKey,
+      colors: reconcileColors(selectedIds, colorState.colors),
+    });
+  const colors = colorState.colors;
   const filters = useMemo(
     () => ({ q, scope, withRange, record }),
     [q, scope, withRange, record],
@@ -612,6 +864,28 @@ export function NativeRangesScreen() {
       "identity",
       selectedIds.filter((value) => value !== id),
     );
+    speciesMode.current?.focus();
+  };
+  const [chooserOpen, setChooserOpen] = useState(false);
+  const chooserTrigger = useRef<HTMLButtonElement>(null);
+  const chooserInvoker = useRef<HTMLElement | null>(null);
+  const closeChooser = () => {
+    setChooserOpen(false);
+    // A filter or selection can replace the KPI that opened the dialog.
+    requestAnimationFrame(() => {
+      if (!chooserInvoker.current?.isConnected) chooserTrigger.current?.focus();
+    });
+  };
+  const choose = (ranged = false) => {
+    chooserInvoker.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
+    if (ranged) view.update("withRange", true);
+    setChooserOpen(true);
+  };
+  const resetFilters = () => {
+    view.replace({ ...view.state, scope: "all", record: [], withRange: false });
   };
   return (
     <section
@@ -622,125 +896,201 @@ export function NativeRangesScreen() {
         title="Native ranges"
         titleId="native-ranges-title"
         eyebrow="Explore"
-        description="Explore recorded native-range regions for species represented in your collection."
+        description="Structured botanical ranges, distinct from occurrences and material origins."
         actions={null}
+        tools={
+          <DirectoryTools
+            name="Native ranges"
+            search={
+              <DirectorySearch
+                id="native-species-search"
+                label="Search species"
+                hideLabel
+                placeholder="Scientific name, common name or cultivar"
+                value={q}
+                onChange={(value) => {
+                  view.update("q", Array.from(value).slice(0, 200).join(""));
+                }}
+              />
+            }
+            savedViews={
+              <SavedViews
+                surface="native_ranges"
+                state={view.savedState}
+                presentation="dialog"
+              />
+            }
+            actions={
+              <button
+                type="button"
+                className="button--secondary"
+                ref={chooserTrigger}
+                aria-haspopup="dialog"
+                aria-expanded={chooserOpen}
+                onClick={() => {
+                  choose();
+                }}
+              >
+                Choose species
+              </button>
+            }
+            filters={
+              <>
+                <div className="representation-filter">
+                  <DirectoryFilterSelect
+                    label="Collection representation"
+                    value={scope}
+                    options={scopes}
+                    onChange={(scope) => {
+                      view.update("scope", scope);
+                    }}
+                  />
+                </div>
+                <p className="field-help">
+                  Living includes active Plants and Plant groups. Current also
+                  includes active seeds, sowings and managed stored material.
+                  Historical has retained evidence with no current material.
+                </p>
+                <fieldset className="native-category-filters">
+                  <legend>Collection records</legend>
+                  <p className="field-help">
+                    Choose any record types (OR). None selected includes all
+                    types within the status above.
+                  </p>
+                  {recordCategories.map((category) => (
+                    <label key={category}>
+                      <input
+                        type="checkbox"
+                        checked={record.includes(category)}
+                        onChange={() => {
+                          view.update(
+                            "record",
+                            recordCategories.filter((value) =>
+                              value === category
+                                ? !record.includes(value)
+                                : record.includes(value),
+                            ),
+                          );
+                        }}
+                      />
+                      {categoryLabels[category]}
+                    </label>
+                  ))}
+                </fieldset>
+                <label className="native-range-only">
+                  <input
+                    type="checkbox"
+                    checked={withRange}
+                    onChange={(event) => {
+                      view.update("withRange", event.currentTarget.checked);
+                    }}
+                  />
+                  With native range only
+                </label>
+              </>
+            }
+            onReset={resetFilters}
+            activeFilters={[
+              ...(q
+                ? [
+                    {
+                      label: "Search",
+                      value: q,
+                      onRemove: () => {
+                        view.update("q", "");
+                      },
+                    },
+                  ]
+                : []),
+              ...(scope !== "all"
+                ? [
+                    {
+                      label: "Representation",
+                      value:
+                        scopes.find((item) => item.value === scope)?.label ??
+                        scope,
+                      onRemove: () => {
+                        view.update("scope", "all");
+                      },
+                    },
+                  ]
+                : []),
+              ...(record.length
+                ? [
+                    {
+                      label: "Records",
+                      value: record
+                        .map((category) => categoryLabels[category])
+                        .join(", "),
+                      onRemove: () => {
+                        view.update("record", []);
+                      },
+                    },
+                  ]
+                : []),
+              ...(withRange
+                ? [
+                    {
+                      label: "Range",
+                      value: "With native range only",
+                      onRemove: () => {
+                        view.update("withRange", false);
+                      },
+                    },
+                  ]
+                : []),
+            ]}
+          />
+        }
       />
-      <p className="field-help">
-        Native ranges are structured botanical reference knowledge. They are
-        distinct from occurrence records and from the recorded origins of your
-        own material.
-      </p>
-      <SavedViews surface="native_ranges" state={view.savedState} />
-      <div className="representation-filter">
-        <DirectoryFilterSelect
-          label="Collection representation"
-          value={scope}
-          options={scopes}
-          onChange={(scope) => {
-            view.update("scope", scope);
-          }}
-        />
-      </div>
-      <p className="field-help">
-        Living includes active Plants and Plant groups. Current also includes
-        active seeds, sowings and managed stored material. Historical has
-        retained evidence with no current material.
-      </p>
-      <fieldset className="native-category-filters">
-        <legend>Collection records</legend>
-        <p className="field-help">
-          Choose any record types (OR). None selected includes all types within
-          the status above.
-        </p>
-        {recordCategories.map((category) => (
-          <label key={category}>
-            <input
-              type="checkbox"
-              checked={record.includes(category)}
-              onChange={() => {
-                view.update(
-                  "record",
-                  recordCategories.filter((value) =>
-                    value === category
-                      ? !record.includes(value)
-                      : record.includes(value),
-                  ),
-                );
-              }}
-            />
-            {categoryLabels[category]}
-          </label>
-        ))}
-      </fieldset>
       {invalidSelection && (
         <p role="alert">
           Selection could not be restored: use valid identity IDs and select at
           most 20 distinct species. No IDs were substituted.
         </p>
       )}
-      <div className="native-filters">
-        <DirectorySearch
-          id="native-species-search"
-          label="Search species"
-          placeholder="Scientific name, common name or cultivar"
-          value={q}
-          onChange={(value) => {
-            view.update("q", Array.from(value).slice(0, 200).join(""));
-          }}
-        />
-        <label className="native-range-only">
-          <input
-            type="checkbox"
-            checked={withRange}
-            onChange={(event) => {
-              view.update("withRange", event.currentTarget.checked);
+      <div className="native-mode-toolbar">
+        <div
+          className="native-controls"
+          role="group"
+          aria-label="Native ranges mode"
+        >
+          <button
+            type="button"
+            aria-pressed={mode === "overview"}
+            className={mode === "overview" ? "" : "button--secondary"}
+            onClick={() => {
+              view.update("mode", "overview");
             }}
-          />
-          With native range only
-        </label>
+          >
+            Explore all
+          </button>
+          <button
+            ref={speciesMode}
+            type="button"
+            aria-pressed={mode === "species"}
+            className={mode === "species" ? "" : "button--secondary"}
+            onClick={() => {
+              view.update("mode", "species");
+            }}
+          >
+            Compare species ({selectedIds.length})
+          </button>
+        </div>
+        {selectedIds.length > 0 && (
+          <button
+            className="button--quiet"
+            type="button"
+            onClick={() => {
+              view.update("identity", []);
+              speciesMode.current?.focus();
+            }}
+          >
+            Clear selection
+          </button>
+        )}
       </div>
-      <div
-        className="native-controls"
-        role="group"
-        aria-label="Native ranges mode"
-      >
-        <button
-          type="button"
-          aria-pressed={mode === "overview"}
-          className={mode === "overview" ? "" : "button--secondary"}
-          onClick={() => {
-            view.update("mode", "overview");
-          }}
-        >
-          Collection overview
-        </button>
-        <button
-          ref={speciesMode}
-          type="button"
-          aria-pressed={mode === "species"}
-          className={mode === "species" ? "" : "button--secondary"}
-          onClick={() => {
-            view.update("mode", "species");
-          }}
-        >
-          Selected species ({selectedIds.length})
-        </button>
-      </div>
-      <div className="native-workspace">
-        <IdentityBrowser
-          key={queryKey}
-          filters={filters}
-          selectedIds={selectedIds}
-          select={(id) => {
-            view.replace({
-              ...view.state,
-              identity: selectedIds.includes(id)
-                ? selectedIds.filter((value) => value !== id)
-                : [...selectedIds, id].sort(),
-              mode: "species",
-            });
-          }}
-        />
+      <MapWorkspace>
         <section
           className="native-panel"
           aria-label={
@@ -755,57 +1105,115 @@ export function NativeRangesScreen() {
               filters={filters}
               geometry={geometry}
               retryGeometry={retryGeometry}
+              choose={choose}
+              territorySelection={territorySelection}
+            />
+          ) : selectedIds.length === 1 ? (
+            <SelectedPanel
+              key={`${queryKey}:${selectedIds[0]}`}
+              id={selectedIds[0]}
+              filters={filters}
+              geometry={geometry}
+              retryGeometry={retryGeometry}
+              colors={colors}
+              territorySelection={territorySelection}
+              remove={remove}
+            />
+          ) : selectedIds.length > 1 ? (
+            <ComparisonPanel
+              key={`${queryKey}:${selectedIds.join(",")}`}
+              ids={selectedIds}
+              filters={filters}
+              geometry={geometry}
+              retryGeometry={retryGeometry}
+              remove={remove}
+              colors={colors}
+              territorySelection={territorySelection}
+              only={(id) => {
+                view.update("identity", [id]);
+                speciesMode.current?.focus();
+              }}
             />
           ) : (
-            <>
-              {selectedIds.length ? (
-                <>
-                  <button
-                    className="button--secondary"
-                    type="button"
-                    onClick={() => {
-                      view.update("identity", []);
-                      speciesMode.current?.focus();
-                    }}
-                  >
-                    Clear selection
-                  </button>
-                  {selectedIds.length === 1 ? (
-                    <SelectedPanel
-                      key={`${queryKey}:${selectedIds[0]}`}
-                      id={selectedIds[0]}
-                      filters={filters}
-                      geometry={geometry}
-                      retryGeometry={retryGeometry}
-                    />
-                  ) : (
-                    <ComparisonPanel
-                      key={`${queryKey}:${selectedIds.join(",")}`}
-                      ids={selectedIds}
-                      filters={filters}
-                      geometry={geometry}
-                      retryGeometry={retryGeometry}
-                      remove={remove}
-                      only={(id) => {
-                        view.update("identity", [id]);
-                      }}
-                    />
-                  )}
-                </>
-              ) : (
-                <div className="empty-state">
-                  <h3>Select a species</h3>
-                  <p>
-                    Choose a represented BotanicalIdentity to explore its exact
-                    recorded native-range places. Species without a range remain
-                    visible.
-                  </p>
-                </div>
-              )}
-            </>
+            <div className="empty-state">
+              <h3>Select a species</h3>
+              <p>
+                Choose a represented BotanicalIdentity to explore its exact
+                recorded native-range places. Species without a range remain
+                visible.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  choose();
+                }}
+              >
+                Choose species to compare
+              </button>
+            </div>
           )}
         </section>
-      </div>
+      </MapWorkspace>
+      {chooserOpen && (
+        <TaskDialog
+          title="Choose represented species"
+          className="native-species-dialog"
+          dismissOnBackdrop
+          onClose={closeChooser}
+        >
+          <div className="section-heading">
+            <h3>Choose species</h3>
+            <button
+              type="button"
+              className="button--secondary"
+              onClick={closeChooser}
+            >
+              Done
+            </button>
+          </div>
+          <DirectorySearch
+            id="native-chooser-search"
+            label="Find represented species"
+            placeholder="Scientific name, common name or cultivar"
+            value={q}
+            onChange={(value) => {
+              view.update("q", Array.from(value).slice(0, 200).join(""));
+            }}
+          />
+          <p className="field-help">
+            Search filters this workspace; selected species stay selected.
+          </p>
+          <p className="native-chooser-summary" role="status">
+            {selectedIds.length} species selected · maximum 5 color layers.{" "}
+            {selectedIds.length > 0 && (
+              <button
+                type="button"
+                className="button--quiet"
+                onClick={() => {
+                  view.update("identity", []);
+                }}
+              >
+                Clear chosen species
+              </button>
+            )}
+          </p>
+          <IdentityBrowser
+            key={queryKey}
+            filters={filters}
+            selectedIds={selectedIds}
+            select={(id) => {
+              if (!selectedIds.includes(id) && selectedIds.length >= 5) return;
+              view.replace({
+                ...view.state,
+                identity: selectedIds.includes(id)
+                  ? selectedIds.filter((value) => value !== id)
+                  : [...selectedIds, id].sort(),
+                mode: "species",
+              });
+            }}
+          />
+        </TaskDialog>
+      )}
     </section>
   );
 }

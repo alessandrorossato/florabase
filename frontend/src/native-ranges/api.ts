@@ -68,3 +68,24 @@ export function getNativeComparison(
   for (const id of ids) query.append("identity", id);
   return requestJson(`${endpoint}/selection?${query}`, { signal });
 }
+
+export type TerritoryIdentityPage =
+  components["schemas"]["TerritoryRangeIdentityPage"];
+export function listTerritoryIdentities(
+  filters: Filters,
+  codes: string[],
+  match: "any" | "all",
+  ids: string[] | undefined,
+  offset: number,
+  signal: AbortSignal,
+): Promise<TerritoryIdentityPage> {
+  const query = params(filters, offset);
+  codes.forEach((code) => {
+    query.append("territory", code);
+  });
+  ids?.forEach((id) => {
+    query.append("identity", id);
+  });
+  query.set("match", match);
+  return requestJson(`${endpoint}/territories/identities?${query}`, { signal });
+}

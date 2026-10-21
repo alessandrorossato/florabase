@@ -28,7 +28,10 @@ export function rangeGeometry(place: RangePlace, geometry: Geometry) {
     missing: codes.filter((code) => !geometry.units[code]),
   };
 }
-export function mapCoverage(territories: Territory[], geometry: Geometry) {
+export function mapCoverage<T extends Territory>(
+  territories: T[],
+  geometry: Geometry,
+) {
   return {
     available: territories.filter((unit) =>
       Boolean(geometry.units[unit.source_code]),

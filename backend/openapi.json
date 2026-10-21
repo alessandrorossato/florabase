@@ -14644,6 +14644,168 @@
         "title": "TerritoryCoverage",
         "type": "object"
       },
+      "TerritoryRangeEvidence": {
+        "properties": {
+          "broad_recorded_places": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Broad Recorded Places",
+            "type": "array"
+          },
+          "exact_recorded": {
+            "title": "Exact Recorded",
+            "type": "boolean"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "source_code": {
+            "title": "Source Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_code",
+          "name",
+          "exact_recorded",
+          "broad_recorded_places"
+        ],
+        "title": "TerritoryRangeEvidence",
+        "type": "object"
+      },
+      "TerritoryRangeIdentity": {
+        "properties": {
+          "common_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Common Name"
+          },
+          "cultivar_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cultivar Name"
+          },
+          "current_records": {
+            "minimum": 0.0,
+            "title": "Current Records",
+            "type": "integer"
+          },
+          "display_label": {
+            "title": "Display Label",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "living_records": {
+            "minimum": 0.0,
+            "title": "Living Records",
+            "type": "integer"
+          },
+          "matches_filters": {
+            "default": true,
+            "title": "Matches Filters",
+            "type": "boolean"
+          },
+          "matches_scope": {
+            "title": "Matches Scope",
+            "type": "boolean"
+          },
+          "matching_territories": {
+            "items": {
+              "$ref": "#/components/schemas/TerritoryRangeEvidence"
+            },
+            "title": "Matching Territories",
+            "type": "array"
+          },
+          "native_range_count": {
+            "minimum": 0.0,
+            "title": "Native Range Count",
+            "type": "integer"
+          },
+          "representation": {
+            "enum": [
+              "living",
+              "current",
+              "historical"
+            ],
+            "title": "Representation",
+            "type": "string"
+          },
+          "retained_records": {
+            "minimum": 1.0,
+            "title": "Retained Records",
+            "type": "integer"
+          },
+          "scientific_name": {
+            "title": "Scientific Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "display_label",
+          "scientific_name",
+          "cultivar_name",
+          "common_name",
+          "representation",
+          "retained_records",
+          "current_records",
+          "living_records",
+          "matches_scope",
+          "native_range_count",
+          "matching_territories"
+        ],
+        "title": "TerritoryRangeIdentity",
+        "type": "object"
+      },
+      "TerritoryRangeIdentityPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TerritoryRangeIdentity"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "offset",
+          "limit"
+        ],
+        "title": "TerritoryRangeIdentityPage",
+        "type": "object"
+      },
       "TransferCreate": {
         "additionalProperties": false,
         "properties": {
@@ -18994,6 +19156,170 @@
           }
         },
         "summary": "Native Selection",
+        "tags": [
+          "explore"
+        ]
+      }
+    },
+    "/api/v1/explore/native-ranges/territories/identities": {
+      "get": {
+        "operationId": "listNativeTerritoryIdentities",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "territory",
+            "required": true,
+            "schema": {
+              "items": {
+                "pattern": "^[A-Z]{2}$",
+                "type": "string"
+              },
+              "maxItems": 250,
+              "minItems": 1,
+              "title": "Territory",
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "match",
+            "required": false,
+            "schema": {
+              "default": "any",
+              "enum": [
+                "any",
+                "all"
+              ],
+              "title": "Match",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "identity",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "maxItems": 20,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Identity"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 200,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "living",
+                "current",
+                "historical"
+              ],
+              "title": "Scope",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "with_range",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "With Range",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "record",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "$ref": "#/components/schemas/CollectionRecordCategory"
+                  },
+                  "maxItems": 5,
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Record"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TerritoryRangeIdentityPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Native Territory Identities",
         "tags": [
           "explore"
         ]

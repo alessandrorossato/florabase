@@ -17,6 +17,7 @@ import {
   getNativeComparison,
   getNativeSelection,
   listNativeIdentities,
+  listTerritoryIdentities,
   type RangeIdentity,
   type RangePlace,
 } from "./api";
@@ -29,6 +30,7 @@ vi.mock("./api", () => ({
   getNativeComparison: vi.fn(),
   getNativeSelection: vi.fn(),
   listNativeIdentities: vi.fn(),
+  listTerritoryIdentities: vi.fn(),
 }));
 vi.mock("./geometry", async (original) => ({
   ...(await original<typeof import("./geometry")>()),
@@ -103,10 +105,62 @@ function show() {
     </AuthContext.Provider>,
   );
 }
+async function openChooser(user: ReturnType<typeof userEvent.setup>) {
+  if (!screen.queryByRole("dialog", { name: "Choose represented species" }))
+    await user.click(screen.getByRole("button", { name: "Choose species" }));
+}
+async function chooseSpecies(
+  user: ReturnType<typeof userEvent.setup>,
+  name: RegExp,
+) {
+  await openChooser(user);
+  await user.click(await screen.findByRole("checkbox", { name }));
+  await user.click(screen.getByRole("button", { name: "Done" }));
+}
+async function openFilters(user: ReturnType<typeof userEvent.setup>) {
+  if (!screen.queryByRole("dialog", { name: "Native ranges filters" }))
+    await user.click(screen.getByRole("button", { name: /^Filters/ }));
+}
+async function closeFilters(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(
+    within(
+      screen.getByRole("dialog", { name: "Native ranges filters" }),
+    ).getByRole("button", { name: "Close" }),
+  );
+}
+async function openDisclosure(
+  user: ReturnType<typeof userEvent.setup>,
+  name: RegExp,
+) {
+  if (name.source.includes("Selected species")) {
+    await screen.findByRole("list", { name: "Comparison species and colors" });
+    return;
+  }
+  if (name.source.includes("Territory map coverage")) {
+    await screen.findByRole("complementary", { name: "Territory inspector" });
+    return;
+  }
+  await user.click(
+    await screen.findByRole("button", { name: /About this map/ }),
+  );
+  await screen.findByRole("dialog", { name: "Data and limitations" });
+  await screen.findByRole("heading", { name });
+}
+
 beforeEach(() => {
   vi.resetAllMocks();
+  Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+    configurable: true,
+    value: vi.fn(),
+  });
   window.history.replaceState(null, "", "#/native-ranges");
   vi.mocked(loadGeometry).mockResolvedValue(geometry);
+  vi.mocked(listTerritoryIdentities).mockResolvedValue({
+    items: [],
+    total: 0,
+    offset: 0,
+    limit: 50,
+  });
   vi.mocked(listNativeIdentities).mockResolvedValue({
     items: [
       identity,
@@ -167,26 +221,26 @@ test("overview exposes distinct coverage, exact places, meaning and local-only s
   show();
   expect(screen.getByRole("heading", { name: "Native ranges" })).toBeVisible();
   expect(
-    screen.getByText(
-      /distinct from occurrence records and from the recorded origins/,
-    ),
+    screen.getByText(/distinct from occurrences and material origins/),
   ).toBeVisible();
   expect(
-    await screen.findByRole("img", {
+    await screen.findByRole("group", {
       name: /Collection recorded native-range coverage map/,
     }),
   ).toBeVisible();
   expect(
-    screen.getByLabelText("Native-range coverage summary"),
-  ).toHaveTextContent("Without structured range1");
-  expect(screen.getByText("Exact recorded places · 2")).toBeVisible();
-  expect(
-    screen.getByText(/One identity counts at most once per unit/),
+    screen.getByRole("group", { name: "Without structured range: 1" }),
   ).toBeVisible();
-  const coverage = screen.getByText(/Territory map coverage/).parentElement;
-  if (!coverage) throw new Error("Coverage list is missing");
+  expect(
+    screen.getByRole("button", { name: "Exact recorded places: 2" }),
+  ).toBeVisible();
+  await openDisclosure(user, /Territory map coverage/);
+  const coverage = screen.getByRole("complementary", {
+    name: "Territory inspector",
+  });
   expect(within(coverage).getByText("3 identities")).toBeVisible();
   expect(screen.getByRole("link", { name: /Natural Earth/ })).toBeVisible();
+  await openFilters(user);
   for (const value of ["living", "current", "historical", "all"]) {
     await user.selectOptions(
       screen.getByRole("combobox", { name: "Collection representation" }),
@@ -199,6 +253,7 @@ test("overview exposes distinct coverage, exact places, meaning and local-only s
   fireEvent.change(screen.getByLabelText("Search species"), {
     target: { value: "synthetic" },
   });
+  await openFilters(user);
   await user.click(screen.getByLabelText("With native range only"));
   await waitFor(() => {
     expect(getNativeOverview).toHaveBeenLastCalledWith(
@@ -216,16 +271,15 @@ test("overview exposes distinct coverage, exact places, meaning and local-only s
 test("selected species preserves broad plus precise records and has existing edit/occurrence links", async () => {
   const user = userEvent.setup();
   show();
-  await user.click(
-    await screen.findByRole("checkbox", { name: /Synthetic species/ }),
-  );
+  await chooseSpecies(user, /^Synthetic species/);
   expect(
-    screen.getByRole("button", { name: /Selected species/ }),
+    screen.getByRole("button", { name: /Compare species/ }),
   ).toHaveAttribute("aria-pressed", "true");
   expect(
     await screen.findByRole("heading", { name: identity.display_label }),
   ).toBeVisible();
-  expect(screen.getByText("Recorded native range · 2 places")).toBeVisible();
+  expect(screen.getByRole("button", { name: /About this map/ })).toBeVisible();
+  await openDisclosure(user, /Recorded native range · 2 places/);
   expect(screen.getByText(/Broad recorded range/)).toBeVisible();
   expect(screen.getByText(broad.display_path)).toBeVisible();
   expect(screen.getByText(precise.display_path)).toBeVisible();
@@ -239,18 +293,15 @@ test("selected species preserves broad plus precise records and has existing edi
     `#/native-ranges?mode=species&identity=${id}`,
   );
   expect(getOccurrenceMapSummary).not.toHaveBeenCalled();
+  await user.click(screen.getByRole("button", { name: "Done" }));
   await user.click(screen.getByRole("button", { name: "Clear selection" }));
-  expect(
-    screen.getByRole("button", { name: /Selected species/ }),
-  ).toHaveFocus();
+  expect(screen.getByRole("button", { name: /Compare species/ })).toHaveFocus();
 });
 
 test("represented no-range identity stays visible and has actionable selected empty state", async () => {
   const user = userEvent.setup();
   show();
-  await user.click(
-    await screen.findByRole("checkbox", { name: /Unranged species/ }),
-  );
+  await chooseSpecies(user, /^Unranged species/);
   expect(
     await screen.findByRole("heading", {
       name: "No structured native range recorded",
@@ -259,10 +310,11 @@ test("represented no-range identity stays visible and has actionable selected em
   expect(
     screen.getByRole("link", { name: "Edit recorded range" }),
   ).toBeVisible();
-  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  expect(document.querySelector(".native-map svg")).not.toBeInTheDocument();
 });
 
 test("custom/unmapped range remains authoritative without borrowing parent geometry", async () => {
+  const user = userEvent.setup();
   window.history.replaceState(
     null,
     "",
@@ -286,6 +338,7 @@ test("custom/unmapped range remains authoritative without borrowing parent geome
     limit: 50,
   });
   show();
+  await openDisclosure(user, /Recorded native range · 1 place/);
   expect(
     await screen.findByText("Custom recorded place · Map boundary unavailable"),
   ).toBeVisible();
@@ -304,12 +357,17 @@ test("geometry failure preserves recorded lists and supports retry", async () =>
   expect(
     await screen.findByText(/Map boundaries could not load/),
   ).toBeVisible();
+  expect(
+    screen.getByRole("group", { name: "Mapped territories: —" }),
+  ).toHaveTextContent("Boundaries unavailable");
+  await openDisclosure(user, /Exact recorded places/);
   expect(screen.getByText(broad.display_path)).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Done" }));
   await user.click(
     screen.getByRole("button", { name: "Retry map boundaries" }),
   );
   expect(
-    await screen.findByRole("img", { name: /Collection recorded/ }),
+    await screen.findByRole("group", { name: /Collection recorded/ }),
   ).toBeVisible();
 });
 
@@ -328,7 +386,7 @@ test("empty represented or no-range collection never presents a misleading blank
   expect(
     await screen.findByText(/None of these represented identities/),
   ).toBeVisible();
-  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  expect(document.querySelector(".native-map svg")).not.toBeInTheDocument();
   shown.unmount();
   vi.mocked(getNativeOverview).mockResolvedValue({
     represented: 0,
@@ -366,7 +424,7 @@ test("stale selection preserves its UUID and mismatch never substitutes another 
   expect(
     await screen.findByText(/no longer matches these collection filters/),
   ).toBeVisible();
-  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  expect(document.querySelector(".native-map svg")).not.toBeInTheDocument();
   shown.unmount();
   vi.mocked(getNativeSelection).mockRejectedValue(new ApiError(404, "missing"));
   show();
@@ -413,12 +471,16 @@ test("Saved Views persist stable state, opening same view rebuilds at page one w
   });
   show();
   await screen.findByRole("heading", { name: identity.display_label });
+  await user.click(screen.getByRole("button", { name: "Saved views" }));
   await user.click(screen.getByRole("button", { name: "Save view" }));
   await user.type(screen.getByLabelText("View name"), "Living recorded ranges");
   await user.click(
-    within(screen.getByRole("dialog")).getByRole("button", {
-      name: "Save view",
-    }),
+    within(screen.getByRole("dialog", { name: "Save view" })).getByRole(
+      "button",
+      {
+        name: "Save view",
+      },
+    ),
   );
   await waitFor(() => {
     expect(createSavedView).toHaveBeenCalledWith(
@@ -432,6 +494,9 @@ test("Saved Views persist stable state, opening same view rebuilds at page one w
     );
   });
   await screen.findByRole("button", { name: "Open Living recorded ranges" });
+  await user.click(screen.getByRole("button", { name: "Close" }));
+  await openChooser(user);
+  await screen.findByRole("navigation", { name: "Represented species pages" });
   await user.click(
     within(
       screen.getByRole("navigation", { name: "Represented species pages" }),
@@ -444,9 +509,12 @@ test("Saved Views persist stable state, opening same view rebuilds at page one w
       expect.any(AbortSignal),
     );
   });
+  await user.click(screen.getByRole("button", { name: "Done" }));
+  await user.click(screen.getByRole("button", { name: "Saved views" }));
   await user.click(
     await screen.findByRole("button", { name: "Open Living recorded ranges" }),
   );
+  await openChooser(user);
   await waitFor(() => {
     expect(listNativeIdentities).toHaveBeenLastCalledWith(
       { q: "synthetic", scope: "living", withRange: true, record: [] },
@@ -463,9 +531,8 @@ test("Saved Views persist stable state, opening same view rebuilds at page one w
 test("Back/Forward restores mode/scope and selection independent of search results", async () => {
   const user = userEvent.setup();
   show();
-  await user.click(
-    await screen.findByRole("checkbox", { name: /Synthetic species/ }),
-  );
+  await chooseSpecies(user, /^Synthetic species/);
+  await openFilters(user);
   fireEvent.change(screen.getByLabelText("Search species"), {
     target: { value: "unmatched" },
   });
@@ -498,23 +565,25 @@ test("API failures remain retryable and authentication expiry uses the session b
   await user.click(
     await screen.findByRole("button", { name: "Retry collection overview" }),
   );
+  await openChooser(user);
   await user.click(
     await screen.findByRole("button", { name: "Retry represented species" }),
   );
   expect(
-    await screen.findByRole("img", { name: /Collection recorded/ }),
+    await screen.findByRole("group", { name: /Collection recorded/ }),
   ).toBeVisible();
-  await user.click(
-    await screen.findByRole("checkbox", { name: /Synthetic species/ }),
-  );
+  await chooseSpecies(user, /^Synthetic species/);
   await screen.findByRole("heading", { name: identity.display_label });
   vi.mocked(listNativeIdentities).mockRejectedValueOnce(
     new ApiError(401, "expired"),
   );
+  await openFilters(user);
   await user.selectOptions(
     screen.getByRole("combobox", { name: "Collection representation" }),
     "living",
   );
+  await closeFilters(user);
+  await openChooser(user);
   await waitFor(() => {
     expect(sessionExpired).toHaveBeenCalled();
   });
@@ -536,22 +605,23 @@ test("explicit multiple selection shows contributors, filter exclusions, removal
     territories: [{ ...territories[0], identity_count: 1, identity_ids: [id] }],
   });
   show();
-  await user.click(
-    await screen.findByRole("checkbox", { name: /Synthetic species/ }),
-  );
+  await chooseSpecies(user, /^Synthetic species/);
   await screen.findByRole("heading", { name: identity.display_label });
-  await user.click(screen.getByRole("checkbox", { name: /Unranged species/ }));
+  await chooseSpecies(user, /^Unranged species/);
   expect(
     await screen.findByRole("heading", { name: "Selected species comparison" }),
   ).toBeVisible();
   expect(
-    screen.getByRole("button", { name: "Selected species (2)" }),
+    screen.getByRole("button", { name: "Compare species (2)" }),
   ).toHaveAttribute("aria-pressed", "true");
+  await openDisclosure(user, /Territory map coverage/);
+  await openDisclosure(user, /Selected species · 2/);
   expect(
-    screen.getByText(/Contributing species: Synthetic species/),
-  ).toBeVisible();
-  expect(screen.getByText(/Excluded by current filters/)).toBeVisible();
+    screen.getByRole("list", { name: "Comparison species and colors" }),
+  ).toHaveTextContent(identity.display_label);
+  expect(screen.getByText(/Excluded by active filters/)).toBeVisible();
   expect(window.location.hash).toContain(`identity=${id}&identity=${other}`);
+  await openFilters(user);
   await user.click(screen.getByLabelText("Plants"));
   await user.click(screen.getByLabelText("Seeds"));
   await waitFor(() => {
@@ -562,16 +632,18 @@ test("explicit multiple selection shows contributors, filter exclusions, removal
     );
   });
   expect(window.location.hash).toContain("record=seed_lot&record=plant");
+  await closeFilters(user);
   await screen.findByRole("heading", { name: "Selected species comparison" });
+  await openDisclosure(user, /Selected species · 2/);
   await user.click(
     screen.getByRole("button", { name: "Remove Unranged species" }),
   );
   expect(
     await screen.findByRole("heading", { name: identity.display_label }),
   ).toBeVisible();
-  await user.click(screen.getByRole("checkbox", { name: /Synthetic species/ }));
+  await chooseSpecies(user, /^Synthetic species/);
   expect(
-    screen.getByRole("button", { name: "Selected species (0)" }),
+    screen.getByRole("button", { name: "Compare species (0)" }),
   ).toBeVisible();
   expect(
     screen.getByRole("heading", { name: "Select a species" }),
@@ -597,7 +669,9 @@ test("20 selection limit keeps deselection available and invalid URL never trunc
     offset: 0,
     limit: 50,
   });
+  const user = userEvent.setup();
   const shown = show();
+  await openChooser(user);
   expect(
     await screen.findByRole("checkbox", { name: /Extra species/ }),
   ).toBeDisabled();
@@ -616,7 +690,7 @@ test("20 selection limit keeps deselection available and invalid URL never trunc
     "Selection could not be restored",
   );
   expect(
-    screen.getByRole("button", { name: "Selected species (0)" }),
+    screen.getByRole("button", { name: "Compare species (0)" }),
   ).toBeVisible();
 });
 
@@ -631,7 +705,9 @@ test("comparison keeps stale UUIDs explicit and restorable from repeated URL par
     missing_ids: [other],
     territories: [],
   });
+  const user = userEvent.setup();
   show();
+  await openDisclosure(user, /Selected species · 2/);
   expect(
     await screen.findByText(`Missing or no longer represented: ${other}`),
   ).toBeVisible();
@@ -641,7 +717,7 @@ test("comparison keeps stale UUIDs explicit and restorable from repeated URL par
     expect.any(AbortSignal),
   );
   expect(
-    screen.getByRole("button", { name: "Selected species (2)" }),
+    screen.getByRole("button", { name: "Compare species (2)" }),
   ).toBeVisible();
 });
 
@@ -683,8 +759,9 @@ test("opening a multi-species Saved View restores its exact set and category fil
     await screen.findByRole("heading", { name: "Selected species comparison" }),
   ).toBeVisible();
   expect(
-    screen.getByRole("button", { name: "Selected species (2)" }),
+    screen.getByRole("button", { name: "Compare species (2)" }),
   ).toHaveAttribute("aria-pressed", "true");
+  await openFilters(user);
   expect(screen.getByLabelText("Plants")).toBeChecked();
   expect(screen.getByLabelText("Seeds")).toBeChecked();
   expect(getNativeComparison).toHaveBeenLastCalledWith(
@@ -705,4 +782,419 @@ test("opening a multi-species Saved View restores its exact set and category fil
       expect.any(AbortSignal),
     );
   });
+});
+
+test("actual Back and Forward restore selection and filters without persisting territory inspection", async () => {
+  const user = userEvent.setup();
+  show();
+  await chooseSpecies(user, /^Synthetic species/);
+  await screen.findByRole("heading", { name: identity.display_label });
+  const selectedHash = window.location.hash;
+  await openFilters(user);
+  await user.selectOptions(
+    screen.getByRole("combobox", { name: "Collection representation" }),
+    "current",
+  );
+  await waitFor(() => {
+    expect(getNativeSelection).toHaveBeenLastCalledWith(
+      id,
+      { q: "", scope: "current", withRange: false, record: [] },
+      0,
+      expect.any(AbortSignal),
+    );
+  });
+  const filteredHash = window.location.hash;
+  const map = await screen.findByRole("group", {
+    name: /Recorded native-range map for selected species/,
+  });
+  await user.click(within(map).getByRole("button", { name: /Brazil/ }));
+  expect(window.location.hash).toBe(filteredHash);
+  window.history.back();
+  await waitFor(() => {
+    expect(window.location.hash).toBe(selectedHash);
+  });
+  await waitFor(() => {
+    expect(
+      screen.getByRole("combobox", { name: "Collection representation" }),
+    ).toHaveValue("all");
+  });
+  expect(
+    await screen.findByRole("heading", { name: identity.display_label }),
+  ).toBeVisible();
+  expect(
+    screen.queryByRole("button", { name: "Clear territory inspection" }),
+  ).not.toBeInTheDocument();
+  window.history.forward();
+  await waitFor(() => {
+    expect(
+      screen.getByRole("combobox", { name: "Collection representation" }),
+    ).toHaveValue("current");
+  });
+  await screen.findByRole("heading", { name: identity.display_label });
+  expect(window.location.hash).toBe(filteredHash);
+  expect(getOccurrenceMapSummary).not.toHaveBeenCalled();
+});
+
+test("reset filters preserves search and explicit selection while restoring unrestricted dimensions", async () => {
+  const user = userEvent.setup();
+  window.history.replaceState(
+    null,
+    "",
+    `#/native-ranges?q=synthetic&scope=current&record=plant&withRange=true&mode=species&identity=${id}`,
+  );
+  show();
+  await screen.findByRole("heading", { name: identity.display_label });
+  await openFilters(user);
+  await user.click(screen.getByRole("button", { name: "Reset filters" }));
+  await waitFor(() => {
+    expect(getNativeSelection).toHaveBeenLastCalledWith(
+      id,
+      { q: "synthetic", scope: "all", withRange: false, record: [] },
+      0,
+      expect.any(AbortSignal),
+    );
+  });
+  expect(screen.getByLabelText("Search species")).toHaveValue("synthetic");
+  expect(window.location.hash).toContain(`identity=${id}`);
+  expect(window.location.hash).not.toMatch(/scope=|record=|withRange=/);
+});
+
+test("KPI drill-down reveals exact evidence or opens bounded species selection with stable focus", async () => {
+  const user = userEvent.setup();
+  show();
+  const exact = await screen.findByRole("button", {
+    name: "Exact recorded places: 2",
+  });
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(listNativeIdentities).not.toHaveBeenCalled();
+  const before = window.location.hash;
+  await user.click(exact);
+  expect(
+    screen.getByRole("dialog", { name: "Data and limitations" }),
+  ).toBeVisible();
+  expect(await screen.findByText(broad.display_path)).toBeVisible();
+  expect(window.location.hash).toBe(before);
+  await user.click(screen.getByRole("button", { name: "Done" }));
+  expect(exact).toHaveFocus();
+  await user.click(
+    screen.getByRole("button", { name: "Mapped territories: 2" }),
+  );
+  expect(
+    screen.getByRole("complementary", { name: "Territory inspector" })
+      .parentElement,
+  ).toHaveFocus();
+  const represented = screen.getByRole("button", {
+    name: "Represented identities: 4",
+  });
+  await user.click(represented);
+  await screen.findByRole("checkbox", { name: /^Synthetic species/ });
+  await user.keyboard("{Escape}");
+  expect(
+    screen.queryByRole("dialog", { name: "Choose represented species" }),
+  ).not.toBeInTheDocument();
+  expect(represented).toHaveFocus();
+  await user.click(
+    screen.getByRole("button", { name: "With recorded native range: 3" }),
+  );
+  await screen.findByRole("checkbox", { name: /^Synthetic species/ });
+  expect(listNativeIdentities).toHaveBeenLastCalledWith(
+    { q: "", scope: "all", withRange: true, record: [] },
+    0,
+    expect.any(AbortSignal),
+  );
+  await user.click(screen.getByRole("button", { name: "Done" }));
+  await waitFor(() => {
+    expect(
+      screen.getByRole("button", { name: "Choose species" }),
+    ).toHaveFocus();
+  });
+  expect(window.location.hash).toBe("#/native-ranges?withRange=true");
+});
+
+test("chooser returns focus, preserves inspection, and keeps selected IDs through search and closing", async () => {
+  const user = userEvent.setup();
+  show();
+  const map = await screen.findByRole("group", { name: /Collection recorded/ });
+  await user.click(within(map).getByRole("button", { name: /Brazil/ }));
+  const trigger = screen.getByRole("button", {
+    name: "Choose species",
+  });
+  await user.click(trigger);
+  await screen.findByRole("checkbox", { name: /^Synthetic species/ });
+  await user.keyboard("{Escape}");
+  expect(trigger).toHaveFocus();
+  expect(within(map).getByRole("button", { name: /Brazil/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
+  await openChooser(user);
+  await user.click(
+    await screen.findByRole("checkbox", { name: /^Synthetic species/ }),
+  );
+  await user.type(
+    screen.getByRole("searchbox", { name: "Find represented species" }),
+    "cultivar",
+  );
+  await waitFor(() => {
+    expect(listNativeIdentities).toHaveBeenLastCalledWith(
+      { q: "cultivar", scope: "all", withRange: false, record: [] },
+      0,
+      expect.any(AbortSignal),
+    );
+  });
+  await user.click(screen.getByRole("button", { name: "Done" }));
+  await waitFor(() => {
+    expect(trigger).toHaveFocus();
+  });
+  expect(
+    screen.getByRole("button", { name: "Compare species (1)" }),
+  ).toHaveAttribute("aria-pressed", "true");
+  expect(window.location.hash).toContain(`identity=${id}`);
+  expect(window.location.hash).toContain("q=cultivar");
+  expect(
+    screen.queryByRole("checkbox", { name: /^Synthetic species/ }),
+  ).not.toBeInTheDocument();
+});
+
+test("five-species comparison disables a sixth choice, preserves colors, and keeps old saved selections intact", async () => {
+  const user = userEvent.setup();
+  const ids = Array.from(
+    { length: 6 },
+    (_, index) =>
+      `01900000-0000-7000-8000-${String(index + 100).padStart(12, "0")}`,
+  );
+  const rows = ids.map((key, index) => ({
+    ...identity,
+    id: key,
+    display_label: `Comparison species ${String(index + 1)}`,
+  }));
+  window.history.replaceState(
+    null,
+    "",
+    `#/native-ranges?mode=species&${ids
+      .slice(0, 5)
+      .map((key) => `identity=${key}`)
+      .join("&")}`,
+  );
+  vi.mocked(listNativeIdentities).mockResolvedValue({
+    items: rows,
+    total: 6,
+    offset: 0,
+    limit: 50,
+  });
+  vi.mocked(getNativeComparison).mockImplementation((selected) =>
+    Promise.resolve({
+      identities: rows.filter((row) => selected.includes(row.id)),
+      missing_ids: [],
+      territories: [
+        {
+          ...territories[0],
+          identity_count: selected.length,
+          identity_ids: selected,
+        },
+      ],
+    }),
+  );
+  const rendered = show();
+  const legend = await screen.findByRole("list", {
+    name: "Comparison species and colors",
+  });
+  expect(within(legend).getAllByRole("listitem")).toHaveLength(5);
+  const colors = [
+    ...legend.querySelectorAll<HTMLElement>(".native-color-key"),
+  ].map((element) => element.style.background);
+  expect(new Set(colors).size).toBe(5);
+  await openChooser(user);
+  expect(
+    await screen.findByRole("checkbox", { name: /^Comparison species 6/ }),
+  ).toBeDisabled();
+  expect(
+    screen.getByRole("checkbox", { name: /^Comparison species 1/ }),
+  ).toBeEnabled();
+  await user.click(screen.getByRole("button", { name: "Done" }));
+  await user.click(
+    screen.getByRole("button", { name: "Remove Comparison species 2" }),
+  );
+  const reduced = await screen.findByRole("list", {
+    name: "Comparison species and colors",
+  });
+  await waitFor(() => {
+    expect(within(reduced).getAllByRole("listitem")).toHaveLength(4);
+  });
+  expect(
+    [...reduced.querySelectorAll<HTMLElement>(".native-color-key")].map(
+      (element) => element.style.background,
+    ),
+  ).toEqual(colors.filter((_, index) => index !== 1));
+  rendered.unmount();
+  window.history.replaceState(
+    null,
+    "",
+    `#/native-ranges?mode=species&${ids.map((key) => `identity=${key}`).join("&")}`,
+  );
+  show();
+  expect(
+    await screen.findByText(/All are preserved in count-based coverage/),
+  ).toBeVisible();
+  expect(
+    screen.getByRole("button", { name: "Compare species (6)" }),
+  ).toBeVisible();
+  expect(window.location.hash.match(/identity=/g)).toHaveLength(6);
+  expect(document.querySelector("pattern")).not.toBeInTheDocument();
+});
+
+test("Explore all inspector uses full scoped collection while Compare passes only explicit IDs", async () => {
+  const user = userEvent.setup();
+  vi.mocked(listTerritoryIdentities).mockResolvedValue({
+    items: [
+      {
+        ...identity,
+        matching_territories: [
+          {
+            source_code: "BR",
+            name: "Brazil",
+            exact_recorded: false,
+            broad_recorded_places: ["South America"],
+          },
+        ],
+      },
+    ],
+    total: 1,
+    offset: 0,
+    limit: 50,
+  });
+  show();
+  const map = await screen.findByRole("group", { name: /Collection recorded/ });
+  await user.click(within(map).getByRole("button", { name: /Brazil/ }));
+  await waitFor(() => {
+    expect(listTerritoryIdentities).toHaveBeenLastCalledWith(
+      { q: "", scope: "all", withRange: false, record: [] },
+      ["BR"],
+      "any",
+      undefined,
+      0,
+      expect.any(AbortSignal),
+    );
+  });
+  expect(
+    await screen.findByText(
+      /Brazil: drawing coverage only · broad record: South America/,
+    ),
+  ).toBeVisible();
+  await user.click(within(map).getByRole("button", { name: /Argentina/ }));
+  await waitFor(() => {
+    expect(listTerritoryIdentities).toHaveBeenLastCalledWith(
+      expect.any(Object),
+      ["BR", "AR"],
+      "any",
+      undefined,
+      0,
+      expect.any(AbortSignal),
+    );
+  });
+  await user.selectOptions(
+    screen.getByRole("combobox", { name: "Match territories" }),
+    "all",
+  );
+  await waitFor(() => {
+    expect(listTerritoryIdentities).toHaveBeenLastCalledWith(
+      expect.any(Object),
+      ["BR", "AR"],
+      "all",
+      undefined,
+      0,
+      expect.any(AbortSignal),
+    );
+  });
+  await chooseSpecies(user, /^Synthetic species/);
+  const comparison = await screen.findByRole("group", {
+    name: /Recorded native-range map for selected species/,
+  });
+  expect(
+    within(comparison).getByRole("button", { name: /Brazil/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+  await waitFor(() => {
+    expect(listTerritoryIdentities).toHaveBeenLastCalledWith(
+      expect.any(Object),
+      ["BR", "AR"],
+      "any",
+      [id],
+      0,
+      expect.any(AbortSignal),
+    );
+  });
+  expect(window.location.hash).toContain(`identity=${id}`);
+  expect(window.location.hash).not.toContain("territory");
+});
+
+test("inspector failures retry and expire authentication without changing comparison IDs", async () => {
+  const user = userEvent.setup();
+  vi.mocked(listTerritoryIdentities).mockRejectedValueOnce(
+    new Error("offline"),
+  );
+  show();
+  const map = await screen.findByRole("group", { name: /Collection recorded/ });
+  await user.click(within(map).getByRole("button", { name: /Brazil/ }));
+  expect(
+    await screen.findByText("Could not load territory identities."),
+  ).toBeVisible();
+  vi.mocked(listTerritoryIdentities).mockResolvedValueOnce({
+    items: [],
+    total: 0,
+    offset: 0,
+    limit: 50,
+  });
+  await user.click(
+    screen.getByRole("button", { name: "Retry territory identities" }),
+  );
+  expect(
+    await screen.findByText(/No matching identities in these results/),
+  ).toBeVisible();
+  vi.mocked(listTerritoryIdentities).mockRejectedValueOnce(
+    new ApiError(401, "expired", "Expired"),
+  );
+  await user.click(within(map).getByRole("button", { name: /Argentina/ }));
+  await waitFor(() => {
+    expect(sessionExpired).toHaveBeenCalled();
+  });
+});
+
+test("paging exact recorded evidence retains the dialog and committed map territory", async () => {
+  const user = userEvent.setup();
+  vi.mocked(getNativeOverview).mockImplementation((_filters, offset) =>
+    Promise.resolve({
+      represented: 4,
+      with_range: 3,
+      without_range: 1,
+      territories,
+      places: [{ ...broad, identity_count: 2 }],
+      places_total: 51,
+      offset,
+      limit: 50,
+    }),
+  );
+  show();
+  const map = await screen.findByRole("group", { name: /Collection recorded/ });
+  await user.click(within(map).getByRole("button", { name: /Brazil/ }));
+  await user.click(
+    screen.getByRole("button", { name: "Exact recorded places: 51" }),
+  );
+  await screen.findByText(broad.display_path);
+  await user.click(screen.getByRole("button", { name: "Next" }));
+  await waitFor(() => {
+    expect(getNativeOverview).toHaveBeenLastCalledWith(
+      expect.any(Object),
+      50,
+      expect.any(AbortSignal),
+    );
+  });
+  expect(await screen.findByText("Page 2")).toBeVisible();
+  expect(
+    screen.getByRole("dialog", { name: "Data and limitations" }),
+  ).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Done" }));
+  expect(within(map).getByRole("button", { name: /Brazil/ })).toHaveAttribute(
+    "aria-pressed",
+    "true",
+  );
 });

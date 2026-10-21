@@ -454,7 +454,7 @@
         "PROFILE-002"
       ],
       "priority": "P2",
-      "status": "implemented"
+      "status": "verified"
     },
     {
       "id": "SEED-001",
@@ -1853,6 +1853,25 @@
       ],
       "priority": "P0",
       "status": "implemented"
+    },
+    {
+      "id": "MAPS-FOUNDATION-001",
+      "category": "ux",
+      "description": "Audit the three cartographic evidence contracts and prove a shared map presentation foundation through Native ranges",
+      "acceptance_criteria": [
+        "A pre-implementation design audits current renderers, sources, precision, URL and Saved Views, accessibility, privacy, performance and the independent evidence contracts of all three Maps workspaces",
+        "Native ranges prioritizes a local map and scoped territory inspector, Collection-style header search, exact recorded evidence and up to five stable color layers without changing geometry or domain assertions",
+        "Territory polygons and textual controls share independent multi-selection, distinct union/intersection results, labelled overlap stripes and keyboard navigation, preserving transient previews and color-independent contributor information",
+        "Responsive map/inspector panels, grounded KPI destinations and a bounded species chooser retain explicit selection and existing URL and Saved View behavior, including non-destructive 6–20 identity compatibility and loading, failure, empty, unsupported and excluded states",
+        "The reuse plan separates the small shared shell and legend from renderer-specific behavior and explicit occurrence loading or provenance basemap privacy; the other two screens remain planned",
+        "Focused map and Saved View tests, frontend static checks, production build and scoped responsive evidence are recorded with explicit live Review and accessibility limitations; independent acceptance and canonical verification remain separate"
+      ],
+      "dependencies": [
+        "EXPLORE-002",
+        "GLOBAL-VISUAL-001"
+      ],
+      "priority": "P1",
+      "status": "verified"
     }
   ]
 }
