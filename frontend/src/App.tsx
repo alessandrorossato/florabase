@@ -764,8 +764,8 @@ function ApplicationShell() {
                 />
               ) : route.section === "orders" ? (
                 <OrderScreen
-                  key={route.recordId ?? "directory"}
                   initialId={route.recordId}
+                  initialTab={route.action === "edit" ? "edit" : route.tab}
                   startCreating={route.action === "create"}
                 />
               ) : route.section === "media" ? (
@@ -828,7 +828,6 @@ function ApplicationShell() {
                 />
               ) : route.section === "suppliers" ? (
                 <SupplierScreen
-                  key={route.recordId ?? "directory"}
                   initialId={route.recordId}
                   initialTab={route.tab}
                   startCreating={route.action === "create"}

@@ -51,7 +51,9 @@ export function collectionPageParent(hash: string): string | null {
   }
   if (
     params.get("action") === "create" &&
-    ["/seeds", "/sowings", "/plants"].includes(pathname)
+    ["/seeds", "/sowings", "/plants", "/suppliers", "/orders"].includes(
+      pathname,
+    )
   )
     return `#${pathname}`;
   if (
@@ -95,9 +97,14 @@ export function openCollectionPage(
           ? "harvest"
           : parent.startsWith("#/plant-groups/")
             ? "extract"
-            : ["#/seeds", "#/sowings", "#/plants", "#/harvests"].includes(
-                  parent,
-                )
+            : [
+                  "#/seeds",
+                  "#/sowings",
+                  "#/plants",
+                  "#/harvests",
+                  "#/suppliers",
+                  "#/orders",
+                ].includes(parent)
               ? "create"
               : undefined,
     },

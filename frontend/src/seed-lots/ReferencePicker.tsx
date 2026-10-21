@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useId,
   useLayoutEffect,
   useMemo,
@@ -33,6 +34,7 @@ export function ReferencePicker({
   createLabel = "Create new",
   help,
   placeholder,
+  openOnFocus = true,
 }: {
   label: string;
   choices: ReferenceChoice[];
@@ -44,6 +46,8 @@ export function ReferencePicker({
   createLabel?: string;
   help?: ReactNode;
   placeholder?: string;
+  /** Keep dialogs from opening a menu merely because they focused this field. */
+  openOnFocus?: boolean;
 }) {
   const inputId = useId();
   const listId = useId();
@@ -56,6 +60,26 @@ export function ReferencePicker({
   const [query, setQuery] = useState(selected?.label ?? "");
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const typing = useRef(false);
+  const previousValue = useRef(value);
+  // Keep the visible query aligned with controlled value changes. Typing emits an
+  // empty value first, so only a real external clear should also clear the query;
+  // a parent re-render that just rebuilds `choices` must preserve typed text.
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (value) {
+        const label = choices.find((choice) => choice.id === value)?.label;
+        if (label !== undefined) setQuery(label);
+      } else if (previousValue.current && !typing.current) {
+        setQuery("");
+      }
+      previousValue.current = value;
+      typing.current = false;
+    }, 0);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [choices, value]);
   const matches = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
     return choices.filter(
@@ -203,9 +227,13 @@ export function ReferencePicker({
           aria-required={required || undefined}
           value={value && selected ? selected.label : query}
           onFocus={() => {
+            if (openOnFocus) setOpen(true);
+          }}
+          onClick={() => {
             setOpen(true);
           }}
           onChange={(event) => {
+            typing.current = true;
             setQuery(event.currentTarget.value);
             onChange("");
             setActiveIndex(0);

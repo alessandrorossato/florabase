@@ -1,5 +1,6 @@
 import {
   cleanup,
+  fireEvent,
   render,
   screen,
   waitFor,
@@ -270,7 +271,7 @@ test("Order reverse selector searches bounded choices then opens the same previe
     );
   });
   await userEvent.click(
-    await screen.findByRole("button", { name: "Physical packet" }),
+    await screen.findByRole("button", { name: /Physical packet/ }),
   );
   const dialog = await screen.findByRole("dialog", {
     name: "Review purchase context",
@@ -284,5 +285,45 @@ test("Order reverse selector searches bounded choices then opens the same previe
     expect.objectContaining({ seed_lot_id: seedId }),
     expect.any(AbortSignal),
   );
+  expect(applyPurchase).not.toHaveBeenCalled();
+});
+test("Link existing seed lot renders a selectable row and dismisses outside or with Escape", async () => {
+  vi.mocked(purchaseChoices).mockResolvedValue({
+    items: [
+      {
+        id: seedId,
+        label: "Physical packet",
+        source_kind: "purchased",
+        supplier: { id: orderId, name: "Nursery A" },
+        order_id: orderId,
+      },
+    ],
+    total: 1,
+    offset: 0,
+    limit: 50,
+  });
+  render(
+    <LinkExistingSeedLot
+      orderId={orderId}
+      csrf="csrf"
+      onApplied={onApplied}
+      onCancel={onCancel}
+    />,
+  );
+  const dialog = await screen.findByRole("dialog", {
+    name: "Link existing seed lot",
+  });
+  const choice = await within(dialog).findByRole("button", {
+    name: /Physical packet/,
+  });
+  expect(choice).toHaveClass("order-link-choice");
+  expect(choice).toHaveTextContent("purchased");
+  expect(choice).toHaveTextContent("Nursery A");
+  expect(choice).toHaveTextContent("Already linked to an Order");
+
+  fireEvent.click(dialog, { clientX: 10, clientY: 10 });
+  expect(onCancel).toHaveBeenCalledOnce();
+  fireEvent.keyDown(dialog, { key: "Escape" });
+  expect(onCancel).toHaveBeenCalledTimes(2);
   expect(applyPurchase).not.toHaveBeenCalled();
 });

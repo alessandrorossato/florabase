@@ -4,6 +4,7 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
 } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
@@ -189,6 +190,128 @@ test("listbox keyboard navigation selects a reference and preserves input focus 
   expect(control).toHaveAttribute("aria-expanded", "false");
   expect(control).not.toHaveAttribute("aria-activedescendant");
   expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+});
+
+test("openOnFocus can defer the menu until an explicit click", async () => {
+  const user = userEvent.setup();
+  render(
+    <ReferencePicker
+      label="Storage location"
+      choices={[{ id: "shelf", label: "Indoor shelf" }]}
+      value=""
+      onChange={() => undefined}
+      openOnFocus={false}
+    />,
+  );
+  const control = screen.getByRole("combobox", {
+    name: "Storage location",
+  });
+  fireEvent.focus(control);
+  expect(control).toHaveAttribute("aria-expanded", "false");
+  await user.click(control);
+  expect(control).toHaveAttribute("aria-expanded", "true");
+});
+
+test("controlled value changes keep the visible label aligned", async () => {
+  const choices = [
+    { id: "shelf", label: "Indoor shelf" },
+    { id: "bed", label: "Garden bed" },
+  ];
+  const { rerender } = render(
+    <ReferencePicker
+      label="Storage location"
+      choices={choices}
+      value=""
+      onChange={() => undefined}
+    />,
+  );
+  const control = screen.getByRole("combobox", {
+    name: "Storage location",
+  });
+
+  rerender(
+    <ReferencePicker
+      label="Storage location"
+      choices={choices}
+      value="shelf"
+      onChange={() => undefined}
+    />,
+  );
+  expect(control).toHaveValue("Indoor shelf");
+
+  rerender(
+    <ReferencePicker
+      label="Storage location"
+      choices={choices}
+      value="bed"
+      onChange={() => undefined}
+    />,
+  );
+  expect(control).toHaveValue("Garden bed");
+
+  rerender(
+    <ReferencePicker
+      label="Storage location"
+      choices={choices}
+      value=""
+      onChange={() => undefined}
+    />,
+  );
+  await waitFor(() => {
+    expect(control).toHaveValue("");
+  });
+});
+
+test("choices arriving after a controlled value populate the picker without clearing it", () => {
+  const { rerender } = render(
+    <ReferencePicker
+      label="Supplier"
+      choices={[]}
+      value="supplier"
+      onChange={() => undefined}
+    />,
+  );
+  const control = screen.getByRole("combobox", { name: "Supplier" });
+  expect(control).toHaveValue("");
+  rerender(
+    <ReferencePicker
+      label="Supplier"
+      choices={[{ id: "supplier", label: "Nursery" }]}
+      value="supplier"
+      onChange={() => undefined}
+    />,
+  );
+  expect(control).toHaveValue("Nursery");
+});
+
+test("a re-rendered choices array preserves a typed query with an empty value", async () => {
+  const user = userEvent.setup();
+  const { rerender } = render(
+    <ReferencePicker
+      label="Supplier"
+      choices={[{ id: "supplier", label: "Nursery" }]}
+      value=""
+      onChange={() => undefined}
+    />,
+  );
+  const control = screen.getByRole("combobox", { name: "Supplier" });
+  await user.click(control);
+  await user.type(control, "Nur");
+  expect(control).toHaveValue("Nur");
+  rerender(
+    <ReferencePicker
+      label="Supplier"
+      choices={[
+        { id: "supplier", label: "Nursery" },
+        { id: "seller", label: "Seller" },
+      ]}
+      value=""
+      onChange={() => undefined}
+    />,
+  );
+  await waitFor(() => {
+    expect(control).toHaveValue("Nur");
+  });
 });
 
 test("Escape dismisses an open picker before its enclosing task and option-button selection restores focus", async () => {

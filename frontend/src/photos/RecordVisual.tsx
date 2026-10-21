@@ -6,8 +6,16 @@ import type { PrimaryPhoto } from "./api";
 type Identity = Pick<BotanicalIdentityResponse, "id" | "display_label"> &
   Partial<BotanicalIdentityResponse>;
 export type RecordVisualKind =
-  "seed" | "sowing" | "plant" | "group" | "identity" | "harvest" | "supplier";
+  | "seed"
+  | "sowing"
+  | "plant"
+  | "group"
+  | "identity"
+  | "harvest"
+  | "supplier"
+  | "order";
 const placeholderPaths: Record<RecordVisualKind, string> = {
+  order: "M6 3h12v18l-3-2-3 2-3-2-3 2V3Zm3 5h6M9 12h6M9 16h4",
   supplier: "M3 10h18M5 10v11h14V10M3 10l2-7h14l2 7M9 21v-7h6v7",
   harvest: "M4 10h16l-2 10H6L4 10ZM8 10l4-7 4 7M9 14v3M15 14v3",
   seed: "M17 5C5 4 4 13 8 17s13 3 9-12ZM9 15l7-8",

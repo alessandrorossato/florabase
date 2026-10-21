@@ -20,7 +20,10 @@ from urllib.parse import unquote, urlsplit
 DEV_PROJECT = "florabase"  # Preserve existing operator volumes; never silently rename them.
 REVIEW_PROJECT = "florabase-feature-review"
 UAT_PROJECT = "florabase-uat-preview"
-PORTS = {"dev": "5173", "review": "15174", "preview": "15173"}
+# Persistent per-worktree Sourcing Preview. Kept on its own loopback port so it can run at the
+# same time as Feature Review (15174), UAT (15174) and Stable Preview (15173).
+SOURCING_PROJECT = "florabase-sourcing-preview"
+PORTS = {"dev": "5173", "review": "15174", "sourcing": "15175", "preview": "15173"}
 BRANCH_PATTERN = re.compile(r"^(feat|fix|docs|ci)/[a-z0-9][a-z0-9._-]*$")
 MEDIA_ROOT = "/var/lib/florabase/attachments"
 LEGACY_MEDIA_ROOT = "/tmp/florabase-attachments"
@@ -263,6 +266,7 @@ class Environment:
             "dev": DEV_PROJECT,
             "review": REVIEW_PROJECT,
             "uat": UAT_PROJECT,
+            "sourcing": SOURCING_PROJECT,
             "quality": f"florabase-quality-{suffix}",
             "prod": "florabase-prod",
         }[role]
@@ -281,14 +285,15 @@ class Environment:
         env["FLORABASE_ROLE"] = self.role
         if self.role == "quality":
             env["FLORABASE_WORKFLOW_OWNER"] = str(self.repository.metadata.resolve())
-        if self.role in {"dev", "review", "uat", "quality"}:
+        if self.role in {"dev", "review", "uat", "sourcing", "quality"}:
             # Shell values override .env and Compose's defaults, including stale 1000:1000
             # settings. Runtime users and dev-state-init receive the same numeric identity.
             env.update(local_identity(env))
-        if self.role in {"review", "uat", "quality"}:
+        if self.role in {"review", "uat", "sourcing", "quality"}:
             database = {
                 "review": "florabase_review",
                 "uat": "florabase_uat",
+                "sourcing": "florabase_sourcing",
                 "quality": "florabase_quality",
             }[self.role]
             env.update(
@@ -309,8 +314,10 @@ class Environment:
         files = ["compose.yaml"]
         if self.role != "prod":
             files.append("compose.dev.yaml")
-        if self.role in {"review", "uat"}:
+        if self.role in {"review", "uat", "sourcing"}:
             files.append("compose.review.yaml")
+        if self.role == "sourcing":
+            files.append("compose.sourcing.yaml")
         if self.role == "quality":
             files.append("compose.quality.yaml")
         if self.role == "uat":
@@ -373,7 +380,7 @@ class Environment:
                         else "stop/remove it from that checkout before using " + str(self.source)
                     )
                 )
-        if self.role in {"review", "uat"}:
+        if self.role in {"review", "uat", "sourcing"}:
             names = run(
                 [
                     "docker",
@@ -591,17 +598,18 @@ class Environment:
         for service in ("backend", "frontend"):
             if Path(services[service]["build"]["context"]).resolve() != self.source / service:
                 raise WorkflowError(f"wrong {service} source context")
-        if self.role in {"review", "uat"}:
+        if self.role in {"review", "uat", "sourcing"}:
             if services["db"].get("ports") or services["backend"].get("ports"):
                 raise WorkflowError("review database/backend must remain internal")
             ports = services["frontend"].get("ports", [])
             if (
                 len(ports) != 1
                 or ports[0].get("host_ip") != "127.0.0.1"
-                or str(ports[0].get("published"))
-                != (str(urlsplit(self.url).port) if self.role == "uat" else PORTS["review"])
+                or str(ports[0].get("published")) != str(urlsplit(self.url).port)
             ):
-                raise WorkflowError("review must publish only localhost:15174")
+                raise WorkflowError(
+                    f"{self.role} must publish only localhost:{urlsplit(self.url).port}"
+                )
             db = services["db"]["environment"]
             backend = services["backend"]["environment"]
             if (
@@ -721,14 +729,14 @@ class Environment:
             self.compose("up", "-d", "--wait", "--wait-timeout", "120", "db")
 
     def up(self) -> None:
-        if self.role in {"review", "uat"}:
+        if self.role in {"review", "uat", "sourcing"}:
             self.repository.initialize()
         self.validate(require_durable_dev=self.role == "dev")
         self.require_owner(allow_stopped_dev=self.role == "dev")
         self.require_durable_legacy_media()
         self.compose("build")
         self.start_database()
-        if self.role in {"review", "uat"}:
+        if self.role in {"review", "uat", "sourcing"}:
             self.compose("run", "--rm", "-T", "--no-deps", "dev-state-init")
             self.upgrade()
         else:
@@ -738,10 +746,23 @@ class Environment:
         print(f"{self.role.upper()} READY")
         self.status()
 
+    def persistent_preview_label(self) -> str:
+        """Operator-facing name of this persistent synthetic preview environment."""
+        return "Review" if self.role == "review" else "Sourcing Preview"
+
+    def persistent_preview_slug(self) -> str:
+        """Fixture marker/manifest prefix of this persistent synthetic preview environment."""
+        return "review" if self.role == "review" else "sourcing"
+
     def require_review_seed(self) -> None:
-        """Prove live Review ownership and isolation before any fixture/media write."""
-        if self.role != "review" or self.project != REVIEW_PROJECT:
-            raise WorkflowError("seed is restricted to florabase-feature-review")
+        """Prove live persistent-preview ownership and isolation before any fixture/media write."""
+        if self.role not in {"review", "sourcing"} or self.project != (
+            REVIEW_PROJECT if self.role == "review" else SOURCING_PROJECT
+        ):
+            raise WorkflowError(
+                "seed is restricted to florabase-feature-review / florabase-sourcing-preview"
+            )
+        name = self.persistent_preview_label()
         self.validate()
         self.require_owner()
         volumes = {
@@ -758,15 +779,15 @@ class Environment:
                 or labels.get("com.docker.compose.project") != self.project
                 or labels.get("io.florabase.source") != str(self.source)
             ):
-                raise WorkflowError("ambiguous Review volume ownership; seed refused")
+                raise WorkflowError(f"ambiguous {name} volume ownership; seed refused")
         if {volume["Name"] for volume in details} != volumes:
-            raise WorkflowError("missing Review volumes; seed refused")
+            raise WorkflowError(f"missing {name} volumes; seed refused")
         network = f"{self.project}_internal"
         network_details = json.loads(run(["docker", "network", "inspect", network], capture=True))[
             0
         ]
         if (network_details.get("Labels") or {}).get("com.docker.compose.project") != self.project:
-            raise WorkflowError("foreign Review network; seed refused")
+            raise WorkflowError(f"foreign {name} network; seed refused")
         ids = run(["docker", "ps", "-aq"], capture=True).splitlines()
         containers = json.loads(run(["docker", "inspect", *ids], capture=True)) if ids else []
         services: set[str] = set()
@@ -777,19 +798,19 @@ class Environment:
             belongs = labels.get("com.docker.compose.project") == self.project
             if not belongs:
                 if network in networks or any(m.get("Name") in volumes for m in mounts.values()):
-                    raise WorkflowError("Review resources are used outside Review; seed refused")
+                    raise WorkflowError(f"{name} resources are used outside {name}; seed refused")
                 continue
             service = labels.get("com.docker.compose.service")
             if (
                 service not in {"db", "backend", "frontend", "dev-state-init"}
                 or service in services
-                or labels.get("io.florabase.role") != "review"
+                or labels.get("io.florabase.role") != self.role
                 or labels.get("io.florabase.source") != str(self.source)
                 or labels.get("com.docker.compose.project.working_dir") != str(self.source)
                 or labels.get("com.docker.compose.oneoff", "").lower() != "false"
                 or set(networks) != {network}
             ):
-                raise WorkflowError("ambiguous running Review identity; seed refused")
+                raise WorkflowError(f"ambiguous running {name} identity; seed refused")
             services.add(service)
             targets = {
                 "db": {"/var/lib/postgresql": "postgres_data"},
@@ -807,7 +828,7 @@ class Environment:
             ) or any(
                 m.get("Type") == "volume" and m.get("Name") not in volumes for m in mounts.values()
             ):
-                raise WorkflowError("wrong Review persistent mount; seed refused")
+                raise WorkflowError(f"wrong {name} persistent mount; seed refused")
             settings = dict(
                 value.split("=", 1) for value in item["Config"].get("Env", []) if "=" in value
             )
@@ -815,7 +836,7 @@ class Environment:
             if service == "db" and any(
                 settings.get(key) != expected[key] for key in ("POSTGRES_DB", "POSTGRES_USER")
             ):
-                raise WorkflowError("wrong running Review database; seed refused")
+                raise WorkflowError(f"wrong running {name} database; seed refused")
             if service == "backend" and any(
                 settings.get(key) != value
                 for key, value in {
@@ -826,33 +847,35 @@ class Environment:
                     "FLORABASE_COOKIE_MODE": "loopback-development",
                 }.items()
             ):
-                raise WorkflowError("wrong running Review backend configuration; seed refused")
+                raise WorkflowError(f"wrong running {name} backend configuration; seed refused")
             if service != "dev-state-init" and (
                 not item["State"].get("Running")
                 or item["State"].get("Health", {}).get("Status") != "healthy"
                 or item["State"].get("Paused")
             ):
-                raise WorkflowError("Review must be healthy before seeding; run feature-review-up")
+                raise WorkflowError(f"{name} must be healthy before seeding; run its start action")
         if not {"db", "backend", "frontend"}.issubset(services):
-            raise WorkflowError("Review is not initialized; run feature-review-up")
+            raise WorkflowError(f"{name} is not initialized; run its start action")
         if self.current() != code_heads(migration_graph(self.source)):
-            raise WorkflowError("Review seed needs DB at code head; run feature-review-up")
+            raise WorkflowError(f"{name} seed needs DB at code head; run its start action")
 
     def seed(self) -> None:
         self.require_review_seed()
+        name = self.persistent_preview_label()
+        slug = self.persistent_preview_slug()
         identity = json.dumps(
             {
                 "project": self.project,
                 "source": str(self.source),
-                "database": "florabase_review",
+                "database": self.environment()["POSTGRES_DB"],
                 "origin": self.url,
             }
         )
         program = (
             "import json,pathlib,sys; "
-            f"p=pathlib.Path({MEDIA_ROOT!r})/'.review-identity.json'; "
+            f"p=pathlib.Path({MEDIA_ROOT!r})/'." + slug + "-identity.json'; "
             "value=json.loads(sys.argv[1]); "
-            "assert not p.exists() or json.loads(p.read_text())==value, 'Review identity marker mismatch'; "
+            f"assert not p.exists() or json.loads(p.read_text())==value, '{name} identity marker mismatch'; "
             "p.write_text(json.dumps(value))"
         )
         self.compose("exec", "-T", "backend", "python", "-c", program, identity)
@@ -864,11 +887,11 @@ class Environment:
             "--volume",
             f"{self.source / 'scripts/uat_fixture.py'}:/review/uat_fixture.py:ro",
             "--env",
-            "FLORABASE_WORKFLOW_MODE=review",
+            f"FLORABASE_WORKFLOW_MODE={slug}",
             "--env",
-            f"FLORABASE_REVIEW_PROJECT={self.project}",
+            f"FLORABASE_{slug.upper()}_PROJECT={self.project}",
             "--env",
-            f"FLORABASE_REVIEW_SOURCE={self.source}",
+            f"FLORABASE_{slug.upper()}_SOURCE={self.source}",
             "backend",
             "python",
             "/review/uat_fixture.py",
@@ -883,7 +906,7 @@ class Environment:
             print(f"{key.title()}: {value}")
         print(
             f"Env source: {self.env_source} (isolated DB overrides)"
-            if self.role == "review"
+            if self.role in {"review", "sourcing"}
             else f"Env source: {self.env_source}"
         )
         print(
@@ -939,22 +962,32 @@ class Environment:
             print("Database current: unavailable (database stopped)")
         if owner_error:
             raise owner_error
-        if self.role == "review" and any(
+        if self.role in {"review", "sourcing"} and any(
             item["Config"].get("Labels", {}).get("com.docker.compose.service") == "backend"
             and item["State"].get("Running")
             for item in containers
         ):
+            name = self.persistent_preview_label()
+            slug = self.persistent_preview_slug()
             program = (
                 "import json,pathlib; "
-                f"p=pathlib.Path({MEDIA_ROOT!r})/'.review-fixture.json'; "
+                f"p=pathlib.Path({MEDIA_ROOT!r})/'." + slug + "-fixture.json'; "
                 "m=json.loads(p.read_text()) if p.is_file() else {}; "
-                "print('Review fixture: version {}; state {}; records {}'.format("
+                f"print('{name} fixture: version " + "{}; state {}; records {}'.format("
                 "m.get('version','missing'),m.get('state','missing'),len(m.get('records',{}))))"
             )
             print(self.compose("exec", "-T", "backend", "python", "-c", program, capture=True))
 
     def stop(self, *, remove: bool = False, confirm: str = "") -> None:
-        if remove and (self.role != "review" or confirm != REVIEW_PROJECT):
+        expected_removal_project = {"review": REVIEW_PROJECT, "sourcing": SOURCING_PROJECT}.get(
+            self.role
+        )
+        if remove and (expected_removal_project is None or confirm != expected_removal_project):
+            if self.role == "sourcing":
+                raise WorkflowError(
+                    "remove deletes ONLY sourcing DB/media/dependencies; "
+                    f"set CONFIRM_REMOVE_SOURCING={SOURCING_PROJECT}"
+                )
             raise WorkflowError(
                 f"remove deletes ONLY review DB/media/dependencies; set CONFIRM_REMOVE_REVIEW={REVIEW_PROJECT}"
             )
@@ -966,7 +999,7 @@ class Environment:
         self.require_durable_legacy_media()
         if remove:
             print(
-                f"Deleting {self.project}_postgres_data, {self.project}_attachment_data, {self.project}_frontend_node_modules and review containers/network"
+                f"Deleting {self.project}_postgres_data, {self.project}_attachment_data, {self.project}_frontend_node_modules and {self.role} containers/network"
             )
         self.compose("down", "--remove-orphans", *(["--volumes"] if remove else []))
         print(f"{self.project}: {'removed' if remove else 'stopped; all volumes preserved'}")
@@ -974,7 +1007,7 @@ class Environment:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("role", choices=["dev", "review", "quality", "prod", "init"])
+    parser.add_argument("role", choices=["dev", "review", "sourcing", "quality", "prod", "init"])
     parser.add_argument("action", nargs="?", default="status")
     parser.add_argument("args", nargs=argparse.REMAINDER)
     args = parser.parse_args()
@@ -991,11 +1024,13 @@ def main() -> int:
                     "provide a Compose subcommand; project/files/config are fixed by role"
                 )
             if (
-                env.role == "review"
+                env.role in {"review", "sourcing"}
                 and command[0] == "down"
                 and any(item in command for item in ("-v", "--volumes"))
             ):
-                raise WorkflowError("use feature-review-remove with its exact project confirmation")
+                raise WorkflowError(
+                    "use the dedicated remove action with its exact project confirmation"
+                )
             if env.role == "dev" and command[0] in {
                 "up",
                 "down",
@@ -1008,7 +1043,7 @@ def main() -> int:
                 raise WorkflowError(
                     "use make dev-up or make dev-stop; raw DEV lifecycle cleanup is refused"
                 )
-            if env.role in {"review", "dev"}:
+            if env.role in {"review", "sourcing", "dev"}:
                 env.validate()
                 env.require_owner()
                 if env.role == "dev" and command[0] in {
@@ -1037,7 +1072,13 @@ def main() -> int:
         elif args.action in {"stop", "remove"}:
             env.stop(
                 remove=args.action == "remove",
-                confirm=os.environ.get("CONFIRM_REMOVE_REVIEW", ""),
+                confirm=os.environ.get(
+                    {
+                        "sourcing": "CONFIRM_REMOVE_SOURCING",
+                        "review": "CONFIRM_REMOVE_REVIEW",
+                    }.get(env.role, "CONFIRM_REMOVE_REVIEW"),
+                    "",
+                ),
             )
         else:
             raise WorkflowError(f"unsupported action: {args.action}")

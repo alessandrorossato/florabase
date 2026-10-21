@@ -70,14 +70,19 @@ test("external collection cover requires explicit policy permission; botanical c
     "no-referrer",
   );
 });
-test.each(["seed", "sowing", "plant", "group", "identity"] as const)(
-  "%s has a type-specific placeholder without metadata",
-  (kind) => {
-    const { container } = render(<RecordVisual label="Record" kind={kind} />);
-    expect(container.querySelector("svg path")).toBeInTheDocument();
-    expect(screen.queryByRole("img")).not.toBeInTheDocument();
-  },
-);
+test.each([
+  "seed",
+  "sowing",
+  "plant",
+  "group",
+  "identity",
+  "supplier",
+  "order",
+] as const)("%s has a type-specific placeholder without metadata", (kind) => {
+  const { container } = render(<RecordVisual label="Record" kind={kind} />);
+  expect(container.querySelector("svg path")).toBeInTheDocument();
+  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+});
 
 test("saved external primary and cover resolve to protected local content", () => {
   const { rerender } = render(

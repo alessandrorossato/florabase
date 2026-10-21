@@ -1,0 +1,278 @@
+/* Sourcing directory refinement: reuse the accepted Collection grammar without
+   touching the shared Collection stylesheets. Every rule stays scoped to the
+   Suppliers workspace so parallel workspaces (including Maps) are unaffected. */
+
+.app-content .suppliers-workspace,
+.app-content .suppliers-workspace .supplier-master-detail,
+.app-content
+  .suppliers-workspace
+  .operational-layout.is-detail-view
+  .supplier-detail-pane {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+.app-content .suppliers-workspace .supplier-master-detail {
+  display: grid;
+  grid-template-columns:
+    minmax(18rem, 0.7fr)
+    minmax(32rem, 1.3fr);
+  align-items: start;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  margin-top: var(--space-3);
+}
+
+/* Compact directory rows: 4rem media tile, identity, truthful counts, state. */
+.app-content .suppliers-workspace .operational-layout .supplier-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(6rem, auto);
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: var(--space-1) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+}
+.app-content .suppliers-workspace .supplier-row > .seed-primary {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.app-content .suppliers-workspace .supplier-row .supplier-row__identity {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.app-content .suppliers-workspace .supplier-row .record-visual {
+  width: 4rem;
+  height: 4rem;
+  box-sizing: border-box;
+}
+.app-content .suppliers-workspace .supplier-row .supplier-row__identity strong {
+  font: 400 1.16rem/1.3 var(--font-editorial);
+  overflow-wrap: anywhere;
+}
+.app-content .suppliers-workspace .supplier-row .supplier-row__identity small {
+  color: var(--text-muted);
+}
+.app-content
+  .suppliers-workspace
+  .operational-layout
+  .supplier-row
+  > .supplier-row__tracking {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: end;
+  align-self: end;
+  text-align: right;
+  min-width: 0;
+  max-width: 14rem;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.app-content
+  .suppliers-workspace
+  .supplier-row
+  > .supplier-row__tracking
+  strong {
+  font: var(--type-strong);
+  color: var(--text);
+}
+.app-content .suppliers-workspace .supplier-row > .lifecycle-badge {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: end;
+  margin: 0;
+}
+
+/* Quick Preview: restrained media tile and editorial title. */
+.app-content .suppliers-workspace .quick-preview h3 {
+  font: 400 1.375rem/1.3 var(--font-editorial);
+  overflow-wrap: anywhere;
+}
+.app-content .suppliers-workspace .quick-preview > .quick-preview-media {
+  width: 100%;
+  height: 6.5rem;
+  max-height: 6.5rem;
+  box-sizing: border-box;
+}
+.app-content .suppliers-workspace .quick-preview > .quick-preview-media svg {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+/* Full-width creation canvas and bounded contextual/edit forms. */
+.app-content .suppliers-workspace .seed-creation-panel .collection-form {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.app-content .suppliers-workspace .edit-workspace-modal .collection-form {
+  max-width: none;
+  padding: var(--space-4) var(--space-6);
+}
+.supplier-form .form-section-tabs {
+  margin-block: var(--space-3);
+}
+.app-content .suppliers-workspace .form-sections--page {
+  display: block;
+}
+.app-content .suppliers-workspace .form-sections--page > .form-section-panel {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: var(--space-3) var(--space-6);
+  margin: 0;
+  padding: var(--space-6) 0;
+  border-top: 1px solid var(--border);
+}
+.app-content
+  .suppliers-workspace
+  .form-sections--page
+  .form-section-panel
+  > h3 {
+  grid-column: 1 / -1;
+  margin: 0;
+  font: var(--type-h3);
+}
+.app-content
+  .suppliers-workspace
+  .form-sections--page
+  [data-form-panel="contact"]
+  > .field:last-child {
+  grid-column: 1 / -1;
+}
+.app-content .suppliers-workspace .form-sections--page > .form-section-footer {
+  grid-column: 1 / -1;
+  position: static;
+  margin: 0;
+  padding: var(--space-3) 0;
+  border-top: 1px solid var(--border);
+  background: transparent;
+}
+.app-content .suppliers-workspace .edit-workspace-modal .form-section-footer {
+  position: static;
+  background: var(--surface);
+}
+@media (min-height: 40rem) and (min-width: 48.01rem) {
+  .app-content
+    .suppliers-workspace
+    .edit-workspace-fallback
+    .form-sections--edit
+    > .form-section-footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    background: var(--surface);
+  }
+  .app-content
+    .suppliers-workspace
+    .supplier-form
+    .form-sections--edit
+    :is(input, select, textarea) {
+    scroll-margin-block-end: 6rem;
+  }
+}
+
+/* Full-width dashboard detail: one state band, then semantic sections. */
+.app-content .suppliers-workspace .detail-tabs [role="tab"]:hover {
+  background: var(--primary-subtle);
+  color: var(--primary);
+}
+.app-content .suppliers-workspace .supplier-detail .detail-header {
+  align-items: center;
+}
+.app-content .suppliers-workspace .supplier-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6) var(--space-8);
+  align-items: start;
+}
+.app-content .suppliers-workspace .supplier-overview > section {
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-4) 0 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+}
+.app-content .suppliers-workspace .supplier-overview > .collection-summary {
+  grid-column: 1 / -1;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.app-content .suppliers-workspace .supplier-fact-group h4 {
+  font: var(--type-h3);
+  margin: 0 0 var(--space-3);
+}
+.app-content .suppliers-workspace .supplier-fact-group dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  margin: 0;
+}
+.app-content .suppliers-workspace .supplier-fact-group dl > div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.7fr) minmax(0, 1fr);
+  gap: var(--space-3);
+}
+.app-content .suppliers-workspace .supplier-fact-group dt {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.app-content .suppliers-workspace .supplier-fact-group dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.app-content .suppliers-workspace .supplier-fact-group p {
+  overflow-wrap: anywhere;
+}
+.app-content .suppliers-workspace .supplier-overview-wide {
+  grid-column: 1 / -1;
+}
+.app-content .suppliers-workspace .supplier-material {
+  display: grid;
+  gap: var(--space-6);
+}
+
+@media (max-width: 64rem) {
+  .app-content .suppliers-workspace .supplier-master-detail {
+    grid-template-columns:
+      minmax(15rem, 0.72fr)
+      minmax(21rem, 1.28fr);
+  }
+}
+@media (max-width: 48rem) {
+  .app-content .suppliers-workspace .supplier-master-detail {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+  .app-content .suppliers-workspace .operational-layout .supplier-row {
+    gap: var(--space-2);
+    padding-inline: var(--space-2);
+    grid-template-columns: minmax(0, 1fr) minmax(5rem, 0.65fr);
+  }
+  .app-content .suppliers-workspace .form-sections--page > .form-section-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-content .suppliers-workspace .supplier-overview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-content .suppliers-workspace .supplier-fact-group dl > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+}
+@media (max-width: 30rem) {
+  .app-content .suppliers-workspace .edit-workspace-modal .collection-form {
+    padding: var(--space-3) var(--space-3)
+      calc(var(--space-3) + env(safe-area-inset-bottom));
+  }
+}

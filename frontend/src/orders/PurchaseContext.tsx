@@ -135,6 +135,8 @@ export function PurchaseContextDialog({
   return (
     <TaskDialog
       title="Review purchase context"
+      className="order-review-dialog"
+      dismissOnBackdrop
       onClose={() => {
         if (!pending) onCancel();
       }}
@@ -345,8 +347,16 @@ export function LinkExistingSeedLot({
       />
     );
   const current = loaded === key ? page : null;
+  const hasPagination =
+    current !== null &&
+    (offset > 0 || offset + current.items.length < current.total);
   return (
-    <TaskDialog title="Link existing seed lot" onClose={onCancel}>
+    <TaskDialog
+      title="Link existing seed lot"
+      className="order-link-dialog"
+      dismissOnBackdrop
+      onClose={onCancel}
+    >
       <h3>Link existing seed lot</h3>
       <p>
         Purchased, purchased-fruit and Unknown sources are eligible for review.
@@ -379,54 +389,63 @@ export function LinkExistingSeedLot({
         <p role="status">Loading seed lots…</p>
       ) : (
         <>
-          <p>{current.total} eligible physical seed lots</p>
-          <ul className="order-list">
+          <p className="order-link-count">
+            {current.total} eligible physical seed lots
+          </p>
+          <ul className="order-link-list">
             {current.items.map((lot) => (
               <li key={lot.id}>
                 <button
                   type="button"
+                  className="order-link-choice"
                   onClick={() => {
                     setSeedLabel(lot.label);
                     setSeedId(lot.id);
                   }}
                 >
-                  {lot.label}
+                  <strong>{lot.label}</strong>
+                  <span className="order-link-meta">
+                    {sourceName(lot.source_kind)} ·{" "}
+                    {lot.supplier?.name ?? "Supplier unknown"}
+                  </span>
+                  {lot.order_id && (
+                    <span className="order-link-status">
+                      Already linked to an Order
+                    </span>
+                  )}
                 </button>
-                <span>
-                  {sourceName(lot.source_kind)} ·{" "}
-                  {lot.supplier?.name ?? "Supplier unknown"}
-                  {lot.order_id ? " · Already linked to an Order" : ""}
-                </span>
               </li>
             ))}
           </ul>
-          <div className="actions">
-            {offset > 0 && (
-              <button
-                type="button"
-                onClick={() => {
-                  setOffset((value) => Math.max(0, value - 50));
-                }}
-              >
-                Previous seed choices
-              </button>
-            )}
-            {offset + current.items.length < current.total && (
-              <button
-                type="button"
-                onClick={() => {
-                  setOffset((value) => value + 50);
-                }}
-              >
-                Next seed choices
-              </button>
-            )}
-          </div>
         </>
       )}
-      <button type="button" className="button--secondary" onClick={onCancel}>
-        Cancel
-      </button>
+      <div className="order-link-footer">
+        <div className="order-link-pagination">
+          {hasPagination && offset > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setOffset((value) => Math.max(0, value - 50));
+              }}
+            >
+              Previous seed choices
+            </button>
+          )}
+          {hasPagination && offset + current.items.length < current.total && (
+            <button
+              type="button"
+              onClick={() => {
+                setOffset((value) => value + 50);
+              }}
+            >
+              Next seed choices
+            </button>
+          )}
+        </div>
+        <button type="button" className="button--secondary" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
     </TaskDialog>
   );
 }

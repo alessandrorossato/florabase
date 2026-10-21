@@ -1,33 +1,491 @@
+/* Orders workspace refinement: reuse the accepted Collection geometry while
+   keeping every rule scoped to Orders so Suppliers, Seeds and Maps are safe. */
+.app-content .orders-workspace,
+.app-content .orders-workspace .order-master-detail,
+.app-content
+  .orders-workspace
+  .operational-layout.is-detail-view
+  .order-detail-pane {
+  width: 100%;
+  max-width: none;
+  margin-inline: 0;
+}
+.app-content .orders-workspace .order-master-detail {
+  display: grid;
+  grid-template-columns:
+    minmax(18rem, 0.7fr)
+    minmax(32rem, 1.3fr);
+  align-items: start;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  margin-top: var(--space-3);
+}
+.app-content .orders-workspace .order-master,
+.app-content .orders-workspace .order-detail-pane {
+  min-width: 0;
+}
+
+/* Compact directory rows: receipt tile, identity, exact total and lot count. */
+.app-content .orders-workspace .operational-layout .order-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(6rem, auto);
+  grid-template-rows: auto;
+  align-items: center;
+  gap: var(--space-2) var(--space-4);
+  padding: var(--space-3) var(--space-4);
+}
+.app-content .orders-workspace .order-row > .seed-primary {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.app-content .orders-workspace .order-row .order-row__identity {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.app-content .orders-workspace .order-row .record-visual {
+  width: 4rem;
+  height: 4rem;
+  box-sizing: border-box;
+}
+.app-content .orders-workspace .order-row .order-row__identity strong {
+  font: 400 1.16rem/1.3 var(--font-editorial);
+  overflow-wrap: anywhere;
+}
+.app-content .orders-workspace .order-row .order-row__identity small,
+.app-content .orders-workspace .order-row .order-row__amount small {
+  color: var(--text-muted);
+  overflow-wrap: anywhere;
+}
+.app-content .orders-workspace .order-row > .order-row__amount {
+  grid-column: 2;
+  grid-row: 1;
+  display: grid;
+  gap: var(--space-1);
+  justify-items: end;
+  align-self: center;
+  min-width: 0;
+  max-width: 14rem;
+  text-align: right;
+  font: var(--type-small);
+}
+.app-content .orders-workspace .order-row > .order-row__amount strong {
+  font: var(--type-strong);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.app-content .orders-workspace .order-pagination {
+  margin-top: var(--space-3);
+}
+
+/* Quick Preview uses the same restrained tile language as Suppliers. */
+.app-content .orders-workspace .quick-preview h3 {
+  font: 400 1.375rem/1.3 var(--font-editorial);
+  overflow-wrap: anywhere;
+}
+.app-content .orders-workspace .quick-preview > .quick-preview-media {
+  width: 100%;
+  height: 6.5rem;
+  max-height: 6.5rem;
+  box-sizing: border-box;
+}
+.app-content .orders-workspace .quick-preview > .quick-preview-media svg {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+/* Full-width dashboard detail. */
+.app-content .orders-workspace .detail-tabs [role="tab"]:hover {
+  background: var(--primary-subtle);
+  color: var(--primary);
+}
+.app-content .orders-workspace .order-detail .detail-header {
+  align-items: center;
+}
+.app-content .orders-workspace .order-count {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.75rem;
+  padding: var(--space-1) var(--space-2);
+  color: var(--text-muted);
+  background: var(--surface-subtle);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font: var(--type-small);
+}
+.app-content .orders-workspace .order-overview {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6) var(--space-8);
+  align-items: start;
+}
+.app-content .orders-workspace .order-overview > section {
+  min-width: 0;
+  margin: 0;
+  padding: var(--space-4) 0 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+}
+.app-content .orders-workspace .order-overview > .collection-summary {
+  grid-column: 1 / -1;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+.app-content .orders-workspace .collection-summary > dl {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.app-content .orders-workspace .order-fact-group h4 {
+  margin: 0 0 var(--space-3);
+  font: var(--type-h3);
+}
+.app-content .orders-workspace .order-fact-group dl {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  margin: 0;
+}
+.app-content .orders-workspace .order-fact-group dl > div {
+  display: grid;
+  grid-template-columns: minmax(8rem, 0.7fr) minmax(0, 1fr);
+  gap: var(--space-3);
+}
+.app-content .orders-workspace .order-fact-group dt {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.app-content .orders-workspace .order-fact-group dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.app-content .orders-workspace .order-fact-group p {
+  overflow-wrap: anywhere;
+}
+.app-content .orders-workspace .order-fact-group .button--quiet {
+  min-height: 2rem;
+  padding: 0;
+}
+.app-content .orders-workspace .order-overview-wide {
+  grid-column: 1 / -1;
+}
+.app-content .orders-workspace .order-danger__button {
+  color: #792525;
+  border-color: #e2b9b9;
+}
+.app-content .orders-workspace .order-danger__button:hover:not(:disabled) {
+  background: #fbecec;
+}
+.app-content .orders-workspace .order-seed-lots {
+  padding-top: var(--space-4);
+}
+.app-content .orders-workspace .order-seed-lots .card-grid {
+  margin-block: var(--space-4);
+}
+.app-content .orders-workspace .order-seed-lots .actions {
+  margin-top: var(--space-4);
+}
+
+/* Compact two-column transaction form; footer stays visible in the modal. */
+.app-content .orders-workspace .order-form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  margin: 0;
+}
+.app-content .orders-workspace .edit-workspace-modal .order-form {
+  height: 100%;
+  padding: var(--space-4) var(--space-6);
+}
+.app-content .orders-workspace .edit-workspace-fallback .order-form {
+  max-width: 64rem;
+  margin-inline: auto;
+  padding: var(--space-4) var(--space-6);
+}
+.app-content .orders-workspace .order-form__header {
+  display: grid;
+  flex-shrink: 0;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+.app-content .orders-workspace .order-form__header h3 {
+  margin: 0;
+  font: 400 1.75rem/1.18 var(--font-editorial);
+}
+.app-content .orders-workspace .order-form__header p:last-child {
+  max-width: 46rem;
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.app-content .orders-workspace .order-form__grid {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-6);
+  align-content: start;
+  min-height: 0;
+  margin-inline: -6px;
+  overflow: auto;
+  padding: var(--space-2) 6px;
+  scroll-padding: var(--space-4) 6px;
+}
+.app-content .orders-workspace .order-form__column {
+  display: grid;
+  gap: var(--space-3);
+  align-content: start;
+  min-width: 0;
+}
+.app-content .orders-workspace .order-form__column h4 {
+  margin: 0;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+  font: var(--type-h3);
+}
+.app-content .orders-workspace .order-form__pair {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(7rem, 0.6fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+.app-content .orders-workspace .order-form .field {
+  min-width: 0;
+  margin: 0;
+}
+.app-content
+  .orders-workspace
+  .order-form
+  :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) {
+  width: 100%;
+  max-width: none;
+}
+.app-content .orders-workspace .order-form .partial-date {
+  margin: 0;
+}
+.app-content .orders-workspace .order-form textarea {
+  min-height: 4.5rem;
+  resize: vertical;
+}
+.app-content .orders-workspace .order-form__footer {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+@media (min-width: 48.01rem) {
+  /* The transaction form is shorter than the shared edit canvas. Let the
+     dialog hug it while retaining the standard cap for validation growth. */
+  .app-content .orders-workspace .edit-workspace-modal {
+    height: fit-content;
+    max-height: 88dvh;
+  }
+  .app-content .orders-workspace .edit-workspace-modal .order-form {
+    height: auto;
+    max-height: 88dvh;
+  }
+}
+@media (min-height: 40rem) and (min-width: 48.01rem) {
+  .app-content .orders-workspace .edit-workspace-fallback .order-form__footer {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    background: var(--surface);
+  }
+}
+
+/* The Supplier filter popup stays inside its control and wraps long names. */
+.app-content .orders-workspace .order-supplier-filter {
+  min-width: 0;
+}
+.app-content .orders-workspace .order-supplier-filter .reference-menu {
+  max-width: 100%;
+}
+.app-content
+  .orders-workspace
+  .order-supplier-filter
+  .reference-menu
+  li
+  button {
+  overflow-wrap: anywhere;
+}
+.app-content
+  .orders-workspace
+  .order-supplier-filter
+  .reference-menu
+  li
+  button
+  span {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 68rem) {
+  /* The shared PageHeader becomes a column here; release the toolbar's
+     desktop flex-basis so it does not reserve a tall empty band. */
+  .app-content .orders-workspace .page-header .page-identity,
+  .app-content .orders-workspace .page-header .page-tools {
+    flex: 0 0 auto;
+    width: 100%;
+  }
+}
+@media (max-width: 64rem) {
+  .app-content .orders-workspace .order-master-detail {
+    grid-template-columns:
+      minmax(17rem, 0.8fr)
+      minmax(0, 1.2fr);
+  }
+  .app-content .orders-workspace .operational-layout .order-row {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+  }
+  .app-content .orders-workspace .order-row > .seed-primary {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .app-content .orders-workspace .order-row > .order-row__amount {
+    grid-column: 1;
+    grid-row: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: flex-start;
+    max-width: none;
+    text-align: left;
+  }
+}
+@media (max-width: 48rem) {
+  .app-content .orders-workspace .order-master-detail {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+  }
+  .app-content .orders-workspace .operational-layout .order-row {
+    gap: var(--space-2);
+    padding-inline: var(--space-2);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-content .orders-workspace .order-overview,
+  .app-content .orders-workspace .collection-summary > dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-content .orders-workspace .order-fact-group dl > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+  }
+  .app-content .orders-workspace .order-form__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-content .orders-workspace .edit-workspace-modal .order-form,
+  .app-content .orders-workspace .edit-workspace-fallback .order-form {
+    padding: var(--space-3) var(--space-4)
+      calc(var(--space-3) + env(safe-area-inset-bottom));
+  }
+}
+@media (max-width: 30rem) {
+  .app-content .orders-workspace .order-form__pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-content .orders-workspace .edit-workspace-modal .order-form,
+  .app-content .orders-workspace .edit-workspace-fallback .order-form {
+    padding: var(--space-3);
+  }
+}
+
 .order-controls {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
   gap: 1rem;
   align-items: end;
 }
-.order-list {
+.app-content .orders-workspace :is(.order-link-dialog, .order-review-dialog) {
+  width: min(46rem, calc(100vw - 2rem));
+}
+.order-link-list {
+  display: grid;
+  gap: var(--space-2);
+  max-height: min(22rem, 42dvh);
+  margin: var(--space-3) -6px;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
   list-style: none;
-  padding: 0;
-  margin: 1rem 0;
 }
-.order-list li {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem 0;
-  border-bottom: 1px solid var(--border, #d8e1d9);
-}
-.order-list li > div {
+.order-link-list li {
   min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
-.order-list a,
-.order-list strong {
+.order-link-choice {
+  display: grid;
+  width: 100%;
+  min-height: 0;
+  gap: 0.2rem;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  box-shadow: none;
+}
+.order-link-choice:hover {
+  border-color: var(--primary);
+  background: var(--primary-subtle);
+}
+.order-link-choice:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.order-link-choice strong {
+  overflow-wrap: anywhere;
+  font: 400 1rem/1.35 var(--font-editorial);
+}
+.order-link-meta {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.order-link-status {
+  width: fit-content;
+  margin-top: 0.1rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 999px;
+  background: var(--primary-subtle);
+  color: var(--primary);
+  font-size: 0.78rem;
   font-weight: 600;
 }
-.order-list span {
-  display: block;
-  color: var(--text-muted, #526259);
-  margin-top: 0.3rem;
+.order-link-count {
+  margin: var(--space-3) 0 0;
+  color: var(--text-muted);
   font-size: 0.9rem;
+}
+.order-link-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
+}
+.order-link-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 .order-facts {
   display: grid;

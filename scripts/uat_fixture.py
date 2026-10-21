@@ -99,10 +99,12 @@ from florabase.taxonomy.source import CHECKSUM as WFO_CHECKSUM
 from florabase.taxonomy.source import WfoSource
 
 VERSION = 4
-NOTE = (
-    "Synthetic Feature Review data; no real collection or provenance claims."
-    if os.environ.get("FLORABASE_WORKFLOW_MODE") == "review"
-    else "Synthetic UAT Preview data; no real collection or provenance claims."
+NOTE = {
+    "review": "Synthetic Feature Review data; no real collection or provenance claims.",
+    "sourcing": "Synthetic Sourcing Preview data; no real collection or provenance claims.",
+}.get(
+    os.environ.get("FLORABASE_WORKFLOW_MODE", ""),
+    "Synthetic UAT Preview data; no real collection or provenance claims.",
 )
 MODELS: dict[str, type[Base]] = {
     "external_taxon": ExternalTaxonLink,
@@ -139,15 +141,16 @@ class FixtureError(RuntimeError):
 
 
 def fixture_prefix() -> str:
-    return "review" if os.environ.get("FLORABASE_WORKFLOW_MODE") == "review" else "uat"
+    mode = os.environ.get("FLORABASE_WORKFLOW_MODE", "")
+    return mode if mode in {"review", "sourcing"} else "uat"
 
 
 def repair_hint() -> str:
-    return (
-        "inspect Review state; ordinary seed will not repair it"
-        if fixture_prefix() == "review"
-        else "run guarded uat-preview-reset"
-    )
+    if fixture_prefix() == "review":
+        return "inspect Review state; ordinary seed will not repair it"
+    if fixture_prefix() == "sourcing":
+        return "inspect Sourcing Preview state; ordinary seed will not repair it"
+    return "run guarded uat-preview-reset"
 
 
 def review_owner(database: Session) -> User:
@@ -159,6 +162,29 @@ def review_owner(database: Session) -> User:
     return owners[0]
 
 
+def sourcing_owner(database: Session) -> User:
+    owners = list(database.scalars(select(User)))
+    if len(owners) != 1 or not owners[0].owner or not owners[0].enabled:
+        raise FixtureError(
+            "Sourcing Preview needs exactly one enabled owner; use sourcing-preview-bootstrap-owner"
+        )
+    return owners[0]
+
+
+def fixture_owner(database: Session) -> User:
+    """The pre-bootstrapped owner of a persistent synthetic preview (Review or Sourcing)."""
+    return review_owner(database) if fixture_prefix() == "review" else sourcing_owner(database)
+
+
+def persistent_owner_key() -> str:
+    prefix = fixture_prefix()
+    return "owner:preview" if prefix == "uat" else f"owner:{prefix}"
+
+
+def environment_label() -> str:
+    return {"review": "Review", "sourcing": "Sourcing Preview"}.get(fixture_prefix(), "UAT Preview")
+
+
 def require_empty_review_collection(database: Session) -> None:
     for model in MODELS.values():
         if model is User:
@@ -168,7 +194,9 @@ def require_empty_review_collection(database: Session) -> None:
         if model is GeographicPlace:
             query = query.where(GeographicPlace.place_kind == "custom")
         if database.scalar(query.limit(1)) is not None:
-            raise FixtureError("Unrecognized populated Review baseline; no data changed")
+            raise FixtureError(
+                f"Unrecognized populated {environment_label()} baseline; no data changed"
+            )
 
 
 def require_identity(settings: Settings, database: Session, *, require_marker: bool = True) -> Path:
@@ -176,12 +204,18 @@ def require_identity(settings: Settings, database: Session, *, require_marker: b
     role = fixture_prefix()
     project = os.environ.get(f"FLORABASE_{role.upper()}_PROJECT", "")
     source = os.environ.get(f"FLORABASE_{role.upper()}_SOURCE", "")
-    database_name = "florabase_review" if role == "review" else "florabase_uat"
-    project_pattern = (
-        r"florabase-feature-review"
-        if role == "review"
-        else r"florabase-uat-preview(?:-smoke-[0-9a-f]{12})?"
-    )
+    database_name = {
+        "review": "florabase_review",
+        "sourcing": "florabase_sourcing",
+    }.get(role, "florabase_uat")
+    project_pattern = {
+        "review": r"florabase-feature-review",
+        "sourcing": r"florabase-sourcing-preview(?:-smoke-[0-9a-f]{12})?",
+    }.get(role, r"florabase-uat-preview(?:-smoke-[0-9a-f]{12})?")
+    expected_origin = {
+        "review": "http://localhost:15174",
+        "sourcing": "http://localhost:15175",
+    }.get(role, "http://localhost:15174")
     if not (
         os.environ.get("FLORABASE_WORKFLOW_MODE") == role
         and re.fullmatch(project_pattern, project)
@@ -189,9 +223,11 @@ def require_identity(settings: Settings, database: Session, *, require_marker: b
         and settings.environment == Environment.DEVELOPMENT
         and settings.cookie_mode == CookieMode.LOOPBACK_DEVELOPMENT
         and (
-            settings.canonical_origin == "http://localhost:15174"
+            settings.canonical_origin == expected_origin
             or (
-                project.startswith("florabase-uat-preview-smoke-")
+                project.startswith(
+                    ("florabase-uat-preview-smoke-", "florabase-sourcing-preview-smoke-")
+                )
                 and urlsplit(settings.canonical_origin or "").hostname == "localhost"
                 and urlsplit(settings.canonical_origin or "").scheme == "http"
                 and 20000 <= (urlsplit(settings.canonical_origin or "").port or 0) <= 60000
@@ -205,10 +241,10 @@ def require_identity(settings: Settings, database: Session, *, require_marker: b
     ):
         raise FixtureError(f"{role.upper()} environment identity refused; no data changed")
     root = cast(Path, settings.attachment_storage_root)
-    if role == "review" and any(
+    if role in {"review", "sourcing"} and any(
         (root / name).exists() for name in (".uat-identity.json", ".uat-fixture.json")
     ):
-        raise FixtureError("UAT bookkeeping in Review media root; refused")
+        raise FixtureError("UAT bookkeeping in this preview media root; refused")
     marker = root / f".{role}-identity.json"
     expected = {
         "project": project,
@@ -259,7 +295,7 @@ def write_manifest(root: Path, value: dict[str, Any]) -> None:
 
 def validate_manifest(database: Session, root: Path, manifest: dict[str, Any]) -> None:
     expected = {
-        "owner:review" if fixture_prefix() == "review" else "owner:preview",
+        persistent_owner_key(),
         "identity:Ocimum basilicum",
         "identity:Lavandula angustifolia",
         "identity:Aloe vera",
@@ -344,17 +380,18 @@ def validate_manifest(database: Session, root: Path, manifest: dict[str, Any]) -
         expected.update({"identity:genovese", "seed:genovese", "schedule:collection"})
     if fixture_prefix() == "review" and manifest.get("collection_visual_extension") == 1:
         expected.update(COLLECTION_VISUAL_KEYS)
+    if fixture_prefix() == "sourcing" and manifest.get("sourcing_suppliers_extension") == 1:
+        expected.update(SOURCING_SUPPLIER_RECORDS)
     if set(manifest["records"]) != expected:
         raise FixtureError("Preview fixture baseline has missing records; " + repair_hint())
     for key, value in manifest["records"].items():
         model = MODELS.get(key.split(":")[0])
         if model is None or database.get(model, UUID(value)) is None:
             raise FixtureError("Preview fixture baseline has missing records; " + repair_hint())
-    if (
-        fixture_prefix() == "review"
-        and str(review_owner(database).id) != manifest["records"]["owner:review"]
+    if fixture_prefix() in {"review", "sourcing"} and (
+        str(fixture_owner(database).id) != manifest["records"][persistent_owner_key()]
     ):
-        raise FixtureError("Review fixture owner mismatch; no data changed")
+        raise FixtureError(f"{environment_label()} fixture owner mismatch; no data changed")
     for value in manifest["records"].values():
         asset = database.get(MediaAsset, UUID(value))
         if asset is not None and asset.attachment_id is not None:
@@ -776,6 +813,216 @@ def ensure_collection_visual(database: Session, root: Path, manifest: dict[str, 
     write_manifest(root, manifest)
 
 
+SOURCING_SUPPLIER_RECORDS = {
+    "supplier:online_seed_shop",
+    "supplier:swap_group",
+    "supplier:neighbour",
+    "supplier:community_orchard",
+    "supplier:wholesale_grower",
+    "supplier:local_market",
+    "supplier:retired_market",
+    "order:shop",
+    "order:grower",
+    "seed:sourcing_shop",
+    "seed:sourcing_swap",
+    "seed:sourcing_grower",
+    "link:supplier_shop",
+}
+
+
+def ensure_sourcing_suppliers(database: Session, root: Path, manifest: dict[str, Any]) -> None:
+    """Sourcing Preview only: broaden the supplier/order/acquisition directory for visual review.
+
+    Uses only existing Supplier/Order/SeedLot services and grounded fields; no invented metrics.
+    """
+    if fixture_prefix() != "sourcing" or manifest.get("sourcing_suppliers_extension") == 1:
+        return
+    ready = manifest["state"] == "ready"
+    manifest["state"] = "building"
+    write_manifest(root, manifest)
+    records = manifest["records"]
+    basil = UUID(records["identity:Ocimum basilicum"])
+    lavender = UUID(records["identity:Lavandula angustifolia"])
+    aloe = UUID(records["identity:Aloe vera"])
+    indoor_id = UUID(records["location:Indoor seed shelf"])
+
+    def add(key: str, value: FixtureRecord) -> None:
+        records[key] = str(value.id)
+
+    shop = suppliers.create_supplier(
+        database,
+        SupplierCreate(
+            name="Preview — Northwind online seeds",
+            kind="seller",
+            website="https://example.invalid/northwind-seeds",
+            email="orders@example.invalid",
+            phone="+39 011 555 0100",
+            notes=NOTE,
+        ),
+    )
+    add("supplier:online_seed_shop", shop)
+    swap = suppliers.create_supplier(
+        database,
+        SupplierCreate(
+            name="Preview — Allotment seed swap",
+            kind="exchange",
+            website="https://example.invalid/seed-swap",
+            notes=NOTE,
+        ),
+    )
+    add("supplier:swap_group", swap)
+    neighbour = suppliers.create_supplier(
+        database,
+        SupplierCreate(
+            name="Preview — Neighbour with spare seedlings", kind="person", phone="+39 333 555 0111"
+        ),
+    )
+    add("supplier:neighbour", neighbour)
+    orchard = suppliers.create_supplier(
+        database,
+        SupplierCreate(
+            name="Preview — Community orchard",
+            kind="seller",
+            email="hello@example.invalid",
+            notes=NOTE,
+        ),
+    )
+    add("supplier:community_orchard", orchard)
+    grower = suppliers.create_supplier(
+        database,
+        SupplierCreate(
+            name="Preview — Regional wholesale grower with a deliberately long trading name",
+            kind="nursery",
+            website="https://example.invalid/regional-grower",
+            email="trade@example.invalid",
+            phone="+39 02 555 0122",
+            notes=NOTE,
+        ),
+    )
+    add("supplier:wholesale_grower", grower)
+    # Name-and-kind-only record exercises the restrained icon fallback and empty contact facts.
+    market = suppliers.create_supplier(
+        database, SupplierCreate(name="Preview — Saturday market stall", kind="other")
+    )
+    add("supplier:local_market", market)
+    retired = suppliers.create_supplier(
+        database,
+        SupplierCreate(
+            name="Preview — Retired supermarket chain",
+            kind="supermarket",
+            website="https://example.invalid/retired-chain",
+            notes=NOTE,
+        ),
+    )
+    add("supplier:retired_market", retired)
+    suppliers.set_supplier_retired(database, retired, retired=True)
+
+    shop_order = orders.create_order(
+        database,
+        OrderCreate.model_validate(
+            {
+                "supplier_id": shop.id,
+                "ordered_on": {"precision": "day", "year": 2026, "month": 4, "day": 12},
+                "order_reference": "Preview — NW-2026-0042",
+                "total_price": "23.90",
+                "currency": "EUR",
+                "notes": NOTE,
+            }
+        ),
+    )
+    add("order:shop", shop_order)
+    grower_order = orders.create_order(
+        database,
+        OrderCreate.model_validate(
+            {
+                "supplier_id": grower.id,
+                "ordered_on": {"precision": "month", "year": 2026, "month": 3},
+                "order_reference": "Preview — Trade order",
+                "total_price": "180.00",
+                "currency": "EUR",
+                "notes": NOTE,
+            }
+        ),
+    )
+    add("order:grower", grower_order)
+
+    add(
+        "seed:sourcing_shop",
+        seeds.create_seed_lot(
+            database,
+            SeedLotCreate.model_validate(
+                {
+                    "botanical_identity_id": basil,
+                    "label": "Preview — Basil packet from online order",
+                    "source_kind": "purchased",
+                    "supplier_id": shop.id,
+                    "order_id": shop_order.id,
+                    "location_id": indoor_id,
+                    "quantity": {"kind": "seed_count", "value": 120, "is_approximate": False},
+                    "notes": NOTE,
+                }
+            ),
+        ),
+    )
+    add(
+        "seed:sourcing_swap",
+        seeds.create_seed_lot(
+            database,
+            SeedLotCreate.model_validate(
+                {
+                    "botanical_identity_id": lavender,
+                    "label": "Preview — Lavender seeds from a swap",
+                    "source_kind": "gift_exchange",
+                    "supplier_id": swap.id,
+                    "location_id": indoor_id,
+                    "notes": NOTE,
+                }
+            ),
+        ),
+    )
+    add(
+        "seed:sourcing_grower",
+        seeds.create_seed_lot(
+            database,
+            SeedLotCreate.model_validate(
+                {
+                    "botanical_identity_id": aloe,
+                    "label": "Preview — Aloe offsets from the wholesale grower",
+                    "source_kind": "purchased",
+                    "supplier_id": grower.id,
+                    "order_id": grower_order.id,
+                    "location_id": indoor_id,
+                    "quantity": {"kind": "seed_count", "value": 6, "is_approximate": False},
+                    "notes": NOTE,
+                }
+            ),
+        ),
+    )
+    # Give the online shop a real primary photo so the directory mixes thumbnails and fallbacks.
+    link = media.create_link(
+        database,
+        "supplier",
+        shop.id,
+        UUID(records["asset:local"]),
+        LinkWrite(caption="Preview supplier leaf illustration"),
+        commit=False,
+    )
+    add("link:supplier_shop", link)
+    primary.set_primary(
+        database,
+        AttachmentStorage(root),
+        "supplier",
+        shop.id,
+        PrimaryPhotoSelection(kind="local", photo_id=link.id),
+    )
+    database.commit()
+    ensure_stored_material(database, root, manifest)
+    manifest["sourcing_suppliers_extension"] = 1
+    if ready:
+        manifest["state"] = "ready"
+    write_manifest(root, manifest)
+
+
 def seed(database: Session, root: Path) -> dict[str, Any]:
     existing = read_manifest(root)
     if existing is not None:
@@ -787,8 +1034,9 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
         ensure_dashboard(database, root, existing)
         ensure_manual_review(database, root, existing)
         ensure_collection_visual(database, root, existing)
+        ensure_sourcing_suppliers(database, root, existing)
         return existing
-    owner = review_owner(database) if fixture_prefix() == "review" else None
+    owner = fixture_owner(database) if fixture_prefix() in {"review", "sourcing"} else None
     if owner is not None:
         require_empty_review_collection(database)
     elif (
@@ -805,7 +1053,7 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
         return result
 
     if owner is not None:
-        remember("owner:review", owner)
+        remember(persistent_owner_key(), owner)
     else:
         owner = remember(
             "owner:preview",
@@ -1285,6 +1533,7 @@ def seed(database: Session, root: Path) -> dict[str, Any]:
     ensure_dashboard(database, root, manifest)
     ensure_manual_review(database, root, manifest)
     ensure_collection_visual(database, root, manifest)
+    ensure_sourcing_suppliers(database, root, manifest)
     manifest["state"] = "ready"
     write_manifest(root, manifest)
     return manifest
@@ -1305,8 +1554,8 @@ def main() -> int:
                 if manifest is not None:
                     validate_manifest(database, root, manifest)
                 owner = (
-                    review_owner(database)
-                    if fixture_prefix() == "review"
+                    fixture_owner(database)
+                    if fixture_prefix() in {"review", "sourcing"}
                     else database.scalar(select(User).where(User.login_name == "preview"))
                 )
                 print(f"Fixture initialized: {'yes' if manifest else 'no'}; version: {VERSION}")

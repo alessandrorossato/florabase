@@ -13,6 +13,9 @@ from sqlalchemy.orm import Session
 from uat_fixture import (
     MODELS,
     FixtureError,
+    environment_label,
+    fixture_prefix,
+    persistent_owner_key,
     read_manifest,
     require_empty_review_collection,
     require_identity,
@@ -204,7 +207,10 @@ def test_review_refuses_unrecognized_collection_without_replacing_owner(
     assert not (tmp_path / ".review-fixture.json").exists()
 
 
-def test_review_empty_baseline_allows_migrated_canonical_geography_but_refuses_custom() -> None:
+def test_review_empty_baseline_allows_migrated_canonical_geography_but_refuses_custom(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("FLORABASE_WORKFLOW_MODE", "review")
     database = MagicMock()
 
     def canonical_references(query: object) -> object:
@@ -223,6 +229,25 @@ def test_review_empty_baseline_allows_migrated_canonical_geography_but_refuses_c
 
     database.scalar.side_effect = custom_geography
     with pytest.raises(FixtureError, match="Unrecognized populated Review"):
+        require_empty_review_collection(database)
+
+
+def test_sourcing_preview_uses_distinct_fixture_identity(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("FLORABASE_WORKFLOW_MODE", "sourcing")
+    assert fixture_prefix() == "sourcing"
+    assert environment_label() == "Sourcing Preview"
+    assert persistent_owner_key() == "owner:sourcing"
+
+
+def test_sourcing_empty_baseline_refusal_names_the_sourcing_preview(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("FLORABASE_WORKFLOW_MODE", "sourcing")
+    database = MagicMock()
+    database.scalar.return_value = object()
+    with pytest.raises(FixtureError, match="Unrecognized populated Sourcing Preview"):
         require_empty_review_collection(database)
 
 

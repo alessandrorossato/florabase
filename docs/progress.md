@@ -1,5 +1,111 @@
 # Engineering progress
 
+## 2026-10-21 — SOURCING-VISUAL-001 synchronization and review
+
+- Synchronized the existing Sourcing worktree without rewriting history: preserved the reviewed
+  candidate in `f9eef43`, merged `origin/main` (`9275947`, Maps `#116`) in normal merge `c946acb`,
+  and kept both the Sourcing and Maps milestones. No conflict was reported; `docs/features.json`
+  remains main's version with `MAPS-FOUNDATION-001`, and `SUPPLIER-003` / `ORDER-001` stay the
+  domain sources of truth for this presentation increment. No backend contract or migration change
+  was introduced.
+- Post-merge review fixed real regressions: Orders search no longer disables itself while a filtered
+  page is in flight, so multi-character queries keep focus; a missing Supplier UUID is visible in
+  both the filter label and active filter; Supplier Quick-Preview Edit returns to the preview and
+  restores its remounted Edit trigger; Back out of a direct edit URL closes the inline editor and
+  restores the heading in Suppliers and Orders; Supplier creation focuses its loaded detail heading;
+  and `ReferencePicker` preserves typed queries when a parent rebuilds `choices`.
+- Verification: focused frontend **157 tests / 7 files**; post-merge full frontend regression
+  **820 tests / 70 files**; strict TypeScript, zero-warning ESLint, Prettier and `make api-check`
+  pass. Workflow helpers **34/34** and Review fixture **24 passed / 1 live-only skipped**.
+  `make sourcing-preview-status` is healthy at `15175` (DB `20261013_0042`, fixture v4/ready/79,
+  9 Suppliers, 4 Orders, 11 SeedLots). The live UAT smoke was not run; UAT volumes were verified
+  untouched. `make verify-full`, delivery and finish remain the exact-tree final gate/operator steps.
+- Deferred: direct-edit browser Back discards an unsaved draft without a custom prompt (in-app dirty
+  dismissal still confirms); dead `.orders-page` / `.order-list li` CSS; Orders Edit remains
+  available when the Supplier list failed to load, with server validation still authoritative.
+- Preview, Feature Review (`15174`), Maps, UAT, DEV, Stable Preview and production were not restarted,
+  reseeded, reset or removed; no volume deletion or prune occurred.
+
+## 2026-10-21 — SOURCING-VISUAL-001 Orders normalization
+
+- Reused the accepted Collection directory/detail architecture for Orders: hidden search caption with
+  accessible name, one-line toolbar, compact rows with amount fallback below identity at narrower
+  widths, Quick Preview, route-driven New Order, contextual/direct Edit and a full-width dashboard
+  with Overview and linked SeedLot tabs. The Supplier filter uses the shared ReferencePicker inside
+  the drawer; long names wrap, the popup stays within the control width, and Escape closes the picker
+  before the drawer. Create/Edit preserve optional Supplier, independent partial Order dates,
+  optional exact amount/currency pair, total-not-per-lot semantics, explicit unlink/delete rules and
+  no fabricated provenance or inventory.
+- Normalized dismissal and geometry: pristine backdrop closes; dirty backdrop/Cancel/Escape protect
+  changes; inside/dropdown clicks stay inside; opener focus is restored, including the remounted
+  Quick Preview trigger and the refreshed detail heading after direct Edit cancel/save. The desktop
+  New Order modal now hugs its compact two-column form (measured about 533px at 1440×844) and keeps
+  its footer visible; mobile keeps the shared full-screen scrollable canvas.
+- Verification: focused Orders/ReferencePicker/navigation/App **122 tests / 4 files**; full frontend
+  **790 tests / 68 files**; strict TypeScript, zero-warning ESLint, Prettier, production build and
+  `git diff --check` pass. Workflow helper **33/33**, Review fixture **22 passed / 1 live-only
+  skipped** and UAT guard subset **12 passed** remain prior candidate evidence. Canonical
+  `make feature-verify`, Python Ruff/mypy, full backend/integration/migration/API gates and the live
+  UAT smoke were not run.
+- Visual review used exact-size same-origin iframe proxies at 1440×844, 1024×844 and 390×844, not
+  native window resizing. Confirmed the 1440 New Order/Edit footer fit, 1024 compact PageHeader and
+  row fallback, 390 one-column modal/directory, 448px filter drawer with a 398px menu wrapping the
+  long Supplier name, and the linked-SeedLot detail tab. Pristine/dirty dismissal, direct-link
+  fallback and every 1024 modal state retain focused-test coverage rather than live capture claims.
+- Review follow-up: `Link existing seed lot` now uses a centered 46rem maximum dialog with an
+  internally scrolling `min(22rem, 42dvh)` list, row-style selectable lot cards with source/Supplier
+  metadata and an explicit linked status, and a footer that keeps pagination and Cancel reachable.
+  A true backdrop click and Escape both dismiss the link dialog; the Review purchase context step
+  shares the backdrop behavior while retaining its pending guard. The Edit Order form grid now
+  reserves six pixels of inline focus-ring clearance plus scroll padding, so the 3px outline/2px
+  offset on edge fields is no longer clipped by the scroll box. Live geometry at 1440×900 measured
+  a 736×684 link dialog with a 352px list; at 390×844 it measured 339×690 with the footer visible.
+  Focused `PurchaseContext`/`OrderScreen` tests **22 passed**.
+- Sourcing Preview remains isolated and healthy at `15175`: frontend/backend/database healthy,
+  backend health `ok`, DB `20261013_0042 (head)`, fixture **v4/ready/79**, coverage 9 Suppliers (1
+  retired), 4 Orders, 11 SeedLots (6 with Supplier, 5 with Order). A review-created blank 0-lot
+  synthetic Order was deleted through the UI, restoring the four fixture Orders; no other record or
+  volume changed. `sourcing_preview.py status` currently refuses its ancestry guard because the
+  branch is **0 ahead / 1 behind** `origin/main`; read-only Docker/API queries were used instead.
+  No Feature Review, UAT, DEV, production or Maps operation occurred.
+- Git remains unsynchronized: HEAD `9a73d3f`, `origin/main` `9275947`, merge base `9a73d3f`. The Maps
+  commit adds no migration and does not overlap local backend contracts; `docs/progress.md` is the
+  likely merge-only overlap. Proposed synchronization is a normal merge followed by both milestone
+  preservation, `make api-check` only, and the focused/full verification set — not rebase/reset/stash
+  or force-push. All changes remain unstaged/untracked; no canonical gate, commit, push or delivery.
+  Candidate is **READY_FOR_SOURCING_REVIEW**.
+
+## 2026-10-21 — SUPPLIERS-VISUAL-001 and dedicated Sourcing Preview
+
+- Added a first-class `sourcing` workflow role and thin `scripts/sourcing_preview.py` CLI. Sourcing
+  Preview runs project `florabase-sourcing-preview` on loopback `15175` with its own database,
+  network, images, owner and retained volumes, composed from `compose.yaml`, `compose.dev.yaml`,
+  `compose.review.yaml` and the new `compose.sourcing.yaml`. Existing fixtures seed the isolated
+  dataset; Feature Review, UAT, DEV and Stable Preview remain untouched. Commands and safety
+  boundaries are documented in `docs/development-workflow.md` and exposed as `sourcing-preview-*`
+  Make targets.
+- Rebuilt the Suppliers workspace against the accepted Collection language: directory search/Saved
+  views/`+ New supplier` toolbar, compact botanical rows with neutral visual fallback, Quick Preview,
+  full-width create panel, contextual Edit modal with dirty dismissal/focus restore, and full-width
+  dashboard-style Details. Supplier rules and markup stay in the supplier feature; supplier-only CSS
+  lives in `supplier-refinement.css`. Orders work was not started in that increment.
+- Found and fixed a real route race while triaging the full suite: the deferred detail reset could
+  clobber an already-loaded supplier after direct creation or directory navigation. The reset now
+  preserves ready detail for the current route id; regression coverage remains in the supplier and
+  App integration tests.
+- Verification: **106 focused tests / three files**, full frontend **780 tests / 68 files**, strict
+  TypeScript, zero-warning ESLint, Prettier, and production build pass. Workflow/environment tests
+  **33 OK**; Review fixture tests **22 passed / 1 live-only skipped**; UAT fixture guard subset
+  **12 passed** under a simulated UAT identity. The UAT live dataset suite still requires the
+  disposable guarded UAT smoke and was not run against Sourcing Preview. No API contract or backend
+  schema change, so API drift/migration gates are unchanged.
+- Live Sourcing Preview checks at `15175` confirmed nine seeded suppliers, detail loading, contextual
+  Edit modal open/Cancel/focus restore, and zero horizontal overflow. Responsive 1024×844 and 390×844
+  checks used same-origin iframes because native viewport resizing was unavailable; 1440-width
+  evidence came from the live desktop window. Native 1440×844/1024×844/390×844 window resizing and a
+  simultaneous Feature Review comparison remain operator checks. All changes are unstaged and
+  uncommitted; candidate is **SUPPLIERS_READY_FOR_VISUAL_REVIEW**.
+
 ## 2026-10-18 — COLLECTION-VISUAL-002 operator screenshot follow-up
 
 - Matched Harvest/Stored material typography and empty preview to Plants; rounded Location row/toggle
