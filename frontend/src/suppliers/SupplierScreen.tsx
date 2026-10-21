@@ -359,6 +359,7 @@ function SupplierPreview({
             <button
               className="button--secondary"
               type="button"
+              data-supplier-preview-edit
               onClick={onEdit}
             >
               Edit
@@ -777,6 +778,8 @@ export function SupplierScreen({
   const editTrigger = useRef<HTMLButtonElement>(null);
   const editBaseline = useRef(JSON.stringify(blankSupplierForm()));
   const directEditHandled = useRef(false);
+  const restorePreviewEdit = useRef(false);
+  const restoreDetailHeading = useRef(false);
   const {
     expanded: creationExpanded,
     triggerRef: creationTriggerRef,
@@ -804,8 +807,11 @@ export function SupplierScreen({
       setSave((current) =>
         current.status === "success" ? current : { status: "idle" },
       );
-      if (!edit.modal && initialId)
+      if (!edit.modal && initialId) {
+        if (restorePreviewEdit.current) return;
+        restoreDetailHeading.current = true;
         setRecordRoute(`#/suppliers/${initialId}`, true);
+      }
     },
   });
 
@@ -952,6 +958,55 @@ export function SupplierScreen({
     };
   }, [detail, edit.modal, initialId, initialTab, suppliers]);
 
+  // Browser Back out of a direct edit URL closes the inline fallback instead of
+  // leaving an editor mounted under a non-edit route.
+  useEffect(() => {
+    if (initialTab === "edit" || edit.modal || !editing || !target) return;
+    const timeout = window.setTimeout(() => {
+      setEditing(false);
+      setTarget(null);
+      if (initialId) restoreDetailHeading.current = true;
+    }, 0);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [edit.modal, editing, initialId, initialTab, target]);
+
+  // Editing from Quick Preview changes the route, so restore focus once the
+  // directory and its preview have rendered again.
+  useEffect(() => {
+    if (
+      initialId ||
+      editing ||
+      edit.modal ||
+      !restorePreviewEdit.current ||
+      !selected
+    )
+      return;
+    restorePreviewEdit.current = false;
+    const frame = requestAnimationFrame(() => {
+      document
+        .querySelector<HTMLElement>("[data-supplier-preview-edit]")
+        ?.focus();
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [edit.modal, editing, initialId, selected]);
+
+  // A route change can mount the detail after save success; wait for its heading.
+  useEffect(() => {
+    if (!restoreDetailHeading.current || editing || edit.modal) return;
+    if (detail.status !== "ready") return;
+    restoreDetailHeading.current = false;
+    const frame = requestAnimationFrame(() => {
+      detailHeading.current?.focus();
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [detail, edit.modal, editing]);
+
   useCollectionPageReturnFocus(
     directory.status === "ready" && !editing && !edit.modal,
   );
@@ -1031,6 +1086,7 @@ export function SupplierScreen({
   ) {
     editTrigger.current = trigger;
     directEditHandled.current = true;
+    restorePreviewEdit.current = !initialId;
     if (creationExpanded) closeCreation({ returnFocus: false });
     const values = supplierFormFrom(supplier);
     editBaseline.current = JSON.stringify(values);
@@ -1067,6 +1123,7 @@ export function SupplierScreen({
           setTarget(null);
         }
         if (wasCreating) {
+          restoreDetailHeading.current = true;
           setFilter("");
           closeCreation({ returnFocus: false });
         }
@@ -1076,7 +1133,10 @@ export function SupplierScreen({
             ? `${supplier.name} was created and selected.`
             : `${supplier.name} was updated.`,
         });
-        if (wasCreating || initialTab === "edit")
+        if (
+          wasCreating ||
+          (initialTab === "edit" && !restorePreviewEdit.current)
+        )
           setRecordRoute(`#/suppliers/${supplier.id}`, true);
         if (!wasCreating && initialId === supplier.id)
           setDetailRefresh((value) => value + 1);

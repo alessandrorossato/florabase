@@ -284,6 +284,36 @@ test("choices arriving after a controlled value populate the picker without clea
   expect(control).toHaveValue("Nursery");
 });
 
+test("a re-rendered choices array preserves a typed query with an empty value", async () => {
+  const user = userEvent.setup();
+  const { rerender } = render(
+    <ReferencePicker
+      label="Supplier"
+      choices={[{ id: "supplier", label: "Nursery" }]}
+      value=""
+      onChange={() => undefined}
+    />,
+  );
+  const control = screen.getByRole("combobox", { name: "Supplier" });
+  await user.click(control);
+  await user.type(control, "Nur");
+  expect(control).toHaveValue("Nur");
+  rerender(
+    <ReferencePicker
+      label="Supplier"
+      choices={[
+        { id: "supplier", label: "Nursery" },
+        { id: "seller", label: "Seller" },
+      ]}
+      value=""
+      onChange={() => undefined}
+    />,
+  );
+  await waitFor(() => {
+    expect(control).toHaveValue("Nur");
+  });
+});
+
 test("Escape dismisses an open picker before its enclosing task and option-button selection restores focus", async () => {
   const user = userEvent.setup();
   const outerEscape = vi.fn();

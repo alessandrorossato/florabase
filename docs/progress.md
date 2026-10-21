@@ -1,5 +1,31 @@
 # Engineering progress
 
+## 2026-10-21 — SOURCING-VISUAL-001 synchronization and review
+
+- Synchronized the existing Sourcing worktree without rewriting history: preserved the reviewed
+  candidate in `f9eef43`, merged `origin/main` (`9275947`, Maps `#116`) in normal merge `c946acb`,
+  and kept both the Sourcing and Maps milestones. No conflict was reported; `docs/features.json`
+  remains main's version with `MAPS-FOUNDATION-001`, and `SUPPLIER-003` / `ORDER-001` stay the
+  domain sources of truth for this presentation increment. No backend contract or migration change
+  was introduced.
+- Post-merge review fixed real regressions: Orders search no longer disables itself while a filtered
+  page is in flight, so multi-character queries keep focus; a missing Supplier UUID is visible in
+  both the filter label and active filter; Supplier Quick-Preview Edit returns to the preview and
+  restores its remounted Edit trigger; Back out of a direct edit URL closes the inline editor and
+  restores the heading in Suppliers and Orders; Supplier creation focuses its loaded detail heading;
+  and `ReferencePicker` preserves typed queries when a parent rebuilds `choices`.
+- Verification: focused frontend **157 tests / 7 files**; post-merge full frontend regression
+  **820 tests / 70 files**; strict TypeScript, zero-warning ESLint, Prettier and `make api-check`
+  pass. Workflow helpers **34/34** and Review fixture **24 passed / 1 live-only skipped**.
+  `make sourcing-preview-status` is healthy at `15175` (DB `20261013_0042`, fixture v4/ready/79,
+  9 Suppliers, 4 Orders, 11 SeedLots). The live UAT smoke was not run; UAT volumes were verified
+  untouched. `make verify-full`, delivery and finish remain the exact-tree final gate/operator steps.
+- Deferred: direct-edit browser Back discards an unsaved draft without a custom prompt (in-app dirty
+  dismissal still confirms); dead `.orders-page` / `.order-list li` CSS; Orders Edit remains
+  available when the Supplier list failed to load, with server validation still authoritative.
+- Preview, Feature Review (`15174`), Maps, UAT, DEV, Stable Preview and production were not restarted,
+  reseeded, reset or removed; no volume deletion or prune occurred.
+
 ## 2026-10-21 — SOURCING-VISUAL-001 Orders normalization
 
 - Reused the accepted Collection directory/detail architecture for Orders: hidden search caption with

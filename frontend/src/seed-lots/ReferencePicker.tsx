@@ -61,16 +61,19 @@ export function ReferencePicker({
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const typing = useRef(false);
+  const previousValue = useRef(value);
   // Keep the visible query aligned with controlled value changes. Typing emits an
-  // empty value first, so only an external clear should also clear the query.
+  // empty value first, so only a real external clear should also clear the query;
+  // a parent re-render that just rebuilds `choices` must preserve typed text.
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       if (value) {
         const label = choices.find((choice) => choice.id === value)?.label;
         if (label !== undefined) setQuery(label);
-      } else if (!typing.current) {
+      } else if (previousValue.current && !typing.current) {
         setQuery("");
       }
+      previousValue.current = value;
       typing.current = false;
     }, 0);
     return () => {

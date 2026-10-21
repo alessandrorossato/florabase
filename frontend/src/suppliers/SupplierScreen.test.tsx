@@ -282,6 +282,40 @@ test("Direct edit URL opens the editor from the loaded detail while directory is
   });
 });
 
+test("leaving the direct edit URL closes the inline editor and restores its heading", async () => {
+  vi.spyOn(globalThis, "fetch").mockImplementation((input) =>
+    Promise.resolve(
+      json(
+        requestUrl(input) === "/api/v1/suppliers"
+          ? [supplier]
+          : {
+              ...supplier,
+              seed_lots: [],
+              plants: [],
+              plant_groups: [],
+              recent_acquisitions: [],
+            },
+      ),
+    ),
+  );
+  const { rerender } = mount({ initialId: id, initialTab: "edit" });
+  await screen.findByDisplayValue("Review nursery");
+  rerender(
+    <AuthContext.Provider value={auth}>
+      <SupplierScreen initialId={id} />
+    </AuthContext.Provider>,
+  );
+  await waitFor(() => {
+    expect(
+      screen.queryByDisplayValue("Review nursery"),
+    ).not.toBeInTheDocument();
+  });
+  const heading = screen.getByRole("heading", { name: "Review nursery" });
+  await waitFor(() => {
+    expect(heading).toHaveFocus();
+  });
+});
+
 test("New supplier uses the full-width creation panel and saves a new record", async () => {
   const createdId = "01900000-0000-7000-8000-000000000914";
   let created: object | null = null;
@@ -441,6 +475,9 @@ test("Quick Preview contextual edit opens a modal, saves with PUT and returns fo
   ).toHaveTextContent("Corrected nursery");
   await waitFor(() => {
     expect(window.location.hash).toBe("#/suppliers");
+  });
+  await waitFor(() => {
+    expect(within(preview).getByRole("button", { name: "Edit" })).toHaveFocus();
   });
 });
 

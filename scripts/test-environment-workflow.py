@@ -134,6 +134,21 @@ class EnvironmentTests(unittest.TestCase):
                 run.assert_not_called()
                 compose.assert_not_called()
 
+    def test_sourcing_preview_role_is_isolated_and_requires_its_own_removal_token(self) -> None:
+        sourcing = Environment(self.repo, "sourcing")
+        self.assertEqual(sourcing.project, "florabase-sourcing-preview")
+        self.assertEqual(sourcing.url, "http://localhost:15175")
+        settings = sourcing.environment()
+        self.assertEqual(settings["POSTGRES_DB"], "florabase_sourcing")
+        self.assertEqual(settings["POSTGRES_USER"], "florabase_sourcing")
+        self.assertEqual(settings["FRONTEND_PORT"], "15175")
+        command = " ".join(sourcing.command("config"))
+        self.assertIn("compose.review.yaml", command)
+        self.assertIn("compose.sourcing.yaml", command)
+        self.assertNotIn("compose.uat.yaml", command)
+        with self.assertRaisesRegex(WorkflowError, "CONFIRM_REMOVE_SOURCING"):
+            sourcing.stop(remove=True, confirm="florabase-feature-review")
+
     def test_review_seed_accepts_owned_resources_and_never_targets_uat(self) -> None:
         review = Environment(self.repo, "review")
         settings = review.environment()

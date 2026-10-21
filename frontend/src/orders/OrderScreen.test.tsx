@@ -413,6 +413,27 @@ test("direct edit route uses the inline fallback and returns focus to the detail
   });
 });
 
+test("leaving the direct edit URL closes the inline editor and restores its heading", async () => {
+  const { rerender } = mount(id, "edit");
+  expect(
+    await screen.findByRole("heading", { name: "Edit Order" }),
+  ).toBeVisible();
+  rerender(
+    <AuthContext.Provider value={auth}>
+      <OrderScreen initialId={id} />
+    </AuthContext.Provider>,
+  );
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("heading", { name: "Edit Order" }),
+    ).not.toBeInTheDocument();
+  });
+  const heading = await screen.findByRole("heading", { name: "REF-1" });
+  await waitFor(() => {
+    expect(heading).toHaveFocus();
+  });
+});
+
 test("unreferenced Order deletion requires explicit confirmation; server refusal remains visible", async () => {
   vi.mocked(getOrder).mockResolvedValue({
     ...detail,
@@ -603,4 +624,67 @@ test("Supplier filter popup stays anchored, wraps long names, and clears before 
   expect(
     screen.queryByRole("dialog", { name: "Orders filters" }),
   ).not.toBeInTheDocument();
+});
+
+test("typing a multi-character search query keeps focus while results are in flight", async () => {
+  vi.mocked(listOrders).mockResolvedValueOnce({
+    items: [detail],
+    total: 1,
+    offset: 0,
+    limit: 50,
+  });
+  vi.mocked(listOrders).mockReturnValue(new Promise(() => undefined));
+  const user = userEvent.setup();
+  mount();
+  await orderRow();
+  const search = screen.getByLabelText("Search Orders");
+  await user.click(search);
+  await user.type(search, "ABC");
+  expect(search).toHaveValue("ABC");
+  expect(search).toHaveFocus();
+  await waitFor(() => {
+    expect(listOrders).toHaveBeenLastCalledWith(
+      "ABC",
+      "",
+      0,
+      expect.any(AbortSignal),
+    );
+  });
+});
+
+test("a missing Supplier filter UUID stays exact and visible", async () => {
+  const missing = "01900000-0000-7000-8000-000000000999";
+  vi.mocked(listOrders).mockResolvedValue({
+    items: [],
+    total: 0,
+    offset: 0,
+    limit: 50,
+  });
+  const user = userEvent.setup();
+  window.history.replaceState(null, "", `#/orders?supplier_id=${missing}`);
+  mount();
+  await waitFor(() => {
+    expect(listOrders).toHaveBeenCalledWith(
+      "",
+      missing,
+      0,
+      expect.any(AbortSignal),
+    );
+  });
+  const label = `Unavailable Supplier — ${missing}`;
+  expect(
+    screen.getByRole("button", { name: "Remove supplier filter" }),
+  ).toHaveTextContent(label);
+  await user.click(screen.getByRole("button", { name: /^Filters/ }));
+  const filters = screen.getByRole("dialog", { name: "Orders filters" });
+  const control = within(filters).getByRole("combobox", {
+    name: "Supplier",
+  });
+  expect(control).toHaveValue(label);
+  await user.click(control);
+  expect(
+    within(filters).getByRole("button", {
+      name: `Unavailable Supplier — ${missing} (unavailable)`,
+    }),
+  ).toBeVisible();
 });

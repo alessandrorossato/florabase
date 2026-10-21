@@ -1717,6 +1717,9 @@ test("keyboard supplier creation needs only name and kind and sends CSRF", async
     name: "Rare Palm Seeds",
   });
   expect(heading).toBeInTheDocument();
+  await waitFor(() => {
+    expect(heading).toHaveFocus();
+  });
   const create = requests.find(
     ({ path, init }) => path === "/api/v1/suppliers" && init?.method === "POST",
   );
@@ -1820,6 +1823,60 @@ test("supplier filtering, keyboard selection, optional details, editing, and lif
         /This supplier is retired.*history remains available/i,
       ),
     ).not.toBeInTheDocument();
+  });
+});
+
+test("Quick Preview edit returns to the preview and restores its Edit trigger", async () => {
+  let updated = false;
+  authenticatedThen((path, init) => {
+    if (path === "/api/v1/suppliers" && !init?.method)
+      return jsonResponse([
+        updated ? { ...supplier, name: "Rare Palm Seeds Europe" } : supplier,
+      ]);
+    if (path === `/api/v1/suppliers/${supplier.id}` && init?.method === "PUT") {
+      if (typeof init.body !== "string") throw new Error("expected JSON body");
+      updated = true;
+      return jsonResponse({ ...supplier, name: "Rare Palm Seeds Europe" });
+    }
+    if (path === `/api/v1/suppliers/${supplier.id}`)
+      return jsonResponse({
+        ...supplierDetail,
+        name: updated ? "Rare Palm Seeds Europe" : supplier.name,
+      });
+    throw new Error(`unexpected request: ${path}`);
+  });
+  const user = await openSuppliers();
+  await user.click(
+    await screen.findByRole("button", { name: /Rare Palm Seeds/i }),
+  );
+  const preview = await screen.findByRole("complementary", {
+    name: "Quick preview",
+  });
+  await user.click(within(preview).getByRole("button", { name: "Edit" }));
+  expect(window.location.hash).toBe(`#/suppliers/${supplier.id}?tab=edit`);
+  const dialog = await screen.findByRole("dialog", {
+    name: "Edit Rare Palm Seeds",
+  });
+  const name = within(dialog).getByLabelText("Name");
+  await user.clear(name);
+  await user.type(name, "Rare Palm Seeds Europe");
+  await user.click(
+    within(dialog).getByRole("button", { name: "Save supplier" }),
+  );
+  await waitFor(() => {
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+  await waitFor(() => {
+    expect(window.location.hash).toBe("#/suppliers");
+  });
+  const returned = await screen.findByRole("complementary", {
+    name: "Quick preview",
+  });
+  expect(returned).toHaveTextContent("Rare Palm Seeds Europe");
+  await waitFor(() => {
+    expect(
+      within(returned).getByRole("button", { name: "Edit" }),
+    ).toHaveFocus();
   });
 });
 

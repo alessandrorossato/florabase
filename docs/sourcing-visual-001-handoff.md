@@ -1,28 +1,61 @@
 # SOURCING-VISUAL-001 — Suppliers + Orders normalization handoff
 
-Candidate: `/home/alessandro/Desktop/github/florabase-sourcing` (linked feature worktree)
+Candidate: `/home/alessandro/Desktop/github/florabase-sourcing` (existing linked feature worktree)
 Branch: `feat/sourcing-visual-001`
-HEAD: `9a73d3f0434a3f8399de8746b010a5d8503937a4`
+Synchronization points: preservation commit `f9eef43`, normal merge commit `c946acb`
 `origin/main`: `927594724d6ccab7dc0d6621a72019e68011944f`
-Merge base: `9a73d3f0434a3f8399de8746b010a5d8503937a4`
-Divergence: **0 ahead / 1 behind**. No new branch, commit, push, PR or delivery was created in
-this pass.
+Merge base after synchronization: `927594724d6ccab7dc0d6621a72019e68011944f`
+Divergence before this handoff commit: **2 ahead / 0 behind**. The reviewed corrections and this
+document are committed on top; no new branch or worktree was created.
 
-All implementation, tests, CSS and documentation changes remain unstaged or untracked. No
-`make feature-verify`, `make feature-deliver` or `make feature-finish` was run. The candidate is
-ready for Sourcing visual review, not for delivery.
+`origin/main` was merged normally into the feature branch. No reset, rebase, history rewrite,
+force-push, discard or manual `main` change occurred. The only overlapping path was
+`docs/progress.md`; Git merged it without conflict and both the Sourcing and Maps milestones remain.
 
 ## STATUS
 
 - Suppliers normalization is retained with the provisional acceptance already recorded.
 - Orders normalization is implemented against the accepted Collection architecture and
-  ORDER-001 semantics.
-- Focused behavior tests (**122 / 4 files**), full frontend regression (**790 / 68 files**), strict
-  TypeScript, zero-warning ESLint, Prettier, production build and whitespace checks pass.
-- The Sourcing Preview is healthy on its isolated project and retains fixture v4 with four Orders.
-- Git synchronization is intentionally not performed. See **GIT DIVERGENCE** for the proposed
-  non-destructive plan.
-- Final handoff marker: **READY_FOR_SOURCING_REVIEW**.
+  ORDER-001 semantics; the merge added no backend contract or schema change.
+- Post-merge review corrected real regressions in Orders search/filter behavior, Supplier
+  Quick-Preview Edit focus/routing, direct-edit Back handling, creation focus and the shared
+  `ReferencePicker` typed-query preservation. Each has focused regression coverage.
+- Focused post-merge frontend checks (**157 passed / 7 files**), strict TypeScript, zero-warning
+  ESLint and Prettier pass. Workflow helpers (**34/34**) and the Review fixture suite
+  (**24 passed / 1 live-only skipped**) also pass.
+- The Sourcing Preview is healthy on its isolated project at `15175` with fixture v4 and four
+  Orders. Maps, Feature Review, UAT, DEV, Stable Preview and production were not touched.
+- Canonical `make verify-full` remains the final local gate on the exact committed tree; delivery
+  and finish are operator actions. Final handoff marker: **READY_FOR_DELIVERY**.
+
+## SYNCHRONIZATION AND REVIEW
+
+- The dirty candidate was preserved in `f9eef43` (23 intended files; no secrets, environment files,
+  local databases or unrelated work). `origin/main` was fetched and merged in `c946acb` as a normal
+  merge with **no conflicts**.
+- `docs/progress.md` retains both milestones, including the Maps delivery. `docs/features.json`
+  remains main's version with `MAPS-FOUNDATION-001`; this presentation increment adds no duplicate
+  feature entry and continues to rely on `SUPPLIER-003` / `ORDER-001` as the domain sources of truth.
+- `make sourcing-preview-status` succeeds after the merge: healthy frontend/backend/database,
+  revision `20261013_0042`, fixture **v4 / ready / 79**, 9 Suppliers (1 retired), 4 Orders and 11
+  SeedLots (6 with Supplier, 5 with Order). The live dataset was not reseeded.
+- Review found and fixed these correctness/usability regressions:
+  - Orders search no longer disables itself while the first filtered page is in flight, so a
+    multi-character query keeps focus and all typed characters.
+  - A missing Supplier filter UUID is again exact and visible as
+    `Unavailable Supplier — <uuid>` in the picker and the active filter.
+  - Supplier Quick-Preview Edit now returns to the preview (not the Details page) after save and
+    restores focus to the remounted preview Edit control.
+  - Browser Back out of a direct `?tab=edit` URL closes the inline editor in both Suppliers and
+    Orders and restores the detail heading.
+  - Successful Supplier creation focuses the loaded detail heading.
+  - `ReferencePicker` preserves an in-progress typed query when its parent re-renders and rebuilds
+    the `choices` array.
+- ORDER-001 invariants were checked: optional Supplier, independent partial dates, optional exact
+  price/currency pair, total-not-per-lot semantics, exact linked SeedLot counts, and unreferenced
+  deletion only. The UI uses `aria-required` for the paired price/currency hints; the backend
+  Pydantic contract rejects an unpaired value with 422, so the invariant is enforced server-side.
+  The earlier wording that native validation alone prevents submission was inaccurate.
 
 ## ORDERS IMPLEMENTATION
 
@@ -125,63 +158,67 @@ ready for Sourcing visual review, not for delivery.
 - Added `/orders` as a recognized Collection parent and return-focus target.
 - Added an `order` visual kind with a neutral receipt/document placeholder.
 - Added `ReferencePicker` controlled-value synchronization, explicit click opening and an
-  `openOnFocus={false}` option for dialogs. Existing pickers keep their focus-opening default.
+  `openOnFocus={false}` option for dialogs. Existing pickers keep their focus-opening default. A
+  parent re-render that rebuilds `choices` no longer clears an in-progress typed query.
 - `App` passes the Orders `initialTab` and no longer remounts `OrderScreen` or `SupplierScreen` by
-  route record id.
+  route record id. The same change required explicit post-route focus/close handling: Quick-Preview
+  Edit returns to its remounted trigger, direct-edit Back closes the inline editor, and successful
+  Supplier creation focuses the loaded detail heading.
 
 ## VERIFICATION
 
-### Current focused frontend checks
+### Post-merge focused frontend checks
 
-Command:
+Command (quality Compose profile):
 
 ```bash
-cd frontend
-npx vitest run --configLoader runner \
+python3 ./scripts/workflow_environment.py quality compose -- \
+  run --rm --no-deps frontend pnpm test \
   src/orders/OrderScreen.test.tsx \
+  src/orders/PurchaseContext.test.tsx \
+  src/suppliers/SupplierScreen.test.tsx \
   src/seed-lots/ReferencePicker.test.tsx \
   src/components/recordNavigation.test.ts \
-  src/App.test.tsx
+  src/App.test.tsx \
+  src/photos/RecordVisual.test.tsx
 ```
 
-Result: **122 passed / 4 files**. Coverage includes directory/search/filter behavior, long Supplier
+Result: **157 passed / 7 files**. Coverage includes directory/search/filter behavior, long Supplier
 names, create/edit payload semantics, partial dates, amount/currency pairing, dirty dismissal,
-backdrop coordinates, picker Escape order, direct-edit fallback and heading focus, modal focus
-restoration, detail tabs, linked SeedLots, deletion guards, route parents and App transitions.
+backdrop coordinates, picker Escape order and typed-query preservation, direct-edit fallback,
+Back-out-of-edit, creation and refresh focus, Supplier Quick-Preview Edit return routing, detail
+tabs, linked SeedLots, deletion guards, route parents and App transitions.
 
-Follow-up evidence for the linking and focus-boundary changes: `PurchaseContext.test.tsx` plus
-`OrderScreen.test.tsx` **22 passed / 2 files**, including the selectable linked-lot row, backdrop
-dismissal and Escape dismissal.
+### Static checks on changed frontend files
 
-### Full frontend regression
+- `pnpm exec tsc -b --pretty false` — pass.
+- `pnpm exec eslint <changed TS/TSX files> --max-warnings 0` — pass, zero warnings. The route
+  departure effects use the repository's existing deferred-update pattern to satisfy
+  `react-hooks/set-state-in-effect`.
+- `pnpm exec prettier --check <changed frontend files>` — pass.
 
-`npm test -- --reporter=dot` in the final clean run: **790 passed / 68 files** (574 seconds). This
-includes the shared-picker, responsive-layout, direct-edit focus and link-dialog corrections.
+### Workflow and environment checks
 
-### Static and build checks
+- Workflow helper suite: **34 tests OK**, including the isolated Sourcing role/removal-token test.
+- Review fixture suite: **24 passed / 1 live-only skipped**, including deterministic
+  `FLORABASE_WORKFLOW_MODE=review` setup and Sourcing identity/refusal coverage.
+- `make sourcing-preview-status` — healthy, revision `20261013_0042`, fixture
+  **v4 / ready / 79**.
+- UAT fixture volumes were verified still present and untouched; the live UAT smoke was not run.
 
-- `npx tsc -b --pretty false` — pass.
-- `npx eslint <changed TS/TSX files> --max-warnings 0` — pass, zero warnings.
-- `npx prettier --write <changed frontend files>` — applied; no remaining formatting issues.
-- `npx vite build` — production build pass.
-- `git diff --check` — pass.
+### Final gate
 
-### Workflow and environment checks already recorded for this candidate
+- `make verify-full` is the canonical final local gate and must run on the exact committed tree;
+  its receipt is required by `make feature-deliver`.
+- Post-merge full frontend regression: **820 passed / 70 files**. The earlier pre-sync run was
+  **790 passed / 68 files**. The final Unix gate supersedes and extends both with backend,
+  integration, API-drift, migration, build and health stages.
 
-- Workflow helper suite: **33/33 OK**.
-- Review fixture suite: **22 passed / 1 live-only skipped**.
-- UAT fixture guard subset: **12 passed** under a simulated UAT identity.
+### Not run here
 
-These checks predate the final Orders-only frontend edits and are reported as candidate environment
-evidence, not as a new full backend gate.
-
-### Not run
-
-- Canonical `make feature-verify` or any full backend, PostgreSQL integration, migration-cycle,
-  API-drift or production-compose gate.
-- Python Ruff and strict mypy: those tools are unavailable in the running preview runtime image.
-- The disposable guarded UAT live-dataset smoke.
-- Native browser-window resizing; visual viewport evidence used same-origin iframes. See below.
+- The disposable guarded UAT live-dataset smoke (live-only by design).
+- Native browser-window resizing in this follow-up; the visual pass recorded below used same-origin
+  iframe proxies.
 
 ## VISUAL REVIEW
 
@@ -201,8 +238,8 @@ Observed states:
 - **390×844 directory:** search is full width, the three actions wrap below it, rows stack amount
   below identity, and the mobile navigation remains visible.
 - **1440×844 New Order:** two-column form, menu closed on open, footer visible, measured dialog
-  height approximately 533px. Entering a price without a currency marks Currency required and
-  native validation prevents submission without hiding the footer.
+  height approximately 533px. Entering a price without a currency marks Currency required through
+  `aria-required`; an unpaired value is rejected by the backend with 422 without hiding the footer.
 - **1440×844 Edit Order:** selected Supplier label, complete date parts, price/currency, notes and
   footer fit within the dialog; no precision sublabel is visible.
 - **390×844 New Order:** full-screen canvas, single-column fields, form panel scrolls independently,
@@ -251,42 +288,35 @@ A blank 0-Linked-SeedLot synthetic Order was created during visual interaction a
 through the UI; the dataset returned to the four fixture Orders and the fixture marker remained
 `v4 / ready / 79`. No Supplier, SeedLot or media record was changed.
 
-`python3 scripts/sourcing_preview.py status` currently exits 1 in this checkout because its context
-guard requires `origin/main` to be an ancestor of `HEAD`, and `HEAD` is behind by the Maps commit.
-The containers and dataset were therefore inspected with read-only Docker/API queries. This is a
-guard/divergence limitation, not a preview failure, and it should disappear after an approved
-synchronization.
+`python3 scripts/sourcing_preview.py status` now succeeds because `origin/main` is an ancestor of
+`HEAD`; the earlier guard failure was only the pre-merge divergence.
 
-## GIT DIVERGENCE AND SAFE SYNCHRONIZATION PLAN
+## GIT SYNCHRONIZATION RECORD
 
-`origin/main` advanced by one commit (`9275947`, Maps `#116`) after this branch's base. The commit
-adds Maps documentation, tests, images, `docs/progress.md` / `docs/features.json` entries and
-generated backend/frontend API declarations. It adds no migration. The local Sourcing work does not
-change backend contracts, the OpenAPI document or migrations.
+`origin/main` had advanced by one commit (`9275947`, Maps `#116`) after this branch's base. That
+commit added Maps documentation, tests, images, progress/feature entries and generated API
+declarations, with no migration. The Sourcing candidate adds no backend contract or schema change.
 
-The only likely textual overlap is `docs/progress.md`; both sides append independent milestones.
-No `rebase`, `reset`, `stash`, history rewrite, force-push or automatic synchronization was
-performed.
+Synchronization used the conservative path:
 
-Proposed non-destructive plan, requiring separate operator approval:
+1. Preserved the reviewed candidate as `f9eef43` after a secret scan and intended-file audit.
+2. Merged `origin/main` with a normal merge commit, `c946acb`; no rebase, reset, stash, history
+   rewrite or force-push.
+3. Git merged `docs/progress.md` without conflict; both the Sourcing and Maps milestones are
+   present. `docs/features.json` retains `MAPS-FOUNDATION-001` and all prior entries.
+4. The merged tree keeps main's generated OpenAPI/schema artifacts; `make api-check` is part of the
+   final gate and no regeneration was needed by inspection.
+5. Post-merge focused checks and static checks pass as recorded above; the canonical gate remains
+   the final exact-tree authority.
 
-1. Preserve and review the current dirty/untracked candidate first. Do not synchronize over it.
-2. Merge `origin/main` into `feat/sourcing-visual-001` with a normal merge. Do not rebase or rewrite
-   the feature branch.
-3. Resolve `docs/progress.md` by retaining both the Maps milestone and this Sourcing milestone.
-   Preserve both sides' feature entries.
-4. Run `make api-check`; only if it reports drift, run `make api-generate` and commit both generated
-   artifacts. No backend source change is expected from the Sourcing work.
-5. Re-run the focused frontend checks, full frontend suite, TypeScript, ESLint, Prettier, production
-   build, `git diff --check`, and the Sourcing Preview status guard.
-6. Only then consider canonical `make feature-verify` and the operator's protected delivery flow.
-
-The merge must not be used to hide or discard either milestone. The branch should remain the
-candidate until the operator explicitly authorizes synchronization.
+The merge did not hide or discard either milestone, and the branch is now **2 ahead / 0 behind**
+before the reviewed corrections and documentation commit.
 
 ## WORKTREE STATE AND FILES
 
-All changes are unstaged or untracked. No commit contains any of the Sourcing work.
+The synchronized and reviewed tree is committed on `feat/sourcing-visual-001`; only intentional
+source, test, script and documentation files are staged for the final local commit. No secret,
+environment file, database, backup, upload, cache or unrelated file is included.
 
 Primary files:
 
@@ -309,15 +339,22 @@ Primary files:
   isolated Sourcing Preview and fixture support.
 - `docs/sourcing-visual-001-handoff.md` — this handoff.
 
-## UNRESOLVED / LIMITS
+## UNRESOLVED / LIMITS / DEFERRED
 
-- The branch is one commit behind `origin/main`; synchronization is intentionally pending approval.
-- `make feature-verify` was not run and no verification receipt exists for this tree.
-- Python lint/type checks and live UAT smoke were not run in this runtime.
+- `make verify-full`, protected delivery and `make feature-finish` run after this document is
+  committed; their results and final PR/merge identifiers are reported in the operator handoff.
+- The disposable guarded UAT live-dataset smoke is live-only and was not run in this pass.
 - Visual viewport evidence is iframe-proxy evidence; native window resizing and actual browser zoom
   remain operator checks.
 - Link-dialog backdrop and Escape dismissal were exercised live at 1440; pristine/dirty New Order
   and Edit dismissal, direct-link fallback and 1024×844 modal states remain unit-tested rather than
-  re-captured live in this final pass.
+  re-captured live in this follow-up.
+- Direct-edit browser Back now closes the editor instead of leaving it stranded, but an unsaved
+  draft is still discarded by the browser traversal without a custom prompt; the in-app Cancel,
+  Escape and backdrop paths retain dirty confirmation.
+- Cosmetic dead CSS remains in `.orders-page` / `.order-list li` after the markup class change; it
+  has no observed behavioral effect and is deferred.
+- Orders still enables Edit from a record detail when the Supplier list failed to load; saving does
+  not fabricate a Supplier and the existing form/error paths remain authoritative. Deferred.
 
-READY_FOR_SOURCING_REVIEW
+READY_FOR_DELIVERY

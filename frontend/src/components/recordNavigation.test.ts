@@ -45,6 +45,11 @@ test.each([
         collectionReturnFocus: parent === "#/harvests" ? "create" : "harvest",
       });
     }
+    if (parent === "#/suppliers" || parent === "#/orders") {
+      expect(window.history.state as unknown).toMatchObject({
+        collectionReturnFocus: "create",
+      });
+    }
     await browserBack();
     expect(window.location.hash).toBe("#/dashboard");
   },

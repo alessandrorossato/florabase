@@ -886,6 +886,22 @@ export function OrderScreen({
     };
   }, [detail, edit.modal, initialId, initialTab, page]);
 
+  // Browser Back out of a direct edit URL closes the inline fallback instead of
+  // leaving an editor mounted under a non-edit route.
+  useEffect(() => {
+    if (initialTab === "edit" || edit.modal || !editing) return;
+    const timeout = window.setTimeout(() => {
+      setEditing(false);
+      setTarget(null);
+      setFormDirty(false);
+      setFormError("");
+      if (initialId) restoreDetailHeading.current = true;
+    }, 0);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [edit.modal, editing, initialId, initialTab]);
+
   useCollectionPageReturnFocus(!initialId && !formOpen && !editing);
 
   useEffect(() => {
@@ -920,7 +936,7 @@ export function OrderScreen({
     )
       choices.push({
         id: view.state.supplier_id,
-        label: "Unavailable Supplier",
+        label: `Unavailable Supplier — ${view.state.supplier_id}`,
         retired: true,
         inactiveLabel: "unavailable",
       });
@@ -928,7 +944,7 @@ export function OrderScreen({
   }, [suppliers, view.state.supplier_id]);
   const activeSupplierName =
     suppliers?.find(({ id }) => id === view.state.supplier_id)?.name ??
-    "Unavailable supplier";
+    `Unavailable Supplier — ${view.state.supplier_id}`;
 
   // A saved edit refreshes the detail, so move focus to the record heading
   // instead of the detached Edit button from the replaced render.
@@ -1267,7 +1283,6 @@ export function OrderScreen({
                     view.update("q", value);
                     setOffset(0);
                   }}
-                  disabled={!page && !pageError}
                 />
               }
               savedViews={
