@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -16,6 +16,7 @@ from florabase.explore.schemas import (
     RepresentedIdentity,
     RepresentedIdentityPage,
     SelectedNativeRanges,
+    TerritoryRangeIdentityPage,
 )
 
 router = APIRouter(prefix="/explore", tags=["explore"])
@@ -164,4 +165,38 @@ def native_selection(
 ) -> NativeRangeSelection:
     return native_ranges.selection(
         database, identity, scope=scope, q=q, with_range=with_range, record=record or ()
+    )
+
+
+@router.get(
+    "/native-ranges/territories/identities",
+    response_model=TerritoryRangeIdentityPage,
+    operation_id="listNativeTerritoryIdentities",
+)
+def native_territory_identities(
+    _actor: Reader,
+    database: Database,
+    territory: Annotated[
+        list[Annotated[str, Query(pattern="^[A-Z]{2}$")]], Query(min_length=1, max_length=250)
+    ],
+    match: Literal["any", "all"] = "any",
+    identity: Annotated[list[UUID] | None, Query(max_length=20)] = None,
+    q: Annotated[str, Query(max_length=200)] = "",
+    scope: RepresentationScope = "all",
+    with_range: bool = False,
+    record: Annotated[list[CollectionRecordCategory] | None, Query(max_length=5)] = None,
+    offset: Annotated[int, Query(ge=0, le=100000)] = 0,
+    limit: Annotated[int, Query(ge=1, le=100)] = 50,
+) -> TerritoryRangeIdentityPage:
+    return native_ranges.territory_identities(
+        database,
+        territory,
+        match=match,
+        identity_ids=identity or (),
+        q=q,
+        scope=scope,
+        with_range=with_range,
+        record=record or (),
+        offset=offset,
+        limit=limit,
     )
