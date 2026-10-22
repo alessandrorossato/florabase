@@ -1,0 +1,3970 @@
+{
+  "version": 5,
+  "name": "Extended Botanical Review Dataset v5",
+  "note": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion.",
+  "nodes": [
+    {
+      "key": "identity:00",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Chamaerops humilis",
+        "common_name": null,
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:01",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Ficus carica",
+        "common_name": "Review v5 \u2014 Fig",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:02",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Quercus robur",
+        "common_name": "Review v5 \u2014 English oak",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:03",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Acer palmatum",
+        "common_name": "Review v5 \u2014 Japanese maple",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:04",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Pinus pinea",
+        "common_name": null,
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:05",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Ginkgo biloba",
+        "common_name": "Review v5 \u2014 Maidenhair tree",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:06",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Solanum lycopersicum",
+        "common_name": "Review v5 \u2014 Tomato",
+        "cultivar_name": "Black Krim"
+      }
+    },
+    {
+      "key": "identity:07",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Capsicum annuum",
+        "common_name": "Review v5 \u2014 Pepper",
+        "cultivar_name": "Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing"
+      }
+    },
+    {
+      "key": "identity:08",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Lactuca sativa",
+        "common_name": null,
+        "cultivar_name": "Lollo Rossa"
+      }
+    },
+    {
+      "key": "identity:09",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Daucus carota",
+        "common_name": "Review v5 \u2014 Carrot",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:10",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Phaseolus vulgaris",
+        "common_name": "Review v5 \u2014 Common bean",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:11",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Pisum sativum",
+        "common_name": "Review v5 \u2014 Pea",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:12",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Echinacea purpurea",
+        "common_name": null,
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:13",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Helianthus annuus",
+        "common_name": "Review v5 \u2014 Sunflower",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:14",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Calendula officinalis",
+        "common_name": "Review v5 \u2014 Pot marigold",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:15",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Hibiscus rosa-sinensis",
+        "common_name": "Review v5 \u2014 Chinese hibiscus",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:16",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Clitoria ternatea",
+        "common_name": null,
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:17",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Musa acuminata",
+        "common_name": "Review v5 \u2014 Banana",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:18",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Coffea arabica",
+        "common_name": "Review v5 \u2014 Coffee",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:19",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Passiflora edulis",
+        "common_name": "Review v5 \u2014 Passion fruit",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:20",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Agave americana",
+        "common_name": null,
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:21",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Crassula ovata",
+        "common_name": "Review v5 \u2014 Jade plant",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:22",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Echeveria elegans",
+        "common_name": "Review v5 \u2014 Mexican snowball",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:23",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Opuntia ficus-indica",
+        "common_name": "Review v5 \u2014 Prickly pear",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:24",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Haworthiopsis fasciata",
+        "common_name": null,
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:25",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Thymus vulgaris",
+        "common_name": "Review v5 \u2014 Thyme",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:26",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Mentha spicata",
+        "common_name": "Review v5 \u2014 Spearmint",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:27",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Origanum vulgare",
+        "common_name": "Review v5 \u2014 Oregano",
+        "cultivar_name": null
+      }
+    },
+    {
+      "key": "identity:28",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Ocimum basilicum",
+        "common_name": null,
+        "cultivar_name": "Cinnamon"
+      }
+    },
+    {
+      "key": "identity:29",
+      "kind": "identity",
+      "payload": {
+        "scientific_name": "Salvia officinalis",
+        "common_name": "Review v5 \u2014 Sage",
+        "cultivar_name": "Tricolor"
+      }
+    },
+    {
+      "key": "location:0",
+      "kind": "location",
+      "payload": {
+        "name": "Review v5 collection",
+        "parent_id": null
+      }
+    },
+    {
+      "key": "location:1",
+      "kind": "location",
+      "payload": {
+        "name": "Review v5 propagation house",
+        "parent_id": {
+          "$ref": "location:0"
+        }
+      }
+    },
+    {
+      "key": "location:2",
+      "kind": "location",
+      "payload": {
+        "name": "Review v5 temperate section",
+        "parent_id": {
+          "$ref": "location:1"
+        }
+      }
+    },
+    {
+      "key": "location:3",
+      "kind": "location",
+      "payload": {
+        "name": "Review v5 bench A \u2014 long storage hierarchy",
+        "parent_id": {
+          "$ref": "location:2"
+        }
+      }
+    },
+    {
+      "key": "location:4",
+      "kind": "location",
+      "payload": {
+        "name": "Review v5 shelf 03",
+        "parent_id": {
+          "$ref": "location:3"
+        }
+      }
+    },
+    {
+      "key": "location:5",
+      "kind": "location",
+      "payload": {
+        "name": "Review v5 tray 07",
+        "parent_id": {
+          "$ref": "location:4"
+        }
+      }
+    },
+    {
+      "key": "location:6",
+      "kind": "location",
+      "payload": {
+        "name": "Review v5 envelope compartment",
+        "parent_id": {
+          "$ref": "location:5"
+        }
+      }
+    },
+    {
+      "key": "place:0",
+      "kind": "place",
+      "payload": {
+        "name": "Review v5 synthetic locality level 1 \u2014 extended cartographic path",
+        "parent_id": {
+          "$ref": "country:IT"
+        },
+        "place_type": "locality"
+      }
+    },
+    {
+      "key": "place:1",
+      "kind": "place",
+      "payload": {
+        "name": "Review v5 synthetic locality level 2 \u2014 extended cartographic path",
+        "parent_id": {
+          "$ref": "place:0"
+        },
+        "place_type": "locality"
+      }
+    },
+    {
+      "key": "place:2",
+      "kind": "place",
+      "payload": {
+        "name": "Review v5 synthetic locality level 3 \u2014 extended cartographic path",
+        "parent_id": {
+          "$ref": "place:1"
+        },
+        "place_type": "locality"
+      }
+    },
+    {
+      "key": "place:3",
+      "kind": "place",
+      "payload": {
+        "name": "Review v5 synthetic locality level 4 \u2014 extended cartographic path",
+        "parent_id": {
+          "$ref": "place:2"
+        },
+        "place_type": "locality"
+      }
+    },
+    {
+      "key": "site:00",
+      "kind": "site",
+      "payload": {
+        "name": "Review v5 synthetic origin 01 \u2014 a deliberately long recorded locality name",
+        "geographic_place_id": {
+          "$ref": "place:3"
+        },
+        "latitude": "38.1600",
+        "longitude": "13.3500",
+        "coordinate_accuracy_m": "25",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "site:01",
+      "kind": "site",
+      "payload": {
+        "name": "Review v5 synthetic origin 02",
+        "geographic_place_id": {
+          "$ref": "country:IT"
+        },
+        "latitude": "38.1602",
+        "longitude": "13.3502",
+        "coordinate_accuracy_m": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "site:02",
+      "kind": "site",
+      "payload": {
+        "name": "Review v5 synthetic origin 03",
+        "geographic_place_id": {
+          "$ref": "country:IT"
+        },
+        "latitude": "38.1600",
+        "longitude": "13.3500",
+        "coordinate_accuracy_m": "150",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "site:03",
+      "kind": "site",
+      "payload": {
+        "name": "Review v5 synthetic origin 04",
+        "geographic_place_id": {
+          "$ref": "country:TH"
+        },
+        "latitude": "18.8000",
+        "longitude": "98.9200",
+        "coordinate_accuracy_m": "1000",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "site:04",
+      "kind": "site",
+      "payload": {
+        "name": "Review v5 synthetic origin 05",
+        "geographic_place_id": {
+          "$ref": "country:BR"
+        },
+        "latitude": "-22.9000",
+        "longitude": "-43.2000",
+        "coordinate_accuracy_m": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "site:05",
+      "kind": "site",
+      "payload": {
+        "name": "Review v5 synthetic origin 06",
+        "geographic_place_id": {
+          "$ref": "country:US"
+        },
+        "latitude": "37.7700",
+        "longitude": "-122.4200",
+        "coordinate_accuracy_m": "50",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "site:06",
+      "kind": "site",
+      "payload": {
+        "name": "Review v5 synthetic origin 07",
+        "geographic_place_id": {
+          "$ref": "country:AU"
+        },
+        "latitude": "-33.8600",
+        "longitude": "151.2000",
+        "coordinate_accuracy_m": "500",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "site:07",
+      "kind": "site",
+      "payload": {
+        "name": "Review v5 synthetic origin 08",
+        "geographic_place_id": {
+          "$ref": "country:ZA"
+        },
+        "latitude": "-33.9200",
+        "longitude": "18.4200",
+        "coordinate_accuracy_m": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "site:08",
+      "kind": "site",
+      "payload": {
+        "name": "Review v5 synthetic origin 09",
+        "geographic_place_id": {
+          "$ref": "country:JP"
+        },
+        "latitude": "35.6800",
+        "longitude": "139.7600",
+        "coordinate_accuracy_m": "75",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "site:09",
+      "kind": "site",
+      "payload": {
+        "name": "Review v5 synthetic origin 10",
+        "geographic_place_id": {
+          "$ref": "country:FR"
+        },
+        "latitude": "43.6000",
+        "longitude": "3.8700",
+        "coordinate_accuracy_m": "5",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "site:10",
+      "kind": "site",
+      "payload": {
+        "name": "Review v5 synthetic origin 11",
+        "geographic_place_id": {
+          "$ref": "country:IT"
+        },
+        "latitude": null,
+        "longitude": null,
+        "coordinate_accuracy_m": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "site:11",
+      "kind": "site",
+      "payload": {
+        "name": "Review v5 synthetic origin 12",
+        "geographic_place_id": {
+          "$ref": "country:MX"
+        },
+        "latitude": null,
+        "longitude": null,
+        "coordinate_accuracy_m": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "site:12",
+      "kind": "site",
+      "payload": {
+        "name": "Review v5 synthetic origin 13 \u2014 no linked material",
+        "geographic_place_id": {
+          "$ref": "country:NZ"
+        },
+        "latitude": "-41.2800",
+        "longitude": "174.7700",
+        "coordinate_accuracy_m": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "supplier:0",
+      "kind": "supplier",
+      "payload": {
+        "name": "Review v5 \u2014 Herb Seed Cooperative",
+        "kind": "seller",
+        "website": "https://example.invalid/review-v5",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "supplier:1",
+      "kind": "supplier",
+      "payload": {
+        "name": "Review v5 \u2014 Temperate Tree Nursery",
+        "kind": "seller",
+        "website": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "supplier:2",
+      "kind": "supplier",
+      "payload": {
+        "name": "Review v5 \u2014 Succulent Exchange",
+        "kind": "exchange",
+        "website": "https://example.invalid/review-v5",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "supplier:3",
+      "kind": "supplier",
+      "payload": {
+        "name": "Review v5 \u2014 Tropical Research Garden",
+        "kind": "other",
+        "website": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "supplier:4",
+      "kind": "supplier",
+      "payload": {
+        "name": "Review v5 \u2014 Vegetable Seed Company",
+        "kind": "seller",
+        "website": "https://example.invalid/review-v5",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "supplier:5",
+      "kind": "supplier",
+      "payload": {
+        "name": "Review v5 \u2014 Ornamental Growers",
+        "kind": "seller",
+        "website": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "supplier:6",
+      "kind": "supplier",
+      "payload": {
+        "name": "Review v5 \u2014 Community Exchange",
+        "kind": "exchange",
+        "website": "https://example.invalid/review-v5",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "supplier:7",
+      "kind": "supplier",
+      "payload": {
+        "name": "Review v5 \u2014 Retained historical supplier",
+        "kind": "other",
+        "website": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "order:00",
+      "kind": "order",
+      "payload": {
+        "supplier_id": {
+          "$ref": "supplier:0"
+        },
+        "order_reference": "Review v5 PO-001",
+        "ordered_on": {
+          "precision": "day",
+          "year": 2026,
+          "month": 8,
+          "day": 1
+        },
+        "total_price": "25.50",
+        "currency": "EUR",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "order:01",
+      "kind": "order",
+      "payload": {
+        "supplier_id": {
+          "$ref": "supplier:0"
+        },
+        "order_reference": "Review v5 PO-002",
+        "ordered_on": {
+          "precision": "month",
+          "year": 2025,
+          "month": 9
+        },
+        "total_price": null,
+        "currency": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "order:02",
+      "kind": "order",
+      "payload": {
+        "supplier_id": {
+          "$ref": "supplier:1"
+        },
+        "order_reference": "Review v5 PO-003",
+        "ordered_on": {
+          "precision": "year",
+          "year": 2024
+        },
+        "total_price": null,
+        "currency": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "order:03",
+      "kind": "order",
+      "payload": {
+        "supplier_id": {
+          "$ref": "supplier:1"
+        },
+        "order_reference": "Review v5 PO-004",
+        "ordered_on": {
+          "precision": "day",
+          "year": 2026,
+          "month": 8,
+          "day": 4
+        },
+        "total_price": "28.50",
+        "currency": "EUR",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "order:04",
+      "kind": "order",
+      "payload": {
+        "supplier_id": {
+          "$ref": "supplier:2"
+        },
+        "order_reference": "Review v5 PO-005",
+        "ordered_on": {
+          "precision": "month",
+          "year": 2025,
+          "month": 9
+        },
+        "total_price": null,
+        "currency": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "order:05",
+      "kind": "order",
+      "payload": {
+        "supplier_id": {
+          "$ref": "supplier:2"
+        },
+        "order_reference": "Review v5 PO-006",
+        "ordered_on": {
+          "precision": "year",
+          "year": 2024
+        },
+        "total_price": null,
+        "currency": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "order:06",
+      "kind": "order",
+      "payload": {
+        "supplier_id": {
+          "$ref": "supplier:3"
+        },
+        "order_reference": "Review v5 PO-007",
+        "ordered_on": {
+          "precision": "day",
+          "year": 2026,
+          "month": 8,
+          "day": 7
+        },
+        "total_price": "31.50",
+        "currency": "EUR",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "order:07",
+      "kind": "order",
+      "payload": {
+        "supplier_id": {
+          "$ref": "supplier:3"
+        },
+        "order_reference": "Review v5 PO-008",
+        "ordered_on": {
+          "precision": "month",
+          "year": 2025,
+          "month": 9
+        },
+        "total_price": null,
+        "currency": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "order:08",
+      "kind": "order",
+      "payload": {
+        "supplier_id": {
+          "$ref": "supplier:4"
+        },
+        "order_reference": "Review v5 PO-009",
+        "ordered_on": {
+          "precision": "year",
+          "year": 2024
+        },
+        "total_price": null,
+        "currency": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "order:09",
+      "kind": "order",
+      "payload": {
+        "supplier_id": null,
+        "order_reference": "Review v5 PO-010",
+        "ordered_on": {
+          "precision": "day",
+          "year": 2026,
+          "month": 8,
+          "day": 10
+        },
+        "total_price": "34.50",
+        "currency": "EUR",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "seed:00",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:00"
+        },
+        "label": "Review v5 \u2014 packet 01 \u2014 Chamaerops humilis",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:00"
+        },
+        "supplier_id": {
+          "$ref": "supplier:0"
+        },
+        "acquisition_date": null,
+        "quantity": null,
+        "lifecycle": "active",
+        "location_id": null,
+        "provenance_site_id": {
+          "$ref": "site:00"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Incomplete acquisition/quantity."
+      }
+    },
+    {
+      "key": "seed:01",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:01"
+        },
+        "label": "Review v5 \u2014 packet 02 \u2014 Ficus carica",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:00"
+        },
+        "supplier_id": {
+          "$ref": "supplier:0"
+        },
+        "acquisition_date": {
+          "precision": "year",
+          "year": 2025
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 101,
+          "is_approximate": true
+        },
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:00"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Approximate stock."
+      }
+    },
+    {
+      "key": "seed:02",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:02"
+        },
+        "label": "Review v5 \u2014 packet 03 \u2014 Quercus robur",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:00"
+        },
+        "supplier_id": {
+          "$ref": "supplier:0"
+        },
+        "acquisition_date": {
+          "precision": "month",
+          "year": 2026,
+          "month": 9
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 102,
+          "is_approximate": false
+        },
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:00"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Month-only acquisition."
+      }
+    },
+    {
+      "key": "seed:03",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:03"
+        },
+        "label": "Review v5 \u2014 packet 04 \u2014 Acer palmatum",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:01"
+        },
+        "supplier_id": {
+          "$ref": "supplier:0"
+        },
+        "acquisition_date": {
+          "precision": "day",
+          "year": 2026,
+          "month": 9,
+          "day": 12
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 103,
+          "is_approximate": false
+        },
+        "lifecycle": "active",
+        "location_id": null,
+        "provenance_site_id": {
+          "$ref": "site:00"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Exact acquisition; synthetic transaction independent from provenance."
+      }
+    },
+    {
+      "key": "seed:04",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:04"
+        },
+        "label": "Review v5 \u2014 packet 05 \u2014 Pinus pinea",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:01"
+        },
+        "supplier_id": {
+          "$ref": "supplier:0"
+        },
+        "acquisition_date": null,
+        "quantity": null,
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:04"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Incomplete acquisition/quantity."
+      }
+    },
+    {
+      "key": "seed:05",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:05"
+        },
+        "label": "Review v5 \u2014 packet 06 \u2014 Ginkgo biloba",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:01"
+        },
+        "supplier_id": {
+          "$ref": "supplier:0"
+        },
+        "acquisition_date": {
+          "precision": "year",
+          "year": 2025
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 105,
+          "is_approximate": true
+        },
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:05"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Approximate stock."
+      }
+    },
+    {
+      "key": "seed:06",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:06"
+        },
+        "label": "Review v5 \u2014 packet 07 \u2014 Solanum lycopersicum",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:02"
+        },
+        "supplier_id": {
+          "$ref": "supplier:1"
+        },
+        "acquisition_date": {
+          "precision": "month",
+          "year": 2026,
+          "month": 9
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 106,
+          "is_approximate": false
+        },
+        "lifecycle": "active",
+        "location_id": null,
+        "provenance_site_id": {
+          "$ref": "site:06"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Month-only acquisition."
+      }
+    },
+    {
+      "key": "seed:07",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:07"
+        },
+        "label": "Review v5 \u2014 packet 08 \u2014 Capsicum annuum",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:02"
+        },
+        "supplier_id": {
+          "$ref": "supplier:1"
+        },
+        "acquisition_date": {
+          "precision": "day",
+          "year": 2026,
+          "month": 9,
+          "day": 12
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 107,
+          "is_approximate": false
+        },
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:07"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Exact acquisition; synthetic transaction independent from provenance."
+      }
+    },
+    {
+      "key": "seed:08",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:08"
+        },
+        "label": "Review v5 \u2014 packet 09 \u2014 Lactuca sativa",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:02"
+        },
+        "supplier_id": {
+          "$ref": "supplier:1"
+        },
+        "acquisition_date": null,
+        "quantity": null,
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:08"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Incomplete acquisition/quantity."
+      }
+    },
+    {
+      "key": "seed:09",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:09"
+        },
+        "label": "Review v5 \u2014 packet 10 \u2014 Daucus carota",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:03"
+        },
+        "supplier_id": {
+          "$ref": "supplier:1"
+        },
+        "acquisition_date": {
+          "precision": "year",
+          "year": 2025
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 109,
+          "is_approximate": true
+        },
+        "lifecycle": "active",
+        "location_id": null,
+        "provenance_site_id": {
+          "$ref": "site:09"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Approximate stock."
+      }
+    },
+    {
+      "key": "seed:10",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:10"
+        },
+        "label": "Review v5 \u2014 packet 11 \u2014 Phaseolus vulgaris",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:03"
+        },
+        "supplier_id": {
+          "$ref": "supplier:1"
+        },
+        "acquisition_date": {
+          "precision": "month",
+          "year": 2026,
+          "month": 9
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 110,
+          "is_approximate": false
+        },
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:10"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Month-only acquisition."
+      }
+    },
+    {
+      "key": "seed:11",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:11"
+        },
+        "label": "Review v5 \u2014 packet 12 \u2014 Pisum sativum",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:03"
+        },
+        "supplier_id": {
+          "$ref": "supplier:1"
+        },
+        "acquisition_date": {
+          "precision": "day",
+          "year": 2026,
+          "month": 9,
+          "day": 12
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 111,
+          "is_approximate": false
+        },
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:11"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Exact acquisition; synthetic transaction independent from provenance."
+      }
+    },
+    {
+      "key": "seed:12",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:12"
+        },
+        "label": "Review v5 \u2014 packet 13 \u2014 Echinacea purpurea",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:04"
+        },
+        "supplier_id": {
+          "$ref": "supplier:2"
+        },
+        "acquisition_date": null,
+        "quantity": null,
+        "lifecycle": "active",
+        "location_id": null,
+        "provenance_site_id": {
+          "$ref": "site:00"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Incomplete acquisition/quantity."
+      }
+    },
+    {
+      "key": "seed:13",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:13"
+        },
+        "label": "Review v5 \u2014 packet 14 \u2014 Helianthus annuus",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:04"
+        },
+        "supplier_id": {
+          "$ref": "supplier:2"
+        },
+        "acquisition_date": {
+          "precision": "year",
+          "year": 2025
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 113,
+          "is_approximate": true
+        },
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:01"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Approximate stock."
+      }
+    },
+    {
+      "key": "seed:14",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:14"
+        },
+        "label": "Review v5 \u2014 packet 15 \u2014 Calendula officinalis",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:04"
+        },
+        "supplier_id": {
+          "$ref": "supplier:2"
+        },
+        "acquisition_date": {
+          "precision": "month",
+          "year": 2026,
+          "month": 9
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 114,
+          "is_approximate": false
+        },
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:02"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Month-only acquisition."
+      }
+    },
+    {
+      "key": "seed:15",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:15"
+        },
+        "label": "Review v5 \u2014 packet 16 \u2014 Hibiscus rosa-sinensis",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:05"
+        },
+        "supplier_id": {
+          "$ref": "supplier:2"
+        },
+        "acquisition_date": {
+          "precision": "day",
+          "year": 2026,
+          "month": 9,
+          "day": 12
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 115,
+          "is_approximate": false
+        },
+        "lifecycle": "active",
+        "location_id": null,
+        "provenance_site_id": {
+          "$ref": "site:03"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Exact acquisition; synthetic transaction independent from provenance."
+      }
+    },
+    {
+      "key": "seed:16",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:16"
+        },
+        "label": "Review v5 \u2014 packet 17 \u2014 Clitoria ternatea",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:05"
+        },
+        "supplier_id": {
+          "$ref": "supplier:2"
+        },
+        "acquisition_date": null,
+        "quantity": null,
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:04"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Incomplete acquisition/quantity."
+      }
+    },
+    {
+      "key": "seed:17",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:17"
+        },
+        "label": "Review v5 \u2014 packet 18 \u2014 Musa acuminata",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:05"
+        },
+        "supplier_id": {
+          "$ref": "supplier:2"
+        },
+        "acquisition_date": {
+          "precision": "year",
+          "year": 2025
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 117,
+          "is_approximate": true
+        },
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:05"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Approximate stock."
+      }
+    },
+    {
+      "key": "seed:18",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:18"
+        },
+        "label": "Review v5 \u2014 packet 19 \u2014 Coffea arabica",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:06"
+        },
+        "supplier_id": {
+          "$ref": "supplier:3"
+        },
+        "acquisition_date": {
+          "precision": "month",
+          "year": 2026,
+          "month": 9
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 118,
+          "is_approximate": false
+        },
+        "lifecycle": "active",
+        "location_id": null,
+        "provenance_site_id": {
+          "$ref": "site:06"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Month-only acquisition."
+      }
+    },
+    {
+      "key": "seed:19",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:19"
+        },
+        "label": "Review v5 \u2014 packet 20 \u2014 Passiflora edulis",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:06"
+        },
+        "supplier_id": {
+          "$ref": "supplier:3"
+        },
+        "acquisition_date": {
+          "precision": "day",
+          "year": 2026,
+          "month": 9,
+          "day": 12
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 119,
+          "is_approximate": false
+        },
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:07"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Exact acquisition; synthetic transaction independent from provenance."
+      }
+    },
+    {
+      "key": "seed:20",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:20"
+        },
+        "label": "Review v5 \u2014 packet 21 \u2014 Agave americana",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:06"
+        },
+        "supplier_id": {
+          "$ref": "supplier:3"
+        },
+        "acquisition_date": null,
+        "quantity": null,
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:08"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Incomplete acquisition/quantity."
+      }
+    },
+    {
+      "key": "seed:21",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:21"
+        },
+        "label": "Review v5 \u2014 packet 22 \u2014 Crassula ovata",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:07"
+        },
+        "supplier_id": {
+          "$ref": "supplier:3"
+        },
+        "acquisition_date": {
+          "precision": "year",
+          "year": 2025
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 121,
+          "is_approximate": true
+        },
+        "lifecycle": "active",
+        "location_id": null,
+        "provenance_site_id": {
+          "$ref": "site:09"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Approximate stock."
+      }
+    },
+    {
+      "key": "seed:22",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:22"
+        },
+        "label": "Review v5 \u2014 packet 23 \u2014 Echeveria elegans",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:07"
+        },
+        "supplier_id": {
+          "$ref": "supplier:3"
+        },
+        "acquisition_date": {
+          "precision": "month",
+          "year": 2026,
+          "month": 9
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 122,
+          "is_approximate": false
+        },
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:10"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Month-only acquisition."
+      }
+    },
+    {
+      "key": "seed:23",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:23"
+        },
+        "label": "Review v5 \u2014 packet 24 \u2014 Opuntia ficus-indica",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:07"
+        },
+        "supplier_id": {
+          "$ref": "supplier:3"
+        },
+        "acquisition_date": {
+          "precision": "day",
+          "year": 2026,
+          "month": 9,
+          "day": 12
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 123,
+          "is_approximate": false
+        },
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:11"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Exact acquisition; synthetic transaction independent from provenance."
+      }
+    },
+    {
+      "key": "seed:24",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:24"
+        },
+        "label": "Review v5 \u2014 packet 25 \u2014 Haworthiopsis fasciata",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:08"
+        },
+        "supplier_id": {
+          "$ref": "supplier:4"
+        },
+        "acquisition_date": null,
+        "quantity": null,
+        "lifecycle": "active",
+        "location_id": null,
+        "provenance_site_id": {
+          "$ref": "site:00"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Incomplete acquisition/quantity."
+      }
+    },
+    {
+      "key": "seed:25",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:25"
+        },
+        "label": "Review v5 \u2014 packet 26 \u2014 Thymus vulgaris",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:08"
+        },
+        "supplier_id": {
+          "$ref": "supplier:4"
+        },
+        "acquisition_date": {
+          "precision": "year",
+          "year": 2025
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 125,
+          "is_approximate": true
+        },
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Approximate stock."
+      }
+    },
+    {
+      "key": "seed:26",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:26"
+        },
+        "label": "Review v5 \u2014 packet 27 \u2014 Mentha spicata",
+        "source_kind": "purchased",
+        "order_id": {
+          "$ref": "order:08"
+        },
+        "supplier_id": {
+          "$ref": "supplier:4"
+        },
+        "acquisition_date": {
+          "precision": "month",
+          "year": 2026,
+          "month": 9
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 0,
+          "is_approximate": false
+        },
+        "lifecycle": "exhausted",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Month-only acquisition."
+      }
+    },
+    {
+      "key": "seed:27",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:27"
+        },
+        "label": "Review v5 \u2014 packet 28 \u2014 Origanum vulgare",
+        "source_kind": "purchased",
+        "order_id": null,
+        "supplier_id": null,
+        "acquisition_date": {
+          "precision": "day",
+          "year": 2026,
+          "month": 9,
+          "day": 12
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 127,
+          "is_approximate": false
+        },
+        "lifecycle": "discarded",
+        "location_id": null,
+        "provenance_site_id": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Exact acquisition; synthetic transaction independent from provenance."
+      }
+    },
+    {
+      "key": "seed:28",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:28"
+        },
+        "label": "Review v5 \u2014 packet 29 \u2014 Ocimum basilicum",
+        "source_kind": "purchased",
+        "order_id": null,
+        "supplier_id": null,
+        "acquisition_date": null,
+        "quantity": null,
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Incomplete acquisition/quantity."
+      }
+    },
+    {
+      "key": "seed:29",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:29"
+        },
+        "label": "Review v5 \u2014 packet 30 \u2014 Salvia officinalis",
+        "source_kind": "gift_exchange",
+        "order_id": null,
+        "supplier_id": {
+          "$ref": "supplier:5"
+        },
+        "acquisition_date": {
+          "precision": "year",
+          "year": 2025
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 129,
+          "is_approximate": true
+        },
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:6"
+        },
+        "provenance_site_id": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Approximate stock."
+      }
+    },
+    {
+      "key": "seed:duplicate",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:00"
+        },
+        "label": "Review v5 \u2014 second physical palm packet",
+        "source_kind": "purchased",
+        "supplier_id": {
+          "$ref": "supplier:0"
+        },
+        "order_id": {
+          "$ref": "order:00"
+        },
+        "provenance_site_id": {
+          "$ref": "site:00"
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "seed:reconcile",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:28"
+        },
+        "label": "Review v5 \u2014 unlinked supplier reconciliation candidate",
+        "source_kind": "purchased",
+        "supplier_id": {
+          "$ref": "supplier:1"
+        },
+        "quantity": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Try linking Order 00 (Supplier 0): explicit reconciliation is required; no invalid persisted link exists."
+      }
+    },
+    {
+      "key": "sowing:00",
+      "kind": "sowing",
+      "payload": {
+        "seed_lot_id": {
+          "$ref": "seed:00"
+        },
+        "label": "Review v5 \u2014 sowing 01",
+        "sowing_date": {
+          "precision": "day",
+          "year": 2026,
+          "month": 10,
+          "day": 1
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 12,
+          "is_approximate": false
+        },
+        "germinated_count": 0,
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "substrate": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "sowing:01",
+      "kind": "sowing",
+      "payload": {
+        "seed_lot_id": {
+          "$ref": "seed:01"
+        },
+        "label": "Review v5 \u2014 sowing 02",
+        "sowing_date": {
+          "precision": "month",
+          "year": 2026,
+          "month": 9
+        },
+        "quantity": null,
+        "germinated_count": null,
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "substrate": "Synthetic seed compost scenario",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "sowing:02",
+      "kind": "sowing",
+      "payload": {
+        "seed_lot_id": {
+          "$ref": "seed:02"
+        },
+        "label": "Review v5 \u2014 sowing 03",
+        "sowing_date": null,
+        "quantity": null,
+        "germinated_count": null,
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "substrate": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "sowing:03",
+      "kind": "sowing",
+      "payload": {
+        "seed_lot_id": {
+          "$ref": "seed:03"
+        },
+        "label": "Review v5 \u2014 sowing 04",
+        "sowing_date": {
+          "precision": "day",
+          "year": 2026,
+          "month": 10,
+          "day": 1
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 12,
+          "is_approximate": false
+        },
+        "germinated_count": 0,
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "substrate": "Synthetic seed compost scenario",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "sowing:04",
+      "kind": "sowing",
+      "payload": {
+        "seed_lot_id": {
+          "$ref": "seed:04"
+        },
+        "label": "Review v5 \u2014 sowing 05",
+        "sowing_date": {
+          "precision": "month",
+          "year": 2026,
+          "month": 9
+        },
+        "quantity": null,
+        "germinated_count": null,
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "substrate": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "sowing:05",
+      "kind": "sowing",
+      "payload": {
+        "seed_lot_id": {
+          "$ref": "seed:05"
+        },
+        "label": "Review v5 \u2014 sowing 06",
+        "sowing_date": null,
+        "quantity": null,
+        "germinated_count": null,
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "substrate": "Synthetic seed compost scenario",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "sowing:06",
+      "kind": "sowing",
+      "payload": {
+        "seed_lot_id": {
+          "$ref": "seed:06"
+        },
+        "label": "Review v5 \u2014 sowing 07",
+        "sowing_date": {
+          "precision": "day",
+          "year": 2026,
+          "month": 10,
+          "day": 1
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 12,
+          "is_approximate": false
+        },
+        "germinated_count": 4,
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "substrate": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "sowing:07",
+      "kind": "sowing",
+      "payload": {
+        "seed_lot_id": {
+          "$ref": "seed:07"
+        },
+        "label": "Review v5 \u2014 sowing 08",
+        "sowing_date": {
+          "precision": "month",
+          "year": 2026,
+          "month": 9
+        },
+        "quantity": null,
+        "germinated_count": null,
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "substrate": "Synthetic seed compost scenario",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "sowing:08",
+      "kind": "sowing",
+      "payload": {
+        "seed_lot_id": {
+          "$ref": "seed:08"
+        },
+        "label": "Review v5 \u2014 sowing 09",
+        "sowing_date": null,
+        "quantity": null,
+        "germinated_count": null,
+        "lifecycle": "active",
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "substrate": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "sowing:09",
+      "kind": "sowing",
+      "payload": {
+        "seed_lot_id": {
+          "$ref": "seed:09"
+        },
+        "label": "Review v5 \u2014 sowing 10",
+        "sowing_date": {
+          "precision": "day",
+          "year": 2026,
+          "month": 10,
+          "day": 1
+        },
+        "quantity": {
+          "kind": "seed_count",
+          "value": 12,
+          "is_approximate": false
+        },
+        "germinated_count": null,
+        "lifecycle": "completed",
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "substrate": "Synthetic seed compost scenario",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "sowing:10",
+      "kind": "sowing",
+      "payload": {
+        "seed_lot_id": {
+          "$ref": "seed:10"
+        },
+        "label": "Review v5 \u2014 sowing 11",
+        "sowing_date": {
+          "precision": "month",
+          "year": 2026,
+          "month": 9
+        },
+        "quantity": null,
+        "germinated_count": null,
+        "lifecycle": "failed",
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "substrate": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "sowing:11",
+      "kind": "sowing",
+      "payload": {
+        "seed_lot_id": {
+          "$ref": "seed:11"
+        },
+        "label": "Review v5 \u2014 sowing 12",
+        "sowing_date": null,
+        "quantity": null,
+        "germinated_count": null,
+        "lifecycle": "abandoned",
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "substrate": "Synthetic seed compost scenario",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:00",
+      "kind": "plant",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:00"
+        },
+        "label": "Review v5 \u2014 direct plant 01",
+        "direct_origin_kind": "gift_exchange",
+        "supplier_id": null,
+        "provenance_site_id": {
+          "$ref": "site:00"
+        },
+        "location_id": null,
+        "collection_entry_date": null,
+        "lifecycle": "active",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:01",
+      "kind": "plant",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:01"
+        },
+        "label": "Review v5 \u2014 direct plant 02",
+        "direct_origin_kind": "purchased",
+        "supplier_id": {
+          "$ref": "supplier:1"
+        },
+        "provenance_site_id": {
+          "$ref": "site:00"
+        },
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "collection_entry_date": {
+          "precision": "year",
+          "year": 2025
+        },
+        "lifecycle": "active",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:02",
+      "kind": "plant",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:02"
+        },
+        "label": "Review v5 \u2014 direct plant 03",
+        "direct_origin_kind": "unknown",
+        "supplier_id": null,
+        "provenance_site_id": {
+          "$ref": "site:00"
+        },
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "collection_entry_date": null,
+        "lifecycle": "active",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:03",
+      "kind": "plant",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:03"
+        },
+        "label": "Review v5 \u2014 direct plant 04",
+        "direct_origin_kind": "gift_exchange",
+        "supplier_id": null,
+        "provenance_site_id": {
+          "$ref": "site:03"
+        },
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "collection_entry_date": {
+          "precision": "year",
+          "year": 2025
+        },
+        "lifecycle": "active",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:04",
+      "kind": "plant",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:04"
+        },
+        "label": "Review v5 \u2014 direct plant 05",
+        "direct_origin_kind": "purchased",
+        "supplier_id": {
+          "$ref": "supplier:4"
+        },
+        "provenance_site_id": {
+          "$ref": "site:04"
+        },
+        "location_id": null,
+        "collection_entry_date": null,
+        "lifecycle": "active",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:05",
+      "kind": "plant",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:05"
+        },
+        "label": "Review v5 \u2014 direct plant 06",
+        "direct_origin_kind": "unknown",
+        "supplier_id": null,
+        "provenance_site_id": {
+          "$ref": "site:05"
+        },
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "collection_entry_date": {
+          "precision": "year",
+          "year": 2025
+        },
+        "lifecycle": "active",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:06",
+      "kind": "plant",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:06"
+        },
+        "label": "Review v5 \u2014 direct plant 07",
+        "direct_origin_kind": "gift_exchange",
+        "supplier_id": null,
+        "provenance_site_id": {
+          "$ref": "site:06"
+        },
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "collection_entry_date": null,
+        "lifecycle": "active",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:07",
+      "kind": "plant",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:07"
+        },
+        "label": "Review v5 \u2014 direct plant 08",
+        "direct_origin_kind": "purchased",
+        "supplier_id": {
+          "$ref": "supplier:0"
+        },
+        "provenance_site_id": {
+          "$ref": "site:07"
+        },
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "collection_entry_date": {
+          "precision": "year",
+          "year": 2025
+        },
+        "lifecycle": "active",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:08",
+      "kind": "plant",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:08"
+        },
+        "label": "Review v5 \u2014 direct plant 09",
+        "direct_origin_kind": "unknown",
+        "supplier_id": null,
+        "provenance_site_id": {
+          "$ref": "site:08"
+        },
+        "location_id": null,
+        "collection_entry_date": null,
+        "lifecycle": "active",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:09",
+      "kind": "plant",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:09"
+        },
+        "label": "Review v5 \u2014 direct plant 10",
+        "direct_origin_kind": "gift_exchange",
+        "supplier_id": null,
+        "provenance_site_id": {
+          "$ref": "site:09"
+        },
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "collection_entry_date": {
+          "precision": "year",
+          "year": 2025
+        },
+        "lifecycle": "active",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:10",
+      "kind": "plant",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:10"
+        },
+        "label": "Review v5 \u2014 direct plant 11",
+        "direct_origin_kind": "purchased",
+        "supplier_id": {
+          "$ref": "supplier:3"
+        },
+        "provenance_site_id": {
+          "$ref": "site:10"
+        },
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "collection_entry_date": null,
+        "lifecycle": "active",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:11",
+      "kind": "plant",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:11"
+        },
+        "label": "Review v5 \u2014 direct plant 12",
+        "direct_origin_kind": "unknown",
+        "supplier_id": null,
+        "provenance_site_id": {
+          "$ref": "site:11"
+        },
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "collection_entry_date": {
+          "precision": "year",
+          "year": 2025
+        },
+        "lifecycle": "active",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:12",
+      "kind": "plant",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:12"
+        },
+        "label": "Review v5 \u2014 direct plant 13",
+        "direct_origin_kind": "gift_exchange",
+        "supplier_id": null,
+        "provenance_site_id": {
+          "$ref": "site:00"
+        },
+        "location_id": null,
+        "collection_entry_date": null,
+        "lifecycle": "active",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:13",
+      "kind": "plant",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:13"
+        },
+        "label": "Review v5 \u2014 direct plant 14",
+        "direct_origin_kind": "purchased",
+        "supplier_id": {
+          "$ref": "supplier:6"
+        },
+        "provenance_site_id": {
+          "$ref": "site:01"
+        },
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "collection_entry_date": {
+          "precision": "year",
+          "year": 2025
+        },
+        "lifecycle": "transferred",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:14",
+      "kind": "plant",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:14"
+        },
+        "label": "Review v5 \u2014 direct plant 15",
+        "direct_origin_kind": "unknown",
+        "supplier_id": null,
+        "provenance_site_id": {
+          "$ref": "site:02"
+        },
+        "location_id": {
+          "$ref": "location:2"
+        },
+        "collection_entry_date": null,
+        "lifecycle": "dead",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "group:0",
+      "kind": "group",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:00"
+        },
+        "label": "Review v5 \u2014 direct group 01",
+        "direct_origin_kind": "unknown",
+        "provenance_site_id": {
+          "$ref": "site:00"
+        },
+        "location_id": {
+          "$ref": "location:3"
+        },
+        "quantity": {
+          "value": 12,
+          "is_approximate": false
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "group:1",
+      "kind": "group",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:01"
+        },
+        "label": "Review v5 \u2014 direct group 02",
+        "direct_origin_kind": "unknown",
+        "provenance_site_id": {
+          "$ref": "site:00"
+        },
+        "location_id": {
+          "$ref": "location:3"
+        },
+        "quantity": {
+          "value": 12,
+          "is_approximate": true
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "group:2",
+      "kind": "group",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:02"
+        },
+        "label": "Review v5 \u2014 direct group 03",
+        "direct_origin_kind": "unknown",
+        "provenance_site_id": {
+          "$ref": "site:02"
+        },
+        "location_id": {
+          "$ref": "location:3"
+        },
+        "quantity": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "group:3",
+      "kind": "group",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:03"
+        },
+        "label": "Review v5 \u2014 direct group 04",
+        "direct_origin_kind": "unknown",
+        "provenance_site_id": {
+          "$ref": "site:03"
+        },
+        "location_id": {
+          "$ref": "location:3"
+        },
+        "quantity": {
+          "value": 12,
+          "is_approximate": false
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "group:4",
+      "kind": "group",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:04"
+        },
+        "label": "Review v5 \u2014 direct group 05",
+        "direct_origin_kind": "unknown",
+        "provenance_site_id": {
+          "$ref": "site:04"
+        },
+        "location_id": {
+          "$ref": "location:3"
+        },
+        "quantity": {
+          "value": 12,
+          "is_approximate": true
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "group:5",
+      "kind": "group",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:05"
+        },
+        "label": "Review v5 \u2014 direct group 06",
+        "direct_origin_kind": "unknown",
+        "provenance_site_id": {
+          "$ref": "site:05"
+        },
+        "location_id": {
+          "$ref": "location:3"
+        },
+        "quantity": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:derived",
+      "kind": "plant",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:00"
+        },
+        "originating_sowing_id": {
+          "$ref": "sowing:00"
+        },
+        "label": "Review v5 \u2014 propagated descendant, no independent origin assertion",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "plant:extracted",
+      "kind": "extract",
+      "payload": {
+        "plant_group_id": {
+          "$ref": "group:0"
+        },
+        "label": "Review v5 \u2014 extracted individual, no independent origin assertion",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "seed:produced",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "identity:00"
+        },
+        "producer_plant_id": {
+          "$ref": "plant:00"
+        },
+        "source_kind": "collection_produced",
+        "label": "Review v5 \u2014 collection-produced palm lot",
+        "quantity": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "profile:00",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:00"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review. ",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": "Synthetic review instructions only; not horticultural advice."
+      }
+    },
+    {
+      "key": "range:00:BR",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:00"
+        },
+        "place_id": {
+          "$ref": "country:BR"
+        }
+      }
+    },
+    {
+      "key": "range:00:TH",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:00"
+        },
+        "place_id": {
+          "$ref": "country:TH"
+        }
+      }
+    },
+    {
+      "key": "range:00:IT",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:00"
+        },
+        "place_id": {
+          "$ref": "country:IT"
+        }
+      }
+    },
+    {
+      "key": "range:00:US",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:00"
+        },
+        "place_id": {
+          "$ref": "country:US"
+        }
+      }
+    },
+    {
+      "key": "range:00:AU",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:00"
+        },
+        "place_id": {
+          "$ref": "country:AU"
+        }
+      }
+    },
+    {
+      "key": "profile:01",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:01"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Sparse synthetic profile.",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": null
+      }
+    },
+    {
+      "key": "range:01:BR",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:01"
+        },
+        "place_id": {
+          "$ref": "country:BR"
+        }
+      }
+    },
+    {
+      "key": "range:01:TH",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:01"
+        },
+        "place_id": {
+          "$ref": "country:TH"
+        }
+      }
+    },
+    {
+      "key": "range:01:IT",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:01"
+        },
+        "place_id": {
+          "$ref": "country:IT"
+        }
+      }
+    },
+    {
+      "key": "range:01:US",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:01"
+        },
+        "place_id": {
+          "$ref": "country:US"
+        }
+      }
+    },
+    {
+      "key": "profile:02",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:02"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Sparse synthetic profile.",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": null
+      }
+    },
+    {
+      "key": "range:02:BR",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:02"
+        },
+        "place_id": {
+          "$ref": "country:BR"
+        }
+      }
+    },
+    {
+      "key": "range:02:TH",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:02"
+        },
+        "place_id": {
+          "$ref": "country:TH"
+        }
+      }
+    },
+    {
+      "key": "range:02:IT",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:02"
+        },
+        "place_id": {
+          "$ref": "country:IT"
+        }
+      }
+    },
+    {
+      "key": "profile:03",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:03"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review. ",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": "Synthetic review instructions only; not horticultural advice."
+      }
+    },
+    {
+      "key": "range:03:BR",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:03"
+        },
+        "place_id": {
+          "$ref": "country:BR"
+        }
+      }
+    },
+    {
+      "key": "range:03:TH",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:03"
+        },
+        "place_id": {
+          "$ref": "country:TH"
+        }
+      }
+    },
+    {
+      "key": "profile:04",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:04"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Sparse synthetic profile.",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": null
+      }
+    },
+    {
+      "key": "range:04:BR",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:04"
+        },
+        "place_id": {
+          "$ref": "country:BR"
+        }
+      }
+    },
+    {
+      "key": "profile:05",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:05"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Sparse synthetic profile.",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": null
+      }
+    },
+    {
+      "key": "range:05:005",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:05"
+        },
+        "place_id": {
+          "$ref": "country:005"
+        }
+      }
+    },
+    {
+      "key": "range:05:BR",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:05"
+        },
+        "place_id": {
+          "$ref": "country:BR"
+        }
+      }
+    },
+    {
+      "key": "profile:06",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:06"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review. ",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": "Synthetic review instructions only; not horticultural advice."
+      }
+    },
+    {
+      "key": "range:06:IT",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:06"
+        },
+        "place_id": {
+          "$ref": "country:IT"
+        }
+      }
+    },
+    {
+      "key": "range:06:JP",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:06"
+        },
+        "place_id": {
+          "$ref": "country:JP"
+        }
+      }
+    },
+    {
+      "key": "profile:07",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:07"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Sparse synthetic profile.",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": null
+      }
+    },
+    {
+      "key": "range:07:ZA",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:07"
+        },
+        "place_id": {
+          "$ref": "country:ZA"
+        }
+      }
+    },
+    {
+      "key": "range:07:AU",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:07"
+        },
+        "place_id": {
+          "$ref": "country:AU"
+        }
+      }
+    },
+    {
+      "key": "profile:08",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:08"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Sparse synthetic profile.",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": null
+      }
+    },
+    {
+      "key": "range:08:MX",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:08"
+        },
+        "place_id": {
+          "$ref": "country:MX"
+        }
+      }
+    },
+    {
+      "key": "range:08:US",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:08"
+        },
+        "place_id": {
+          "$ref": "country:US"
+        }
+      }
+    },
+    {
+      "key": "profile:09",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:09"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review. ",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": "Synthetic review instructions only; not horticultural advice."
+      }
+    },
+    {
+      "key": "range:09:TH",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:09"
+        },
+        "place_id": {
+          "$ref": "country:TH"
+        }
+      }
+    },
+    {
+      "key": "range:09:BR",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:09"
+        },
+        "place_id": {
+          "$ref": "country:BR"
+        }
+      }
+    },
+    {
+      "key": "profile:10",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:10"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Sparse synthetic profile.",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": null
+      }
+    },
+    {
+      "key": "range:10:JP",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:10"
+        },
+        "place_id": {
+          "$ref": "country:JP"
+        }
+      }
+    },
+    {
+      "key": "profile:11",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:11"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Sparse synthetic profile.",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": null
+      }
+    },
+    {
+      "key": "range:11:FR",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:11"
+        },
+        "place_id": {
+          "$ref": "country:FR"
+        }
+      }
+    },
+    {
+      "key": "profile:12",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:12"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review. ",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": "Synthetic review instructions only; not horticultural advice."
+      }
+    },
+    {
+      "key": "range:12:VA",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:12"
+        },
+        "place_id": {
+          "$ref": "country:VA"
+        }
+      }
+    },
+    {
+      "key": "profile:13",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:13"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Sparse synthetic profile.",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": null
+      }
+    },
+    {
+      "key": "range:13:NZ",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:13"
+        },
+        "place_id": {
+          "$ref": "country:NZ"
+        }
+      }
+    },
+    {
+      "key": "range:13:BR",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:13"
+        },
+        "place_id": {
+          "$ref": "country:BR"
+        }
+      }
+    },
+    {
+      "key": "profile:14",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:14"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Sparse synthetic profile.",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": null
+      }
+    },
+    {
+      "key": "range:14:IT",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:14"
+        },
+        "place_id": {
+          "$ref": "country:IT"
+        }
+      }
+    },
+    {
+      "key": "profile:15",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:15"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review. ",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": "Synthetic review instructions only; not horticultural advice."
+      }
+    },
+    {
+      "key": "range:15:005",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:15"
+        },
+        "place_id": {
+          "$ref": "country:005"
+        }
+      }
+    },
+    {
+      "key": "profile:16",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:16"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Sparse synthetic profile.",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": null
+      }
+    },
+    {
+      "key": "range:16:US",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:16"
+        },
+        "place_id": {
+          "$ref": "country:US"
+        }
+      }
+    },
+    {
+      "key": "range:16:JP",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:16"
+        },
+        "place_id": {
+          "$ref": "country:JP"
+        }
+      }
+    },
+    {
+      "key": "profile:17",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:17"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Sparse synthetic profile.",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": null
+      }
+    },
+    {
+      "key": "range:17:MX",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:17"
+        },
+        "place_id": {
+          "$ref": "country:MX"
+        }
+      }
+    },
+    {
+      "key": "profile:18",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:18"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review.  Rich synthetic reference text for layout and evidence-boundary review. ",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": "Synthetic review instructions only; not horticultural advice."
+      }
+    },
+    {
+      "key": "range:18:ZA",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:18"
+        },
+        "place_id": {
+          "$ref": "country:ZA"
+        }
+      }
+    },
+    {
+      "key": "profile:19",
+      "kind": "profile",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:19"
+        },
+        "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Sparse synthetic profile.",
+        "origin_distribution": "Synthetic native-range test geometry below; not scientific native-range evidence.",
+        "cultivation": null
+      }
+    },
+    {
+      "key": "range:19:AU",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:19"
+        },
+        "place_id": {
+          "$ref": "country:AU"
+        }
+      }
+    },
+    {
+      "key": "range:04:custom",
+      "kind": "range",
+      "payload": {
+        "identity_id": {
+          "$ref": "identity:04"
+        },
+        "place_id": {
+          "$ref": "place:3"
+        }
+      }
+    },
+    {
+      "key": "event:0",
+      "kind": "event",
+      "payload": {
+        "plant_id": {
+          "$ref": "plant:00"
+        },
+        "kind": "observation",
+        "occurred_on": {
+          "precision": "day",
+          "year": 2026,
+          "month": 10,
+          "day": 10
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Synthetic operator-recorded observation."
+      }
+    },
+    {
+      "key": "event:1",
+      "kind": "event",
+      "payload": {
+        "plant_id": {
+          "$ref": "plant:01"
+        },
+        "kind": "flowering",
+        "occurred_on": {
+          "precision": "day",
+          "year": 2026,
+          "month": 10,
+          "day": 11
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Synthetic operator-recorded observation."
+      }
+    },
+    {
+      "key": "event:2",
+      "kind": "event",
+      "payload": {
+        "plant_id": {
+          "$ref": "plant:02"
+        },
+        "kind": "fruiting",
+        "occurred_on": {
+          "precision": "day",
+          "year": 2026,
+          "month": 10,
+          "day": 12
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Synthetic operator-recorded observation."
+      }
+    },
+    {
+      "key": "event:3",
+      "kind": "event",
+      "payload": {
+        "plant_id": {
+          "$ref": "plant:03"
+        },
+        "kind": "repotting",
+        "occurred_on": {
+          "precision": "day",
+          "year": 2026,
+          "month": 10,
+          "day": 13
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion. Synthetic operator-recorded observation."
+      }
+    },
+    {
+      "key": "observation:0",
+      "kind": "observation",
+      "payload": {
+        "sowing_id": {
+          "$ref": "sowing:06"
+        },
+        "observed_on": "2026-10-05",
+        "newly_germinated_count": 0
+      }
+    },
+    {
+      "key": "observation:1",
+      "kind": "observation",
+      "payload": {
+        "sowing_id": {
+          "$ref": "sowing:06"
+        },
+        "observed_on": "2026-10-10",
+        "newly_germinated_count": 2
+      }
+    },
+    {
+      "key": "schedule:0",
+      "kind": "schedule",
+      "payload": {
+        "activity_kind": "follow_up",
+        "title": "Review v5 \u2014 planned inspection 1",
+        "due_on": "2026-10-18",
+        "target": {
+          "kind": "plant",
+          "id": {
+            "$ref": "plant:00"
+          }
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "schedule:1",
+      "kind": "schedule",
+      "payload": {
+        "activity_kind": "inspect",
+        "title": "Review v5 \u2014 planned inspection 2",
+        "due_on": "2026-10-19",
+        "target": {
+          "kind": "plant",
+          "id": {
+            "$ref": "plant:00"
+          }
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "schedule:2",
+      "kind": "schedule",
+      "payload": {
+        "activity_kind": "follow_up",
+        "title": "Review v5 \u2014 planned inspection 3",
+        "due_on": "2026-10-20",
+        "target": {
+          "kind": "plant",
+          "id": {
+            "$ref": "plant:00"
+          }
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "schedule:3",
+      "kind": "schedule",
+      "payload": {
+        "activity_kind": "inspect",
+        "title": "Review v5 \u2014 planned inspection 4",
+        "due_on": "2026-10-21",
+        "target": {
+          "kind": "seed_lot",
+          "id": {
+            "$ref": "seed:00"
+          }
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "schedule:4",
+      "kind": "schedule",
+      "payload": {
+        "activity_kind": "follow_up",
+        "title": "Review v5 \u2014 planned inspection 5",
+        "due_on": "2026-10-22",
+        "target": {
+          "kind": "seed_lot",
+          "id": {
+            "$ref": "seed:00"
+          }
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "schedule:5",
+      "kind": "schedule",
+      "payload": {
+        "activity_kind": "inspect",
+        "title": "Review v5 \u2014 planned inspection 6",
+        "due_on": "2026-10-23",
+        "target": {
+          "kind": "plant_group",
+          "id": {
+            "$ref": "group:1"
+          }
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "schedule:6",
+      "kind": "schedule",
+      "payload": {
+        "activity_kind": "follow_up",
+        "title": "Review v5 \u2014 planned inspection 7",
+        "due_on": "2026-10-24",
+        "target": {
+          "kind": "plant_group",
+          "id": {
+            "$ref": "group:1"
+          }
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "schedule:7",
+      "kind": "schedule",
+      "payload": {
+        "activity_kind": "inspect",
+        "title": "Review v5 \u2014 planned inspection 8",
+        "due_on": "2026-10-25",
+        "target": {
+          "kind": "plant_group",
+          "id": {
+            "$ref": "group:1"
+          }
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "harvest:0",
+      "kind": "harvest",
+      "payload": {
+        "plant_id": {
+          "$ref": "plant:00"
+        },
+        "label": "Review v5 \u2014 harvest 1",
+        "occurred_on": null,
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion.",
+        "items": [
+          {
+            "material_kind": "seed",
+            "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion.",
+            "quantity": {
+              "kind": "weight",
+              "value": "12.50",
+              "unit": "g",
+              "is_approximate": false
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "inventory:0",
+      "kind": "inventory",
+      "payload": {
+        "item_id": {
+          "$ref": "item:harvest:0"
+        },
+        "state": "active",
+        "quantity": {
+          "kind": "weight",
+          "value": "4.25",
+          "unit": "g",
+          "is_approximate": false
+        },
+        "location_id": {
+          "$ref": "location:5"
+        }
+      }
+    },
+    {
+      "key": "harvest:1",
+      "kind": "harvest",
+      "payload": {
+        "plant_id": {
+          "$ref": "plant:01"
+        },
+        "label": "Review v5 \u2014 harvest 2",
+        "occurred_on": {
+          "precision": "month",
+          "year": 2026,
+          "month": 9
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion.",
+        "items": [
+          {
+            "material_kind": "fruit",
+            "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion.",
+            "quantity": {
+              "kind": "weight",
+              "value": "12.50",
+              "unit": "g",
+              "is_approximate": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "key": "inventory:1",
+      "kind": "inventory",
+      "payload": {
+        "item_id": {
+          "$ref": "item:harvest:1"
+        },
+        "state": "active",
+        "quantity": {
+          "kind": "weight",
+          "value": "4.25",
+          "unit": "g",
+          "is_approximate": true
+        },
+        "location_id": {
+          "$ref": "location:5"
+        }
+      }
+    },
+    {
+      "key": "harvest:2",
+      "kind": "harvest",
+      "payload": {
+        "plant_id": {
+          "$ref": "plant:02"
+        },
+        "label": "Review v5 \u2014 harvest 3",
+        "occurred_on": {
+          "precision": "month",
+          "year": 2026,
+          "month": 9
+        },
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion.",
+        "items": [
+          {
+            "material_kind": "leaf",
+            "description": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion.",
+            "quantity": null
+          }
+        ]
+      }
+    },
+    {
+      "key": "inventory:2",
+      "kind": "inventory",
+      "payload": {
+        "item_id": {
+          "$ref": "item:harvest:2"
+        },
+        "state": "depleted",
+        "quantity": null,
+        "location_id": {
+          "$ref": "location:5"
+        }
+      }
+    },
+    {
+      "key": "asset:local:0",
+      "kind": "asset",
+      "payload": {
+        "media_key": "aloe",
+        "external": false
+      }
+    },
+    {
+      "key": "seed:photo:0",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "baseline:identity:Aloe vera"
+        },
+        "source_kind": "unknown",
+        "label": "Review v5 \u2014 protected photo example Aloe vera",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "link:local:0",
+      "kind": "link",
+      "payload": {
+        "asset_id": {
+          "$ref": "asset:local:0"
+        },
+        "target_type": "seed_lot",
+        "target_id": {
+          "$ref": "seed:photo:0"
+        },
+        "caption": "Licensed species illustration for synthetic review; not this collection specimen."
+      }
+    },
+    {
+      "key": "asset:external:0",
+      "kind": "asset",
+      "payload": {
+        "media_key": "aloe",
+        "external": true
+      }
+    },
+    {
+      "key": "link:external:0",
+      "kind": "link",
+      "payload": {
+        "asset_id": {
+          "$ref": "asset:external:0"
+        },
+        "target_type": "plant",
+        "target_id": {
+          "$ref": "plant:00"
+        },
+        "caption": "Reference only. Explicit Preview once; no automatic third-party contact."
+      }
+    },
+    {
+      "key": "asset:local:1",
+      "kind": "asset",
+      "payload": {
+        "media_key": "lavender",
+        "external": false
+      }
+    },
+    {
+      "key": "seed:photo:1",
+      "kind": "seed",
+      "payload": {
+        "botanical_identity_id": {
+          "$ref": "baseline:identity:Lavandula angustifolia"
+        },
+        "source_kind": "unknown",
+        "label": "Review v5 \u2014 protected photo example Lavandula angustifolia",
+        "notes": "Synthetic Extended Botanical Review Dataset v5; no real collection, provenance or scientifically verified native-range assertion."
+      }
+    },
+    {
+      "key": "link:local:1",
+      "kind": "link",
+      "payload": {
+        "asset_id": {
+          "$ref": "asset:local:1"
+        },
+        "target_type": "seed_lot",
+        "target_id": {
+          "$ref": "seed:photo:1"
+        },
+        "caption": "Licensed species illustration for synthetic review; not this collection specimen."
+      }
+    },
+    {
+      "key": "asset:external:1",
+      "kind": "asset",
+      "payload": {
+        "media_key": "lavender",
+        "external": true
+      }
+    },
+    {
+      "key": "link:external:1",
+      "kind": "link",
+      "payload": {
+        "asset_id": {
+          "$ref": "asset:external:1"
+        },
+        "target_type": "plant",
+        "target_id": {
+          "$ref": "plant:01"
+        },
+        "caption": "Reference only. Explicit Preview once; no automatic third-party contact."
+      }
+    },
+    {
+      "key": "asset:local:2",
+      "kind": "asset",
+      "payload": {
+        "media_key": "sage",
+        "external": false
+      }
+    },
+    {
+      "key": "link:local:2",
+      "kind": "link",
+      "payload": {
+        "asset_id": {
+          "$ref": "asset:local:2"
+        },
+        "target_type": "seed_lot",
+        "target_id": {
+          "$ref": "seed:29"
+        },
+        "caption": "Licensed species illustration for synthetic review; not this collection specimen."
+      }
+    },
+    {
+      "key": "asset:external:2",
+      "kind": "asset",
+      "payload": {
+        "media_key": "sage",
+        "external": true
+      }
+    },
+    {
+      "key": "link:external:2",
+      "kind": "link",
+      "payload": {
+        "asset_id": {
+          "$ref": "asset:external:2"
+        },
+        "target_type": "plant",
+        "target_id": {
+          "$ref": "plant:02"
+        },
+        "caption": "Reference only. Explicit Preview once; no automatic third-party contact."
+      }
+    },
+    {
+      "key": "asset:local:3",
+      "kind": "asset",
+      "payload": {
+        "media_key": "fig",
+        "external": false
+      }
+    },
+    {
+      "key": "link:local:3",
+      "kind": "link",
+      "payload": {
+        "asset_id": {
+          "$ref": "asset:local:3"
+        },
+        "target_type": "seed_lot",
+        "target_id": {
+          "$ref": "seed:01"
+        },
+        "caption": "Licensed species illustration for synthetic review; not this collection specimen."
+      }
+    },
+    {
+      "key": "asset:external:3",
+      "kind": "asset",
+      "payload": {
+        "media_key": "fig",
+        "external": true
+      }
+    },
+    {
+      "key": "link:external:3",
+      "kind": "link",
+      "payload": {
+        "asset_id": {
+          "$ref": "asset:external:3"
+        },
+        "target_type": "plant",
+        "target_id": {
+          "$ref": "plant:03"
+        },
+        "caption": "Reference only. Explicit Preview once; no automatic third-party contact."
+      }
+    },
+    {
+      "key": "asset:local:4",
+      "kind": "asset",
+      "payload": {
+        "media_key": "basil",
+        "external": false
+      }
+    },
+    {
+      "key": "link:local:4",
+      "kind": "link",
+      "payload": {
+        "asset_id": {
+          "$ref": "asset:local:4"
+        },
+        "target_type": "seed_lot",
+        "target_id": {
+          "$ref": "seed:28"
+        },
+        "caption": "Licensed species illustration for synthetic review; not this collection specimen."
+      }
+    },
+    {
+      "key": "asset:external:4",
+      "kind": "asset",
+      "payload": {
+        "media_key": "basil",
+        "external": true
+      }
+    },
+    {
+      "key": "link:external:4",
+      "kind": "link",
+      "payload": {
+        "asset_id": {
+          "$ref": "asset:external:4"
+        },
+        "target_type": "plant",
+        "target_id": {
+          "$ref": "plant:04"
+        },
+        "caption": "Reference only. Explicit Preview once; no automatic third-party contact."
+      }
+    },
+    {
+      "key": "asset:local:5",
+      "kind": "asset",
+      "payload": {
+        "media_key": "echinacea",
+        "external": false
+      }
+    },
+    {
+      "key": "link:local:5",
+      "kind": "link",
+      "payload": {
+        "asset_id": {
+          "$ref": "asset:local:5"
+        },
+        "target_type": "seed_lot",
+        "target_id": {
+          "$ref": "seed:12"
+        },
+        "caption": "Licensed species illustration for synthetic review; not this collection specimen."
+      }
+    },
+    {
+      "key": "asset:external:5",
+      "kind": "asset",
+      "payload": {
+        "media_key": "echinacea",
+        "external": true
+      }
+    },
+    {
+      "key": "link:external:5",
+      "kind": "link",
+      "payload": {
+        "asset_id": {
+          "$ref": "asset:external:5"
+        },
+        "target_type": "plant",
+        "target_id": {
+          "$ref": "plant:05"
+        },
+        "caption": "Reference only. Explicit Preview once; no automatic third-party contact."
+      }
+    },
+    {
+      "key": "asset:local:6",
+      "kind": "asset",
+      "payload": {
+        "media_key": "sunflower",
+        "external": false
+      }
+    },
+    {
+      "key": "link:local:6",
+      "kind": "link",
+      "payload": {
+        "asset_id": {
+          "$ref": "asset:local:6"
+        },
+        "target_type": "seed_lot",
+        "target_id": {
+          "$ref": "seed:13"
+        },
+        "caption": "Licensed species illustration for synthetic review; not this collection specimen."
+      }
+    },
+    {
+      "key": "asset:external:6",
+      "kind": "asset",
+      "payload": {
+        "media_key": "sunflower",
+        "external": true
+      }
+    },
+    {
+      "key": "asset:local:7",
+      "kind": "asset",
+      "payload": {
+        "media_key": "tomato",
+        "external": false
+      }
+    }
+  ],
+  "retire_supplier": "supplier:7",
+  "reconciliation": {
+    "seed": "seed:reconcile",
+    "order": "order:00",
+    "reason": "order_supplier_conflict"
+  }
+}

@@ -1,0 +1,280 @@
+{
+  "synthetic": true,
+  "measurements": [
+    {
+      "viewport": [
+        1440,
+        844
+      ],
+      "scrollWidth": 1440,
+      "scrollHeight": 848,
+      "map": {
+        "x": 273,
+        "y": 270.953125,
+        "width": 787.59375,
+        "height": 430.4375,
+        "bottom": 701.390625
+      },
+      "canvas": {
+        "x": 272,
+        "y": 209.953125,
+        "width": 789.59375,
+        "height": 526.421875,
+        "bottom": 736.375
+      },
+      "inspector": {
+        "x": 1077.59375,
+        "y": 209.953125,
+        "width": 338.40625,
+        "height": 572,
+        "bottom": 781.953125
+      },
+      "kpis": {
+        "x": 272,
+        "y": 123.984375,
+        "width": 1144,
+        "height": 69.96875,
+        "bottom": 193.953125
+      }
+    },
+    {
+      "viewport": [
+        1024,
+        844
+      ],
+      "scrollWidth": 1024,
+      "scrollHeight": 924,
+      "map": {
+        "x": 273,
+        "y": 392.953125,
+        "width": 726,
+        "height": 430.4375,
+        "bottom": 823.390625
+      },
+      "canvas": {
+        "x": 272,
+        "y": 331.953125,
+        "width": 728,
+        "height": 526.421875,
+        "bottom": 858.375
+      },
+      "inspector": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "bottom": 0
+      },
+      "kpis": {
+        "x": 272,
+        "y": 185.984375,
+        "width": 728,
+        "height": 69.96875,
+        "bottom": 255.953125
+      }
+    },
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "scrollWidth": 390,
+      "scrollHeight": 1094,
+      "map": {
+        "x": 17,
+        "y": 564.171875,
+        "width": 356,
+        "height": 320.71875,
+        "bottom": 884.890625
+      },
+      "canvas": {
+        "x": 16,
+        "y": 503.171875,
+        "width": 358,
+        "height": 434.6875,
+        "bottom": 937.859375
+      },
+      "inspector": {
+        "x": 0,
+        "y": 0,
+        "width": 0,
+        "height": 0,
+        "bottom": 0
+      },
+      "kpis": {
+        "x": 16,
+        "y": 317.171875,
+        "width": 358,
+        "height": 110,
+        "bottom": 427.171875
+      }
+    }
+  ],
+  "checks": [
+    "1440/1024/390 no horizontal overflow; exact selected details and identity grouping",
+    "mobile map DOM retained across pane switch",
+    "real Leaflet Enter/Space selection and Escape clearing",
+    "actual browser Back/Forward and legacy Saved View restoration",
+    "identical Saved View reopening clears inspection",
+    "no-site/no-coordinate/API failure and Retry states",
+    "outgoing provider requests contain only tile z/x/y; no referrer"
+  ],
+  "providerRequests": [
+    {
+      "url": "https://b.tile.openstreetmap.org/3/4/3.png",
+      "referer": null
+    },
+    {
+      "url": "https://c.tile.openstreetmap.org/3/5/3.png",
+      "referer": null
+    },
+    {
+      "url": "https://a.tile.openstreetmap.org/3/4/2.png",
+      "referer": null
+    },
+    {
+      "url": "https://b.tile.openstreetmap.org/3/5/2.png",
+      "referer": null
+    },
+    {
+      "url": "https://c.tile.openstreetmap.org/3/4/4.png",
+      "referer": null
+    },
+    {
+      "url": "https://a.tile.openstreetmap.org/3/5/4.png",
+      "referer": null
+    },
+    {
+      "url": "https://a.tile.openstreetmap.org/3/3/3.png",
+      "referer": null
+    },
+    {
+      "url": "https://a.tile.openstreetmap.org/3/6/3.png",
+      "referer": null
+    },
+    {
+      "url": "https://c.tile.openstreetmap.org/3/3/2.png",
+      "referer": null
+    },
+    {
+      "url": "https://c.tile.openstreetmap.org/3/6/2.png",
+      "referer": null
+    },
+    {
+      "url": "https://b.tile.openstreetmap.org/3/3/4.png",
+      "referer": null
+    },
+    {
+      "url": "https://b.tile.openstreetmap.org/3/6/4.png",
+      "referer": null
+    },
+    {
+      "url": "https://b.tile.openstreetmap.org/3/4/3.png",
+      "referer": null
+    },
+    {
+      "url": "https://c.tile.openstreetmap.org/3/5/3.png",
+      "referer": null
+    },
+    {
+      "url": "https://a.tile.openstreetmap.org/3/4/2.png",
+      "referer": null
+    },
+    {
+      "url": "https://b.tile.openstreetmap.org/3/5/2.png",
+      "referer": null
+    },
+    {
+      "url": "https://c.tile.openstreetmap.org/3/4/4.png",
+      "referer": null
+    },
+    {
+      "url": "https://a.tile.openstreetmap.org/3/5/4.png",
+      "referer": null
+    },
+    {
+      "url": "https://a.tile.openstreetmap.org/3/3/3.png",
+      "referer": null
+    },
+    {
+      "url": "https://a.tile.openstreetmap.org/3/6/3.png",
+      "referer": null
+    },
+    {
+      "url": "https://c.tile.openstreetmap.org/3/3/2.png",
+      "referer": null
+    },
+    {
+      "url": "https://c.tile.openstreetmap.org/3/6/2.png",
+      "referer": null
+    },
+    {
+      "url": "https://b.tile.openstreetmap.org/3/3/4.png",
+      "referer": null
+    },
+    {
+      "url": "https://b.tile.openstreetmap.org/3/6/4.png",
+      "referer": null
+    },
+    {
+      "url": "https://b.tile.openstreetmap.org/3/4/3.png",
+      "referer": null
+    },
+    {
+      "url": "https://c.tile.openstreetmap.org/3/5/3.png",
+      "referer": null
+    },
+    {
+      "url": "https://a.tile.openstreetmap.org/3/4/2.png",
+      "referer": null
+    },
+    {
+      "url": "https://b.tile.openstreetmap.org/3/5/2.png",
+      "referer": null
+    },
+    {
+      "url": "https://c.tile.openstreetmap.org/3/4/4.png",
+      "referer": null
+    },
+    {
+      "url": "https://a.tile.openstreetmap.org/3/5/4.png",
+      "referer": null
+    },
+    {
+      "url": "https://a.tile.openstreetmap.org/3/3/3.png",
+      "referer": null
+    },
+    {
+      "url": "https://a.tile.openstreetmap.org/3/6/3.png",
+      "referer": null
+    },
+    {
+      "url": "https://c.tile.openstreetmap.org/3/3/2.png",
+      "referer": null
+    },
+    {
+      "url": "https://c.tile.openstreetmap.org/3/6/2.png",
+      "referer": null
+    },
+    {
+      "url": "https://b.tile.openstreetmap.org/3/3/4.png",
+      "referer": null
+    },
+    {
+      "url": "https://b.tile.openstreetmap.org/3/6/4.png",
+      "referer": null
+    }
+  ],
+  "consoleErrors": [],
+  "zoomAttempt": {
+    "before": {
+      "width": 1440,
+      "ratio": 1
+    },
+    "after": {
+      "width": 1440,
+      "ratio": 1
+    },
+    "method": "headless keyboard Control++"
+  }
+}

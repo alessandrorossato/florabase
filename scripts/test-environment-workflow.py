@@ -134,6 +134,34 @@ class EnvironmentTests(unittest.TestCase):
                 run.assert_not_called()
                 compose.assert_not_called()
 
+    def test_extended_review_is_guarded_and_does_not_broaden_baseline(self) -> None:
+        for role in ("dev", "uat", "quality", "prod", "sourcing"):
+            env = Environment(self.repo, role)
+            with patch.object(env, "compose") as compose:
+                with self.assertRaisesRegex(WorkflowError, "restricted to Review"):
+                    env.extended_review("seed")
+                compose.assert_not_called()
+        review = Environment(self.repo, "review")
+        with (
+            patch.object(review, "require_review_seed", side_effect=WorkflowError("foreign")),
+            patch.object(review, "compose") as compose,
+        ):
+            with self.assertRaisesRegex(WorkflowError, "foreign"):
+                review.extended_review("seed")
+            compose.assert_not_called()
+        for action in ("seed", "status"):
+            with (
+                patch.object(review, "require_review_seed") as guard,
+                patch.object(review, "compose") as compose,
+            ):
+                review.extended_review(action)
+                guard.assert_called_once()
+                command = compose.call_args.args
+                self.assertIn(f"{self.feature}/scripts:/review:ro", command)
+                self.assertIn("/review/review_dataset_v5.py", command)
+                self.assertEqual(command[-1], action)
+                self.assertNotIn("uat_fixture.py", command)
+
     def test_sourcing_preview_role_is_isolated_and_requires_its_own_removal_token(self) -> None:
         sourcing = Environment(self.repo, "sourcing")
         self.assertEqual(sourcing.project, "florabase-sourcing-preview")

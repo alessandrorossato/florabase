@@ -57,16 +57,26 @@ expose the frontend deliberately and protect the network path. Do not publish Po
 
 ### Provenance-map basemap
 
-The frontend image includes `/usr/share/nginx/html/runtime-config.js` with OpenStreetMap tile and
-attribution defaults. An operator may replace or bind-mount that file to configure `mapTileUrl` and
-`mapAttribution` for another compatible provider or a local/self-hosted tile server without changing
-Florabase provenance code. Preserve the provider's required attribution.
+Collection origins starts with bundled Natural Earth 1:110m generalized geography. This is an
+orientation overview, not street-level detail; markers retain their exact recorded WGS84 positions
+and accuracy circles. Local geography, records and inspector do not require an external provider.
 
-Tiles are requested directly by the browser; Florabase does not proxy them. The provider therefore
-sees normal tile requests and the viewed map area, but Florabase does not put entity names,
-BotanicalIdentities, notes, or other record metadata in those requests. Configure a self-hosted tile
-server when disclosing the viewed area to an external provider is undesirable. The map does not use
-geocoding, browser geolocation, analytics, or botanical-data services.
+The frontend image includes `/usr/share/nginx/html/runtime-config.js`. An operator may replace or
+bind-mount it, setting `mapOnlineEnabled: true`, `mapTileUrl` and `mapAttribution` only after verifying
+that the selected provider permits this deployment. The visitor must then explicitly enable Online
+basemap. The shipped flag is false. Preserve the provider's attribution; the canonical public OSM
+endpoint is `https://tile.openstreetmap.org/{z}/{x}/{y}.png` and its
+[tile usage policy](https://operations.osmfoundation.org/policies/tiles/) applies. No bulk acquisition,
+prefetch, host rotation, custom User-Agent, proxy impersonation or cache bypass is implemented.
+
+Tiles go directly from the browser to the provider, disclosing IP, viewed tile area and the app
+origin. Cross-origin Referer uses `strict-origin-when-cross-origin`; record paths, hashes, queries,
+identity names and notes are not sent. Suppressing Referer violates public OSM policy. Choose a
+permitted self-hosted provider if this disclosure is undesirable. The first image/tile error removes
+the whole online layer and disables further attempts until the next visit; local evidence remains.
+Browser image errors cannot reliably distinguish HTTP status or detect policy artwork returned with
+HTTP 200. A deployment must resolve provider access before enabling the optional layer. The app does
+not geocode, request geolocation or infer provenance from basemap availability.
 
 ## First installation
 

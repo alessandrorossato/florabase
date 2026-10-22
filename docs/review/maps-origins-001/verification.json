@@ -1,0 +1,153 @@
+{
+  "date": "2026-10-22",
+  "base": "b3f1de4693f50a12396344d251a16a0b4ded4b92",
+  "branch": "feat/maps-origins-001-candidate",
+  "frontend": [
+    {
+      "name": "Origins final",
+      "passed": 16,
+      "failed": 0,
+      "files": [
+        {
+          "path": "src/provenance-map/ProvenanceMap.test.tsx",
+          "status": "passed",
+          "selected_tests": 6
+        },
+        {
+          "path": "src/provenance-map/ProvenanceMapScreen.test.tsx",
+          "status": "passed",
+          "selected_tests": 10
+        }
+      ]
+    },
+    {
+      "name": "Native ranges and shared Maps",
+      "passed": 49,
+      "failed": 0,
+      "files": [
+        {
+          "path": "src/maps/MapWorkspace.test.tsx",
+          "status": "passed",
+          "selected_tests": 2
+        },
+        {
+          "path": "src/native-ranges/NativeCoverageMap.test.tsx",
+          "status": "passed",
+          "selected_tests": 12
+        },
+        {
+          "path": "src/native-ranges/NativeRangesScreen.test.tsx",
+          "status": "passed",
+          "selected_tests": 22
+        },
+        {
+          "path": "src/native-ranges/geometry.test.ts",
+          "status": "passed",
+          "selected_tests": 3
+        },
+        {
+          "path": "src/species-distribution/SpeciesDistributionScreen.test.tsx",
+          "status": "passed",
+          "selected_tests": 10
+        }
+      ]
+    },
+    {
+      "name": "Collection and persistence regressions",
+      "passed": 201,
+      "failed": 0,
+      "files": [
+        {
+          "path": "src/components/DirectoryTools.test.tsx",
+          "status": "passed",
+          "selected_tests": 1
+        },
+        {
+          "path": "src/occurrence-map/EvidenceTiles.test.ts",
+          "status": "passed",
+          "selected_tests": 4
+        },
+        {
+          "path": "src/occurrence-map/OccurrenceDensityMap.test.tsx",
+          "status": "passed",
+          "selected_tests": 3
+        },
+        {
+          "path": "src/occurrence-map/OccurrenceMapPanel.test.tsx",
+          "status": "passed",
+          "selected_tests": 4
+        },
+        {
+          "path": "src/plants/PlantScreen.test.tsx",
+          "status": "passed",
+          "selected_tests": 58
+        },
+        {
+          "path": "src/provenance-sites/CoordinateFields.test.tsx",
+          "status": "passed",
+          "selected_tests": 2
+        },
+        {
+          "path": "src/provenance-sites/ProvenanceSiteManager.test.tsx",
+          "status": "passed",
+          "selected_tests": 4
+        },
+        {
+          "path": "src/provenance-sites/coordinates.test.ts",
+          "status": "passed",
+          "selected_tests": 15
+        },
+        {
+          "path": "src/saved-views/SavedViews.test.tsx",
+          "status": "passed",
+          "selected_tests": 10
+        },
+        {
+          "path": "src/saved-views/state.test.ts",
+          "status": "passed",
+          "selected_tests": 50
+        },
+        {
+          "path": "src/seed-lots/SeedLotScreen.test.tsx",
+          "status": "passed",
+          "selected_tests": 50
+        }
+      ]
+    },
+    {
+      "name": "Geography navigation",
+      "passed": 4,
+      "failed": 0,
+      "files": [
+        {
+          "path": "src/App.test.tsx",
+          "status": "passed",
+          "selected_tests": 4
+        }
+      ]
+    }
+  ],
+  "backend_unit": {
+    "command": "python3 scripts/workflow_environment.py quality compose -- run --rm --no-deps backend pytest --no-cov tests/test_provenance_site.py tests/test_saved_views.py",
+    "passed": 94
+  },
+  "integration": {
+    "command": "./scripts/test-integration.sh backend/tests/integration/test_provenance_site_api.py",
+    "passed": 4,
+    "project": "florabase-integration-b440a404cb4b",
+    "residual_resources": 0
+  },
+  "static": {
+    "full_frontend_eslint": "passed",
+    "final_changed_source_eslint": "passed",
+    "full_frontend_prettier": "passed",
+    "strict_typescript_production_build": "passed",
+    "make_api_check": "passed",
+    "feature_graph": 109,
+    "git_diff_check": "passed",
+    "staged_diff": "empty"
+  },
+  "canonical_gate_run": false,
+  "independent_qa_complete": false,
+  "live_candidate_review": false
+}

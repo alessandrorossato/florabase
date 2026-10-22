@@ -1,0 +1,37 @@
+{
+  "frontend": {
+    "tests": 130,
+    "files": 15,
+    "eslint": "passed, zero warnings",
+    "typescript": "passed",
+    "production_build": "passed",
+    "formatting": "affected provenance-map source and runtime config passed",
+    "final_origins_tests": 17,
+    "final_origins_files": 2,
+    "final_css_build": "passed after long-name tooltip correction",
+    "final_affected_eslint": "passed, zero warnings"
+  },
+  "backend": {
+    "tests_passed": 109,
+    "tests_skipped": 1,
+    "skipped_reason": "optional live-environment guard check",
+    "focused_no_cov": true,
+    "strict_fixture_workflow_typing": "passed",
+    "integration_test_typing": "passed"
+  },
+  "postgresql": {
+    "affected_tests_passed": 38,
+    "final_fixture_tests_passed": 3,
+    "guarded_disposable_cleanup": "passed, no residual owned containers/networks/volumes"
+  },
+  "workflow_environment": {
+    "tests_passed": 35
+  },
+  "api_drift": "backend and generated TypeScript passed",
+  "feature_graph": {
+    "valid": 109
+  },
+  "canonical_feature_verify": "not run; not authorized",
+  "staged_files": 0,
+  "commits_or_delivery": "none"
+}

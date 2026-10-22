@@ -1,0 +1,80 @@
+{
+  "checks": [
+    "Five identities chosen with native UI; authenticated coverage BR5 TH4 IT3 US2 AU1; keyboard territory selection",
+    "Real collection directories: seeds, sowings, plants, orders, suppliers, harvests, media, history, schedule; no automatic third-party media contact",
+    "Injected local provider 403: layer removed, markers retained, no retry; not a real external outage"
+  ],
+  "selected_native_coverage": [
+    {
+      "id": "019f3f06-3800-7b32-a097-ed9760b28022",
+      "name": "Brazil",
+      "source_code": "BR",
+      "identity_count": 5,
+      "identity_ids": [
+        "01a162be-f9d7-72ba-928e-c207e6626cc9",
+        "01a162be-f9ea-7734-b536-38668db39c06",
+        "01a162be-f9f2-7512-8953-9761ac090ebd",
+        "01a162be-f9fa-74d4-8051-c7b3dd0c5351",
+        "01a162be-fa00-76b0-a7c9-cad04e0929c9"
+      ]
+    },
+    {
+      "id": "019f3f06-3800-7e69-9448-015e33fba60b",
+      "name": "Thailand",
+      "source_code": "TH",
+      "identity_count": 4,
+      "identity_ids": [
+        "01a162be-f9d7-72ba-928e-c207e6626cc9",
+        "01a162be-f9ea-7734-b536-38668db39c06",
+        "01a162be-f9f2-7512-8953-9761ac090ebd",
+        "01a162be-f9fa-74d4-8051-c7b3dd0c5351"
+      ]
+    },
+    {
+      "id": "019f3f06-3800-722d-a856-c551fa2d9ece",
+      "name": "Italy",
+      "source_code": "IT",
+      "identity_count": 3,
+      "identity_ids": [
+        "01a162be-f9d7-72ba-928e-c207e6626cc9",
+        "01a162be-f9ea-7734-b536-38668db39c06",
+        "01a162be-f9f2-7512-8953-9761ac090ebd"
+      ]
+    },
+    {
+      "id": "019f3f06-3800-73b0-ad82-ded80a871252",
+      "name": "United States",
+      "source_code": "US",
+      "identity_count": 2,
+      "identity_ids": [
+        "01a162be-f9d7-72ba-928e-c207e6626cc9",
+        "01a162be-f9ea-7734-b536-38668db39c06"
+      ]
+    },
+    {
+      "id": "019f3f06-3800-7882-9828-712ceac5581f",
+      "name": "Australia",
+      "source_code": "AU",
+      "identity_count": 1,
+      "identity_ids": [
+        "01a162be-f9d7-72ba-928e-c207e6626cc9"
+      ]
+    }
+  ],
+  "visited": [
+    "seeds",
+    "sowings",
+    "plants",
+    "orders",
+    "suppliers",
+    "harvests",
+    "media",
+    "history",
+    "schedule"
+  ],
+  "tileRequests": 4,
+  "referer": "http://localhost:15174/",
+  "external_requests": [],
+  "runtime_errors": [],
+  "provider_failure": "isolated local test double, never real OSM requests"
+}

@@ -898,6 +898,29 @@ class Environment:
             "seed",
         )
 
+    def extended_review(self, action: str) -> None:
+        if self.role != "review":
+            raise WorkflowError("Extended Botanical Review Dataset is restricted to Review")
+        self.require_review_seed()
+        self.compose(
+            "run",
+            "--rm",
+            "-T",
+            "--no-deps",
+            "--volume",
+            f"{self.source / 'scripts'}:/review:ro",
+            "--env",
+            "FLORABASE_WORKFLOW_MODE=review",
+            "--env",
+            f"FLORABASE_REVIEW_PROJECT={self.project}",
+            "--env",
+            f"FLORABASE_REVIEW_SOURCE={self.source}",
+            "backend",
+            "python",
+            "/review/review_dataset_v5.py",
+            action,
+        )
+
     def status(self) -> None:
         self.validate()
         identity = self.repo.identity()
@@ -1067,6 +1090,8 @@ def main() -> int:
             env.up()
         elif args.action == "seed":
             env.seed()
+        elif args.action in {"extended-seed", "extended-status"}:
+            env.extended_review("seed" if args.action == "extended-seed" else "status")
         elif args.action == "upgrade":
             env.upgrade_state()
         elif args.action in {"stop", "remove"}:
