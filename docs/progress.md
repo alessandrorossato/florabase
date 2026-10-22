@@ -5014,3 +5014,144 @@ not the current delivery state.
   the lazy workspace was still loading at the one-second query timeout. Raised that assertion's
   wait to ten seconds (matching the route-transition regression), then the isolated UX001 suite
   passed **7/7**. The final full gate is being rerun after this test-only reliability adjustment.
+
+## 2026-10-22 — MAPS-ORIGINS-001 visual-review candidate
+
+- Fetched main `b3f1de4` includes delivered PR #118. Canonical initialization attached
+  new supplied Codex `c902` to `feat/maps-origins-001-candidate` because the suggested
+  branch was already attached elsewhere. Primary and other worktrees were preserved.
+- Audited and documented reuse before implementation. Collection origins now uses
+  the accepted header search/Filters/Saved Views, functional mapped-site/direct-record/
+  identity counts, approximately 70/30 Leaflet/inspector layout, bounded site browsing
+  and identity-grouped exact record/lifecycle links. Missing coordinates retain the
+  Geography path; default mapped sites with no direct records remain inspectable.
+- Preserved `#/map`, `provenance_map` v1, identity-only `q`, `seed_lots` and Plants plus
+  PlantGroups `plants`. Exclusion permanently clears selection; ordinary inspection
+  preserves viewport. Exact markers/accuracy circles, safe hover/focus text, explicit
+  Enter/Space, 44px hit areas, mounted responsive panes/resize and reduced motion are
+  covered. No descendant, Supplier, Location, native-range or GBIF origin inference.
+- Retained configured online tiles/attribution with explicit offline switch, local
+  bundled Natural Earth context, tile-failure Retry and visible privacy distinction.
+  Final synthetic browser audit intercepted 36 tile-coordinate-only URLs with no
+  referrer. No remote geocoding/provider/dependency/API/schema changes were needed.
+- Completed **270 frontend tests / 19 files**, **94 backend unit tests**, **4 PostgreSQL
+  provenance API integration tests**; exact disposable integration cleanup passed.
+  ESLint, full frontend formatting, strict TypeScript/production build, API drift,
+  **109-feature** graph and whitespace/index checks pass. A broad run exited 143 and
+  an initial unchanged lazy Geography timeout are not claimed passed; completed
+  scoped reruns supersede them without weakening checks.
+- [Handoff](maps-origins-001-handoff.md) and labelled
+  [synthetic evidence](review/maps-origins-001/README.md) record 1440×844, 1024×844,
+  390×844 measurements, real Leaflet keyboard, pane retention, Back/Forward, Saved
+  View reopening, API Retry and provider-failure fallback. No horizontal overflow.
+  Headless zoom did not change viewport/ratio; true zoom, actual screen reader,
+  physical touch and live authenticated candidate acceptance remain operator work.
+- Feature Review 15174 still belongs to delivered `b139` and was not acquired,
+  started, removed or reseeded. DEV, UAT, Stable Preview, production and Sourcing
+  remain untouched. Status is `implemented`; all changes remain unstaged/uncommitted.
+  No canonical `make feature-verify`, commit, push, PR or delivery. Candidate boundary:
+  **READY_FOR_ORIGINS_VISUAL_REVIEW**.
+
+## 2026-10-22 — MAPS-ORIGINS-001 authenticated Feature Review
+
+- Verified old Review ownership/resources with guarded inventory/status, then obtained
+  explicit operator deletion approval. Stopped/removed only `b139`'s exact Review
+  environment through its owning guarded commands; all other environments/worktrees
+  were preserved. Started replacement from `c902` using `make feature-review-up`.
+- Bootstrapped new enabled `owner` securely via password stdin; random password stays
+  in a user-owned mode-0600 file outside the repository. Guarded seeding initialized
+  **v4 / ready / 80 records**. Frontend, backend and database are healthy, owned by
+  `c902`, at revision `20261013_0042`; launched HEAD is `b3f1de4` plus the dirty candidate.
+- Authenticated real-browser checks verify exact marker/list/inspector selection,
+  KPI counts/dialogs, search, record filters, exclusion clearing and retained panes
+  at 1440×844, 1024×844 and 390×844, with no horizontal overflow or runtime errors.
+  Actual online check loaded **12 tiles**, none failed/pending. Standard live fixture
+  has one mapped site/direct SeedLot/identity and unknown accuracy; richer states
+  retain the earlier labelled synthetic and test evidence, without collection edits.
+- Review remains running at <http://localhost:15174/#/map>.
+  [Live evidence/status](review/maps-origins-001/live/README.md) supersede the previous
+  slot limitation. True zoom, screen reader, physical touch, independent QA and
+  operator visual acceptance remain pending. No canonical verification, staging,
+  commit, delivery or DEV upgrade. **ORIGINS_LIVE_REVIEW_READY**.
+
+## 2026-10-22 — Origins operator corrections and Extended Botanical Review Dataset v5
+
+- Continued dirty c902 candidate without new branch, staging, commit, delivery or canonical gate.
+  Audited outgoing OSM requests and official policy: prior no-referrer tiles violated its Referer
+  requirement. Collection origins now starts with local Natural Earth context; permitted online
+  detail requires configuration plus explicit enablement, uses origin-only cross-origin Referer and
+  hides the complete layer on first error without retry. Exact WGS84 markers/accuracy remain local.
+  HTTP-200 policy artwork remains a documented browser-image limitation; no bypass/prefetch added.
+- Corrected Filters into compact full-row Seed lots / Plants and plant groups controls, retaining
+  existing keys and shared apply-as-chosen Done/Close/Escape/backdrop semantics. Real 1440/1024/390
+  screenshots/checks pass with no horizontal overflow. Long site labels exposed a collapsing Leaflet
+  tooltip; explicit bounded width fixes it without moving coordinates or changing the mapping stack.
+- Added separately versioned Review-only dataset/manifest and guarded extended seed/status commands.
+  Existing v4, owner credentials, edits and UAT semantics remain unchanged. New data uses domain
+  services with transactional graph creation, explicit failure diagnostics, stable logical references
+  and retained service-generated UUIDv7 IDs. No network acquisition; licensed photos total 508,755 bytes
+  outside production build contexts. External references remain private until explicit Preview once.
+- Positively verified exact c902 project/source/DB/media/network/revision ownership before mutation.
+  Additive live seed twice returned ready/252 references and identical IDs/counts; v4 retains its
+  byte-identical ledger/80 references and unchanged owner credential fingerprint. All 14 pre-existing
+  foreign project inventories compare unchanged. No Review reset/removal/recreation.
+- Live totals: 37 identities, 43 SeedLots, 19 Plants, 7 PlantGroups, 16 Sowings, 12 Orders, 10 Suppliers,
+  14 provenance sites, 18 Locations, 25 profiles, 24 identities with structured ranges, 5 Harvests,
+  8 items, 4 inventories, 13 Journal/operation events, 2 germination observations, 27 scheduled
+  activities, 17 media assets (9 local/8 external), 18 media links and 9 protected attachments.
+  Origins projects 12 mapped / 2 no-coordinate sites, 42 direct records and 22 distinct identities.
+- Authenticated browser acceptance verifies marker/inspector navigation, KPIs, filters, responsive
+  panes, five-species BR5/TH4/IT3/US2/AU1 overlap, broad/exact/custom/unmapped range records, collection
+  directories and Stored material, protected photo decode/401, attribution, explicit no-referrer
+  external preview and isolated online-provider refusal without retry. No real remote provider
+  outage/download is claimed. Evidence: `docs/review/maps-origins-001/refinement-v5/`.
+- Completed checks: frontend 130/15 files; full ESLint, TypeScript/build and scoped formatting; backend
+  109 passed/1 optional live skip; PostgreSQL affected suites 38 passed and final strengthened fixture
+  3 passed; workflow/environment 35 passed; operational lint/format/strict typing; backend and generated
+  TypeScript API drift; 109-feature graph; diff whitespace and empty staged diff. Disposable test
+  cleanup succeeded. No schema/API/dependency changes. Intermediate harness/static-invocation errors
+  were corrected; only successful final checks are counted.
+- Updated design/handoff and dedicated `docs/review/extended-botanical-dataset-v5.md` with matrices,
+  licensing, exact counts, failure/recovery and disk footprint. Live Review stays healthy at 15174,
+  owner password retained outside repository. True browser zoom, physical touch, screen-reader and
+  independent/operator acceptance remain pending. `READY_FOR_ORIGINS_VISUAL_REVIEW`.
+
+## 2026-10-22 — MAPS-ORIGINS-001 independent review
+
+- Re-fetched `origin/main`: `b3f1de4693f50a12396344d251a16a0b4ded4b92`, exactly the candidate base;
+  merge-base matches and branch divergence is zero. Guarded Review status confirms the healthy
+  c902-owned `florabase-feature-review`, both database revisions `20261013_0042`, v4 ready/80 and
+  v5 ready/252 references with operator edits preserved.
+- Rechecked the authenticated live map, KPIs, mapped marker and inspector, exact WGS84/recorded
+  accuracy, grouped material links, category filters and responsive pane controls. Live totals are
+  12 mapped sites, 42 distinct direct records, 22 identities and 2 sites without coordinates.
+  Enter on a textual site row selected it; Escape cleared inspection. No live data was changed.
+- Reviewed source, workflow ownership, domain relationships, synthetic fixture idempotence/failure
+  tests, no-network guarantees, local/external media split and v4/UAT isolation. All eight local
+  image sources/licences were checked against individual Wikimedia Commons pages; the 508,755-byte
+  derivatives match manifest size/hash and contain no EXIF. Natural Earth is public-domain 1:110m
+  context. Current OSM guidance requires an accurate Referer and attribution and prohibits scraping
+  and offline tile prefetch; online detail remains disabled by default and the tested failure path
+  retains local geography without automatic retry.
+- `origin/main` compatibility is clean; targeted backend Ruff passes after correcting import order.
+  Focused browser, backend, PostgreSQL, workflow, type, build and API checks remain documented above.
+  Canonical verification and operator acceptance were pending at that review checkpoint; both are
+  recorded as complete in the following milestone. No staging, commit or delivery had occurred.
+
+## 2026-10-22 — MAPS-ORIGINS-001 canonical verification
+
+- The final independent review rechecked authenticated c902 Review ownership, healthy services,
+  revision `20261013_0042`, v4/v5 fixture status, exact map evidence and operator-preserved edits.
+  The authenticated map interaction suite covered marker/list/inspector synchronization, keyboard
+  selection, record filters and KPIs. No live collection data was changed.
+- `make verify-full` passed on the implementation and review-evidence tree and recorded its
+  per-worktree verification receipt. Backend unit tests: **953 passed, 1 skipped**; frontend:
+  **844 passed across 72 files**; PostgreSQL integration: **740 passed, 953 deselected**. Ruff,
+  ESLint, formatting, mypy/TypeScript, backend/frontend production builds, API drift, workflow and
+  resource guards, migration cycle and whitespace/index checks passed. The verified schema is
+  `20261013_0042`; this increment adds no API, schema or dependency change.
+- The exact disposable integration project and migration cycle cleaned up successfully with no
+  residual containers, networks or volumes. Review, DEV, UAT, Stable Preview, Sourcing, production,
+  and all other worktrees remain preserved. Feature status is now `verified`; changes are still
+  unstaged/uncommitted. The documentation update requires one final receipt refresh before guarded
+  delivery via `make feature-deliver`.

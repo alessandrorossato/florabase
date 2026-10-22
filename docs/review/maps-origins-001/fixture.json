@@ -1,0 +1,322 @@
+{
+  "total_provenance_sites": 9,
+  "coordinate_less_sites": 2,
+  "sites": [
+    {
+      "id": "01900000-0000-7000-8000-000000000050",
+      "name": "Monte Pellegrino collection ridge with a long recorded locality name",
+      "latitude": "38.166667",
+      "longitude": "13.350000",
+      "coordinate_accuracy_m": "25.500",
+      "geographic_place_id": null,
+      "geographic_place_path": "World \u2192 Europe \u2192 Italy \u2192 Sicily \u2192 Palermo \u2192 Monte Pellegrino upper collection locality",
+      "usage": {
+        "seed_lots": 1,
+        "plants": 1,
+        "plant_groups": 1,
+        "total": 3
+      },
+      "records": [
+        {
+          "id": "01900000-0000-7000-8000-000000000100",
+          "record_type": "seed_lot",
+          "label": "Historical seed packet 1",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000001",
+            "display_label": "Chamaerops humilis"
+          },
+          "lifecycle": "discarded",
+          "is_active": false
+        },
+        {
+          "id": "01900000-0000-7000-8000-000000000101",
+          "record_type": "plant",
+          "label": "Direct-origin plant 1",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000001",
+            "display_label": "Chamaerops humilis"
+          },
+          "lifecycle": "active",
+          "is_active": true
+        },
+        {
+          "id": "01900000-0000-7000-8000-000000000102",
+          "record_type": "plant_group",
+          "label": "Direct-origin group 1",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000002",
+            "display_label": "Clitoria ternatea"
+          },
+          "lifecycle": "transferred",
+          "is_active": false
+        }
+      ]
+    },
+    {
+      "id": "01900000-0000-7000-8000-000000000051",
+      "name": "Sicilian coastal locality",
+      "latitude": "37.618000",
+      "longitude": "12.812000",
+      "coordinate_accuracy_m": null,
+      "geographic_place_id": null,
+      "geographic_place_path": "World \u2192 Europe \u2192 Italy \u2192 Sicily",
+      "usage": {
+        "seed_lots": 1,
+        "plants": 1,
+        "plant_groups": 1,
+        "total": 3
+      },
+      "records": [
+        {
+          "id": "01900000-0000-7000-8000-000000000103",
+          "record_type": "seed_lot",
+          "label": "Historical seed packet 2",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000002",
+            "display_label": "Clitoria ternatea"
+          },
+          "lifecycle": "discarded",
+          "is_active": false
+        },
+        {
+          "id": "01900000-0000-7000-8000-000000000104",
+          "record_type": "plant",
+          "label": "Direct-origin plant 2",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000002",
+            "display_label": "Clitoria ternatea"
+          },
+          "lifecycle": "active",
+          "is_active": true
+        },
+        {
+          "id": "01900000-0000-7000-8000-000000000105",
+          "record_type": "plant_group",
+          "label": "Direct-origin group 2",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000003",
+            "display_label": "Ocimum basilicum \u2018Genovese\u2019"
+          },
+          "lifecycle": "transferred",
+          "is_active": false
+        }
+      ]
+    },
+    {
+      "id": "01900000-0000-7000-8000-000000000052",
+      "name": "Doi Suthep ridge",
+      "latitude": "18.804900",
+      "longitude": "98.921600",
+      "coordinate_accuracy_m": "250",
+      "geographic_place_id": null,
+      "geographic_place_path": "World \u2192 Asia \u2192 Thailand \u2192 Chiang Mai \u2192 Doi Suthep",
+      "usage": {
+        "seed_lots": 1,
+        "plants": 1,
+        "plant_groups": 1,
+        "total": 3
+      },
+      "records": [
+        {
+          "id": "01900000-0000-7000-8000-000000000106",
+          "record_type": "seed_lot",
+          "label": "Historical seed packet 3",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000003",
+            "display_label": "Ocimum basilicum \u2018Genovese\u2019"
+          },
+          "lifecycle": "discarded",
+          "is_active": false
+        },
+        {
+          "id": "01900000-0000-7000-8000-000000000107",
+          "record_type": "plant",
+          "label": "Direct-origin plant 3",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000003",
+            "display_label": "Ocimum basilicum \u2018Genovese\u2019"
+          },
+          "lifecycle": "active",
+          "is_active": true
+        },
+        {
+          "id": "01900000-0000-7000-8000-000000000108",
+          "record_type": "plant_group",
+          "label": "Direct-origin group 3",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000004",
+            "display_label": "Salvia officinalis"
+          },
+          "lifecycle": "transferred",
+          "is_active": false
+        }
+      ]
+    },
+    {
+      "id": "01900000-0000-7000-8000-000000000053",
+      "name": "Northern Adriatic garden",
+      "latitude": "45.650000",
+      "longitude": "13.770000",
+      "coordinate_accuracy_m": "10",
+      "geographic_place_id": null,
+      "geographic_place_path": "World \u2192 Europe \u2192 Italy \u2192 Trieste",
+      "usage": {
+        "seed_lots": 1,
+        "plants": 1,
+        "plant_groups": 1,
+        "total": 3
+      },
+      "records": [
+        {
+          "id": "01900000-0000-7000-8000-000000000109",
+          "record_type": "seed_lot",
+          "label": "Historical seed packet 4",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000004",
+            "display_label": "Salvia officinalis"
+          },
+          "lifecycle": "discarded",
+          "is_active": false
+        },
+        {
+          "id": "01900000-0000-7000-8000-000000000110",
+          "record_type": "plant",
+          "label": "Direct-origin plant 4",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000004",
+            "display_label": "Salvia officinalis"
+          },
+          "lifecycle": "active",
+          "is_active": true
+        },
+        {
+          "id": "01900000-0000-7000-8000-000000000111",
+          "record_type": "plant_group",
+          "label": "Direct-origin group 4",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000005",
+            "display_label": "Ficus carica"
+          },
+          "lifecycle": "transferred",
+          "is_active": false
+        }
+      ]
+    },
+    {
+      "id": "01900000-0000-7000-8000-000000000054",
+      "name": "Cretan foothill locality",
+      "latitude": "35.240000",
+      "longitude": "24.800000",
+      "coordinate_accuracy_m": null,
+      "geographic_place_id": null,
+      "geographic_place_path": "World \u2192 Europe \u2192 Greece \u2192 Crete",
+      "usage": {
+        "seed_lots": 1,
+        "plants": 1,
+        "plant_groups": 1,
+        "total": 3
+      },
+      "records": [
+        {
+          "id": "01900000-0000-7000-8000-000000000112",
+          "record_type": "seed_lot",
+          "label": "Historical seed packet 5",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000005",
+            "display_label": "Ficus carica"
+          },
+          "lifecycle": "discarded",
+          "is_active": false
+        },
+        {
+          "id": "01900000-0000-7000-8000-000000000113",
+          "record_type": "plant",
+          "label": "Direct-origin plant 5",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000005",
+            "display_label": "Ficus carica"
+          },
+          "lifecycle": "active",
+          "is_active": true
+        },
+        {
+          "id": "01900000-0000-7000-8000-000000000114",
+          "record_type": "plant_group",
+          "label": "Direct-origin group 5",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000001",
+            "display_label": "Chamaerops humilis"
+          },
+          "lifecycle": "transferred",
+          "is_active": false
+        }
+      ]
+    },
+    {
+      "id": "01900000-0000-7000-8000-000000000055",
+      "name": "Coastal locality, separately recorded site at the same coordinates",
+      "latitude": "37.618000",
+      "longitude": "12.812000",
+      "coordinate_accuracy_m": "50",
+      "geographic_place_id": null,
+      "geographic_place_path": "World \u2192 Europe \u2192 Italy \u2192 Sicily",
+      "usage": {
+        "seed_lots": 1,
+        "plants": 1,
+        "plant_groups": 1,
+        "total": 3
+      },
+      "records": [
+        {
+          "id": "01900000-0000-7000-8000-000000000115",
+          "record_type": "seed_lot",
+          "label": "Historical seed packet 6",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000001",
+            "display_label": "Chamaerops humilis"
+          },
+          "lifecycle": "discarded",
+          "is_active": false
+        },
+        {
+          "id": "01900000-0000-7000-8000-000000000116",
+          "record_type": "plant",
+          "label": "Direct-origin plant 6",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000001",
+            "display_label": "Chamaerops humilis"
+          },
+          "lifecycle": "active",
+          "is_active": true
+        },
+        {
+          "id": "01900000-0000-7000-8000-000000000117",
+          "record_type": "plant_group",
+          "label": "Direct-origin group 6",
+          "botanical_identity": {
+            "id": "01900000-0000-7000-8000-000000000002",
+            "display_label": "Clitoria ternatea"
+          },
+          "lifecycle": "transferred",
+          "is_active": false
+        }
+      ]
+    },
+    {
+      "id": "01900000-0000-7000-8000-000000000056",
+      "name": "Recorded locality without linked collection material",
+      "latitude": "41.900000",
+      "longitude": "12.490000",
+      "coordinate_accuracy_m": null,
+      "geographic_place_id": null,
+      "geographic_place_path": null,
+      "usage": {
+        "seed_lots": 0,
+        "plants": 0,
+        "plant_groups": 0,
+        "total": 0
+      },
+      "records": []
+    }
+  ]
+}

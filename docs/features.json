@@ -1892,6 +1892,26 @@
       ],
       "priority": "P1",
       "status": "verified"
+    },
+    {
+      "id": "MAPS-ORIGINS-001",
+      "category": "ux",
+      "description": "Normalize Collection origins into a precise site map and contextual direct-material inspector",
+      "acceptance_criteria": [
+        "An audited design reuses the accepted PageHeader, compact search, Filters, Saved Views and mounted responsive map workspace while retaining the provenance-specific coordinate and direct-origin evidence contract",
+        "Functional mapped-site, distinct-record and botanical-identity counts distinguish filtered evidence from totals; sites missing coordinates retain a truthful non-map Geography path and record counts never imply material quantity",
+        "Precise Leaflet markers, accuracy circles and a bounded searchable textual inspector synchronize selection, identity grouping, lifecycle and exact record/site navigation without inferring descendant origins or resetting the viewport during inspection",
+        "Existing map route and provenance_map v1 q, seed_lots and plants keys retain their meanings, Saved View restoration and browser history; excluded selection clears predictably and pane switches retain the mounted map with Leaflet resize handling",
+        "Bundled generalized Natural Earth context is the default; optional permitted/configured online detail preserves policy-required origin Referer and attribution, hides its whole layer on failure without retry, and never changes precise recorded provenance or infers missing sites",
+        "Focused map, Saved Views, direct-origin, Geography, SeedLot and Plant regressions, lint, formatting, strict TypeScript, production build, API drift, labelled responsive evidence, operator acceptance and independent canonical full verification are complete"
+      ],
+      "dependencies": [
+        "MAPS-FOUNDATION-001",
+        "MAPS-DISTRIBUTION-001",
+        "MAP-001"
+      ],
+      "priority": "P1",
+      "status": "verified"
     }
   ]
 }

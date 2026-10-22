@@ -1,0 +1,86 @@
+{
+  "basemap": {
+    "total": 12,
+    "loaded": 12,
+    "failed": 0,
+    "pending": 0
+  },
+  "authenticated": true,
+  "synthetic_persisted_fixture": true,
+  "login_name": "owner",
+  "owner": true,
+  "dataset": {
+    "total_provenance_sites": 1,
+    "mapped_sites": 1,
+    "coordinate_less_sites": 0,
+    "eligible_direct_records": 1,
+    "botanical_identities": 1,
+    "sites": [
+      {
+        "name": "Preview herb garden (synthetic coordinates)",
+        "accuracy_recorded": false,
+        "record_types": [
+          "seed_lot"
+        ]
+      }
+    ]
+  },
+  "checks": [
+    "real UI login authenticated as enabled owner",
+    "KPI site/record/identity/missing-coordinate counts match authenticated API",
+    "online basemap can be disabled while exact local site evidence remains",
+    "real Leaflet Enter selects marker and exact-coordinate inspector; management route correct",
+    "keyboard textual-site selection synchronizes selected marker and inspector",
+    "all three KPI drill-down dialogs work against live fixture",
+    "identity search, zero-result state, permanent exclusion clearing and SeedLot category filters match live data",
+    "1440x844 / 1024x844 / 390x844: map/inspector keyboard and pointer interactions, retained map, no horizontal overflow"
+  ],
+  "measurements": [
+    {
+      "viewport": [
+        1440,
+        844
+      ],
+      "scrollWidth": 1440,
+      "scrollHeight": 844,
+      "map": {
+        "x": 273,
+        "y": 270.953125,
+        "width": 787.59375,
+        "height": 430.4375,
+        "bottom": 701.390625
+      }
+    },
+    {
+      "viewport": [
+        1024,
+        844
+      ],
+      "scrollWidth": 1024,
+      "scrollHeight": 924,
+      "map": {
+        "x": 273,
+        "y": 392.953125,
+        "width": 726,
+        "height": 430.4375,
+        "bottom": 823.390625
+      }
+    },
+    {
+      "viewport": [
+        390,
+        844
+      ],
+      "scrollWidth": 390,
+      "scrollHeight": 1094,
+      "map": {
+        "x": 17,
+        "y": 564.171875,
+        "width": 356,
+        "height": 320.71875,
+        "bottom": 884.890625
+      }
+    }
+  ],
+  "runtime_errors": []
+}

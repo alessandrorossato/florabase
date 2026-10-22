@@ -41,6 +41,8 @@ services:
         pytest --no-cov -m integration
     networks: [integration]
     init: true
+    volumes:
+      - ./scripts:/review:ro
     tmpfs:
       - /tmp/florabase-attachments:mode=0700
 

@@ -1,0 +1,27 @@
+{
+  "baseline_v4_references_unchanged": true,
+  "baseline_v4_ledger_bytes_unchanged": true,
+  "owner_credentials_unchanged": true,
+  "foreign_projects_unchanged": {
+    "florabase": true,
+    "florabase-attachment-focused": true,
+    "florabase-integration-5afd67660adf": true,
+    "florabase-location-review": true,
+    "florabase-media-review": true,
+    "florabase-media-tests": true,
+    "florabase-perf": true,
+    "florabase-preview": true,
+    "florabase-propagation003-review": true,
+    "florabase-quality-2e1fbf34031c": true,
+    "florabase-quality-4e6148495d36": true,
+    "florabase-quality-b12e7288d355": true,
+    "florabase-sourcing-preview": true,
+    "florabase-uat-preview": true
+  },
+  "seed_1_equals_seed_2": true,
+  "footprint": {
+    "media_root_files": 61,
+    "media_root_bytes": 798099,
+    "database_bytes": 12605119
+  }
+}

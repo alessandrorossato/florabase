@@ -1,0 +1,17 @@
+{
+  "checks": [
+    "All three grounded KPI drill-down dialogs operate on real v5 data",
+    "Origin inspector expands identity group and opens exact SeedLot details with protected Photos",
+    "Harvest → Stored material navigation exposes live managed inventory",
+    "Real local image decodes; creator/licence retained; unauthenticated content request returns 401",
+    "External list/detail make no remote contact; Preview once makes exactly one no-referrer request to an isolated refusal double; no retry",
+    "1024/390 inspector screenshots; Close and backdrop retain shared drawer contract"
+  ],
+  "external_preview_requests": [
+    {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/d/df/Ficus_carica_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original",
+      "referer": null
+    }
+  ],
+  "provider": "isolated refusal double; no external request transmitted"
+}
