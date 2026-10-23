@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import "../components/collection-page.css";
 import {
   closeCollectionPage,
@@ -612,7 +613,8 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
               <button type="submit" disabled={pending}>
                 {pending ? "Starting sowing…" : "Start sowing"}
               </button>
-              <button
+              <ActionButton
+                icon="back"
                 type="button"
                 className="button--secondary"
                 disabled={pending}
@@ -622,7 +624,7 @@ export function SeedLotSowingWizard({ seedLotId }: { seedLotId: string }) {
                 }}
               >
                 Back to details
-              </button>
+              </ActionButton>
               <a
                 className="button-link button--secondary"
                 href={`#/seeds/${lot.id}`}

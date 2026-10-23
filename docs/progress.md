@@ -1,5 +1,85 @@
 # Engineering progress
 
+## 2026-10-23 — THEMES-001 + CONTROLS-001 combined visual-review candidate
+
+- Implemented one local semantic SVG vocabulary, native action/link adapters, three action patterns,
+  and accessible Tooltip with hover/focus, descriptions, collision handling, native modal/fallback
+  overlays and ordered Escape. Settings now uses labelled horizontal sliders; functional theme state
+  is retained. Shared directories, search, Saved Views, menus, details, forms, shell/mobile and
+  representative capability actions reuse the same system; essential/domain actions keep text.
+- Preserved the six approved THEMES palettes and original 143 PNGs. Added
+  [Controls handoff](controls-001-handoff.md) and [gallery](review/controls-001/gallery.html):
+  **113 product captures + 3 component-fixture images**, six variants, real desktop/tablet/phone
+  layout sizes, separate export dimensions, no measured root overflow, 44px action targets and
+  30 passing Tooltip contrast/hit measurements. Browser System/reload behavior and labelled
+  creation-menu keyboard behavior were checked. Pending AT/zoom/raster/printing are explicit.
+- Combined frontend run passed **859/859 in 75 files**. After the final navigation/chevron refinements,
+  all 82 App cases passed and a fresh focused run passed **63/63 in 10 files**, including 9 Controls
+  cases. Final TypeScript, full ESLint (zero warnings), formatting and production build passed
+  (**219 Vite modules**); graph **110 valid** and whitespace checks passed. The full suite predates
+  the two final visual refinements; no exact-tree canonical receipt is claimed.
+- Restored the authorized split review after its runtime stopped: exact current Quality frontend on
+  loopback 15174, retained matching backend and database/media. Ownership was inspected; helper source
+  mismatch still prevents supported complete handover. No reset/reseed/migration/credential change,
+  no primary/foreign branch edit and no DEV/UAT/Stable Preview/production mutation.
+- Both features are **implemented**, not verified. Operator approval supersedes the historical
+  separate-PR plan with one branch, combined visual review and later protected PR. No canonical FULL
+  gate, staging, commit, push, PR or delivery. Stop at `READY_FOR_THEMES_CONTROLS_VISUAL_REVIEW`.
+
+
+## 2026-10-22 — THEMES-001 implementation candidate
+
+- Implemented the exact six approved Botanical/Herbarium/Mineral Light/Dark token sets, semantic
+  capability colors, native controls, map chrome/comparison slots and print-safe overrides without
+  changing application routes, type, spacing, domain state or image/raster pixels.
+- Added one blocking same-origin browser-local preference store: independent palette and
+  System/Light/Dark, validation, denied-storage fallback, first-paint attributes, live OS updates,
+  cross-tab synchronization and authentication persistence. Settings native radios and both existing
+  footer controls apply immediately; footer cycles System → Light → Dark → System. Settings gear and
+  CONTROLS-001 implementation remain untouched.
+- Prepared [handoff](themes-001-handoff.md) and [actual browser gallery](review/themes-001/gallery.html):
+  126 six-theme captures at approved real viewport sizes where recorded, 16 supplementary page-family
+  checks and one Dark label preview. All 2,520 measured root colors match approved values; no captured
+  root horizontal overflow. Plants/group evidence was recaptured populated. No actual zoom claim.
+- Retained Review database/media/session under the explicitly authorized split runtime: current Quality
+  frontend on loopback 15174, retained owner backend. Helper ownership mismatch remains documented;
+  no reset, deletion, copy or reseed. DEV/UAT/Stable Preview/production unchanged.
+- Validation: final frontend **850/850 tests in 74 files passed**; focused 45/45 and targeted
+  UX004/theme retry 27/27 passed. Repaired a partial browser API test-stub leak without changing
+  assertions/timeouts. Final `pnpm typecheck`, `pnpm lint` (zero warnings), `pnpm format:check` and
+  `pnpm build` (214 modules) passed. Built bootstrap exists before the module bundle. Approved contrast
+  calculator: 72 cases, zero failures. Feature graph: 110 valid; whitespace clean.
+- Limits: independent visual/AT/forced-colors/zoom and physical print acceptance remain; synthetic GBIF
+  fixture has no downloaded raster, and unmerged MAPS-ORIGINS-001 needs later integration review.
+  THEMES is **implemented**, not verified; CONTROLS remains **planned**, scheduled before remaining-page
+  normalization. No canonical gate, staging, commit, push or delivery in this phase.
+
+
+## 2026-10-22 — THEMES-001 and CONTROLS-001 design contracts
+
+- Audited the accepted UI Foundation, semantic/legacy color rules, shared controls, Theme preview,
+  Settings, auth/media/print and the three map renderers at `b3f1de4`. Added the
+  [theme proposal](themes-001-design-proposal.md), [six-variant token matrix](themes-001-token-matrix.md),
+  [controls contract](controls-001-design-contract.md) and [implementation plan](themes-001-implementation-plan.md).
+  The controls contract specifies one local SVG vocabulary, three action patterns, accessible
+  Tooltip/overlay behavior, labelled essential actions and responsive migration/testing boundaries.
+- Proposed THEMES delivery first, CONTROLS second, then remaining-page normalization and final
+  application-wide visual review. Both remain independently deliverable and `planned`; neither is
+  claimed implemented/verified. No production component, CSS, dependency, API or migration change.
+- Added [design specimens](design/themes-controls/review.html) covering six variants and three
+  widths, the six requested toolbar contexts, and form/modal/map/Settings structures. Source Sans/
+  Serif families and existing type scale use local fallback fonts when unavailable. These are design
+  excerpts, not production screenshots or actual browser-zoom proof.
+- Checks: baseline feature graph **108 valid** and whitespace clean; final graph **110 valid**.
+  Reproducible sRGB contrast calculator **72/72 pass**; source-relative design links, JSON/Python/HTML
+  structure and documentation whitespace checked. Browser DOM geometry for **18/18 specimen
+  palette/width combinations** had no sheet/control overflow; Botanical Dark phone inspected visually.
+  Runtime, screen-reader, true viewport/zoom, tooltip interaction and physical print validation remain
+  Phase 2 work. Canonical verification was deliberately not run.
+- Existing managed worktree attached to `feat/themes-001` with `make feature-init`; no second
+  worktree, protected-environment change, staging, commit, push or delivery. Design review boundary:
+  `THEMES_AND_CONTROLS_DESIGN_REVIEW_READY`.
+
 ## 2026-10-21 — SOURCING-VISUAL-001 synchronization and review
 
 - Synchronized the existing Sourcing worktree without rewriting history: preserved the reviewed

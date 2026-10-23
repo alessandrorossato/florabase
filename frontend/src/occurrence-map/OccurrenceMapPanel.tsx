@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import { lazy, Suspense, useEffect, useState, type ReactNode } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -140,7 +141,8 @@ export function OccurrenceMapPanel({
               ? " · This response could not be retained under the provider cache policy."
               : ""}
           </p>
-          <button
+          <ActionButton
+            icon={summary ? "refresh" : undefined}
             type="button"
             disabled={pending || !csrf}
             onClick={() => {
@@ -152,7 +154,7 @@ export function OccurrenceMapPanel({
               : summary
                 ? "Refresh from GBIF"
                 : "Load GBIF occurrence map"}
-          </button>
+          </ActionButton>
           {summary && (
             <button
               type="button"

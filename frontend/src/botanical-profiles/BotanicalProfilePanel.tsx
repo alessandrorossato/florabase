@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import { firstValidationField } from "../components/formValidation";
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
@@ -235,7 +236,8 @@ export function BotanicalProfilePanel({
                 </div>
               )}
               {!editing && (
-                <button
+                <ActionButton
+                  icon="edit"
                   className="button--secondary"
                   type="button"
                   ref={editTriggerRef}
@@ -244,7 +246,7 @@ export function BotanicalProfilePanel({
                   }}
                 >
                   Edit profile
-                </button>
+                </ActionButton>
               )}
             </>
           )}

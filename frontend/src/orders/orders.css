@@ -175,11 +175,11 @@
   grid-column: 1 / -1;
 }
 .app-content .orders-workspace .order-danger__button {
-  color: #792525;
-  border-color: #e2b9b9;
+  color: var(--danger);
+  border-color: var(--danger);
 }
 .app-content .orders-workspace .order-danger__button:hover:not(:disabled) {
-  background: #fbecec;
+  background: var(--danger-subtle);
 }
 .app-content .orders-workspace .order-seed-lots {
   padding-top: var(--space-4);
@@ -495,7 +495,7 @@
 }
 .order-facts dt {
   font-size: 0.85rem;
-  color: var(--text-muted, #526259);
+  color: var(--text-muted);
 }
 .order-facts dd {
   margin: 0.25rem 0 0;
@@ -520,7 +520,7 @@
 .order-transaction {
   min-width: 0;
   padding: 1rem;
-  border: 1px solid var(--border, #d8e1d9);
+  border: 1px solid var(--border);
   border-radius: 0.6rem;
 }
 .order-transaction :is(a, dd, p),

@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import { FieldLabel } from "../components/FieldLabel";
 import { DirectoryTools } from "../components/DirectoryTools";
 import { DirectoryResults } from "../components/DirectoryResults";
@@ -581,7 +582,8 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                         <p>Display order: {link.display_order}</p>
                       </div>
                       <div className="actions">
-                        <button
+                        <ActionButton
+                          icon="edit"
                           type="button"
                           className="button--secondary"
                           disabled={pending || detail.deletion_pending}
@@ -590,7 +592,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                           }}
                         >
                           Edit link details
-                        </button>
+                        </ActionButton>
                         {(link.target_type === "seed_lot" ||
                           link.target_type === "plant" ||
                           link.target_type === "plant_group" ||

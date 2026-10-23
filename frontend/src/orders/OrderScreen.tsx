@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import {
   useEffect,
   useMemo,
@@ -361,14 +362,15 @@ function OrderPreview({
             role="group"
             aria-label="Order actions"
           >
-            <button
+            <ActionButton
+              icon="edit"
               className="button--secondary"
               type="button"
               data-order-preview-edit
               onClick={onEdit}
             >
               Edit
-            </button>
+            </ActionButton>
           </div>
         </>
       }
@@ -1293,15 +1295,16 @@ export function OrderScreen({
                 />
               }
               actions={
-                <button
+                <ActionButton
+                  icon="add"
                   type="button"
                   ref={createTrigger}
                   data-collection-return="create"
                   disabled={!suppliers}
                   onClick={startCreate}
                 >
-                  + New Order
-                </button>
+                  New Order
+                </ActionButton>
               }
               filters={
                 <div className="order-supplier-filter">

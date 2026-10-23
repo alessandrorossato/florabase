@@ -1,3 +1,4 @@
+import { ActionLink, ActionButton } from "../components/Action";
 import {
   DirectoryFilterSelect,
   DirectoryTools,
@@ -600,7 +601,9 @@ function SelectedPanel({
           />
         </h3>
         {recorded}
-        <a href={`#/identities/${id}?tab=native-range`}>Edit recorded range</a>
+        <ActionLink icon="edit" href={`#/identities/${id}?tab=native-range`}>
+          Edit recorded range
+        </ActionLink>
       </section>
     );
   return (
@@ -648,7 +651,9 @@ function SelectedPanel({
         <a href={`#/identities/${id}?tab=reference`}>
           Botanical identity details
         </a>
-        <a href={`#/identities/${id}?tab=native-range`}>Edit recorded range</a>
+        <ActionLink icon="edit" href={`#/identities/${id}?tab=native-range`}>
+          Edit recorded range
+        </ActionLink>
         <a href={`#/species-distribution?identity=${id}`}>
           View occurrence distribution
         </a>
@@ -755,14 +760,15 @@ function ComparisonPanel({
             setEvidenceId(null);
           }}
         >
-          <button
+          <ActionButton
+            variant="secondary"
             type="button"
             onClick={() => {
               setEvidenceId(null);
             }}
           >
             Done
-          </button>
+          </ActionButton>
           <SelectedPanel
             id={evidenceId}
             filters={filters}
@@ -1078,7 +1084,8 @@ export function NativeRangesScreen() {
           </button>
         </div>
         {selectedIds.length > 0 && (
-          <button
+          <ActionButton
+            icon="clear-selection"
             className="button--quiet"
             type="button"
             onClick={() => {
@@ -1087,7 +1094,7 @@ export function NativeRangesScreen() {
             }}
           >
             Clear selection
-          </button>
+          </ActionButton>
         )}
       </div>
       <MapWorkspace>
@@ -1163,13 +1170,14 @@ export function NativeRangesScreen() {
         >
           <div className="section-heading">
             <h3>Choose species</h3>
-            <button
+            <ActionButton
+              variant="secondary"
               type="button"
               className="button--secondary"
               onClick={closeChooser}
             >
               Done
-            </button>
+            </ActionButton>
           </div>
           <DirectorySearch
             id="native-chooser-search"

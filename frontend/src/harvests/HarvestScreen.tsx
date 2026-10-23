@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import { RecordIdentities } from "../components/recordPresentation";
 import "../components/collection-page.css";
@@ -725,7 +726,8 @@ export function HarvestScreen({
                     >
                       Open details
                     </a>
-                    <button
+                    <ActionButton
+                      icon="edit"
                       type="button"
                       className="button--secondary"
                       onClick={() => {
@@ -733,7 +735,7 @@ export function HarvestScreen({
                       }}
                     >
                       Edit
-                    </button>
+                    </ActionButton>
                   </div>
                 </QuickPreview>
               ) : (

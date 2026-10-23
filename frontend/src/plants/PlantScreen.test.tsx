@@ -504,7 +504,7 @@ test("Plants navigation exposes loading, empty, missing-identity, and failure st
     await screen.findByRole("heading", { name: "No Plants recorded yet" }),
   ).toBeInTheDocument();
   expect(
-    screen.getByRole("button", { name: "+ New plant or group" }),
+    screen.getByRole("button", { name: "New plant or group" }),
   ).toBeDisabled();
   expect(
     screen.getByText(/Botanical identity is required/),
@@ -601,12 +601,12 @@ test("one New disclosure chooses type and supports BotanicalIdentity-only Plant 
   );
   const user = await openPlants();
   const trigger = await screen.findByRole("button", {
-    name: "+ New plant or group",
+    name: "New plant or group",
   });
   expect(trigger).toHaveAttribute("aria-expanded", "false");
   await user.click(trigger);
   expect(
-    screen.queryByRole("button", { name: "+ New plant or group" }),
+    screen.queryByRole("button", { name: "New plant or group" }),
   ).not.toBeInTheDocument();
   expect(
     screen.getByRole("heading", { name: "What are you tracking?" }),
@@ -636,7 +636,7 @@ test("one New disclosure chooses type and supports BotanicalIdentity-only Plant 
     notes: null,
   });
   expect(
-    screen.getByRole("button", { name: "+ New plant or group" }),
+    screen.getByRole("button", { name: "New plant or group" }),
   ).toHaveAttribute("aria-expanded", "false");
 });
 
@@ -673,7 +673,7 @@ test("minimal group creation keeps quantity unknown", async () => {
   );
   const user = await openPlants();
   await user.click(
-    await screen.findByRole("button", { name: "+ New plant or group" }),
+    await screen.findByRole("button", { name: "New plant or group" }),
   );
   await user.click(
     screen.getByRole("button", { name: /Plant group.*Multiple/s }),
@@ -720,7 +720,7 @@ test("direct origin, references, partial date, Location, lifecycle, notes, and s
   );
   const user = await openPlants();
   await user.click(
-    await screen.findByRole("button", { name: "+ New plant or group" }),
+    await screen.findByRole("button", { name: "New plant or group" }),
   );
   await user.click(
     screen.getByRole("button", { name: /Plant.*One individually/s }),
@@ -823,7 +823,7 @@ test("known Sowing clears direct provenance and preserves an independently chose
   );
   const user = await openPlants();
   await user.click(
-    await screen.findByRole("button", { name: "+ New plant or group" }),
+    await screen.findByRole("button", { name: "New plant or group" }),
   );
   await user.click(
     screen.getByRole("button", { name: /Plant.*One individually/s }),
@@ -890,7 +890,7 @@ test("group count validation covers exact and approximate zero before valid atom
   );
   const user = await openPlants();
   await user.click(
-    await screen.findByRole("button", { name: "+ New plant or group" }),
+    await screen.findByRole("button", { name: "New plant or group" }),
   );
   await user.click(
     screen.getByRole("button", { name: /Plant group.*Multiple/s }),
@@ -936,9 +936,7 @@ test("group count validation covers exact and approximate zero before valid atom
     lifecycle: "completed",
     quantity: { value: 0, is_approximate: false },
   });
-  await user.click(
-    screen.getByRole("button", { name: "+ New plant or group" }),
-  );
+  await user.click(screen.getByRole("button", { name: "New plant or group" }));
   await user.click(
     screen.getByRole("button", { name: /Plant group.*Multiple/s }),
   );
@@ -1071,7 +1069,7 @@ test("detail loading, detail failure, authorization, and session expiry are expl
   );
   const forbiddenUser = await openPlants();
   await forbiddenUser.click(
-    await screen.findByRole("button", { name: "+ New plant or group" }),
+    await screen.findByRole("button", { name: "New plant or group" }),
   );
   await forbiddenUser.click(
     screen.getByRole("button", { name: /Plant.*One individually/s }),
@@ -2136,7 +2134,7 @@ test.each(["plant", "group"] as const)(
     );
     const user = await openPlants();
     await user.click(
-      screen.getByRole("button", { name: "+ New plant or group" }),
+      screen.getByRole("button", { name: "New plant or group" }),
     );
     await user.click(
       screen.getByRole("button", {
@@ -2206,16 +2204,14 @@ test.each(["plant", "group"] as const)(
 test("closing new entry returns focus to its single creation action", async () => {
   mockApi(plantHandler([], []));
   const user = await openPlants();
-  await user.click(
-    screen.getByRole("button", { name: "+ New plant or group" }),
-  );
+  await user.click(screen.getByRole("button", { name: "New plant or group" }));
   await user.click(
     screen.getByRole("button", { name: /Plant.*One individually/ }),
   );
   await user.click(screen.getByRole("button", { name: "Cancel" }));
   await waitFor(() => {
     expect(
-      screen.getByRole("button", { name: "+ New plant or group" }),
+      screen.getByRole("button", { name: "New plant or group" }),
     ).toHaveFocus();
   });
 });
@@ -2400,9 +2396,7 @@ test("server validation focuses the visible error and preserves field values", a
     }),
   );
   const user = await openPlants();
-  await user.click(
-    screen.getByRole("button", { name: "+ New plant or group" }),
-  );
+  await user.click(screen.getByRole("button", { name: "New plant or group" }));
   await user.click(
     screen.getByRole("button", { name: /Plant.*One individually/ }),
   );
@@ -2758,7 +2752,7 @@ test.each(["plant", "group"] as const)(
     mockApi(plantHandler([plant()], []));
     const user = await openPlants();
     await user.click(
-      screen.getByRole("button", { name: "+ New plant or group" }),
+      screen.getByRole("button", { name: "New plant or group" }),
     );
     await user.click(
       screen.getByRole("button", {
@@ -2774,7 +2768,7 @@ test.each(["plant", "group"] as const)(
     await browserBack();
     expect(window.location.hash).toBe("#/plants");
     expect(
-      await screen.findByRole("button", { name: "+ New plant or group" }),
+      await screen.findByRole("button", { name: "New plant or group" }),
     ).toBeVisible();
     await user.click(
       within(
@@ -2793,7 +2787,7 @@ test.each(["plant", "group"] as const)(
     await browserBack();
     expect(window.location.hash).toBe("#/plants");
     expect(
-      await screen.findByRole("button", { name: "+ New plant or group" }),
+      await screen.findByRole("button", { name: "New plant or group" }),
     ).toBeVisible();
   },
 );

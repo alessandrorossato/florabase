@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import { useEffect, useState, type ReactNode } from "react";
 import { OrderTransaction } from "./PurchaseContext";
 import { getOrder, listOrders, orderDate, orderTitle, type Order } from "./api";
@@ -189,7 +190,8 @@ export function OrderPicker({
         >
           Create Order (new tab)
         </a>
-        <button
+        <ActionButton
+          icon="refresh"
           type="button"
           disabled={disabled || loading}
           onClick={() => {
@@ -197,7 +199,7 @@ export function OrderPicker({
           }}
         >
           Refresh Order choices
-        </button>
+        </ActionButton>
         {offset > 0 && (
           <button
             type="button"

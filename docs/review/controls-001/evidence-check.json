@@ -1,0 +1,217 @@
+{
+  "productCaptures": 113,
+  "fixtureCaptures": 3,
+  "viewports": [
+    [
+      390,
+      844
+    ],
+    [
+      1024,
+      844
+    ],
+    [
+      1440,
+      844
+    ]
+  ],
+  "variants": [
+    "botanical dark",
+    "botanical light",
+    "herbarium dark",
+    "herbarium light",
+    "mineral dark",
+    "mineral light"
+  ],
+  "checks": [
+    "root overflow",
+    "canonical icon size and stroke",
+    "migrated action minimum 44px target",
+    "open tooltip text >=4.5 and border >=3 contrast",
+    "open tooltip center hit test"
+  ],
+  "tooltipCases": [
+    {
+      "file": "seeds-tooltip-botanical-light-1440.jpg",
+      "textContrast": 15.5,
+      "borderContrast": 3.65,
+      "hit": true
+    },
+    {
+      "file": "seeds-tooltip-botanical-dark-1440.jpg",
+      "textContrast": 12.81,
+      "borderContrast": 4.94,
+      "hit": true
+    },
+    {
+      "file": "seeds-tooltip-herbarium-light-1440.jpg",
+      "textContrast": 14.33,
+      "borderContrast": 4.23,
+      "hit": true
+    },
+    {
+      "file": "seeds-tooltip-herbarium-dark-1440.jpg",
+      "textContrast": 12.61,
+      "borderContrast": 4.9,
+      "hit": true
+    },
+    {
+      "file": "seeds-tooltip-mineral-light-1440.jpg",
+      "textContrast": 14.32,
+      "borderContrast": 4.07,
+      "hit": true
+    },
+    {
+      "file": "seeds-tooltip-mineral-dark-1440.jpg",
+      "textContrast": 12.44,
+      "borderContrast": 5.08,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-botanical-light-1440.jpg",
+      "textContrast": 15.5,
+      "borderContrast": 3.65,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-botanical-dark-1440.jpg",
+      "textContrast": 12.81,
+      "borderContrast": 4.94,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-herbarium-light-1440.jpg",
+      "textContrast": 14.33,
+      "borderContrast": 4.23,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-herbarium-dark-1440.jpg",
+      "textContrast": 12.61,
+      "borderContrast": 4.9,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-mineral-light-1440.jpg",
+      "textContrast": 14.32,
+      "borderContrast": 4.07,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-mineral-dark-1440.jpg",
+      "textContrast": 12.44,
+      "borderContrast": 5.08,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-botanical-light-1024.jpg",
+      "textContrast": 15.5,
+      "borderContrast": 3.65,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-botanical-dark-1024.jpg",
+      "textContrast": 12.81,
+      "borderContrast": 4.94,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-herbarium-light-1024.jpg",
+      "textContrast": 14.33,
+      "borderContrast": 4.23,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-herbarium-dark-1024.jpg",
+      "textContrast": 12.61,
+      "borderContrast": 4.9,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-mineral-light-1024.jpg",
+      "textContrast": 14.32,
+      "borderContrast": 4.07,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-mineral-dark-1024.jpg",
+      "textContrast": 12.44,
+      "borderContrast": 5.08,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-botanical-light-390.jpg",
+      "textContrast": 15.5,
+      "borderContrast": 3.65,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-botanical-dark-390.jpg",
+      "textContrast": 12.81,
+      "borderContrast": 4.94,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-herbarium-light-390.jpg",
+      "textContrast": 14.33,
+      "borderContrast": 4.23,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-herbarium-dark-390.jpg",
+      "textContrast": 12.61,
+      "borderContrast": 4.9,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-mineral-light-390.jpg",
+      "textContrast": 14.32,
+      "borderContrast": 4.07,
+      "hit": true
+    },
+    {
+      "file": "filter-drawer-tooltip-mineral-dark-390.jpg",
+      "textContrast": 12.44,
+      "borderContrast": 5.08,
+      "hit": true
+    },
+    {
+      "file": "mobile-navigation-tooltip-botanical-light-390.jpg",
+      "textContrast": 15.5,
+      "borderContrast": 3.65,
+      "hit": true
+    },
+    {
+      "file": "mobile-navigation-tooltip-botanical-dark-390.jpg",
+      "textContrast": 12.81,
+      "borderContrast": 4.94,
+      "hit": true
+    },
+    {
+      "file": "mobile-navigation-tooltip-herbarium-light-390.jpg",
+      "textContrast": 14.33,
+      "borderContrast": 4.23,
+      "hit": true
+    },
+    {
+      "file": "mobile-navigation-tooltip-herbarium-dark-390.jpg",
+      "textContrast": 12.61,
+      "borderContrast": 4.9,
+      "hit": true
+    },
+    {
+      "file": "mobile-navigation-tooltip-mineral-light-390.jpg",
+      "textContrast": 14.32,
+      "borderContrast": 4.07,
+      "hit": true
+    },
+    {
+      "file": "mobile-navigation-tooltip-mineral-dark-390.jpg",
+      "textContrast": 12.44,
+      "borderContrast": 5.08,
+      "hit": true
+    }
+  ],
+  "failures": [],
+  "exportNote": "DOM layout viewport is authoritative. IAB screenshot export sometimes scales the bitmap; bitmap dimensions are separately recorded. No upscaling or zoom proxy."
+}

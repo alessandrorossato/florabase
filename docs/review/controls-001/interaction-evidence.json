@@ -1,0 +1,61 @@
+{
+  "nativeModal": {
+    "describedby": "_r_2_",
+    "dialogLocal": true,
+    "focus": "More actions for fixture record",
+    "popover": true,
+    "tooltip": {
+      "bottom": 387.109375,
+      "height": 35.984375,
+      "left": 427.21875,
+      "right": 528.859375,
+      "top": 351.125,
+      "width": 101.640625,
+      "x": 427.21875,
+      "y": 351.125
+    },
+    "trigger": {
+      "bottom": 439.109375,
+      "height": 44,
+      "left": 433.5,
+      "right": 522.578125,
+      "top": 395.109375,
+      "width": 89.078125,
+      "x": 433.5,
+      "y": 395.109375
+    }
+  },
+  "fallbackModal": {
+    "dialog": {
+      "bottom": 628.109375,
+      "height": 412.21875,
+      "left": 408.5,
+      "right": 1016.5,
+      "top": 215.890625,
+      "width": 608,
+      "x": 408.5,
+      "y": 215.890625
+    },
+    "hit": true,
+    "popover": null,
+    "tooltip": {
+      "bottom": 216.890625,
+      "height": 53.96875,
+      "left": 832.890625,
+      "right": 1120.890625,
+      "top": 162.921875,
+      "width": 288,
+      "x": 832.890625,
+      "y": 162.921875
+    }
+  },
+  "escapeSequence": [
+    "Browser tab: 3, Title: \"CONTROLS interaction fixture\", URL: \"http://localhost:15174/build/controls-review.html\".\n0 AXWebArea CONTROLS interaction fixture, URL: localhost:15174/build/controls-review.html\n\t1 container Controls modal test\n\t\t2 heading Controls modal test, Value: 2\n\t\t\t3 text Controls modal test\n\t\t4 text field (settable) Focus start\n\t\t5 button (expanded) Description: More actions for fixture record, Secondary Actions: Collapse\n\t\t6 button Scrollable action\n\t\t7 button Modal edge action\n\t\t8 button Close modal test\n\t\t11 container More actions for fixture record menu\n\t\t\t12 button Inspect source\n\nThe focused UI element is 12 button Inspect source",
+    "Browser tab: 3, Title: \"CONTROLS interaction fixture\", URL: \"http://localhost:15174/build/controls-review.html\".\n0 AXWebArea CONTROLS interaction fixture, URL: localhost:15174/build/controls-review.html\n\t1 container Controls modal test\n\t\t2 heading Controls modal test, Value: 2\n\t\t\t3 text Controls modal test\n\t\t4 text field (settable) Focus start\n\t\t5 button (collapsed) Description: More actions for fixture record, Secondary Actions: Expand\n\t\t6 button Scrollable action\n\t\t7 button Modal edge action\n\t\t8 button Close modal test\n\nThe focused UI element is 5 button (collapsed) Description: More actions for fixture record, Secondary Actions: Expand",
+    "ture, URL: localhost:15174/build/controls-review.html\n\t1 container\n\t\t2 heading CONTROLS interaction fixture, Value: 1\n\t\t\t3 text CONTROLS interaction fixture\n\t\t4 text Actual shared components; fixture-only actions do not write application data.\n\t\t5 container Appearance\n\t\t\t6 heading Appearance, Value: 3, ID: settings-appearance-heading\n\t\t\t\t7 text Appearance\n\t\t\t8 text Applies immediately to this browser, including the sign-in screen.\n\t\t\t9 container Color theme\n\t\t\t\t10 text Color theme\n\t\t\t\t11 container\n\t\t\t\t\t12 radio button (settable, integer) Description: Botanical, Value: 1\n\t\t\t\t\t13 text Botanical\n\t\t\t\t\t14 radio button (settable, integer) Description: Herbarium, Value: 0\n\t\t\t\t\t15 text Herbarium\n\t\t\t\t\t16 radio button (settable, integer) Description: Mineral, Value: 0\n\t\t\t\t\t17 text Mineral\n\t\t\t18 container Appearance\n\t\t\t\t19 text Appearance\n\t\t\t\t20 container\n\t\t\t\t\t21 radio button (settable, integer) Description: System, Value: 0\n\t\t\t\t\t22 text System\n\t\t\t\t\t23 radio button (settable, integer) Description: Light, Value: 0\n\t\t\t\t\t24 text Light\n\t\t\t\t\t25 radio button (settable, integer) Description: Dark, Value: 1\n\t\t\t\t\t26 text Dark\n\t\t\t27 text Dark appearance.\n\t\t28 checkbox (settable, integer) Description: Use fixed overlay fallback, Value: 0\n\t\t29 button Open modal test\n\t\t30 button Open drawer test\n\t\t31 button Edge action\n\t\t32 text Executed actions:  0\n\nThe focused UI element is 29 button Open modal test"
+  ],
+  "scrollDismissal": {
+    "scrollTop": 103,
+    "tooltipCount": 0
+  }
+}

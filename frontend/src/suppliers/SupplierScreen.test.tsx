@@ -333,9 +333,7 @@ test("New supplier uses the full-width creation panel and saves a new record", a
     });
   const user = userEvent.setup();
   mount();
-  await user.click(
-    await screen.findByRole("button", { name: "+ New supplier" }),
-  );
+  await user.click(await screen.findByRole("button", { name: "New supplier" }));
   expect(window.location.hash).toBe("#/suppliers?action=create");
   expect(
     screen.getByRole("heading", { name: "Add supplier", level: 3 }),
@@ -373,21 +371,17 @@ test("New supplier Cancel and Back return to the directory and its create action
   vi.spyOn(globalThis, "fetch").mockResolvedValue(json([supplier]));
   const user = userEvent.setup();
   const { rerender } = mount();
-  await user.click(
-    await screen.findByRole("button", { name: "+ New supplier" }),
-  );
+  await user.click(await screen.findByRole("button", { name: "New supplier" }));
   expect(window.location.hash).toBe("#/suppliers?action=create");
   await user.click(screen.getByRole("button", { name: "Cancel" }));
   await waitFor(() => {
     expect(window.location.hash).toBe("#/suppliers");
   });
   await waitFor(() => {
-    expect(
-      screen.getByRole("button", { name: "+ New supplier" }),
-    ).toHaveFocus();
+    expect(screen.getByRole("button", { name: "New supplier" })).toHaveFocus();
   });
 
-  await user.click(screen.getByRole("button", { name: "+ New supplier" }));
+  await user.click(screen.getByRole("button", { name: "New supplier" }));
   rerender(
     <AuthContext.Provider value={auth}>
       <SupplierScreen startCreating />
@@ -401,9 +395,7 @@ test("New supplier Cancel and Back return to the directory and its create action
   );
   expect(window.location.hash).toBe("#/suppliers");
   await waitFor(() => {
-    expect(
-      screen.getByRole("button", { name: "+ New supplier" }),
-    ).toHaveFocus();
+    expect(screen.getByRole("button", { name: "New supplier" })).toHaveFocus();
   });
   expect(
     screen.queryByRole("heading", { name: "Add supplier" }),

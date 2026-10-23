@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import "../components/collection-page.css";
 import "../components/collection-directory.css";
 import "../components/collection-visual.css";
@@ -356,14 +357,15 @@ function SupplierPreview({
             role="group"
             aria-label="Supplier actions"
           >
-            <button
+            <ActionButton
+              icon="edit"
               className="button--secondary"
               type="button"
               data-supplier-preview-edit
               onClick={onEdit}
             >
               Edit
-            </button>
+            </ActionButton>
           </div>
         </>
       }
@@ -1371,7 +1373,8 @@ export function SupplierScreen({
                   />
                 }
                 actions={
-                  <button
+                  <ActionButton
+                    icon="add"
                     type="button"
                     ref={creationTriggerRef}
                     data-collection-return="create"
@@ -1386,8 +1389,8 @@ export function SupplierScreen({
                       startCreate();
                     }}
                   >
-                    + New supplier
-                  </button>
+                    New supplier
+                  </ActionButton>
                 }
               />
             )

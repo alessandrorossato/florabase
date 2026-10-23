@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import {
   useEffect,
   useId,
@@ -208,7 +209,8 @@ export function SavedViews({
               Save view
             </button>
           )}
-          <button
+          <ActionButton
+            icon="close"
             type="button"
             className="button--quiet"
             onClick={() => {
@@ -216,7 +218,7 @@ export function SavedViews({
             }}
           >
             Close
-          </button>
+          </ActionButton>
         </div>
       )}
       {loadError ? (
@@ -341,7 +343,8 @@ export function SavedViews({
             Save view
           </button>
         )}
-        <button
+        <ActionButton
+          icon="saved-views"
           type="button"
           className="button--secondary"
           aria-expanded={expanded}
@@ -360,7 +363,7 @@ export function SavedViews({
         >
           Saved views
           {allSurfaces && presentation === "inline" ? " · all surfaces" : ""}
-        </button>
+        </ActionButton>
         {utilityActions}
       </div>
       {notice && presentation === "inline" && (
@@ -453,7 +456,11 @@ export function SavedViews({
               </p>
             )}
             <div className="actions">
-              <button type="submit" disabled={pending}>
+              <ActionButton
+                type="submit"
+                variant={action.kind === "delete" ? "danger" : "primary"}
+                disabled={pending}
+              >
                 {pending
                   ? "Saving…"
                   : action.kind === "delete"
@@ -463,7 +470,7 @@ export function SavedViews({
                       : action.kind === "rename"
                         ? "Rename Saved View"
                         : "Save view"}
-              </button>
+              </ActionButton>
               <button
                 type="button"
                 className="button--secondary"

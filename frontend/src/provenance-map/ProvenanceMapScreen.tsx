@@ -1,3 +1,4 @@
+import { ActionLink } from "../components/Action";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
@@ -58,7 +59,9 @@ function SiteDetails({ site }: { site: ProvenanceMapSite }) {
           <h3 id="map-site-title">{site.name}</h3>
           <p>{site.geographic_place_path ?? "No named geographic place"}</p>
         </div>
-        <a href={`#/geography/${site.id}`}>Edit site</a>
+        <ActionLink icon="edit" href={`#/geography/${site.id}`}>
+          Edit site
+        </ActionLink>
       </div>
       <dl className="detail-list detail-list--compact">
         <div>

@@ -1,3 +1,5 @@
+import { Icon } from "./Icon";
+import { ActionButton, IconButton } from "./Action";
 import { useId, useState, type ReactNode } from "react";
 import { DirectorySearch } from "./ReferenceUI";
 import { TaskDialog } from "./TaskDialog";
@@ -37,7 +39,8 @@ export function DirectoryTools({
       >
         {search}
         {filters && (
-          <button
+          <ActionButton
+            icon="filter"
             type="button"
             className="button--secondary"
             aria-haspopup="dialog"
@@ -49,7 +52,7 @@ export function DirectoryTools({
           >
             Filters
             {activeFilters.length ? ` (${String(activeFilters.length)})` : ""}
-          </button>
+          </ActionButton>
         )}
         {savedViews}
         {actions}
@@ -63,12 +66,15 @@ export function DirectoryTools({
           {activeFilters.map((filter) => (
             <button
               type="button"
-              className="button--quiet"
+              className="button--quiet control-action"
               key={filter.label}
               aria-label={`Remove ${filter.label.toLowerCase()} filter`}
               onClick={filter.onRemove}
             >
-              {filter.label}: {filter.value} <span aria-hidden="true">×</span>
+              <span>
+                {filter.label}: {filter.value}
+              </span>
+              <Icon name="close" />
             </button>
           ))}
         </div>
@@ -85,15 +91,16 @@ export function DirectoryTools({
         >
           <div className="section-heading">
             <h3>Filters</h3>
-            <button
-              type="button"
+            <IconButton
+              icon="close"
+              label="Close"
+              tooltip={`Close ${name} filters`}
+              visibleLabel="Close"
               className="button--quiet"
               onClick={() => {
                 setOpen(false);
               }}
-            >
-              Close
-            </button>
+            />
           </div>
           <div className="directory-filter-fields">{filters}</div>
           <p className="field-help">
@@ -109,14 +116,15 @@ export function DirectoryTools({
                 Reset filters
               </button>
             )}
-            <button
+            <ActionButton
+              variant="secondary"
               type="button"
               onClick={() => {
                 setOpen(false);
               }}
             >
               Done
-            </button>
+            </ActionButton>
           </div>
         </TaskDialog>
       )}

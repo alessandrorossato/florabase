@@ -1,0 +1,117 @@
+.tooltip-trigger {
+  display: contents;
+}
+/* CONTROLS-001: one action geometry and semantic palette, with no layout ownership. */
+.control-icon {
+  display: block;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  color: inherit;
+}
+.control-icon.control-icon--shell {
+  width: 20px;
+  height: 20px;
+}
+.control-action,
+.control-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  min-width: var(--control-height);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-small);
+  font: var(--type-strong);
+  white-space: normal;
+}
+.control-action > span {
+  min-width: 0;
+}
+.control-icon-button__label {
+  display: none;
+}
+.control-action .control-icon {
+  align-self: center;
+}
+.search-control > .control-icon {
+  margin-left: var(--space-3);
+  color: var(--text-muted);
+}
+.directory-filter-summary .control-icon {
+  width: 18px;
+  height: 18px;
+}
+.controls-overlay-host {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1100;
+}
+.controls-overlay-host .overflow-popover {
+  pointer-events: auto;
+}
+.controls-tooltip {
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  box-sizing: border-box;
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 16px));
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--elevation-overlay);
+  font: var(--type-small);
+  overflow-wrap: anywhere;
+  pointer-events: auto;
+}
+.controls-tooltip::backdrop {
+  background: transparent;
+  pointer-events: none;
+}
+.sidebar-footer-actions .control-action,
+.sidebar-footer-actions .control-icon-button,
+.mobile-navigation-footer-actions .control-action,
+.mobile-navigation-footer-actions .control-icon-button {
+  font: var(--type-small);
+}
+.theme-preview.control-icon-button {
+  color: var(--text-muted);
+  background: transparent;
+  border-color: transparent;
+}
+.mobile-navigation-dialog .theme-preview .control-icon-button__label {
+  display: inline;
+}
+@media (max-width: 48rem), (any-pointer: coarse), (hover: none) {
+  .control-icon-button__label {
+    display: inline;
+  }
+}
+@media (forced-colors: active) {
+  .controls-tooltip {
+    background: Canvas;
+    color: CanvasText;
+    border-color: CanvasText;
+  }
+}
+@media print {
+  .controls-overlay-host {
+    display: none;
+  }
+}
+
+.leaflet-bar a {
+  width: var(--control-height);
+  height: var(--control-height);
+  line-height: var(--control-height);
+}
+
+.sidebar-group-toggle .control-icon {
+  width: 18px;
+  height: 18px;
+}

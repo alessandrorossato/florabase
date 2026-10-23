@@ -1,3 +1,4 @@
+import { ActionLink, ActionButton } from "../components/Action";
 import { RecordIdentities } from "../components/recordPresentation";
 import { DirectoryTools } from "../components/DirectoryTools";
 import { OverflowMenu, BotanicalName } from "../components/ReferenceUI";
@@ -314,7 +315,8 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
                       <OverflowMenu
                         ariaLabel={`More ${materials.find((m) => m.id === item.material_kind)?.label ?? "stored material"} actions`}
                       >
-                        <a
+                        <ActionLink
+                          icon="print"
                           className="button-link button--secondary"
                           href={labelComposerHref(
                             "stored-material",
@@ -322,8 +324,9 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
                           )}
                         >
                           Print label
-                        </a>
-                        <button
+                        </ActionLink>
+                        <ActionButton
+                          icon="edit"
                           type="button"
                           className="button--secondary"
                           onClick={() => {
@@ -331,7 +334,7 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
                           }}
                         >
                           Edit stored material
-                        </button>
+                        </ActionButton>
                         {!inventory.has_dispositions && (
                           <button
                             type="button"
@@ -782,12 +785,13 @@ export function StoredMaterialDirectory() {
                   </a>
                   <div className="actions stored-directory-actions">
                     {!bulk.active && (
-                      <a
+                      <ActionLink
+                        icon="print"
                         className="button-link button--secondary"
                         href={labelComposerHref("stored-material", row.id)}
                       >
                         Print label
-                      </a>
+                      </ActionLink>
                     )}
                     {!bulk.active &&
                       row.material_kind === "seed" &&

@@ -133,3 +133,21 @@ test("revealed panes resize the existing map and disconnect on unmount", () => {
   view.unmount();
   expect(disconnect).toHaveBeenCalledOnce();
 });
+
+test("theme changes keep the map, cached evidence, generation and provider layers intact", async () => {
+  render(<OccurrenceDensityMap identityId="identity" generation="one" />);
+  await waitFor(() => {
+    expect(mocks.map.attributionControl.addAttribution).toHaveBeenCalled();
+  });
+  const fetch = vi.spyOn(globalThis, "fetch");
+  window.florabaseAppearance.setAppearance("dark");
+  window.florabaseAppearance.setPalette("mineral");
+  window.florabaseAppearance.setAppearance("light");
+  expect(mocks.createMap).toHaveBeenCalledTimes(1);
+  expect(mocks.overlayConstruct).toHaveBeenCalledTimes(1);
+  expect(mocks.tileLayer).not.toHaveBeenCalled();
+  expect(mocks.map.remove).not.toHaveBeenCalled();
+  expect(mocks.overlayRemove).not.toHaveBeenCalled();
+  expect(fetch).not.toHaveBeenCalled();
+  fetch.mockRestore();
+});

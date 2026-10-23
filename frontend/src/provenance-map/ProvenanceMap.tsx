@@ -123,7 +123,8 @@ export function ProvenanceMap({
       ) {
         const accuracyCircle = circle(sitePosition, {
           radius: accuracy,
-          color: "#30624b",
+          // Leaflet uses its SVG renderer here; CSS roles update in place without tile requests.
+          color: "var(--primary)",
           fillOpacity: 0.08,
           weight: 1,
         }).addTo(map);

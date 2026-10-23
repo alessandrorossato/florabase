@@ -1,3 +1,6 @@
+import { Icon } from "./Icon";
+import { ActionButton, IconButton } from "./Action";
+import { registerControlLayer } from "./controlLayers";
 import {
   useEffect,
   useLayoutEffect,
@@ -6,6 +9,7 @@ import {
   useState,
   type ReactNode,
   type RefObject,
+  type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { createPortal } from "react-dom";
 
@@ -64,6 +68,7 @@ export function DirectorySearch({
   disabled = false,
   className = "",
   hideLabel = false,
+  maxLength,
 }: {
   id: string;
   label: string;
@@ -73,6 +78,7 @@ export function DirectorySearch({
   disabled?: boolean;
   className?: string;
   hideLabel?: boolean;
+  maxLength?: number;
 }) {
   return (
     <div className={`field directory-search ${className}`.trim()}>
@@ -80,10 +86,11 @@ export function DirectorySearch({
         {label}
       </label>
       <div className="search-control">
-        <span aria-hidden="true">⌕</span>
+        <Icon name="search" />
         <input
           id={id}
           type="search"
+          maxLength={maxLength}
           placeholder={placeholder}
           value={value}
           disabled={disabled}
@@ -265,55 +272,78 @@ export function OverflowMenu({
         }
       }
     };
-    const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        setOpen(false);
-        trigger.current?.focus();
-      }
-    };
+    const unregister = panel.current
+      ? registerControlLayer({
+          element: panel.current,
+          priority: 2,
+          dismiss: () => {
+            setOpen(false);
+            trigger.current?.focus();
+          },
+        })
+      : undefined;
     document.addEventListener("pointerdown", dismiss);
     document.addEventListener("focusin", dismiss);
-    document.addEventListener("keydown", escape);
+
     return () => {
       document.removeEventListener("pointerdown", dismiss);
       document.removeEventListener("focusin", dismiss);
-      document.removeEventListener("keydown", escape);
+      unregister?.();
     };
   }, [open, trigger]);
+  const triggerProps = {
+    ref: trigger,
+    type: "button" as const,
+    disabled,
+    "aria-expanded": open,
+    "aria-controls": open ? id : undefined,
+    className: "overflow-trigger button--secondary",
+    onClick: () => {
+      if (open) close();
+      else show();
+    },
+    onKeyDown: (event: ReactKeyboardEvent<HTMLButtonElement>) => {
+      if (event.key === "Escape" && open) {
+        event.preventDefault();
+        event.stopPropagation();
+        close(true);
+      }
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        show();
+        requestAnimationFrame(() =>
+          panel.current
+            ?.querySelector<HTMLElement>("button:not(:disabled),a[href]")
+            ?.focus(),
+        );
+      }
+    },
+  };
   return (
     <>
-      <button
-        className="overflow-trigger button--secondary"
-        ref={trigger}
-        type="button"
-        disabled={disabled}
-        aria-label={ariaLabel}
-        aria-expanded={open}
-        aria-controls={open ? id : undefined}
-        onClick={() => {
-          if (open) close();
-          else show();
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Escape" && open) {
-            event.preventDefault();
-            event.stopPropagation();
-            close(true);
+      {["More", "⋯", "…"].includes(label) ? (
+        <IconButton
+          {...triggerProps}
+          icon="more"
+          label={ariaLabel ?? "More actions"}
+          visibleLabel="More"
+          tooltip="More actions"
+          tooltipDisabled={open}
+        />
+      ) : (
+        <ActionButton
+          {...triggerProps}
+          trailingIcon="chevron-down"
+          aria-label={ariaLabel}
+          icon={
+            label.startsWith("+") || label.startsWith("Quick add")
+              ? "add"
+              : "more"
           }
-          if (event.key === "ArrowDown") {
-            event.preventDefault();
-            show();
-            requestAnimationFrame(() =>
-              panel.current
-                ?.querySelector<HTMLElement>("button:not(:disabled),a[href]")
-                ?.focus(),
-            );
-          }
-        }}
-      >
-        {label}
-      </button>
+        >
+          {label.replace(/^\+\s*|\s*▾$/g, "")}
+        </ActionButton>
+      )}
       {open &&
         createPortal(
           <div

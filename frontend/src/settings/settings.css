@@ -18,7 +18,7 @@
 .settings-panel p {
   margin: 0;
 }
-.settings-panel input {
+.settings-panel input:not([type="radio"]) {
   width: 100%;
   min-width: 0;
 }
@@ -83,4 +83,65 @@
     top: 0;
     height: 100dvh;
   }
+}
+
+/* Browser-local appearance preferences do not participate in the General form. */
+.appearance-settings fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.appearance-settings legend {
+  margin-bottom: var(--space-2);
+  font: var(--type-strong);
+}
+.appearance-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.appearance-option {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  min-height: var(--control-height);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  font: var(--type-body);
+}
+.appearance-option:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--primary-subtle);
+}
+.appearance-option input[type="radio"] {
+  width: 1rem;
+  height: 1rem;
+  margin: 0;
+  flex: none;
+}
+.appearance-selected {
+  font: var(--type-small);
+  color: var(--primary);
+}
+.appearance-preview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  width: 4rem;
+  padding: var(--space-1) var(--space-2);
+  color: var(--text);
+  background: var(--background);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-small);
+}
+.appearance-preview__accent {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 2px;
+  background: var(--primary);
 }

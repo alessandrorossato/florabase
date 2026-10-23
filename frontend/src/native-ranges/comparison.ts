@@ -1,10 +1,10 @@
 // Discrete identity colors: fill identity, never abundance or inferred precision.
 export const comparisonPalette = [
-  "#287c67",
-  "#aa562d",
-  "#5467b2",
-  "#9a477a",
-  "#81701f",
+  "var(--comparison-1)",
+  "var(--comparison-2)",
+  "var(--comparison-3)",
+  "var(--comparison-4)",
+  "var(--comparison-5)",
 ];
 
 export function reconcileColors(

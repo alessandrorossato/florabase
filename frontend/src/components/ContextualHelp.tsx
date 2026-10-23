@@ -1,3 +1,4 @@
+import { ActionButton } from "./Action";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 
 export function FieldHelp({
@@ -142,14 +143,15 @@ export function ContextHelpDialog({
           >
             <h3 id={titleId}>{title}</h3>
             <div className="context-help-dialog__content">{children}</div>
-            <button
+            <ActionButton
+              icon="close"
               className="button--secondary"
               ref={closeButton}
               type="button"
               onClick={close}
             >
               Close
-            </button>
+            </ActionButton>
           </div>
         </div>
       )}

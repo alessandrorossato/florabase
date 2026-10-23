@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import { FieldLabel } from "../components/FieldLabel";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { CoordinateFields } from "./CoordinateFields";
@@ -241,7 +242,8 @@ export function ProvenanceSiteManager({
           <h3 id="provenance-sites-title">Provenance sites</h3>
         </div>
         {showCreateAction && (
-          <button
+          <ActionButton
+            icon="add"
             type="button"
             onClick={() => {
               setSelectedId(null);
@@ -251,7 +253,7 @@ export function ProvenanceSiteManager({
             }}
           >
             New provenance site
-          </button>
+          </ActionButton>
         )}
       </header>
       {!editing && message && (
@@ -418,7 +420,8 @@ export function ProvenanceSiteManager({
                   ]}
                 />
                 <div className="actions">
-                  <button
+                  <ActionButton
+                    icon="edit"
                     type="button"
                     className="button--secondary"
                     onClick={() => {
@@ -426,7 +429,7 @@ export function ProvenanceSiteManager({
                     }}
                   >
                     Edit
-                  </button>
+                  </ActionButton>
                   <OverflowMenu ariaLabel="More provenance site actions">
                     <button
                       type="button"

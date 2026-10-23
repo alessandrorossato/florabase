@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import { FieldLabel } from "../components/FieldLabel";
 import { DirectoryTools } from "../components/DirectoryTools";
 import { DirectoryResults } from "../components/DirectoryResults";
@@ -444,7 +445,8 @@ export function GeographyScreen({
         actions={
           initialSiteId || initialPlaceId ? (
             mode === "places" ? (
-              <button
+              <ActionButton
+                icon="add"
                 type="button"
                 ref={creationTriggerRef}
                 aria-haspopup="dialog"
@@ -456,16 +458,17 @@ export function GeographyScreen({
                 }}
               >
                 New local place
-              </button>
+              </ActionButton>
             ) : (
-              <button
+              <ActionButton
+                icon="add"
                 type="button"
                 onClick={() => {
                   setSiteCreating(true);
                 }}
               >
                 New provenance site
-              </button>
+              </ActionButton>
             )
           ) : undefined
         }
@@ -500,7 +503,8 @@ export function GeographyScreen({
               }
               actions={
                 mode === "places" ? (
-                  <button
+                  <ActionButton
+                    icon="add"
                     type="button"
                     ref={creationTriggerRef}
                     aria-haspopup="dialog"
@@ -512,16 +516,17 @@ export function GeographyScreen({
                     }}
                   >
                     New local place
-                  </button>
+                  </ActionButton>
                 ) : (
-                  <button
+                  <ActionButton
+                    icon="add"
                     type="button"
                     onClick={() => {
                       setSiteCreating(true);
                     }}
                   >
                     New provenance site
-                  </button>
+                  </ActionButton>
                 )
               }
             />

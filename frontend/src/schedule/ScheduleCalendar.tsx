@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import { ScheduleTargetLabel } from "./ScheduleTargetLabel";
 import { useState, type ReactNode } from "react";
 import { TaskDialog } from "../components/TaskDialog";
@@ -303,7 +304,8 @@ export function ScheduleCalendar({
         >
           <header className="ui-section-header">
             <h3>{dayLabel(selected)}</h3>
-            <button
+            <ActionButton
+              icon="close"
               type="button"
               className="button--secondary"
               onClick={() => {
@@ -311,7 +313,7 @@ export function ScheduleCalendar({
               }}
             >
               Close day
-            </button>
+            </ActionButton>
           </header>
           <p className="muted">
             {state.status.length === 1

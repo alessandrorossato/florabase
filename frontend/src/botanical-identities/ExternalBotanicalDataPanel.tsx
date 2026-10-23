@@ -205,7 +205,7 @@ export function ExternalBotanicalDataPanel({
             >
               {busyId === "refresh" ? "Refreshing…" : "Refresh"}
             </button>
-            <OverflowMenu>
+            <OverflowMenu ariaLabel="More external botanical data actions">
               <>
                 <button
                   className="button--secondary"

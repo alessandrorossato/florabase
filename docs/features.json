@@ -1892,6 +1892,38 @@
       ],
       "priority": "P1",
       "status": "verified"
+    },
+    {
+      "id": "THEMES-001",
+      "category": "frontend",
+      "description": "Multi-theme and dark-mode foundation with three palettes and independent System/Light/Dark appearance",
+      "acceptance_criteria": [
+        "Approved semantic token sets cover all six palette and mode variants without changing typography, density, navigation or domain semantics",
+        "Browser-local validated preferences, first-paint resolution, cross-tab and operating-system updates work through Settings and footer controls",
+        "Shared UI, authentication, forms, overlays, media and all three map renderers retain accessible contrast and behavior without theme-triggered provider requests",
+        "Print-safe labels and QR geometry remain unchanged; measured contrast, responsive, keyboard and accessibility evidence covers the approved implementation matrix"
+      ],
+      "dependencies": [
+        "GLOBAL-VISUAL-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
+      "id": "CONTROLS-001",
+      "category": "frontend",
+      "description": "Shared toolbar iconography, action hierarchy and accessible tooltips",
+      "acceptance_criteria": [
+        "One semantic-token SVG action vocabulary and three shared action patterns preserve visible primary, destructive and domain-sensitive operation labels",
+        "Reusable Tooltip supports hover, focus, Escape, hover transfer, viewport collision handling, native-dialog layering, touch alternatives and reduced motion without focus traps",
+        "Audited directories, Saved Views, filters, previews, detail actions, dialogs, Settings, mobile navigation and existing map controls adopt consistent geometry without changing routes or domain state",
+        "Filters retain dimension counts, Saved Views remain labelled and discoverable, and focused behavior plus responsive and theme compatibility evidence is complete"
+      ],
+      "dependencies": [
+        "GLOBAL-VISUAL-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
     }
   ]
 }

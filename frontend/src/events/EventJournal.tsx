@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import { FieldLabel } from "../components/FieldLabel";
 import {
   useEffect,
@@ -482,7 +483,8 @@ export function EventJournal({
                           !["extraction", "reintegration"].includes(
                             item.kind,
                           ) && (
-                            <button
+                            <ActionButton
+                              icon="edit"
                               type="button"
                               className="button--secondary"
                               onClick={() => {
@@ -490,7 +492,7 @@ export function EventJournal({
                               }}
                             >
                               Edit
-                            </button>
+                            </ActionButton>
                           )}
                         {item.harvest_id ? (
                           <a
@@ -587,7 +589,8 @@ export function EventJournal({
             targetLabel={`${eventKindLabels[photoEvent.kind]} for ${targetLabel}`}
           />
           <div className="actions">
-            <button
+            <ActionButton
+              icon="close"
               className="button--secondary"
               type="button"
               onClick={() => {
@@ -595,7 +598,7 @@ export function EventJournal({
               }}
             >
               Close
-            </button>
+            </ActionButton>
           </div>
         </EventDialog>
       )}

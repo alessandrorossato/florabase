@@ -1,3 +1,5 @@
+import { DirectorySearch } from "../components/ReferenceUI";
+import { ActionButton } from "../components/Action";
 import { saveSearchState } from "../saved-views/state";
 import { useEffect, useRef, useState } from "react";
 
@@ -263,7 +265,7 @@ export function useDashboardSearch() {
   const singleKind = state.kinds.length === 1 ? state.kinds[0] : undefined;
   const lifecycleOptions = singleKind ? lifecycles[singleKind] : undefined;
   const filterCount =
-    state.kinds.length +
+    (state.kinds.length ? 1 : 0) +
     [
       state.identityId,
       state.lifecycle,
@@ -328,21 +330,19 @@ export function useDashboardSearch() {
     savedState: saveSearchState(state),
     header: (
       <div className="dashboard-search-controls">
-        <div className="field dashboard-search-field">
-          <label className="sr-only" htmlFor="dashboard-search">
-            Search your collection
-          </label>
-          <input
-            id="dashboard-search"
-            type="search"
-            placeholder="Search your collection…"
-            value={state.q}
-            onChange={(event) => {
-              apply({ ...state, q: event.currentTarget.value }, true);
-            }}
-          />
-        </div>
-        <button
+        <DirectorySearch
+          id="dashboard-search"
+          label="Search your collection"
+          placeholder="Search your collection…"
+          value={state.q}
+          onChange={(q) => {
+            apply({ ...state, q }, true);
+          }}
+          hideLabel
+          className="dashboard-search-field"
+        />
+        <ActionButton
+          icon="filter"
           ref={filterButton}
           type="button"
           className="button--secondary"
@@ -354,7 +354,7 @@ export function useDashboardSearch() {
           }}
         >
           Filters{filterCount ? ` (${String(filterCount)})` : ""}
-        </button>
+        </ActionButton>
       </div>
     ),
     content: (
@@ -371,7 +371,8 @@ export function useDashboardSearch() {
           >
             <div className="section-heading">
               <h3>Filters</h3>
-              <button
+              <ActionButton
+                icon="close"
                 type="button"
                 className="button--quiet"
                 onClick={() => {
@@ -380,7 +381,7 @@ export function useDashboardSearch() {
                 }}
               >
                 Close
-              </button>
+              </ActionButton>
             </div>
             <div className="dashboard-drawer-fields">
               <fieldset className="dashboard-kind-filters">
@@ -589,14 +590,15 @@ export function useDashboardSearch() {
               >
                 Reset filters
               </button>
-              <button
+              <ActionButton
+                variant="secondary"
                 type="button"
                 onClick={() => {
                   setFiltersOpen(false);
                 }}
               >
                 Done
-              </button>
+              </ActionButton>
             </div>
           </TaskDialog>
         )}

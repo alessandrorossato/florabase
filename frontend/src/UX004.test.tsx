@@ -390,7 +390,7 @@ test("identity forms use named grouping with existing help and close with predic
   const user = userEvent.setup();
   render(<App />);
   const create = await screen.findByRole("button", {
-    name: "+ New botanical identity",
+    name: "New botanical identity",
   });
   await user.click(create);
   const dialog = screen.getByRole("dialog", {
