@@ -1,0 +1,20 @@
+{
+  "fullFrontend": {
+    "numTotalTests": 872,
+    "numPassedTests": 872,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "files": 75,
+  "checks": {
+    "typecheck": "passed",
+    "eslint": "passed, zero warnings",
+    "format": "passed",
+    "productionBuild": "passed",
+    "featureGraph": "111 valid",
+    "whitespace": "passed",
+    "canonicalFullGate": "not run; excluded for integration phase"
+  },
+  "focusedFirstRun": "132/133, asynchronous Settings focus assertion failed; isolated Settings retry passed. Assertion waits for focus using existing timeout; full suite includes correction."
+}

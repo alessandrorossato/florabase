@@ -252,9 +252,12 @@ test("direct QR Settings navigation focuses the General field and keeps Tools av
     json({ public_qr_base_url: null, default_label_preset: "medium" }),
   );
   settings(true);
-  expect(
-    await screen.findByRole("textbox", { name: "Public / QR base URL" }),
-  ).toHaveFocus();
+  const field = await screen.findByRole("textbox", {
+    name: "Public / QR base URL",
+  });
+  await waitFor(() => {
+    expect(field).toHaveFocus();
+  });
   expect(screen.getByRole("link", { name: "Labels" })).toBeVisible();
 });
 

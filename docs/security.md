@@ -22,6 +22,10 @@
   page; the browser still sends no referrer, the URL carries no Florabase record or session data,
   failures are not retried automatically, and the backend never downloads, proxies, or validates by
   contacting the remote host.
+- Collection origins uses local geography by default. Optional configured online tiles require an
+  explicit visitor action and disclose IP, map tile area and app origin under the provider policy.
+  Cross-origin Referer contains only the origin; no record path/query/hash. A tile error removes the
+  layer without automatic retries. This is separate from external photo privacy described above.
 - Backups contain sensitive collection and account data. Encrypt and restrict them, and test
   restoration.
 

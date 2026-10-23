@@ -326,6 +326,14 @@ media root. It refuses every other project, foreign ownership, shared resources 
 One enabled Review owner must already exist; its login, password, sessions and settings are retained.
 Collection records use the application's existing single-owner collection model and domain services.
 
+`make feature-review-extended-seed` adds the separately versioned
+[Extended Botanical Review Dataset v5](review/extended-botanical-dataset-v5.md) to a ready v4 Review.
+`make feature-review-extended-status` validates its ledger and reports counts. Both repeat exact
+host/resource/runtime ownership checks and refuse DEV, UAT, Sourcing, Stable Preview and production.
+The extension never resets the database/media, changes credentials, overwrites operator edits or
+changes UAT's baseline semantics. It uses a separate `.review-dataset-v5.json` ledger and the same
+Review lock. Packaged licensed photographs are mounted read-only; seeding makes no external requests.
+
 The dataset has **66 managed records**, or **68** when the configured approved WFO snapshot is available:
 identities, Seeds, Sowings, Plants/PlantGroups, Locations, geography/native ranges, Stored material,
 Harvests, Suppliers/Orders, Journal/History facts, Schedule examples and generated local/shared media.

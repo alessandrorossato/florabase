@@ -1,0 +1,331 @@
+.app-content .collection-origins .page-header {
+  flex-direction: row;
+  align-items: start;
+  margin-bottom: var(--space-3);
+}
+.collection-origins .page-identity {
+  flex: 1 1 17rem;
+}
+.collection-origins .page-tools {
+  flex: 2 1 38rem;
+}
+.collection-origins .directory-search {
+  flex: 1 1 15rem;
+  min-width: min(12rem, 100%);
+}
+.collection-origins .maps-workspace {
+  grid-template-columns: minmax(0, 7fr) minmax(17rem, 3fr);
+  gap: var(--space-4);
+}
+.origins-overview {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-block: 1px solid var(--border);
+  margin-bottom: var(--space-4);
+  padding-block: var(--space-2);
+  gap: var(--space-2);
+}
+.origins-overview > :is(button, a) {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: start;
+  white-space: normal;
+  min-width: 0;
+  padding: var(--space-2);
+  text-decoration: none;
+  color: var(--text);
+  border-radius: var(--radius-small);
+}
+.origins-overview > a:hover {
+  background: var(--surface-hover);
+}
+.origins-overview strong {
+  font: var(--type-h2);
+  font-variant-numeric: tabular-nums;
+}
+.origins-overview span {
+  font: var(--type-small);
+}
+.origins-overview small {
+  display: block;
+  color: var(--text-muted);
+  font: var(--type-label);
+  font-weight: 400;
+}
+.origins-canvas {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  overflow: hidden;
+  background: var(--surface);
+}
+.collection-origins .provenance-map {
+  min-height: 22rem;
+  height: clamp(22rem, 51dvh, 34rem);
+  background: var(--surface-subtle);
+}
+.origins-map-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-2);
+  font: var(--type-small);
+}
+.origins-map-controls label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 2.75rem;
+}
+.origins-marker-key {
+  color: var(--text-muted);
+}
+.origins-marker-key > span {
+  color: var(--primary);
+}
+.origins-provider-note,
+.origins-evidence-note {
+  font: var(--type-small);
+  color: var(--text-muted);
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+}
+.origins-evidence-note {
+  padding-inline: 0;
+  margin-top: var(--space-2);
+}
+.origins-canvas > .notice {
+  margin: 0;
+  padding: var(--space-2) var(--space-3);
+  font: var(--type-small);
+}
+.origins-canvas > .notice p {
+  margin: 0 0 var(--space-2);
+}
+.origins-marker.provenance-map-marker {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.origins-marker::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border: 3px solid var(--surface);
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+.origins-marker.provenance-map-marker span {
+  position: relative;
+  background: var(--on-primary);
+}
+.origins-marker--unlinked::before {
+  background: var(--surface);
+}
+.origins-marker--unlinked.provenance-map-marker span {
+  background: var(--primary);
+}
+.origins-marker--selected::before {
+  border-color: var(--text);
+  outline: 3px solid var(--surface);
+  outline-offset: 2px;
+}
+.origins-map-controls label {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  width: auto;
+  font: var(--type-small);
+}
+.origins-map-controls input[type="checkbox"] {
+  flex: none;
+  width: 1rem;
+  min-height: 1rem;
+  height: 1rem;
+  margin: 0;
+}
+.provenance-map .leaflet-tooltip {
+  white-space: normal;
+  width: 18rem;
+  max-width: calc(100vw - 3rem);
+  font: var(--type-small);
+  overflow-wrap: anywhere;
+}
+.origins-empty {
+  position: absolute;
+  z-index: 500;
+  inset: 5rem var(--space-4) auto;
+  padding: var(--space-4);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+.origins-empty h3 {
+  margin-top: 0;
+}
+.origins-inspector {
+  display: grid;
+  gap: var(--space-2);
+}
+.origins-inspector > *,
+.origins-inspector section > :is(h3, p) {
+  margin: 0;
+}
+.origins-inspector h3 {
+  font: var(--type-h3);
+}
+.origins-inspector section {
+  display: grid;
+  gap: var(--space-3);
+}
+.origins-inspector .detail-list {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+}
+.origins-inspector .detail-list > div {
+  display: block;
+}
+.origins-inspector .detail-list dd {
+  margin: 0;
+}
+.origins-place {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.origins-sites,
+.origins-records {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.origins-sites li {
+  border-bottom: 1px solid var(--border);
+}
+.origins-sites li > :is(button, a) {
+  width: 100%;
+  text-align: start;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.origins-sites button {
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-2);
+}
+.origins-sites :is(span, small) {
+  display: block;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.origins-identities details {
+  border-top: 1px solid var(--border);
+}
+.origins-identities summary {
+  cursor: pointer;
+  padding: var(--space-3) 0;
+  min-height: 2.75rem;
+  font: var(--type-strong);
+}
+.origins-identities summary small {
+  display: block;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.origins-identity-link {
+  font: var(--type-small);
+}
+.origins-records li {
+  display: grid;
+  gap: var(--space-1);
+  padding-block: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+.origins-records li > span {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.collection-origins .origins-categories {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-2);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.collection-origins .origins-categories legend {
+  padding: 0 0 var(--space-2);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.collection-origins .origins-categories label {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 2.75rem;
+  width: 100%;
+  text-align: start;
+  cursor: pointer;
+}
+.collection-origins .origins-categories input[type="checkbox"] {
+  flex: 0 0 1rem;
+  width: 1rem;
+  height: 1rem;
+  min-height: 1rem;
+  margin: 0;
+}
+.collection-origins .origins-categories label > span {
+  flex: 1;
+  min-width: 0;
+}
+.origins-breakdown {
+  width: min(42rem, calc(100vw - 2 * var(--space-4)));
+}
+@media (min-width: 64.001rem) {
+  .collection-origins .maps-workspace__browser {
+    max-height: calc(100dvh - 17rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    padding-inline-end: var(--space-2);
+  }
+}
+@media (max-width: 64rem) {
+  .collection-origins .maps-workspace {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 40rem) {
+  .origins-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-1);
+  }
+  .origins-overview > :is(button, a) {
+    gap: var(--space-2);
+    padding: var(--space-1);
+  }
+  .collection-origins .provenance-map {
+    min-height: 18rem;
+    height: 38dvh;
+  }
+  .origins-marker-key {
+    display: none;
+  }
+}
+
+/* Leaflet site descriptions inherit the same six-theme roles as workspace tooltips. */
+.provenance-map .leaflet-tooltip {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+  box-shadow: var(--elevation-overlay);
+}
+.provenance-map .leaflet-tooltip-top::before {
+  border-top-color: var(--border-strong);
+}
+.provenance-map .leaflet-tooltip-bottom::before {
+  border-bottom-color: var(--border-strong);
+}

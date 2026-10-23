@@ -1,0 +1,141 @@
+{
+  "checks": [
+    "Owner session; exact API KPIs; all markers; native Leaflet keyboard selection; multi-identity inspector; default local geography without internet",
+    "Filters at 1440/1024/390: 44px clickable rows, adjacent labels, no horizontal overflow, Done/Escape preserve shared apply-on-change behavior"
+  ],
+  "measurements": [
+    {
+      "width": 1440,
+      "rows": [
+        {
+          "text": "Seed lots",
+          "row": {
+            "x": 1017,
+            "y": 117.984375,
+            "width": 398,
+            "height": 44
+          },
+          "input": {
+            "x": 1017,
+            "width": 16,
+            "height": 16
+          },
+          "label": {
+            "x": 1045,
+            "width": 370
+          }
+        },
+        {
+          "text": "Plants and plant groups",
+          "row": {
+            "x": 1017,
+            "y": 169.984375,
+            "width": 398,
+            "height": 44
+          },
+          "input": {
+            "x": 1017,
+            "width": 16,
+            "height": 16
+          },
+          "label": {
+            "x": 1045,
+            "width": 370
+          }
+        }
+      ]
+    },
+    {
+      "width": 1024,
+      "rows": [
+        {
+          "text": "Seed lots",
+          "row": {
+            "x": 601,
+            "y": 117.984375,
+            "width": 398,
+            "height": 44
+          },
+          "input": {
+            "x": 601,
+            "width": 16,
+            "height": 16
+          },
+          "label": {
+            "x": 629,
+            "width": 370
+          }
+        },
+        {
+          "text": "Plants and plant groups",
+          "row": {
+            "x": 601,
+            "y": 169.984375,
+            "width": 398,
+            "height": 44
+          },
+          "input": {
+            "x": 601,
+            "width": 16,
+            "height": 16
+          },
+          "label": {
+            "x": 629,
+            "width": 370
+          }
+        }
+      ]
+    },
+    {
+      "width": 390,
+      "rows": [
+        {
+          "text": "Seed lots",
+          "row": {
+            "x": 53,
+            "y": 109.984375,
+            "width": 320,
+            "height": 44
+          },
+          "input": {
+            "x": 53,
+            "width": 16,
+            "height": 16
+          },
+          "label": {
+            "x": 81,
+            "width": 292
+          }
+        },
+        {
+          "text": "Plants and plant groups",
+          "row": {
+            "x": 53,
+            "y": 161.984375,
+            "width": 320,
+            "height": 44
+          },
+          "input": {
+            "x": 53,
+            "width": 16,
+            "height": 16
+          },
+          "label": {
+            "x": 81,
+            "width": 292
+          }
+        }
+      ]
+    }
+  ],
+  "dataset": {
+    "total": 14,
+    "mapped": 12,
+    "without_coordinates": 2,
+    "direct_records": 42,
+    "identities": 22
+  },
+  "external_requests": [],
+  "runtime_errors": [],
+  "zoom": "Viewport checks at default browser zoom; no actual browser zoom certification."
+}

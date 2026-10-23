@@ -31,7 +31,18 @@ export function filterMapSites(
     const records = site.records.filter((record) =>
       recordMatches(record, filters),
     );
-    if (records.length === 0) return [];
+    // A stored coordinate-bearing site is still evidence when no material is linked.
+    // Category/query restrictions require a matching direct record.
+    if (
+      records.length === 0 &&
+      !(
+        site.records.length === 0 &&
+        filters.seedLots &&
+        filters.plants &&
+        !filters.identityQuery.trim()
+      )
+    )
+      return [];
     const seedLots = records.filter(
       ({ record_type }) => record_type === "seed_lot",
     ).length;

@@ -1,8 +1,9 @@
-const DEFAULT_TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+const DEFAULT_TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
 const DEFAULT_ATTRIBUTION =
   '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>';
 
 export interface FlorabaseRuntimeConfig {
+  mapOnlineEnabled?: boolean;
   mapTileUrl?: string;
   mapAttribution?: string;
 }
@@ -21,6 +22,9 @@ function configured(value: string | undefined, fallback: string): string {
 }
 
 export const mapRuntimeConfig = {
+  onlineConfigured:
+    window.__FLORABASE_RUNTIME_CONFIG__?.mapOnlineEnabled === true,
+
   tileUrl: configured(
     window.__FLORABASE_RUNTIME_CONFIG__?.mapTileUrl,
     DEFAULT_TILE_URL,

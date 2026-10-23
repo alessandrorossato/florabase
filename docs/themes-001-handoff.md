@@ -13,6 +13,15 @@ artifacts remain preserved. The historical 850-test result below describes the T
 must not be treated as Controls coverage. Current combined evidence includes a complete 859-test run
 and post-refinement targeted regressions. Both features remain `implemented`, not `verified`.
 
+## Integration update
+
+The delivered MAPS-ORIGINS-001 implementation from `46ade479` has now been reconciled with the
+combined candidate. Its local basemap, inspector, filters, Saved Views, privacy and precision behavior
+are retained. [Integration evidence](review/controls-001/origins-integration/README.md) supersedes the
+older statements below that Origins reconciliation is pending. Original captures remain historical;
+new six-theme map captures and regression results describe the integrated tree. Canonical QA and
+protected delivery remain pending; neither Themes nor Controls is marked verified.
+
 ## Implemented architecture
 
 `frontend/src/styles/tokens.css` owns all six approved semantic color sets. Root selectors combine

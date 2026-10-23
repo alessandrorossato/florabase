@@ -9,6 +9,16 @@ one combined visual review and one later protected PR. THEMES-001 and CONTROLS-0
 [Product screenshot gallery](review/controls-001/gallery.html) ·
 [Evidence notes](review/controls-001/README.md) · [Themes handoff](themes-001-handoff.md).
 
+## Origins integration update
+
+The local integration merge reconciles reviewed implementation `564f479ef2c6dc657fc213d2f9636ddac9ccd590`
+(original base `b3f1de4693f50a12396344d251a16a0b4ded4b92`) with delivered main
+`46ade479fb3955b1d020a321c8256211cd2af869` (MAPS-ORIGINS-001, PR #119).
+See [integration evidence and checks](review/controls-001/origins-integration/README.md).
+The original handoff below records the earlier implementation phase; its uncommitted/delivery-boundary
+statements are historical. The integrated candidate is committed locally for renewed independent QA.
+Both Themes and Controls remain implemented; the canonical FULL gate and delivery are pending.
+
 ## Shared architecture and action hierarchy
 
 - `Icon.tsx`: one local, typed SVG action vocabulary, without another dependency. Decorative,
