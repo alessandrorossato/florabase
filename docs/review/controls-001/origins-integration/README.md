@@ -75,5 +75,44 @@ receipt is reused for the integrated tree.
 - Six actual browser variants, keyboard marker selection, drawer/Tooltip Escape layers, Saved Views,
   selected inspector navigation and phone/tablet mounted-pane behavior were checked as described above.
 
+## Independent QA — 23 October 2026
+
+- Reconfirmed `HEAD` is merge commit `1a712ca7d01ee7705433f98622ae625cd228be82`, with original
+  combined implementation `564f479ef2c6dc657fc213d2f9636ddac9ccd590` and delivered
+  `origin/main` `46ade479fb3955b1d020a321c8256211cd2af869` as its parents. The fetched `origin/main`
+  remains at that SHA and is an ancestor of the candidate.
+- Independently reviewed the map conflict resolutions, theme/action implementations, test changes,
+  and feature graph. `ProvenanceMap.tsx` and `ProvenanceMapScreen.tsx` have no candidate-side edits
+  beyond main's delivered implementation. The retained graph entries keep authoritative main statuses
+  and dependencies; Themes and Controls are still `implemented`.
+- The live browser frontend at `127.0.0.1:15174` is container
+  `florabase-themes-review-frontend`, from candidate Quality project
+  `florabase-quality-ab1b459cfd98`, source bind `/home/alessandro/.codex/worktrees/b64e/florabase`.
+  The Feature Review backend and persistent DB/media belong to
+  `/home/alessandro/.codex/worktrees/c902/florabase` at launch SHA `b3f1de4693f50a12396344d251a16a0b4ded4b92`;
+  its Review frontend is exited. The supported Review status command refuses cross-owner use. No
+  Review lifecycle or data changes were made. Consequently, current live browser observations are
+  frontend/accessibility-tree checks only; they are not independent full-stack or fixture-data proof.
+- The live Settings tree exposes labelled native Botanical/Herbarium/Mineral and System/Light/Dark
+  radios. Keyboard selection of System kept the effective OS-dark scheme and changed the footer
+  announcement to `Appearance: System (Dark), Mineral. Switch to Light.` Selecting Dark restored the
+  original Mineral/Dark preference. The Origins accessible tree exposes named Filters, Saved views,
+  inspector and Manage provenance site actions. Pointer clicks timed out in this browser session;
+  keyboard checks and the automated interaction suites remain the evidence for those controls.
+- Six-theme token coverage and approved contrast pairs are directly tested in
+  `frontend/src/appearance/styles.test.ts`; System/storage behavior in `appearance/theme.test.ts`;
+  Tooltip focus, Escape and hover transfer in `components/Controls.test.tsx`; map theme preservation
+  in `provenance-map/ProvenanceMap.test.tsx`; print/raster invariants in `appearance/styles.test.ts`
+  and the Labels tests. These are implementation tests, not physical-device acceptance.
+- No reproducible integration defect was found, so no production correction or additional regression
+  test was needed during independent review. The full frontend suite and static checks recorded above
+  are the completed integrated-tree results; the canonical FULL gate and exact-tree receipt are still
+  pending at this point.
+
+Actual screen-reader/AT use, physical touch, OS forced-colors/reduced-motion emulation, 125%/150%
+browser zoom, downloaded GBIF raster appearance, throttled cold first paint, native print dialog,
+QR output and physical printer output remain unverified. Screenshots, accessible-tree snapshots and
+calculated token contrast do not certify those checks.
+
 These checks support integration review. No canonical `make verify-full` or delivery receipt was run
 or claimed; independent QA must gate the accepted final candidate before protected delivery.

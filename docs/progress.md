@@ -23,6 +23,25 @@
   Actual AT/zoom/touch, provider raster, first-paint filmstrip and physical print acceptance remain
   explicitly pending. Integration is committed locally; no push, PR, delivery or finish.
 
+## 2026-10-23 — Independent Themes/Controls QA review
+
+- Reconfirmed integration commit `1a712ca7d01ee7705433f98622ae625cd228be82` includes original
+  implementation `564f479` and current fetched `origin/main` `46ade479`; no newer main changes.
+  Independently reviewed conflict resolutions, feature graph, themes, shared actions, map renderers,
+  tooltips, accessibility tests and print/raster invariants. No confirmed defect found.
+- Confirmed exact split runtime ownership: current candidate Quality frontend on port 15174; Review
+  backend, database and media remain owned by older `c902` at `b3f1de4`, and Review's own frontend is
+  stopped. The supported ownership guard refused reuse. No environment or other worktree was changed;
+  live browser observations are not treated as full-stack acceptance.
+- Browser keyboard check verified Settings System mode and synchronized footer announcement, then
+  restored the pre-check Mineral/Dark preference. Accessible names for Origins filters, Saved Views,
+  inspector and its Manage action were present. Pointer dispatch timed out; automated tests cover it.
+  Independent real AT, physical touch, forced-colors/reduced-motion emulation, browser zoom, downloaded
+  GBIF raster, throttled cold first paint and physical print/QR checks remain deferred.
+- The integrated 872-test frontend run plus TypeScript, ESLint, formatting, production build and
+  feature-graph checks remain passing evidence. The canonical FULL gate and exact-tree receipt are
+  pending and must cover the final committed handoff.
+
 
 ## 2026-10-23 — THEMES-001 + CONTROLS-001 combined visual-review candidate
 

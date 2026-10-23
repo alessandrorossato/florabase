@@ -1,8 +1,9 @@
 # THEMES-001 implementation handoff
 
-Candidate: `feat/themes-001` in `/home/alessandro/.codex/worktrees/b64e/florabase`, based on
-`b3f1de4` (delivered main inspected during this phase). Status: implementation candidate awaiting
-independent visual/accessibility review. No staging, commit, push, delivery or canonical gate.
+Candidate: `feat/themes-001` in `/home/alessandro/.codex/worktrees/b64e/florabase`, at integration
+commit `1a712ca7d01ee7705433f98622ae625cd228be82`, incorporating reviewed implementation based on
+`b3f1de4` plus delivered MAPS-ORIGINS-001. THEMES-001 and CONTROLS-001 remain implemented pending
+canonical FULL verification and protected delivery.
 
 ## Combined integration update — 23 October 2026
 

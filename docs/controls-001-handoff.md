@@ -1,9 +1,10 @@
 # CONTROLS-001 implementation handoff
 
-23 October 2026. Combined candidate: `feat/themes-001`, source base `b3f1de4`, in
-`/home/alessandro/.codex/worktrees/b64e/florabase`. The operator approved one implementation branch,
-one combined visual review and one later protected PR. THEMES-001 and CONTROLS-001 both remain
-**implemented**, not verified. No stage, commit, push, PR, delivery or canonical FULL gate.
+23 October 2026. Combined candidate: `feat/themes-001` in
+`/home/alessandro/.codex/worktrees/b64e/florabase`, currently at integration commit
+`1a712ca7d01ee7705433f98622ae625cd228be82`. The operator approved one implementation branch,
+combined visual review and one protected PR. THEMES-001 and CONTROLS-001 remain **implemented**;
+canonical FULL verification and protected delivery are in progress.
 
 [Live authenticated review](http://localhost:15174/#/settings) ·
 [Product screenshot gallery](review/controls-001/gallery.html) ·
