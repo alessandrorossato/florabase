@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { ApiError } from "../auth/api";
@@ -275,7 +276,8 @@ export function BotanicalNativeRangeManager({
                   </select>
                 </div>
                 <div className="actions">
-                  <button
+                  <ActionButton
+                    variant="secondary"
                     className="button--secondary"
                     type="button"
                     ref={doneButtonRef}
@@ -290,7 +292,7 @@ export function BotanicalNativeRangeManager({
                     }}
                   >
                     Done
-                  </button>
+                  </ActionButton>
                   <button
                     type="button"
                     disabled={pending || !selectedPlaceId}

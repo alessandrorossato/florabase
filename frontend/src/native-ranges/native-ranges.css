@@ -1,9 +1,6 @@
 /* Native-range presentation consumes the existing UI Foundation tokens. */
 .native-ranges {
   --native-land: var(--border);
-  --native-count-low: color-mix(in srgb, var(--primary) 40%, var(--surface));
-  --native-count-mid: color-mix(in srgb, var(--primary) 70%, var(--surface));
-  --native-count-high: var(--primary);
 }
 .app-content .native-ranges .page-header {
   flex-direction: row;
@@ -103,6 +100,10 @@
 .native-ranges .native-boundary-layer {
   stroke: var(--surface);
   stroke-width: 0.7;
+}
+.native-ranges .native-emphasis-casing {
+  stroke: var(--surface);
+  stroke-width: 9;
 }
 .native-ranges .native-selected-outline {
   stroke: var(--text);
@@ -540,9 +541,9 @@
   margin-inline-end: var(--space-2);
   background: repeating-linear-gradient(
     35deg,
-    #287c67 0 5px,
-    #aa562d 5px 10px,
-    #5467b2 10px 15px
+    var(--comparison-1) 0 5px,
+    var(--comparison-2) 5px 10px,
+    var(--comparison-3) 10px 15px
   );
   border: 1px solid var(--border-strong);
 }

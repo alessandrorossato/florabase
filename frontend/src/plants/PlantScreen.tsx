@@ -1,3 +1,4 @@
+import { ActionLink, ActionButton } from "../components/Action";
 import "../components/collection-page.css";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import { OverflowMenu } from "../components/ReferenceUI";
@@ -2401,7 +2402,8 @@ export function PlantScreen({
           {selected.kind === "plant" ? "Transfer" : "Transfer group"}
         </button>
       )}
-      <a
+      <ActionLink
+        icon="print"
         className="button-link button--secondary"
         href={labelComposerHref(
           selected.kind === "plant" ? "plant" : "plant-group",
@@ -2409,7 +2411,7 @@ export function PlantScreen({
         )}
       >
         Print label
-      </a>
+      </ActionLink>
     </>
   );
 
@@ -2441,7 +2443,8 @@ export function PlantScreen({
           actions={
             mobileDetail
               ? !editing && (
-                  <button
+                  <ActionButton
+                    icon="add"
                     type="button"
                     ref={creationTriggerRef}
                     data-collection-return="create"
@@ -2453,8 +2456,8 @@ export function PlantScreen({
                       else startCreate();
                     }}
                   >
-                    + New plant or group
-                  </button>
+                    New plant or group
+                  </ActionButton>
                 )
               : undefined
           }
@@ -2536,7 +2539,8 @@ export function PlantScreen({
                     : []),
                 ]}
                 actions={
-                  <button
+                  <ActionButton
+                    icon="add"
                     type="button"
                     ref={creationTriggerRef}
                     data-collection-return="create"
@@ -2548,8 +2552,8 @@ export function PlantScreen({
                       else startCreate();
                     }}
                   >
-                    + New plant or group
-                  </button>
+                    New plant or group
+                  </ActionButton>
                 }
               />
             )
@@ -2558,7 +2562,9 @@ export function PlantScreen({
         {extractionRouteError && !extractionSource && (
           <div role="alert">
             <p>{extractionRouteError}</p>
-            <a href="#/plants">Back to Plants</a>
+            <ActionLink icon="back" href="#/plants">
+              Back to Plants
+            </ActionLink>
           </div>
         )}
         {references.identities.length === 0 && (
@@ -2611,7 +2617,7 @@ export function PlantScreen({
               <div className="profile-empty">
                 <h4>No Plants recorded yet</h4>
                 <p>
-                  Use + New plant or group to record the first Plant or Plant
+                  Use New plant or group to record the first Plant or Plant
                   group.
                 </p>
               </div>
@@ -3013,7 +3019,8 @@ export function PlantScreen({
                         role="group"
                         aria-label="Plant actions"
                       >
-                        <button
+                        <ActionButton
+                          icon="edit"
                           type="button"
                           className="button--secondary"
                           onClick={(event) => {
@@ -3021,7 +3028,7 @@ export function PlantScreen({
                           }}
                         >
                           Edit
-                        </button>
+                        </ActionButton>
                         {
                           <a
                             className="button-link button--secondary"

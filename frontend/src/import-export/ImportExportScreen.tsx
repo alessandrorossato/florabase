@@ -1,3 +1,4 @@
+import { ActionLink } from "../components/Action";
 import { useState } from "react";
 import { PageHeader } from "../components/ReferenceUI";
 
@@ -292,14 +293,15 @@ export function ImportExportScreen() {
         >
           <h3 id="export-heading">Export CSV</h3>
           <p className="import-workspace__selected">{selectedType}</p>
-          <a
+          <ActionLink
+            icon="download"
             className="button-link button--secondary"
             href={`/api/v1/exports/${kind}.csv`}
             aria-label={`Download ${selectedType} CSV`}
             download
           >
             Download CSV
-          </a>
+          </ActionLink>
           <p>For spreadsheets, not backup or full collection transfer.</p>
           <div className="import-order">
             <strong>Recommended import order</strong>

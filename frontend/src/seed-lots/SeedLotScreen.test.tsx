@@ -294,14 +294,14 @@ test("Seeds navigation exposes the collection loading and global empty states", 
   expect(
     await screen.findByRole("heading", { name: "No seeds recorded yet" }),
   ).toBeInTheDocument();
-  const newLot = screen.getByRole("button", { name: "+ New seed lot" });
+  const newLot = screen.getByRole("button", { name: "New seed lot" });
   expect(newLot).toHaveAttribute("aria-expanded", "false");
   expect(
     screen.queryByRole("combobox", { name: "Botanical identity" }),
   ).not.toBeInTheDocument();
   await user.click(newLot);
   expect(
-    screen.queryByRole("button", { name: "+ New seed lot" }),
+    screen.queryByRole("button", { name: "New seed lot" }),
   ).not.toBeInTheDocument();
   expect(
     screen.getByRole("combobox", { name: "Botanical identity" }),
@@ -312,10 +312,11 @@ test("Seeds navigation exposes the collection loading and global empty states", 
   expect(creationPanel).toHaveClass("seed-creation-panel");
   expect(creationPanel.parentElement).toHaveClass("seed-master-detail");
   await user.click(screen.getByRole("button", { name: "Cancel" }));
-  expect(
-    screen.getByRole("button", { name: "+ New seed lot" }),
-  ).toHaveAttribute("aria-expanded", "false");
-  expect(screen.getByRole("button", { name: "+ New seed lot" })).toHaveFocus();
+  expect(screen.getByRole("button", { name: "New seed lot" })).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
+  expect(screen.getByRole("button", { name: "New seed lot" })).toHaveFocus();
 });
 
 test("inventory preserves API ordering and composes active/history/all with useful text search", async () => {
@@ -480,9 +481,10 @@ test("selection shows complete details without internal identifiers and opens co
   expect(inventory).toHaveClass("seed-master");
   expect(detailPane).toHaveClass("seed-detail-pane");
   expect(inventory.parentElement).toHaveClass("seed-master-detail");
-  expect(
-    screen.getByRole("button", { name: "+ New seed lot" }),
-  ).toHaveAttribute("aria-expanded", "false");
+  expect(screen.getByRole("button", { name: "New seed lot" })).toHaveAttribute(
+    "aria-expanded",
+    "false",
+  );
   const selectedRow = screen.getByRole("button", {
     name: /Clitoria ternatea/,
   });
@@ -674,9 +676,7 @@ test("guided sowing leaves unknown source quantity unknown", async () => {
 test("layered help explains ambiguous SeedLot fields without adding chrome to Notes", async () => {
   mockApi(directoryHandler([]));
   const user = await openSeeds();
-  await user.click(
-    await screen.findByRole("button", { name: "+ New seed lot" }),
-  );
+  await user.click(await screen.findByRole("button", { name: "New seed lot" }));
 
   expect(
     screen.getByRole("combobox", { name: "Botanical identity" }),
@@ -752,11 +752,11 @@ test("minimal fast entry submits only known user information and uses authoritat
   );
   const user = await openSeeds();
   const newLot = await screen.findByRole("button", {
-    name: "+ New seed lot",
+    name: "New seed lot",
   });
   await user.click(newLot);
   expect(
-    screen.queryByRole("button", { name: "+ New seed lot" }),
+    screen.queryByRole("button", { name: "New seed lot" }),
   ).not.toBeInTheDocument();
   expect(
     screen.getByRole("combobox", { name: "Botanical identity" }),
@@ -793,7 +793,7 @@ test("minimal fast entry submits only known user information and uses authoritat
     acquisition_date: null,
   });
   expect(
-    screen.queryByRole("button", { name: "+ New seed lot" }),
+    screen.queryByRole("button", { name: "New seed lot" }),
   ).not.toBeInTheDocument();
   await waitFor(() => {
     expect(
@@ -832,9 +832,7 @@ test("full entry maps count, approximate g/mg quantity, Other source, references
     }),
   );
   const user = await openSeeds();
-  await user.click(
-    await screen.findByRole("button", { name: "+ New seed lot" }),
-  );
+  await user.click(await screen.findByRole("button", { name: "New seed lot" }));
   await chooseReference(user, "Botanical identity", "Clitoria ternatea");
   await user.type(screen.getByLabelText("Lot label"), "Fresh blue");
   await openSection(user, "Inventory");
@@ -942,9 +940,7 @@ test("milligram weight maps cleanly and leaving Other clears its detail", async 
     }),
   );
   const user = await openSeeds();
-  await user.click(
-    await screen.findByRole("button", { name: "+ New seed lot" }),
-  );
+  await user.click(await screen.findByRole("button", { name: "New seed lot" }));
   await chooseReference(user, "Botanical identity", "Clitoria ternatea");
   await openSection(user, "Inventory");
   await user.type(screen.getByLabelText("Quantity value"), "125");
@@ -1000,9 +996,7 @@ test("historical exhausted zero is valid while active zero is explained before s
     }),
   );
   const user = await openSeeds();
-  await user.click(
-    await screen.findByRole("button", { name: "+ New seed lot" }),
-  );
+  await user.click(await screen.findByRole("button", { name: "New seed lot" }));
   await chooseReference(user, "Botanical identity", "Clitoria ternatea");
   await openSection(user, "Inventory");
   await user.type(screen.getByLabelText("Quantity value"), "0");
@@ -1012,7 +1006,7 @@ test("historical exhausted zero is valid while active zero is explained before s
     "only valid for an exhausted lot",
   );
   expect(
-    screen.queryByRole("button", { name: "+ New seed lot" }),
+    screen.queryByRole("button", { name: "New seed lot" }),
   ).not.toBeInTheDocument();
   expect(screen.getByLabelText("Quantity value")).toHaveValue("0");
   expect(postCalls).toBe(0);
@@ -1124,9 +1118,7 @@ test("contextual creators auto-select references, preserve unsaved lot data, and
     throw new Error(`Unexpected request: ${path}`);
   });
   const user = await openSeeds();
-  await user.click(
-    await screen.findByRole("button", { name: "+ New seed lot" }),
-  );
+  await user.click(await screen.findByRole("button", { name: "New seed lot" }));
   await user.type(screen.getByLabelText("Lot label"), "Unsaved packet");
 
   const identityPicker = screen.getByRole("combobox", {
@@ -1212,9 +1204,7 @@ test("duplicate and failed contextual creation keep the seed form intact", async
     }),
   );
   const user = await openSeeds();
-  await user.click(
-    await screen.findByRole("button", { name: "+ New seed lot" }),
-  );
+  await user.click(await screen.findByRole("button", { name: "New seed lot" }));
   await user.type(screen.getByLabelText("Lot label"), "Still here");
   await user.type(
     screen.getByRole("combobox", { name: "Botanical identity" }),
@@ -1323,9 +1313,7 @@ test("load, validation, forbidden, update, network, and session-expiry failures 
     }),
   );
   const user = await openSeeds();
-  await user.click(
-    await screen.findByRole("button", { name: "+ New seed lot" }),
-  );
+  await user.click(await screen.findByRole("button", { name: "New seed lot" }));
   await chooseReference(user, "Botanical identity", "Clitoria ternatea");
   await openSection(user, "Seed details");
   await user.click(screen.getByRole("button", { name: "Add seed lot" }));
@@ -1403,9 +1391,7 @@ test("update and stale-reference failures retain the editable lot", async () => 
 test("reference combobox supports keyboard selection with accessible names", async () => {
   mockApi(directoryHandler([]));
   const user = await openSeeds();
-  await user.click(
-    await screen.findByRole("button", { name: "+ New seed lot" }),
-  );
+  await user.click(await screen.findByRole("button", { name: "New seed lot" }));
   const picker = screen.getByRole("combobox", { name: "Botanical identity" });
   expect(picker).toHaveAttribute("aria-controls");
   await user.type(picker, "Clit");
@@ -2413,7 +2399,7 @@ test("Details empty Sowings and Lineage are plain messages while Photos retains 
 test("Create labels expose the real required identity and keep optional acquisition facts optional", async () => {
   mockApi(directoryHandler([]));
   const user = await openSeeds();
-  await user.click(screen.getByRole("button", { name: "+ New seed lot" }));
+  await user.click(screen.getByRole("button", { name: "New seed lot" }));
   expect(
     screen.getByRole("combobox", { name: "Botanical identity" }),
   ).toBeRequired();
@@ -2457,14 +2443,12 @@ test("minimal Seed row retains quantity and moves storage context to Quick Previ
 test("New SeedLot Back keeps the Seeds parent and restores its create action", async () => {
   mockApi(directoryHandler([lot()]));
   const user = await openSeeds();
-  await user.click(screen.getByRole("button", { name: "+ New seed lot" }));
+  await user.click(screen.getByRole("button", { name: "New seed lot" }));
   expect(window.location.hash).toBe("#/seeds?action=create");
   await browserBack();
   expect(window.location.hash).toBe("#/seeds");
   await waitFor(() => {
-    expect(
-      screen.getByRole("button", { name: "+ New seed lot" }),
-    ).toHaveFocus();
+    expect(screen.getByRole("button", { name: "New seed lot" })).toHaveFocus();
   });
   expect(
     screen.queryByRole("heading", { name: "Add seed lot" }),

@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import {
   useEffect,
   useId,
@@ -209,7 +210,8 @@ export function CreationReversal({
                 <p role="status">Checking reversal eligibility…</p>
               )}
               {error && (
-                <button
+                <ActionButton
+                  icon="refresh"
                   type="button"
                   disabled={pending}
                   onClick={() => {
@@ -220,7 +222,7 @@ export function CreationReversal({
                   }}
                 >
                   Refresh eligibility
-                </button>
+                </ActionButton>
               )}
               {eligibility && (
                 <>

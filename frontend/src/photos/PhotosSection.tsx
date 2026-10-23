@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import "./compact-gallery.css";
 import { DetailEmptyState } from "../components/DetailEmptyState";
 import { FieldLabel } from "../components/FieldLabel";
@@ -786,7 +787,8 @@ export function PhotosSection({
                           ))}
                         {(photo.kind === "external" ||
                           !photo.deletion_pending) && (
-                          <button
+                          <ActionButton
+                            icon="edit"
                             className="button--secondary"
                             type="button"
                             onClick={() => {
@@ -795,7 +797,7 @@ export function PhotosSection({
                             }}
                           >
                             Edit details
-                          </button>
+                          </ActionButton>
                         )}
                         <button
                           className="button--danger"
@@ -840,7 +842,8 @@ export function PhotosSection({
                           ))}
                         {(photo.kind === "external" ||
                           !photo.deletion_pending) && (
-                          <button
+                          <ActionButton
+                            icon="edit"
                             className="button--secondary"
                             type="button"
                             onClick={() => {
@@ -849,7 +852,7 @@ export function PhotosSection({
                             }}
                           >
                             Edit details
-                          </button>
+                          </ActionButton>
                         )}
                         <button
                           className="button--danger"

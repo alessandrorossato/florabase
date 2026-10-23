@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import "../components/collection-page.css";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import "../components/collection-directory.css";
@@ -1531,7 +1532,8 @@ export function SowingScreen({
           actions={
             mobileDetail
               ? !editing && (
-                  <button
+                  <ActionButton
+                    icon="add"
                     type="button"
                     ref={creationTriggerRef}
                     data-collection-return="create"
@@ -1543,8 +1545,8 @@ export function SowingScreen({
                       else startCreate();
                     }}
                   >
-                    + New sowing
-                  </button>
+                    New sowing
+                  </ActionButton>
                 )
               : undefined
           }
@@ -1600,7 +1602,8 @@ export function SowingScreen({
                     : []),
                 ]}
                 actions={
-                  <button
+                  <ActionButton
+                    icon="add"
                     type="button"
                     ref={creationTriggerRef}
                     data-collection-return="create"
@@ -1612,8 +1615,8 @@ export function SowingScreen({
                       else startCreate();
                     }}
                   >
-                    + New sowing
-                  </button>
+                    New sowing
+                  </ActionButton>
                 }
               />
             )
@@ -1668,7 +1671,7 @@ export function SowingScreen({
                 <h4>No Sowings recorded yet</h4>
                 <p>
                   {references.seedLots.length
-                    ? "Use + New sowing to record the first attempt."
+                    ? "Use New sowing to record the first attempt."
                     : "Create a SeedLot from Seeds first."}
                 </p>
               </div>
@@ -1885,7 +1888,8 @@ export function SowingScreen({
                         role="group"
                         aria-label="Record maintenance"
                       >
-                        <button
+                        <ActionButton
+                          icon="edit"
                           type="button"
                           className="button--secondary"
                           onClick={(event) => {
@@ -1893,7 +1897,7 @@ export function SowingScreen({
                           }}
                         >
                           Edit
-                        </button>
+                        </ActionButton>
                         {selected.lifecycle !== "reversed" && (
                           <>
                             <a

@@ -1,3 +1,4 @@
+import { ActionButton } from "./Action";
 import type { MouseEventHandler, ReactNode, RefObject } from "react";
 import { PageHeader } from "./ReferenceUI";
 
@@ -116,13 +117,14 @@ export function DetailHeader({
           {primaryActions}
           {secondaryActions}
           {onEdit && (
-            <button
+            <ActionButton
+              icon="edit"
               className="button--secondary"
               type="button"
               onClick={onEdit}
             >
               {editLabel}
-            </button>
+            </ActionButton>
           )}
           {overflow}
         </div>

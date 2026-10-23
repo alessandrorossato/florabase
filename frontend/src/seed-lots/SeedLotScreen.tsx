@@ -1,3 +1,4 @@
+import { ActionButton, ActionLink } from "../components/Action";
 import "../components/collection-page.css";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import "../components/collection-directory.css";
@@ -333,9 +334,14 @@ function SeedLotPreview({
         <button className="button--secondary" type="button" onClick={onOpen}>
           Open details
         </button>
-        <button className="button--secondary" type="button" onClick={onEdit}>
+        <ActionButton
+          icon="edit"
+          className="button--secondary"
+          type="button"
+          onClick={onEdit}
+        >
           Edit
-        </button>
+        </ActionButton>
       </div>
     </QuickPreview>
   );
@@ -527,12 +533,13 @@ function Detail({
         editLabel="Edit seed lot"
         onEdit={onEdit}
         overflow={
-          <a
+          <ActionLink
+            icon="print"
             className="button-link button--secondary"
             href={labelComposerHref("seed-lot", lot.id)}
           >
             Print label
-          </a>
+          </ActionLink>
         }
       />
       {lot.lifecycle !== "active" && (
@@ -2010,7 +2017,8 @@ export function SeedLotScreen({
                     : []),
                 ]}
                 actions={
-                  <button
+                  <ActionButton
+                    icon="add"
                     type="button"
                     ref={creationTriggerRef}
                     data-collection-return="create"
@@ -2021,8 +2029,8 @@ export function SeedLotScreen({
                       else startCreate();
                     }}
                   >
-                    + New seed lot
-                  </button>
+                    New seed lot
+                  </ActionButton>
                 }
               />
             )

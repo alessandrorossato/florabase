@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import "../harvests/collection-visual.css";
 import { FieldLabel } from "../components/FieldLabel";
@@ -786,7 +787,8 @@ export function LocationScreen({
                   : []),
               ]}
               actions={
-                <button
+                <ActionButton
+                  icon="add"
                   type="button"
                   ref={creationTriggerRef}
                   aria-haspopup="dialog"
@@ -798,7 +800,7 @@ export function LocationScreen({
                   }}
                 >
                   New location
-                </button>
+                </ActionButton>
               }
             />
           }
@@ -914,7 +916,8 @@ export function LocationScreen({
                   >
                     Open details
                   </a>
-                  <button
+                  <ActionButton
+                    icon="edit"
                     type="button"
                     className="button--secondary"
                     onClick={() => {
@@ -923,7 +926,7 @@ export function LocationScreen({
                     }}
                   >
                     Edit
-                  </button>
+                  </ActionButton>
                   {!selected.retired_at && (
                     <button
                       type="button"

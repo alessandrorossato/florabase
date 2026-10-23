@@ -1,0 +1,279 @@
+[
+  {
+    "appearance": "dark",
+    "heading": [
+      "Overview▾",
+      "Collection▾",
+      "Activity▾",
+      "Explore▾",
+      "Sourcing▾",
+      "Sowings"
+    ],
+    "height": 844,
+    "palette": "botanical",
+    "route": "#/sowings",
+    "scrollWidth": 1425,
+    "width": 1440,
+    "file": "family-sowings-botanical-dark-1440.png"
+  },
+  {
+    "appearance": "dark",
+    "heading": [
+      "Overview▾",
+      "Collection▾",
+      "Activity▾",
+      "Explore▾",
+      "Sourcing▾",
+      "Plants"
+    ],
+    "height": 844,
+    "palette": "botanical",
+    "route": "#/plants",
+    "scrollWidth": 1425,
+    "width": 1440,
+    "file": "family-plants-botanical-dark-1440.png",
+    "clientWidth": 1425,
+    "records": 24
+  },
+  {
+    "appearance": "dark",
+    "heading": [
+      "Overview▾",
+      "Collection▾",
+      "Activity▾",
+      "Explore▾",
+      "Sourcing▾",
+      "Plants"
+    ],
+    "height": 844,
+    "palette": "botanical",
+    "route": "#/plants?type=group",
+    "scrollWidth": 1425,
+    "width": 1440,
+    "file": "family-plants-type-group-botanical-dark-1440.png",
+    "filter": "Record type: Groups; 7 populated records",
+    "clientWidth": 1425,
+    "records": 7
+  },
+  {
+    "appearance": "dark",
+    "heading": [
+      "Overview▾",
+      "Collection▾",
+      "Activity▾",
+      "Explore▾",
+      "Sourcing▾",
+      "Harvests"
+    ],
+    "height": 844,
+    "palette": "botanical",
+    "route": "#/harvests",
+    "scrollWidth": 1440,
+    "width": 1440,
+    "file": "family-harvests-botanical-dark-1440.png"
+  },
+  {
+    "appearance": "dark",
+    "heading": [
+      "Overview▾",
+      "Collection▾",
+      "Activity▾",
+      "Explore▾",
+      "Sourcing▾",
+      "Harvests"
+    ],
+    "height": 844,
+    "palette": "botanical",
+    "route": "#/harvests?tab=stored-material",
+    "scrollWidth": 1425,
+    "width": 1440,
+    "file": "family-harvests-tab-stored-material-botanical-dark-1440.png"
+  },
+  {
+    "appearance": "dark",
+    "heading": [
+      "Overview▾",
+      "Collection▾",
+      "Activity▾",
+      "Explore▾",
+      "Sourcing▾",
+      "Locations"
+    ],
+    "height": 844,
+    "palette": "botanical",
+    "route": "#/locations",
+    "scrollWidth": 1440,
+    "width": 1440,
+    "file": "family-locations-botanical-dark-1440.png"
+  },
+  {
+    "appearance": "dark",
+    "heading": [
+      "Overview▾",
+      "Collection▾",
+      "Activity▾",
+      "Explore▾",
+      "Sourcing▾",
+      "Journal"
+    ],
+    "height": 844,
+    "palette": "botanical",
+    "route": "#/events",
+    "scrollWidth": 1425,
+    "width": 1440,
+    "file": "family-events-botanical-dark-1440.png"
+  },
+  {
+    "appearance": "dark",
+    "heading": [
+      "Overview▾",
+      "Collection▾",
+      "Activity▾",
+      "Explore▾",
+      "Sourcing▾",
+      "History"
+    ],
+    "height": 844,
+    "palette": "botanical",
+    "route": "#/history",
+    "scrollWidth": 1425,
+    "width": 1440,
+    "file": "family-history-botanical-dark-1440.png"
+  },
+  {
+    "appearance": "dark",
+    "heading": [
+      "Overview▾",
+      "Collection▾",
+      "Activity▾",
+      "Explore▾",
+      "Sourcing▾",
+      "Schedule"
+    ],
+    "height": 844,
+    "palette": "botanical",
+    "route": "#/schedule",
+    "scrollWidth": 1425,
+    "width": 1440,
+    "file": "family-schedule-botanical-dark-1440.png"
+  },
+  {
+    "appearance": "dark",
+    "heading": [
+      "Overview▾",
+      "Collection▾",
+      "Activity▾",
+      "Explore▾",
+      "Sourcing▾",
+      "Botanical identities"
+    ],
+    "height": 844,
+    "palette": "botanical",
+    "route": "#/identities",
+    "scrollWidth": 1425,
+    "width": 1440,
+    "file": "family-identities-botanical-dark-1440.png"
+  },
+  {
+    "appearance": "dark",
+    "heading": [
+      "Overview▾",
+      "Collection▾",
+      "Activity▾",
+      "Explore▾",
+      "Sourcing▾",
+      "Collection taxonomy"
+    ],
+    "height": 844,
+    "palette": "botanical",
+    "route": "#/taxonomy",
+    "scrollWidth": 1425,
+    "width": 1440,
+    "file": "family-taxonomy-botanical-dark-1440.png"
+  },
+  {
+    "appearance": "dark",
+    "heading": [
+      "Overview▾",
+      "Collection▾",
+      "Activity▾",
+      "Explore▾",
+      "Sourcing▾",
+      "Geography"
+    ],
+    "height": 844,
+    "palette": "botanical",
+    "route": "#/geography",
+    "scrollWidth": 1440,
+    "width": 1440,
+    "file": "family-geography-botanical-dark-1440.png"
+  },
+  {
+    "appearance": "dark",
+    "heading": [
+      "Overview▾",
+      "Collection▾",
+      "Activity▾",
+      "Explore▾",
+      "Sourcing▾",
+      "Suppliers"
+    ],
+    "height": 844,
+    "palette": "botanical",
+    "route": "#/suppliers",
+    "scrollWidth": 1425,
+    "width": 1440,
+    "file": "family-suppliers-botanical-dark-1440.png"
+  },
+  {
+    "appearance": "dark",
+    "heading": [
+      "Overview▾",
+      "Collection▾",
+      "Activity▾",
+      "Explore▾",
+      "Sourcing▾",
+      "Orders"
+    ],
+    "height": 844,
+    "palette": "botanical",
+    "route": "#/orders",
+    "scrollWidth": 1425,
+    "width": 1440,
+    "file": "family-orders-botanical-dark-1440.png"
+  },
+  {
+    "appearance": "dark",
+    "heading": [
+      "Overview▾",
+      "Collection▾",
+      "Activity▾",
+      "Explore▾",
+      "Sourcing▾",
+      "Media"
+    ],
+    "height": 844,
+    "palette": "botanical",
+    "route": "#/media",
+    "scrollWidth": 1425,
+    "width": 1440,
+    "file": "family-media-botanical-dark-1440.png"
+  },
+  {
+    "appearance": "dark",
+    "heading": [
+      "Overview▾",
+      "Collection▾",
+      "Activity▾",
+      "Explore▾",
+      "Sourcing▾",
+      "Labels"
+    ],
+    "height": 844,
+    "palette": "botanical",
+    "route": "#/labels",
+    "scrollWidth": 1425,
+    "width": 1440,
+    "file": "family-labels-botanical-dark-1440.png"
+  }
+]

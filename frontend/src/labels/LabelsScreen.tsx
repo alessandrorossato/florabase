@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -209,7 +210,8 @@ export function LabelsScreen({
         eyebrow="Tools"
         description="Prepare collection material for print."
         tools={
-          <button
+          <ActionButton
+            icon="print"
             type="button"
             disabled={!canPrint}
             onClick={() => {
@@ -224,7 +226,7 @@ export function LabelsScreen({
             }}
           >
             Print
-          </button>
+          </ActionButton>
         }
       />
       {configuration.status === "loading" ? (
@@ -247,7 +249,8 @@ export function LabelsScreen({
               ? `QR destination: ${configuration.baseUrl}`
               : "QR destination is not configured. Set a public URL before printing."}
           </span>
-          <button
+          <ActionButton
+            icon="edit"
             type="button"
             className="button--secondary"
             aria-label="Edit QR destination"
@@ -256,7 +259,7 @@ export function LabelsScreen({
             }}
           >
             Edit
-          </button>
+          </ActionButton>
         </div>
       )}
       {editingQr && (

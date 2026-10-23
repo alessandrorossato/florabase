@@ -350,7 +350,7 @@ test("navigation exposes loading, empty, and missing-SeedLot states", async () =
   expect(
     await screen.findByRole("heading", { name: "No Sowings recorded yet" }),
   ).toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "+ New sowing" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "New sowing" })).toBeDisabled();
   expect(screen.getByText(/SeedLot is required/)).toBeInTheDocument();
 });
 
@@ -363,7 +363,7 @@ test("Dashboard New sowing route opens the existing form with SeedLot selection"
     await screen.findByRole("heading", { name: "Record Sowing" }),
   ).toBeInTheDocument();
   expect(
-    screen.queryByRole("button", { name: "+ New sowing" }),
+    screen.queryByRole("button", { name: "New sowing" }),
   ).not.toBeInTheDocument();
   expect(screen.getByLabelText("SeedLot")).toBeInTheDocument();
 });
@@ -606,11 +606,11 @@ test("minimal creation requires only an understandable SeedLot choice", async ()
     }),
   );
   const user = await openSowings();
-  const trigger = await screen.findByRole("button", { name: "+ New sowing" });
+  const trigger = await screen.findByRole("button", { name: "New sowing" });
   expect(trigger).toHaveAttribute("aria-expanded", "false");
   await user.click(trigger);
   expect(
-    screen.queryByRole("button", { name: "+ New sowing" }),
+    screen.queryByRole("button", { name: "New sowing" }),
   ).not.toBeInTheDocument();
   const selector = screen.getByLabelText("SeedLot");
   expect(
@@ -662,7 +662,7 @@ test("full creation preserves partial dates, quantity kinds, germination, locati
     }),
   );
   const user = await openSowings();
-  await user.click(await screen.findByRole("button", { name: "+ New sowing" }));
+  await user.click(await screen.findByRole("button", { name: "New sowing" }));
   await openFormSection(user, "Essentials");
   await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
   await openFormSection(user, "Essentials");
@@ -761,9 +761,7 @@ test.each([
       }),
     );
     const user = await openSowings();
-    await user.click(
-      await screen.findByRole("button", { name: "+ New sowing" }),
-    );
+    await user.click(await screen.findByRole("button", { name: "New sowing" }));
     await openFormSection(user, "Essentials");
     await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
     await openFormSection(user, "Essentials");
@@ -797,7 +795,7 @@ test("germination and temperature validation applies only to trustworthy bounds"
     }),
   );
   const user = await openSowings();
-  await user.click(await screen.findByRole("button", { name: "+ New sowing" }));
+  await user.click(await screen.findByRole("button", { name: "New sowing" }));
   await openFormSection(user, "Essentials");
   await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
   await openFormSection(user, "Material & location");
@@ -849,7 +847,7 @@ test("germination and temperature validation applies only to trustworthy bounds"
   );
   const weightUser = await openSowings();
   await weightUser.click(
-    await screen.findByRole("button", { name: "+ New sowing" }),
+    await screen.findByRole("button", { name: "New sowing" }),
   );
   await openFormSection(weightUser, "Essentials");
   await weightUser.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
@@ -948,7 +946,7 @@ test("validation, forbidden, and expired-session API failures remain explicit", 
     }),
   );
   const user = await openSowings();
-  await user.click(await screen.findByRole("button", { name: "+ New sowing" }));
+  await user.click(await screen.findByRole("button", { name: "New sowing" }));
   await openFormSection(user, "Essentials");
   await user.selectOptions(screen.getByLabelText("SeedLot"), seedLotId);
   await openFormSection(user, "Notes");
@@ -1421,22 +1419,19 @@ test.each([false, true])(
         await screen.findByRole("button", { name: "Quick add" }),
       );
       await user.click(screen.getByRole("link", { name: "New sowing" }));
-    } else
-      await user.click(screen.getByRole("button", { name: "+ New sowing" }));
+    } else await user.click(screen.getByRole("button", { name: "New sowing" }));
     await screen.findByRole("heading", { name: "Record Sowing" });
     expect(window.location.hash).toBe("#/sowings?action=create");
     await browserBack();
     expect(window.location.hash).toBe("#/sowings");
     expect(
-      await screen.findByRole("button", { name: "+ New sowing" }),
+      await screen.findByRole("button", { name: "New sowing" }),
     ).toBeVisible();
     expect(
       screen.queryByRole("heading", { name: "Record Sowing" }),
     ).not.toBeInTheDocument();
     await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: "+ New sowing" }),
-      ).toHaveFocus();
+      expect(screen.getByRole("button", { name: "New sowing" })).toHaveFocus();
     });
   },
 );

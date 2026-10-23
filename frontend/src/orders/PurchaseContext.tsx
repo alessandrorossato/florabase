@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import "./orders.css";
 import { useEffect, useState } from "react";
 import { TaskDialog } from "../components/TaskDialog";
@@ -277,7 +278,8 @@ export function PurchaseContextDialog({
           Cancel
         </button>
         {error && (
-          <button
+          <ActionButton
+            icon="refresh"
             type="button"
             disabled={pending}
             onClick={() => {
@@ -286,7 +288,7 @@ export function PurchaseContextDialog({
             }}
           >
             Refresh purchase preview
-          </button>
+          </ActionButton>
         )}
       </div>
     </TaskDialog>

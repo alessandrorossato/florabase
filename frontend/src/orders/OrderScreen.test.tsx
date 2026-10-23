@@ -213,7 +213,7 @@ test("new Order keeps unknown date and absent price, then sends the exact suppli
   const user = userEvent.setup();
   mount();
   await orderRow();
-  const create = screen.getByRole("button", { name: "+ New Order" });
+  const create = screen.getByRole("button", { name: "New Order" });
   await user.click(create);
   const dialog = screen.getByRole("dialog", { name: "New Order" });
   expect(dialog.querySelector(".order-form__grid")).toBeInTheDocument();
@@ -265,7 +265,7 @@ test("pristine backdrop click closes New Order and restores focus without confir
   const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
   mount();
   await orderRow();
-  const create = screen.getByRole("button", { name: "+ New Order" });
+  const create = screen.getByRole("button", { name: "New Order" });
   await user.click(create);
   const dialog = screen.getByRole("dialog", { name: "New Order" });
   fireEvent.click(dialog, { clientX: 10, clientY: 10 });
@@ -282,7 +282,7 @@ test("dirty New Order protects backdrop, Escape and Cancel; inside clicks never 
   const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
   mount();
   await orderRow();
-  await user.click(screen.getByRole("button", { name: "+ New Order" }));
+  await user.click(screen.getByRole("button", { name: "New Order" }));
   const dialog = screen.getByRole("dialog", { name: "New Order" });
   const reference = within(dialog).getByLabelText("Order reference");
   await user.type(reference, "DIRTY");
@@ -314,7 +314,7 @@ test("New Order dropdown clicks stay inside; Escape closes the picker before the
   const confirm = vi.spyOn(window, "confirm").mockReturnValue(true);
   mount();
   await orderRow();
-  await user.click(screen.getByRole("button", { name: "+ New Order" }));
+  await user.click(screen.getByRole("button", { name: "New Order" }));
   const dialog = screen.getByRole("dialog", { name: "New Order" });
   const supplierControl = within(dialog).getByRole("combobox", {
     name: "Supplier",

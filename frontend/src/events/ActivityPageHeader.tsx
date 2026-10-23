@@ -1,6 +1,7 @@
+import { ActionButton } from "../components/Action";
 import { useId, useState, type ReactNode } from "react";
 import { TaskDialog } from "../components/TaskDialog";
-import { PageHeader } from "../components/ReferenceUI";
+import { PageHeader, DirectorySearch } from "../components/ReferenceUI";
 import "../collection/dashboard.css";
 
 export function ActivityPageHeader({
@@ -43,22 +44,18 @@ export function ActivityPageHeader({
             role="group"
             aria-label={`${name} toolbar`}
           >
-            <div className="field dashboard-search-field">
-              <label className="sr-only" htmlFor={`${id}-search`}>
-                Search {name}
-              </label>
-              <input
-                id={`${id}-search`}
-                type="search"
-                maxLength={200}
-                placeholder={`Search ${name.toLowerCase()}…`}
-                value={query}
-                onChange={(event) => {
-                  onSearch(event.target.value);
-                }}
-              />
-            </div>
-            <button
+            <DirectorySearch
+              id={`${id}-search`}
+              label={`Search ${name}`}
+              placeholder={`Search ${name.toLowerCase()}…`}
+              value={query}
+              onChange={onSearch}
+              maxLength={200}
+              hideLabel
+              className="dashboard-search-field"
+            />
+            <ActionButton
+              icon="filter"
               type="button"
               className="button--secondary"
               aria-haspopup="dialog"
@@ -69,7 +66,7 @@ export function ActivityPageHeader({
               }}
             >
               Filters{filterCount ? ` (${String(filterCount)})` : ""}
-            </button>
+            </ActionButton>
             {savedViews}
             {primaryAction}
           </div>
@@ -103,7 +100,8 @@ export function ActivityPageHeader({
         >
           <div className="section-heading">
             <h3>Filters</h3>
-            <button
+            <ActionButton
+              icon="close"
               type="button"
               className="button--quiet"
               onClick={() => {
@@ -111,7 +109,7 @@ export function ActivityPageHeader({
               }}
             >
               Close
-            </button>
+            </ActionButton>
           </div>
           <div className="dashboard-drawer-fields">{children}</div>
           <div className="dashboard-drawer-actions">
@@ -124,14 +122,15 @@ export function ActivityPageHeader({
                 Reset filters
               </button>
             )}
-            <button
+            <ActionButton
+              variant="secondary"
               type="button"
               onClick={() => {
                 setOpen(false);
               }}
             >
               Done
-            </button>
+            </ActionButton>
           </div>
         </TaskDialog>
       )}

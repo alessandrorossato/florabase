@@ -216,13 +216,33 @@ protection and return focus. Save updates QR in place without losing the batch o
 
 Primary navigation remains Overview, Collection, Activity, Explore and Sourcing. Maps is a plain
 subgroup with three children; plant groups and Stored material stay local modes. The footer places
-signed-in identity above labelled gear Settings and a quiet icon-only Theme preview cycler, then
+signed-in identity above labelled sliders Settings and a quiet appearance cycler, then
 separate Sign out. Hidden/collapsed desktop navigation reopens access; mobile More retains the same
-controls and shared preview state. Modified-click links and existing route semantics remain.
+controls and shared appearance state. Modified-click links and existing route semantics remain.
 
-Theme cycles monitor → sun → moon → monitor, updating only SVG/title/accessibility text. Every
-state explicitly says switching is not enabled. There is no popover, visible explanatory paragraph,
-color/token change, backend write or theme persistence. Actual theming remains a later increment.
+The appearance control cycles System → Light → Dark → System and applies immediately, preserving
+the selected palette. Monitor/sun/moon, accessible name and shared Tooltip describe the current
+preference (including the effective System mode) and next action. Settings → Appearance offers
+Botanical, Herbarium and Mineral independently from System/Light/Dark, using labelled native radios
+and compact previews. One browser-local store synchronizes both footer controls, Settings, reloads,
+authentication transitions, operating-system changes and other tabs. There is no backend write.
+CONTROLS-001 supplies one local SVG vocabulary, shared action adapters and accessible Tooltip.
+Settings uses horizontal sliders, distinct from the funnel Filters and monitor/sun/moon Appearance.
+See [THEMES handoff](themes-001-handoff.md) and [Controls handoff](controls-001-handoff.md).
+
+Secondary icon buttons keep explicit accessible names and concise hover/focus descriptions. Labels
+return at phone/tablet widths and on coarse/no-hover devices; mobile Appearance is always labelled.
+Filters and Saved views stay labelled at every width; supported active-filter badges count restricting
+dimensions. Primary creation, Save and destructive/domain confirmations retain immediately readable
+text. Shared actions have 44px minimum targets, 18px decorative icons (20px in the shell), 1.75 strokes
+and semantic theme colors. Native links, refs, disabled states and existing domain callbacks remain.
+
+Tooltip appears after 500ms fine-pointer hover or immediately on keyboard focus-visible, allows 150ms
+pointer transfer, and dismisses on activation, blur/leave or Escape without moving focus. It supplements
+the trigger name through `aria-describedby`; it is not a menu or essential-only help. Manual popovers
+and dialog-local fixed hosts avoid clipping; placement flips/shifts within the visual viewport.
+Escape dismisses Tooltip, then menu, then dialog. No motion or additional keyboard stop is introduced.
+See [Controls contract](controls-001-design-contract.md) for the canonical action matrix and exclusions.
 
 ## Directory and task normalization
 
@@ -236,11 +256,11 @@ use a native right drawer with live application, removable dimension chips, Rese
 reset clears every dimension together while preserving search. No unsupported filter or Saved View
 capability is added for symmetry.
 
-A directory is one white grouped surface with row dividers and a subtle selected inset edge.
+A directory is one grouped semantic surface with row dividers and a subtle selected inset edge.
 Rich Media summaries retain thumbnail cards; maps retain their analytical area. Directories and
 reference workspaces use document flow; the desktop sidebar remains sticky and its destination list
 scrolls independently. A preview may remain sticky with its own bounded height. Important task forms
-use one white surface with a 56rem default maximum (60rem for the proven SeedLot editor), existing semantic sections and tabs, two columns where
+use one semantic surface with a 56rem default maximum (60rem for the proven SeedLot editor), existing semantic sections and tabs, two columns where
 reading order permits and one column on mobile. Date/quantity/currency controls use narrower widths.
 Edit is a secondary action; Save/Create/Complete remain primary, and destructive intent uses danger.
 
@@ -266,8 +286,11 @@ surfaces are semantic tokens. Physical label geometry and print typography remai
 Native dialog focus excludes inactive hidden panels, disabled fieldsets, inert descendants and
 negative tab stops. Sign-in and recovery use the same quiet surfaces and type hierarchy.
 
-Actual themes remain deferred. Legacy capability CSS and third-party map/tile colors still require a
-separate theme audit; tokenizing these shared surfaces does not claim complete dark-mode support.
+THEMES-001 centralizes six approved semantic color sets in `styles/tokens.css`; dimensions and type
+remain shared. Capability colors consume these roles. Map comparison identities and provider density
+ramps retain their scientific meaning; third-party imagery and botanical photographs are not inverted.
+Print explicitly uses white paper and black text/QR with existing physical dimensions. Independent
+visual/accessibility acceptance and later Origins integration remain bounded as recorded in the handoff.
 
 ## SeedLot family refinement
 

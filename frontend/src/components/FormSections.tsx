@@ -1,3 +1,4 @@
+import { ActionButton } from "./Action";
 import {
   useCallback,
   useEffect,
@@ -158,7 +159,8 @@ export function FormSections({
       <div className="form-section-footer">
         <div className="form-section-footer__return">
           {mode === "create" && index > 0 && (
-            <button
+            <ActionButton
+              icon="back"
               type="button"
               className="button--secondary"
               disabled={disabled}
@@ -167,7 +169,7 @@ export function FormSections({
               }}
             >
               Back
-            </button>
+            </ActionButton>
           )}
           {cancel}
         </div>

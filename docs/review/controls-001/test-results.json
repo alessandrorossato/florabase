@@ -1,0 +1,28 @@
+{
+  "full": {
+    "numTotalTests": 859,
+    "numPassedTests": 859,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "numTotalTestSuites": 91,
+    "success": true
+  },
+  "postVisualFocused": {
+    "numTotalTests": 63,
+    "numPassedTests": 63,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "numTotalTestSuites": 10,
+    "success": true
+  },
+  "scopeNote": "Full 859-test suite passed before final Hide-navigation/Quick-add visual refinements. Post-refinement focused 63 tests passed; all 82 App cases passed in the preceding post-navigation run. No canonical gate or verified receipt is claimed.",
+  "finalStaticChecks": {
+    "typecheck": "passed",
+    "eslint": "passed, zero warnings",
+    "format": "passed",
+    "productionBuild": "passed, 219 Vite modules",
+    "featureGraph": "110 valid",
+    "whitespace": "passed",
+    "canonicalFullGate": "not run; explicitly excluded"
+  }
+}

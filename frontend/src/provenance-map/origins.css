@@ -315,3 +315,17 @@
     display: none;
   }
 }
+
+/* Leaflet site descriptions inherit the same six-theme roles as workspace tooltips. */
+.provenance-map .leaflet-tooltip {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border-strong);
+  box-shadow: var(--elevation-overlay);
+}
+.provenance-map .leaflet-tooltip-top::before {
+  border-top-color: var(--border-strong);
+}
+.provenance-map .leaflet-tooltip-bottom::before {
+  border-bottom-color: var(--border-strong);
+}

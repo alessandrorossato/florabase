@@ -1,3 +1,4 @@
+import { ActionLink } from "../components/Action";
 import { useRef, useState } from "react";
 import type { ProvenanceMapRecord, ProvenanceMapSite } from "./api";
 import {
@@ -190,7 +191,9 @@ export function OriginInspector({
               {selected.usage.seed_lots} SeedLots · {selected.usage.plants}{" "}
               Plants · {selected.usage.plant_groups} PlantGroups
             </p>
-            <a href={`#/geography/${selected.id}`}>Manage provenance site</a>
+            <ActionLink icon="edit" href={`#/geography/${selected.id}`}>
+              Manage provenance site
+            </ActionLink>
             {selected.records.length === 0 && (
               <p className="notice">
                 No directly linked eligible collection records. This site still

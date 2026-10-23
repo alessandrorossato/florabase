@@ -1,0 +1,15 @@
+{
+  "appearance": "dark",
+  "checkedRadios": [
+    {
+      "label": "AaBotanicalSelected",
+      "name": "palette"
+    },
+    {
+      "label": "System",
+      "name": "appearance"
+    }
+  ],
+  "footer": "Appearance: System (Dark), Botanical. Switch to Light.",
+  "palette": "botanical"
+}

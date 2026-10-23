@@ -83,9 +83,7 @@ test("read, save normalized QR destination with CSRF, remount persisted value an
   expect(input).toHaveValue("");
   await user.type(input, "https://FLORA.example/");
   await user.click(screen.getByRole("button", { name: "Save settings" }));
-  expect(await screen.findByRole("status")).toHaveTextContent(
-    "Application settings saved",
-  );
+  expect(await screen.findByText("Application settings saved.")).toBeVisible();
   expect(input).toHaveValue("https://flora.example");
   expect(
     new Headers(
@@ -254,8 +252,25 @@ test("direct QR Settings navigation focuses the General field and keeps Tools av
     json({ public_qr_base_url: null, default_label_preset: "medium" }),
   );
   settings(true);
-  expect(
-    await screen.findByRole("textbox", { name: "Public / QR base URL" }),
-  ).toHaveFocus();
+  const field = await screen.findByRole("textbox", {
+    name: "Public / QR base URL",
+  });
+  await waitFor(() => {
+    expect(field).toHaveFocus();
+  });
   expect(screen.getByRole("link", { name: "Labels" })).toBeVisible();
+});
+
+test("local Appearance remains usable when server-owned General settings cannot load", async () => {
+  const fetch = vi.spyOn(globalThis, "fetch").mockResolvedValue(json({}, 500));
+  settings();
+  await screen.findByRole("alert");
+  const initialCalls = fetch.mock.calls.length;
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("radio", { name: "Herbarium" }));
+  await user.click(screen.getByRole("radio", { name: "Dark" }));
+  expect(document.documentElement).toHaveAttribute("data-palette", "herbarium");
+  expect(document.documentElement).toHaveAttribute("data-appearance", "dark");
+  expect(fetch).toHaveBeenCalledTimes(initialCalls);
+  expect(screen.getByRole("radio", { name: "Dark" })).toHaveFocus();
 });

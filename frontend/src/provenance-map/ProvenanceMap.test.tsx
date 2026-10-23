@@ -290,3 +290,51 @@ test("reduced motion disables Leaflet zoom, marker, fade and inertia animations"
     }),
   );
 });
+
+test.each([false, true])(
+  "six-theme switching preserves Origins selection, camera and basemap consent (online=%s)",
+  async (online) => {
+    mapRuntimeConfig.onlineConfigured = true;
+    render(
+      <ProvenanceMap sites={[site]} selectedId="site" onSelect={vi.fn()} />,
+    );
+    await waitFor(() => {
+      expect(mocks.map.attributionControl.addAttribution).toHaveBeenCalled();
+    });
+    if (online)
+      fireEvent.click(screen.getByRole("checkbox", { name: "Online basemap" }));
+    const fits = mocks.map.fitBounds.mock.calls.length;
+    const removals = mocks.layer.remove.mock.calls.length;
+    const fetch = vi.spyOn(globalThis, "fetch");
+    for (const palette of ["botanical", "herbarium", "mineral"] as const) {
+      for (const appearance of ["light", "dark"] as const) {
+        act(() => {
+          window.florabaseAppearance.setPalette(palette);
+          window.florabaseAppearance.setAppearance(appearance);
+        });
+        expect(mocks.createMap).toHaveBeenCalledTimes(1);
+        expect(mocks.tileLayer).toHaveBeenCalledTimes(online ? 1 : 0);
+        expect(mocks.map.fitBounds).toHaveBeenCalledTimes(fits);
+        expect(mocks.layer.remove).toHaveBeenCalledTimes(removals);
+        expect(mocks.map.remove).not.toHaveBeenCalled();
+        expect(mocks.markers).toHaveLength(1);
+        expect(mocks.markers[0].element).toHaveAttribute(
+          "aria-pressed",
+          "true",
+        );
+        expect(
+          screen.getByRole("checkbox", { name: "Online basemap" }),
+        ).toHaveProperty("checked", online);
+        expect(fetch).not.toHaveBeenCalled();
+      }
+    }
+    expect(mocks.circle).toHaveBeenCalledWith(
+      [38.166667, 13.35],
+      expect.objectContaining({
+        radius: 25.5,
+        color: "var(--primary)",
+        interactive: false,
+      }),
+    );
+  },
+);

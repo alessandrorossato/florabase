@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import { DetailEmptyState } from "../components/DetailEmptyState";
 import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
@@ -312,7 +313,8 @@ export function GerminationSection({ sowingId }: { sowingId: string }) {
                   <td data-label="Actions" className="germination-actions">
                     {canEdit && (
                       <>
-                        <button
+                        <ActionButton
+                          icon="edit"
                           type="button"
                           className="button--secondary"
                           onClick={(event) => {
@@ -323,7 +325,7 @@ export function GerminationSection({ sowingId }: { sowingId: string }) {
                           }}
                         >
                           Edit
-                        </button>
+                        </ActionButton>
                         <button
                           type="button"
                           className="button--secondary"

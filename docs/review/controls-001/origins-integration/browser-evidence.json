@@ -1,0 +1,110 @@
+[
+  {
+    "appearance": "light",
+    "height": 720,
+    "manageLabel": "Manage provenance site",
+    "mapTransform": "transform: translate3d(0px, 0px, 0px);",
+    "markers": 12,
+    "palette": "botanical",
+    "scrollWidth": 1265,
+    "selected": "Review v5 synthetic origin 02 · World → Europe → Southern Europe → Italy · 2 linked records",
+    "tiles": 0,
+    "tooltip": {
+      "background": "rgb(255, 255, 255)",
+      "border": "rgb(124, 137, 128)",
+      "color": "rgb(30, 38, 33)"
+    },
+    "width": 1280,
+    "file": "botanical-light.jpg"
+  },
+  {
+    "appearance": "dark",
+    "height": 720,
+    "manageLabel": "Manage provenance site",
+    "mapTransform": "transform: translate3d(0px, 0px, 0px);",
+    "markers": 12,
+    "palette": "botanical",
+    "scrollWidth": 1265,
+    "selected": "Review v5 synthetic origin 02 · World → Europe → Southern Europe → Italy · 2 linked records",
+    "tiles": 0,
+    "tooltip": {
+      "background": "rgb(29, 39, 33)",
+      "border": "rgb(130, 151, 138)",
+      "color": "rgb(229, 236, 230)"
+    },
+    "width": 1280,
+    "file": "botanical-dark.jpg"
+  },
+  {
+    "appearance": "light",
+    "height": 720,
+    "manageLabel": "Manage provenance site",
+    "mapTransform": "transform: translate3d(0px, 0px, 0px);",
+    "markers": 12,
+    "palette": "herbarium",
+    "scrollWidth": 1265,
+    "selected": "Review v5 synthetic origin 02 · World → Europe → Southern Europe → Italy · 2 linked records",
+    "tiles": 0,
+    "tooltip": {
+      "background": "rgb(255, 253, 248)",
+      "border": "rgb(130, 121, 103)",
+      "color": "rgb(43, 41, 33)"
+    },
+    "width": 1280,
+    "file": "herbarium-light.jpg"
+  },
+  {
+    "appearance": "dark",
+    "height": 720,
+    "manageLabel": "Manage provenance site",
+    "mapTransform": "transform: translate3d(0px, 0px, 0px);",
+    "markers": 12,
+    "palette": "herbarium",
+    "scrollWidth": 1265,
+    "selected": "Review v5 synthetic origin 02 · World → Europe → Southern Europe → Italy · 2 linked records",
+    "tiles": 0,
+    "tooltip": {
+      "background": "rgb(40, 37, 31)",
+      "border": "rgb(156, 145, 121)",
+      "color": "rgb(238, 233, 221)"
+    },
+    "width": 1280,
+    "file": "herbarium-dark.jpg"
+  },
+  {
+    "appearance": "light",
+    "height": 720,
+    "manageLabel": "Manage provenance site",
+    "mapTransform": "transform: translate3d(0px, 0px, 0px);",
+    "markers": 12,
+    "palette": "mineral",
+    "scrollWidth": 1265,
+    "selected": "Review v5 synthetic origin 02 · World → Europe → Southern Europe → Italy · 2 linked records",
+    "tiles": 0,
+    "tooltip": {
+      "background": "rgb(252, 253, 255)",
+      "border": "rgb(109, 127, 140)",
+      "color": "rgb(32, 42, 51)"
+    },
+    "width": 1280,
+    "file": "mineral-light.jpg"
+  },
+  {
+    "appearance": "dark",
+    "height": 720,
+    "manageLabel": "Manage provenance site",
+    "mapTransform": "transform: translate3d(0px, 0px, 0px);",
+    "markers": 12,
+    "palette": "mineral",
+    "scrollWidth": 1265,
+    "selected": "Review v5 synthetic origin 02 · World → Europe → Southern Europe → Italy · 2 linked records",
+    "tiles": 0,
+    "tooltip": {
+      "background": "rgb(29, 40, 50)",
+      "border": "rgb(130, 153, 174)",
+      "color": "rgb(227, 235, 243)"
+    },
+    "width": 1280,
+    "file": "mineral-dark.jpg"
+  }
+]

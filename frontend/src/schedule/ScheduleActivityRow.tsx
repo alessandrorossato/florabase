@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import { ScheduleTargetLabel } from "./ScheduleTargetLabel";
 import { OverflowMenu } from "../components/ReferenceUI";
 import type { Activity } from "./api";
@@ -85,14 +86,15 @@ export function ScheduleActivityRow({
               className="schedule-row-menu"
               aria-label={`Activity actions for ${item.title}`}
             >
-              <button
+              <ActionButton
+                icon="edit"
                 type="button"
                 onClick={() => {
                   onAction("edit", item);
                 }}
               >
                 Edit / reschedule
-              </button>
+              </ActionButton>
               <button
                 type="button"
                 className="schedule-cancel-action"

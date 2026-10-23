@@ -1,0 +1,19 @@
+{
+  "success": true,
+  "numTotalTests": 850,
+  "numPassedTests": 850,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "files": 74,
+  "command": "pnpm test --reporter=json --outputFile=/app/build/themes-final-results.json",
+  "assertions_or_timeouts_weakened": false,
+  "typecheck": "passed",
+  "eslint": "passed, zero warnings",
+  "prettier": "passed",
+  "production_build": "passed, 214 modules",
+  "approved_contrast_cases": 72,
+  "approved_contrast_failures": 0,
+  "feature_graph_count": 110,
+  "git_diff_check": "passed",
+  "canonical_gate": "not run, explicitly forbidden"
+}

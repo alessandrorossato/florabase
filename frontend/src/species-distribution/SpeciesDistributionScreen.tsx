@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import {
   DirectoryFilterSelect,
   DirectoryTools,
@@ -107,9 +108,14 @@ function SelectedIdentity({
             : "Could not load the selected identity."}
         </p>
         <p className="field-help">Selected identity: {id}</p>
-        <button type="button" className="button--secondary" onClick={onClear}>
+        <ActionButton
+          icon="clear-selection"
+          type="button"
+          className="button--secondary"
+          onClick={onClear}
+        >
           Clear selection
-        </button>
+        </ActionButton>
         {error === "error" && (
           <button
             type="button"
@@ -149,9 +155,14 @@ function SelectedIdentity({
           eligibility[identity.occurrence_eligibility]
         )}
       </p>
-      <button type="button" className="button--secondary" onClick={onClear}>
+      <ActionButton
+        icon="clear-selection"
+        type="button"
+        className="button--secondary"
+        onClick={onClear}
+      >
         Clear selection
-      </button>
+      </ActionButton>
     </section>
   );
   if (!identity.matches_scope)
@@ -415,7 +426,8 @@ export function SpeciesDistributionScreen() {
         >
           <div className="section-heading">
             <h3>Choose one species</h3>
-            <button
+            <ActionButton
+              icon="close"
               type="button"
               className="button--quiet"
               onClick={() => {
@@ -424,7 +436,7 @@ export function SpeciesDistributionScreen() {
               }}
             >
               Close
-            </button>
+            </ActionButton>
           </div>
           {search("distribution-chooser-search", "Search botanical identities")}
           <p className="field-help">

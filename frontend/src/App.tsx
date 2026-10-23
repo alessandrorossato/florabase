@@ -1,3 +1,5 @@
+import { Icon } from "./components/Icon";
+import { ActionButton, IconButton } from "./components/Action";
 import {
   collectionPageParent,
   openCollectionPage,
@@ -12,7 +14,7 @@ import type { components } from "./api/schema";
 import { AuthProvider } from "./auth/AuthProvider";
 import { useAuth } from "./auth/context";
 import { LoginForm } from "./auth/LoginForm";
-import { ThemeControl, type ThemePreview } from "./components/ThemeControl";
+import { ThemeControl } from "./components/ThemeControl";
 import { TaskDialog } from "./components/TaskDialog";
 import { WorkspaceBoundary } from "./components/WorkspaceBoundary";
 import { loadWorkspaceChunk } from "./components/workspaceChunk";
@@ -391,7 +393,6 @@ function WorkspaceLoading() {
 function ApplicationShell() {
   const auth = useAuth();
   const state = auth.state;
-  const [themePreview, setThemePreview] = useState<ThemePreview>("System");
   const [health, setHealth] = useState<HealthState>({ status: "loading" });
   const [route, setRoute] = useState<Route>(currentRoute);
   const [collapsedGroups, setCollapsedGroups] = useState(() =>
@@ -567,18 +568,20 @@ function ApplicationShell() {
               Florabase
             </a>
           </h1>
-          <button
+          <IconButton
+            icon="panel-close"
+            label="Hide navigation"
+            tooltip="Collapse the navigation panel"
+            visibleLabel="Hide"
+            shell
             type="button"
             className="sidebar-toggle sidebar-toggle--hide"
             ref={hideNavigationRef}
-            aria-label="Hide navigation"
             onClick={() => {
               setNavigationVisible(false);
               window.setTimeout(() => showNavigationRef.current?.focus(), 0);
             }}
-          >
-            <span aria-hidden="true">‹</span>
-          </button>
+          />
         </div>
         <div className="desktop-sidebar__content">
           <nav aria-label="Primary navigation">
@@ -599,9 +602,13 @@ function ApplicationShell() {
                     }}
                   >
                     {group.label}
-                    <span aria-hidden="true">
-                      {collapsedGroups.includes(group.label) ? "▸" : "▾"}
-                    </span>
+                    <Icon
+                      name={
+                        collapsedGroups.includes(group.label)
+                          ? "chevron-down"
+                          : "chevron-up"
+                      }
+                    />
                   </button>
                 </h2>
                 <div
@@ -643,23 +650,10 @@ function ApplicationShell() {
                 followNavigation(event, "settings");
               }}
             >
-              <svg
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                className="footer-settings-icon"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="1.7"
-              >
-                <path d="m9 3-1 3-3 1-2 3 2 2-1 3 3 2 3-1 2 2 3-2 1-3 3-1-1-4-3-1-1-3Z" />
-                <circle cx="12" cy="11" r="3" />
-              </svg>
+              <Icon name="settings" shell />
               Settings
             </a>
-            <ThemeControl
-              mode={themePreview}
-              onPreviewChange={setThemePreview}
-            />
+            <ThemeControl />
           </div>
           <button
             className="footer-sign-out"
@@ -724,7 +718,7 @@ function ApplicationShell() {
             window.setTimeout(() => hideNavigationRef.current?.focus(), 0);
           }}
         >
-          <span aria-hidden="true">☰</span>
+          <Icon name="menu" shell />
           <span>Open navigation</span>
         </button>
         <RecordPresentationProvider
@@ -935,7 +929,8 @@ function ApplicationShell() {
         >
           <div className="mobile-navigation-heading">
             <h2>Navigation</h2>
-            <button
+            <ActionButton
+              icon="close"
               type="button"
               className="button--secondary"
               onClick={() => {
@@ -943,7 +938,7 @@ function ApplicationShell() {
               }}
             >
               Close navigation
-            </button>
+            </ActionButton>
           </div>
           <nav
             aria-label="More navigation"
@@ -985,23 +980,10 @@ function ApplicationShell() {
                   followNavigation(event, "settings");
                 }}
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  className="footer-settings-icon"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.7"
-                >
-                  <path d="m9 3-1 3-3 1-2 3 2 2-1 3 3 2 3-1 2 2 3-2 1-3 3-1-1-4-3-1-1-3Z" />
-                  <circle cx="12" cy="11" r="3" />
-                </svg>
+                <Icon name="settings" shell />
                 Settings
               </a>
-              <ThemeControl
-                mode={themePreview}
-                onPreviewChange={setThemePreview}
-              />
+              <ThemeControl />
             </div>
             <button
               className="footer-sign-out"

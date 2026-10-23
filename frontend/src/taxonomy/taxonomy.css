@@ -10,7 +10,7 @@
   align-items: start;
 }
 .taxonomy-panel {
-  border: 1px solid var(--border-color, #d6dfd7);
+  border: 1px solid var(--border-color);
   border-radius: 1rem;
   padding: 1rem;
   min-width: 0;
@@ -45,7 +45,7 @@
   list-style: none;
   padding-left: 0.8rem;
   margin: 0.25rem 0;
-  border-left: 1px solid var(--border-color, #d6dfd7);
+  border-left: 1px solid var(--border-color);
 }
 .taxonomy-branches--root {
   padding-left: 0;

@@ -1,48 +1,47 @@
-export type ThemePreview = "System" | "Light" | "Dark";
-const modes: ThemePreview[] = ["System", "Light", "Dark"];
+import { Icon } from "./Icon";
+import { Tooltip } from "./Tooltip";
+import {
+  appearanceLabels,
+  paletteLabels,
+  useAppearance,
+} from "../appearance/theme";
 
-export function ThemeControl({
-  mode,
-  onPreviewChange,
-}: {
-  mode: ThemePreview;
-  onPreviewChange: (mode: ThemePreview) => void;
-}) {
-  const label = `Theme preview: ${mode}. Theme switching is not enabled yet.`;
+export function ThemeControl() {
+  const { palette, appearance, effectiveAppearance, cycleAppearance } =
+    useAppearance();
+  const mode = appearanceLabels[appearance];
+  const next =
+    appearance === "system"
+      ? "Light"
+      : appearance === "light"
+        ? "Dark"
+        : "System";
+  const current =
+    appearance === "system"
+      ? `System (${appearanceLabels[effectiveAppearance]})`
+      : mode;
+  const label = `Appearance: ${current}, ${paletteLabels[palette]}. Switch to ${next}.`;
   return (
-    <button
-      type="button"
-      className="theme-preview"
-      aria-label={label}
-      title={label}
-      onClick={() => {
-        onPreviewChange(modes[(modes.indexOf(mode) + 1) % modes.length]);
-      }}
-    >
-      <svg
-        viewBox="0 0 24 24"
-        aria-hidden="true"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.7"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        data-preview={mode.toLowerCase()}
+    <Tooltip content={`${current} appearance. Switch to ${next}.`}>
+      <button
+        type="button"
+        className="theme-preview control-icon-button button--quiet"
+        aria-label={label}
+        onClick={cycleAppearance}
       >
-        {mode === "System" ? (
-          <>
-            <rect x="3" y="4" width="18" height="12" rx="2" />
-            <path d="M12 16v5M8 21h8" />
-          </>
-        ) : mode === "Light" ? (
-          <>
-            <circle cx="12" cy="12" r="4" />
-            <path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.4 1.4M17.6 17.6 19 19M5 19l1.4-1.4M17.6 6.4 19 5" />
-          </>
-        ) : (
-          <path d="M20.9 13.1A9 9 0 0 1 10.9 3.1a9 9 0 1 0 10 10Z" />
-        )}
-      </svg>
-    </button>
+        <Icon
+          name={
+            appearance === "system"
+              ? "monitor"
+              : appearance === "light"
+                ? "sun"
+                : "moon"
+          }
+          shell
+          data-appearance={appearance}
+        />
+        <span className="control-icon-button__label">Appearance</span>
+      </button>
+    </Tooltip>
   );
 }

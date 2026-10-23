@@ -11,7 +11,7 @@ body:has(.edit-workspace-modal[open]),
   overflow: hidden;
 }
 .edit-workspace-modal::backdrop {
-  background: rgb(14 36 28 / 35%);
+  background: var(--overlay-backdrop);
 }
 .app-content .edit-workspace-modal .collection-form {
   display: flex;

@@ -649,10 +649,10 @@ test("Harvest kind offers occurrence year and restores mixed kinds through brows
       within(panel).getByRole("checkbox", { name: "Media" }),
     ).toBeChecked();
   });
-  // Escape returns keyboard focus to the existing filter toggle.
+  // Both kinds restrict one dimension. Escape returns keyboard focus to the existing filter toggle.
   within(panel).getByRole("checkbox", { name: "Media" }).focus();
   await user.keyboard("{Escape}");
-  expect(screen.getByRole("button", { name: "Filters (2)" })).toHaveFocus();
+  expect(screen.getByRole("button", { name: "Filters (1)" })).toHaveFocus();
 });
 
 test("a Media search hit opens its exact asset and browser history restores search", async () => {
@@ -800,7 +800,7 @@ test("Dashboard toolbar keeps compact controls and Quick add supports keyboard a
     within(toolbar)
       .getAllByRole("button")
       .map((item) => item.textContent),
-  ).toEqual(["Filters", "Saved views", "Quick add ▾"]);
+  ).toEqual(["Filters", "Saved views", "Quick add"]);
   expect(
     screen.queryByRole("heading", { name: "Record in your collection" }),
   ).toBeNull();

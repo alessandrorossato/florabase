@@ -176,7 +176,7 @@ async function createSelectedIdentity() {
   const user = userEvent.setup();
   render(<App />);
   await user.click(
-    await screen.findByRole("button", { name: "+ New botanical identity" }),
+    await screen.findByRole("button", { name: "New botanical identity" }),
   );
   await user.type(
     await screen.findByLabelText("Scientific name"),
@@ -470,7 +470,7 @@ test("restores an existing session and recovers CSRF without a password", async 
     within(sidebar).getByRole("link", { name: "Settings" }),
   );
   expect(utilities).toContainElement(
-    within(sidebar).getByRole("button", { name: /Theme preview:/ }),
+    within(sidebar).getByRole("button", { name: /Appearance:/ }),
   );
   expect(utilities).not.toContainElement(
     within(sidebar).getByRole("button", { name: "Sign out" }),
@@ -511,7 +511,7 @@ test("desktop navigation hides and reopens without remounting the workspace", as
     within(sidebar).getByRole("link", { name: "Settings" }),
   ).toHaveAttribute("href", "#/settings");
   expect(
-    within(sidebar).getByRole("button", { name: /Theme preview:/ }),
+    within(sidebar).getByRole("button", { name: /Appearance:/ }),
   ).toBeInTheDocument();
   const resize = within(sidebar).getByRole("separator", {
     name: "Resize navigation",
@@ -730,6 +730,8 @@ test("login network failure is distinct from credential failure", async () => {
 });
 
 test("logout sends in-memory CSRF and clears authenticated UI", async () => {
+  window.florabaseAppearance.setPalette("mineral");
+  window.florabaseAppearance.setAppearance("dark");
   const requests: { path: string; init?: RequestInit }[] = [];
   mockFetch((path, init) => {
     requests.push({ path, init });
@@ -746,6 +748,9 @@ test("logout sends in-memory CSRF and clears authenticated UI", async () => {
   expect(
     await screen.findByRole("button", { name: "Sign in" }),
   ).toBeInTheDocument();
+  expect(document.documentElement).toHaveAttribute("data-palette", "mineral");
+  expect(document.documentElement).toHaveAttribute("data-appearance", "dark");
+  expect(window.florabaseAppearance.getSnapshot().appearance).toBe("dark");
   const logout = requests.find(({ path }) => path.endsWith("/logout"));
   expect(new Headers(logout?.init?.headers).get("X-CSRF-Token")).toBe(
     "fresh-csrf",
@@ -805,7 +810,7 @@ test("authenticated owners see the labelled create form and truthful empty state
   ).toBeInTheDocument();
   const user = userEvent.setup();
   const newIdentity = await screen.findByRole("button", {
-    name: "+ New botanical identity",
+    name: "New botanical identity",
   });
   expect(newIdentity).toHaveAttribute("aria-expanded", "false");
   expect(newIdentity).toHaveAttribute("aria-haspopup", "dialog");
@@ -994,7 +999,7 @@ test("keyboard creation sends generated-contract fields with CSRF and renders th
   const user = userEvent.setup();
   render(<App />);
   const newIdentity = await screen.findByRole("button", {
-    name: "+ New botanical identity",
+    name: "New botanical identity",
   });
   await user.click(newIdentity);
 
@@ -1047,7 +1052,7 @@ test("creation exposes a busy state and prevents duplicate submissions", async (
   const user = userEvent.setup();
   render(<App />);
   await user.click(
-    await screen.findByRole("button", { name: "+ New botanical identity" }),
+    await screen.findByRole("button", { name: "New botanical identity" }),
   );
 
   await user.type(
@@ -1088,7 +1093,7 @@ test("backend validation is announced in useful language and receives focus", as
   const user = userEvent.setup();
   render(<App />);
   await user.click(
-    await screen.findByRole("button", { name: "+ New botanical identity" }),
+    await screen.findByRole("button", { name: "New botanical identity" }),
   );
 
   await user.type(await screen.findByLabelText("Scientific name"), " {Enter}");
@@ -1127,7 +1132,7 @@ test("a duplicate offers an accessible action that loads the existing record wit
   const user = userEvent.setup();
   render(<App />);
   await user.click(
-    await screen.findByRole("button", { name: "+ New botanical identity" }),
+    await screen.findByRole("button", { name: "New botanical identity" }),
   );
 
   await user.type(
@@ -1163,7 +1168,7 @@ test("server failure is explicit and distinct from duplicate or validation feedb
   const user = userEvent.setup();
   render(<App />);
   await user.click(
-    await screen.findByRole("button", { name: "+ New botanical identity" }),
+    await screen.findByRole("button", { name: "New botanical identity" }),
   );
 
   await user.type(
@@ -1187,7 +1192,7 @@ test("forbidden creation is explicit and does not retry with a stale CSRF token"
   const user = userEvent.setup();
   render(<App />);
   await user.click(
-    await screen.findByRole("button", { name: "+ New botanical identity" }),
+    await screen.findByRole("button", { name: "New botanical identity" }),
   );
 
   await user.type(
@@ -1210,7 +1215,7 @@ test("botanical authentication expiry returns to the existing login boundary", a
   const user = userEvent.setup();
   render(<App />);
   await user.click(
-    await screen.findByRole("button", { name: "+ New botanical identity" }),
+    await screen.findByRole("button", { name: "New botanical identity" }),
   );
 
   await user.type(
@@ -1627,7 +1632,7 @@ test("primary navigation switches accessibly to the empty supplier directory", a
   expect(
     await screen.findByRole("heading", { name: "No suppliers yet" }),
   ).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "+ New supplier" }));
+  await user.click(screen.getByRole("button", { name: "New supplier" }));
   expect(
     screen.getByLabelText("Name", { selector: "#supplier-name" }),
   ).toHaveFocus();
@@ -1652,7 +1657,7 @@ test("primary navigation switches accessibly to the empty supplier directory", a
   expect(
     screen.queryByRole("heading", { name: "Add supplier" }),
   ).not.toBeInTheDocument();
-  expect(screen.getByRole("button", { name: "+ New supplier" })).toHaveFocus();
+  expect(screen.getByRole("button", { name: "New supplier" })).toHaveFocus();
   await user.click(
     within(
       screen.getByRole("navigation", { name: "Primary navigation" }),
@@ -1702,7 +1707,7 @@ test("keyboard supplier creation needs only name and kind and sends CSRF", async
   });
   const user = await openSuppliers();
   const newSupplier = await screen.findByRole("button", {
-    name: "+ New supplier",
+    name: "New supplier",
   });
   expect(
     screen.queryByRole("heading", { name: "Add supplier" }),
@@ -2024,9 +2029,7 @@ test("supplier validation, forbidden saves, and session expiry are explicit", as
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await openSuppliers();
-  await user.click(
-    await screen.findByRole("button", { name: "+ New supplier" }),
-  );
+  await user.click(await screen.findByRole("button", { name: "New supplier" }));
   await user.type(await screen.findByLabelText("Name"), "Source");
   await user.click(screen.getByRole("button", { name: "Add supplier" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(/check website/i);
@@ -2999,7 +3002,7 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
     ).getByRole("link", { name: "Suppliers" }),
   );
   const newSupplier = await screen.findByRole("button", {
-    name: "+ New supplier",
+    name: "New supplier",
   });
   await user.click(newSupplier);
   expect(
@@ -3007,9 +3010,7 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
   ).toBeVisible();
   await user.click(screen.getByRole("button", { name: "Cancel" }));
   await waitFor(() => {
-    expect(
-      screen.getByRole("button", { name: "+ New supplier" }),
-    ).toHaveFocus();
+    expect(screen.getByRole("button", { name: "New supplier" })).toHaveFocus();
   });
   await user.click(
     await screen.findByRole("button", { name: /Rare Palm Seeds/i }),

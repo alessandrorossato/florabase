@@ -1,3 +1,4 @@
+import { ActionButton } from "../components/Action";
 import { useId, useRef, useState, type RefObject, type ReactNode } from "react";
 import { MapLegend } from "../maps/MapLegend";
 import { TaskDialog } from "../components/TaskDialog";
@@ -98,14 +99,15 @@ export function NativeCoverageMap({
               setAboutOpen(false);
             }}
           >
-            <button
+            <ActionButton
+              variant="secondary"
               type="button"
               onClick={() => {
                 setAboutOpen(false);
               }}
             >
               Done
-            </button>
+            </ActionButton>
             {evidence}
           </TaskDialog>
         )}
@@ -390,6 +392,12 @@ export function NativeCoverageMap({
               >
                 {outlines.map((code) => (
                   <g key={code} clipPath={`url(#${id}-clip-${code})`}>
+                    <path
+                      className="native-emphasis-casing"
+                      d={data.units[code]}
+                      fill="none"
+                      vectorEffect="non-scaling-stroke"
+                    />
                     {inspected.includes(code) && (
                       <path
                         className="native-selected-outline"
@@ -587,14 +595,15 @@ export function NativeCoverageMap({
         >
           <div className="section-heading">
             <h3>Data and limitations</h3>
-            <button
+            <ActionButton
+              variant="secondary"
               type="button"
               onClick={() => {
                 setAboutOpen(false);
               }}
             >
               Done
-            </button>
+            </ActionButton>
           </div>
           <p>
             Broad recorded places use descendant territories only to draw their

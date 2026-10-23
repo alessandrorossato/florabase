@@ -1,3 +1,4 @@
+import { ActionButton, ActionLink } from "../components/Action";
 import { FieldLabel } from "../components/FieldLabel";
 import { DirectoryTools } from "../components/DirectoryTools";
 import { DirectoryResults } from "../components/DirectoryResults";
@@ -258,9 +259,14 @@ function IdentityDetails({
       >
         Add plant
       </a>
-      <button ref={editTrigger} type="button" onClick={openIdentityEditor}>
+      <ActionButton
+        icon="edit"
+        ref={editTrigger}
+        type="button"
+        onClick={openIdentityEditor}
+      >
         Edit botanical identity
-      </button>
+      </ActionButton>
       <OverflowMenu label="…" ariaLabel="More botanical identity actions">
         <button
           className="button--danger"
@@ -551,7 +557,8 @@ function IdentityDetails({
                   },
                 ]}
                 cancel={
-                  <button
+                  <ActionButton
+                    icon="close"
                     type="button"
                     className="button--secondary"
                     disabled={saving}
@@ -561,7 +568,7 @@ function IdentityDetails({
                     }}
                   >
                     Close editor
-                  </button>
+                  </ActionButton>
                 }
                 submit={null}
               />
@@ -1364,7 +1371,9 @@ export function BotanicalIdentityScreen({
         ) : (
           <div className="empty-state">
             <h2>Botanical identity not found</h2>
-            <a href="#/identities">Back to botanical identities</a>
+            <ActionLink icon="back" href="#/identities">
+              Back to botanical identities
+            </ActionLink>
           </div>
         )}
       </section>
@@ -1405,7 +1414,8 @@ export function BotanicalIdentityScreen({
               />
             }
             actions={
-              <button
+              <ActionButton
+                icon="add"
                 type="button"
                 ref={creationTriggerRef}
                 aria-expanded={creationExpanded}
@@ -1420,8 +1430,8 @@ export function BotanicalIdentityScreen({
                   openCreation();
                 }}
               >
-                + New botanical identity
-              </button>
+                New botanical identity
+              </ActionButton>
             }
           />
         }
@@ -1712,12 +1722,13 @@ export function BotanicalIdentityScreen({
                   role="group"
                   aria-label="Record maintenance"
                 >
-                  <a
+                  <ActionLink
+                    icon="edit"
                     className="button-link button--secondary"
                     href={`#/identities/${selected.id}?tab=edit`}
                   >
                     Edit
-                  </a>
+                  </ActionLink>
                 </div>
                 <div
                   className="preview-action-group preview-action-group--descendants"

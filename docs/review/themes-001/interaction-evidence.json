@@ -1,0 +1,12 @@
+{
+  "footerCycleLabels": [
+    "Appearance: System (Dark), Botanical. Switch to Light.",
+    "Appearance: Light, Botanical. Switch to Dark.",
+    "Appearance: Dark, Botanical. Switch to System."
+  ],
+  "afterReload": {
+    "appearance": "dark",
+    "colorScheme": "dark",
+    "palette": "botanical"
+  }
+}

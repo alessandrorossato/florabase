@@ -10,6 +10,7 @@ import {
   type ApplicationSettings,
 } from "./api";
 import "./settings.css";
+import { AppearanceSettings } from "../appearance/AppearanceSettings";
 
 export function SettingsScreen({ focusQr = false }: { focusQr?: boolean }) {
   const auth = useAuth();
@@ -81,6 +82,7 @@ export function SettingsScreen({ focusQr = false }: { focusQr?: boolean }) {
         description="Configuration and application utilities."
       />
       <div className="settings-content">
+        <AppearanceSettings />
         <section
           className="settings-panel"
           aria-labelledby="settings-general-heading"

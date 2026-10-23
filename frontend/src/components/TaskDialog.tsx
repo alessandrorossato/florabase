@@ -1,3 +1,4 @@
+import { dismissDialogControlLayer } from "./controlLayers";
 import { useEffect, useRef, type ReactNode, type RefObject } from "react";
 
 function focusableControls(element: HTMLDialogElement | null) {
@@ -73,9 +74,10 @@ export function TaskDialog({
       }}
       onCancel={(event) => {
         event.preventDefault();
-        onClose();
+        if (!dismissDialogControlLayer(event.currentTarget)) onClose();
       }}
       onKeyDown={(event) => {
+        if (event.defaultPrevented) return;
         if (event.key === "Escape") {
           event.preventDefault();
           onClose();
@@ -94,6 +96,7 @@ export function TaskDialog({
       }}
     >
       {children}
+      <div className="controls-overlay-host" data-controls-overlay-host="" />
     </dialog>
   );
 }
