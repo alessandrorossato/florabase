@@ -1,0 +1,44 @@
+{
+  "identity_id": "01a16824-e0a5-73c3-83fe-33ad8edb1361",
+  "additive_only": true,
+  "records": [
+    {
+      "id": "01a16a0c-905f-70c1-b426-2ca0e4bbd392",
+      "label": "Refinement review packet 01",
+      "lifecycle": "active"
+    },
+    {
+      "id": "01a16a0c-90d4-7044-bb94-877c259728d5",
+      "label": "Refinement review packet 02",
+      "lifecycle": "active"
+    },
+    {
+      "id": "01a16a0c-911e-71ad-950f-473ef6789e9e",
+      "label": "Refinement review packet 03",
+      "lifecycle": "exhausted"
+    },
+    {
+      "id": "01a16a0c-9162-7490-aa5d-9376e8d36fa2",
+      "label": "Refinement review packet 04",
+      "lifecycle": "exhausted"
+    },
+    {
+      "id": "01a16a0c-91ab-7490-b7cd-54a27b8e8ee9",
+      "label": "Refinement review packet 05",
+      "lifecycle": "lost"
+    },
+    {
+      "id": "01a16a0c-91f8-755b-aa1a-5fa41d457db2",
+      "label": "Refinement review packet 06",
+      "lifecycle": "lost"
+    }
+  ],
+  "saved_view": {
+    "name": "Refinement review \u00b7 basil identity",
+    "surface": "seed_lots",
+    "state": {
+      "identity_id": "01a16824-e0a5-73c3-83fe-33ad8edb1361",
+      "lifecycle": "all"
+    }
+  }
+}

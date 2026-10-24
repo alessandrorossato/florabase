@@ -29,8 +29,10 @@ type MutationState =
 
 export function BotanicalNativeRangeManager({
   identityId,
+  onEditStateChange,
 }: {
   identityId: string;
+  onEditStateChange?: (dirty: boolean, pending: boolean) => void;
 }) {
   const auth = useAuth();
   const [load, setLoad] = useState<LoadState>({ status: "loading" });
@@ -79,6 +81,10 @@ export function BotanicalNativeRangeManager({
       (place) => place.retired_at === null && !linked.has(place.id),
     );
   }, [load]);
+
+  useEffect(() => {
+    onEditStateChange?.(Boolean(selectedPlaceId), mutation.status === "saving");
+  }, [selectedPlaceId, mutation.status, onEditStateChange]);
 
   if (
     auth.state.status !== "authenticated" &&

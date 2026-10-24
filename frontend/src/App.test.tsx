@@ -120,6 +120,12 @@ function authenticatedDirectoryThen(
       window.location.hash.startsWith("#/identities")
     )
       return jsonResponse([worldPlace, southAmericaPlace, brazilPlace]);
+    if (path === "/api/v1/provenance-sites/map")
+      return jsonResponse({
+        sites: [],
+        coordinate_less_sites: 0,
+        total_provenance_sites: 0,
+      });
     return handler(path, init);
   });
 }
@@ -148,11 +154,26 @@ function createIdentityThenProfile(
     init: RequestInit | undefined,
   ) => Response | Promise<Response>,
 ) {
-  return authenticatedThen((path, init) => {
+  // Model persisted profile state across the read page and newly mounted contextual editor.
+  let persisted: Response | undefined;
+  return authenticatedThen(async (path, init) => {
     if (path === "/api/v1/botanical-identities")
       return jsonResponse(botanicalIdentity, 201);
-    if (path === `/api/v1/botanical-identities/${botanicalIdentity.id}/profile`)
-      return profileHandler(init);
+    if (
+      path === `/api/v1/botanical-identities/${botanicalIdentity.id}/profile`
+    ) {
+      if (!init?.method && persisted) return persisted.clone();
+      const response = await profileHandler(init);
+      if (response.ok || response.status === 404)
+        persisted =
+          response.status === 204
+            ? jsonResponse(
+                { detail: { code: "botanical_profile_not_found" } },
+                404,
+              )
+            : response.clone();
+      return response;
+    }
     if (
       path ===
       `/api/v1/botanical-identities/${botanicalIdentity.id}/external-taxon-link`
@@ -185,8 +206,15 @@ async function createSelectedIdentity() {
   await screen.findByRole("heading", {
     name: "Acer palmatum ‘Bloodgood’",
   });
-  await user.click(await screen.findByRole("link", { name: "Open details" }));
-  await user.click(await screen.findByRole("tab", { name: "Reference" }));
+  act(() => {
+    window.history.pushState(
+      null,
+      "",
+      `#/identities/${botanicalIdentity.id}?tab=reference`,
+    );
+    window.dispatchEvent(new PopStateEvent("popstate"));
+  });
+  await screen.findByRole("tab", { name: "Reference" });
   return user;
 }
 
@@ -1410,7 +1438,9 @@ test("profile validation and network failures are announced without duplicate sa
   await user.click(await screen.findByRole("button", { name: "Add profile" }));
   await user.click(screen.getByRole("tab", { name: "Uses & warnings" }));
   await user.click(await screen.findByRole("button", { name: "Save profile" }));
-  const validation = await screen.findByRole("alert");
+  const validation = await within(
+    screen.getByRole("region", { name: "Botanical profile" }),
+  ).findByRole("alert");
   expect(validation).toHaveTextContent(
     /add profile text or a structured native range/i,
   );
@@ -1421,7 +1451,11 @@ test("profile validation and network failures are announced without duplicate sa
   await user.type(screen.getByLabelText("Warnings"), "Handle carefully.");
   await user.click(screen.getByRole("tab", { name: "Uses & warnings" }));
   await user.click(screen.getByRole("button", { name: "Save profile" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent(
+  expect(
+    await within(
+      screen.getByRole("region", { name: "Botanical profile" }),
+    ).findByRole("alert"),
+  ).toHaveTextContent(
     /could not save this botanical profile.*check the connection/i,
   );
   expect(profileCalls).toBe(3);
@@ -1539,7 +1573,14 @@ test("structured native ranges distinguish paths and support add and remove with
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await createSelectedIdentity();
-  await user.click(screen.getByRole("tab", { name: "Native range" }));
+  await user.click(
+    screen.getByRole("button", { name: "Edit botanical identity" }),
+  );
+  const editor = await screen.findByRole("dialog", {
+    name: "Edit botanical identity",
+  });
+  await user.click(within(editor).getByRole("tab", { name: "Native range" }));
+  await within(editor).findByRole("heading", { name: "Native range" });
 
   expect(
     await screen.findByText("No structured native range recorded."),
@@ -1557,7 +1598,11 @@ test("structured native ranges distinguish paths and support add and remove with
 
   await user.selectOptions(selector, georgiaUs.id);
   await user.click(screen.getByRole("button", { name: "Add place" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent(/already/i);
+  expect(
+    await within(
+      screen.getByRole("region", { name: "Native range" }),
+    ).findByRole("alert"),
+  ).toHaveTextContent(/already/i);
   await user.click(screen.getByRole("button", { name: "Add place" }));
   const remove = await screen.findByRole("button", {
     name: "Remove Georgia from native range",
@@ -1605,10 +1650,19 @@ test("native-range loading failure is explicit and retryable", async () => {
     throw new Error(`unexpected request: ${path}`);
   });
   const user = await createSelectedIdentity();
-  await user.click(screen.getByRole("tab", { name: "Native range" }));
-  expect(await screen.findByRole("alert")).toHaveTextContent(
-    /could not load this native range/i,
+  await user.click(
+    screen.getByRole("button", { name: "Edit botanical identity" }),
   );
+  const editor = await screen.findByRole("dialog", {
+    name: "Edit botanical identity",
+  });
+  await user.click(within(editor).getByRole("tab", { name: "Native range" }));
+  await within(editor).findByRole("heading", { name: "Native range" });
+  expect(
+    await within(
+      screen.getByRole("region", { name: "Native range" }),
+    ).findByRole("alert"),
+  ).toHaveTextContent(/could not load this native range/i);
   await user.click(screen.getByRole("button", { name: "Retry native range" }));
   expect(
     await screen.findByText("No structured native range recorded."),
@@ -2254,6 +2308,7 @@ test("Botanical identity detail deep links stay synchronized with hash navigatio
         sowings: [],
         plants: [],
         plant_groups: [],
+        harvests: [],
         events: [],
       });
     if (path === `/api/v1/botanical-identities/${secondIdentity.id}/collection`)
@@ -2263,6 +2318,7 @@ test("Botanical identity detail deep links stay synchronized with hash navigatio
         sowings: [],
         plants: [],
         plant_groups: [],
+        harvests: [],
         events: [],
       });
     if (path === `/api/v1/botanical-identities/${secondIdentity.id}/profile`)
@@ -3057,6 +3113,7 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
 });
 
 test("Botanical identity editor keeps name and profile drafts across its separate edit sections", async () => {
+  const discard = vi.spyOn(window, "confirm").mockReturnValue(false);
   window.history.replaceState(
     null,
     "",
@@ -3077,6 +3134,7 @@ test("Botanical identity editor keeps name and profile drafts across its separat
         sowings: [],
         plants: [],
         plant_groups: [],
+        harvests: [],
         events: [],
       });
     if (path.endsWith("/profile")) return jsonResponse(botanicalProfile);
@@ -3106,6 +3164,20 @@ test("Botanical identity editor keeps name and profile drafts across its separat
     `${botanicalProfile.description} Draft profile`,
   );
   expect(writes).toHaveLength(0);
+  expect(
+    screen.queryByRole("button", { name: "Next" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("tablist", { name: "Record sections" }),
+  ).not.toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Close editor" }));
+  expect(discard).toHaveBeenCalledWith(
+    "Discard unsaved botanical identity changes in all sections?",
+  );
+  expect(screen.getByLabelText("Description")).toHaveValue(
+    `${botanicalProfile.description} Draft profile`,
+  );
+  discard.mockReturnValue(true);
   await user.click(screen.getByRole("button", { name: "Close editor" }));
   expect(
     screen.queryByRole("tablist", { name: "Botanical identity edit sections" }),
@@ -3605,6 +3677,7 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
   ];
   for (const [index, destination] of destinations.entries()) {
     await user.click(within(nav).getByRole("link", { name: destination }));
+    await vi.dynamicImportSettled();
     await waitFor(() => {
       expect(window.location.hash).toBe(`#/${routes[index]}`);
     });
@@ -3744,13 +3817,16 @@ test("Native ranges edit link opens the existing native-range Reference module d
   });
   render(<App />);
   expect(
-    await screen.findByRole("button", { name: "Manage native range" }),
+    await screen.findByRole("button", { name: "Edit native range" }),
   ).toBeVisible();
   expect(
-    screen.getByRole("tab", { name: "Reference", selected: true }),
+    screen.getByRole("tab", { name: "Maps", selected: true }),
   ).toBeVisible();
   expect(
-    screen.getByRole("tab", { name: "Native range", selected: true }),
+    screen.getByRole("heading", { name: "Native range", level: 4 }),
+  ).toBeVisible();
+  expect(
+    await screen.findByText("0 mapped sites · 0 direct record links"),
   ).toBeVisible();
 });
 
@@ -3779,11 +3855,11 @@ test("Botanical source deep link opens Reference source locally and survives rel
       { timeout: 10000 },
     );
     expect(
-      await screen.findByRole("tab", { name: "Reference" }),
+      await screen.findByRole("tab", { name: "Taxonomy" }),
     ).toHaveAttribute("aria-selected", "true");
     expect(
-      screen.getByRole("tab", { name: "Botanical source" }),
-    ).toHaveAttribute("aria-selected", "true");
+      screen.getByRole("heading", { name: "External botanical source" }),
+    ).toBeVisible();
   };
 
   await renderIdentity();
@@ -3831,9 +3907,21 @@ test("Location preview edits the complete location and guards dirty Escape and C
 });
 
 test.each([
-  { route: "seeds", toolbar: "Seeds", labels: ["Lifecycle"] },
-  { route: "sowings", toolbar: "Sowings", labels: ["Lifecycle"] },
-  { route: "plants", toolbar: "Plants", labels: ["Lifecycle", "Record type"] },
+  {
+    route: "seeds",
+    toolbar: "Seeds",
+    labels: ["Botanical identity", "Lifecycle"],
+  },
+  {
+    route: "sowings",
+    toolbar: "Sowings",
+    labels: ["Botanical identity", "Lifecycle"],
+  },
+  {
+    route: "plants",
+    toolbar: "Plants",
+    labels: ["Botanical identity", "Lifecycle", "Record type"],
+  },
   {
     route: "harvests",
     toolbar: "Harvests",
@@ -3980,4 +4068,367 @@ test("Location parent search cannot silently reparent to root and explicit root 
   await waitFor(() => {
     expect(updates).toBe(1);
   });
+});
+
+function identityVisualFixture({ deleteStatus = 409, saveStatus = 200 } = {}) {
+  let current = { ...botanicalIdentity };
+  const writes: string[] = [];
+  authenticatedDirectoryThen((path, init) => {
+    if (init?.method === "DELETE") {
+      writes.push("delete");
+      return jsonResponse({ detail: "Identity is in use" }, deleteStatus);
+    }
+    if (init?.method === "PUT") {
+      writes.push("save");
+      if (saveStatus === 200)
+        current = {
+          ...current,
+          ...(JSON.parse(
+            typeof init.body === "string" ? init.body : "{}",
+          ) as typeof current),
+        };
+      return jsonResponse(
+        saveStatus === 200 ? current : { detail: "Duplicate identity" },
+        saveStatus,
+      );
+    }
+    if (path === "/api/v1/botanical-identities") return jsonResponse([current]);
+    if (path.endsWith("/collection"))
+      return jsonResponse({
+        identity: current,
+        seed_lots: [],
+        sowings: [],
+        plants: [],
+        plant_groups: [],
+        harvests: [],
+        events: [],
+      });
+    if (path.endsWith("/profile")) return jsonResponse(botanicalProfile);
+    if (path.endsWith("/cover")) return jsonResponse(null);
+    throw new Error(`unexpected identity visual request ${path}`);
+  });
+  return writes;
+}
+
+test("identity edit opens a contextual native workspace, saves without losing another section draft and restores focus/context", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    `#/identities/${botanicalIdentity.id}?tab=plants`,
+  );
+  identityVisualFixture();
+  const user = userEvent.setup();
+  render(<App />);
+  const trigger = await screen.findByRole("button", {
+    name: "Edit botanical identity",
+  });
+  await user.click(trigger);
+  const dialog = await screen.findByRole("dialog", {
+    name: "Edit botanical identity",
+  });
+  await waitFor(() => {
+    expect(within(dialog).getByLabelText("Scientific name")).toHaveFocus();
+  });
+  expect(
+    within(dialog).queryByRole("button", { name: "Next" }),
+  ).not.toBeInTheDocument();
+  const tabs = within(dialog).getByRole("tablist", {
+    name: "Botanical identity edit sections",
+  });
+  await user.click(within(tabs).getByRole("tab", { name: "Reference" }));
+  await user.type(
+    await within(dialog).findByLabelText("Description"),
+    " Other section draft",
+  );
+  await user.click(within(tabs).getByRole("tab", { name: "Identity" }));
+  await user.clear(within(dialog).getByLabelText("Common name"));
+  await user.type(within(dialog).getByLabelText("Common name"), "Saved maple");
+  await user.click(
+    within(dialog).getByRole("button", { name: "Save changes" }),
+  );
+  await within(dialog).findByText("Botanical identity saved.");
+  await user.click(within(tabs).getByRole("tab", { name: "Reference" }));
+  expect(within(dialog).getByLabelText("Description")).toHaveValue(
+    `${botanicalProfile.description} Other section draft`,
+  );
+  const discard = vi.spyOn(window, "confirm").mockReturnValue(false);
+  await user.keyboard("{Escape}");
+  expect(dialog).toBeInTheDocument();
+  discard.mockReturnValue(true);
+  await user.click(
+    within(dialog).getByRole("button", { name: "Close editor" }),
+  );
+  await waitFor(() => {
+    expect(window.location.hash).toBe(
+      `#/identities/${botanicalIdentity.id}?tab=plants`,
+    );
+  });
+  expect(trigger).toHaveFocus();
+  expect(screen.getByRole("tab", { name: "Overview" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+});
+
+test("identity name save conflict preserves the editor and field values", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    `#/identities/${botanicalIdentity.id}?tab=edit`,
+  );
+  identityVisualFixture({ saveStatus: 409 });
+  const user = userEvent.setup();
+  render(<App />);
+  await user.type(
+    await screen.findByLabelText("Common name"),
+    " conflict draft",
+  );
+  await user.click(screen.getByRole("button", { name: "Save changes" }));
+  await screen.findByText(
+    "Another botanical identity already uses that scientific name and cultivar.",
+  );
+  expect(screen.getByLabelText("Common name")).toHaveValue(
+    "Japanese maple conflict draft",
+  );
+  await user.click(
+    screen.getByRole("button", { name: "Reset identity changes" }),
+  );
+  expect(screen.getByLabelText("Common name")).toHaveValue("Japanese maple");
+});
+
+test("identity delete is isolated in Danger zone, confirmed, and reports retained relationships", async () => {
+  window.history.replaceState(null, "", `#/identities/${botanicalIdentity.id}`);
+  const writes = identityVisualFixture();
+  const user = userEvent.setup();
+  render(<App />);
+  const deleteButton = await screen.findByRole("button", {
+    name: "Delete botanical identity",
+  });
+  expect(deleteButton.closest("section")).toHaveAccessibleName("Danger zone");
+  expect(
+    screen.queryByRole("button", { name: "More botanical identity actions" }),
+  ).not.toBeInTheDocument();
+  await user.click(deleteButton);
+  const dialog = screen.getByRole("dialog", {
+    name: `Delete ${botanicalIdentity.display_label}?`,
+  });
+  expect(writes).toEqual([]);
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(writes).toEqual([]);
+  expect(deleteButton).toHaveFocus();
+  await user.click(deleteButton);
+  await user.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: "Delete botanical identity",
+    }),
+  );
+  await screen.findByText(
+    /has collection records, a cover image, or retained native-range source evidence/,
+  );
+  expect(writes).toEqual(["delete"]);
+});
+
+test("legacy native-range URLs restore the Maps page across reload", async () => {
+  const target = `#/identities/${botanicalIdentity.id}?tab=native-range`;
+  window.history.replaceState(null, "", target);
+  identityVisualFixture();
+  const view = render(<App />);
+  expect(
+    await screen.findByRole("heading", { name: "Native range", level: 4 }),
+  ).toBeVisible();
+  expect(
+    screen.queryByRole("tablist", { name: "Reference sections" }),
+  ).not.toBeInTheDocument();
+  expect(window.location.hash).toBe(target);
+  view.unmount();
+  render(<App />);
+  expect(
+    await screen.findByRole("heading", { name: "Native range", level: 4 }),
+  ).toBeVisible();
+  expect(screen.getByRole("tab", { name: "Maps" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+});
+
+test.each(["seeds", "sowings", "plants", "harvests", "events"])(
+  "identity %s mode retains labelled navigation and a truthful empty state",
+  async (tab) => {
+    window.history.replaceState(
+      null,
+      "",
+      `#/identities/${botanicalIdentity.id}?tab=${tab}`,
+    );
+    identityVisualFixture();
+    render(<App />);
+    await screen.findByRole("button", { name: "Edit botanical identity" });
+    if (tab === "events")
+      await screen.findByText(/No events belong to plants or plant groups/);
+    else {
+      expect(
+        await screen.findByRole("region", {
+          name: "Linked collection records",
+        }),
+      ).toBeVisible();
+      expect(
+        screen.getByRole("tab", { name: "Overview", selected: true }),
+      ).toBeVisible();
+      for (const label of [
+        "Seed lots",
+        "Sowings",
+        "Plants",
+        "Plant groups",
+        "Harvests",
+      ]) {
+        expect(
+          await screen.findByRole("link", {
+            name: new RegExp(`View all ${label}: 0 recorded`),
+          }),
+        ).toHaveAttribute("href", expect.stringContaining("identity_id="));
+      }
+      expect(screen.queryByRole("tab", { name: "Collection" })).toBeNull();
+      await waitFor(() => {
+        expect(
+          screen.queryByText("Loading collection context…"),
+        ).not.toBeInTheDocument();
+      });
+    }
+  },
+);
+
+test("narrow identity selection opens the compact preview with creation actions and restores its row focus", async () => {
+  window.history.replaceState(null, "", "#/identities");
+  vi.spyOn(window, "matchMedia").mockImplementation((query) => ({
+    media: query,
+    matches: query === "(max-width: 68rem)",
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }));
+  identityVisualFixture();
+  const user = userEvent.setup();
+  render(<App />);
+  await vi.dynamicImportSettled();
+  const row = await screen.findByRole("button", {
+    name: /Acer palmatum.*Bloodgood/,
+  });
+  await user.click(row);
+  const preview = screen.getByRole("dialog", {
+    name: "Botanical identity preview",
+  });
+  expect(
+    within(preview).getByRole("button", { name: "Start sowing" }),
+  ).toBeInTheDocument();
+  expect(
+    within(preview).getByRole("button", { name: "Record harvest" }),
+  ).toBeInTheDocument();
+  expect(
+    within(preview).getByRole("link", { name: "Open details" }),
+  ).toHaveAttribute("href", `#/identities/${botanicalIdentity.id}`);
+  expect(window.location.hash).toBe("#/identities");
+  await user.click(
+    within(preview).getByRole("button", { name: "Close preview" }),
+  );
+  expect(row).toHaveFocus();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});
+
+test.each([
+  ["collection", "Overview"],
+  ["seeds", "Overview"],
+  ["sowings", "Overview"],
+  ["plants", "Overview"],
+  ["harvests", "Overview"],
+  ["events", "History"],
+  ["profile", "Reference"],
+  ["source", "Taxonomy"],
+  ["native-range", "Maps"],
+  ["occurrences", "Maps"],
+  ["overview", "Overview"],
+  ["reference", "Reference"],
+  ["taxonomy", "Taxonomy"],
+  ["maps", "Maps"],
+  ["media", "Media"],
+  ["history", "History"],
+])(
+  "identity section URL %s resolves to %s without changing the legacy address",
+  async (route, selected) => {
+    const target = `#/identities/${botanicalIdentity.id}?tab=${route}`;
+    window.history.replaceState(null, "", target);
+    identityVisualFixture();
+    const view = render(<App />);
+    const main = await screen.findByRole("tablist", {
+      name: "Record sections",
+    });
+    expect(
+      within(main)
+        .getAllByRole("tab")
+        .map((t) => t.textContent),
+    ).toEqual([
+      "Overview",
+      "Reference",
+      "Taxonomy",
+      "Maps",
+      "Media",
+      "History",
+    ]);
+    expect(
+      within(main).getByRole("tab", { name: selected, selected: true }),
+    ).toBeVisible();
+    expect(window.location.hash).toBe(target);
+    view.unmount();
+    render(<App />);
+    expect(
+      await screen.findByRole("tab", { name: selected, selected: true }),
+    ).toBeVisible();
+  },
+);
+
+test("identity section keyboard navigation retains browser Back and Forward boundaries", async () => {
+  window.history.replaceState(null, "", `#/identities/${botanicalIdentity.id}`);
+  identityVisualFixture();
+  const user = userEvent.setup();
+  render(<App />);
+  const overview = await screen.findByRole("tab", {
+    name: "Overview",
+    selected: true,
+  });
+  overview.focus();
+  await user.keyboard("{End}");
+  expect(
+    await screen.findByRole("tab", { name: "History", selected: true }),
+  ).toHaveFocus();
+  expect(window.location.hash).toContain("tab=history");
+  act(() => {
+    window.history.back();
+  });
+  expect(
+    await screen.findByRole("tab", { name: "Overview", selected: true }),
+  ).toBeVisible();
+  act(() => {
+    window.history.forward();
+  });
+  expect(
+    await screen.findByRole("tab", { name: "History", selected: true }),
+  ).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Add to collection" }));
+  const menu = screen.getByRole("group", { name: "Add to collection menu" });
+  const first = within(menu).getByRole("link", { name: "Add seed lot" });
+  first.focus();
+  await user.keyboard("{End}");
+  expect(
+    within(menu).getByRole("button", { name: "Record harvest" }),
+  ).toHaveFocus();
+  await user.keyboard("{Home}");
+  expect(first).toHaveFocus();
+  await user.keyboard("{Escape}");
+  expect(
+    screen.queryByRole("group", { name: "Add to collection menu" }),
+  ).toBeNull();
+  expect(
+    screen.getByRole("button", { name: "Add to collection" }),
+  ).toHaveFocus();
 });

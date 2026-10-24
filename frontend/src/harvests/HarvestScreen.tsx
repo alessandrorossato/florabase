@@ -335,6 +335,13 @@ export function HarvestScreen({
           !displayId &&
           !storedMode && (
             <DirectoryTools
+              context={
+                identity ? (
+                  <a href={`#/identities/${identity}?tab=overview`}>
+                    Return to botanical identity
+                  </a>
+                ) : undefined
+              }
               onReset={() => {
                 view.replace({
                   ...view.state,

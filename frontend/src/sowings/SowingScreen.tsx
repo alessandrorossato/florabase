@@ -1,3 +1,4 @@
+import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
 import { ActionButton } from "../components/Action";
 import "../components/collection-page.css";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
@@ -795,6 +796,7 @@ export function SowingScreen({
   const setFilter = (value: "active" | "completed" | "all") => {
     view.update("lifecycle", value);
   };
+  const identityFilter = view.state.identity_id;
   const search = view.state.q;
   const setSearch = (value: string) => {
     view.update("q", value);
@@ -948,6 +950,11 @@ export function SowingScreen({
   const visible = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     return sowings.filter((sowing) => {
+      if (
+        identityFilter &&
+        sowing.seed_lot.botanical_identity_id !== identityFilter
+      )
+        return false;
       const lifecycleMatch =
         filter === "all" ||
         (filter === "active"
@@ -963,7 +970,7 @@ export function SowingScreen({
         ].some((value) => value?.toLocaleLowerCase().includes(query));
       return lifecycleMatch && textMatch;
     });
-  }, [filter, search, sowings]);
+  }, [identityFilter, filter, search, sowings]);
 
   const bulkChoices = visible.map((sowing) => ({
     kind: "sowing" as const,
@@ -1553,8 +1560,19 @@ export function SowingScreen({
           tools={
             !(mobileDetail || (editing && !edit.modal)) && (
               <DirectoryTools
+                context={
+                  identityFilter ? (
+                    <a href={`#/identities/${identityFilter}?tab=overview`}>
+                      Return to botanical identity
+                    </a>
+                  ) : undefined
+                }
                 onReset={() => {
-                  setFilter("all");
+                  view.replace({
+                    ...view.state,
+                    lifecycle: "all",
+                    identity_id: "",
+                  });
                 }}
                 name="Sowings"
                 search={
@@ -1576,6 +1594,25 @@ export function SowingScreen({
                 }
                 filters={
                   <>
+                    <BotanicalIdentityFilter
+                      choices={Array.from(
+                        new Map(
+                          sowings.map((sowing) => [
+                            sowing.seed_lot.botanical_identity_id,
+                            {
+                              id: sowing.seed_lot.botanical_identity_id,
+                              label:
+                                sowing.seed_lot
+                                  .botanical_identity_display_label,
+                            },
+                          ]),
+                        ).values(),
+                      )}
+                      value={identityFilter}
+                      onChange={(id) => {
+                        view.update("identity_id", id);
+                      }}
+                    />
                     <DirectoryFilterSelect
                       label="Lifecycle"
                       value={filter}
@@ -1589,6 +1626,23 @@ export function SowingScreen({
                   </>
                 }
                 activeFilters={[
+                  ...(identityFilter
+                    ? [
+                        {
+                          label: "Botanical identity",
+                          value:
+                            sowings.find(
+                              (s) =>
+                                s.seed_lot.botanical_identity_id ===
+                                identityFilter,
+                            )?.seed_lot.botanical_identity_display_label ??
+                            identityFilter,
+                          onRemove: () => {
+                            view.update("identity_id", "");
+                          },
+                        },
+                      ]
+                    : []),
                   ...(filter !== "all"
                     ? [
                         {

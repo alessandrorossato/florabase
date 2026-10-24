@@ -68,10 +68,14 @@ export function BotanicalProfilePanel({
   identityId,
   includeNativeRange = true,
   startEditing = false,
+  onEditStateChange,
+  onEditRequest,
 }: {
   identityId: string;
+  onEditRequest?: () => void;
   includeNativeRange?: boolean;
   startEditing?: boolean;
+  onEditStateChange?: (dirty: boolean, pending: boolean) => void;
 }) {
   const auth = useAuth();
   const [loadState, setLoadState] = useState<LoadState>({ status: "loading" });
@@ -112,6 +116,16 @@ export function BotanicalProfilePanel({
   useEffect(() => {
     if (saveState.status === "error") feedbackRef.current?.focus();
   }, [saveState]);
+
+  useEffect(() => {
+    onEditStateChange?.(
+      editing &&
+        loadState.status === "ready" &&
+        JSON.stringify(values) !==
+          JSON.stringify(valuesFromProfile(loadState.profile)),
+      saveState.status === "saving",
+    );
+  }, [editing, loadState, values, saveState.status, onEditStateChange]);
 
   if (
     auth.state.status !== "authenticated" &&
@@ -178,6 +192,20 @@ export function BotanicalProfilePanel({
     >
       <div className="profile-heading section-heading">
         <h3 id="botanical-profile-title">Botanical profile</h3>
+        {onEditRequest &&
+          !editing &&
+          loadState.status === "ready" &&
+          loadState.profile && (
+            <ActionButton
+              icon="edit"
+              className="button--secondary"
+              type="button"
+              ref={editTriggerRef}
+              onClick={onEditRequest}
+            >
+              Edit profile
+            </ActionButton>
+          )}
       </div>
 
       {loadState.status === "loading" && (
@@ -210,7 +238,8 @@ export function BotanicalProfilePanel({
                   type="button"
                   ref={editTriggerRef}
                   onClick={() => {
-                    setEditing(true);
+                    if (onEditRequest) onEditRequest();
+                    else setEditing(true);
                   }}
                 >
                   Add profile
@@ -227,7 +256,14 @@ export function BotanicalProfilePanel({
                   {sections.map(({ field, label }) => {
                     const content = loadState.profile?.[field];
                     return content ? (
-                      <section key={field}>
+                      <section
+                        key={field}
+                        className={
+                          content.length > 600
+                            ? "profile-field--wide"
+                            : undefined
+                        }
+                      >
                         <h4>{label}</h4>
                         <p>{content}</p>
                       </section>
@@ -235,7 +271,7 @@ export function BotanicalProfilePanel({
                   })}
                 </div>
               )}
-              {!editing && (
+              {!editing && !onEditRequest && (
                 <ActionButton
                   icon="edit"
                   className="button--secondary"

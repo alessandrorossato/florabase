@@ -34,3 +34,10 @@ beforeEach(() => {
   window.localStorage.removeItem("florabase.appearance.v1");
   runInNewContext(appearanceSource, { window, document });
 });
+
+// jsdom has no layout scrolling; browsers use the native method for legacy section links.
+Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
+  configurable: true,
+  writable: true,
+  value: vi.fn(),
+});

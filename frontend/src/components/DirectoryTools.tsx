@@ -19,6 +19,7 @@ export function DirectoryTools({
   filters,
   onReset,
   activeFilters = [],
+  context,
 }: {
   name: string;
   search?: ReactNode;
@@ -27,6 +28,7 @@ export function DirectoryTools({
   filters?: ReactNode;
   onReset?: () => void;
   activeFilters?: ActiveDirectoryFilter[];
+  context?: ReactNode;
 }) {
   const id = useId();
   const [open, setOpen] = useState(false);
@@ -57,6 +59,7 @@ export function DirectoryTools({
         {savedViews}
         {actions}
       </div>
+      {context && <div className="directory-context">{context}</div>}
       {activeFilters.length > 0 && (
         <div
           className="directory-filter-summary"

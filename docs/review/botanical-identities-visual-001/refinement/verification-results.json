@@ -1,0 +1,76 @@
+{
+  "feature": "BOTANICAL-IDENTITIES-VISUAL-001",
+  "phase": "second operator refinement / visual review",
+  "source": "/home/alessandro/.codex/worktrees/f6da/florabase",
+  "head": "e7ade78559803a35b738a669085799f55eb76258",
+  "frontend": {
+    "passed": 374,
+    "files": 18,
+    "failed": 0,
+    "single_worker": true,
+    "selection": [
+      "src/App.test.tsx",
+      "src/UX001.test.tsx",
+      "src/UX004.test.tsx",
+      "src/botanical-identities/ExternalBotanicalDataPanel.test.tsx",
+      "src/botanical-identities/IdentityCollectionHub.test.tsx",
+      "src/botanical-identities/IdentityReferenceSummary.test.tsx",
+      "src/botanical-identities/IdentitySourceAction.test.tsx",
+      "src/events/EventFeed.test.tsx",
+      "src/events/GlobalEventsScreen.test.tsx",
+      "src/harvests/HarvestScreen.test.tsx",
+      "src/occurrence-map/OccurrenceDensityMap.test.tsx",
+      "src/occurrence-map/OccurrenceMapPanel.test.tsx",
+      "src/plants/PlantScreen.test.tsx",
+      "src/photos/BotanicalIdentityCover.test.tsx",
+      "src/saved-views/SavedViews.test.tsx",
+      "src/saved-views/state.test.ts",
+      "src/seed-lots/SeedLotScreen.test.tsx",
+      "src/sowings/SowingScreen.test.tsx"
+    ],
+    "command": "NODE_OPTIONS=--max-old-space-size=512 pnpm --dir frontend test <selection> --pool=threads --maxWorkers=1 --reporter=dot --reporter=json --outputFile=../docs/review/botanical-identities-visual-001/refinement/final-test-results.json"
+  },
+  "backend": {
+    "unit_passed": 88,
+    "unit_selection": [
+      "tests/test_saved_views.py",
+      "tests/test_saved_views_service.py"
+    ],
+    "unit_flags": "--no-cov -q",
+    "integration_passed": 15,
+    "integration_command": "scripts/test-integration.sh tests/integration/test_saved_views.py",
+    "integration_project": "florabase-integration-bf3889885f40",
+    "cleanup": "RESOURCE_CLEANUP_PASSED; residual containers/networks/volumes=0"
+  },
+  "static": {
+    "frontend_eslint_changed_files": 30,
+    "frontend_eslint_max_warnings": 0,
+    "frontend_prettier": "passed",
+    "typescript_and_build": "passed; pnpm --dir frontend build; 230 modules",
+    "backend_ruff_lint_format": "passed; state.py and both changed test files",
+    "backend_mypy": "passed; src/florabase/saved_views/state.py",
+    "backend_openapi_export_check": "passed",
+    "frontend_openapi_typescript_check": "passed",
+    "feature_graph": "112 valid",
+    "diff_whitespace": "passed"
+  },
+  "visual": {
+    "refinement_screenshots": 66,
+    "measured_states": 63,
+    "horizontal_overflow": 0,
+    "viewport_sizes": ["1440x844", "1024x844", "390x844"],
+    "theme_variants": 6,
+    "first_pass_screenshots_retained": 71,
+    "limits": [
+      "Phone Collection/Reference/Events/menu captures precede final shared header adjustment; final phone Overview shows final shared header.",
+      "Native discard dialog blocked final automated interaction and recaptures; manual discard and deletion confirmation remain review items.",
+      "No provider-backed imagery in synthetic fixture; no new provider downloads."
+    ]
+  },
+  "status": "implemented; operator acceptance pending",
+  "canonical_full": "not run, per operator boundary",
+  "staged": false,
+  "committed": false,
+  "pushed": false,
+  "pull_request_created": false
+}

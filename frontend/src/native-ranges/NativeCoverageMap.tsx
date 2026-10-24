@@ -32,8 +32,10 @@ export function NativeCoverageMap({
   showEvidence,
   evidenceRef,
   territorySelection,
+  scopeLabel,
 }: {
   territorySelection?: TerritorySelection;
+  scopeLabel?: string;
   territories: (Territory & { identity_ids?: string[] })[];
   geometry: GeometryState;
   selected?: boolean;
@@ -578,6 +580,7 @@ export function NativeCoverageMap({
               paths.current.get(inspected.at(-1) ?? "")?.focus();
             }}
             filters={filters}
+            scopeLabel={scopeLabel}
             identities={identities}
             comparisonIds={comparisonIds}
             evidence={showEvidence}

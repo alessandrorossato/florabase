@@ -2454,3 +2454,43 @@ test("New SeedLot Back keeps the Seeds parent and restores its create action", a
     screen.queryByRole("heading", { name: "Add seed lot" }),
   ).not.toBeInTheDocument();
 });
+
+test("identity-scoped Seeds survives URL reload, composes search and clears without losing lifecycle", async () => {
+  const other = lot({
+    id: "01900000-0000-7000-8000-000000000502",
+    label: "Other packet",
+    botanical_identity_id: secondIdentity.id,
+    botanical_identity: {
+      id: secondIdentity.id,
+      display_label: secondIdentity.display_label,
+    },
+  });
+  mockApi(directoryHandler([lot(), other]));
+  const hash = `#/seeds?identity_id=${identity.id}&lifecycle=all&q=packet`;
+  window.history.replaceState(null, "", hash);
+  const user = userEvent.setup();
+  const view = render(<App />);
+  expect(
+    await screen.findByRole("button", { name: /Blue packet/ }),
+  ).toBeVisible();
+  expect(screen.queryByRole("button", { name: /Other packet/ })).toBeNull();
+  expect(
+    screen.getByRole("button", { name: "Remove botanical identity filter" }),
+  ).toHaveTextContent(identity.display_label);
+  view.unmount();
+  render(<App />);
+  await screen.findByRole("button", { name: /Blue packet/ });
+  await user.click(
+    screen.getByRole("button", { name: "Remove botanical identity filter" }),
+  );
+  expect(
+    await screen.findByRole("button", { name: /Other packet/ }),
+  ).toBeVisible();
+  expect(window.location.hash).toContain("lifecycle=all");
+  expect(screen.getByLabelText("Search seed inventory")).toHaveValue("packet");
+  await browserBack();
+  await waitFor(() => {
+    expect(screen.queryByRole("button", { name: /Other packet/ })).toBeNull();
+  });
+  expect(window.location.hash).toBe(hash);
+});

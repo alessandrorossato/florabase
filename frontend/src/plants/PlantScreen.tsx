@@ -1,3 +1,4 @@
+import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
 import { ActionLink, ActionButton } from "../components/Action";
 import "../components/collection-page.css";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
@@ -879,6 +880,7 @@ export function PlantScreen({
   const setTypeFilter = (value: "all" | RecordKind) => {
     view.update("type", value);
   };
+  const identityFilter = view.state.identity_id;
   const search = view.state.q;
   const setSearch = (value: string) => {
     view.update("q", value);
@@ -1243,6 +1245,11 @@ export function PlantScreen({
   const visible = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     return records.filter((record) => {
+      if (
+        identityFilter &&
+        record.value.botanical_identity_id !== identityFilter
+      )
+        return false;
       const value = record.value;
       const lifecycleMatch =
         lifecycleFilter === "all" ||
@@ -1272,7 +1279,14 @@ export function PlantScreen({
         ].some((item) => item?.toLocaleLowerCase().includes(query));
       return lifecycleMatch && typeMatch && textMatch;
     });
-  }, [lifecycleFilter, records, references, search, typeFilter]);
+  }, [
+    identityFilter,
+    lifecycleFilter,
+    records,
+    references,
+    search,
+    typeFilter,
+  ]);
 
   const bulkChoices = visible.map((record) => ({
     kind:
@@ -2464,9 +2478,17 @@ export function PlantScreen({
           tools={
             !(mobileDetail || (editing && !edit.modal)) && (
               <DirectoryTools
+                context={
+                  identityFilter ? (
+                    <a href={`#/identities/${identityFilter}?tab=overview`}>
+                      Return to botanical identity
+                    </a>
+                  ) : undefined
+                }
                 onReset={() => {
                   view.replace({
                     ...view.state,
+                    identity_id: "",
                     lifecycle: "all",
                     type: "all",
                   });
@@ -2491,6 +2513,24 @@ export function PlantScreen({
                 }
                 filters={
                   <>
+                    <BotanicalIdentityFilter
+                      choices={Array.from(
+                        new Map(
+                          records.map((record) => [
+                            record.value.botanical_identity_id,
+                            {
+                              id: record.value.botanical_identity_id,
+                              label:
+                                record.value.botanical_identity.display_label,
+                            },
+                          ]),
+                        ).values(),
+                      )}
+                      value={identityFilter}
+                      onChange={(id) => {
+                        view.update("identity_id", id);
+                      }}
+                    />
                     <DirectoryFilterSelect
                       label="Lifecycle"
                       value={lifecycleFilter}
@@ -2514,6 +2554,20 @@ export function PlantScreen({
                   </>
                 }
                 activeFilters={[
+                  ...(identityFilter
+                    ? [
+                        {
+                          label: "Botanical identity",
+                          value:
+                            references.identities.find(
+                              ({ id }) => id === identityFilter,
+                            )?.display_label ?? identityFilter,
+                          onRemove: () => {
+                            view.update("identity_id", "");
+                          },
+                        },
+                      ]
+                    : []),
                   ...(lifecycleFilter !== "all"
                     ? [
                         {

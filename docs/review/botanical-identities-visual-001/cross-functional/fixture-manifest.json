@@ -1,0 +1,167 @@
+{
+  "source": "/home/alessandro/.codex/worktrees/f6da/florabase",
+  "base_url": "http://localhost:15176",
+  "additive_only": true,
+  "synthetic": true,
+  "records": {
+    "identity": "01a16cb5-e4fe-77c4-8458-2e1873f1e9dd",
+    "site": "01a16cba-72ed-7318-a08e-cb5d5e447a26",
+    "lot-active": "01a16cba-7475-76ad-acd4-2c539d3e0371",
+    "lot-unknown": "01a16cba-784a-7198-8418-c246b78bafea",
+    "lot-historical": "01a16cba-79fe-77aa-bfc7-10d33be09124",
+    "sowing": "01a16cba-7f00-7208-bbd5-f3d71f3d4d93",
+    "plant-derived": "01a16cba-817d-77ac-9d76-9692c7f2206d",
+    "plant-direct": "01a16cba-8332-7355-9c07-a1f971c7ed4b",
+    "group": "01a16cba-8565-72dc-86f7-1ae8054001f1",
+    "observation": "01a16cba-8723-756d-bcbc-d077038b19be",
+    "repotting": "01a16cba-88f4-7209-b307-66a3c1a8f412",
+    "flowering": "01a16cba-8a7c-7578-bba7-f3b6cb71d7c1",
+    "harvest": "01a16cba-8c03-740c-ab30-37f04a30379f",
+    "cover_asset": "01a16cba-8eaa-744f-a675-38e3c8579f2d",
+    "cover_reference": "01a16cba-8ec5-741d-af2a-c367aed45dcf"
+  },
+  "operations": [
+    {
+      "key": "identity",
+      "method": "POST",
+      "path": "/api/v1/botanical-identities",
+      "id": "01a16cb5-e4fe-77c4-8458-2e1873f1e9dd"
+    },
+    {
+      "key": "site",
+      "method": "POST",
+      "path": "/api/v1/provenance-sites",
+      "id": "01a16cba-72ed-7318-a08e-cb5d5e447a26"
+    },
+    {
+      "key": "lot-active",
+      "method": "POST",
+      "path": "/api/v1/seed-lots",
+      "id": "01a16cba-7475-76ad-acd4-2c539d3e0371"
+    },
+    {
+      "key": "lot-unknown",
+      "method": "POST",
+      "path": "/api/v1/seed-lots",
+      "id": "01a16cba-784a-7198-8418-c246b78bafea"
+    },
+    {
+      "key": "lot-historical",
+      "method": "POST",
+      "path": "/api/v1/seed-lots",
+      "id": "01a16cba-79fe-77aa-bfc7-10d33be09124"
+    },
+    {
+      "key": "sowing",
+      "method": "POST",
+      "path": "/api/v1/sowings",
+      "id": "01a16cba-7f00-7208-bbd5-f3d71f3d4d93"
+    },
+    {
+      "key": "plant-derived",
+      "method": "POST",
+      "path": "/api/v1/plants",
+      "id": "01a16cba-817d-77ac-9d76-9692c7f2206d"
+    },
+    {
+      "key": "plant-direct",
+      "method": "POST",
+      "path": "/api/v1/plants",
+      "id": "01a16cba-8332-7355-9c07-a1f971c7ed4b"
+    },
+    {
+      "key": "group",
+      "method": "POST",
+      "path": "/api/v1/plant-groups",
+      "id": "01a16cba-8565-72dc-86f7-1ae8054001f1"
+    },
+    {
+      "key": "observation",
+      "method": "POST",
+      "path": "/api/v1/plants/01a16cba-817d-77ac-9d76-9692c7f2206d/events",
+      "id": "01a16cba-8723-756d-bcbc-d077038b19be"
+    },
+    {
+      "key": "repotting",
+      "method": "POST",
+      "path": "/api/v1/plants/01a16cba-817d-77ac-9d76-9692c7f2206d/events",
+      "id": "01a16cba-88f4-7209-b307-66a3c1a8f412"
+    },
+    {
+      "key": "flowering",
+      "method": "POST",
+      "path": "/api/v1/plants/01a16cba-817d-77ac-9d76-9692c7f2206d/events",
+      "id": "01a16cba-8a7c-7578-bba7-f3b6cb71d7c1"
+    },
+    {
+      "key": "harvest",
+      "method": "POST",
+      "path": "/api/v1/harvests",
+      "id": "01a16cba-8c03-740c-ab30-37f04a30379f"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/botanical-identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd/cover-image/local",
+      "scope": "new fictional identity only"
+    }
+  ],
+  "original_identity_ids": [
+    "01a16824-e0a5-73c3-83fe-33ad8edb1361",
+    "01a16824-e0c8-74b4-8b44-eb5d966b89c8"
+  ],
+  "profile_created": true,
+  "native_range_created": {
+    "geographic_place_id": "019f3f06-3800-722d-a856-c551fa2d9ece",
+    "label": "World \u2192 Europe \u2192 Southern Europe \u2192 Italy",
+    "scope": "fabricated manual assertion on fictional identity only"
+  },
+  "media_metadata_set": true,
+  "media_source": {
+    "key": "sage",
+    "species": "Salvia officinalis",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Sauge_officinale.JPG",
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Sauge_officinale.JPG?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original",
+    "creator": "Caroline L\u00e9na Becker",
+    "licence": "CC-BY-3.0",
+    "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+    "file": "sage.jpg",
+    "sha256": "263217c80d374d9907292a6b89f18e93928d7f83a9c0ded47d3945f4ee66df87",
+    "bytes": 47830,
+    "width": 427,
+    "height": 640,
+    "changes": "Resized to at most 640px; recompressed JPEG; EXIF removed. Synthetic review illustration, not a collection specimen.",
+    "verified_on": "2026-10-22"
+  },
+  "plant_media_link": "01a16cba-91ed-73fb-bf78-c71b0e9797b6",
+  "result_counts": {
+    "seed_lots": 3,
+    "sowings": 1,
+    "plants": 2,
+    "plant_groups": 1,
+    "harvests": 1,
+    "events": 4
+  },
+  "url": "http://localhost:15176/#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd",
+  "no_provider_calls": true,
+  "original_identity_counts_verified": {
+    "01a16824-e0a5-73c3-83fe-33ad8edb1361": {
+      "seed_lots": 8,
+      "sowings": 1,
+      "plants": 1,
+      "plant_groups": 1,
+      "harvests": 1,
+      "events": 2
+    },
+    "01a16824-e0c8-74b4-8b44-eb5d966b89c8": {
+      "seed_lots": 0,
+      "sowings": 0,
+      "plants": 0,
+      "plant_groups": 0,
+      "harvests": 0,
+      "events": 0
+    }
+  },
+  "review_health": {
+    "status": "ok"
+  }
+}
