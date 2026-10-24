@@ -4179,17 +4179,16 @@ test("identity name save conflict preserves the editor and field values", async 
   identityVisualFixture({ saveStatus: 409 });
   const user = userEvent.setup();
   render(<App />);
-  await user.type(
-    await screen.findByLabelText("Common name"),
-    " conflict draft",
-  );
+  const commonName = await screen.findByLabelText("Common name");
+  await user.type(commonName, " conflict draft");
+  await waitFor(() => {
+    expect(commonName).toHaveValue("Japanese maple conflict draft");
+  });
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   await screen.findByText(
     "Another botanical identity already uses that scientific name and cultivar.",
   );
-  expect(screen.getByLabelText("Common name")).toHaveValue(
-    "Japanese maple conflict draft",
-  );
+  expect(commonName).toHaveValue("Japanese maple conflict draft");
   await user.click(
     screen.getByRole("button", { name: "Reset identity changes" }),
   );
