@@ -21,8 +21,10 @@ export function TerritoryInspector({
   comparisonIds,
   evidence,
   unavailableCodes = [],
+  scopeLabel,
 }: {
   unavailableCodes?: string[];
+  scopeLabel?: string;
   territories: (Territory & { identity_ids?: string[] })[];
   codes: string[];
   toggle: (code: string) => void;
@@ -110,11 +112,16 @@ export function TerritoryInspector({
       className="native-territory-inspector"
       aria-label="Territory inspector"
     >
-      <h3>{comparisonIds ? "Compared species" : "Explore all identities"}</h3>
+      <h3>
+        {scopeLabel ??
+          (comparisonIds ? "Compared species" : "Explore all identities")}
+      </h3>
       <p className="field-help">
-        {comparisonIds
-          ? "Within the chosen comparison and active filters."
-          : "Within the active collection scope and filters."}
+        {scopeLabel
+          ? "Only this identity’s recorded native-range assertions."
+          : comparisonIds
+            ? "Within the chosen comparison and active filters."
+            : "Within the active collection scope and filters."}
       </p>
       {selected.length ? (
         <>

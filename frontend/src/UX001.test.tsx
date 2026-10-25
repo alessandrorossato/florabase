@@ -1,5 +1,11 @@
 import { emptyOverview, journalFixture } from "./collection/dashboardFixtures";
-import { cleanup, render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
@@ -243,6 +249,7 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
             location: null,
           },
         ],
+        harvests: [],
         events: [event],
       });
     if (path === `/api/v1/botanical-identities/${identity.id}/profile`)
@@ -260,6 +267,7 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
   const user = userEvent.setup();
   render(<App />);
 
+  await vi.dynamicImportSettled();
   expect(
     await screen.findByRole("heading", { name: identity.display_label }),
   ).toBeInTheDocument();
@@ -281,7 +289,7 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
   );
   expect(screen.getByRole("tabpanel")).toHaveAttribute("id", "panel-overview");
   expect(
-    screen.getByRole("heading", { name: "Record details" }),
+    screen.getByRole("heading", { name: "Botanical summary" }),
   ).toBeInTheDocument();
   expect(
     screen.queryByRole("heading", { name: "Collection snapshot" }),
@@ -290,69 +298,57 @@ test("Botanical identity detail is a cross-collection hub without implied lineag
     screen.getByRole("button", { name: "Edit botanical identity" }),
   ).toBeInTheDocument();
   expect(
-    screen.getByLabelText("More botanical identity actions"),
+    screen.getByRole("button", { name: "Delete botanical identity" }),
   ).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Add to collection" }));
   expect(screen.getByRole("link", { name: "Add seed lot" })).toHaveAttribute(
     "href",
     `#/seeds?action=create&identity=${identity.id}`,
   );
 
-  await user.click(screen.getByRole("tab", { name: "Collection" }));
-  await user.click(screen.getByRole("tab", { name: "Seeds" }));
-  expect(window.location.hash).toBe(`#/identities/${identity.id}?tab=seeds`);
-  expect(
-    screen.getByRole("link", { name: /Bloodgood seed lot/ }),
-  ).toHaveAttribute("href", "#/seeds/seed-1");
-  expect(
-    within(screen.getByRole("tabpanel", { name: "Seeds" })).getByRole("link", {
-      name: "Add seed lot",
-    }),
-  ).toHaveAttribute("href", `#/seeds?action=create&identity=${identity.id}`);
-
-  await user.keyboard("{ArrowRight}");
-  expect(screen.getByRole("tab", { name: "Sowings" })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
-  const sowingWorkflow = screen.getByRole("region", {
-    name: "Start a sowing",
+  await user.keyboard("{Escape}");
+  for (const [name, route] of [
+    ["Seed lots", "seeds"],
+    ["Sowings", "sowings"],
+    ["Plants", "plants"],
+    ["Plant groups", "plants"],
+    ["Harvests", "harvests"],
+  ]) {
+    expect(
+      await screen.findByRole("link", {
+        name: new RegExp(`View all ${name}:`),
+      }),
+    ).toHaveAttribute(
+      "href",
+      expect.stringContaining(`#/${route}?identity_id=${identity.id}`),
+    );
+  }
+  expect(screen.queryByRole("tab", { name: "Collection" })).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Start sowing" }));
+  const sowingWorkflow = await screen.findByRole("dialog", {
+    name: "Start sowing",
   });
   expect(
-    within(sowingWorkflow).getByRole("link", { name: "Start sowing" }),
-  ).toHaveAttribute("href", "#/sowings?action=start&seedLot=seed-1");
-  const recordedSowings = screen
-    .getByRole("heading", { name: "Recorded sowings" })
-    .closest("section");
-  expect(recordedSowings).not.toBeNull();
-  if (!recordedSowings) throw new Error("Recorded sowings section is missing");
-  expect(
-    within(recordedSowings).getByRole("link", {
-      name: /Autumn tray/,
+    await within(sowingWorkflow).findByRole("link", {
+      name: "Bloodgood seed lot",
     }),
-  ).toHaveAttribute("href", "#/sowings/sowing-1");
-
-  await user.click(screen.getByRole("tab", { name: "Plants / Plant groups" }));
-  expect(screen.getByRole("link", { name: /Courtyard maple/ })).toHaveAttribute(
-    "href",
-    "#/plants/plant-1",
+  ).toHaveAttribute("href", "#/sowings?action=start&seedLot=seed-1");
+  await user.click(
+    within(sowingWorkflow).getByRole("button", { name: "Cancel" }),
   );
-  expect(screen.getByRole("link", { name: /Maple seedlings/ })).toHaveAttribute(
-    "href",
-    "#/plant-groups/group-1",
-  );
-  expect(screen.getByText("Plant group")).toBeInTheDocument();
-  expect(
-    screen.getByRole("link", { name: "Direct / acquired plant" }),
-  ).toHaveAttribute(
-    "href",
-    `#/plants?action=create&identity=${identity.id}&kind=plant`,
-  );
-  expect(screen.getByRole("link", { name: "Create plant" })).toHaveAttribute(
-    "href",
-    "#/plants?action=from-sowing&sowing=sowing-1&kind=plant",
-  );
-
-  await user.click(screen.getByRole("tab", { name: "Events" }));
+  await user.click(screen.getByRole("tab", { name: "Media" }));
+  for (const [name, href] of [
+    ["Bloodgood seed lot", "#/seeds/seed-1?tab=photos"],
+    ["Autumn tray", "#/sowings/sowing-1?tab=photos"],
+    ["Courtyard maple", "#/plants/plant-1?tab=photos"],
+    ["Maple seedlings", "#/plant-groups/group-1?tab=photos"],
+  ]) {
+    expect(await screen.findByRole("link", { name })).toHaveAttribute(
+      "href",
+      href,
+    );
+  }
+  await user.click(screen.getByRole("tab", { name: "History" }));
   expect(screen.getByText(/Strong new growth\./)).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Courtyard maple" })).toHaveAttribute(
     "href",
@@ -427,6 +423,7 @@ test("A Botanical identity tab deep link restores the selected collection view",
         sowings: [],
         plants: [],
         plant_groups: [],
+        harvests: [],
         events: [],
       });
     if (path === `/api/v1/botanical-identities/${identity.id}/profile`)
@@ -435,7 +432,7 @@ test("A Botanical identity tab deep link restores the selected collection view",
   });
   render(<App />);
 
-  expect(await screen.findByRole("tab", { name: "Events" })).toHaveAttribute(
+  expect(await screen.findByRole("tab", { name: "History" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
@@ -472,7 +469,7 @@ test("Botanical reference deep links use compact context and defer collection wo
   );
   expect(
     screen.getByRole("heading", {
-      name: "Reference",
+      name: "Botanical profile",
       level: 3,
     }),
   ).toBeInTheDocument();
@@ -501,6 +498,7 @@ test("Botanical identity empty states require a SeedLot before Sowing and preser
         sowings: [],
         plants: [],
         plant_groups: [],
+        harvests: [],
         events: [],
       });
     if (path === `/api/v1/botanical-identities/${identity.id}/profile`)
@@ -510,25 +508,24 @@ test("Botanical identity empty states require a SeedLot before Sowing and preser
   const user = userEvent.setup();
   render(<App />);
 
+  await user.click(
+    await screen.findByRole("button", { name: "Add to collection" }),
+  );
+  await user.click(screen.getByRole("button", { name: "Start sowing" }));
   expect(
-    await screen.findByText(
-      /Record an active seed lot before starting a sowing/,
-    ),
+    await screen.findByText(/No active seed lots are recorded/),
   ).toBeInTheDocument();
   expect(screen.getByRole("link", { name: "Create seed lot" })).toHaveAttribute(
     "href",
     `#/seeds?action=create&identity=${identity.id}`,
   );
-  await user.click(screen.getByRole("tab", { name: "Plants / Plant groups" }));
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+
   expect(
-    screen.getByRole("heading", { name: "From a sowing" }),
-  ).toBeInTheDocument();
-  expect(
-    screen.getByText(/No source sowings are recorded yet/),
-  ).toBeInTheDocument();
-  expect(
-    screen.getByRole("link", { name: "Direct / acquired plant" }),
-  ).toHaveAttribute(
+    await screen.findByRole("link", { name: /Sowings: 0 recorded, 0 active/ }),
+  ).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Add to collection" }));
+  expect(screen.getByRole("link", { name: "Add plant" })).toHaveAttribute(
     "href",
     `#/plants?action=create&identity=${identity.id}&kind=plant`,
   );
@@ -548,6 +545,7 @@ test("Botanical identity edit and guarded deletion stay explicit", async () => {
         sowings: [],
         plants: [],
         plant_groups: [],
+        harvests: [],
         events: [],
       });
     if (path === `/api/v1/botanical-identities/${identity.id}/profile`)
@@ -593,13 +591,22 @@ test("Botanical identity edit and guarded deletion stay explicit", async () => {
   await user.click(screen.getByRole("button", { name: "Save changes" }));
   expect(await screen.findAllByText("Japanese laceleaf maple")).toHaveLength(1);
 
-  await user.click(screen.getByLabelText("More botanical identity actions"));
-  await user.click(screen.getByRole("button", { name: "Delete" }));
+  await user.click(screen.getByRole("button", { name: "Close editor" }));
+  await waitFor(() => {
+    expect(
+      screen.queryByRole("dialog", { name: "Edit botanical identity" }),
+    ).not.toBeInTheDocument();
+  });
+  await user.click(
+    screen.getByRole("button", { name: "Delete botanical identity" }),
+  );
   expect(screen.getByRole("dialog")).toHaveTextContent(
     "Collection records are never cascaded",
   );
   await user.click(
-    screen.getByRole("button", { name: "Delete botanical identity" }),
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: "Delete botanical identity",
+    }),
   );
   expect(
     await screen.findByText(
@@ -608,10 +615,13 @@ test("Botanical identity edit and guarded deletion stay explicit", async () => {
   ).toHaveAttribute("role", "alert");
 
   referenced = false;
-  await user.click(screen.getByLabelText("More botanical identity actions"));
-  await user.click(screen.getByRole("button", { name: "Delete" }));
   await user.click(
     screen.getByRole("button", { name: "Delete botanical identity" }),
+  );
+  await user.click(
+    within(screen.getByRole("dialog")).getByRole("button", {
+      name: "Delete botanical identity",
+    }),
   );
   expect(
     await screen.findByRole("heading", { name: "Select a botanical identity" }),

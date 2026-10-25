@@ -249,3 +249,24 @@ test("external identity cover prefers its persistent protected local copy", asyn
     }),
   ).toHaveAttribute("src", "/api/v1/attachments/snapshot/content");
 });
+
+test("cover draft dismissal and source switching require explicit discard while preserving values", async () => {
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(json(null));
+  const discard = vi.spyOn(window, "confirm").mockReturnValue(false);
+  const user = userEvent.setup();
+  renderCover();
+  await user.click(
+    await screen.findByRole("button", { name: "Set cover image" }),
+  );
+  await user.click(screen.getByRole("button", { name: "Use external image" }));
+  const imageUrl = screen.getByLabelText(/Image URL/);
+  await user.type(imageUrl, "https://images.example.test/draft.jpg");
+  await user.keyboard("{Escape}");
+  expect(discard).toHaveBeenCalledWith("Discard unsaved cover changes?");
+  expect(imageUrl).toHaveValue("https://images.example.test/draft.jpg");
+  await user.click(screen.getByRole("button", { name: "Upload local image" }));
+  expect(imageUrl).toBeInTheDocument();
+  discard.mockReturnValue(true);
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+});

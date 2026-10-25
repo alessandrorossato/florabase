@@ -1,3 +1,4 @@
+import { IdentityCoverMetadata } from "../botanical-identities/IdentityCoverMetadata";
 import { FieldLabel } from "../components/FieldLabel";
 import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 
@@ -42,8 +43,14 @@ export function BotanicalIdentityCover({
   identityLabel,
   csrfToken,
   integrated = false,
+  showAssetMetadata = false,
+  featured = false,
+  onEditStateChange,
 }: {
   integrated?: boolean;
+  featured?: boolean;
+  showAssetMetadata?: boolean;
+  onEditStateChange?: (dirty: boolean, pending: boolean) => void;
   identityId: string;
   identityLabel: string;
   csrfToken: string;
@@ -57,6 +64,26 @@ export function BotanicalIdentityCover({
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [broken, setBroken] = useState(false);
+  const [coverDirty, setCoverDirty] = useState(false);
+  useEffect(() => {
+    onEditStateChange?.(editor !== null && coverDirty, pending);
+  }, [editor, coverDirty, pending, onEditStateChange]);
+  function dismissEditor() {
+    if (
+      pending ||
+      (coverDirty && !window.confirm("Discard unsaved cover changes?"))
+    )
+      return;
+    setCoverDirty(false);
+    setEditor(null);
+  }
+  function chooseSource(kind: "local" | "external") {
+    if (pending || editor === kind) return;
+    if (coverDirty && !window.confirm("Discard unsaved cover changes?")) return;
+    setCoverDirty(false);
+    setEditor(kind);
+    setError(null);
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -119,6 +146,7 @@ export function BotanicalIdentityCover({
       setState({ status: "ready", cover: saved });
       setBroken(false);
       setEditor(null);
+      setCoverDirty(false);
       setNotice("Cover image was saved.");
     } catch (saveFailure: unknown) {
       setError(saveError(saveFailure));
@@ -158,21 +186,25 @@ export function BotanicalIdentityCover({
   return (
     <section
       className={
-        integrated ? "identity-cover identity-cover--hero" : "identity-cover"
+        integrated
+          ? "identity-cover identity-cover--hero"
+          : `identity-cover${featured ? " identity-cover--featured" : ""}`
       }
       aria-label="Representative image"
     >
       <div className="identity-cover__heading">
         {!integrated && (
           <div>
-            <p className="eyebrow">Representative image</p>
-            <h3>Identity cover</h3>
+            <p className="eyebrow">
+              {featured ? "Cover" : "Representative image"}
+            </p>
+            <h3>{featured ? "Featured identity image" : "Identity cover"}</h3>
           </div>
         )}
         {state.status === "ready" && (
           <details
             className="cover-actions"
-            open={integrated ? undefined : true}
+            open={integrated || featured ? undefined : true}
           >
             <summary>{cover ? "Manage cover" : "Add cover"}</summary>
             <div className="actions">
@@ -181,6 +213,7 @@ export function BotanicalIdentityCover({
                 type="button"
                 onClick={() => {
                   setError(null);
+                  setCoverDirty(false);
                   setEditor(cover?.kind ?? "local");
                 }}
               >
@@ -313,37 +346,50 @@ export function BotanicalIdentityCover({
         </div>
       )}
 
+      {cover?.media_asset_id && cover.kind === "local" && showAssetMetadata && (
+        <IdentityCoverMetadata
+          key={cover.media_asset_id}
+          id={cover.media_asset_id}
+        />
+      )}
+      {cover?.media_asset_id && !integrated && (
+        <a href={`#/media/${cover.media_asset_id}`}>Open cover media record</a>
+      )}
+
       {editor && (
         <PhotoDialog
           className="identity-cover-dialog"
           title={cover ? "Change identity cover" : "Set identity cover"}
-          onClose={() => {
-            if (!pending) setEditor(null);
-          }}
+          onClose={dismissEditor}
         >
           <div className="segmented-control" aria-label="Cover source">
             <button
               aria-pressed={editor === "local"}
+              disabled={pending}
               type="button"
               onClick={() => {
-                setEditor("local");
-                setError(null);
+                chooseSource("local");
               }}
             >
               Upload local image
             </button>
             <button
               aria-pressed={editor === "external"}
+              disabled={pending}
               type="button"
               onClick={() => {
-                setEditor("external");
-                setError(null);
+                chooseSource("external");
               }}
             >
               Use external image
             </button>
           </div>
-          <form onSubmit={(event) => void submit(event)}>
+          <form
+            onChange={() => {
+              setCoverDirty(true);
+            }}
+            onSubmit={(event) => void submit(event)}
+          >
             <FormSection
               title={editor === "local" ? "Upload image" : "Source and credit"}
             >
@@ -473,9 +519,7 @@ export function BotanicalIdentityCover({
                 className="button--secondary"
                 disabled={pending}
                 type="button"
-                onClick={() => {
-                  setEditor(null);
-                }}
+                onClick={dismissEditor}
               >
                 Cancel
               </button>

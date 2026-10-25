@@ -1,0 +1,119 @@
+{
+  "phase": "visual composition; no canonical FULL gate",
+  "date": "2026-10-24",
+  "source_worktree": "/home/alessandro/.codex/worktrees/f6da/florabase",
+  "base_head": "e7ade78559803a35b738a669085799f55eb76258",
+  "frontend": {
+    "status": "passed",
+    "passed": 501,
+    "failed": 0,
+    "files": 31,
+    "exit_code": 0,
+    "result": "final-test-results.json",
+    "selection": [
+      "src/App.test.tsx",
+      "src/UX001.test.tsx",
+      "src/UX004.test.tsx",
+      "src/botanical-identities/ExternalBotanicalDataPanel.test.tsx",
+      "src/botanical-identities/IdentityCollectionHub.test.tsx",
+      "src/botanical-identities/IdentityCoverMetadata.test.tsx",
+      "src/botanical-identities/IdentityMaps.test.tsx",
+      "src/botanical-identities/IdentityMedia.test.tsx",
+      "src/botanical-identities/IdentityRecordMedia.test.tsx",
+      "src/botanical-identities/IdentityReferenceSummary.test.tsx",
+      "src/botanical-identities/IdentitySourceAction.test.tsx",
+      "src/botanical-identities/identityGeography.test.ts",
+      "src/events/EventFeed.test.tsx",
+      "src/events/GlobalEventsScreen.test.tsx",
+      "src/harvests/HarvestScreen.test.tsx",
+      "src/media/MediaScreen.test.tsx",
+      "src/occurrence-map/OccurrenceDensityMap.test.tsx",
+      "src/occurrence-map/OccurrenceMapPanel.test.tsx",
+      "src/native-ranges/NativeCoverageMap.test.tsx",
+      "src/native-ranges/NativeRangesScreen.test.tsx",
+      "src/components/FormSections.test.tsx",
+      "src/plants/PlantScreen.test.tsx",
+      "src/photos/BotanicalIdentityCover.test.tsx",
+      "src/photos/PhotosSection.test.tsx",
+      "src/propagation/GuidedForms.test.tsx",
+      "src/saved-views/SavedViews.test.tsx",
+      "src/saved-views/state.test.ts",
+      "src/provenance-map/ProvenanceMap.test.tsx",
+      "src/sowings/SowingScreen.test.tsx",
+      "src/seed-lots/SeedLotScreen.test.tsx",
+      "src/taxonomy/TaxonomyScreen.test.tsx"
+    ],
+    "prior_attempt": "501 assertions passed; overall failure from an unhandled old App provenance mock shape. Corrected fixture and added readiness assertion; no weakening.",
+    "final_follow_up": {
+      "passed": 22,
+      "failed": 0,
+      "files": 3,
+      "exit_code": 0,
+      "result": "inspection-focus-tests.json",
+      "purpose": "After final inspection focus/close behavior and lint cleanup; tests overlap the broad selection."
+    }
+  },
+  "build": {
+    "status": "passed",
+    "typescript": "strict build passed",
+    "modules": 237
+  },
+  "eslint": {
+    "status": "passed",
+    "affected_ts_tsx_files": 11,
+    "warnings": 0
+  },
+  "formatting": {
+    "source_files": 51,
+    "status": "passed scoped frontend source/CSS check; final documentation formatted and checked"
+  },
+  "browser": {
+    "screenshots": 63,
+    "measurements": 63,
+    "overflow": [],
+    "viewports": [
+      [390, 844],
+      [860, 844],
+      [1024, 844],
+      [1440, 844]
+    ],
+    "theme_variants": [
+      "Botanical Light",
+      "Botanical Dark",
+      "Herbarium Light",
+      "Herbarium Dark",
+      "Mineral Light",
+      "Mineral Dark"
+    ],
+    "long_name_860px_header_height_after_fix": 176.4375,
+    "native_confirm": "Retained editor tab untouched; independent read-only inspection tab used. Earlier native-confirm manual acceptance remains pending.",
+    "inspection_viewport": "override reset",
+    "appearance_restored": "Botanical Light",
+    "pristine_editor": "Desktop/phone opened and closed without edits, save, delete or native dirty prompt; returned to Media.",
+    "inspection_focus": "Verified activation brings heading/map into view; Close inspection returns to exact evidence trigger at 1440px and 390px."
+  },
+  "data": "data-audit.json",
+  "api_schema_migrations": "none added in this pass",
+  "backend_checks": "Not rerun; prior 88 unit +15 PostgreSQL integration evidence archived.",
+  "limits": [
+    "Operator composition acceptance pending",
+    "Approved WFO/GBIF provider-backed imagery pending",
+    "Physical touch, assistive technology and zoom pending",
+    "Native unsaved confirmation interactive acceptance pending",
+    "No exact identity filter in dedicated Collection origins workspace; preview exact, workspace link honestly all identities",
+    "Identity supports one cover; related thumbnails retain source-record ownership; older entries without asset IDs use owner links"
+  ],
+  "lifecycle": {
+    "unstaged": true,
+    "uncommitted": true,
+    "canonical_full": false,
+    "push_pr_delivery": false
+  },
+  "gallery_local_links": "passed current and all three archived galleries; all final handoff links valid",
+  "feature_graph": {
+    "valid": 112
+  },
+  "index": "empty staged diff",
+  "whitespace": "git diff --check and newly added text-source whitespace passed",
+  "source_review": "Reviewed final tracked diff and new Maps/Origins/Media/record-gallery/helpers/tests; contact-sheet audit found and corrected intermediate Overview squeeze, recaptured final layout."
+}

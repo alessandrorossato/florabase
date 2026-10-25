@@ -26,9 +26,18 @@ export const recordCategories = [
 ] as const;
 export type RecordCategory = (typeof recordCategories)[number];
 export interface DirectoryStates {
-  seed_lots: { q: string; lifecycle: "active" | "history" | "all" };
-  sowings: { q: string; lifecycle: "active" | "completed" | "all" };
+  seed_lots: {
+    identity_id: string;
+    q: string;
+    lifecycle: "active" | "history" | "all";
+  };
+  sowings: {
+    identity_id: string;
+    q: string;
+    lifecycle: "active" | "completed" | "all";
+  };
   plants: {
+    identity_id: string;
     q: string;
     lifecycle: "active" | "history" | "all";
     type: "all" | "plant" | "group";
@@ -127,9 +136,9 @@ export const directoryRoutes: Record<DirectorySurface, string> = {
   provenance_map: "map",
 };
 export const defaults: DirectoryStates = {
-  seed_lots: { q: "", lifecycle: "active" },
-  sowings: { q: "", lifecycle: "active" },
-  plants: { q: "", lifecycle: "active", type: "all" },
+  seed_lots: { identity_id: "", q: "", lifecycle: "active" },
+  sowings: { identity_id: "", q: "", lifecycle: "active" },
+  plants: { identity_id: "", q: "", lifecycle: "active", type: "all" },
   harvests: { q: "", material: "", source_type: "", identity_id: "" },
   stored_material: {
     q: "",

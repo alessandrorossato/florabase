@@ -177,6 +177,7 @@ test("stale UUIDs stay exact, UI defaults do not store presentation noise", () =
   );
   expect(
     saveDirectoryState("plants", {
+      identity_id: "",
       q: "  basil  ",
       lifecycle: "active",
       type: "all",
@@ -309,3 +310,26 @@ test("Location lifecycle state defaults to active and round trips retired/all Sa
   ).toBe("active");
   expect(directoryState("locations", { state: "invalid" })).toBeNull();
 });
+
+test.each(["seed_lots", "sowings", "plants"] as const)(
+  "%s identity filter is exact, stable and saved with search/lifecycle",
+  (surface) => {
+    const value = { identity_id: missing, q: "basil", lifecycle: "all" };
+    const hash = savedViewHash(surface, 1, value);
+    expect(hash).toContain(`identity_id=${missing.toLowerCase()}`);
+    if (!hash) throw new Error("Expected identity-filter URL");
+    expect(readDirectoryState(surface, hash)).toMatchObject({
+      ...value,
+      identity_id: missing.toLowerCase(),
+    });
+    expect(
+      saveDirectoryState(surface, readDirectoryState(surface, hash)),
+    ).toMatchObject({
+      identity_id: missing.toLowerCase(),
+      q: "basil",
+      lifecycle: "all",
+    });
+    expect(directoryState(surface, { identity_id: "basil" })).toBeNull();
+    expect(savedViewHash(surface, 1, { identity_id: "" })).toBeNull();
+  },
+);

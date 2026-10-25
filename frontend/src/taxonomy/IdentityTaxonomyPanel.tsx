@@ -143,9 +143,19 @@ export function IdentityTaxonomyPanel({
     return (
       <section className="taxonomy-panel" aria-label="Taxonomy">
         <h3>Taxonomy</h3>
+        {!current && <p role="status">Loading taxonomy status…</p>}
+        {current?.failed && <p role="alert">Taxonomy status could not load.</p>}
+        {data && !link && <p>No WFO classification confirmed.</p>}
+        {data && !data.source_available && (
+          <p className="field-help">Local taxonomy source unavailable.</p>
+        )}
         {breadcrumb}
         <a href={linkUrl}>
-          {link ? "Review taxonomy source" : "Link taxonomy source"}
+          {!data
+            ? "Review taxonomy status"
+            : link
+              ? "Review taxonomy source"
+              : "Link taxonomy source"}
         </a>
         {link && !valid && (
           <p>

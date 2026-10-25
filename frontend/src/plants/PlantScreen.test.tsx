@@ -2916,3 +2916,45 @@ test.each(["plant", "group"] as const)(
     expect(more).toHaveFocus();
   },
 );
+
+test("identity scope composes with the Plants ownership model and separate group type", async () => {
+  const own = plant({ label: "Scoped plant" });
+  const ownGroup = group({
+    label: "Scoped group",
+    botanical_identity_id: identityId,
+    botanical_identity: own.botanical_identity,
+  });
+  const other = plant({
+    id: "01900000-0000-7000-8000-000000000599",
+    label: "Other plant",
+    botanical_identity_id: otherIdentityId,
+    botanical_identity: {
+      id: otherIdentityId,
+      display_label: "Other identity",
+    },
+  });
+  mockApi(plantHandler([own, other], [ownGroup]));
+  window.history.replaceState(
+    null,
+    "",
+    `#/plants?identity_id=${identityId}&lifecycle=all&type=group`,
+  );
+  const user = userEvent.setup();
+  render(<App />);
+  expect(
+    await screen.findByRole("button", { name: /Scoped group/ }),
+  ).toBeVisible();
+  expect(screen.queryByRole("button", { name: /Scoped plant/ })).toBeNull();
+  expect(screen.queryByRole("button", { name: /Other plant/ })).toBeNull();
+  await selectDirectoryFilter(user, "Record type", "all");
+  expect(
+    await screen.findByRole("button", { name: /Scoped plant/ }),
+  ).toBeVisible();
+  expect(screen.queryByRole("button", { name: /Other plant/ })).toBeNull();
+  await user.click(
+    screen.getByRole("button", { name: "Remove botanical identity filter" }),
+  );
+  expect(
+    await screen.findByRole("button", { name: /Other plant/ }),
+  ).toBeVisible();
+});

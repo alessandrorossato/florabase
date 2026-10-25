@@ -174,3 +174,29 @@ test("structured Harvest links to details and prefers Harvest imagery without du
   fireEvent.error(screen.getByRole("img"));
   expect(screen.getByRole("img")).toHaveAttribute("src", "/source-primary");
 });
+
+test("identity timeline keeps month precision and full long notes without repeating its identity", () => {
+  const notes = "An operator observation with retained detail. ".repeat(12);
+  render(
+    <EventFeed
+      journal
+      identityContextId="identity"
+      expandNotes
+      events={[
+        {
+          ...event,
+          occurred_on: { precision: "month", year: 2026, month: 10 },
+          notes,
+        },
+      ]}
+    />,
+  );
+  expect(screen.getByText("2026-10", { selector: "time" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Glasshouse plant" }),
+  ).toHaveAttribute("href", "#/plants/plant?tab=events");
+  expect(screen.queryByRole("link", { name: "Solanum betaceum" })).toBeNull();
+  const details = screen.getByText("Read full event notes").closest("details");
+  expect(details).toHaveTextContent(notes.trim());
+  expect(details).not.toHaveAttribute("open");
+});

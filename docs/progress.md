@@ -5278,3 +5278,127 @@ not the current delivery state.
   and all other worktrees remain preserved. Feature status is now `verified`; changes are still
   unstaged/uncommitted. The documentation update requires one final receipt refresh before guarded
   delivery via `make feature-deliver`.
+
+## 2026-10-23 — BOTANICAL-IDENTITIES-VISUAL-001 implementation and visual handoff
+
+- Implemented balanced Quick Preview actions and explicit active-SeedLot Sowing / actual Plant or
+  PlantGroup Harvest source choosers, including loading, retry, cancellation and prerequisite links.
+  Tablet/phone selection now exposes the same Preview actions in the shared native TaskDialog.
+- Reworked the compact identity header, Overview facts/links, all four Collection modes, all five
+  Reference modes and source-labelled Events. Preserved botanical names, counts, provenance,
+  Journal/History boundaries, direct URLs and existing provider-loading behavior.
+- Reused contextual EditWorkspace with all four edit sections, mounted drafts, section-specific
+  saves, normalized saved names, unsaved/pending guards and focus/context return. Moved deletion
+  to the Overview Danger zone; confirmation starts on Cancel and retains server integrity rules.
+- Focused frontend: **134 passed / 8 files**; strict TypeScript and production build (**225 modules**),
+  ESLint on all ten changed TS/TSX files, scoped formatting, **112-feature graph** and whitespace
+  checks pass. Repository-wide lint/full frontend attempts were interrupted (143); the full attempt
+  also reported ImportExport readiness failures. No full-suite or canonical verification is claimed.
+- Positively owned isolated review runs at **http://localhost:15176/#/identities**, synthetic data only;
+  retained Review port 15174 and foreign worktrees/data were preserved. Handoff and **71 screenshots**
+  with measured desktop/tablet/phone states and all six theme variants are in
+  `docs/botanical-identities-visual-001-handoff.md` and its linked gallery; zero measured horizontal
+  overflow. Approved provider-backed imagery, real AT/touch/zoom and independent/operator acceptance
+  remain pending. Feature is `implemented`; no FULL gate, staging, commit, push, PR, merge or delivery.
+  `BOTANICAL_IDENTITIES_VISUAL_REVIEW_READY`.
+
+
+## 2026-10-23 — BOTANICAL-IDENTITIES-VISUAL-001 operator refinement
+
+- Replaced nested Collection/Reference read navigation with flat bounded sections; Overview now
+  combines a local botanical excerpt/status, distinct truthful record/active counts, one relevant
+  next action and four recent events. Added all five canonical collection operations, including
+  PlantGroup creation; genuine SeedLot/Plant/group source eligibility remains authoritative.
+- Added exact identity-ID URL/Saved View scope to Seeds, Sowings and Plants, composing with search,
+  lifecycle and kind, with visible clear controls and return links. Reused existing Harvest/map
+  contracts; unsupported Journal/History filters are explicitly deferred in the handoff.
+- Normalized identity row dimensions and shared thin preview-selection accents across comparable
+  lists while preserving focus/bulk states. Extracted shared Journal timeline styles for identity
+  Events, retaining partial dates, source ownership and existing global Journal behavior.
+- Final affected frontend **374 passed / 18 files**; backend **88 unit + 15 PostgreSQL integration
+  passed**, exact disposable cleanup verified. Strict TypeScript/build (**230 modules**), targeted
+  ESLint (**30 files**), frontend/backend formatting, Ruff, changed-module mypy, both API artifact
+  checks, **112-feature graph** and whitespace pass. No canonical FULL or full-suite claim.
+- Current gallery adds **66 screenshots / 63 measured states**, all six theme variants and three
+  viewport sizes, with zero measured horizontal overflow; original 71 retained. Native discard
+  confirmation blocked final browser recaptures; older phone-header screenshots and manual
+  discard/deletion review limits are labelled honestly. No editor save/deletion was submitted.
+- The exact owned port-15176 review services remain running; original synthetic data preserved,
+  six labelled packets and one Saved View added. Handoff records routes, checks and limitations in
+  `docs/botanical-identities-visual-001-handoff.md`. Operator acceptance remains pending. Changes
+  remain unstaged/uncommitted; no push, PR or delivery.
+  `BOTANICAL_IDENTITIES_REFINED_REVIEW_READY`.
+
+## 2026-10-24 — BOTANICAL-IDENTITIES-VISUAL-001 cross-functional IA review
+
+- Final operator pass now has exactly Overview, Reference, Taxonomy, Maps, Media and History.
+  Overview combines a compact semantic surface band, five exact filtered footprint links, local
+  botanical/taxonomy summary, four recent authoritative facts including Harvests and one valid next
+  action. Legacy Collection/Events and previous sub-section routes retain useful destinations.
+- Reference is textual only. Taxonomy reuses existing source workflows. Maps explicitly loads one
+  of three distinct evidence types using existing engines; native inspector is identity scoped and
+  direct provenance membership/counts exclude unrelated records. Media shows actual cover rights
+  and bounded owner links with honest gallery limits. History retains the actual event provider;
+  unsupported sowing/germination/global identity history projections are documented.
+- Preserved exact URL/Saved View filters, all five creation actions and real source choosers,
+  mounted editor drafts, independent saves, dirty/pending guards and Cancel-first deletion.
+  Uniform Add entries measure 44px in all six themes. Editor context and adjacent navigation are
+  compact; the six main tabs use a narrow-screen scroll strip without page overflow.
+- On operator request, added a clearly fictional populated identity through authenticated review
+  APIs: 3 SeedLots, 1 Sowing, 2 Plants, 1 PlantGroup, 1 Harvest and 4 recorded facts, complete profile,
+  illustrative manual range/direct provenance and an attributed existing offline image. The manifest
+  verifies both original identities' counts are unchanged; no existing record was deleted or reset.
+- Final affected frontend **458 passed / 28 files**; strict TypeScript/build (**236 modules**),
+  ESLint (**45 TS/TSX files**, zero warnings), scoped frontend formatting (**49 source files**),
+  **112-feature graph** and whitespace passed. No third-pass API/schema change or backend rerun;
+  historical **88 unit + 15 integration** evidence remains in the archived refinement handoff.
+- Current gallery contains **72 screenshots / 72 measured states**, all six themes and three
+  viewports (1440×844, 1024×844, 390×844), with zero root/body horizontal overflow. All prior
+  handoffs/galleries remain. Native discard confirmation was reproduced safely with a temporary
+  unsaved draft; the browser exposed no dialog handle, so operator Cancel was requested and no
+  bypass/save/deletion was attempted. Interactive discard acceptance, approved provider imagery,
+  physical touch/AT/zoom and independent operator acceptance remain pending.
+- Only positively owned review services were reconnected after restart, retaining DB/media and
+  network. The populated review is at port 15176; no foreign/DEV/UAT/Preview/production resource was
+  changed. Final handoff: `docs/botanical-identities-visual-001-handoff.md`. Status `implemented`;
+  changes unstaged/uncommitted; no canonical FULL, push, PR or delivery.
+  `BOTANICAL_IDENTITY_CROSS_FUNCTIONAL_REVIEW_READY`.
+
+## 2026-10-24 — BOTANICAL-IDENTITIES-VISUAL-001 final visual composition
+
+- Preserved the accepted Overview/Reference/Taxonomy/Maps/Media/History architecture and all prior
+  candidate work. Applied one semantic primary section surface, aligned spacing/borders/radii and
+  quieter internal dividers. Compacted breadcrumb/header/tab spacing; actions stay together below
+  the name at intermediate widths. Fixed and recaptured the long-name Overview squeeze at 860px.
+- Maps now compares three distinct evidence types in three/two/one columns, showing actual entry,
+  saved-cache and direct provenance counts through existing local reads. One explicitly activated
+  full-width inspection reuses existing engines; it focuses/scrolls to the map and Close inspection
+  returns focus to its trigger. Dedicated origins workspace remains honestly labelled all identities;
+  no unsupported filter, provider acquisition or inferred geographic evidence was introduced.
+- Media features the actual cover and its rights with restrained existing management controls.
+  A separate responsive gallery queries existing exact owner photo lists in six-record batches,
+  preserves captions/owner links/rights and uses shared protected thumbnails/viewer. Remote assets
+  without saved copies stay placeholders. Older entries without asset IDs remain source links.
+  Two credited offline illustrations were added only to the existing fictional review Plant;
+  readonly audit confirms original and fictional collection counts, image rights and ownership.
+- Reference now exposes textual content directly under the tabs, with heading-row Edit profile,
+  two-column short fields and readable full-width long fields. Taxonomy uses the same surface;
+  History retains its operational timeline and Harvest facts without a redundant feed container.
+- Final affected frontend **501 passed / 31 files**, clean exit 0; final focused inspection/keyboard
+  follow-up **22 passed / 3 files**, clean exit 0 (overlapping selection). Initial composition run's
+  unhandled old App provenance mock shape was fixed explicitly; its attempt evidence is retained.
+  Strict TypeScript/build (**237 modules**), ESLint (**11 affected TS/TSX files**, zero warnings),
+  scoped formatting (**51 source/CSS files**), **112-feature graph**, whitespace and gallery links
+  pass. No API/schema/migration change or backend rerun in this pass.
+- Updated handoff and gallery contain **63 captures / 63 measured states**, six themes, 1440×844,
+  1024×844, 390×844 and intermediate 860×844; zero page-level horizontal overflow. Pristine editor
+  opens/closes at desktop/phone and returns to Media; the retained editor tab was untouched.
+  Provider imagery, physical touch/AT/zoom, earlier native-confirm manual acceptance and operator
+  composition acceptance remain pending. Inspection preferences restored to Botanical Light and
+  temporary viewport reset. Only the positively owned port-15176 review runtime was used.
+- Operator accepts the current excess card/elevated-surface nesting as non-blocking. Track a separate
+  cross-application visual-normalization follow-up: reduce unnecessary card/background nesting,
+  reuse established page surfaces and separators, preserve useful grouping, and align with the
+  eventual global IA. No broad styling redesign is part of this delivery.
+- Status remains `implemented`; all changes unstaged/uncommitted. No canonical FULL gate, push,
+  PR, delivery or global IA-NAV-001 redesign. `BOTANICAL_IDENTITY_VISUAL_COMPOSITION_READY`.

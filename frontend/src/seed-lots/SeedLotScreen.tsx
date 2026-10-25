@@ -1,3 +1,4 @@
+import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
 import { ActionButton, ActionLink } from "../components/Action";
 import "../components/collection-page.css";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
@@ -811,6 +812,7 @@ export function SeedLotScreen({
   const setFilter = (value: "active" | "history" | "all") => {
     view.update("lifecycle", value);
   };
+  const identityFilter = view.state.identity_id;
   const search = view.state.q;
   const setSearch = (value: string) => {
     view.update("q", value);
@@ -1036,6 +1038,8 @@ export function SeedLotScreen({
   const visible = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     return lots.filter((lot) => {
+      if (identityFilter && lot.botanical_identity_id !== identityFilter)
+        return false;
       const lifecycleMatch =
         filter === "all" ||
         (filter === "active"
@@ -1052,7 +1056,7 @@ export function SeedLotScreen({
         ].some((value) => value?.toLocaleLowerCase().includes(query));
       return lifecycleMatch && textMatch;
     });
-  }, [filter, lots, search]);
+  }, [identityFilter, filter, lots, search]);
 
   const bulkChoices = visible.map((lot) => ({
     kind: "seed_lot" as const,
@@ -1968,8 +1972,19 @@ export function SeedLotScreen({
           tools={
             !(detailOpen || (editing && !edit.modal)) && (
               <DirectoryTools
+                context={
+                  identityFilter ? (
+                    <a href={`#/identities/${identityFilter}?tab=overview`}>
+                      Return to botanical identity
+                    </a>
+                  ) : undefined
+                }
                 onReset={() => {
-                  setFilter("all");
+                  view.replace({
+                    ...view.state,
+                    lifecycle: "all",
+                    identity_id: "",
+                  });
                 }}
                 name="Seeds"
                 search={
@@ -1991,6 +2006,23 @@ export function SeedLotScreen({
                 }
                 filters={
                   <>
+                    <BotanicalIdentityFilter
+                      choices={Array.from(
+                        new Map(
+                          lots.map((lot) => [
+                            lot.botanical_identity_id,
+                            {
+                              id: lot.botanical_identity_id,
+                              label: lot.botanical_identity.display_label,
+                            },
+                          ]),
+                        ).values(),
+                      )}
+                      value={identityFilter}
+                      onChange={(id) => {
+                        view.update("identity_id", id);
+                      }}
+                    />
                     <DirectoryFilterSelect
                       label="Lifecycle"
                       value={filter}
@@ -2004,6 +2036,20 @@ export function SeedLotScreen({
                   </>
                 }
                 activeFilters={[
+                  ...(identityFilter
+                    ? [
+                        {
+                          label: "Botanical identity",
+                          value:
+                            references.identities.find(
+                              ({ id }) => id === identityFilter,
+                            )?.display_label ?? identityFilter,
+                          onRemove: () => {
+                            view.update("identity_id", "");
+                          },
+                        },
+                      ]
+                    : []),
                   ...(filter !== "all"
                     ? [
                         {
