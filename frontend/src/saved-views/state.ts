@@ -1,3 +1,4 @@
+import { directoryPath } from "../geography/routes";
 import {
   historyHash,
   parseHistoryState,
@@ -300,9 +301,15 @@ export function readDirectoryState<S extends DirectorySurface>(
 ): DirectoryStates[S] {
   const [path, query = ""] = hash.split("?", 2);
   const params = new URLSearchParams(
-    path === `#/${directoryRoutes[surface].split("?", 2)[0]}` ? query : "",
+    directoryPath(hash) === `#/${directoryRoutes[surface].split("?", 2)[0]}`
+      ? query
+      : "",
   );
   const input: SavedState = { ...fallback };
+  if (surface === "geography" && path === "#/geography/sites")
+    input.mode = "sites";
+  if (surface === "geography" && path === "#/geography/places")
+    input.mode = "places";
   for (const key of Object.keys(defaults[surface])) {
     const value = params.get(key);
     if (value !== null)

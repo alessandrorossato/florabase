@@ -1,0 +1,435 @@
+.geography-overview.workspace {
+  overflow-y: auto;
+}
+.geography-overview-intro {
+  margin-bottom: var(--space-4);
+}
+.geography-overview-intro h3,
+.geography-records h3 {
+  font: var(--type-h3);
+  margin: 0 0 var(--space-1);
+}
+.geography-overview-intro p,
+.geography-records > p {
+  color: var(--text-muted);
+  margin: 0;
+  font: var(--type-small);
+}
+
+.geography-coverage-title {
+  font: var(--type-label);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-2);
+}
+.geography-destinations {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.geography-destinations > section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+}
+.geography-destinations h4 {
+  font: var(--type-h3);
+  margin: 0 0 var(--space-1);
+}
+.geography-destinations p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.geography-summary-description {
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.geography-summary-body {
+  display: grid;
+  align-content: start;
+  gap: var(--space-3);
+  flex: 1;
+}
+.geography-coverage {
+  display: grid;
+  gap: var(--space-1);
+  font: var(--type-small);
+}
+.geography-coverage > strong {
+  font: var(--type-metric);
+  font-variant-numeric: tabular-nums;
+}
+.geography-coverage strong span {
+  font: var(--type-body);
+  color: var(--text-muted);
+}
+.geography-summary-facts {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  font: var(--type-small);
+}
+.geography-summary-facts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+.geography-summary-facts dt {
+  color: var(--text-muted);
+}
+.geography-summary-facts dd {
+  margin: 0;
+  text-align: end;
+  font-weight: 600;
+}
+.geography-summary-links {
+  font: var(--type-small);
+}
+.geography-summary-links summary {
+  cursor: pointer;
+  color: var(--primary);
+  padding-block: var(--space-2);
+}
+.geography-summary-links ul {
+  padding-inline-start: var(--space-4);
+  margin-block: var(--space-2);
+}
+.geography-destinations .control-action {
+  align-self: start;
+  max-width: 100%;
+  white-space: normal;
+  text-align: start;
+}
+.geography-records {
+  margin-top: var(--space-4);
+}
+.geography-records > div {
+  display: grid;
+  margin-top: var(--space-2);
+}
+.geography-records a {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-2);
+  border-bottom: 1px solid var(--border);
+  text-decoration: none;
+}
+.geography-records a strong {
+  min-width: 9rem;
+}
+.geography-records a span {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.geography-site-modes {
+  display: flex;
+  flex: none;
+  gap: var(--space-2);
+  margin-block: var(--space-2);
+}
+.geography-site-modes button[aria-pressed="true"] {
+  border-color: var(--primary);
+  background: var(--primary-subtle);
+  color: var(--primary);
+}
+@media (max-width: 48rem) {
+  .geography-destinations {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.geography-workspace .identity-list-item.geography-directory-row,
+.provenance-sites-workspace .identity-list-item.geography-directory-row {
+  padding: var(--space-3);
+  min-height: 2.75rem;
+  border-radius: var(--radius-small);
+  gap: var(--space-1);
+}
+.geography-directory-row .geography-row-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  font: var(--type-body);
+}
+.geography-directory-row strong {
+  font: var(--type-strong);
+}
+
+.geography-workspace .geography-directory-row:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 3px;
+}
+.geography-workspace .quick-preview {
+  padding: var(--space-4);
+}
+.geography-workspace .quick-preview :is(h3, .detail-header h3) {
+  font: var(--type-h3);
+  overflow-wrap: anywhere;
+}
+.geography-workspace .quick-preview :is(.record-facts, .stat-strip) {
+  margin-block: var(--space-3);
+}
+.geography-workspace .quick-preview .record-facts > div {
+  padding-block: var(--space-2);
+}
+.geography-workspace .quick-preview .detail-header {
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+}
+.geography-workspace .geography-place-inspector .detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+}
+.geography-workspace
+  .geography-place-inspector
+  .detail-actions
+  > :not(.overflow-menu) {
+  width: auto;
+}
+.geography-workspace .quick-preview .record-preview__actions {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: start;
+  margin-block: var(--space-3);
+  gap: var(--space-2);
+}
+.geography-workspace .quick-preview .record-facts {
+  gap: 0;
+}
+.geography-workspace .quick-preview .record-preview__actions > .button-link {
+  width: auto;
+}
+.geography-workspace .quick-preview .record-section h4 {
+  font: var(--type-h3);
+  margin-bottom: var(--space-2);
+}
+/* Legacy column headers turn shared horizontal flex bases into oversized heights. */
+.app-content :is(.geography-workspace, .geography-overview) .page-header {
+  flex-direction: row;
+  align-items: start;
+}
+
+.geography-workspace .quick-preview {
+  display: grid;
+  align-content: start;
+}
+.geography-workspace .identity-list,
+.geography-workspace .geography-directory-row {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Cap indentation while reusing the existing directory selection accent. */
+.geography-workspace .location-tree {
+  gap: 0;
+}
+.geography-workspace .location-tree--nested {
+  margin-block: 0;
+  margin-inline-start: var(--space-2);
+  padding-inline-start: var(--space-2);
+  border-width: 1px;
+}
+.geography-workspace .location-tree--compact-depth {
+  margin-inline-start: 0;
+  padding-inline-start: 0;
+  border: 0;
+}
+.geography-workspace .location-tree-node {
+  gap: var(--space-1);
+  align-items: center;
+}
+.geography-workspace .location-tree-toggle {
+  background: none;
+  border-color: transparent;
+}
+.geography-workspace .location-tree .geography-directory-row {
+  border-radius: 0;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  padding-block: var(--space-2);
+}
+.geography-workspace .geography-place-inspector .detail-header {
+  padding-top: 0;
+}
+.geography-workspace .geography-place-inspector .record-path {
+  font: var(--type-small);
+}
+.geography-workspace > .breadcrumbs,
+.geography-overview > .breadcrumbs {
+  flex: none;
+  margin: 0 0 var(--space-2);
+}
+.geography-workspace > .breadcrumbs ol,
+.geography-overview > .breadcrumbs ol {
+  flex-wrap: wrap;
+  white-space: normal;
+}
+
+/* One selection model; list and inspector share the left rail, map stays on the right edge. */
+.site-workspace-heading {
+  display: flex;
+  justify-content: end;
+}
+.site-workspace-heading:has(> div:only-child) {
+  height: 0;
+}
+.app-content .provenance-selection {
+  display: grid;
+  grid-template-columns: minmax(18rem, 37fr) minmax(0, 63fr);
+  gap: var(--space-4);
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  align-items: start;
+}
+.site-navigation-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.provenance-selection .site-directory-column {
+  min-width: 0;
+}
+.provenance-selection .identity-list {
+  margin: 0;
+  padding: 0;
+  gap: var(--space-2);
+}
+.provenance-selection .site-directory-column > .identity-list {
+  max-height: 11rem;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.app-content .provenance-selection .quick-preview {
+  display: block;
+  position: static;
+  max-height: 25rem;
+  overflow-y: auto;
+}
+.provenance-selection .site-map-panel {
+  min-width: 0;
+  padding: var(--space-2);
+}
+.provenance-selection .provenance-map {
+  height: clamp(24rem, calc(100dvh - 17rem), 45rem);
+}
+.app-content .provenance-selection .record-inspector {
+  align-content: start;
+  gap: var(--space-2);
+}
+.app-content .provenance-selection .record-inspector > :is(h3, p) {
+  margin: 0;
+}
+.app-content .provenance-selection .record-preview__actions {
+  margin-block: var(--space-1);
+}
+.app-content .provenance-selection .record-facts > div {
+  padding-block: var(--space-1);
+  grid-template-columns: minmax(5.5rem, 0.35fr) minmax(0, 1fr);
+}
+.provenance-selection .record-inspector .eyebrow {
+  display: none;
+}
+@media (min-width: 48.001rem) {
+  .geography-site-modes {
+    display: none;
+  }
+}
+@media (max-width: 48rem) {
+  .app-content .provenance-selection {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .provenance-selection[data-presentation="browse"] .site-map-panel {
+    display: none;
+  }
+  .provenance-selection .provenance-map {
+    height: 24rem;
+  }
+  .app-content .provenance-selection .quick-preview {
+    max-height: none;
+    overflow: visible;
+  }
+}
+.app-content .geography-workspace .location-tree {
+  gap: var(--space-2);
+}
+.app-content .geography-workspace .location-tree .geography-directory-row {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+  padding: var(--space-2) var(--space-3);
+}
+.app-content .geography-workspace .location-tree-toggle {
+  border: 0;
+  border-radius: var(--radius-small);
+  background: transparent;
+  display: grid;
+  place-items: center;
+}
+.geography-workspace .location-tree-toggle svg {
+  width: 1rem;
+  height: 1rem;
+}
+.geography-workspace .location-tree-toggle[aria-expanded="false"] svg {
+  transform: rotate(-90deg);
+}
+.app-content [aria-labelledby^="geography-"] > .page-header .eyebrow:empty {
+  display: none;
+}
+.app-content .workspace > .breadcrumbs {
+  flex: none;
+  margin: 0 0 var(--space-2);
+}
+.app-content .breadcrumbs ol {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+.app-content .breadcrumbs li {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  overflow: visible;
+}
+
+@media (min-width: 48.001rem) {
+  .site-navigation-inspector,
+  .provenance-selection .site-map-panel {
+    height: calc(100dvh - 15rem);
+  }
+  .site-navigation-inspector > .site-directory-column {
+    flex: none;
+  }
+  .app-content .provenance-selection .quick-preview {
+    flex: 1;
+    min-height: 0;
+    max-height: none;
+  }
+  .provenance-selection .site-map-panel {
+    display: flex;
+    flex-direction: column;
+  }
+  .provenance-selection .provenance-map {
+    flex: 1;
+    min-height: 16rem;
+    height: auto;
+  }
+}
+@media (min-width: 48.001rem) and (max-width: 75rem) {
+  .site-navigation-inspector,
+  .provenance-selection .site-map-panel {
+    height: calc(100dvh - 18rem);
+  }
+}
+.app-content .provenance-selection .quick-preview:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: -3px;
+}
+
+.app-content .geography-destinations > section {
+  align-self: stretch;
+}

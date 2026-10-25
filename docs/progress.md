@@ -5278,3 +5278,190 @@ not the current delivery state.
   and all other worktrees remain preserved. Feature status is now `verified`; changes are still
   unstaged/uncommitted. The documentation update requires one final receipt refresh before guarded
   delivery via `make feature-deliver`.
+
+
+## 2026-10-24 — GEOGRAPHY-VISUAL-001 exploration review candidate
+
+- Initialized `feat/geography-visual-001` in the provided clean Codex worktree from freshly fetched
+  `origin/main` `e7ade78559803a35b738a669085799f55eb76258`. Kept the implementation unstaged and
+  uncommitted; feature status is `implemented`, with operator acceptance and canonical verification
+  explicitly pending.
+- Added `#/geography/overview`: four local authenticated reads, independent loading/empty/error/retry
+  summaries and exact identity/site/material links keep structured native ranges, observed occurrence
+  density and recorded provenance distinct. No map engines, provider loading or inference on the hub.
+  Reused all three delivered map destinations through grouped internal navigation; global sidebar,
+  Settings, tokens, APIs/schema and dependencies are unchanged.
+- Normalized Geography row/preview typography, density, metadata, actions and visible focus using
+  existing primitives. Retained the Places hierarchy and canonical/local restrictions. Exact
+  place-to-site filtering reuses existing site identities; source records reuse the origins projection.
+  Coordinate-less sites explicitly retain the missing exact-record-link limitation. Legacy `mode=map`
+  is labelled Site map and remains distinct from Collection origins.
+- Browser review reproduced and fixed lost Geography query transitions by stabilizing view-hook
+  arguments, a tablet header flex-direction defect, and the native species deep-link mode. Added no
+  shared router mechanism or shared directory primitive. The App change reserves one lazy internal
+  overview route; IA-NAV integration remains documented.
+- Focused baseline: 47 tests/4 files. Final affected frontend suite: **148 passed/7 files**. Strict
+  TypeScript, full zero-warning ESLint, frontend formatting and production Vite build passed.
+  Feature graph: **112 valid**; whitespace/index checks passed. One earlier host-pressure timeout
+  was superseded by the unchanged passing full affected selection; no tests/timeouts were weakened.
+- Authenticated isolated `florabase-geography-5430` review runs at `http://localhost:15276`, backend
+  loopback 18276, database revision `20261013_0042`, with a small API-created synthetic fixture and
+  separate volumes/network. Existing Review/UAT/DEV/Sourcing/Preview and other worktrees were not
+  taken over, reset or reseeded.
+- Evidence: **67** captures at 1440×844, 1024×844 and 390×844 across Botanical Light/Dark, Herbarium
+  Light and Mineral Dark; **9** browser interaction groups include keyboard/focus, hierarchy,
+  exact source records, Back/Forward, real Saved View restoration and labelled empty/error/1000-site
+  renderer doubles. Zero page errors, attempted third-party requests or horizontal overflow.
+  Handoff and evidence: `docs/geography-visual-001-handoff.md`, `docs/review/geography-visual-001/`.
+- Backend/integration/API regeneration and canonical FULL verification were not run because this
+  phase changes no backend/API/schema and reserves the final gate for acceptance. True zoom,
+  screen-reader/physical-device use, real-large-collection performance and live-provider checks remain
+  explicit limits. No staging, commit, push, PR or delivery. `GEOGRAPHY_EXPLORATION_REVIEW_READY`.
+
+
+## 2026-10-24 — Geography review runtime persistence
+
+- Replaced the stopped session-bound frontend with detached candidate-owned container
+  `florabase-geography-5430-frontend`, restart policy `unless-stopped`, on the existing Geography
+  network and loopback port 15276. Reused this worktree and its locked dependencies; backend, DB,
+  credentials and collection data remain intact. No other environment was changed.
+- Frontend startup and proxied `/api/v1/ready` passed. Application suites were not rerun for this
+  runtime-only repair; source remains unstaged and uncommitted.
+
+## 2026-10-24 — GEOGRAPHY-VISUAL-001 unified navigation refinement
+
+- Continued the existing `feat/geography-visual-001` candidate at `e7ade78`; no branch reset,
+  additional worktree, staging or commit. Feature remains `implemented`, pending operator acceptance
+  and canonical verification. This operator-approved refinement supersedes the initial grouped
+  navigation and sidebar-preservation scope above.
+- Removed only the global Maps subgroup and its three children from Explore/mobile More; Geography
+  is the single geographic entry. One six-link internal navigation mounts the complete existing
+  Native ranges, Species distribution and Collection origins screens through a shared Geography
+  header. Places/Sites stay first-class; Site map remains a local Sites List/Map mode. No renderer,
+  provider, dependency, backend/API/schema or shared token changes.
+- Canonical `#/geography/*` views coexist with unchanged old map URLs, exact identity/query state,
+  management and site deep links. A small directory-state path adapter retains v1 Saved View schemas
+  and stored paths. Native anchors preserve normal keyboard/history behavior and modified clicks.
+  Stabilized Origins' reset callback after reproducing stale visible search on same-view navigation.
+- Reworked Overview into three balanced evidence summaries with explicit unknown occurrence totals,
+  direct-record counts qualified to mapped sites and compact Places/Sites access. Existing independent
+  load/error/retry behavior, canonical/local restrictions, coordinates and source semantics remain.
+- Read-only audited botanical-identity branch `859028a`: its exact legacy map links remain supported.
+  Documented the localized Maps removal and shared App/state integration points for IA-NAV-001;
+  no other workstream or environment was edited. Fetched main remains `e7ade78`.
+- Baseline: **51 passed/2 files**. Final affected frontend selection: **225 passed/15 files**,
+  including route/alias/navigation, all map screens, App/lazy/transition, Overview, Saved Views,
+  Site management and provider/cache/privacy/tile regressions. TypeScript, zero-warning ESLint,
+  formatting and production build passed (refinement verification record). Feature graph:
+  **112 valid**; whitespace and empty-index checks passed. Canonical FULL was not run.
+- Browser matrix: **126 checks** across seven presentations, 1440×844/1024×844/390×844 and all three
+  palettes in Light/Dark. **57** curated exact-dimension captures; active navigation visible, no
+  checked horizontal overflow, page errors or third-party requests. Regional Origins/Site map
+  captures use existing zoom controls, preserving automatic fitting. Interaction evidence covers
+  legacy/canonical reload, exact Native identity selection, filters, Back/Forward, record cross-links,
+  local Site map, existing Saved View restoration and mobile keyboard/More navigation. Headless
+  Ctrl-click remains unprevented; native tab creation is explicitly unclaimed.
+- Preserved the original handoff/gallery and added current evidence under
+  `docs/review/geography-visual-001/refinement/`. The isolated persistent review remains on loopback
+  15276/18276 with its existing synthetic data. No live provider, actual screen-reader/physical-device,
+  true zoom or real-large-collection claim. Coordinate-less exact source-record linking remains an
+  explicit API limitation. No push, PR, delivery or final verification receipt.
+  `GEOGRAPHY_UNIFIED_NAVIGATION_REVIEW_READY`.
+
+## 2026-10-24 — GEOGRAPHY-VISUAL-001 final UX refinement
+
+- Preserved the accepted six-view IA, global Geography entry and supported canonical/legacy routes.
+  Shared Florabase Breadcrumbs now precede every Geography header; Explore is the existing group
+  label, Geography links through the canonical route helper to Overview and the active view is named.
+  No unsupported Explore landing route or extra navigation strip was introduced.
+- Replaced Overview cards with compact divider-led evidence rows and simple geographic-record links.
+  Existing local coverage, independent loading/error/retry/empty states and exact links remain;
+  occurrence totals stay explicitly unknown and mapped-site record counts remain distinct from quantities.
+- Normalized Places density and indentation, reusing the shared selection accent and keeping expand
+  separate from select. Preview status, ancestry, parent navigation, child creation, authoritative
+  counts, associated-site links and canonical/local restrictions remain. Capped deep indentation
+  preserves space for real long names on mobile.
+- Fixed New local place backdrop dismissal through existing TaskDialog behavior. Backdrop, native
+  Escape and Cancel share pending/dirty checks and the established discard confirmation. A preset
+  child parent is a clean baseline; declined discard retains all fields. Focus trapping and return
+  to the actual initiating control passed real-browser checks. Five focused clean/dirty/pending
+  regressions pass; no global modal or dirty-state mechanism was added.
+- Unified Provenance sites into one selected-ID list/map/inspector. Desktop shows all panes; tablet
+  places the inspector below list/map; mobile presentation preserves the same DOM and selection.
+  Coordinate-less rows remain searchable/selectable/editable in both presentations, with explicit
+  missing-coordinate state and no invented marker. Existing map engine, decimal coordinates,
+  accuracy, usage, source semantics, local context and provider privacy are preserved. No site
+  subtype exists in the API, so no classification was invented.
+- Baseline: **17 passed/3 files**. Final retained passing results cover **231 unique tests/15 files**
+  across focused runs, including App/lazy/transition, all map screens, breadcrumbs/aliases/state,
+  Overview, Place workflows, new dialog safety, site synchronization, coordinate-less records,
+  Saved Views and occurrence/cache/privacy/tile behavior. A stale eyebrow assertion now checks the
+  actual breadcrumb, and StrictMode waits for the real cold view import; assertions and global
+  timeouts were not weakened. Interrupted workers under host memory pressure are not passing evidence.
+- Browser evidence: **162 presentation checks**, nine presentations × three viewports × Botanical,
+  Herbarium and Mineral Light/Dark; **71** independently size-checked captures (69 ordinary plus two
+  labelled browser-only 1000-site renderer doubles). Seven real interaction groups cover hierarchy,
+  clean/dirty dialog focus/dismissal, synchronized markers/list/inspector, coordinate-less mobile
+  presentation and breadcrumb history/reload. No completed-run page errors, external requests or
+  checked horizontal overflow. The large-data doubles are not persisted data or a backend benchmark.
+- Fetched latest `origin/main` again before finalizing: still `e7ade78`; no reconciliation/reset or
+  other-worktree edit. The candidate-owned persistent review retains its data; protected DEV/Review/
+  UAT and other agent environments were not modified. Earlier handoffs and galleries are preserved;
+  current evidence is `docs/review/geography-visual-001/final-ux/`.
+- Feature remains `implemented`, unstaged and uncommitted. Operator acceptance and canonical FULL
+  remain separate; no push, PR, merge, feature-finish, receipt or live-provider/physical-device claim.
+
+
+## 2026-10-25 — Geography final UX handoff completion
+
+- Completed strict TypeScript, full zero-warning ESLint, full frontend formatting and production build.
+  Feature graph: **112 valid**; whitespace and empty-index checks pass. Retained focused evidence:
+  **231 unique tests/15 files passed**, plus **16 repeated final-source confirmation tests/2 files**.
+  Current reports, **162** presentation checks, **7** interaction groups and **71** size-checked
+  screenshots are indexed in `docs/review/geography-visual-001/final-ux/README.md`.
+- Latest fetched main remains `e7ade78`. Ownership inventory confirmed only the existing
+  `florabase-geography-5430` containers mount this worktree. Started those retained DB/backend/frontend
+  containers after they were stopped; existing volumes, records and account are preserved. Review
+  readiness and the existing synthetic login passed. No other environment or database was changed.
+- Final handoff: `docs/geography-visual-001-handoff.md`. Feature stays `implemented`; everything
+  remains unstaged/uncommitted. Canonical FULL, delivery, live-provider, real-device/screen-reader
+  and true-zoom checks remain explicitly deferred. No push, PR, merge, receipt or feature-finish.
+  `GEOGRAPHY_FINAL_UX_REVIEW_READY`.
+
+## 2026-10-25 — GEOGRAPHY-VISUAL-001 operator corrections
+
+- Restored the accepted balanced three-card Overview with current factual metrics, unknown occurrence
+  counts and compact record access. Removed the six-view tab component entirely from every Geography
+  view; the hub, canonical breadcrumbs and contextual links now provide geographic navigation.
+- Reorganized sites as a LEFT list/inspector rail and RIGHT prominent existing map (37/63). Selection,
+  accuracy, edit/detail/source links and coordinate-less discovery remain synchronized. Mobile
+  List/Map retains the same record. Measured map/rail bounds fit 1440×844 (y=233–837) and 1024×844
+  (y=273–829). Long lists and keyboard-focusable inspectors use intentional panel scrolling;
+  mobile keeps complete details in document flow. No map engine or provider behavior changed.
+- Places now have moderately rounded shared rows, spacing/borders, selected inset accent, separate
+  visible focus and restrained ARIA-expanded chevrons instead of boxed +/−. Leaves have no disclosure.
+  Hierarchy, canonical/local rules, create-child behavior and dirty/pending dialog protection remain.
+- Extracted the existing Breadcrumbs renderer without changing callers; PageHeader applies one common
+  convention to straightforward roots. Unsupported group links to Dashboard are plain labels; exact
+  existing parent URLs remain. Named Collection details and missing Explore/Collection prefixes were
+  corrected without workflow refactoring. Contextual-task/module exceptions and main reconciliation
+  are documented in `docs/geography-breadcrumb-audit.md` as a bounded follow-up.
+- Baseline **17 tests/3 files**. Final full frontend: **919 passed/79 files**, plus **47 repeated
+  focused confirmations** after lint-only cleanup. Strict TypeScript, zero-warning ESLint, frontend
+  formatting, production build, **112-feature** graph, whitespace and empty-index checks passed.
+  No tests/assertions or validation were weakened; edit-invalidated attempts are superseded.
+- Evidence: **162 Geography +56 global breadcrumb checks**, **6 interaction groups**, **89 current
+  size-verified PNGs** (84 matrix +3 selection/focus +2 labelled renderer doubles), and a separate
+  provenance-labelled before JPEG from main. Before/after links prove cards, no tabs, rounded rows,
+  chevrons, right-edge map, mobile selection and breadcrumbs. Zero completed matrix/interaction page
+  errors or attempted external requests. Existing data and previous galleries/handoffs are preserved.
+- Latest inspected `origin/main` is **5778da7 (#121)**. Its exact legacy map links remain supported;
+  the dirty candidate stays on e7ade78 and was not rebased/reset/merged. Preserve both workstreams
+  when reconciling Collection and Saved View overlaps before delivery. IA-NAV's worktree and protected
+  DEV/Review/UAT datasets were not modified.
+- Current handoff/gallery: `docs/geography-visual-001-handoff.md`,
+  `docs/review/geography-visual-001/operator-corrections/README.md`. Feature remains `implemented`;
+  operator visual review is complete and the implementation is approved for local commit. Independent
+  QA and canonical FULL remain separate; backend/integration checks (no backend changes), live-provider,
+  true-zoom and physical-device/screen-reader checks remain deferred. No push, PR or merge.
+  `GEOGRAPHY_COMMITTED_READY_FOR_QA`.

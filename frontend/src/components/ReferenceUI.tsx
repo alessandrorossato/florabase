@@ -1,3 +1,5 @@
+import { Breadcrumbs } from "./Breadcrumbs";
+import { workspaceBreadcrumbs } from "./breadcrumbPaths";
 import { Icon } from "./Icon";
 import { ActionButton, IconButton } from "./Action";
 import { registerControlLayer } from "./controlLayers";
@@ -46,16 +48,26 @@ export function PageHeader({
   tools?: ReactNode;
   eyebrow?: string;
 }) {
+  const breadcrumbs = workspaceBreadcrumbs(
+    title,
+    eyebrow,
+    window.location.hash,
+  );
   return (
-    <header className={`page-header${tools ? " page-header--with-tools" : ""}`}>
-      <div className="page-identity">
-        <p className="eyebrow">{eyebrow}</p>
-        <h2 id={titleId}>{title}</h2>
-        {description && <p>{description}</p>}
-      </div>
-      {tools && <div className="page-tools">{tools}</div>}
-      {actions && <div className="page-actions">{actions}</div>}
-    </header>
+    <>
+      {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
+      <header
+        className={`page-header${tools ? " page-header--with-tools" : ""}`}
+      >
+        <div className="page-identity">
+          {!breadcrumbs && <p className="eyebrow">{eyebrow}</p>}
+          <h2 id={titleId}>{title}</h2>
+          {description && <p>{description}</p>}
+        </div>
+        {tools && <div className="page-tools">{tools}</div>}
+        {actions && <div className="page-actions">{actions}</div>}
+      </header>
+    </>
   );
 }
 
@@ -141,9 +153,19 @@ export function StatStrip({
   );
 }
 
-export function QuickPreview({ children }: { children: ReactNode }) {
+export function QuickPreview({
+  children,
+  tabIndex,
+}: {
+  children: ReactNode;
+  tabIndex?: number;
+}) {
   return (
-    <aside className="quick-preview" aria-label="Quick preview">
+    <aside
+      className="quick-preview"
+      aria-label="Quick preview"
+      tabIndex={tabIndex}
+    >
       <p className="eyebrow">Quick preview</p>
       {children}
     </aside>

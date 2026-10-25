@@ -1,3 +1,4 @@
+import { directoryPath } from "../geography/routes";
 import { useCallback, useEffect, useState, type SetStateAction } from "react";
 import {
   isFreshDirectoryNavigation,
@@ -47,8 +48,12 @@ export function useDirectoryView<S extends DirectorySurface>(
 
   useEffect(() => {
     const sync = (event: Event) => {
-      const [path, query = ""] = window.location.hash.split("?", 2);
-      if (path !== `#/${directoryRoutes[surface].split("?", 2)[0]}`) return;
+      const [, query = ""] = window.location.hash.split("?", 2);
+      if (
+        directoryPath(window.location.hash) !==
+        `#/${directoryRoutes[surface].split("?", 2)[0]}`
+      )
+        return;
       const stored =
         new URLSearchParams(query).get("tab") === "stored-material";
       if (

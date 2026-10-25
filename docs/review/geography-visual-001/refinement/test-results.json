@@ -1,0 +1,88 @@
+{
+  "numTotalTestSuites": 28,
+  "numPassedTestSuites": 28,
+  "numFailedTestSuites": 0,
+  "numTotalTests": 225,
+  "numPassedTests": 225,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "success": true,
+  "files": [
+    {
+      "path": "src/App.lazy.test.tsx",
+      "tests": 1,
+      "status": "passed"
+    },
+    {
+      "path": "src/App.test.tsx",
+      "tests": 83,
+      "status": "passed"
+    },
+    {
+      "path": "src/App.transition.test.tsx",
+      "tests": 1,
+      "status": "passed"
+    },
+    {
+      "path": "src/geography/GeographyOverview.test.tsx",
+      "tests": 7,
+      "status": "passed"
+    },
+    {
+      "path": "src/geography/GeographyWorkspace.test.tsx",
+      "tests": 8,
+      "status": "passed"
+    },
+    {
+      "path": "src/geography/routes.test.ts",
+      "tests": 5,
+      "status": "passed"
+    },
+    {
+      "path": "src/occurrence-map/EvidenceTiles.test.ts",
+      "tests": 4,
+      "status": "passed"
+    },
+    {
+      "path": "src/occurrence-map/OccurrenceDensityMap.test.tsx",
+      "tests": 4,
+      "status": "passed"
+    },
+    {
+      "path": "src/occurrence-map/OccurrenceMapPanel.test.tsx",
+      "tests": 4,
+      "status": "passed"
+    },
+    {
+      "path": "src/native-ranges/NativeRangesScreen.test.tsx",
+      "tests": 22,
+      "status": "passed"
+    },
+    {
+      "path": "src/provenance-map/ProvenanceMapScreen.test.tsx",
+      "tests": 11,
+      "status": "passed"
+    },
+    {
+      "path": "src/provenance-sites/ProvenanceSiteManager.test.tsx",
+      "tests": 5,
+      "status": "passed"
+    },
+    {
+      "path": "src/saved-views/SavedViews.test.tsx",
+      "tests": 10,
+      "status": "passed"
+    },
+    {
+      "path": "src/saved-views/state.test.ts",
+      "tests": 50,
+      "status": "passed"
+    },
+    {
+      "path": "src/species-distribution/SpeciesDistributionScreen.test.tsx",
+      "tests": 10,
+      "status": "passed"
+    }
+  ],
+  "note": "Focused review selection, not canonical FULL verification. Baseline 51 tests in 2 files passed before refinement."
+}

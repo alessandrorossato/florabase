@@ -393,6 +393,14 @@ function Detail({
         items={[
           { label: "Collection", href: "#/dashboard" },
           { label: "Plants", href: "#/plants" },
+          {
+            label: recordName(
+              value,
+              record.kind === "plant"
+                ? "Unlabelled plant"
+                : "Unlabelled plant group",
+            ),
+          },
         ]}
       />
       <DetailHeader
