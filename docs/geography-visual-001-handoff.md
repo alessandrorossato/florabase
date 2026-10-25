@@ -1,12 +1,20 @@
 # GEOGRAPHY-VISUAL-001 — Operator corrections review candidate
 
 25 October 2026. Worktree `/home/alessandro/.codex/worktrees/5430/florabase`, branch
-`feat/geography-visual-001`, base `e7ade78559803a35b738a669085799f55eb76258`.
+`feat/geography-visual-001`, base `5778da7be03bc6030cb0ab3af03b9631bf4fa209`.
 Latest fetched main: `5778da7be03bc6030cb0ab3af03b9631bf4fa209` (Botanical Identities #121).
 The approved Geography implementation commit is `9bd85335daeea3b64ed4e3fc31ec23567913ec0a`.
 Fetched `origin/main` at `5778da7be03bc6030cb0ab3af03b9631bf4fa209` (#121) was integrated into
-this feature branch without resetting or rebasing either history. Independent QA and canonical FULL
-remain pending. Protected PR delivery and feature-finish are still ahead.
+this feature branch without resetting or rebasing either history. Reconciliation commit
+`e501d7c2f068451e11808731e1bb87aa05e03a23` preserves both implementations. Independent QA and
+canonical FULL passed on the final QA tree. The first FULL run passed backend, workflow and static stages but exposed three
+frontend test failures caused by waits around lazy-loaded Import/Export controls and a transient
+Schedule focus assertion. Schedule passed 51/51 when isolated; Import/Export passed 3/3 after its
+tests were updated to wait for the loaded route and controls. A later run exposed one more lazy-route
+wait in the App geography-create test; it now allows five seconds for the dialog. Final FULL passed
+956 backend tests, 975 frontend tests, and 743 PostgreSQL integration tests, plus typing, lint and
+formatting, API drift, production builds, migration cycle, workflow and receipt checks. Protected PR
+delivery, feature-finish and DEV smoke are still ahead.
 
 ## Final operator decisions
 
@@ -121,9 +129,11 @@ verification.
 The gallery verification JSON records the pre-#121 Geography visual pass. After integrating #121,
 focused cross-feature regressions passed **356 tests in 12 files**, covering App routing, Geography,
 shared breadcrumbs, Identity maps/deep links, identity-scoped Saved Views, and SeedLot/Sowing/Plant
-pages. The feature graph validates **113** entries. The canonical FULL gate will verify this final
-integrated tree; backend/API/schema and provider behavior changes from #121 are included in that gate.
-The feature remains `implemented` until the required gate succeeds.
+pages. The feature graph validates **113** entries. Canonical FULL passed on the final QA tree:
+**956 backend tests**, **975 frontend tests**, and **743 PostgreSQL integration tests**; formatting,
+lint, typing, API drift, production builds, migration cycle, workflow and exact-tree receipt also
+passed. The final run includes the reconciled #121 backend, API/schema and provider behavior changes.
+The feature remains `implemented` pending protected delivery and post-merge local completion.
 
 [Open existing isolated Geography review](http://localhost:15276/#/geography/overview).
 Login `geography-review`; the operator-only password note is outside the repository at
@@ -132,8 +142,8 @@ volumes, media and network are preserved. Loopback ports 15276/18276 remain; Pos
 No protected DEV/Review/UAT or other agent environment was reset, reseeded or taken over.
 
 Live GBIF/online imagery, real screen reader/touch devices, true browser zoom and real-large-collection
-performance remain deferred. Contextual breadcrumb improvements remain a bounded follow-up. Canonical
-FULL, protected delivery, feature-finish and DEV checks remain pending.
+performance remain deferred. Contextual breadcrumb improvements remain a bounded follow-up. Protected
+delivery, feature-finish and guarded DEV checks remain pending.
 
 ## Future concepts — not delivered
 

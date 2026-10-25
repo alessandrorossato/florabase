@@ -275,7 +275,11 @@ test.each([
       await vi.dynamicImportSettled();
     });
     expect(
-      await screen.findByRole("dialog", { name: dialogName }),
+      await screen.findByRole(
+        "dialog",
+        { name: dialogName },
+        { timeout: 5000 },
+      ),
     ).toBeInTheDocument();
   },
 );

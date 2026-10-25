@@ -5593,3 +5593,34 @@ not the current delivery state.
   pending. Live-provider, true-zoom, physical-device/screen-reader and contextual breadcrumb checks
   remain deferred. No push, PR or merge.
   `GEOGRAPHY_COMMITTED_READY_FOR_QA`.
+
+## 2026-10-25 — GEOGRAPHY-VISUAL-001 independent QA follow-up
+
+- Reconciliation merge `e501d7c2f068451e11808731e1bb87aa05e03a23` retains the approved Geography
+  commit and Botanical Identities #121. Independent cross-feature regression passed **356 tests / 12
+  files**; feature graph validates **113** entries.
+- First canonical `make verify-full` passed workflow safety, formatting/lint/type checks and backend
+  unit tests, then reported **972/975 frontend tests**. Geography, breadcrumb, Places, map and
+  Provenance suites passed. Schedule passed **51/51** in isolation; its one full-suite focus failure
+  was transient. Import/Export exposed asynchronous test waits around lazy route loading; the tests
+  now wait for the loaded links and controls and passed **3/3**.
+- The exact-tree canonical gate must be rerun after these reviewed test and handoff updates. No
+  product behavior changed during independent QA. Protected delivery, feature-finish and DEV smoke
+  have not run. Live-provider, physical-device/screen-reader, true-zoom and contextual breadcrumb
+  improvements remain accepted follow-ups.
+  `GEOGRAPHY_INDEPENDENT_QA_IN_PROGRESS`.
+
+- Follow-up FULL run passed **974/975 frontend tests**; one `App.test.tsx` geography-create case
+  timed out while the lazy route still displayed its loading state. Extended that dialog wait to five
+  seconds. Import/Export now passes **3/3**, Schedule passed **51/51**, and the Geography-specific
+  workspace, Overview, Places, breadcrumbs, and Provenance tests passed. Canonical FULL must be
+  repeated on this final test/documentation tree; no product behavior changed.
+
+- Final canonical `make verify-full` passed on the reconciled final QA tree: **956 backend tests**,
+  **975 frontend tests**, and **743 PostgreSQL integration tests**; workflow and feature graph checks,
+  formatting, lint, typing, API drift, production builds, migration cycle, whitespace and exact-tree
+  receipt passed. The receipt is for branch `feat/geography-visual-001` against
+  `5778da7be03bc6030cb0ab3af03b9631bf4fa209`. No product behavior changed during QA. Protected
+  delivery, feature-finish and guarded DEV smoke remain pending. Live-provider, physical-device/screen
+  reader, true-zoom and contextual breadcrumb improvements remain accepted follow-ups.
+  `GEOGRAPHY_QA_VERIFIED_READY_FOR_DELIVERY`.
