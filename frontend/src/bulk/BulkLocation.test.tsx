@@ -93,6 +93,11 @@ function Harness({
 async function openMove() {
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: "Select records" }));
+  await waitFor(() => {
+    expect(
+      screen.getByRole("button", { name: "Select visible" }),
+    ).toHaveFocus();
+  });
   await user.click(screen.getByRole("button", { name: "Select visible" }));
   await user.click(screen.getByRole("button", { name: "Bulk actions" }));
   await user.click(screen.getByRole("button", { name: "Move to location" }));
@@ -329,6 +334,11 @@ test("Location failure can retry without applying and only shared eligible scope
   render(<Harness />);
   const user = userEvent.setup();
   await user.click(screen.getByRole("button", { name: "Select records" }));
+  await waitFor(() => {
+    expect(
+      screen.getByRole("button", { name: "Select visible" }),
+    ).toHaveFocus();
+  });
   await user.click(screen.getByRole("button", { name: "Select visible" }));
   await user.click(screen.getByRole("button", { name: "Bulk actions" }));
   await user.click(screen.getByRole("button", { name: "Move to location" }));
