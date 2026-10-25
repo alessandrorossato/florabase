@@ -1,0 +1,50 @@
+{
+  "scope": "Two additive offline illustrations on the existing fictional review Plant only; no existing records changed",
+  "plant_id": "01a16cba-817d-77ac-9d76-9692c7f2206d",
+  "images": [
+    {
+      "key": "aloe",
+      "asset_id": "01a16dd2-6067-7192-ac6c-b287a5f88cb6",
+      "source": {
+        "key": "aloe",
+        "species": "Aloe vera",
+        "source_url": "https://commons.wikimedia.org/wiki/File:Aloe_Vera%2C.jpg",
+        "image_url": "https://upload.wikimedia.org/wikipedia/commons/3/30/Aloe_Vera%2C.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original",
+        "creator": "Merstel007",
+        "licence": "CC0-1.0",
+        "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "file": "aloe.jpg",
+        "sha256": "383064743d5def51969306a54ea05d23049179297f86e7c0450d350af727ad37",
+        "bytes": 79579,
+        "width": 480,
+        "height": 640,
+        "changes": "Resized to at most 640px; recompressed JPEG; EXIF removed. Synthetic review illustration, not a collection specimen.",
+        "verified_on": "2026-10-22"
+      },
+      "linked": true,
+      "link_id": "01a16dd2-60cb-731b-b0ba-1edf0537115a"
+    },
+    {
+      "key": "fig",
+      "asset_id": "01a16dd2-611e-754c-859d-06a63fe7c281",
+      "source": {
+        "key": "fig",
+        "species": "Ficus carica",
+        "source_url": "https://commons.wikimedia.org/wiki/File:Ficus_carica_%281%29.jpg",
+        "image_url": "https://upload.wikimedia.org/wikipedia/commons/d/df/Ficus_carica_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original",
+        "creator": "Homoarborea",
+        "licence": "CC0-1.0",
+        "licence_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "file": "fig.jpg",
+        "sha256": "d0027ef9ab2c6432a43cccb2a9f2ccebf63e3e91f732ef2da716019e21e12a72",
+        "bytes": 92045,
+        "width": 640,
+        "height": 480,
+        "changes": "Resized to at most 640px; recompressed JPEG; EXIF removed. Synthetic review illustration, not a collection specimen.",
+        "verified_on": "2026-10-22"
+      },
+      "linked": true,
+      "link_id": "01a16dd2-6180-77f0-8893-247b4ae59209"
+    }
+  ]
+}

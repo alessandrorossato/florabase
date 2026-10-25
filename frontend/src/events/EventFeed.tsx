@@ -1,3 +1,4 @@
+import "./event-feed.css";
 import { StatusBadge } from "../components/WorkspaceUI";
 import { useRecordName } from "../components/recordPresentation";
 import { EventTargetPhoto } from "./EventTargetPhoto";
@@ -10,11 +11,15 @@ export function EventFeed({
   compact = false,
   showTargetPhoto = false,
   journal = false,
+  identityContextId,
+  expandNotes = false,
 }: {
   events: EventResponse[];
   compact?: boolean;
   showTargetPhoto?: boolean;
   journal?: boolean;
+  identityContextId?: string;
+  expandNotes?: boolean;
 }) {
   const recordName = useRecordName();
 
@@ -33,15 +38,17 @@ export function EventFeed({
         const href = `#/${event.target.type === "plant" ? "plants" : "plant-groups"}/${event.target.id}?tab=events`;
         const related = (
           <>
-            <p>
-              {journal && "Botanical identity: "}
-              <a
-                className="event-identity"
-                href={`#/identities/${event.target.botanical_identity.id}?tab=events`}
-              >
-                {event.target.botanical_identity.display_label}
-              </a>
-            </p>
+            {event.target.botanical_identity.id !== identityContextId && (
+              <p>
+                {journal && "Botanical identity: "}
+                <a
+                  className="event-identity"
+                  href={`#/identities/${event.target.botanical_identity.id}?tab=events`}
+                >
+                  {event.target.botanical_identity.display_label}
+                </a>
+              </p>
+            )}
             {event.destination_location && (
               <p>
                 Moved to{" "}
@@ -105,6 +112,12 @@ export function EventFeed({
                         ? `${event.notes.slice(0, 240).trimEnd()}…`
                         : event.notes}
                     </p>
+                  )}
+                  {expandNotes && event.notes && event.notes.length > 240 && (
+                    <details>
+                      <summary>Read full event notes</summary>
+                      <p className="preserve-lines">{event.notes}</p>
+                    </details>
                   )}
                   <div className="journal-related">{related}</div>
                 </div>

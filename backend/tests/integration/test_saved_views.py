@@ -302,3 +302,26 @@ def test_list_surface_api_and_bounded_pages(
     assert next_page[0]["name"] == "View 100"
     assert _api_get("/api/v1/saved-views?surface=unknown", cookie)[0] == 422
     assert _api_get("/api/v1/saved-views?offset=-1", cookie)[0] == 422
+
+
+@pytest.mark.parametrize("surface", ["seed_lots", "sowings", "plants"])
+def test_identity_scoped_collection_view_persistence(
+    authenticated_browser: tuple[str, str], db: Session, surface: str
+) -> None:
+    identity = str(uuid7())
+    state = {"identity_id": identity, "q": "basil", "lifecycle": "all"}
+    status, _, created = mutate(
+        authenticated_browser,
+        "POST",
+        "/api/v1/saved-views",
+        payload(f"Identity scope {surface}", surface, state),
+    )
+    assert status == 201
+    record = db.get(SavedView, UUID(created["id"]))
+    assert record is not None
+    assert record.state == state
+    assert created["compatibility"] == "supported"
+    status, restored = _api_get(f"/api/v1/saved-views?surface={surface}", authenticated_browser[0])
+    assert status == 200
+    assert isinstance(restored, list)
+    assert next(view for view in restored if view["id"] == created["id"])["state"] == state

@@ -3,7 +3,7 @@ from typing import Any
 from uuid import uuid7
 
 import pytest
-from pydantic import ValidationError
+from pydantic import JsonValue, ValidationError
 
 from florabase.saved_views.model import SavedView
 from florabase.saved_views.schemas import SavedViewCreate, SavedViewResponse, SavedViewUpdate
@@ -201,3 +201,18 @@ def test_stale_exact_reference_is_retained_without_lookup() -> None:
     assert canonical_state(SavedViewSurface.GLOBAL_SEARCH, 1, {"identity_id": missing}) == {
         "identity_id": missing
     }
+
+
+@pytest.mark.parametrize("surface", ["seed_lots", "sowings", "plants"])
+def test_collection_identity_scope_round_trip(surface: str) -> None:
+    identity = str(uuid7())
+    state: dict[str, JsonValue] = {
+        "identity_id": identity.upper(),
+        "q": "basil",
+        "lifecycle": "all",
+    }
+    result = canonical_state(SavedViewSurface(surface), 1, state)
+    assert result == {**state, "identity_id": identity}
+    assert canonical_state(SavedViewSurface(surface), 1, result) == result
+    with pytest.raises(ValidationError, match="identity_id"):
+        canonical_state(SavedViewSurface(surface), 1, {"identity_id": "basil"})

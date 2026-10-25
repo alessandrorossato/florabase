@@ -5,8 +5,8 @@
 [Shared breadcrumb audit and follow-up](../../../geography-breadcrumb-audit.md).
 
 Source `/home/alessandro/.codex/worktrees/5430/florabase`, `feat/geography-visual-001`, base `e7ade78`.
-Latest inspected main `5778da7` includes Botanical Identities #121 and is **not merged** into this
-candidate. Reconcile its overlapping Collection/Saved View changes before delivery.
+Latest inspected main `5778da7` includes Botanical Identities #121 and is integrated into this
+candidate. The overlap preserves both Collection/Saved View implementations.
 No IA-NAV design worktree or protected environment was edited.
 
 ## Before and after
@@ -112,6 +112,11 @@ completed command results. **Full frontend: 919 tests/79 files passed**, with 47
 confirmations after lint-only cleanup. Baseline: 17 tests in three files. The full frontend suite was selected
 because breadcrumb/PageHeader changes reach Collection, Activity, Explore, Sourcing and Tools;
 focused regressions cover shared group/record paths and the new Geography navigation/layout.
+
+Those files record the Geography visual pass before PR #121 integration. The integrated branch then
+passed **356 focused tests in 12 files**, including App, Geography, Identity maps and deep links,
+identity-scoped Saved Views, and SeedLot/Sowing/Plant routes. Its feature graph validates **113** entries.
+The canonical receipt will cover the final merged tree.
 
 TypeScript, ESLint, formatting, feature graph and production build are reported exactly. Backend/
 integration, schema/API regeneration and canonical FULL were not run: this increment changes only UI

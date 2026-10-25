@@ -1,7 +1,7 @@
 # Geography operator corrections: breadcrumb audit
 
-Source: `feat/geography-visual-001`, base `e7ade78`. Latest fetched main is `5778da7`
-(Botanical Identities #121). This dirty candidate is preserved; no rebase, merge or other-worktree edit.
+Source: `feat/geography-visual-001`, base `e7ade78`, with Botanical Identities #121 (`5778da7`)
+integrated by merge. Both histories and the separate IA-NAV worktree are preserved.
 
 ## Shared convention
 
@@ -45,8 +45,8 @@ identity module; normalizing every operation to a universal path requires agreei
 return contract first. Loading/error placeholders may retain their existing short path until their
 record is available. This is a bounded follow-up, not an invitation to redesign the sidebar.
 
-Before a later canonical gate/delivery, reconcile main #121's identity hub, Collection media/context
-changes and Saved View additions with this candidate's small shared-state route adapter. The existing
-IdentityMaps links on main still use `#/native-ranges?mode=species&identity=<id>`,
-`#/species-distribution?identity=<id>` and `#/map`; all are preserved here. Do not overwrite those
-changes or the separate IA-NAV-001 design worktree. This review does not claim main was merged.
+The merge retained main #121's identity hub, Collection media/context changes and identity-scoped
+Saved View additions alongside Geography's route adapter. Main's `IdentityMaps` links still use
+`#/native-ranges?mode=species&identity=<id>`, `#/species-distribution?identity=<id>` and `#/map`;
+all remain supported. Focused integrated checks and the canonical gate are recorded in the current
+handoff. The separate IA-NAV-001 design worktree remains untouched.

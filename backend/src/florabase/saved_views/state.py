@@ -71,10 +71,12 @@ class NativeRangesState(TextState):
 
 
 class SeedLotState(TextState):
+    identity_id: UUID | None = None
     lifecycle: Literal["active", "history", "all"] = "active"
 
 
 class SowingState(TextState):
+    identity_id: UUID | None = None
     lifecycle: Literal["active", "completed", "all"] = "active"
 
 

@@ -91,6 +91,7 @@ function setup(hash = "#/identities", mobile = false) {
           sowings: [],
           plants: [],
           plant_groups: [],
+          harvests: [],
           events: [],
         }),
       );
@@ -216,7 +217,7 @@ test("open details, browser back and forward preserve the directory and dedicate
   ).not.toBeInTheDocument();
   expect(
     screen.getByRole("tablist", { name: "Record sections" }),
-  ).toHaveTextContent("OverviewCollectionReferenceEvents");
+  ).toHaveTextContent("OverviewReferenceTaxonomyMapsMediaHistory");
   expect(
     screen.getByRole("region", { name: identity.display_label }),
   ).toContainElement(title);
@@ -240,13 +241,23 @@ test("open details, browser back and forward preserve the directory and dedicate
   ).toBeInTheDocument();
 });
 
-test("mobile card activation opens the dedicated detail directly", async () => {
+test("mobile card activation exposes Quick Preview before explicit detail navigation", async () => {
   setup("#/identities", true);
   const user = userEvent.setup();
   render(<App />);
   await user.click(
     await screen.findByRole("button", { name: /Abelmoschus.*Okra Burgundy/ }),
   );
+  const preview = await screen.findByRole("dialog", {
+    name: "Botanical identity preview",
+  });
+  expect(
+    within(preview).getByRole("button", { name: "Start sowing" }),
+  ).toBeInTheDocument();
+  expect(
+    within(preview).getByRole("button", { name: "Record harvest" }),
+  ).toBeInTheDocument();
+  await user.click(within(preview).getByRole("link", { name: "Open details" }));
   expect(
     await screen.findByRole("heading", {
       level: 2,
@@ -261,19 +272,21 @@ test("mobile card activation opens the dedicated detail directly", async () => {
 
 test("legacy collection deep links and same-record navigation restore the right accessible panel", async () => {
   setup(`#/identities/${identity.id}?tab=sowings`);
-  const user = userEvent.setup();
   render(<App />);
-  expect(
-    await screen.findByRole("tab", { name: "Collection" }),
-  ).toHaveAttribute("aria-selected", "true");
-  expect(screen.getByRole("tab", { name: "Sowings" })).toHaveAttribute(
+  expect(await screen.findByRole("tab", { name: "Overview" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
-  await user.click(screen.getByRole("tab", { name: "Plants / Plant groups" }));
   expect(
-    await screen.findByRole("tabpanel", { name: "Plants / Plant groups" }),
-  ).toBeInTheDocument();
+    await screen.findByRole("region", { name: "Linked collection records" }),
+  ).toHaveTextContent("Sowings");
+  expect(
+    screen.queryByRole("tablist", { name: "Collection sections" }),
+  ).toBeNull();
+  expect(screen.getByRole("link", { name: /Plants.*active/ })).toHaveAttribute(
+    "href",
+    expect.stringContaining("identity_id="),
+  );
   act(() => {
     window.history.pushState(
       null,
@@ -282,16 +295,16 @@ test("legacy collection deep links and same-record navigation restore the right 
     );
     window.dispatchEvent(new PopStateEvent("popstate"));
   });
-  expect(await screen.findByRole("tab", { name: "Events" })).toHaveAttribute(
+  expect(await screen.findByRole("tab", { name: "History" })).toHaveAttribute(
     "aria-selected",
     "true",
   );
   expect(
-    await screen.findByRole("tabpanel", { name: "Events" }),
+    await screen.findByRole("tabpanel", { name: "History" }),
   ).toBeInTheDocument();
 });
 
-test("Reference stays lazy and exposes one read-first module at a time", async () => {
+test("Reference is textual, contextual editing returns correctly, and Maps stays explicit", async () => {
   const requested = setup(`#/identities/${identity.id}`);
   const user = userEvent.setup();
   render(<App />);
@@ -299,71 +312,82 @@ test("Reference stays lazy and exposes one read-first module at a time", async (
     level: 2,
     name: identity.display_label,
   });
-  expect(
-    screen.getByRole("link", { name: "Add seed lot" }),
-  ).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Add to collection" }));
   expect(screen.getByRole("link", { name: "Add plant" })).toHaveAttribute(
     "href",
     `#/plants?action=create&identity=${identity.id}&kind=plant`,
   );
-  expect(
-    requested.some((path) => /profile|external-taxon|occurrence/.test(path)),
-  ).toBe(false);
-  await user.click(
-    await screen.findByText("Add cover", { selector: "summary" }),
-  );
+  await user.keyboard("{Escape}");
+  await user.click(screen.getByRole("tab", { name: "Media" }));
+  await user.click(await screen.findByText("Add cover", { exact: true }));
+  await screen.findByRole("button", { name: "Set cover image" });
   await user.click(screen.getByRole("button", { name: "Set cover image" }));
   expect(screen.getByRole("dialog")).toHaveTextContent("Upload image");
   await user.keyboard("{Escape}");
-  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Set cover image" })).toHaveFocus();
   await user.click(screen.getByRole("tab", { name: "Reference" }));
-  expect(document.querySelector(".identity-summary")).not.toBeInTheDocument();
-  expect(document.querySelector(".identity-work-header")).toBeInTheDocument();
-  expect(
-    screen.getByRole("tablist", { name: "Reference sections" }),
-  ).toHaveTextContent("ProfileNative rangeBotanical sourceTaxonomyOccurrences");
   await screen.findByText("No botanical profile yet.");
   expect(screen.queryByRole("heading", { name: "Native range" })).toBeNull();
   expect(
     screen.queryByRole("heading", { name: "External botanical source" }),
   ).toBeNull();
-  expect(screen.queryByRole("textbox", { name: "Description" })).toBeNull();
-  expect(screen.queryByLabelText("Geographic place")).toBeNull();
-  await user.click(screen.getByRole("button", { name: "Add profile" }));
-  expect(screen.getByRole("textbox", { name: "Description" })).toBeVisible();
-  await user.click(screen.getByRole("button", { name: "Cancel" }));
-  expect(screen.queryByRole("textbox", { name: "Description" })).toBeNull();
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Add profile" })).toHaveFocus();
-  });
-  await user.click(screen.getByRole("tab", { name: "Native range" }));
-  expect(screen.queryByText("No botanical profile yet.")).toBeNull();
-  await user.click(screen.getByRole("button", { name: "Manage native range" }));
-  expect(screen.getByLabelText("Geographic place")).toBeVisible();
-  await waitFor(() => {
-    expect(screen.getByRole("button", { name: "Done" })).toHaveFocus();
-  });
-  await user.click(screen.getByRole("button", { name: "Done" }));
-  await waitFor(() => {
-    expect(
-      screen.getByRole("button", { name: "Manage native range" }),
-    ).toHaveFocus();
-  });
-  expect(requested.some((path) => path.endsWith("/profile"))).toBe(true);
-  expect(requested.some((path) => path.includes("occurrence"))).toBe(false);
-  await user.click(screen.getByRole("tab", { name: "Botanical source" }));
   expect(
-    await screen.findByRole("heading", { name: "External botanical source" }),
-  ).toBeInTheDocument();
-  expect(screen.queryByText("Occurrence evidence")).toBeNull();
-  await user.click(screen.getByRole("tab", { name: "Occurrences" }));
+    screen.queryByRole("heading", { name: "Occurrence evidence" }),
+  ).toBeNull();
+  expect(screen.queryByRole("textbox", { name: "Description" })).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Add profile" }));
+  const editor = await screen.findByRole("dialog", {
+    name: "Edit botanical identity",
+  });
+  expect(
+    within(editor).getByRole("tab", { name: "Reference", selected: true }),
+  ).toBeVisible();
+  expect(
+    await within(editor).findByRole("textbox", { name: "Description" }),
+  ).toBeVisible();
+  await user.click(
+    within(editor).getByRole("button", { name: "Close editor" }),
+  );
+  await screen.findByRole("tabpanel", { name: "Reference" });
+  expect(
+    screen.getByRole("button", { name: "Edit botanical identity" }),
+  ).toHaveFocus();
+  await user.click(screen.getByRole("tab", { name: "Maps" }));
+  expect(
+    await screen.findByRole("heading", { name: "Geographic evidence" }),
+  ).toBeVisible();
+  expect(screen.queryByRole("heading", { name: "Occurrences" })).toBeNull();
+  await user.click(
+    screen.getByRole("button", { name: "Inspect occurrence evidence" }),
+  );
   expect(
     await screen.findByRole("heading", { name: "Occurrences" }),
-  ).toBeInTheDocument();
-  expect(screen.getByText("Occurrence evidence")).toBeInTheDocument();
-  expect(screen.queryByText("No botanical profile yet.")).toBeNull();
-  expect(requested.some((path) => path.includes("occurrence"))).toBe(false);
+  ).toBeVisible();
+  expect(
+    requested.some((path) => /external-taxa\/search|occurrence/.test(path)),
+  ).toBe(false);
+  await user.click(screen.getByRole("button", { name: "Edit native range" }));
+  const rangeEditor = await screen.findByRole("dialog", {
+    name: "Edit botanical identity",
+  });
+  expect(
+    within(rangeEditor).getByRole("tab", {
+      name: "Native range",
+      selected: true,
+    }),
+  ).toBeVisible();
+  await user.click(
+    await within(rangeEditor).findByRole("button", {
+      name: "Manage native range",
+    }),
+  );
+  expect(
+    await within(rangeEditor).findByLabelText("Geographic place"),
+  ).toBeVisible();
+  await user.click(
+    within(rangeEditor).getByRole("button", { name: "Close editor" }),
+  );
+  expect(await screen.findByRole("tabpanel", { name: "Maps" })).toBeVisible();
 });
 
 test("work tabs replace the rich Overview summary with compact identity context", async () => {
@@ -376,11 +400,13 @@ test("work tabs replace the rich Overview summary with compact identity context"
   });
   expect(document.querySelector(".identity-summary")).toBeInTheDocument();
   expect(document.querySelector(".identity-work-header")).toBeNull();
-  await user.click(screen.getByRole("tab", { name: "Collection" }));
+  await user.click(screen.getByRole("tab", { name: "Reference" }));
   expect(document.querySelector(".identity-summary")).toBeNull();
   expect(document.querySelector(".identity-work-header")).toBeInTheDocument();
-  expect(screen.getByRole("tab", { name: "Seeds" })).toBeInTheDocument();
-  await user.click(screen.getByRole("tab", { name: "Events" }));
+  expect(
+    await screen.findByRole("heading", { name: "Botanical profile" }),
+  ).toBeVisible();
+  await user.click(screen.getByRole("tab", { name: "History" }));
   expect(document.querySelector(".identity-summary")).toBeNull();
   expect(document.querySelector(".identity-work-header")).toBeInTheDocument();
 });
@@ -437,19 +463,23 @@ test("broken configured external covers fall back inside their directory card", 
   expect(within(card).getByText("Cover unavailable")).toBeInTheDocument();
 });
 
-test("identity overflow keeps delete anchored and restores trigger focus on Escape", async () => {
+test("identity Danger zone confirmation focuses Cancel and restores the destructive trigger on Escape", async () => {
   setup(`#/identities/${identity.id}`);
   const user = userEvent.setup();
   render(<App />);
-  const more = await screen.findByLabelText("More botanical identity actions");
-  await user.click(more);
-  expect(screen.getByRole("button", { name: "Delete" })).toBeVisible();
-  await user.keyboard("{Escape}");
-  expect(more).toHaveFocus();
-  expect(more).toHaveAttribute("aria-expanded", "false");
+  const trigger = await screen.findByRole("button", {
+    name: "Delete botanical identity",
+  });
+  expect(trigger.closest("section")).toHaveAccessibleName("Danger zone");
+  await user.click(trigger);
+  const dialog = screen.getByRole("dialog");
+  expect(within(dialog).getByRole("button", { name: "Cancel" })).toHaveFocus();
   expect(
-    screen.queryByRole("button", { name: /^Delete$/ }),
-  ).not.toBeInTheDocument();
+    within(dialog).getByRole("button", { name: "Delete botanical identity" }),
+  ).toBeVisible();
+  await user.keyboard("{Escape}");
+  expect(trigger).toHaveFocus();
+  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 });
 
 test("edit validation stays linked to the field and retains contextual help", async () => {
@@ -505,6 +535,7 @@ test("Identity Quick Preview Add plant opens the normal direct Plant form with i
     `#/plants?action=create&identity=${identity.id}&kind=plant`,
   );
   await user.click(action);
+  await vi.dynamicImportSettled();
   expect(
     await screen.findByRole("combobox", { name: /Botanical identity/ }),
   ).toHaveValue(identity.display_label);

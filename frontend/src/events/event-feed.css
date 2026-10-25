@@ -1,0 +1,111 @@
+/* Shared Journal timeline grammar, extracted from the Activity family. */
+.event-feed.journal-feed {
+  display: block;
+  list-style: none;
+  margin: 0;
+  padding: 0 var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+  background: var(--surface);
+}
+.event-feed.journal-feed > li:first-child > article {
+  border-top: 0;
+}
+.event-feed.journal-feed > li > article {
+  display: grid;
+  grid-template-columns: minmax(6rem, 9rem) minmax(0, 1fr);
+  gap: var(--space-4);
+  padding: var(--space-3) 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.journal-feed .journal-date {
+  padding: 0;
+  color: var(--text-muted);
+  font: var(--type-small);
+  font-variant-numeric: tabular-nums;
+}
+.journal-feed .journal-content {
+  min-width: 0;
+  border-left: 1px solid var(--border);
+  padding: 0 0 0 var(--space-4);
+  position: relative;
+  overflow-wrap: anywhere;
+}
+.journal-feed .journal-content::before {
+  content: "";
+  position: absolute;
+  width: var(--space-2);
+  height: var(--space-2);
+  left: calc(var(--space-1) * -1);
+  top: var(--space-1);
+  border: 1px solid var(--primary);
+  border-radius: 50%;
+  background: var(--background);
+}
+.event-feed.journal-feed .event-kind {
+  font: var(--type-strong);
+  margin: 0;
+}
+.event-feed.journal-feed .event-target {
+  display: inline;
+  font: var(--type-body);
+  color: var(--primary);
+  margin: 0;
+  text-underline-offset: 3px;
+}
+.journal-feed .journal-record-type {
+  display: inline;
+  margin-left: var(--space-2);
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.event-feed.journal-feed p {
+  margin: var(--space-1) 0 0;
+  font: var(--type-small);
+  overflow-wrap: anywhere;
+}
+.journal-feed .journal-related {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-1) 0 0;
+  padding: 0;
+  list-style: none;
+  font: var(--type-small);
+}
+.event-feed.journal-feed .journal-related p {
+  margin: 0;
+}
+.journal-feed .journal-excerpt {
+  white-space: pre-line;
+}
+.journal-feed .activity-row-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-1);
+}
+.journal-feed .activity-row-heading h3 {
+  font: var(--type-strong);
+  margin: 0;
+}
+@media (max-width: 48rem) {
+  .event-feed.journal-feed > li > article {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+    border-left: 1px solid var(--border);
+    padding-left: var(--space-3);
+  }
+  .journal-feed .journal-content {
+    padding: 0;
+    border-left: 0;
+  }
+  .journal-feed .journal-content::before {
+    left: calc(var(--space-4) * -1);
+  }
+}

@@ -1,0 +1,1673 @@
+[
+  {
+    "name": "collection-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=collection",
+    "width": 1440
+  },
+  {
+    "name": "bulk-selection-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 01Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 02Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderReserve seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderSpring seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/seeds?identity_id=01a16824-e0a5-73c3-83fe-33ad8edb1361&lifecycle=all",
+    "width": 1440
+  },
+  {
+    "name": "reference-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Reference"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=reference",
+    "width": 1440
+  },
+  {
+    "name": "reference-occurrence-prerequisite-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Reference"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=reference",
+    "width": 1440
+  },
+  {
+    "name": "events-1440",
+    "appearance": "light",
+    "bodyWidth": 1440,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "rows": [],
+    "tabs": [
+      "Events"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=events",
+    "width": 1440
+  },
+  {
+    "name": "filtered-sowings-1440",
+    "appearance": "light",
+    "bodyWidth": 1440,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "rows": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Sowing image placeholderApril tray · greenhouseOcimum basilicum ‘Genovese’Germination not recordedAc",
+        "outline": "rgb(61, 111, 142) solid 2px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(47, 104, 79) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/sowings?identity_id=01a16824-e0a5-73c3-83fe-33ad8edb1361&lifecycle=all",
+    "width": 1440
+  },
+  {
+    "name": "filtered-plants-1440",
+    "appearance": "light",
+    "bodyWidth": 1440,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "rows": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Plant image placeholderKitchen basil · pot 1Ocimum basilicum ‘Genovese’PlantActive",
+        "outline": "rgb(61, 111, 142) solid 2px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(47, 104, 79) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/plants?identity_id=01a16824-e0a5-73c3-83fe-33ad8edb1361&lifecycle=all&type=plant",
+    "width": 1440
+  },
+  {
+    "name": "filtered-groups-1440",
+    "appearance": "light",
+    "bodyWidth": 1440,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "rows": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "borderRadius": "0px",
+        "height": 92.109375,
+        "label": "Plant group image placeholderGreenhouse basil groupOcimum basilicum ‘Genovese’GroupQuantity unknownA",
+        "outline": "rgb(61, 111, 142) solid 2px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(47, 104, 79) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/plants?identity_id=01a16824-e0a5-73c3-83fe-33ad8edb1361&lifecycle=all&type=group",
+    "width": 1440
+  },
+  {
+    "name": "filtered-harvests-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Harvest image placeholderKitchen leavesOcimum basilicum ‘Genovese’2026-10-20Leaves",
+        "outline": "rgb(61, 111, 142) solid 2px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(47, 104, 79) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/harvests?identity_id=01a16824-e0a5-73c3-83fe-33ad8edb1361",
+    "width": 1440
+  },
+  {
+    "name": "add-menu-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=collection",
+    "width": 1440
+  },
+  {
+    "name": "sowing-source-menu-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=collection",
+    "width": 1440
+  },
+  {
+    "name": "sowing-canonical-source-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [],
+    "url": "#/sowings?action=start&seedLot=01a16a0c-905f-70c1-b426-2ca0e4bbd392",
+    "width": 1440
+  },
+  {
+    "name": "harvest-source-menu-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=collection",
+    "width": 1440
+  },
+  {
+    "name": "plant-group-canonical-1440",
+    "appearance": "light",
+    "bodyWidth": 1440,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "rows": [],
+    "tabs": [],
+    "url": "#/plants?action=create&identity=01a16824-e0a5-73c3-83fe-33ad8edb1361&kind=group",
+    "width": 1440
+  },
+  {
+    "name": "directory-botanical-light-1440",
+    "appearance": "light",
+    "bodyWidth": 1440,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "rows": [
+      {
+        "background": "rgba(231, 240, 234, 0.937)",
+        "borderRadius": "0px",
+        "height": 92.53125,
+        "label": "No cover imageOcimum basilicum ‘Genovese’Sweet basil4 seed lots · 1 plant",
+        "outline": "rgb(61, 111, 142) solid 3px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(47, 104, 79) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 92.53125,
+        "label": "No cover imagePelargonium peltatum ‘A deliberately long cultivar name for narrow workspace review’Iv",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/identities",
+    "width": 1440
+  },
+  {
+    "name": "overview-botanical-light-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Overview"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361",
+    "width": 1440
+  },
+  {
+    "name": "collection-botanical-light-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=collection",
+    "width": 1440
+  },
+  {
+    "name": "filtered-seeds-botanical-light-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 01Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(61, 111, 142) solid 2px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(47, 104, 79) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 02Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderReserve seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderSpring seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/seeds?identity_id=01a16824-e0a5-73c3-83fe-33ad8edb1361&lifecycle=all",
+    "width": 1440
+  },
+  {
+    "name": "directory-botanical-dark-1440",
+    "appearance": "dark",
+    "bodyWidth": 1440,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "rows": [
+      {
+        "background": "rgba(40, 62, 48, 0.855)",
+        "borderRadius": "0px",
+        "height": 92.53125,
+        "label": "No cover imageOcimum basilicum ‘Genovese’Sweet basil4 seed lots · 1 plant",
+        "outline": "rgb(155, 197, 224) solid 3px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(141, 197, 163) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgb(45, 59, 50)",
+        "borderRadius": "0px",
+        "height": 92.53125,
+        "label": "No cover imagePelargonium peltatum ‘A deliberately long cultivar name for narrow workspace review’Iv",
+        "outline": "rgb(229, 236, 230) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/identities",
+    "width": 1440
+  },
+  {
+    "name": "overview-botanical-dark-1440",
+    "appearance": "dark",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Overview"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361",
+    "width": 1440
+  },
+  {
+    "name": "collection-botanical-dark-1440",
+    "appearance": "dark",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=collection",
+    "width": 1440
+  },
+  {
+    "name": "filtered-seeds-botanical-dark-1440",
+    "appearance": "dark",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [
+      {
+        "background": "rgb(40, 62, 48)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 01Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(155, 197, 224) solid 2px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(141, 197, 163) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgb(45, 59, 50)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 02Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(229, 236, 230) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderReserve seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(229, 236, 230) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderSpring seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(229, 236, 230) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/seeds?identity_id=01a16824-e0a5-73c3-83fe-33ad8edb1361&lifecycle=all",
+    "width": 1440
+  },
+  {
+    "name": "directory-herbarium-light-1440",
+    "appearance": "light",
+    "bodyWidth": 1440,
+    "height": 844,
+    "palette": "herbarium",
+    "rootWidth": 1440,
+    "rows": [
+      {
+        "background": "rgba(236, 235, 220, 0.85)",
+        "borderRadius": "0px",
+        "height": 92.53125,
+        "label": "No cover imageOcimum basilicum ‘Genovese’Sweet basil4 seed lots · 1 plant",
+        "outline": "rgb(53, 98, 125) solid 3px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(98, 97, 59) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgb(233, 228, 215)",
+        "borderRadius": "0px",
+        "height": 92.53125,
+        "label": "No cover imagePelargonium peltatum ‘A deliberately long cultivar name for narrow workspace review’Iv",
+        "outline": "rgb(43, 41, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/identities",
+    "width": 1440
+  },
+  {
+    "name": "overview-herbarium-light-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "herbarium",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Overview"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361",
+    "width": 1440
+  },
+  {
+    "name": "collection-herbarium-light-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "herbarium",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=collection",
+    "width": 1440
+  },
+  {
+    "name": "filtered-seeds-herbarium-light-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "herbarium",
+    "rootWidth": 1425,
+    "rows": [
+      {
+        "background": "rgb(236, 235, 220)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 01Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(53, 98, 125) solid 2px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(98, 97, 59) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgb(233, 228, 215)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 02Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(43, 41, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderReserve seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(43, 41, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderSpring seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(43, 41, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/seeds?identity_id=01a16824-e0a5-73c3-83fe-33ad8edb1361&lifecycle=all",
+    "width": 1440
+  },
+  {
+    "name": "directory-herbarium-dark-1440",
+    "appearance": "dark",
+    "bodyWidth": 1440,
+    "height": 844,
+    "palette": "herbarium",
+    "rootWidth": 1440,
+    "rows": [
+      {
+        "background": "rgb(58, 59, 41)",
+        "borderRadius": "0px",
+        "height": 92.53125,
+        "label": "No cover imageOcimum basilicum ‘Genovese’Sweet basil4 seed lots · 1 plant",
+        "outline": "rgb(155, 197, 224) solid 3px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(198, 193, 139) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgb(59, 55, 45)",
+        "borderRadius": "0px",
+        "height": 92.53125,
+        "label": "No cover imagePelargonium peltatum ‘A deliberately long cultivar name for narrow workspace review’Iv",
+        "outline": "rgb(238, 233, 221) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/identities",
+    "width": 1440
+  },
+  {
+    "name": "overview-herbarium-dark-1440",
+    "appearance": "dark",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "herbarium",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Overview"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361",
+    "width": 1440
+  },
+  {
+    "name": "collection-herbarium-dark-1440",
+    "appearance": "dark",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "herbarium",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=collection",
+    "width": 1440
+  },
+  {
+    "name": "filtered-seeds-herbarium-dark-1440",
+    "appearance": "dark",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "herbarium",
+    "rootWidth": 1425,
+    "rows": [
+      {
+        "background": "rgb(58, 59, 41)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 01Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(155, 197, 224) solid 2px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(198, 193, 139) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgb(59, 55, 45)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 02Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(238, 233, 221) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderReserve seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(238, 233, 221) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderSpring seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(238, 233, 221) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/seeds?identity_id=01a16824-e0a5-73c3-83fe-33ad8edb1361&lifecycle=all",
+    "width": 1440
+  },
+  {
+    "name": "directory-mineral-light-1440",
+    "appearance": "light",
+    "bodyWidth": 1440,
+    "height": 844,
+    "palette": "mineral",
+    "rootWidth": 1440,
+    "rows": [
+      {
+        "background": "rgba(228, 237, 244, 0.706)",
+        "borderRadius": "0px",
+        "height": 92.53125,
+        "label": "No cover imageOcimum basilicum ‘Genovese’Sweet basil4 seed lots · 1 plant",
+        "outline": "rgb(53, 98, 125) solid 3px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(52, 95, 124) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgb(226, 234, 240)",
+        "borderRadius": "0px",
+        "height": 92.53125,
+        "label": "No cover imagePelargonium peltatum ‘A deliberately long cultivar name for narrow workspace review’Iv",
+        "outline": "rgb(32, 42, 51) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/identities",
+    "width": 1440
+  },
+  {
+    "name": "overview-mineral-light-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "mineral",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Overview"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361",
+    "width": 1440
+  },
+  {
+    "name": "collection-mineral-light-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "mineral",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=collection",
+    "width": 1440
+  },
+  {
+    "name": "filtered-seeds-mineral-light-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "mineral",
+    "rootWidth": 1425,
+    "rows": [
+      {
+        "background": "rgb(228, 237, 244)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 01Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(53, 98, 125) solid 2px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(52, 95, 124) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgb(226, 234, 240)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 02Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(32, 42, 51) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderReserve seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(32, 42, 51) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderSpring seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(32, 42, 51) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/seeds?identity_id=01a16824-e0a5-73c3-83fe-33ad8edb1361&lifecycle=all",
+    "width": 1440
+  },
+  {
+    "name": "directory-mineral-dark-1440",
+    "appearance": "dark",
+    "bodyWidth": 1440,
+    "height": 844,
+    "palette": "mineral",
+    "rootWidth": 1440,
+    "rows": [
+      {
+        "background": "rgba(41, 61, 78, 0.85)",
+        "borderRadius": "0px",
+        "height": 92.53125,
+        "label": "No cover imageOcimum basilicum ‘Genovese’Sweet basil4 seed lots · 1 plant",
+        "outline": "rgb(155, 197, 224) solid 3px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(155, 191, 220) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgb(45, 61, 75)",
+        "borderRadius": "0px",
+        "height": 92.53125,
+        "label": "No cover imagePelargonium peltatum ‘A deliberately long cultivar name for narrow workspace review’Iv",
+        "outline": "rgb(227, 235, 243) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/identities",
+    "width": 1440
+  },
+  {
+    "name": "overview-mineral-dark-1440",
+    "appearance": "dark",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "mineral",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Overview"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361",
+    "width": 1440
+  },
+  {
+    "name": "collection-mineral-dark-1440",
+    "appearance": "dark",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "mineral",
+    "rootWidth": 1425,
+    "rows": [],
+    "tabs": [
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=collection",
+    "width": 1440
+  },
+  {
+    "name": "filtered-seeds-mineral-dark-1440",
+    "appearance": "dark",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "mineral",
+    "rootWidth": 1425,
+    "rows": [
+      {
+        "background": "rgb(41, 61, 78)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 01Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(155, 197, 224) solid 2px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(155, 191, 220) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgb(45, 61, 75)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 02Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(227, 235, 243) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderReserve seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(227, 235, 243) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderSpring seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(227, 235, 243) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/seeds?identity_id=01a16824-e0a5-73c3-83fe-33ad8edb1361&lifecycle=all",
+    "width": 1440
+  },
+  {
+    "name": "collection-1024",
+    "appearance": "light",
+    "bodyWidth": 1009,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1009,
+    "rows": [],
+    "tabs": [
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=collection",
+    "width": 1024
+  },
+  {
+    "name": "reference-1024",
+    "appearance": "light",
+    "bodyWidth": 1009,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1009,
+    "rows": [],
+    "tabs": [
+      "Reference"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=reference",
+    "width": 1024
+  },
+  {
+    "name": "events-1024",
+    "appearance": "light",
+    "bodyWidth": 1024,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1024,
+    "rows": [],
+    "tabs": [
+      "Events"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=events",
+    "width": 1024
+  },
+  {
+    "name": "add-menu-1024",
+    "appearance": "light",
+    "bodyWidth": 1024,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1024,
+    "rows": [],
+    "tabs": [
+      "Events"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=events",
+    "width": 1024
+  },
+  {
+    "name": "editor-1024",
+    "appearance": "light",
+    "bodyWidth": 1024,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1024,
+    "rows": [],
+    "tabs": [
+      "Identity",
+      "Events"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=edit",
+    "width": 1024
+  },
+  {
+    "name": "collection-390",
+    "appearance": "light",
+    "bodyWidth": 375,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 375,
+    "rows": [],
+    "tabs": [
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=collection",
+    "width": 390
+  },
+  {
+    "name": "reference-390",
+    "appearance": "light",
+    "bodyWidth": 375,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 375,
+    "rows": [],
+    "tabs": [
+      "Reference"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=reference",
+    "width": 390
+  },
+  {
+    "name": "events-390",
+    "appearance": "light",
+    "bodyWidth": 375,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 375,
+    "rows": [],
+    "tabs": [
+      "Events"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=events",
+    "width": 390
+  },
+  {
+    "name": "add-menu-390",
+    "appearance": "light",
+    "bodyWidth": 375,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 375,
+    "rows": [],
+    "tabs": [
+      "Events"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=events",
+    "width": 390
+  },
+  {
+    "name": "editor-390",
+    "appearance": "light",
+    "bodyWidth": 390,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 390,
+    "rows": [],
+    "tabs": [
+      "Identity",
+      "Events"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=edit",
+    "width": 390
+  },
+  {
+    "name": "overview-390",
+    "appearance": "light",
+    "bodyWidth": 375,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 375,
+    "rows": [],
+    "tabs": [
+      "Overview"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=overview",
+    "width": 390
+  },
+  {
+    "name": "long-name-empty-overview-390",
+    "appearance": "light",
+    "bodyWidth": 375,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 375,
+    "rows": [],
+    "tabs": [
+      "Overview"
+    ],
+    "url": "#/identities/01a16824-e0c8-74b4-8b44-eb5d966b89c8?tab=overview",
+    "width": 390
+  },
+  {
+    "name": "empty-collection-390",
+    "appearance": "light",
+    "bodyWidth": 375,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 375,
+    "rows": [],
+    "tabs": [
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0c8-74b4-8b44-eb5d966b89c8?tab=collection",
+    "width": 390
+  },
+  {
+    "name": "empty-sowing-390",
+    "appearance": "light",
+    "bodyWidth": 375,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 375,
+    "rows": [],
+    "tabs": [
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0c8-74b4-8b44-eb5d966b89c8?tab=collection",
+    "width": 390
+  },
+  {
+    "name": "empty-harvest-390",
+    "appearance": "light",
+    "bodyWidth": 375,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 375,
+    "rows": [],
+    "tabs": [
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0c8-74b4-8b44-eb5d966b89c8?tab=collection",
+    "width": 390
+  },
+  {
+    "name": "empty-reference-390",
+    "appearance": "light",
+    "bodyWidth": 375,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 375,
+    "rows": [],
+    "tabs": [
+      "Reference"
+    ],
+    "url": "#/identities/01a16824-e0c8-74b4-8b44-eb5d966b89c8?tab=reference",
+    "width": 390
+  },
+  {
+    "name": "directory-390",
+    "appearance": "light",
+    "bodyWidth": 390,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 390,
+    "rows": [
+      {
+        "background": "rgb(231, 240, 234)",
+        "borderRadius": "0px",
+        "height": 92.53125,
+        "label": "No cover imageOcimum basilicum ‘Genovese’Sweet basil4 seed lots · 1 plant",
+        "outline": "rgb(61, 111, 142) solid 3px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(47, 104, 79) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 155.296875,
+        "label": "No cover imagePelargonium peltatum ‘A deliberately long cultivar name for narrow workspace review’Iv",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/identities",
+    "width": 390
+  },
+  {
+    "name": "long-name-preview-390",
+    "appearance": "light",
+    "bodyWidth": 390,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 390,
+    "rows": [
+      {
+        "background": "rgba(231, 240, 234, 0.15)",
+        "borderRadius": "0px",
+        "height": 92.53125,
+        "label": "No cover imageOcimum basilicum ‘Genovese’Sweet basil4 seed lots · 1 plant",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(231, 240, 234, 0.85)",
+        "borderRadius": "0px",
+        "height": 155.296875,
+        "label": "No cover imagePelargonium peltatum ‘A deliberately long cultivar name for narrow workspace review’Iv",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(47, 104, 79) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/identities",
+    "width": 390
+  },
+  {
+    "name": "preview-390",
+    "appearance": "light",
+    "bodyWidth": 390,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 390,
+    "rows": [
+      {
+        "background": "rgba(231, 240, 234, 0.855)",
+        "borderRadius": "0px",
+        "height": 92.53125,
+        "label": "No cover imageOcimum basilicum ‘Genovese’Sweet basil4 seed lots · 1 plant",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "true",
+        "shadow": "rgb(47, 104, 79) 3px 0px 0px 0px inset",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(231, 240, 234, 0.145)",
+        "borderRadius": "0px",
+        "height": 155.296875,
+        "label": "No cover imagePelargonium peltatum ‘A deliberately long cultivar name for narrow workspace review’Iv",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/identities",
+    "width": 390
+  },
+  {
+    "name": "overview-1024",
+    "appearance": "light",
+    "bodyWidth": 1009,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1009,
+    "rows": [],
+    "tabs": [
+      "Overview"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361",
+    "width": 1024
+  },
+  {
+    "name": "shared-journal-1440",
+    "appearance": "light",
+    "bodyWidth": 1440,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "rows": [],
+    "tabs": [],
+    "url": "#/events",
+    "width": 1440
+  },
+  {
+    "name": "identity-saved-view-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 01Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 02Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderReserve seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderSpring seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/seeds?identity_id=01a16824-e0a5-73c3-83fe-33ad8edb1361&lifecycle=all",
+    "width": 1440
+  },
+  {
+    "name": "restored-identity-filter-1440",
+    "appearance": "light",
+    "bodyWidth": 1425,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "rows": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 01Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderRefinement review packet 02Ocimum basilicum ‘Genovese’Quantity unknownActive",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderReserve seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px",
+        "height": 89,
+        "label": "Seed image placeholderSpring seed packetOcimum basilicum ‘Genovese’30 seeds remainingActive",
+        "outline": "rgb(30, 38, 33) none 3px",
+        "padding": "12px 16px",
+        "selected": "false",
+        "shadow": "none",
+        "visual": {
+          "height": 64,
+          "width": 64
+        }
+      }
+    ],
+    "tabs": [],
+    "url": "#/seeds?identity_id=01a16824-e0a5-73c3-83fe-33ad8edb1361&lifecycle=all",
+    "width": 1440
+  },
+  {
+    "name": "editor-1440",
+    "appearance": "light",
+    "bodyWidth": 1440,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "rows": [],
+    "tabs": [
+      "Identity",
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=edit",
+    "width": 1440
+  },
+  {
+    "name": "editor-reference-draft-1440",
+    "appearance": "light",
+    "bodyWidth": 1440,
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "rows": [],
+    "tabs": [
+      "Reference",
+      "Description & origin",
+      "Collection"
+    ],
+    "url": "#/identities/01a16824-e0a5-73c3-83fe-33ad8edb1361?tab=edit",
+    "width": 1440
+  }
+]

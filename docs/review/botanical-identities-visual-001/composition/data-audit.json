@@ -1,0 +1,45 @@
+{
+  "health": {
+    "status": "ok"
+  },
+  "original_counts": {
+    "01a16824-e0a5-73c3-83fe-33ad8edb1361": {
+      "seed_lots": 8,
+      "sowings": 1,
+      "plants": 1,
+      "plant_groups": 1,
+      "harvests": 1,
+      "events": 2
+    },
+    "01a16824-e0c8-74b4-8b44-eb5d966b89c8": {
+      "seed_lots": 0,
+      "sowings": 0,
+      "plants": 0,
+      "plant_groups": 0,
+      "harvests": 0,
+      "events": 0
+    }
+  },
+  "media": [
+    {
+      "asset_id": "01a16dd2-6067-7192-ac6c-b287a5f88cb6",
+      "licence": "CC0-1.0",
+      "owner": "01a16cba-817d-77ac-9d76-9692c7f2206d",
+      "cover_references": 0
+    },
+    {
+      "asset_id": "01a16dd2-611e-754c-859d-06a63fe7c281",
+      "licence": "CC0-1.0",
+      "owner": "01a16cba-817d-77ac-9d76-9692c7f2206d",
+      "cover_references": 0
+    }
+  ],
+  "fictional_counts": {
+    "seed_lots": 3,
+    "sowings": 1,
+    "plants": 2,
+    "plant_groups": 1,
+    "harvests": 1,
+    "events": 4
+  }
+}

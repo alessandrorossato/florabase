@@ -1435,3 +1435,30 @@ test.each([false, true])(
     });
   },
 );
+
+test("identity-scoped Sowings uses the actual SeedLot identity and retains text search", async () => {
+  const own = sowing();
+  const other = sowing({
+    id: "01900000-0000-7000-8000-000000000599",
+    label: "Tray B",
+    seed_lot: {
+      ...own.seed_lot,
+      botanical_identity_id: "01900000-0000-7000-8000-000000000199",
+    },
+  });
+  mockApi(sowingHandler([own, other]));
+  window.history.replaceState(
+    null,
+    "",
+    `#/sowings?identity_id=${identityId}&lifecycle=all&q=Tray`,
+  );
+  const user = userEvent.setup();
+  render(<App />);
+  expect(await screen.findByRole("button", { name: /Tray A/ })).toBeVisible();
+  expect(screen.queryByRole("button", { name: /Tray B/ })).toBeNull();
+  await user.click(
+    screen.getByRole("button", { name: "Remove botanical identity filter" }),
+  );
+  expect(await screen.findByRole("button", { name: /Tray B/ })).toBeVisible();
+  expect(window.location.hash).toContain("q=Tray");
+});

@@ -3,9 +3,10 @@
 25 October 2026. Worktree `/home/alessandro/.codex/worktrees/5430/florabase`, branch
 `feat/geography-visual-001`, base `e7ade78559803a35b738a669085799f55eb76258`.
 Latest fetched main: `5778da7be03bc6030cb0ab3af03b9631bf4fa209` (Botanical Identities #121).
-The candidate was not reset/rebased/merged. Feature remains `implemented`. The operator completed
-the visual review and approved the current implementation for a local commit. Independent QA and
-canonical FULL remain pending. No push, PR or merge is part of this handoff.
+The approved Geography implementation commit is `9bd85335daeea3b64ed4e3fc31ec23567913ec0a`.
+Fetched `origin/main` at `5778da7be03bc6030cb0ab3af03b9631bf4fa209` (#121) was integrated into
+this feature branch without resetting or rebasing either history. Independent QA and canonical FULL
+remain pending. Protected PR delivery and feature-finish are still ahead.
 
 ## Final operator decisions
 
@@ -86,12 +87,12 @@ Media detail paths gain their actual group where previously absent. No sidebar m
 Contextual operation/wizard and embedded module paths retain their existing explicit return contracts.
 They have a dedicated bounded follow-up in the audit; they do not trigger a global workflow refactor.
 
-Main #121 adds the delivered identity hub, collection media/context and Saved View work. Read-only
-IdentityMaps audit confirms its three exact legacy map links remain supported here. Before a later
-canonical gate/delivery, reconcile its overlapping Collection files and Saved View state with this
-candidate, preserving both. This review does not claim main was merged or their combined API tested.
-The separate IA-NAV-001 worktree was not edited. The earlier operator-approved Maps subgroup removal
-remains localized: Geography is still the sole global geographic destination.
+Main #121 adds the delivered identity hub, collection media/context and Saved View work. Its exact
+legacy map links remain supported by the Geography route aliases. The merge preserved its
+identity-scoped Collection filters, Saved View schemas and backend canonicalization alongside the
+Geography state adapter; the shared App tests and both feature/progress records were retained. The
+separate IA-NAV-001 worktree was not edited. The operator-approved Maps subgroup removal remains
+localized: Geography is still the sole global geographic destination.
 
 ## Viewport fit and evidence
 
@@ -117,11 +118,12 @@ verification.
 
 ## Verification and review runtime
 
-Exact completed test/static/build results are recorded in the gallery verification JSON. The baseline
-was 17 tests/3 files. Because PageHeader/Breadcrumbs are shared, the affected verification includes the
-full frontend suite, plus focused route/tree/site/breadcrumb regressions. Backend/API/schema and
-provider implementations were not changed, so backend/integration, API regeneration and migrations
-were not rerun. Canonical FULL is explicitly deferred; no receipt or verified status is claimed.
+The gallery verification JSON records the pre-#121 Geography visual pass. After integrating #121,
+focused cross-feature regressions passed **356 tests in 12 files**, covering App routing, Geography,
+shared breadcrumbs, Identity maps/deep links, identity-scoped Saved Views, and SeedLot/Sowing/Plant
+pages. The feature graph validates **113** entries. The canonical FULL gate will verify this final
+integrated tree; backend/API/schema and provider behavior changes from #121 are included in that gate.
+The feature remains `implemented` until the required gate succeeds.
 
 [Open existing isolated Geography review](http://localhost:15276/#/geography/overview).
 Login `geography-review`; the operator-only password note is outside the repository at
@@ -130,8 +132,8 @@ volumes, media and network are preserved. Loopback ports 15276/18276 remain; Pos
 No protected DEV/Review/UAT or other agent environment was reset, reseeded or taken over.
 
 Live GBIF/online imagery, real screen reader/touch devices, true browser zoom and real-large-collection
-performance remain deferred. The audit identifies contextual breadcrumb follow-ups and main #121
-reconciliation before delivery. No push, PR, merge, feature-finish or canonical FULL is authorized.
+performance remain deferred. Contextual breadcrumb improvements remain a bounded follow-up. Canonical
+FULL, protected delivery, feature-finish and DEV checks remain pending.
 
 ## Future concepts — not delivered
 

@@ -1969,6 +1969,31 @@
       ],
       "priority": "P1",
       "status": "implemented"
+    },
+    {
+      "id": "BOTANICAL-IDENTITIES-VISUAL-001",
+      "category": "ux",
+      "description": "Complete the Botanical Identity cross-functional hub, exact collection drilldowns, source actions and contextual visual review",
+      "acceptance_criteria": [
+        "Directory and compact Quick Preview retain search, selection, real counts and route state, with balanced Open details, Edit, Add seed lot, Add plant, Start sowing and Record harvest actions",
+        "Sowing selects an active SeedLot and Harvest selects an actual Plant or PlantGroup, including supported historical sources; absent prerequisites link to the existing identity-prefilled creation flows",
+        "The compact responsive hub has exactly Overview, Reference, Taxonomy, Maps, Media and History; legacy Collection and Events URLs remain useful entry points without changing evidence or lineage contracts",
+        "The existing contextual EditWorkspace separates editing from detail navigation, preserves all four edit sections and their save semantics and drafts, guards unsaved/pending dismissal and restores focus and detail context",
+        "Seeds, Sowings and Plants retain exact Botanical Identity URL and Saved View filters with visible scope, clear and browser navigation; the Overview footprint links to canonical directories without nesting a Collection directory, keeping PlantGroups and Harvests distinct",
+        "Comparable directory rows share compact identity visuals and a semantic leading selection accent distinct from hover, focus and bulk checkboxes; all five valid operations use a consistent accessible shared action-menu grammar",
+        "Reference contains existing textual profile fields only; dedicated Taxonomy reuses source-linked workflows, Maps compares three distinct evidence types with one explicitly loaded inspection region, and Media features the actual cover plus a separate bounded linked-record thumbnail gallery with ownership and attribution",
+        "History retains authoritative linked recorded events, including structured Harvests, source links, ordering, deduplication and PartialDate precision, with concrete gaps documented instead of fabricated lifecycle facts",
+        "Delete botanical identity is separated in an Overview Danger zone with safe confirmation focus and unchanged backend referential integrity",
+        "Focused regressions, strict TypeScript, lint, formatting, production build, responsive and six-theme evidence and independent operator visual acceptance cover the final implementation; canonical FULL verification remains a separate authorized phase"
+      ],
+      "dependencies": [
+        "UX-004",
+        "GLOBAL-VISUAL-001",
+        "THEMES-001",
+        "CONTROLS-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
     }
   ]
 }

@@ -81,7 +81,7 @@ function Directory() {
       </button>
       <button
         onClick={() => {
-          state.replace({ q: "", lifecycle: "active" });
+          state.replace({ q: "", lifecycle: "active", identity_id: "" });
         }}
       >
         Clear filters

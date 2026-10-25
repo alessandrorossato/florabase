@@ -25,8 +25,10 @@ export function FormSections({
   errorFields = [],
   label = "Form sections",
   mode = "create",
+  initialPanelId,
 }: {
   label?: string;
+  initialPanelId?: string;
   mode?: "create" | "edit" | "page";
   panels: FormPanel[];
   submit: ReactNode;
@@ -37,7 +39,12 @@ export function FormSections({
 }) {
   const prefix = useId();
   const root = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(() =>
+    Math.max(
+      0,
+      panels.findIndex((panel) => panel.id === initialPanelId),
+    ),
+  );
   const index = Math.min(active, panels.length - 1);
   const reveal = useCallback((field: HTMLElement) => {
     let panel = field.closest<HTMLElement>("[data-form-panel]");

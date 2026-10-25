@@ -1,0 +1,3492 @@
+[
+  {
+    "name": "reference-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "Reference",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 91.625
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Reference"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1129,
+        "width": 1129
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=reference",
+    "width": 1440
+  },
+  {
+    "name": "maps-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "Maps",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 60.109375
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Maps"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1129,
+        "width": 1129
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=maps",
+    "width": 1440
+  },
+  {
+    "name": "taxonomy-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "Taxonomy",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 94.109375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Taxonomy"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1129,
+        "width": 1129
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=taxonomy",
+    "width": 1440
+  },
+  {
+    "name": "history-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "History",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 73.890625
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["History"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1129,
+        "width": 1129
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=history",
+    "width": 1440
+  },
+  {
+    "name": "history-full-botanical-light-1440",
+    "fullPage": true,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "History",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 73.890625
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["History"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1129,
+        "width": 1129
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=history",
+    "width": 1440
+  },
+  {
+    "name": "media-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "Media",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 65.4375
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Media"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=media",
+    "width": 1440
+  },
+  {
+    "name": "media-full-botanical-light-1440",
+    "fullPage": true,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "Media",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 65.4375
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Media"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=media",
+    "width": 1440
+  },
+  {
+    "name": "overview-botanical-light-1024",
+    "fullPage": false,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(255, 255, 255)",
+      "height": 184.875
+    },
+    "bodyWidth": 1009,
+    "focus": "Overview",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1009,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 741,
+        "width": 741
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1024
+  },
+  {
+    "name": "reference-botanical-light-1024",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1009,
+    "focus": "Reference",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 91.625
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1009,
+    "selectedTabs": ["Reference"],
+    "tabStrip": [
+      {
+        "scrollWidth": 741,
+        "width": 741
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=reference",
+    "width": 1024
+  },
+  {
+    "name": "taxonomy-botanical-light-1024",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1009,
+    "focus": "Taxonomy",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 94.109375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1009,
+    "selectedTabs": ["Taxonomy"],
+    "tabStrip": [
+      {
+        "scrollWidth": 741,
+        "width": 741
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=taxonomy",
+    "width": 1024
+  },
+  {
+    "name": "maps-botanical-light-1024",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1009,
+    "focus": "Maps",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 60.109375
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1009,
+    "selectedTabs": ["Maps"],
+    "tabStrip": [
+      {
+        "scrollWidth": 741,
+        "width": 741
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=maps",
+    "width": 1024
+  },
+  {
+    "name": "media-botanical-light-1024",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1009,
+    "focus": "Media",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 65.4375
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1009,
+    "selectedTabs": ["Media"],
+    "tabStrip": [
+      {
+        "scrollWidth": 741,
+        "width": 741
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=media",
+    "width": 1024
+  },
+  {
+    "name": "history-botanical-light-1024",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1009,
+    "focus": "History",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 73.890625
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1009,
+    "selectedTabs": ["History"],
+    "tabStrip": [
+      {
+        "scrollWidth": 741,
+        "width": 741
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=history",
+    "width": 1024
+  },
+  {
+    "name": "overview-botanical-light-390",
+    "fullPage": false,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(255, 255, 255)",
+      "height": 244.875
+    },
+    "bodyWidth": 375,
+    "focus": "Overview",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 44,
+        "label": "Overview",
+        "width": 67.078125
+      },
+      {
+        "height": 44,
+        "label": "Reference",
+        "width": 69.84375
+      },
+      {
+        "height": 44,
+        "label": "Taxonomy",
+        "width": 72.203125
+      },
+      {
+        "height": 44,
+        "label": "Maps",
+        "width": 44.640625
+      },
+      {
+        "height": 44,
+        "label": "Media",
+        "width": 48.875
+      },
+      {
+        "height": 44,
+        "label": "History",
+        "width": 55.046875
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 375,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 410,
+        "width": 375
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 390
+  },
+  {
+    "name": "reference-botanical-light-390",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 375,
+    "focus": "Reference",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 44,
+        "label": "Overview",
+        "width": 67.078125
+      },
+      {
+        "height": 44,
+        "label": "Reference",
+        "width": 69.84375
+      },
+      {
+        "height": 44,
+        "label": "Taxonomy",
+        "width": 72.203125
+      },
+      {
+        "height": 44,
+        "label": "Maps",
+        "width": 44.640625
+      },
+      {
+        "height": 44,
+        "label": "Media",
+        "width": 48.875
+      },
+      {
+        "height": 44,
+        "label": "History",
+        "width": 55.046875
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 375,
+    "selectedTabs": ["Reference"],
+    "tabStrip": [
+      {
+        "scrollWidth": 410,
+        "width": 375
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=reference",
+    "width": 390
+  },
+  {
+    "name": "taxonomy-botanical-light-390",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 375,
+    "focus": "Taxonomy",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 44,
+        "label": "Overview",
+        "width": 67.078125
+      },
+      {
+        "height": 44,
+        "label": "Reference",
+        "width": 69.84375
+      },
+      {
+        "height": 44,
+        "label": "Taxonomy",
+        "width": 72.203125
+      },
+      {
+        "height": 44,
+        "label": "Maps",
+        "width": 44.640625
+      },
+      {
+        "height": 44,
+        "label": "Media",
+        "width": 48.875
+      },
+      {
+        "height": 44,
+        "label": "History",
+        "width": 55.046875
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 375,
+    "selectedTabs": ["Taxonomy"],
+    "tabStrip": [
+      {
+        "scrollWidth": 410,
+        "width": 375
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=taxonomy",
+    "width": 390
+  },
+  {
+    "name": "maps-botanical-light-390",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 375,
+    "focus": "Maps",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 44,
+        "label": "Overview",
+        "width": 67.078125
+      },
+      {
+        "height": 44,
+        "label": "Reference",
+        "width": 69.84375
+      },
+      {
+        "height": 44,
+        "label": "Taxonomy",
+        "width": 72.203125
+      },
+      {
+        "height": 44,
+        "label": "Maps",
+        "width": 44.640625
+      },
+      {
+        "height": 44,
+        "label": "Media",
+        "width": 48.875
+      },
+      {
+        "height": 44,
+        "label": "History",
+        "width": 55.046875
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 375,
+    "selectedTabs": ["Maps"],
+    "tabStrip": [
+      {
+        "scrollWidth": 410,
+        "width": 375
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=maps",
+    "width": 390
+  },
+  {
+    "name": "media-botanical-light-390",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 375,
+    "focus": "Media",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 44,
+        "label": "Overview",
+        "width": 67.078125
+      },
+      {
+        "height": 44,
+        "label": "Reference",
+        "width": 69.84375
+      },
+      {
+        "height": 44,
+        "label": "Taxonomy",
+        "width": 72.203125
+      },
+      {
+        "height": 44,
+        "label": "Maps",
+        "width": 44.640625
+      },
+      {
+        "height": 44,
+        "label": "Media",
+        "width": 48.875
+      },
+      {
+        "height": 44,
+        "label": "History",
+        "width": 55.046875
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 375,
+    "selectedTabs": ["Media"],
+    "tabStrip": [
+      {
+        "scrollWidth": 410,
+        "width": 375
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=media",
+    "width": 390
+  },
+  {
+    "name": "history-botanical-light-390",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 375,
+    "focus": "History",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 44,
+        "label": "Overview",
+        "width": 67.078125
+      },
+      {
+        "height": 44,
+        "label": "Reference",
+        "width": 69.84375
+      },
+      {
+        "height": 44,
+        "label": "Taxonomy",
+        "width": 72.203125
+      },
+      {
+        "height": 44,
+        "label": "Maps",
+        "width": 44.640625
+      },
+      {
+        "height": 44,
+        "label": "Media",
+        "width": 48.875
+      },
+      {
+        "height": 44,
+        "label": "History",
+        "width": 55.046875
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 375,
+    "selectedTabs": ["History"],
+    "tabStrip": [
+      {
+        "scrollWidth": 410,
+        "width": 375
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=history",
+    "width": 390
+  },
+  {
+    "name": "add-menu-botanical-light-390",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 375,
+    "focus": "Add to collection",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 44,
+        "label": "Overview",
+        "width": 67.078125
+      },
+      {
+        "height": 44,
+        "label": "Reference",
+        "width": 69.84375
+      },
+      {
+        "height": 44,
+        "label": "Taxonomy",
+        "width": 72.203125
+      },
+      {
+        "height": 44,
+        "label": "Maps",
+        "width": 44.640625
+      },
+      {
+        "height": 44,
+        "label": "Media",
+        "width": 48.875
+      },
+      {
+        "height": 44,
+        "label": "History",
+        "width": 55.046875
+      }
+    ],
+    "menu": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(30, 38, 33)",
+        "color": "rgb(30, 38, 33)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add seed lot",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(30, 38, 33)",
+        "color": "rgb(30, 38, 33)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Start sowing",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(30, 38, 33)",
+        "color": "rgb(30, 38, 33)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add plant",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(30, 38, 33)",
+        "color": "rgb(30, 38, 33)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add plant group",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(30, 38, 33)",
+        "color": "rgb(30, 38, 33)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Record harvest",
+        "padding": "8px 12px"
+      }
+    ],
+    "palette": "botanical",
+    "rootWidth": 375,
+    "selectedTabs": ["History"],
+    "tabStrip": [
+      {
+        "scrollWidth": 410,
+        "width": 375
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=history",
+    "width": 390
+  },
+  {
+    "name": "danger-confirmation-botanical-light-390",
+    "fullPage": false,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(255, 255, 255)",
+      "height": 244.875
+    },
+    "bodyWidth": 375,
+    "focus": "Cancel",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 44,
+        "label": "Overview",
+        "width": 67.078125
+      },
+      {
+        "height": 44,
+        "label": "Reference",
+        "width": 69.84375
+      },
+      {
+        "height": 44,
+        "label": "Taxonomy",
+        "width": 72.203125
+      },
+      {
+        "height": 44,
+        "label": "Maps",
+        "width": 44.640625
+      },
+      {
+        "height": 44,
+        "label": "Media",
+        "width": 48.875
+      },
+      {
+        "height": 44,
+        "label": "History",
+        "width": 55.046875
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 375,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 410,
+        "width": 375
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 390
+  },
+  {
+    "name": "overview-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(255, 255, 255)",
+      "height": 128
+    },
+    "bodyWidth": 1425,
+    "focus": "Overview",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1440
+  },
+  {
+    "name": "add-menu-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(255, 255, 255)",
+      "height": 128
+    },
+    "bodyWidth": 1425,
+    "focus": "Add to collection",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(30, 38, 33)",
+        "color": "rgb(30, 38, 33)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add seed lot",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(30, 38, 33)",
+        "color": "rgb(30, 38, 33)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Start sowing",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(30, 38, 33)",
+        "color": "rgb(30, 38, 33)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add plant",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(30, 38, 33)",
+        "color": "rgb(30, 38, 33)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add plant group",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(30, 38, 33)",
+        "color": "rgb(30, 38, 33)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Record harvest",
+        "padding": "8px 12px"
+      }
+    ],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1440
+  },
+  {
+    "name": "overview-botanical-dark-1440",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": {
+      "background": "rgb(29, 39, 33)",
+      "height": 128
+    },
+    "bodyWidth": 1425,
+    "focus": "Overview",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1440
+  },
+  {
+    "name": "add-menu-botanical-dark-1440",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": {
+      "background": "rgb(29, 39, 33)",
+      "height": 128
+    },
+    "bodyWidth": 1425,
+    "focus": "Add to collection",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(229, 236, 230)",
+        "color": "rgb(229, 236, 230)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add seed lot",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(229, 236, 230)",
+        "color": "rgb(229, 236, 230)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Start sowing",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(229, 236, 230)",
+        "color": "rgb(229, 236, 230)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add plant",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(229, 236, 230)",
+        "color": "rgb(229, 236, 230)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add plant group",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(229, 236, 230)",
+        "color": "rgb(229, 236, 230)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Record harvest",
+        "padding": "8px 12px"
+      }
+    ],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1440
+  },
+  {
+    "name": "overview-herbarium-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(255, 253, 248)",
+      "height": 128
+    },
+    "bodyWidth": 1425,
+    "focus": "Overview",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "herbarium",
+    "rootWidth": 1425,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1440
+  },
+  {
+    "name": "add-menu-herbarium-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(255, 253, 248)",
+      "height": 128
+    },
+    "bodyWidth": 1425,
+    "focus": "Add to collection",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(43, 41, 33)",
+        "color": "rgb(43, 41, 33)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add seed lot",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(43, 41, 33)",
+        "color": "rgb(43, 41, 33)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Start sowing",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(43, 41, 33)",
+        "color": "rgb(43, 41, 33)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add plant",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(43, 41, 33)",
+        "color": "rgb(43, 41, 33)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add plant group",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(43, 41, 33)",
+        "color": "rgb(43, 41, 33)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Record harvest",
+        "padding": "8px 12px"
+      }
+    ],
+    "palette": "herbarium",
+    "rootWidth": 1425,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1440
+  },
+  {
+    "name": "overview-herbarium-dark-1440",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": {
+      "background": "rgb(40, 37, 31)",
+      "height": 128
+    },
+    "bodyWidth": 1425,
+    "focus": "Overview",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "herbarium",
+    "rootWidth": 1425,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1440
+  },
+  {
+    "name": "add-menu-herbarium-dark-1440",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": {
+      "background": "rgb(40, 37, 31)",
+      "height": 128
+    },
+    "bodyWidth": 1425,
+    "focus": "Add to collection",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(238, 233, 221)",
+        "color": "rgb(238, 233, 221)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add seed lot",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(238, 233, 221)",
+        "color": "rgb(238, 233, 221)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Start sowing",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(238, 233, 221)",
+        "color": "rgb(238, 233, 221)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add plant",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(238, 233, 221)",
+        "color": "rgb(238, 233, 221)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add plant group",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(238, 233, 221)",
+        "color": "rgb(238, 233, 221)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Record harvest",
+        "padding": "8px 12px"
+      }
+    ],
+    "palette": "herbarium",
+    "rootWidth": 1425,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1440
+  },
+  {
+    "name": "overview-mineral-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(252, 253, 255)",
+      "height": 128
+    },
+    "bodyWidth": 1425,
+    "focus": "Overview",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "mineral",
+    "rootWidth": 1425,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1440
+  },
+  {
+    "name": "add-menu-mineral-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(252, 253, 255)",
+      "height": 128
+    },
+    "bodyWidth": 1425,
+    "focus": "Add to collection",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(32, 42, 51)",
+        "color": "rgb(32, 42, 51)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add seed lot",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(32, 42, 51)",
+        "color": "rgb(32, 42, 51)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Start sowing",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(32, 42, 51)",
+        "color": "rgb(32, 42, 51)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add plant",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(32, 42, 51)",
+        "color": "rgb(32, 42, 51)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add plant group",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(32, 42, 51)",
+        "color": "rgb(32, 42, 51)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Record harvest",
+        "padding": "8px 12px"
+      }
+    ],
+    "palette": "mineral",
+    "rootWidth": 1425,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1440
+  },
+  {
+    "name": "add-menu-mineral-dark-1440",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": {
+      "background": "rgb(29, 40, 50)",
+      "height": 128
+    },
+    "bodyWidth": 1425,
+    "focus": "Add to collection",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(227, 235, 243)",
+        "color": "rgb(227, 235, 243)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add seed lot",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(227, 235, 243)",
+        "color": "rgb(227, 235, 243)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Start sowing",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(227, 235, 243)",
+        "color": "rgb(227, 235, 243)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add plant",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(227, 235, 243)",
+        "color": "rgb(227, 235, 243)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Add plant group",
+        "padding": "8px 12px"
+      },
+      {
+        "background": "rgba(0, 0, 0, 0)",
+        "border": "0px none rgb(227, 235, 243)",
+        "color": "rgb(227, 235, 243)",
+        "font": "15px / 22.0005px \"Source Sans 3 Variable\", system-ui, sans-serif",
+        "height": 44,
+        "label": "Record harvest",
+        "padding": "8px 12px"
+      }
+    ],
+    "palette": "mineral",
+    "rootWidth": 1425,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1440
+  },
+  {
+    "name": "overview-mineral-dark-1440",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": {
+      "background": "rgb(29, 40, 50)",
+      "height": 128
+    },
+    "bodyWidth": 1425,
+    "focus": "Overview",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "mineral",
+    "rootWidth": 1425,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1440
+  },
+  {
+    "name": "reference-mineral-dark-1440",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "Reference",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 91.625
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "mineral",
+    "rootWidth": 1425,
+    "selectedTabs": ["Reference"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=reference",
+    "width": 1440
+  },
+  {
+    "name": "taxonomy-mineral-dark-1440",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "Taxonomy",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 94.109375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "mineral",
+    "rootWidth": 1425,
+    "selectedTabs": ["Taxonomy"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=taxonomy",
+    "width": 1440
+  },
+  {
+    "name": "maps-mineral-dark-1440",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "Maps",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 60.109375
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "mineral",
+    "rootWidth": 1425,
+    "selectedTabs": ["Maps"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=maps",
+    "width": 1440
+  },
+  {
+    "name": "media-mineral-dark-1440",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "Media",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 65.4375
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "mineral",
+    "rootWidth": 1425,
+    "selectedTabs": ["Media"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=media",
+    "width": 1440
+  },
+  {
+    "name": "history-mineral-dark-1440",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "History",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 73.890625
+      }
+    ],
+    "menu": [],
+    "palette": "mineral",
+    "rootWidth": 1425,
+    "selectedTabs": ["History"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=history",
+    "width": 1440
+  },
+  {
+    "name": "overview-mineral-dark-390",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": {
+      "background": "rgb(29, 40, 50)",
+      "height": 244.875
+    },
+    "bodyWidth": 375,
+    "focus": "Overview",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 44,
+        "label": "Overview",
+        "width": 67.078125
+      },
+      {
+        "height": 44,
+        "label": "Reference",
+        "width": 69.84375
+      },
+      {
+        "height": 44,
+        "label": "Taxonomy",
+        "width": 72.203125
+      },
+      {
+        "height": 44,
+        "label": "Maps",
+        "width": 44.640625
+      },
+      {
+        "height": 44,
+        "label": "Media",
+        "width": 48.875
+      },
+      {
+        "height": 44,
+        "label": "History",
+        "width": 55.046875
+      }
+    ],
+    "menu": [],
+    "palette": "mineral",
+    "rootWidth": 375,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 410,
+        "width": 375
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 390
+  },
+  {
+    "name": "reference-mineral-dark-390",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": null,
+    "bodyWidth": 375,
+    "focus": "Reference",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 44,
+        "label": "Overview",
+        "width": 67.078125
+      },
+      {
+        "height": 44,
+        "label": "Reference",
+        "width": 69.84375
+      },
+      {
+        "height": 44,
+        "label": "Taxonomy",
+        "width": 72.203125
+      },
+      {
+        "height": 44,
+        "label": "Maps",
+        "width": 44.640625
+      },
+      {
+        "height": 44,
+        "label": "Media",
+        "width": 48.875
+      },
+      {
+        "height": 44,
+        "label": "History",
+        "width": 55.046875
+      }
+    ],
+    "menu": [],
+    "palette": "mineral",
+    "rootWidth": 375,
+    "selectedTabs": ["Reference"],
+    "tabStrip": [
+      {
+        "scrollWidth": 410,
+        "width": 375
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=reference",
+    "width": 390
+  },
+  {
+    "name": "taxonomy-mineral-dark-390",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": null,
+    "bodyWidth": 375,
+    "focus": "Taxonomy",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 44,
+        "label": "Overview",
+        "width": 67.078125
+      },
+      {
+        "height": 44,
+        "label": "Reference",
+        "width": 69.84375
+      },
+      {
+        "height": 44,
+        "label": "Taxonomy",
+        "width": 72.203125
+      },
+      {
+        "height": 44,
+        "label": "Maps",
+        "width": 44.640625
+      },
+      {
+        "height": 44,
+        "label": "Media",
+        "width": 48.875
+      },
+      {
+        "height": 44,
+        "label": "History",
+        "width": 55.046875
+      }
+    ],
+    "menu": [],
+    "palette": "mineral",
+    "rootWidth": 375,
+    "selectedTabs": ["Taxonomy"],
+    "tabStrip": [
+      {
+        "scrollWidth": 410,
+        "width": 375
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=taxonomy",
+    "width": 390
+  },
+  {
+    "name": "maps-mineral-dark-390",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": null,
+    "bodyWidth": 375,
+    "focus": "Maps",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 44,
+        "label": "Overview",
+        "width": 67.078125
+      },
+      {
+        "height": 44,
+        "label": "Reference",
+        "width": 69.84375
+      },
+      {
+        "height": 44,
+        "label": "Taxonomy",
+        "width": 72.203125
+      },
+      {
+        "height": 44,
+        "label": "Maps",
+        "width": 44.640625
+      },
+      {
+        "height": 44,
+        "label": "Media",
+        "width": 48.875
+      },
+      {
+        "height": 44,
+        "label": "History",
+        "width": 55.046875
+      }
+    ],
+    "menu": [],
+    "palette": "mineral",
+    "rootWidth": 375,
+    "selectedTabs": ["Maps"],
+    "tabStrip": [
+      {
+        "scrollWidth": 410,
+        "width": 375
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=maps",
+    "width": 390
+  },
+  {
+    "name": "media-mineral-dark-390",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": null,
+    "bodyWidth": 375,
+    "focus": "Media",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 44,
+        "label": "Overview",
+        "width": 67.078125
+      },
+      {
+        "height": 44,
+        "label": "Reference",
+        "width": 69.84375
+      },
+      {
+        "height": 44,
+        "label": "Taxonomy",
+        "width": 72.203125
+      },
+      {
+        "height": 44,
+        "label": "Maps",
+        "width": 44.640625
+      },
+      {
+        "height": 44,
+        "label": "Media",
+        "width": 48.875
+      },
+      {
+        "height": 44,
+        "label": "History",
+        "width": 55.046875
+      }
+    ],
+    "menu": [],
+    "palette": "mineral",
+    "rootWidth": 375,
+    "selectedTabs": ["Media"],
+    "tabStrip": [
+      {
+        "scrollWidth": 410,
+        "width": 375
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=media",
+    "width": 390
+  },
+  {
+    "name": "history-mineral-dark-390",
+    "fullPage": false,
+    "appearance": "dark",
+    "band": null,
+    "bodyWidth": 375,
+    "focus": "History",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 44,
+        "label": "Overview",
+        "width": 67.078125
+      },
+      {
+        "height": 44,
+        "label": "Reference",
+        "width": 69.84375
+      },
+      {
+        "height": 44,
+        "label": "Taxonomy",
+        "width": 72.203125
+      },
+      {
+        "height": 44,
+        "label": "Maps",
+        "width": 44.640625
+      },
+      {
+        "height": 44,
+        "label": "Media",
+        "width": 48.875
+      },
+      {
+        "height": 44,
+        "label": "History",
+        "width": 55.046875
+      }
+    ],
+    "menu": [],
+    "palette": "mineral",
+    "rootWidth": 375,
+    "selectedTabs": ["History"],
+    "tabStrip": [
+      {
+        "scrollWidth": 410,
+        "width": 375
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=history",
+    "width": 390
+  },
+  {
+    "name": "overview-full-botanical-light-1440",
+    "fullPage": true,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(255, 255, 255)",
+      "height": 128
+    },
+    "bodyWidth": 1425,
+    "focus": "Overview",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1440
+  },
+  {
+    "name": "maps-native-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 60.109375
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Maps"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=maps",
+    "width": 1440
+  },
+  {
+    "name": "maps-native-full-botanical-light-1440",
+    "fullPage": true,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 60.109375
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Maps"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=maps",
+    "width": 1440
+  },
+  {
+    "name": "maps-origins-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "Cross-functional review · illustrative exchange origin · 2 linked records",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 60.109375
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Maps"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=maps",
+    "width": 1440
+  },
+  {
+    "name": "maps-origins-full-botanical-light-1440",
+    "fullPage": true,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "Cross-functional review · illustrative exchange origin · 2 linked records",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 60.109375
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Maps"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=maps",
+    "width": 1440
+  },
+  {
+    "name": "maps-occurrences-prerequisite-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1425,
+    "focus": "Close occurrence evidence",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 86.65625
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 60.109375
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Maps"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=maps",
+    "width": 1440
+  },
+  {
+    "name": "sowing-source-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(255, 255, 255)",
+      "height": 128
+    },
+    "bodyWidth": 1425,
+    "focus": "Cancel",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1440
+  },
+  {
+    "name": "harvest-source-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(255, 255, 255)",
+      "height": 128
+    },
+    "bodyWidth": 1425,
+    "focus": "Cancel",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1440
+  },
+  {
+    "name": "plant-group-canonical-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1440,
+    "focus": "Record Plant group",
+    "height": 844,
+    "mainTabs": [],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "selectedTabs": [],
+    "tabStrip": [],
+    "url": "#/plants?action=create&identity=01a16cb5-e4fe-77c4-8458-2e1873f1e9dd&kind=group",
+    "width": 1440
+  },
+  {
+    "name": "editor-identity-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(255, 255, 255)",
+      "height": 128
+    },
+    "bodyWidth": 1440,
+    "focus": "Identity",
+    "height": 844,
+    "mainTabs": [],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "selectedTabs": ["Identity"],
+    "tabStrip": [],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=edit",
+    "width": 1440
+  },
+  {
+    "name": "editor-reference-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(255, 255, 255)",
+      "height": 128
+    },
+    "bodyWidth": 1440,
+    "focus": "Reference",
+    "height": 844,
+    "mainTabs": [],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "selectedTabs": ["Reference", "Description & origin"],
+    "tabStrip": [],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=edit",
+    "width": 1440
+  },
+  {
+    "name": "editor-native-range-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(255, 255, 255)",
+      "height": 128
+    },
+    "bodyWidth": 1440,
+    "focus": "Native range",
+    "height": 844,
+    "mainTabs": [],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "selectedTabs": ["Native range"],
+    "tabStrip": [],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=edit",
+    "width": 1440
+  },
+  {
+    "name": "editor-media-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(255, 255, 255)",
+      "height": 128
+    },
+    "bodyWidth": 1440,
+    "focus": "Media",
+    "height": 844,
+    "mainTabs": [],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "selectedTabs": ["Media"],
+    "tabStrip": [],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=edit",
+    "width": 1440
+  },
+  {
+    "name": "danger-confirmation-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": {
+      "background": "rgb(255, 255, 255)",
+      "height": 128
+    },
+    "bodyWidth": 1425,
+    "focus": "Cancel",
+    "height": 844,
+    "mainTabs": [
+      {
+        "height": 45.78125,
+        "label": "Overview",
+        "width": 88.734375
+      },
+      {
+        "height": 45.78125,
+        "label": "Reference",
+        "width": 89.71875
+      },
+      {
+        "height": 45.78125,
+        "label": "Taxonomy",
+        "width": 92.34375
+      },
+      {
+        "height": 45.78125,
+        "label": "Maps",
+        "width": 59.390625
+      },
+      {
+        "height": 45.78125,
+        "label": "Media",
+        "width": 64.515625
+      },
+      {
+        "height": 45.78125,
+        "label": "History",
+        "width": 72.3125
+      }
+    ],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1425,
+    "selectedTabs": ["Overview"],
+    "tabStrip": [
+      {
+        "scrollWidth": 1157,
+        "width": 1157
+      }
+    ],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1440
+  },
+  {
+    "name": "filtered-seeds-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1440,
+    "focus": "FlorabaseHideOverviewDashboardCollectionSeedsSowingsPlantsHarvestsLocationsActivityJournalHistorySch",
+    "height": 844,
+    "mainTabs": [],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "selectedTabs": [],
+    "tabStrip": [],
+    "url": "#/seeds?identity_id=01a16cb5-e4fe-77c4-8458-2e1873f1e9dd&lifecycle=all",
+    "width": 1440
+  },
+  {
+    "name": "filtered-sowings-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1440,
+    "focus": "FlorabaseHideOverviewDashboardCollectionSeedsSowingsPlantsHarvestsLocationsActivityJournalHistorySch",
+    "height": 844,
+    "mainTabs": [],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "selectedTabs": [],
+    "tabStrip": [],
+    "url": "#/sowings?identity_id=01a16cb5-e4fe-77c4-8458-2e1873f1e9dd&lifecycle=all",
+    "width": 1440
+  },
+  {
+    "name": "filtered-plants-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1440,
+    "focus": "FlorabaseHideOverviewDashboardCollectionSeedsSowingsPlantsHarvestsLocationsActivityJournalHistorySch",
+    "height": 844,
+    "mainTabs": [],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "selectedTabs": [],
+    "tabStrip": [],
+    "url": "#/plants?identity_id=01a16cb5-e4fe-77c4-8458-2e1873f1e9dd&lifecycle=all&type=plant",
+    "width": 1440
+  },
+  {
+    "name": "filtered-groups-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1440,
+    "focus": "FlorabaseHideOverviewDashboardCollectionSeedsSowingsPlantsHarvestsLocationsActivityJournalHistorySch",
+    "height": 844,
+    "mainTabs": [],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "selectedTabs": [],
+    "tabStrip": [],
+    "url": "#/plants?identity_id=01a16cb5-e4fe-77c4-8458-2e1873f1e9dd&lifecycle=all&type=group",
+    "width": 1440
+  },
+  {
+    "name": "filtered-harvests-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "band": null,
+    "bodyWidth": 1440,
+    "focus": "FlorabaseHideOverviewDashboardCollectionSeedsSowingsPlantsHarvestsLocationsActivityJournalHistorySch",
+    "height": 844,
+    "mainTabs": [],
+    "menu": [],
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "selectedTabs": [],
+    "tabStrip": [],
+    "url": "#/harvests?identity_id=01a16cb5-e4fe-77c4-8458-2e1873f1e9dd",
+    "width": 1440
+  },
+  {
+    "name": "editor-identity-botanical-light-390",
+    "fullPage": false,
+    "appearance": "light",
+    "bodyWidth": 390,
+    "focus": "",
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 390,
+    "selectedTabs": ["Identity", "Description & origin"],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=edit",
+    "width": 390
+  },
+  {
+    "name": "editor-reference-botanical-light-390",
+    "fullPage": false,
+    "appearance": "light",
+    "bodyWidth": 390,
+    "focus": "Reference",
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 390,
+    "selectedTabs": ["Reference", "Description & origin"],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=edit",
+    "width": 390
+  },
+  {
+    "name": "empty-long-name-overview-botanical-light-390",
+    "fullPage": false,
+    "appearance": "light",
+    "bodyWidth": 375,
+    "focus": "Pelargonium peltatum ‘A deliberately long cultivar name for narrow workspace review’",
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 375,
+    "selectedTabs": ["Overview"],
+    "url": "#/identities/01a16824-e0c8-74b4-8b44-eb5d966b89c8",
+    "width": 390
+  },
+  {
+    "name": "empty-reference-botanical-light-390",
+    "fullPage": false,
+    "appearance": "light",
+    "bodyWidth": 375,
+    "focus": "Reference",
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 375,
+    "selectedTabs": ["Reference"],
+    "url": "#/identities/01a16824-e0c8-74b4-8b44-eb5d966b89c8?tab=reference",
+    "width": 390
+  },
+  {
+    "name": "empty-history-botanical-light-390",
+    "fullPage": false,
+    "appearance": "light",
+    "bodyWidth": 375,
+    "focus": "History",
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 375,
+    "selectedTabs": ["History"],
+    "url": "#/identities/01a16824-e0c8-74b4-8b44-eb5d966b89c8?tab=history",
+    "width": 390
+  },
+  {
+    "name": "maps-native-full-botanical-light-390",
+    "fullPage": true,
+    "appearance": "light",
+    "bodyWidth": 375,
+    "focus": "Close native range",
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 375,
+    "selectedTabs": ["Maps"],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=maps",
+    "width": 390
+  },
+  {
+    "name": "maps-botanical-dark-1024",
+    "fullPage": false,
+    "appearance": "dark",
+    "bodyWidth": 1009,
+    "focus": "Appearance",
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1009,
+    "selectedTabs": ["Maps"],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=maps",
+    "width": 1024
+  },
+  {
+    "name": "overview-botanical-dark-1024",
+    "fullPage": false,
+    "appearance": "dark",
+    "bodyWidth": 1009,
+    "focus": "Overview",
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1009,
+    "selectedTabs": ["Overview"],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=overview",
+    "width": 1024
+  },
+  {
+    "name": "editor-unsaved-retained-botanical-light-1440",
+    "fullPage": false,
+    "appearance": "light",
+    "bodyWidth": 1440,
+    "focus": "Identity",
+    "height": 844,
+    "palette": "botanical",
+    "rootWidth": 1440,
+    "selectedTabs": ["Identity", "Description & origin"],
+    "url": "#/identities/01a16cb5-e4fe-77c4-8458-2e1873f1e9dd?tab=edit",
+    "width": 1440
+  }
+]

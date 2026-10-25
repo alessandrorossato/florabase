@@ -742,3 +742,54 @@ textarea:disabled {
     outline-offset: -2px;
   }
 }
+
+/* One preview-record selection grammar; bulk checkboxes and focus remain independent. */
+.app-content
+  :is(
+    .identity-card,
+    .identity-list-item,
+    .seed-row,
+    .harvest-directory-row,
+    .location-directory-row
+  )[aria-pressed="true"],
+.app-content .harvest-directory-row.is-selected {
+  background: var(--primary-subtle);
+  box-shadow: inset 3px 0 var(--primary);
+  border-color: var(--border);
+}
+.app-content
+  :is(
+    .identity-card,
+    .identity-list-item,
+    .seed-row,
+    .harvest-directory-row,
+    .location-directory-row
+  ):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+/* Match the Collection directory's 4rem visual and compact row spacing. */
+.app-content .identity-card {
+  grid-template-columns: 4rem minmax(0, 1fr);
+  gap: var(--space-3);
+}
+.app-content .identity-card > .identity-image {
+  width: 4rem;
+  height: 4rem;
+  min-height: 0;
+  padding: var(--space-2);
+  box-sizing: border-box;
+}
+.app-content
+  .identity-card-copy
+  :is(.identity-name, .identity-scientific-name, .identity-cultivar) {
+  display: inline;
+  margin: 0;
+  text-wrap: wrap;
+}
+.app-content .identity-card-copy .identity-cultivar {
+  margin-inline-start: 0.3em;
+}
+.app-content .identity-card-context {
+  margin-top: 0;
+}
