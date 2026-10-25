@@ -1,3 +1,4 @@
+import { GeographyHeader } from "../geography/GeographyHeader";
 import { ActionButton } from "../components/Action";
 import {
   DirectoryFilterSelect,
@@ -13,11 +14,7 @@ import {
 } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import {
-  BotanicalName,
-  DirectorySearch,
-  PageHeader,
-} from "../components/ReferenceUI";
+import { BotanicalName, DirectorySearch } from "../components/ReferenceUI";
 import { TaskDialog } from "../components/TaskDialog";
 import { MapWorkspace } from "../maps/MapWorkspace";
 import { OccurrenceMapPanel } from "../occurrence-map/OccurrenceMapPanel";
@@ -275,12 +272,10 @@ export function SpeciesDistributionScreen() {
   return (
     <section
       className="workspace species-distribution"
-      aria-labelledby="distribution-title"
+      aria-labelledby="geography-species-distribution-title"
     >
-      <PageHeader
-        title="Species distribution"
-        titleId="distribution-title"
-        eyebrow="Explore"
+      <GeographyHeader
+        view="species-distribution"
         description="Observed occurrence evidence for your collection."
         actions={null}
         tools={

@@ -1,0 +1,44 @@
+{
+  "total": 148,
+  "passed": 148,
+  "failed": 0,
+  "files": [
+    {
+      "file": "App.test.tsx",
+      "status": "passed",
+      "tests": 83
+    },
+    {
+      "file": "geography/GeographyOverview.test.tsx",
+      "status": "passed",
+      "tests": 7
+    },
+    {
+      "file": "native-ranges/NativeRangesScreen.test.tsx",
+      "status": "passed",
+      "tests": 22
+    },
+    {
+      "file": "provenance-sites/ProvenanceSiteManager.test.tsx",
+      "status": "passed",
+      "tests": 5
+    },
+    {
+      "file": "provenance-map/ProvenanceMapScreen.test.tsx",
+      "status": "passed",
+      "tests": 11
+    },
+    {
+      "file": "saved-views/SavedViews.test.tsx",
+      "status": "passed",
+      "tests": 10
+    },
+    {
+      "file": "species-distribution/SpeciesDistributionScreen.test.tsx",
+      "status": "passed",
+      "tests": 10
+    }
+  ],
+  "success": true,
+  "note": "Focused frontend verification only; no canonical FULL gate or backend/integration rerun."
+}

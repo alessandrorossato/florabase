@@ -1,0 +1,28 @@
+{
+  "base": "http://localhost:15276",
+  "checks": [
+    "Places expand/collapse; keyboard selection and independent focus; canonical edit restriction",
+    "Creation dialog Escape and return focus without saving",
+    "Exact place-to-site scope, full-precision site details and exact originating SeedLot link",
+    "Source record navigation and Back to the exact site",
+    "Back/Forward restore management mode and query while retaining unknown query parameters",
+    "Unknown coordinate/accuracy preview, existing editor and persisted Geography v1 Saved View restore",
+    "Overview uses exact species-mode native-range deep link",
+    "1000-site browser-only renderer double remains searchable; no horizontal overflow",
+    "Empty and independent partial-error summaries retain all three workspace links (browser doubles)"
+  ],
+  "focus": {
+    "outline": "solid",
+    "background": "rgb(232, 241, 235)"
+  },
+  "errors": [],
+  "external": [],
+  "fixture": {
+    "place": "01a16df9-87db-7655-bef8-361b0dec0185",
+    "parent": "01a16df9-87ad-7519-a079-c79a199f08cf",
+    "site": "01a16df9-882d-746e-a384-6f221848e46c",
+    "coordinate_less_site": "01a16df9-8858-70bd-b90a-85645d72a7bb",
+    "identity": "01a16df9-8885-710d-83dd-907342ca94f7",
+    "record": "01a16df9-88cc-775e-88b2-3e1502d94a85"
+  }
+}

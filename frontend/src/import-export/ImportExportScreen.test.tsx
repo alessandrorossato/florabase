@@ -95,10 +95,18 @@ test("navigates, validates row issues, retries and explicitly confirms the revie
   render(<App />);
   await user.click(await screen.findByRole("link", { name: "Settings" }));
   await user.click(
-    await screen.findByRole("link", { name: "Import / Export" }),
+    await screen.findByRole(
+      "link",
+      { name: "Import / Export" },
+      { timeout: 5000 },
+    ),
   );
   expect(
-    await screen.findByRole("heading", { name: "Import / Export" }),
+    await screen.findByRole(
+      "heading",
+      { name: "Import / Export" },
+      { timeout: 5000 },
+    ),
   ).toBeVisible();
   const steps = screen.getByRole("list", { name: "Import steps" });
   expect(within(steps).getByText("Template").closest("li")).toHaveAttribute(
@@ -214,10 +222,14 @@ test("shows validation progress and a recoverable file error", async () => {
   render(<App />);
   await user.click(await screen.findByRole("link", { name: "Settings" }));
   await user.click(
-    await screen.findByRole("link", { name: "Import / Export" }),
+    await screen.findByRole(
+      "link",
+      { name: "Import / Export" },
+      { timeout: 5000 },
+    ),
   );
   await user.upload(
-    screen.getByLabelText(/CSV file/),
+    await screen.findByLabelText(/CSV file/),
     new File(["invalid"], "bad.csv", { type: "text/csv" }),
   );
   await user.click(
@@ -337,9 +349,16 @@ test("guides a human Supplier import and requires a reviewed update choice", asy
   render(<App />);
   await user.click(await screen.findByRole("link", { name: "Settings" }));
   await user.click(
-    await screen.findByRole("link", { name: "Import / Export" }),
+    await screen.findByRole(
+      "link",
+      { name: "Import / Export" },
+      { timeout: 5000 },
+    ),
   );
-  await user.selectOptions(screen.getByLabelText("Record type"), "suppliers");
+  await user.selectOptions(
+    await screen.findByLabelText("Record type"),
+    "suppliers",
+  );
   const guideToggle = screen.getByRole("button", { name: "Field guide" });
   expect(guideToggle).toHaveAttribute("aria-expanded", "false");
   expect(document.getElementById("import-field-guide")).toHaveAttribute(

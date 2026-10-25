@@ -1,3 +1,5 @@
+import { SiteSourceRecords } from "../geography/SiteSourceRecords";
+import "../geography/geography.css";
 import { ActionButton } from "../components/Action";
 import { FieldLabel } from "../components/FieldLabel";
 import { DirectoryResults } from "../components/DirectoryResults";
@@ -61,6 +63,7 @@ export function ProvenanceSiteManager({
   places,
   csrfToken,
   initialSiteId,
+  placeId,
   mode = "browse",
   query = "",
   onPlaceSelect,
@@ -74,6 +77,7 @@ export function ProvenanceSiteManager({
   places: GeographicPlaceResponse[];
   csrfToken: string;
   initialSiteId?: string;
+  placeId?: string;
   mode?: "browse" | "map";
   query?: string;
   onPlaceSelect?: (id: string) => void;
@@ -197,12 +201,13 @@ export function ProvenanceSiteManager({
     () =>
       sites.filter(
         (site) =>
-          !needle ||
-          [site.name, site.geographic_place_path].some((value) =>
-            value?.toLocaleLowerCase().includes(needle),
-          ),
+          (!placeId || site.geographic_place_id === placeId) &&
+          (!needle ||
+            [site.name, site.geographic_place_path].some((value) =>
+              value?.toLocaleLowerCase().includes(needle),
+            )),
       ),
-    [sites, needle],
+    [sites, needle, placeId],
   );
   const mapped = useMemo(
     () =>
@@ -228,7 +233,7 @@ export function ProvenanceSiteManager({
       })),
     [mapped],
   );
-  const listed = mode === "map" ? mapped : visible;
+  const listed = visible;
   const selected = listed.find((site) => site.id === selectedId) ?? null;
 
   return (
@@ -236,10 +241,11 @@ export function ProvenanceSiteManager({
       aria-labelledby="provenance-sites-title"
       className="provenance-sites-workspace"
     >
-      <header className="page-header">
+      <header className="site-workspace-heading">
         <div>
-          <p className="eyebrow">Precise collection origins</p>
-          <h3 id="provenance-sites-title">Provenance sites</h3>
+          <h3 className="sr-only" id="provenance-sites-title">
+            Provenance sites
+          </h3>
         </div>
         {showCreateAction && (
           <ActionButton
@@ -256,6 +262,19 @@ export function ProvenanceSiteManager({
           </ActionButton>
         )}
       </header>
+      <p className="field-help">
+        Manage recorded sites, including sites without coordinates or collection
+        links. <a href="#/map">Collection origins</a> explores linked collection
+        material.
+      </p>
+      {placeId && (
+        <p className="notice">
+          Sites directly associated with{" "}
+          {places.find((place) => place.id === placeId)?.display_path ??
+            "the selected geographic place"}
+          . <a href="#/geography?mode=sites">Show all provenance sites</a>
+        </p>
+      )}
       {!editing && message && (
         <p role="status" className="notice">
           {message}
@@ -296,14 +315,176 @@ export function ProvenanceSiteManager({
       )}
       {!loading && !loadError && sites.length > 0 && listed.length === 0 && (
         <p className="empty-state" role="status">
-          {mode === "map"
-            ? "No coordinate-bearing sites match this view."
-            : "No provenance sites match this search."}
+          No provenance sites match this search.
         </p>
       )}
-      {mode === "map" && mapped.length > 0 && (
-        <div className="geography-map-layout">
-          <div className="map-canvas-card">
+      {listed.length > 0 && (
+        <div className="provenance-selection" data-presentation={mode}>
+          <div className="site-navigation-inspector">
+            <div className="site-directory-column">
+              <h4 className="sr-only">Site directory</h4>
+              {!initialSiteId && <DirectoryResults count={listed.length} />}
+              <ul className="identity-list" aria-label="Provenance sites">
+                {listed.map((site) => (
+                  <li key={site.id}>
+                    <button
+                      type="button"
+                      className="identity-list-item geography-directory-row"
+                      aria-pressed={site.id === selectedId}
+                      onClick={() => {
+                        select(site);
+                      }}
+                    >
+                      <span className="geography-row-title">
+                        <strong>{site.name}</strong>
+                        <span className="record-state">
+                          {site.latitude != null && site.longitude != null
+                            ? "Coordinates recorded"
+                            : "No coordinates recorded"}
+                        </span>
+                      </span>
+                      <small>
+                        {site.geographic_place_path ??
+                          "No named geographic place"}
+                      </small>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <QuickPreview tabIndex={0}>
+              {selected ? (
+                <article className="record-inspector">
+                  <p className="eyebrow">Provenance site</p>
+                  <h3>{selected.name}</h3>
+                  {selected.latitude == null || selected.longitude == null ? (
+                    <p className="record-state">No coordinates recorded</p>
+                  ) : null}
+                  <div className="actions record-preview__actions">
+                    {!initialSiteId && (
+                      <a
+                        className="button-link"
+                        href={`#/geography/${selected.id}`}
+                      >
+                        Open details
+                      </a>
+                    )}
+                    <ActionButton
+                      icon="edit"
+                      type="button"
+                      className="button--secondary"
+                      onClick={() => {
+                        setEditing(true);
+                      }}
+                    >
+                      Edit
+                    </ActionButton>
+                    <OverflowMenu ariaLabel="More provenance site actions">
+                      <button
+                        type="button"
+                        className="button--danger"
+                        disabled={pending}
+                        onClick={() => {
+                          if (!window.confirm(`Delete ${selected.name}?`))
+                            return;
+                          setPending(true);
+                          void deleteProvenanceSite(selected.id, csrfToken)
+                            .then(async () => {
+                              await refresh();
+                              setSelectedId(null);
+                              setMessage("The provenance site was deleted.");
+                            })
+                            .catch((error: unknown) => {
+                              setMessage(
+                                error instanceof ApiError &&
+                                  error.status === 409
+                                  ? "This provenance site is used by collection records and cannot be deleted."
+                                  : "Florabase could not delete this provenance site.",
+                              );
+                            })
+                            .finally(() => {
+                              setPending(false);
+                            });
+                        }}
+                      >
+                        Delete provenance site
+                      </button>
+                    </OverflowMenu>
+                  </div>
+                  <dl className="record-facts">
+                    <div>
+                      <dt>Geographic place</dt>
+                      <dd>
+                        {selected.geographic_place_id && onPlaceSelect ? (
+                          <button
+                            type="button"
+                            className="text-link"
+                            onClick={() => {
+                              if (selected.geographic_place_id)
+                                onPlaceSelect(selected.geographic_place_id);
+                            }}
+                          >
+                            {selected.geographic_place_path}
+                          </button>
+                        ) : (
+                          (selected.geographic_place_path ??
+                          "No named geographic place")
+                        )}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Coordinates</dt>
+                      <dd>
+                        {selected.latitude != null && selected.longitude != null
+                          ? `${selected.latitude}, ${selected.longitude}`
+                          : "Not recorded"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Accuracy</dt>
+                      <dd>
+                        {selected.coordinate_accuracy_m != null
+                          ? `± ${selected.coordinate_accuracy_m} m`
+                          : "Not recorded"}
+                      </dd>
+                    </div>
+                    {initialSiteId && selected.notes && (
+                      <div>
+                        <dt>Notes</dt>
+                        <dd className="preserve-lines">{selected.notes}</dd>
+                      </div>
+                    )}
+                  </dl>
+                  <StatStrip
+                    label="Direct collection links"
+                    items={[
+                      { label: "Seed lots", value: selected.usage.seed_lots },
+                      { label: "Plants", value: selected.usage.plants },
+                      {
+                        label: "Plant groups",
+                        value: selected.usage.plant_groups,
+                      },
+                    ]}
+                  />
+                  {initialSiteId && (
+                    <SiteSourceRecords
+                      key={selected.id}
+                      siteId={selected.id}
+                      hasCoordinates={
+                        selected.latitude != null && selected.longitude != null
+                      }
+                    />
+                  )}
+                </article>
+              ) : (
+                <div className="preview-empty">
+                  <h3>Select a provenance site</h3>
+                  <p>Choose a site from the list or map.</p>
+                </div>
+              )}
+            </QuickPreview>
+          </div>
+          <div className="map-canvas-card site-map-panel">
             <Suspense fallback={<p role="status">Loading map…</p>}>
               <ProvenanceMap
                 sites={mapPoints}
@@ -319,155 +500,13 @@ export function ProvenanceSiteManager({
                 label="Geography map of stored provenance sites"
               />
             </Suspense>
-            <p className="map-provider-note">
-              Only stored WGS84 coordinates are mapped. Basemap tiles use the
-              configured provider.
-            </p>
-          </div>
-        </div>
-      )}
-      {listed.length > 0 && (
-        <div
-          className={
-            mode === "map" ? "geography-map-companion" : "reference-split"
-          }
-        >
-          <div className="site-directory-column">
-            <h4 className={mode === "map" ? undefined : "sr-only"}>
-              {mode === "map" ? "Mapped sites" : "Site directory"}
-            </h4>
-            {!initialSiteId && <DirectoryResults count={listed.length} />}
-            <ul className="identity-list">
-              {listed.map((site) => (
-                <li key={site.id}>
-                  <button
-                    type="button"
-                    className="identity-list-item"
-                    aria-pressed={site.id === selectedId}
-                    onClick={() => {
-                      select(site);
-                    }}
-                  >
-                    <span>{site.name}</span>
-                    <small>
-                      {site.geographic_place_path ??
-                        "No named geographic place"}
-                      {site.latitude !== null && site.longitude !== null
-                        ? " · Mapped"
-                        : " · No coordinates"}
-                    </small>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <QuickPreview>
-            {selected ? (
-              <article className="record-inspector">
-                <p className="eyebrow">Provenance site</p>
-                <h3>{selected.name}</h3>
-                <dl className="record-facts">
-                  <div>
-                    <dt>Geographic place</dt>
-                    <dd>
-                      {selected.geographic_place_id && onPlaceSelect ? (
-                        <button
-                          type="button"
-                          className="text-link"
-                          onClick={() => {
-                            if (selected.geographic_place_id)
-                              onPlaceSelect(selected.geographic_place_id);
-                          }}
-                        >
-                          {selected.geographic_place_path}
-                        </button>
-                      ) : (
-                        (selected.geographic_place_path ??
-                        "No named geographic place")
-                      )}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt>Coordinates</dt>
-                    <dd>
-                      {selected.latitude != null && selected.longitude != null
-                        ? `${selected.latitude}, ${selected.longitude}`
-                        : "Not recorded"}
-                    </dd>
-                  </div>
-                  {selected.coordinate_accuracy_m != null && (
-                    <div>
-                      <dt>Accuracy</dt>
-                      <dd>± {selected.coordinate_accuracy_m} m</dd>
-                    </div>
-                  )}
-                  {selected.notes && (
-                    <div>
-                      <dt>Notes</dt>
-                      <dd className="preserve-lines">{selected.notes}</dd>
-                    </div>
-                  )}
-                </dl>
-                <StatStrip
-                  label="Direct collection links"
-                  items={[
-                    { label: "Seed lots", value: selected.usage.seed_lots },
-                    { label: "Plants", value: selected.usage.plants },
-                    {
-                      label: "Plant groups",
-                      value: selected.usage.plant_groups,
-                    },
-                  ]}
-                />
-                <div className="actions">
-                  <ActionButton
-                    icon="edit"
-                    type="button"
-                    className="button--secondary"
-                    onClick={() => {
-                      setEditing(true);
-                    }}
-                  >
-                    Edit
-                  </ActionButton>
-                  <OverflowMenu ariaLabel="More provenance site actions">
-                    <button
-                      type="button"
-                      className="button--danger"
-                      disabled={pending}
-                      onClick={() => {
-                        if (!window.confirm(`Delete ${selected.name}?`)) return;
-                        setPending(true);
-                        void deleteProvenanceSite(selected.id, csrfToken)
-                          .then(async () => {
-                            await refresh();
-                            setSelectedId(null);
-                            setMessage("The provenance site was deleted.");
-                          })
-                          .catch((error: unknown) => {
-                            setMessage(
-                              error instanceof ApiError && error.status === 409
-                                ? "This provenance site is used by collection records and cannot be deleted."
-                                : "Florabase could not delete this provenance site.",
-                            );
-                          })
-                          .finally(() => {
-                            setPending(false);
-                          });
-                      }}
-                    >
-                      Delete provenance site
-                    </button>
-                  </OverflowMenu>
-                </div>
-              </article>
-            ) : (
-              <div className="preview-empty">
-                <h3>Select a provenance site</h3>
-                <p>Choose a site from the list or map.</p>
-              </div>
+            {mapped.length === 0 && (
+              <p className="notice">
+                No coordinates recorded for these sites. Select a site to
+                inspect or edit its record.
+              </p>
             )}
-          </QuickPreview>
+          </div>
         </div>
       )}
       {editing && (

@@ -1,0 +1,88 @@
+{
+  "date": "2026-10-25",
+  "source": "/home/alessandro/.codex/worktrees/5430/florabase",
+  "branch": "feat/geography-visual-001",
+  "head": "e7ade78559803a35b738a669085799f55eb76258",
+  "latestOriginMain": "e7ade78559803a35b738a669085799f55eb76258",
+  "status": "implemented; final operator acceptance and canonical verification pending",
+  "checks": [
+    {
+      "command": "pnpm typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm format:check",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "passed"
+    },
+    {
+      "command": "python3 scripts/check-features.py",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --cached --quiet",
+      "result": "passed"
+    },
+    {
+      "command": "GET http://localhost:15276/api/v1/ready",
+      "result": "passed"
+    }
+  ],
+  "features": 112,
+  "tests": {
+    "uniquePassed": 231,
+    "files": 15,
+    "report": "test-results.json",
+    "finalSourceConfirmation": {
+      "passed": 16,
+      "files": 2,
+      "note": "Repeated Workspace/Overview tests on 25 October; not added to the unique count"
+    }
+  },
+  "browser": {
+    "presentationChecks": 162,
+    "curatedScreenshots": 69,
+    "labelledRendererDoubleScreenshots": 2,
+    "interactionGroups": 7,
+    "pageErrors": [],
+    "externalRequests": []
+  },
+  "runtime": {
+    "project": "florabase-geography-5430",
+    "sourceMount": "/home/alessandro/.codex/worktrees/5430/florabase",
+    "ports": [
+      15276,
+      18276
+    ],
+    "binding": "127.0.0.1",
+    "restoration": "Started only the positively owned existing DB/backend/frontend containers; retained existing volumes and collection data; no recreation, reseed or migration",
+    "login": "Existing synthetic review login verified; operator-only temporary note restored outside repository"
+  },
+  "canonicalFullRun": false,
+  "staged": false,
+  "committed": false,
+  "pushed": false,
+  "backendApiSchemaChanged": false,
+  "limits": [
+    "No actual screen reader, physical device or true browser zoom verification",
+    "No live provider downloads or online imagery opt-in",
+    "The 1000-site case is a labelled browser renderer double, not real backend scale evidence",
+    "Coordinate-less sites still lack exact source-record IDs in the existing API"
+  ],
+  "evidenceNotes": [
+    "Prior handoffs and galleries preserved",
+    "Completed focused results supersede interrupted host-pressure runs and obsolete test waits; assertions/global timeouts not weakened",
+    "No protected DEV, Review, UAT or other agent environment changed"
+  ]
+}

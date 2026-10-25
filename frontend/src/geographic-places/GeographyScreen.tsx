@@ -1,3 +1,5 @@
+import { Icon } from "../components/Icon";
+import { GeographyHeader } from "../geography/GeographyHeader";
 import { ActionButton } from "../components/Action";
 import { FieldLabel } from "../components/FieldLabel";
 import { DirectoryTools } from "../components/DirectoryTools";
@@ -19,7 +21,6 @@ import { DetailHeader } from "../components/CollectionUI";
 import {
   DirectorySearch,
   OverflowMenu,
-  PageHeader,
   QuickPreview,
   StatStrip,
 } from "../components/ReferenceUI";
@@ -101,20 +102,26 @@ function PlaceButton({
   return (
     <button
       type="button"
-      className="identity-list-item"
+      className="identity-list-item geography-directory-row"
       aria-pressed={selectedId === place.id}
       onClick={() => {
         onSelect(place.id);
       }}
     >
-      <span>
-        {place.name}
+      <span className="geography-row-title">
+        <strong>{place.name}</strong>
         <span className="record-state">
           {place.place_kind === "canonical" ? "Canonical" : "Local"}
         </span>
         {place.retired_at && <span className="record-state">Retired</span>}
       </span>
-      {showPath && <small>{place.display_path}</small>}
+      <small>
+        {showPath
+          ? place.display_path
+          : place.source_code
+            ? `${place.source_code_type ?? "Reference"}: ${place.source_code}`
+            : placeTypeLabel(place.place_type, place.place_kind)}
+      </small>
     </button>
   );
 }
@@ -126,6 +133,7 @@ function PlaceTree({
   onSelect,
   expanded,
   onToggle,
+  depth = 0,
 }: {
   places: GeographicPlaceResponse[];
   parentId: string | null;
@@ -133,6 +141,7 @@ function PlaceTree({
   onSelect: (id: string) => void;
   expanded: Set<string>;
   onToggle: (id: string) => void;
+  depth?: number;
 }) {
   const children = places.filter((place) => place.parent_id === parentId);
   if (children.length === 0) return null;
@@ -140,7 +149,9 @@ function PlaceTree({
     <ul
       tabIndex={parentId ? undefined : 0}
       className={
-        parentId ? "location-tree location-tree--nested" : "location-tree"
+        parentId
+          ? `location-tree location-tree--nested${depth >= 3 ? " location-tree--compact-depth" : ""}`
+          : "location-tree"
       }
     >
       {children.map((place) => {
@@ -158,7 +169,7 @@ function PlaceTree({
                     onToggle(place.id);
                   }}
                 >
-                  {expanded.has(place.id) ? "−" : "+"}
+                  <Icon name="chevron-down" />
                 </button>
               ) : (
                 <span className="location-tree-spacer" aria-hidden="true" />
@@ -173,6 +184,7 @@ function PlaceTree({
               <PlaceTree
                 places={places}
                 parentId={place.id}
+                depth={depth + 1}
                 selectedId={selectedId}
                 onSelect={onSelect}
                 expanded={expanded}
@@ -203,13 +215,15 @@ export function GeographyScreen({
   const [selectedId, setSelectedId] = useState<string | null>(
     initialPlaceId ?? null,
   );
-  const view = useDirectoryView(
-    "geography",
-    () => {
-      setSelectedId(null);
-    },
-    { mode: initialSiteId ? "sites" : "places" },
+  // Keep URL listeners mounted while App handles the same hash navigation.
+  const clearSelection = useCallback(() => {
+    setSelectedId(null);
+  }, []);
+  const initialView = useMemo(
+    () => ({ mode: initialSiteId ? ("sites" as const) : ("places" as const) }),
+    [initialSiteId],
   );
+  const view = useDirectoryView("geography", clearSelection, initialView);
   const filter = view.state.q;
   const setFilter = (value: string) => {
     view.update("q", value);
@@ -234,6 +248,7 @@ export function GeographyScreen({
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const initialExpansionApplied = useRef(false);
   const createNameInput = useRef<HTMLInputElement>(null);
+  const createInitialParent = useRef("");
   const feedback = useRef<HTMLDivElement>(null);
   const {
     expanded: creationExpanded,
@@ -252,6 +267,8 @@ export function GeographyScreen({
       return;
     dashboardCreationStarted.current = true;
     setMode("places");
+    createInitialParent.current = "";
+    setCreateType("other_named_area");
     setCreateName("");
     setCreateParentId("");
     setSave({ status: "idle" });
@@ -379,8 +396,42 @@ export function GeographyScreen({
 
   function selectPlace(id: string) {
     setSelectedId(id);
+    setExpanded((current) => {
+      const next = new Set(current);
+      const byId = new Map(places.map((place) => [place.id, place]));
+      let parent = byId.get(id)?.parent_id;
+      while (parent) {
+        next.add(parent);
+        parent = byId.get(parent)?.parent_id;
+      }
+      return next;
+    });
     setEditing(false);
     setSave({ status: "idle" });
+  }
+
+  function beginCreate(parentId = "") {
+    createInitialParent.current = parentId;
+    setCreateName("");
+    setCreateParentId(parentId);
+    setCreateType("other_named_area");
+    setSave({ status: "idle" });
+    openCreation();
+  }
+
+  function dismissCreate() {
+    if (pending) return;
+    const dirty =
+      createName !== "" ||
+      createParentId !== createInitialParent.current ||
+      createType !== "other_named_area";
+    if (dirty && !window.confirm("Discard unsaved local place changes?"))
+      return;
+    setCreateName("");
+    setCreateParentId("");
+    setCreateType("other_named_area");
+    setSave({ status: "idle" });
+    closeCreation({ returnFocus: false });
   }
 
   function submitCreate(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
@@ -434,14 +485,18 @@ export function GeographyScreen({
 
   return (
     <section
-      aria-labelledby="geography-title"
+      aria-labelledby={
+        mode === "places" ? "geography-places-title" : "geography-sites-title"
+      }
       className="workspace geography-workspace"
     >
-      <PageHeader
-        title="Geography"
-        titleId="geography-title"
-        eyebrow="Explore"
-        description="Manage named places and precise collection provenance sites."
+      <GeographyHeader
+        view={mode === "places" ? "places" : "sites"}
+        description={
+          mode === "places"
+            ? "Manage hierarchical geographic places, canonical and local."
+            : "Manage precise collection-origin sites and their recorded coordinates."
+        }
         actions={
           initialSiteId || initialPlaceId ? (
             mode === "places" ? (
@@ -451,10 +506,7 @@ export function GeographyScreen({
                 ref={creationTriggerRef}
                 aria-haspopup="dialog"
                 onClick={() => {
-                  setCreateName("");
-                  setCreateParentId("");
-                  setSave({ status: "idle" });
-                  openCreation();
+                  beginCreate();
                 }}
               >
                 New local place
@@ -509,10 +561,7 @@ export function GeographyScreen({
                     ref={creationTriggerRef}
                     aria-haspopup="dialog"
                     onClick={() => {
-                      setCreateName("");
-                      setCreateParentId("");
-                      setSave({ status: "idle" });
-                      openCreation();
+                      beginCreate();
                     }}
                   >
                     New local place
@@ -547,35 +596,34 @@ export function GeographyScreen({
           className="geography-search"
         />
       )}
-      <nav aria-label="Geography views" className="geography-view-nav">
-        <button
-          type="button"
-          aria-pressed={mode === "places"}
-          onClick={() => {
-            setMode("places");
-          }}
+      {mode !== "places" && (
+        <div
+          className="geography-site-modes"
+          role="group"
+          aria-label="Provenance site view"
         >
-          Places
-        </button>
-        <button
-          type="button"
-          aria-pressed={mode === "sites"}
-          onClick={() => {
-            setMode("sites");
-          }}
-        >
-          Provenance sites
-        </button>
-        <button
-          type="button"
-          aria-pressed={mode === "map"}
-          onClick={() => {
-            setMode("map");
-          }}
-        >
-          Map
-        </button>
-      </nav>
+          <button
+            type="button"
+            className="button--secondary"
+            aria-pressed={mode === "sites"}
+            onClick={() => {
+              setMode("sites");
+            }}
+          >
+            List
+          </button>
+          <button
+            type="button"
+            className="button--secondary"
+            aria-pressed={mode === "map"}
+            onClick={() => {
+              setMode("map");
+            }}
+          >
+            Site map
+          </button>
+        </div>
+      )}
       {mode === "places" && (
         <>
           <div className="reference-split">
@@ -606,6 +654,12 @@ export function GeographyScreen({
                       Retry directory
                     </button>
                   </div>
+                )}
+                {directory.status === "ready" && places.length === 0 && (
+                  <p className="empty-state">
+                    No geographic places available. Canonical places must be
+                    initialized before adding local children.
+                  </p>
                 )}
                 {directory.status === "ready" &&
                   filter.trim() &&
@@ -656,11 +710,7 @@ export function GeographyScreen({
                   className="geography-place-inspector"
                 >
                   <DetailHeader
-                    eyebrow={
-                      selected.place_kind === "canonical"
-                        ? "Canonical geographic place"
-                        : "Local geographic place"
-                    }
+                    eyebrow="Geographic place"
                     title={selected.name}
                     secondary={
                       <span className="record-path">
@@ -685,11 +735,7 @@ export function GeographyScreen({
                         <button
                           type="button"
                           onClick={() => {
-                            setCreateParentId(selected.id);
-                            setSave({ status: "idle" });
-                            if (creationExpanded)
-                              createNameInput.current?.focus();
-                            else openCreation();
+                            beginCreate(selected.id);
                           }}
                         >
                           Create local child
@@ -777,6 +823,20 @@ export function GeographyScreen({
                       ) : undefined
                     }
                   />
+                  <div className="actions record-preview__actions">
+                    {!initialPlaceId && (
+                      <a
+                        className="button-link button--secondary"
+                        href={`#/geography?place=${selected.id}`}
+                      >
+                        Open details
+                      </a>
+                    )}
+                    <a href={`#/geography?mode=sites&place=${selected.id}`}>
+                      Associated provenance sites (
+                      {selected.provenance_site_count})
+                    </a>
+                  </div>
                   <dl className="record-facts">
                     <div>
                       <dt>Type</dt>
@@ -801,7 +861,7 @@ export function GeographyScreen({
                           >
                             {places.find(
                               (place) => place.id === selected.parent_id,
-                            )?.display_path ?? "Parent geographic place"}
+                            )?.name ?? "Parent geographic place"}
                           </button>
                         </dd>
                       </div>
@@ -967,9 +1027,8 @@ export function GeographyScreen({
           {creationExpanded && (
             <TaskDialog
               title="New local place"
-              onClose={() => {
-                closeCreation({ returnFocus: false });
-              }}
+              dismissOnBackdrop
+              onClose={dismissCreate}
             >
               <div ref={creationPanelRef}>
                 <form
@@ -1058,12 +1117,7 @@ export function GeographyScreen({
                       type="button"
                       className="button--secondary"
                       disabled={pending}
-                      onClick={() => {
-                        setCreateName("");
-                        setCreateParentId("");
-                        setSave({ status: "idle" });
-                        closeCreation({ returnFocus: false });
-                      }}
+                      onClick={dismissCreate}
                     >
                       Cancel
                     </button>
@@ -1092,6 +1146,31 @@ export function GeographyScreen({
           </div>
         </>
       )}
+      {mode !== "places" && directory.status !== "ready" && (
+        <div
+          className={
+            directory.status === "error" ? "notice notice--error" : "notice"
+          }
+          role={directory.status === "error" ? "alert" : "status"}
+        >
+          <p>
+            {directory.status === "loading"
+              ? "Loading geography…"
+              : "Florabase could not load geographic places for the site directory."}
+          </p>
+          {directory.status === "error" && (
+            <button
+              type="button"
+              onClick={() => {
+                setDirectory({ status: "loading" });
+                setAttempt((value) => value + 1);
+              }}
+            >
+              Retry directory
+            </button>
+          )}
+        </div>
+      )}
       {directory.status === "ready" && mode !== "places" && (
         <ProvenanceSiteManager
           startCreating={siteCreating}
@@ -1102,11 +1181,11 @@ export function GeographyScreen({
           places={places}
           csrfToken={csrfToken}
           initialSiteId={initialSiteId}
+          placeId={initialPlaceId}
           mode={mode === "map" ? "map" : "browse"}
           query={filter}
           onPlaceSelect={(id) => {
-            setSelectedId(id);
-            setMode("places");
+            window.location.hash = `#/geography/places?place=${id}`;
           }}
         />
       )}

@@ -52,23 +52,7 @@ export function WorkspaceIntro({
   );
 }
 
-export function Breadcrumbs({
-  items,
-}: {
-  items: { label: string; href?: string }[];
-}) {
-  return (
-    <nav aria-label="Breadcrumb" className="breadcrumbs">
-      <ol>
-        {items.map((item, index) => (
-          <li key={`${item.label}:${String(index)}`}>
-            {item.href ? <a href={item.href}>{item.label}</a> : item.label}
-          </li>
-        ))}
-      </ol>
-    </nav>
-  );
-}
+export { Breadcrumbs } from "./Breadcrumbs";
 
 export function DetailHeader({
   eyebrow,

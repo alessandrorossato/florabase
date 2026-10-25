@@ -3,6 +3,7 @@ import { emptyOverview } from "./collection/dashboardFixtures";
 import {
   act,
   cleanup,
+  fireEvent,
   render,
   screen,
   waitFor,
@@ -84,6 +85,23 @@ function authenticatedThen(
     if (path.endsWith("/external-taxon-link") && init?.method === undefined)
       return jsonResponse(null);
     if (path === "/api/v1/provenance-sites") return jsonResponse([]);
+    if (path.startsWith("/api/v1/explore/native-ranges/overview"))
+      return jsonResponse({
+        represented: 0,
+        with_range: 0,
+        without_range: 0,
+        places_total: 0,
+      });
+    if (path.startsWith("/api/v1/explore/native-ranges/identities"))
+      return jsonResponse({ items: [] });
+    if (path.startsWith("/api/v1/explore/species-distribution/identities"))
+      return jsonResponse({ items: [], total: 0, occurrence_ready: 0 });
+    if (path === "/api/v1/provenance-sites/map")
+      return jsonResponse({
+        sites: [],
+        coordinate_less_sites: 0,
+        total_provenance_sites: 0,
+      });
     if (
       path === "/api/v1/botanical-identities" &&
       (init?.method === undefined || init.method === "GET")
@@ -257,7 +275,11 @@ test.each([
       await vi.dynamicImportSettled();
     });
     expect(
-      await screen.findByRole("dialog", { name: dialogName }),
+      await screen.findByRole(
+        "dialog",
+        { name: dialogName },
+        { timeout: 5000 },
+      ),
     ).toBeInTheDocument();
   },
 );
@@ -435,11 +457,15 @@ const thailandPlace = {
 
 async function openGeography() {
   const user = userEvent.setup();
+  window.history.replaceState(null, "", "#/geography/places");
   render(<App />);
-  await user.click(
-    within(
-      await screen.findByRole("navigation", { name: "Primary navigation" }),
-    ).getByRole("link", { name: "Geography" }),
+  await act(async () => {
+    await vi.dynamicImportSettled();
+  });
+  await screen.findByRole(
+    "button",
+    { name: "New local place" },
+    { timeout: 5000 },
   );
   return user;
 }
@@ -2698,14 +2724,12 @@ test("Geography navigation loads, filters, and selects broad and country canonic
   expect(
     await screen.findByRole("heading", { name: "Geography" }),
   ).toBeInTheDocument();
-  const views = screen.getByRole("navigation", { name: "Geography views" });
-  expect(views.querySelectorAll("button")).toHaveLength(3);
   expect(
-    screen.queryByRole("navigation", { name: "Browse geography" }),
+    screen.queryByRole("navigation", { name: "Geography views" }),
   ).not.toBeInTheDocument();
   expect(
-    screen.getByRole("button", { name: "Places", pressed: true }),
-  ).toBeInTheDocument();
+    screen.getByRole("navigation", { name: "Breadcrumb" }),
+  ).toHaveTextContent("Places");
   expect(
     screen.getByRole("button", { name: "Collapse World" }),
   ).toHaveAttribute("aria-expanded", "true");
@@ -2713,20 +2737,24 @@ test("Geography navigation loads, filters, and selects broad and country canonic
     screen.getByRole("button", { name: "Expand South America" }),
   ).toHaveAttribute("aria-expanded", "false");
   await user.click(screen.getByRole("button", { name: "Collapse World" }));
-  await user.click(
-    screen.getByRole("button", { name: "Provenance sites", pressed: false }),
-  );
+  act(() => {
+    window.location.hash = "#/geography/sites";
+  });
+  await screen.findByRole("searchbox", { name: "Search provenance sites" });
   expect(
-    screen.getByRole("button", { name: "Provenance sites", pressed: true }),
-  ).toBeInTheDocument();
+    screen.getByRole("navigation", { name: "Breadcrumb" }),
+  ).toHaveTextContent("Provenance sites");
   expect(screen.getByLabelText("Search provenance sites")).toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: "Map", pressed: false }));
-  expect(
-    screen.getByRole("button", { name: "Map", pressed: true }),
-  ).toBeInTheDocument();
   await user.click(
-    screen.getByRole("button", { name: "Places", pressed: false }),
+    screen.getByRole("button", { name: "Site map", pressed: false }),
   );
+  expect(
+    screen.getByRole("button", { name: "Site map", pressed: true }),
+  ).toBeInTheDocument();
+  act(() => {
+    window.location.hash = "#/geography/places";
+  });
+  await screen.findByRole("button", { name: "Expand World" });
   expect(screen.getByRole("button", { name: "Expand World" })).toHaveAttribute(
     "aria-expanded",
     "false",
@@ -3088,6 +3116,10 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
       screen.getByRole("navigation", { name: "Primary navigation" }),
     ).getByRole("link", { name: "Geography" }),
   );
+  await act(async () => {
+    await vi.dynamicImportSettled();
+  });
+  await user.click(await screen.findByRole("link", { name: "Places" }));
   const newPlace = await screen.findByRole("button", {
     name: "New local place",
   });
@@ -3574,7 +3606,7 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
   expect(within(nav).getAllByRole("button", { expanded: true })).toHaveLength(
     5,
   );
-  expect(within(nav).getByText("Maps")).toHaveClass("sidebar-subsection");
+  expect(within(nav).queryByText("Maps")).not.toBeInTheDocument();
   expect(
     within(nav).queryByRole("button", { name: "Maps" }),
   ).not.toBeInTheDocument();
@@ -3592,9 +3624,6 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "Taxonomy",
     "Media",
     "Geography",
-    "Species distribution",
-    "Native ranges",
-    "Collection origins",
     "Suppliers",
     "Orders",
   ];
@@ -3649,9 +3678,6 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "taxonomy",
     "media",
     "geography",
-    "species-distribution",
-    "native-ranges",
-    "map",
     "suppliers",
     "orders",
   ];
@@ -3669,9 +3695,6 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     "Explore",
     "Explore",
     "Explore",
-    "Explore",
-    "Explore",
-    "Explore",
     "Sourcing",
     "Sourcing",
   ];
@@ -3684,13 +3707,21 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
     expect(
       within(nav).getByRole("link", { name: destination }),
     ).toHaveAttribute("aria-current", "page");
-    const heading = await screen.findByRole("heading", {
+    await screen.findByRole("heading", {
       name: destination === "Taxonomy" ? "Collection taxonomy" : destination,
       level: 2,
     });
-    expect(
-      heading.closest("header")?.querySelector(".eyebrow"),
-    ).toHaveTextContent(categories[index]);
+    if (destination === "Geography") {
+      expect(
+        within(screen.getByRole("navigation", { name: "Breadcrumb" }))
+          .getAllByRole("listitem")
+          .map((item) => item.textContent),
+      ).toEqual(["Explore", "Geography", "Overview"]);
+    } else if (destination !== "Dashboard") {
+      expect(
+        screen.getByRole("navigation", { name: "Breadcrumb" }),
+      ).toHaveTextContent(categories[index]);
+    }
     expect(
       screen.getByRole("heading", { name: "Florabase", level: 1 }),
     ).toBeVisible();
@@ -4068,6 +4099,158 @@ test("Location parent search cannot silently reparent to root and explicit root 
   await waitFor(() => {
     expect(updates).toBe(1);
   });
+});
+
+test("Geography overview is an internal route, preserving the legacy management entry", async () => {
+  authenticatedThen((path) => {
+    if (path.includes("native-ranges/overview"))
+      return jsonResponse({
+        represented: 0,
+        with_range: 0,
+        without_range: 0,
+        places_total: 0,
+      });
+    if (path.includes("native-ranges/identities"))
+      return jsonResponse({ items: [] });
+    if (path.includes("species-distribution/identities"))
+      return jsonResponse({ total: 0, occurrence_ready: 0, items: [] });
+    if (path === "/api/v1/provenance-sites/map")
+      return jsonResponse({
+        sites: [],
+        coordinate_less_sites: 0,
+        total_provenance_sites: 0,
+      });
+    if (path === "/api/v1/geographic-places") return jsonResponse([worldPlace]);
+    throw new Error(`unexpected request: ${path}`);
+  });
+  window.history.replaceState(null, "", "#/geography/overview");
+  render(<App />);
+  await screen.findByText(/No structured native ranges recorded/);
+  expect(
+    screen.queryByRole("navigation", { name: "Geography views" }),
+  ).not.toBeInTheDocument();
+  expect(
+    within(
+      screen.getByRole("navigation", { name: "Primary navigation" }),
+    ).getByRole("link", { name: "Geography" }),
+  ).toHaveAttribute("href", "#/geography");
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("link", { name: "Places" }));
+  await screen.findByRole("button", { name: "New local place" });
+  expect(
+    screen.getByRole("navigation", { name: "Breadcrumb" }),
+  ).toHaveTextContent("Places");
+  act(() => {
+    window.location.hash = "#/geography?mode=sites&q=site&future=keep";
+  });
+  await waitFor(() => {
+    expect(
+      screen.getByRole("navigation", { name: "Breadcrumb" }),
+    ).toHaveTextContent("Provenance sites");
+  });
+  expect(screen.getByLabelText("Search provenance sites")).toHaveValue("site");
+  await user.click(screen.getByRole("button", { name: "Site map" }));
+  expect(window.location.hash).toContain("future=keep");
+  expect(window.location.hash).toContain("q=site");
+});
+
+test.each(["backdrop", "Escape", "Cancel"])(
+  "clean New local place dismisses with %s and restores the actual trigger",
+  async (dismissal) => {
+    authenticatedThen((path) =>
+      jsonResponse(path === "/api/v1/geographic-places" ? [worldPlace] : []),
+    );
+    const user = await openGeography();
+    await user.click(await screen.findByRole("button", { name: /^World/ }));
+    const trigger = screen.getByRole("button", { name: "Create local child" });
+    await user.click(trigger);
+    const dialog = screen.getByRole("dialog", { name: "New local place" });
+    expect(screen.getByLabelText("Parent geographic place")).toHaveValue(
+      worldPlace.id,
+    );
+    await user.click(
+      within(dialog).getByRole("heading", { name: "Create a local place" }),
+    );
+    expect(dialog).toBeInTheDocument();
+    const confirm = vi.spyOn(window, "confirm");
+    if (dismissal === "backdrop")
+      fireEvent.click(dialog, { clientX: -10, clientY: -10 });
+    else if (dismissal === "Escape")
+      fireEvent(dialog, new Event("cancel", { cancelable: true }));
+    else
+      await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    expect(
+      screen.queryByRole("dialog", { name: "New local place" }),
+    ).not.toBeInTheDocument();
+    expect(confirm).not.toHaveBeenCalled();
+    expect(trigger).toHaveFocus();
+  },
+);
+
+test("all New local place dismissal paths protect changes and retain the draft when declined", async () => {
+  authenticatedThen((path) =>
+    jsonResponse(path === "/api/v1/geographic-places" ? [worldPlace] : []),
+  );
+  const user = await openGeography();
+  const trigger = screen.getByRole("button", { name: "New local place" });
+  await user.click(trigger);
+  const dialog = screen.getByRole("dialog", { name: "New local place" });
+  const name = within(dialog).getByRole("textbox", { name: "Name" });
+  await user.type(name, "Unsaved locality");
+  await user.selectOptions(
+    within(dialog).getByRole("combobox", { name: "Local place type" }),
+    "locality",
+  );
+  await user.selectOptions(
+    within(dialog).getByRole("combobox", { name: "Parent geographic place" }),
+    worldPlace.id,
+  );
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  fireEvent.click(dialog, { clientX: -10, clientY: -10 });
+  await user.keyboard("{Escape}");
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(confirm).toHaveBeenCalledTimes(3);
+  expect(name).toHaveValue("Unsaved locality");
+  expect(dialog).toBeInTheDocument();
+  confirm.mockReturnValue(true);
+  await user.keyboard("{Escape}");
+  expect(
+    screen.queryByRole("dialog", { name: "New local place" }),
+  ).not.toBeInTheDocument();
+  expect(trigger).toHaveFocus();
+  await user.click(trigger);
+  expect(screen.getByRole("textbox", { name: "Name" })).toHaveValue("");
+});
+
+test("submitting New local place retains the dialog and blocks every dismissal while pending", async () => {
+  authenticatedThen((path, init) => {
+    if (path === "/api/v1/geographic-places" && init?.method === "POST")
+      return new Promise<Response>(() => undefined);
+    return jsonResponse(
+      path === "/api/v1/geographic-places" ? [worldPlace] : [],
+    );
+  });
+  const user = await openGeography();
+  await user.click(screen.getByRole("button", { name: "New local place" }));
+  const dialog = screen.getByRole("dialog", { name: "New local place" });
+  await user.type(
+    within(dialog).getByRole("textbox", { name: "Name" }),
+    "Pending locality",
+  );
+  await user.selectOptions(
+    within(dialog).getByRole("combobox", { name: "Parent geographic place" }),
+    worldPlace.id,
+  );
+  await user.click(
+    within(dialog).getByRole("button", { name: "Create local place" }),
+  );
+  expect(
+    within(dialog).getByRole("button", { name: "Saving local place…" }),
+  ).toBeDisabled();
+  fireEvent.click(dialog, { clientX: -10, clientY: -10 });
+  fireEvent(dialog, new Event("cancel", { cancelable: true }));
+  expect(dialog).toBeInTheDocument();
+  expect(within(dialog).getByRole("button", { name: "Cancel" })).toBeDisabled();
 });
 
 function identityVisualFixture({ deleteStatus = 409, saveStatus = 200 } = {}) {

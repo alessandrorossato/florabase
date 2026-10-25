@@ -1,0 +1,91 @@
+{
+  "checks": [
+    "Overview cards mount real maps; the canonical Geography breadcrumb returns to the hub; legacy exact identity, unknown parameters, Back and reload survive without tabs",
+    "Rounded Places rows retain independent chevron disclosure/selection and canonical context; clean backdrop focus-return and dirty discard protection remain correct; no place saved",
+    "LEFT list/inspector and RIGHT existing map synchronize both directions; coordinate-less records stay editable without invented markers; overflow inspector is keyboard focusable",
+    "Mobile List/Map preserves the same selected coordinate-less record and inspector; representative viewport and panel-scroll extents recorded",
+    "Shared Sourcing breadcrumb uses the existing Orders owner; no fake group link to Dashboard",
+    "Labelled browser-only 1000-site renderer double: bounded left list, 10 coordinate-bearing markers, exact search and coordinate-less inspection at desktop/mobile; no persisted data or backend benchmark"
+  ],
+  "fit": [
+    {
+      "width": 1440,
+      "map": {
+        "top": 233.03125,
+        "bottom": 837.03125,
+        "left": 705.359375,
+        "right": 1415.984375
+      },
+      "rail": {
+        "top": 233.03125,
+        "bottom": 837.03125,
+        "left": 272,
+        "right": 689.359375
+      },
+      "list": {
+        "clientHeight": 176,
+        "scrollHeight": 241
+      },
+      "inspector": {
+        "clientHeight": 362,
+        "scrollHeight": 413
+      },
+      "pageWidth": 1440
+    },
+    {
+      "width": 1024,
+      "map": {
+        "top": 273.03125,
+        "bottom": 829.03125,
+        "left": 576,
+        "right": 1000
+      },
+      "rail": {
+        "top": 273.03125,
+        "bottom": 829.03125,
+        "left": 272,
+        "right": 560
+      },
+      "list": {
+        "clientHeight": 176,
+        "scrollHeight": 303
+      },
+      "inspector": {
+        "clientHeight": 314,
+        "scrollHeight": 525
+      },
+      "pageWidth": 1024
+    },
+    {
+      "width": 390,
+      "map": {
+        "top": 0,
+        "bottom": 0,
+        "left": 0,
+        "right": 0
+      },
+      "rail": {
+        "top": 558.1875,
+        "bottom": 1259.15625,
+        "left": 16,
+        "right": 374
+      },
+      "list": {
+        "clientHeight": 176,
+        "scrollHeight": 241
+      },
+      "inspector": {
+        "clientHeight": 459,
+        "scrollHeight": 459
+      },
+      "pageWidth": 390
+    }
+  ],
+  "files": [
+    "large-sites-renderer-double-1440.png",
+    "large-sites-renderer-double-390.png"
+  ],
+  "errors": [],
+  "external": [],
+  "fixture": "Existing review records read only; unsaved draft discarded. Large rows are browser response doubles, not persisted."
+}

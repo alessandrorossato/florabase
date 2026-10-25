@@ -1,0 +1,413 @@
+{
+  "success": true,
+  "testsPassed": 919,
+  "testFiles": 79,
+  "failed": 0,
+  "pending": 0,
+  "command": "pnpm test --pool=threads --maxWorkers=1",
+  "scope": "Full frontend suite; not canonical FULL verification",
+  "baseline": "17 tests/3 files passed before operator corrections",
+  "files": [
+    {
+      "path": "src/App.lazy.test.tsx",
+      "status": "passed",
+      "tests": 1
+    },
+    {
+      "path": "src/App.test.tsx",
+      "status": "passed",
+      "tests": 88
+    },
+    {
+      "path": "src/App.transition.test.tsx",
+      "status": "passed",
+      "tests": 1
+    },
+    {
+      "path": "src/Propagation002.test.tsx",
+      "status": "passed",
+      "tests": 14
+    },
+    {
+      "path": "src/UX001.test.tsx",
+      "status": "passed",
+      "tests": 7
+    },
+    {
+      "path": "src/UX004.test.tsx",
+      "status": "passed",
+      "tests": 12
+    },
+    {
+      "path": "src/appearance/styles.test.ts",
+      "status": "passed",
+      "tests": 4
+    },
+    {
+      "path": "src/appearance/theme.test.ts",
+      "status": "passed",
+      "tests": 11
+    },
+    {
+      "path": "src/botanical-identities/ExternalBotanicalDataPanel.test.tsx",
+      "status": "passed",
+      "tests": 3
+    },
+    {
+      "path": "src/botanical-profiles/NativeRangeEnrichmentPanel.test.tsx",
+      "status": "passed",
+      "tests": 6
+    },
+    {
+      "path": "src/bulk/BulkLocation.test.tsx",
+      "status": "passed",
+      "tests": 12
+    },
+    {
+      "path": "src/bulk/api.test.ts",
+      "status": "passed",
+      "tests": 1
+    },
+    {
+      "path": "src/collection/DashboardScreen.test.tsx",
+      "status": "passed",
+      "tests": 4
+    },
+    {
+      "path": "src/collection/DashboardSearch.test.tsx",
+      "status": "passed",
+      "tests": 13
+    },
+    {
+      "path": "src/events/EventFeed.test.tsx",
+      "status": "passed",
+      "tests": 5
+    },
+    {
+      "path": "src/events/EventTargetPhoto.test.tsx",
+      "status": "passed",
+      "tests": 2
+    },
+    {
+      "path": "src/events/GlobalEventsScreen.test.tsx",
+      "status": "passed",
+      "tests": 10
+    },
+    {
+      "path": "src/geography/GeographyOverview.test.tsx",
+      "status": "passed",
+      "tests": 7
+    },
+    {
+      "path": "src/geography/GeographyWorkspace.test.tsx",
+      "status": "passed",
+      "tests": 9
+    },
+    {
+      "path": "src/geography/routes.test.ts",
+      "status": "passed",
+      "tests": 5
+    },
+    {
+      "path": "src/history/HistoryScreen.test.tsx",
+      "status": "passed",
+      "tests": 9
+    },
+    {
+      "path": "src/import-export/ImportExportScreen.test.tsx",
+      "status": "passed",
+      "tests": 3
+    },
+    {
+      "path": "src/harvests/Conversion.test.tsx",
+      "status": "passed",
+      "tests": 9
+    },
+    {
+      "path": "src/harvests/HarvestScreen.test.tsx",
+      "status": "passed",
+      "tests": 15
+    },
+    {
+      "path": "src/harvests/StoredMaterial.test.tsx",
+      "status": "passed",
+      "tests": 20
+    },
+    {
+      "path": "src/harvests/api.test.ts",
+      "status": "passed",
+      "tests": 1
+    },
+    {
+      "path": "src/lineage/LineagePanel.test.tsx",
+      "status": "passed",
+      "tests": 6
+    },
+    {
+      "path": "src/components/Breadcrumbs.test.tsx",
+      "status": "passed",
+      "tests": 19
+    },
+    {
+      "path": "src/components/CollectionUI.test.tsx",
+      "status": "passed",
+      "tests": 1
+    },
+    {
+      "path": "src/components/ContextualHelp.test.tsx",
+      "status": "passed",
+      "tests": 3
+    },
+    {
+      "path": "src/components/Controls.test.tsx",
+      "status": "passed",
+      "tests": 9
+    },
+    {
+      "path": "src/components/DirectoryResults.test.tsx",
+      "status": "passed",
+      "tests": 5
+    },
+    {
+      "path": "src/components/DirectoryTools.test.tsx",
+      "status": "passed",
+      "tests": 1
+    },
+    {
+      "path": "src/components/FieldLabel.test.tsx",
+      "status": "passed",
+      "tests": 2
+    },
+    {
+      "path": "src/components/FormSections.test.tsx",
+      "status": "passed",
+      "tests": 6
+    },
+    {
+      "path": "src/components/ReferenceInteractions.test.tsx",
+      "status": "passed",
+      "tests": 4
+    },
+    {
+      "path": "src/components/ThemeControl.test.tsx",
+      "status": "passed",
+      "tests": 2
+    },
+    {
+      "path": "src/components/WorkspaceBoundary.test.tsx",
+      "status": "passed",
+      "tests": 3
+    },
+    {
+      "path": "src/components/recordNavigation.test.ts",
+      "status": "passed",
+      "tests": 18
+    },
+    {
+      "path": "src/components/recordPresentation.test.ts",
+      "status": "passed",
+      "tests": 2
+    },
+    {
+      "path": "src/locations/api.test.ts",
+      "status": "passed",
+      "tests": 1
+    },
+    {
+      "path": "src/labels/LabelsScreen.test.tsx",
+      "status": "passed",
+      "tests": 54
+    },
+    {
+      "path": "src/labels/qrCode.test.ts",
+      "status": "passed",
+      "tests": 10
+    },
+    {
+      "path": "src/maps/MapWorkspace.test.tsx",
+      "status": "passed",
+      "tests": 2
+    },
+    {
+      "path": "src/media/MediaScreen.test.tsx",
+      "status": "passed",
+      "tests": 22
+    },
+    {
+      "path": "src/occurrence-map/EvidenceTiles.test.ts",
+      "status": "passed",
+      "tests": 4
+    },
+    {
+      "path": "src/occurrence-map/OccurrenceDensityMap.test.tsx",
+      "status": "passed",
+      "tests": 4
+    },
+    {
+      "path": "src/occurrence-map/OccurrenceMapPanel.test.tsx",
+      "status": "passed",
+      "tests": 4
+    },
+    {
+      "path": "src/orders/OrderPicker.test.tsx",
+      "status": "passed",
+      "tests": 4
+    },
+    {
+      "path": "src/orders/OrderScreen.test.tsx",
+      "status": "passed",
+      "tests": 17
+    },
+    {
+      "path": "src/orders/PurchaseContext.test.tsx",
+      "status": "passed",
+      "tests": 8
+    },
+    {
+      "path": "src/photos/BotanicalIdentityCover.test.tsx",
+      "status": "passed",
+      "tests": 5
+    },
+    {
+      "path": "src/photos/PhotosSection.test.tsx",
+      "status": "passed",
+      "tests": 16
+    },
+    {
+      "path": "src/photos/PrimaryPhotoVisual.test.tsx",
+      "status": "passed",
+      "tests": 7
+    },
+    {
+      "path": "src/photos/RecordVisual.test.tsx",
+      "status": "passed",
+      "tests": 12
+    },
+    {
+      "path": "src/native-ranges/NativeCoverageMap.test.tsx",
+      "status": "passed",
+      "tests": 12
+    },
+    {
+      "path": "src/native-ranges/NativeRangesScreen.test.tsx",
+      "status": "passed",
+      "tests": 22
+    },
+    {
+      "path": "src/native-ranges/geometry.test.ts",
+      "status": "passed",
+      "tests": 3
+    },
+    {
+      "path": "src/plants/PlantScreen.test.tsx",
+      "status": "passed",
+      "tests": 58
+    },
+    {
+      "path": "src/propagation/CreationReversal.test.tsx",
+      "status": "passed",
+      "tests": 11
+    },
+    {
+      "path": "src/propagation/GuidedForms.test.tsx",
+      "status": "passed",
+      "tests": 6
+    },
+    {
+      "path": "src/provenance-sites/CoordinateFields.test.tsx",
+      "status": "passed",
+      "tests": 2
+    },
+    {
+      "path": "src/provenance-sites/ProvenanceSiteManager.test.tsx",
+      "status": "passed",
+      "tests": 5
+    },
+    {
+      "path": "src/provenance-sites/coordinates.test.ts",
+      "status": "passed",
+      "tests": 15
+    },
+    {
+      "path": "src/provenance-map/ProvenanceMap.test.tsx",
+      "status": "passed",
+      "tests": 8
+    },
+    {
+      "path": "src/provenance-map/ProvenanceMapScreen.test.tsx",
+      "status": "passed",
+      "tests": 11
+    },
+    {
+      "path": "src/saved-views/SavedViews.test.tsx",
+      "status": "passed",
+      "tests": 10
+    },
+    {
+      "path": "src/saved-views/state.test.ts",
+      "status": "passed",
+      "tests": 50
+    },
+    {
+      "path": "src/settings/SettingsScreen.test.tsx",
+      "status": "passed",
+      "tests": 6
+    },
+    {
+      "path": "src/sowings/SowingScreen.test.tsx",
+      "status": "passed",
+      "tests": 31
+    },
+    {
+      "path": "src/species-distribution/SpeciesDistributionScreen.test.tsx",
+      "status": "passed",
+      "tests": 10
+    },
+    {
+      "path": "src/seed-lots/PartialDateField.test.tsx",
+      "status": "passed",
+      "tests": 2
+    },
+    {
+      "path": "src/seed-lots/ReferencePicker.test.tsx",
+      "status": "passed",
+      "tests": 11
+    },
+    {
+      "path": "src/seed-lots/SeedLotScreen.test.tsx",
+      "status": "passed",
+      "tests": 50
+    },
+    {
+      "path": "src/schedule/ScheduleScreen.test.tsx",
+      "status": "passed",
+      "tests": 51
+    },
+    {
+      "path": "src/schedule/api.test.ts",
+      "status": "passed",
+      "tests": 3
+    },
+    {
+      "path": "src/schedule/calendar.test.ts",
+      "status": "passed",
+      "tests": 2
+    },
+    {
+      "path": "src/suppliers/SupplierScreen.test.tsx",
+      "status": "passed",
+      "tests": 10
+    },
+    {
+      "path": "src/taxonomy/TaxonomyScreen.test.tsx",
+      "status": "passed",
+      "tests": 7
+    }
+  ],
+  "finalConfirmation": {
+    "testsPassed": 40,
+    "files": 4,
+    "appFocusedPassed": 7,
+    "note": "Repeated final-source checks after lint-only cleanup; not added to the 919 full-suite total"
+  }
+}

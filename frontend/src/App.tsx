@@ -1,3 +1,4 @@
+import { geographyRoute, type GeographyView } from "./geography/routes";
 import { Icon } from "./components/Icon";
 import { ActionButton, IconButton } from "./components/Action";
 import {
@@ -41,17 +42,10 @@ const TaxonomyScreen = lazy(() =>
   }),
 );
 
-const NativeRangesScreen = lazy(() =>
+const GeographyWorkspace = lazy(() =>
   loadWorkspaceChunk(async () => {
-    const module = await import("./native-ranges/NativeRangesScreen");
-    return { default: module.NativeRangesScreen };
-  }),
-);
-const SpeciesDistributionScreen = lazy(() =>
-  loadWorkspaceChunk(async () => {
-    const module =
-      await import("./species-distribution/SpeciesDistributionScreen");
-    return { default: module.SpeciesDistributionScreen };
+    const module = await import("./geography/GeographyWorkspace");
+    return { default: module.GeographyWorkspace };
   }),
 );
 
@@ -87,13 +81,6 @@ const GlobalEventsScreen = lazy(() =>
   loadWorkspaceChunk(async () => {
     const module = await import("./events/GlobalEventsScreen");
     return { default: module.GlobalEventsScreen };
-  }),
-);
-
-const GeographyScreen = lazy(() =>
-  loadWorkspaceChunk(async () => {
-    const module = await import("./geographic-places/GeographyScreen");
-    return { default: module.GeographyScreen };
   }),
 );
 
@@ -174,13 +161,6 @@ const OrderScreen = lazy(() =>
   }),
 );
 
-const ProvenanceMapScreen = lazy(() =>
-  loadWorkspaceChunk(async () => {
-    const module = await import("./provenance-map/ProvenanceMapScreen");
-    return { default: module.ProvenanceMapScreen };
-  }),
-);
-
 type HealthResponse = components["schemas"]["HealthResponse"];
 type HealthState =
   | { status: "loading" }
@@ -196,10 +176,7 @@ type Section =
   | "events"
   | "history"
   | "schedule"
-  | "species-distribution"
-  | "native-ranges"
   | "taxonomy"
-  | "map"
   | "identities"
   | "suppliers"
   | "orders"
@@ -212,6 +189,7 @@ type Section =
 
 interface Route {
   section: Section;
+  geographyView?: GeographyView;
   recordId?: string;
   recordKind?: "plant" | "group";
   recordTypeFilter?: "plant" | "group";
@@ -253,6 +231,15 @@ function currentRoute(): Route {
     sowingId,
     creationKind: kind === "plant" || kind === "group" ? kind : undefined,
   } as const;
+  const geographic = geographyRoute(window.location.hash);
+  if (geographic)
+    return {
+      section: "geography",
+      geographyView: geographic.view,
+      recordId: geographic.siteId,
+      placeId,
+      ...context,
+    };
   if (first === "plant-groups")
     return {
       section: "plants",
@@ -278,10 +265,7 @@ function currentRoute(): Route {
     "events",
     "history",
     "schedule",
-    "species-distribution",
-    "native-ranges",
     "taxonomy",
-    "map",
     "identities",
     "suppliers",
     "orders",
@@ -307,7 +291,7 @@ function currentRoute(): Route {
 
 const desktopGroups: {
   label: string;
-  items: { id: Section; label: string; subgroup?: "Maps" }[];
+  items: { id: Section; label: string }[];
 }[] = [
   { label: "Overview", items: [{ id: "dashboard", label: "Dashboard" }] },
   {
@@ -335,13 +319,6 @@ const desktopGroups: {
       { id: "taxonomy", label: "Taxonomy" },
       { id: "media", label: "Media" },
       { id: "geography", label: "Geography" },
-      {
-        id: "species-distribution",
-        subgroup: "Maps",
-        label: "Species distribution",
-      },
-      { id: "native-ranges", subgroup: "Maps", label: "Native ranges" },
-      { id: "map", subgroup: "Maps", label: "Collection origins" },
     ],
   },
   {
@@ -617,12 +594,9 @@ function ApplicationShell() {
                 >
                   {group.items.map((item) => (
                     <Fragment key={item.id}>
-                      {item.id === "species-distribution" && (
-                        <p className="sidebar-subsection">Maps</p>
-                      )}
                       <a
                         href={`#/${item.id}`}
-                        className={`navigation-link${item.subgroup ? " navigation-link--map" : ""}`}
+                        className="navigation-link"
                         aria-current={
                           route.section === item.id ? "page" : undefined
                         }
@@ -802,18 +776,6 @@ function ApplicationShell() {
                 <GlobalEventsScreen />
               ) : route.section === "taxonomy" ? (
                 <TaxonomyScreen />
-              ) : route.section === "native-ranges" ? (
-                <NativeRangesScreen />
-              ) : route.section === "species-distribution" ? (
-                <SpeciesDistributionScreen />
-              ) : route.section === "map" ? (
-                <Suspense
-                  fallback={
-                    <p aria-live="polite">Loading collection origins…</p>
-                  }
-                >
-                  <ProvenanceMapScreen />
-                </Suspense>
               ) : route.section === "identities" ? (
                 <BotanicalIdentityScreen
                   initialId={route.recordId}
@@ -843,10 +805,10 @@ function ApplicationShell() {
                   startCreating={route.action === "create"}
                 />
               ) : (
-                <GeographyScreen
-                  key={route.recordId ?? route.placeId ?? "directory"}
-                  initialSiteId={route.recordId}
-                  initialPlaceId={route.placeId}
+                <GeographyWorkspace
+                  view={route.geographyView ?? "overview"}
+                  siteId={route.recordId}
+                  placeId={route.placeId}
                   startCreating={route.action === "create"}
                 />
               )}
@@ -949,12 +911,9 @@ function ApplicationShell() {
                 <h3>{group.label}</h3>
                 {group.items.map((item) => (
                   <Fragment key={item.id}>
-                    {item.id === "species-distribution" && (
-                      <p className="sidebar-subsection">Maps</p>
-                    )}
                     <a
                       href={`#/${item.id}`}
-                      className={`navigation-link${item.subgroup ? " navigation-link--map" : ""}`}
+                      className="navigation-link"
                       aria-current={
                         route.section === item.id ? "page" : undefined
                       }

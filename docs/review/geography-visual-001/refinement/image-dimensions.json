@@ -1,0 +1,347 @@
+{
+  "verified": 57,
+  "files": [
+    {
+      "file": "overview-1440-botanical-light.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "native-1440-botanical-light.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "distribution-1440-botanical-light.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "origins-1440-botanical-light.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "places-1440-botanical-light.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "sites-1440-botanical-light.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "site-map-1440-botanical-light.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-1024-botanical-light.png",
+      "width": 1024,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "native-1024-botanical-light.png",
+      "width": 1024,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "distribution-1024-botanical-light.png",
+      "width": 1024,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "origins-1024-botanical-light.png",
+      "width": 1024,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "places-1024-botanical-light.png",
+      "width": 1024,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "sites-1024-botanical-light.png",
+      "width": 1024,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "site-map-1024-botanical-light.png",
+      "width": 1024,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-390-botanical-light.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-records-390-botanical-light.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "native-390-botanical-light.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "distribution-390-botanical-light.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "origins-390-botanical-light.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "places-390-botanical-light.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "places-preview-390-botanical-light.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "sites-390-botanical-light.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "sites-preview-390-botanical-light.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "site-map-390-botanical-light.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-1440-botanical-dark.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "native-1440-botanical-dark.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "origins-1440-botanical-dark.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "sites-1440-botanical-dark.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-1024-botanical-dark.png",
+      "width": 1024,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-390-botanical-dark.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "native-390-botanical-dark.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-1440-herbarium-light.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "native-1440-herbarium-light.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "origins-1440-herbarium-light.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "sites-1440-herbarium-light.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-1024-herbarium-light.png",
+      "width": 1024,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-390-herbarium-light.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-1440-herbarium-dark.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "native-1440-herbarium-dark.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "origins-1440-herbarium-dark.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "sites-1440-herbarium-dark.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-1024-herbarium-dark.png",
+      "width": 1024,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-390-herbarium-dark.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "native-390-herbarium-dark.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-1440-mineral-light.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "native-1440-mineral-light.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "origins-1440-mineral-light.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "sites-1440-mineral-light.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-1024-mineral-light.png",
+      "width": 1024,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-390-mineral-light.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-1440-mineral-dark.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "native-1440-mineral-dark.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "origins-1440-mineral-dark.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "sites-1440-mineral-dark.png",
+      "width": 1440,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-1024-mineral-dark.png",
+      "width": 1024,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "overview-390-mineral-dark.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    },
+    {
+      "file": "native-390-mineral-dark.png",
+      "width": 390,
+      "height": 844,
+      "matches": true
+    }
+  ]
+}

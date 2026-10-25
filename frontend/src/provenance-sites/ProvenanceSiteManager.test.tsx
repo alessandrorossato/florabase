@@ -1,4 +1,10 @@
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import {
+  cleanup,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 
@@ -11,7 +17,9 @@ vi.mock("../provenance-map/ProvenanceMap", () => ({
   ProvenanceMap: ({
     sites,
     onSelect,
+    selectedId,
   }: {
+    selectedId: string | null;
     sites: MapPoint[];
     onSelect: (id: string) => void;
   }) => (
@@ -19,6 +27,7 @@ vi.mock("../provenance-map/ProvenanceMap", () => ({
       {sites.map((site) => (
         <button
           key={site.id}
+          aria-pressed={site.id === selectedId}
           type="button"
           onClick={() => {
             onSelect(site.id);
@@ -247,7 +256,7 @@ test("shows an actionable coordinate-pair validation error", async () => {
   expect(screen.getByLabelText("Provenance site name")).toHaveFocus();
 });
 
-test("Browse retains coordinate-less sites while map mode lists stored coordinate pairs only", async () => {
+test("List and Map share all sites and selection; only stored coordinate pairs create markers", async () => {
   const coordinateSite: ProvenanceSiteResponse = {
     id: "mapped-site",
     name: "Ridge collection",
@@ -280,21 +289,51 @@ test("Browse retains coordinate-less sites while map mode lists stored coordinat
     await screen.findByRole("button", { name: /Historical valley/ }),
   ).toBeInTheDocument();
   expect(
-    screen.getByRole("button", { name: /Ridge collection/ }),
+    within(screen.getByRole("list", { name: "Provenance sites" })).getByRole(
+      "button",
+      { name: /Ridge collection/ },
+    ),
   ).toBeInTheDocument();
   rerender(
     <ProvenanceSiteManager places={[world]} csrfToken="csrf" mode="map" />,
   );
-  expect(
-    screen.queryByRole("button", { name: /Historical valley/ }),
-  ).not.toBeInTheDocument();
-  expect(
-    screen.getByRole("button", { name: /Ridge collection/ }),
-  ).toBeInTheDocument();
+  const directory = screen.getByRole("list", { name: "Provenance sites" });
   const user = userEvent.setup();
+  await user.click(
+    within(directory).getByRole("button", { name: /Historical valley/ }),
+  );
+  expect(
+    within(directory).getByRole("button", { name: /Historical valley/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+  expect(
+    screen.getByRole("button", { name: "Map marker Ridge collection" }),
+  ).toHaveAttribute("aria-pressed", "false");
+  expect(
+    screen.queryByRole("button", { name: "Map marker Historical valley" }),
+  ).not.toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Edit" })).toBeEnabled();
+  expect(screen.getAllByText("No coordinates recorded")).toHaveLength(2);
+  rerender(
+    <ProvenanceSiteManager places={[world]} csrfToken="csrf" mode="browse" />,
+  );
+  expect(
+    within(directory).getByRole("button", { name: /Historical valley/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+  expect(
+    within(screen.getByRole("list", { name: "Provenance sites" })).getByRole(
+      "button",
+      { name: /Ridge collection/ },
+    ),
+  ).toBeInTheDocument();
   await user.click(
     await screen.findByRole("button", { name: "Map marker Ridge collection" }),
   );
+  expect(
+    within(directory).getByRole("button", { name: /Ridge collection/ }),
+  ).toHaveAttribute("aria-pressed", "true");
+  expect(
+    screen.getByRole("button", { name: "Map marker Ridge collection" }),
+  ).toHaveAttribute("aria-pressed", "true");
   expect(screen.getByText("38.1, 13.3")).toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Edit" }));
   expect(
@@ -332,7 +371,11 @@ test("shows zero accuracy and distinguishes delete conflicts from other failures
   vi.spyOn(window, "confirm").mockReturnValue(true);
   const user = userEvent.setup();
   render(<ProvenanceSiteManager places={[world]} csrfToken="csrf" />);
-  await user.click(await screen.findByRole("button", { name: /Survey point/ }));
+  await user.click(
+    within(
+      await screen.findByRole("list", { name: "Provenance sites" }),
+    ).getByRole("button", { name: /Survey point/ }),
+  );
   expect(screen.getByText("± 0 m")).toBeInTheDocument();
   await user.click(screen.getByLabelText("More provenance site actions"));
   await user.click(
@@ -344,4 +387,39 @@ test("shows zero accuracy and distinguishes delete conflicts from other failures
   expect(
     screen.queryByText(/used by collection records/),
   ).not.toBeInTheDocument();
+});
+
+test("associated sites use exact place identity independently of matching names and search", async () => {
+  const sites: ProvenanceSiteResponse[] = [
+    world.id,
+    "01900000-0000-7000-8000-000000000099",
+  ].map((placeId, i) => ({
+    id: `01900000-0000-7000-8000-00000000001${String(i)}`,
+    name: `Same locality site ${String(i)}`,
+    geographic_place_id: placeId,
+    geographic_place_path: "World → Same locality",
+    latitude: null,
+    longitude: null,
+    coordinate_accuracy_m: null,
+    notes: null,
+    usage: { seed_lots: 0, plants: 0, plant_groups: 0 },
+    created_at: "2026-10-24T00:00:00Z",
+    updated_at: "2026-10-24T00:00:00Z",
+  }));
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(response(sites));
+  render(
+    <ProvenanceSiteManager
+      places={[world]}
+      placeId={world.id}
+      csrfToken="csrf"
+      query="Same locality"
+    />,
+  );
+  await screen.findByRole("button", { name: /Same locality site 0/ });
+  expect(
+    screen.queryByRole("button", { name: /Same locality site 1/ }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Show all provenance sites" }),
+  ).toHaveAttribute("href", "#/geography?mode=sites");
 });

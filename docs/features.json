@@ -1946,6 +1946,31 @@
       "status": "implemented"
     },
     {
+      "id": "GEOGRAPHY-VISUAL-001",
+      "category": "ux",
+      "description": "Normalize Geography management and unify the full native-range, occurrence and collection-origin workspaces behind one geographic entry and a compact local-evidence overview",
+      "acceptance_criteria": [
+        "Places retain hierarchy, canonical/local restrictions and guarded create-dialog safety with moderately rounded shared rows, separated chevron disclosure/selection, capped indentation, contextual preview, focus and exact associated-site navigation",
+        "Provenance sites synchronize one LEFT list/inspector rail with a prominent RIGHT map on desktop, retaining coordinate-less discovery, exact WGS84/accuracy/usage, existing edit/detail/source links and a selection-preserving mobile List/Map presentation",
+        "The restored balanced three-card Geography overview separates reference ranges, observed occurrence evidence and recorded origins with accurate coverage, explicit unknown occurrence counts, independent states, compact disclosures and record access",
+        "Geography remains the sole global geographic entry; its six existing routes have no persistent tab strip and use the Overview hub, contextual links and canonical breadcrumb return while preserving full maps, legacy URLs, exact queries and v1 Saved Views",
+        "Canonical Geography routes and legacy map aliases support direct entry, reload, Back/Forward and modified clicks; Botanical Identity links remain compatible and the operator-authorized Maps subgroup removal is documented for IA-NAV reconciliation",
+        "One shared breadcrumb convention covers straightforward root workspaces and existing record paths without invented group links; Geography uses canonical Overview return, exact identifiers/history remain intact and bounded contextual exceptions and main/IA integration are documented",
+        "Affected frontend regressions and static checks plus desktop, tablet, mobile and representative theme evidence are documented in the handoff; operator acceptance and canonical verification remain separate",
+        "Future assisted import, source refresh, validated boundaries, completeness and comparison proposals remain documented rather than implemented"
+      ],
+      "dependencies": [
+        "GEOGRAPHY-003",
+        "MAPS-FOUNDATION-001",
+        "MAPS-DISTRIBUTION-001",
+        "MAPS-ORIGINS-001",
+        "THEMES-001",
+        "CONTROLS-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "BOTANICAL-IDENTITIES-VISUAL-001",
       "category": "ux",
       "description": "Complete the Botanical Identity cross-functional hub, exact collection drilldowns, source actions and contextual visual review",
