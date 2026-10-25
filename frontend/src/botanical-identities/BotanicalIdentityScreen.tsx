@@ -152,15 +152,25 @@ function IdentityDetails({
     window.scrollTo({ top: 0 });
   }, []);
   useEffect(() => {
-    if (editing)
-      requestAnimationFrame(() =>
-        (editorSection === "identity"
-          ? editPanel.current?.querySelector<HTMLInputElement>("input")
-          : editorContainer.current?.querySelector<HTMLElement>(
-              `[data-form-panel="${editorSection}"] textarea, [data-form-panel="${editorSection}"] select, [data-form-panel="${editorSection}"] button`,
-            )
-        )?.focus(),
-      );
+    if (!editing) return;
+    const frame = requestAnimationFrame(() => {
+      if (
+        editorContainer.current?.contains(document.activeElement) &&
+        (document.activeElement instanceof HTMLInputElement ||
+          document.activeElement instanceof HTMLTextAreaElement ||
+          document.activeElement instanceof HTMLSelectElement)
+      )
+        return;
+      (editorSection === "identity"
+        ? editPanel.current?.querySelector<HTMLInputElement>("input")
+        : editorContainer.current?.querySelector<HTMLElement>(
+            `[data-form-panel="${editorSection}"] textarea, [data-form-panel="${editorSection}"] select, [data-form-panel="${editorSection}"] button`,
+          )
+      )?.focus();
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+    };
   }, [editing, editorSection]);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
