@@ -127,7 +127,10 @@ general route assertions are retained. The merged `App.test.tsx` suite passed **
 CI-004 remains a separate delivery; no CI-004 branch or changes were cherry-picked.
 The first canonical FULL attempt caught an invalid `list.append()` return-value
 assignment in a Taxonomy API test; it is corrected with an explicitly typed fake
-search function and no checks were weakened. The exact final tree still needs a
+search function and no checks were weakened. A corrected rerun passed strict typing
+but exposed **89.97% backend coverage** against the unchanged 90% policy. Focused
+tests now exercise malformed WFO rows, missing metadata and unresolved accepted
+parents (**25/25 Taxonomy unit tests passed**). The exact final tree still needs a
 fresh canonical FULL receipt before protected delivery. Feature status stays
 **implemented**, not verified, until that receipt passes.
 Minimap, worldwide taxonomy, new providers, remote image acquisition, a general

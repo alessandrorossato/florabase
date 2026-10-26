@@ -2,6 +2,7 @@ import copy
 import hashlib
 import json
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -84,6 +85,15 @@ def test_hierarchy_exact_parent_synonym_intermediate_and_literal_search(source: 
     assert source.metadata() == META
 
 
+def test_path_rejects_an_unresolved_accepted_parent(source: WfoSource) -> None:
+    nodes = source.hierarchy([SPECIES])
+    nodes[GENUS] = nodes[GENUS].model_copy(
+        update={"parent_source_taxon_id": "wfo-9999999999"}
+    )
+    with pytest.raises(SourceUnavailableError, match="unresolved parent"):
+        path(nodes, SPECIES)
+
+
 @pytest.mark.parametrize(
     "problem",
     [
@@ -164,6 +174,25 @@ def test_missing_corrupt_wrong_release_schema_and_encoding(tmp_path: Path) -> No
     with ZipFile(archive) as z, pytest.raises(UnicodeDecodeError):
         list(rows(z, "name.tsv"))
     assert json.loads(META.model_dump_json())["version"] == "2026-06"
+
+
+def test_empty_metadata_table_is_unavailable(tmp_path: Path) -> None:
+    p = tmp_path / "empty.sqlite"
+    with closing(sqlite3.connect(p)) as db:
+        db.execute("CREATE TABLE metadata(payload TEXT NOT NULL)")
+    p.with_suffix(".sha256").write_text(hashlib.sha256(p.read_bytes()).hexdigest())
+    with pytest.raises(SourceUnavailableError, match="unavailable or invalid"):
+        WfoSource(p).metadata()
+
+
+def test_rows_reject_an_extra_tsv_field(tmp_path: Path) -> None:
+    archive = tmp_path / "malformed.zip"
+    header = "\t".join(FIELDS["name.tsv"])
+    row = "\t".join(["x"] * 16)
+    with ZipFile(archive, "w") as result:
+        result.writestr("name.tsv", f"{header}\n{row}\n")
+    with ZipFile(archive) as result, pytest.raises(ValueError, match="Malformed WFO row"):
+        list(rows(result, "name.tsv"))
 
 
 @pytest.mark.parametrize(

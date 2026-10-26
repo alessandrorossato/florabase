@@ -5718,7 +5718,10 @@ Status remains implemented pending canonical verification.
 - The impact plan selects canonical FULL. Its first run reached strict typing and found
   the Taxonomy test's `list.append()` assignment lacked a return value; replaced it with
   an explicitly typed fake search function without weakening assertions. Final-tree
-  canonical FULL must be rerun; protected delivery and feature-finish remain pending.
+  rerun passed typing but backend unit coverage was 89.97% against the unchanged 90%
+  policy. Added tests for malformed WFO rows, missing source metadata and unresolved
+  accepted parents; Taxonomy unit tests passed **25/25**. Canonical FULL must be rerun;
+  protected delivery and feature-finish remain pending.
   Physical-device/screen-reader certification and real large-collection performance
   remain documented limits.
   `TAXONOMY_INDEPENDENT_QA_IN_PROGRESS`.
