@@ -29,10 +29,19 @@ jobs:
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - name: Test repository workflow helpers
-        run: make test-verification-impact test-workflow-resources test-workflow-helpers test-feature-workflow test-preview-workflow test-environment-workflow test-uat-preview workflow-check
-      - name: Run formatting, lint, typing, unit, frontend, and API drift checks
-        run: make check
+          fetch-depth: 2
+      - name: Run required quality checks
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 scripts/ci-verify.py quality 2>&1 | tee "$RUNNER_TEMP/ci-quality.log"
+      - name: Retain complete quality log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-quality-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-quality.log
+          retention-days: 14
 
   integration:
     name: integration
@@ -43,8 +52,19 @@ jobs:
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - name: Run disposable PostgreSQL integration tests
-        run: make test-integration
+          fetch-depth: 2
+      - name: Run required integration checks
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 scripts/ci-verify.py integration 2>&1 | tee "$RUNNER_TEMP/ci-integration.log"
+      - name: Retain complete integration log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-integration-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-integration.log
+          retention-days: 14
 
   build:
     name: build
@@ -55,5 +75,16 @@ jobs:
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - name: Build production backend and frontend images
-        run: make build
+          fetch-depth: 2
+      - name: Run required build checks
+        shell: bash
+        run: |
+          set -o pipefail
+          python3 scripts/ci-verify.py build 2>&1 | tee "$RUNNER_TEMP/ci-build.log"
+      - name: Retain complete build log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ci-build-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/ci-build.log
+          retention-days: 14

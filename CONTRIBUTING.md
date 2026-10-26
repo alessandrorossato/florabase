@@ -16,7 +16,11 @@ Florabase is developed as small, dependency-aware increments. Start with the
    `feature-review-up` remains the manual-owner alternative on the same port. Stable Preview remains separate. Independently review fixes, then
    run `make feature-verify` as the one canonical final local gate. It derives a fail-closed affected/full plan and records the exact completed checks. Use
    `make verification-plan` to inspect selection and `make verify-full` to force the exhaustive gate.
-   Protected remote quality/integration/build remain full.
+   Run one final gate after source/index freeze; do not follow a passing `feature-verify` with
+   `verify-full` unless policy or the operator requires additional exhaustive evidence. Independent
+   QA owns that final gate; implementation owns focused feedback. Protected remote product suites
+   and both builds remain exhaustive; docs-only PRs run repository checks, affected product PRs
+   omit workflow helpers, and main/high-risk/unknown changes run the complete remote checks.
 4. Inspect the final diff, update tests and documentation, and create a reviewed local commit. Only
    mark a feature `verified` when every listed acceptance criterion was actually exercised.
 5. The operator runs `make feature-deliver`. It performs a normal push, reuses or creates one pull

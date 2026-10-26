@@ -504,10 +504,39 @@ normal same reviewed tree can be committed without a ceremonial rerun. Transient
 changes masked by unstaged reverts are classified conservatively; freeze the index too when using
 such unusual combinations, since removing transient impact invalidates the stored plan.
 
-Protected GitHub `quality`, `integration`, and `build` still run **complete** suites and both builds.
-`make ci` also remains exhaustive; remote CI is not sectorized. This CI-003 increment itself requires
-Luna's independent **full** canonical gate before commit/delivery. See the
-[handoff/evidence](ci-003-resource-impact-handoff.md).
+Protected GitHub `quality`, `integration`, and `build` remain stable, independent jobs with no job
+conditions or path filters. Each independently validates the platform PR merge SHA and both exact
+parents, then recomputes the complete-tree impact plan. Docs-only PRs run graph/whitespace checks
+in each job. Affected product PRs omit workflow helpers; **all product PRs still run complete product
+suites, API/static checks, disposable PostgreSQL integration and both production builds**. Main,
+high-risk/unknown changes retain exhaustive remote checks. Missing/invalid platform SHA or a checkout
+at another SHA refuses before checks. Once checkout identity is proven, missing/inconsistent impact
+event metadata falls back to full. Depth-two checkout retains the merge and both exact parents.
+No local receipt or client impact metadata is trusted. Missing/invalid policy fails the job.
+`make ci` remains exhaustive; remote product test sectorization is deferred. See the
+[CI-004 handoff/evidence](ci-004-verification-efficiency-handoff.md).
+
+Implementation (Sol) runs focused tests, relevant static/build checks and records uncovered risks.
+Independent QA (Luna) reviews behavior/code, runs focused regressions for uncovered risks, fixes
+ordinary defects, then freezes source **and index** and runs **one** `make feature-verify`. That
+entry point selects FULL automatically when required; do not routinely chain `verify-full` after it.
+CI-004 itself requires independent infrastructure QA and the complete FULL gate before delivery.
+Only a post-gate change to verified content or the recomputed plan (including transient index impact),
+a failed/interrupted gate, established release policy or explicit operator request warrants new
+canonical execution. Commit the same verified tree without
+a ceremonial rerun; validate its receipt after committing. Finish confirms merge/repository/resource
+safety without rerunning comprehensive suites. Review handoffs may leave the final gate pending when
+the operator owns the next acceptance phase; never label that state `verified`.
+
+Remote stages retain their original output and 14-day full-log artifacts, add durations and report
+failure exit status, command, prior passed stages and recovery guidance. Diagnose a failed test using
+its exact file/case before repeating expensive suites. For an evidenced transient GitHub environment
+failure on an unchanged SHA, rerun only failed jobs (`gh run rerun RUN_ID --failed`) or one job
+(`gh run rerun --job JOB_ID`); do not automatically retry assertion failures. Existing successful
+independent jobs can remain evidence for that same run/SHA. Code or dependency changes require a
+new commit/run and a new local receipt. Local gate startup invalidates its previous receipt; a
+failed/partial gate never leaves new delivery evidence. Remote failures do not alter the local
+receipt, but delivery continues to require successful current-SHA remote checks.
 
 ### Quality and Docker resources
 

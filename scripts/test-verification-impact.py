@@ -3,18 +3,27 @@
 
 from __future__ import annotations
 
+import importlib.util
+import io
 import json
 import os
+import shutil
 import subprocess
 import tempfile
+import time
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
 
-from verification_gate import checks_for, execute, validate_execution
+from verification_gate import checks_for, execute, run_checks, validate_execution
 from verification_impact import MAP_PATH, changed_paths, load_map, plan_paths
 
 ROOT = Path(__file__).resolve().parent.parent
+CI_SPEC = importlib.util.spec_from_file_location("ci_verification", ROOT / "scripts/ci-verify.py")
+assert CI_SPEC and CI_SPEC.loader
+CI = importlib.util.module_from_spec(CI_SPEC)
+CI_SPEC.loader.exec_module(CI)
 
 
 class SelectionTests(unittest.TestCase):
@@ -76,7 +85,15 @@ class SelectionTests(unittest.TestCase):
     def test_full_escalation_matrix(self) -> None:
         for path in [
             "frontend/src/components/TaskDialog.tsx",
+            "frontend/src/components/actions/OverflowMenu.tsx",
+            "frontend/src/styles/tokens.css",
+            "frontend/src/styles/normalization.css",
+            "frontend/src/maps/MapWorkspace.tsx",
+            "frontend/src/native-ranges/geometry.ts",
+            "frontend/src/provenance-map/ProvenanceMap.tsx",
             "frontend/src/seed-lots/ReferencePicker.tsx",
+            "frontend/src/seed-lots/PartialDateField.tsx",
+            "frontend/src/seed-lots/partial-date.css",
             "backend/src/florabase/db/session.py",
             "backend/src/florabase/auth/security.py",
             "backend/alembic/versions/new.py",
@@ -232,6 +249,244 @@ class SelectionTests(unittest.TestCase):
                 ),
                 relative,
             )
+
+    def test_classified_frontend_test_inventory_cannot_silently_drift(self) -> None:
+        data = load_map()
+        for rule in data["rules"]:
+            if rule["layer"] != "frontend" or "prefix" not in rule:
+                continue
+            for path in Path(rule["prefix"]).rglob("*"):
+                if path.is_file() and ".test." in path.name:
+                    self.assertIn(str(path), data["scopes"][rule["scope"]]["frontend"])
+
+    def test_remote_policy_matrix(self) -> None:
+        for path in (
+            "docs/example.md",
+            "frontend/src/taxonomy/taxonomy.css",
+            "frontend/src/taxonomy/TaxonomyScreen.tsx",
+            "frontend/src/components/Controls.tsx",
+            "frontend/src/styles/tokens.css",
+            "backend/src/florabase/taxonomy/service.py",
+            "backend/openapi.json",
+            "frontend/package.json",
+            "backend/alembic/versions/new.py",
+            "backend/src/florabase/auth/service.py",
+            ".github/workflows/ci.yml",
+            "unknown.conf",
+        ):
+            with self.subTest(path=path):
+                plan = self.plan(path)
+                jobs = {
+                    job: CI.ci_checks_for(plan, job) for job in ("quality", "integration", "build")
+                }
+                if plan["docs_only"]:
+                    self.assertTrue(all(checks == checks_for(plan) for checks in jobs.values()))
+                else:
+                    self.assertIn({"id": "quality", "command": ["make", "check"]}, jobs["quality"])
+                    self.assertEqual(
+                        jobs["integration"][0]["command"], ["make", "test-integration"]
+                    )
+                    self.assertEqual(
+                        jobs["build"][0]["command"],
+                        ["make", "verify-build", "SERVICES=backend frontend"],
+                    )
+                    helpers = [c for c in jobs["quality"] if c["id"].startswith("test-")]
+                    self.assertEqual(bool(helpers), plan["mode"] == "full")
+        with self.assertRaises(ValueError):
+            CI.ci_checks_for(self.plan("docs/example.md"), "unknown")
+
+    def test_failure_keeps_output_exit_status_and_prior_stages(self) -> None:
+        output = io.StringIO()
+        with (
+            redirect_stdout(output),
+            redirect_stderr(output),
+            self.assertRaises(SystemExit) as error,
+        ):
+            run_checks(
+                self.plan("docs/example.md"),
+                [
+                    {"id": "first", "command": ["true"]},
+                    {"id": "failed-case", "command": ["bash", "-c", "exit 7"]},
+                    {"id": "never", "command": ["false"]},
+                ],
+            )
+        self.assertEqual(error.exception.code, 7)
+        self.assertIn("exit=7", output.getvalue())
+        self.assertIn("prior stages passed=first", output.getvalue())
+        self.assertIn("no new receipt issued", output.getvalue())
+        self.assertNotIn("stage passed: never", output.getvalue())
+
+    def test_workflow_preserves_required_jobs_and_pipe_failures(self) -> None:
+        workflow = (ROOT / ".github/workflows/ci.yml").read_text()
+        self.assertNotIn("continue-on-error", workflow)
+        self.assertNotIn("needs:", workflow)
+        for job in ("quality", "integration", "build"):
+            self.assertIn(f"    name: {job}\n", workflow)
+            self.assertIn(f"python3 scripts/ci-verify.py {job} 2>&1 | tee", workflow)
+        self.assertEqual(workflow.count("set -o pipefail"), 3)
+        self.assertEqual(workflow.count("fetch-depth: 2"), 3)
+        self.assertEqual(workflow.count("if: always()"), 3)
+        result = subprocess.run(["bash", "-o", "pipefail", "-c", "exit 7 | cat"])
+        self.assertEqual(result.returncode, 7)
+
+
+class RemoteHistoryTests(unittest.TestCase):
+    def test_real_merge_event_docs_smoke_and_fail_closed_revisions(self) -> None:
+        previous = Path.cwd()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+
+            def git(*args: str) -> str:
+                return subprocess.run(
+                    ["git", "-C", str(root), *args], check=True, text=True, capture_output=True
+                ).stdout.strip()
+
+            (root / "scripts").mkdir()
+            (root / "docs").mkdir()
+            for name in (
+                "ci-verify.py",
+                "verification_gate.py",
+                "verification_impact.py",
+                "verification-impact.json",
+                "feature-tree-fingerprint.py",
+                "disposable_workflow.py",
+                "workflow_resources.py",
+                "check-features.py",
+            ):
+                shutil.copy(ROOT / "scripts" / name, root / "scripts" / name)
+            shutil.copy(ROOT / "docs/features.json", root / "docs/features.json")
+            (root / ".gitignore").write_text("__pycache__/\n")
+            (root / "README.md").write_text("base\n")
+            git("init", "--initial-branch=main")
+            git("config", "user.name", "Test")
+            git("config", "user.email", "test@example.invalid")
+            git("add", ".")
+            git("commit", "-m", "base")
+            base = git("rev-parse", "HEAD")
+            git("checkout", "-b", "docs/example")
+            (root / "README.md").write_text("feature\n")
+            git("commit", "-am", "docs")
+            head = git("rev-parse", "HEAD")
+            git("checkout", "main")
+            git("merge", "--no-ff", "docs/example", "-m", "synthetic PR merge")
+            merge = git("rev-parse", "HEAD")
+            event_path = root / ".git/event.json"
+            event = {"pull_request": {"base": {"sha": base}, "head": {"sha": head}}}
+            event_path.write_text(json.dumps(event))
+            environment = {
+                "GITHUB_EVENT_NAME": "pull_request",
+                "GITHUB_EVENT_PATH": str(event_path),
+                "GITHUB_SHA": merge,
+            }
+            os.chdir(root)
+            try:
+                shallow = root / ".git/shallow-fixture"
+                subprocess.run(
+                    ["git", "clone", "--depth", "2", root.as_uri(), str(shallow)],
+                    check=True,
+                    capture_output=True,
+                )
+                os.chdir(shallow)
+                with patch.dict(os.environ, environment), redirect_stdout(io.StringIO()):
+                    self.assertTrue(CI.ci_plan()["docs_only"])
+                os.chdir(root)
+                with patch.dict(os.environ, environment), redirect_stdout(io.StringIO()):
+                    self.assertTrue(CI.ci_plan()["docs_only"])
+                    # A moving remote ref cannot replace the event's immutable base.
+                    git("update-ref", "refs/remotes/origin/main", merge)
+                    self.assertEqual(CI.ci_plan()["base"], base)
+                for job in ("quality", "integration", "build"):
+                    started = time.monotonic()
+                    result = subprocess.run(
+                        ["python3", "scripts/ci-verify.py", job],
+                        env={**os.environ, **environment},
+                        text=True,
+                        capture_output=True,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                    self.assertIn(f"CI_JOB_PASSED: {job}", result.stdout)
+                    self.assertNotIn("Command: make", result.stdout)
+                    print(f"CI004_DOCS_SMOKE: {job} {time.monotonic() - started:.3f}s")
+                self.assertFalse((root / ".git/info/florabase-feature-verification.json").exists())
+                for changes in (
+                    {"GITHUB_EVENT_NAME": "push"},
+                    {"GITHUB_EVENT_NAME": "unknown"},
+                    {"GITHUB_EVENT_PATH": "/missing"},
+                ):
+                    with (
+                        patch.dict(os.environ, {**environment, **changes}),
+                        redirect_stdout(io.StringIO()),
+                    ):
+                        self.assertEqual(CI.ci_plan()["mode"], "full")
+                with (
+                    patch.dict(os.environ, {**environment, "GITHUB_EVENT_NAME": "push"}),
+                    patch.object(CI, "make_plan", side_effect=AssertionError("unneeded inventory")),
+                    redirect_stdout(io.StringIO()),
+                ):
+                    full = CI.ci_plan()
+                    self.assertEqual(full["mode"], "full")
+                    self.assertEqual(
+                        CI.ci_checks_for(full, "integration")[0]["command"],
+                        ["make", "test-integration"],
+                    )
+                bad_map = root / ".git/bad-map.json"
+                bad_map.write_text('{"version": 0}')
+                for policy in (bad_map, root / ".git/missing-map.json"):
+                    with (
+                        patch.dict(os.environ, {**environment, "GITHUB_EVENT_NAME": "push"}),
+                        patch("verification_impact.MAP_PATH", policy),
+                        redirect_stdout(io.StringIO()),
+                        self.assertRaises((ValueError, OSError)),
+                    ):
+                        CI.ci_plan()
+                for sha in (head, "", "invalid"):
+                    with patch.dict(os.environ, {**environment, "GITHUB_SHA": sha}):
+                        with self.assertRaisesRegex(ValueError, "exact platform GITHUB_SHA"):
+                            CI.ci_plan()
+                result = subprocess.run(
+                    ["python3", "scripts/ci-verify.py", "quality"],
+                    env={**os.environ, **environment, "GITHUB_SHA": head},
+                    text=True,
+                    capture_output=True,
+                )
+                self.assertNotEqual(result.returncode, 0)
+                self.assertNotIn("Command:", result.stdout)
+                self.assertNotIn("CI_JOB_PASSED", result.stdout)
+                for bad in (
+                    {},
+                    {"pull_request": None},
+                    {"pull_request": {"base": {"sha": head}, "head": {"sha": head}}},
+                ):
+                    event_path.write_text(json.dumps(bad))
+                    with patch.dict(os.environ, environment), redirect_stdout(io.StringIO()):
+                        self.assertEqual(CI.ci_plan()["mode"], "full")
+                event_path.write_text(json.dumps(event))
+                # Merge resolutions and unexpected untracked/index/dirty files participate.
+                (root / "surprise.config").write_text("unsafe\n")
+                with patch.dict(os.environ, environment), redirect_stdout(io.StringIO()):
+                    self.assertEqual(CI.ci_plan()["mode"], "full")
+                git("add", "surprise.config")
+                (root / "surprise.config").unlink()
+                with patch.dict(os.environ, environment), redirect_stdout(io.StringIO()):
+                    self.assertEqual(CI.ci_plan()["mode"], "full")
+                fake_bin = root / ".git/fake-bin"
+                fake_bin.mkdir()
+                fake_make = fake_bin / "make"
+                fake_make.write_text("#!/bin/sh\necho original-command-failure >&2\nexit 7\n")
+                fake_make.chmod(0o755)
+                result = subprocess.run(
+                    ["python3", "scripts/ci-verify.py", "quality"],
+                    env={**os.environ, **environment, "PATH": f"{fake_bin}:{os.environ['PATH']}"},
+                    text=True,
+                    capture_output=True,
+                )
+                self.assertEqual(result.returncode, 7, result.stdout + result.stderr)
+                self.assertIn("original-command-failure", result.stderr)
+                self.assertIn("exit=7", result.stderr)
+                self.assertNotIn("CI_JOB_PASSED", result.stdout)
+                self.assertFalse((root / ".git/info/florabase-feature-verification.json").exists())
+            finally:
+                os.chdir(previous)
 
 
 class InventoryTests(unittest.TestCase):

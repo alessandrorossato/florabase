@@ -99,6 +99,37 @@ for (const filename of [
 const lock = readFileSync(path.join(root, "frontend/pnpm-lock.yaml"), "utf8");
 for (const name of Object.keys(expected))
   assert.ok(lock.includes(`${name}@${pins[name]}`));
+const ci = load(
+  readFileSync(path.join(root, ".github/workflows/ci.yml"), "utf8"),
+);
+assert.deepEqual(Object.keys(ci.jobs).sort(), [
+  "build",
+  "integration",
+  "quality",
+]);
+assert.deepEqual(ci.on, {
+  pull_request: { branches: ["main"] },
+  push: { branches: ["main"] },
+});
+for (const [name, job] of Object.entries(ci.jobs)) {
+  assert.equal(job.name, name);
+  assert.equal(job.if, undefined);
+  assert.equal(job.needs, undefined);
+  assert.equal(job["continue-on-error"], undefined);
+  assert.equal(job.steps[0].with["fetch-depth"], 2);
+  assert.equal(job.steps[0].with.ref, undefined);
+  assert.equal(job.steps[0].with["persist-credentials"], false);
+  assert.equal(job.steps[1].if, undefined);
+  assert.equal(job.steps[1]["continue-on-error"], undefined);
+  assert.match(job.steps[1].run, /set -o pipefail/);
+  assert.ok(
+    job.steps[1].run.includes(
+      `python3 scripts/ci-verify.py ${name} 2>&1 | tee`,
+    ),
+  );
+  assert.equal(job.steps[2].if, "always()");
+  assert.equal(job.steps[2].with["retention-days"], 14);
+}
 console.log(
-  "DEPENDABOT POLICY PASSED: valid YAML; exact names/ranges; weekly groups intact; delivered contracts unchanged",
+  "WORKFLOW POLICY PASSED: valid YAML; stable required jobs and failure propagation; dependency names/ranges and weekly groups intact",
 );

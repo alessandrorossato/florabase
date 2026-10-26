@@ -108,6 +108,27 @@
       "status": "verified"
     },
     {
+      "id": "CI-004",
+      "category": "infrastructure",
+      "description": "Reduce redundant verification while preserving exact-tree acceptance and protected delivery",
+      "acceptance_criteria": [
+        "Evidence-based lifecycle, repeated-work and timing matrices document focused implementation, independent QA, one policy-selected canonical gate, protected CI and guarded finish",
+        "Each stable required remote job independently validates the platform checkout SHA and derives impact from exact PR merge parents when available; docs-only changes run repository checks and affected product changes omit workflow helpers while complete product suites and both builds remain mandatory",
+        "Main, security, infrastructure, dependencies, migrations and unknown changes remain exhaustive; missing or mismatched platform SHA refuses, uncertain impact metadata falls back to full only on the proven revision, and invalid policy fails closed",
+        "Explicit impact test ownership and shared UI, map, CSS and token boundaries cover regression consumers or escalate conservatively",
+        "Original failures and detailed logs are preserved with stage, duration, exit and recovery evidence; same-SHA transient job recovery never bypasses genuine failures",
+        "Workflow regression and real disposable smoke prove receipt strictness, Git revision and source/index safety, required-check failures, worktree isolation and positive resource ownership",
+        "Independent infrastructure QA and a final FULL canonical gate on the frozen reviewed tree pass before protected delivery; no branch-protection changes or client-supplied receipt reuse replace remote verification"
+      ],
+      "dependencies": [
+        "CI-001",
+        "CI-002",
+        "CI-003"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "PREVIEW-001",
       "category": "infrastructure",
       "description": "Provide an isolated persistent operator Preview for UAT",

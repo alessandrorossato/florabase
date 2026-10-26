@@ -20,7 +20,8 @@ Never create another feature worktree or switch primary `main` in that workflow.
 `make feature-start BRANCH=feat/<feature-id>` (or focused `fix/`, `docs/`, `ci/`) for clean,
 fast-forwarded `main`. Follow [docs/development-workflow.md](docs/development-workflow.md) for source,
 environment and review-profile boundaries. Implement the smallest coherent change, run focused checks while developing,
-then complete the relevant full verification before marking a feature `verified`.
+then complete one policy-selected canonical gate before marking a feature `verified`.
+Infrastructure, security, dependencies, migrations, unknown changes and releases require FULL.
 
 ## Repository boundaries
 

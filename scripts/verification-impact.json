@@ -24,8 +24,17 @@
     "frontend/src/App.tsx",
     "frontend/src/main.tsx",
     "frontend/src/styles.css",
+    "frontend/src/styles/",
+    "frontend/src/maps/",
+    "frontend/src/appearance/",
+    "frontend/src/native-ranges/",
+    "frontend/src/provenance-map/",
+    "frontend/src/occurrence-map/",
+    "frontend/src/species-distribution/",
     "frontend/src/test/",
     "frontend/src/seed-lots/ReferencePicker",
+    "frontend/src/seed-lots/PartialDateField",
+    "frontend/src/seed-lots/partial-date.css",
     "frontend/package",
     "frontend/pnpm",
     "frontend/tsconfig",
@@ -59,7 +68,15 @@
         "backend/tests/integration/test_botanical_identity_migration.py"
       ],
       "frontend": [
-        "frontend/src/botanical-identities/ExternalBotanicalDataPanel.test.tsx"
+        "frontend/src/botanical-identities/ExternalBotanicalDataPanel.test.tsx",
+        "frontend/src/botanical-identities/IdentityCollectionHub.test.tsx",
+        "frontend/src/botanical-identities/IdentityCoverMetadata.test.tsx",
+        "frontend/src/botanical-identities/IdentityMaps.test.tsx",
+        "frontend/src/botanical-identities/IdentityMedia.test.tsx",
+        "frontend/src/botanical-identities/IdentityRecordMedia.test.tsx",
+        "frontend/src/botanical-identities/IdentityReferenceSummary.test.tsx",
+        "frontend/src/botanical-identities/IdentitySourceAction.test.tsx",
+        "frontend/src/botanical-identities/identityGeography.test.ts"
       ],
       "affects": [
         "profile-regression",
@@ -141,7 +158,8 @@
       ],
       "frontend": [
         "frontend/src/seed-lots/ReferencePicker.test.tsx",
-        "frontend/src/seed-lots/SeedLotScreen.test.tsx"
+        "frontend/src/seed-lots/SeedLotScreen.test.tsx",
+        "frontend/src/seed-lots/PartialDateField.test.tsx"
       ],
       "affects": [
         "sowings-regression",
@@ -260,7 +278,11 @@
     "schedule": {
       "backend": ["backend/tests/test_schedule.py"],
       "integration": ["backend/tests/integration/test_schedule.py"],
-      "frontend": ["frontend/src/schedule/ScheduleScreen.test.tsx"],
+      "frontend": [
+        "frontend/src/schedule/ScheduleScreen.test.tsx",
+        "frontend/src/schedule/api.test.ts",
+        "frontend/src/schedule/calendar.test.ts"
+      ],
       "affects": [
         "events-regression",
         "activity",
@@ -343,7 +365,8 @@
         "frontend/src/provenance-sites/CoordinateFields.test.tsx",
         "frontend/src/provenance-sites/ProvenanceSiteManager.test.tsx",
         "frontend/src/provenance-sites/coordinates.test.ts",
-        "frontend/src/provenance-map/ProvenanceMapScreen.test.tsx"
+        "frontend/src/provenance-map/ProvenanceMapScreen.test.tsx",
+        "frontend/src/provenance-map/ProvenanceMap.test.tsx"
       ],
       "affects": ["seeds-regression", "plants-regression", "explore-regression"]
     },
@@ -361,7 +384,8 @@
       "frontend": [
         "frontend/src/species-distribution/SpeciesDistributionScreen.test.tsx",
         "frontend/src/native-ranges/NativeRangesScreen.test.tsx",
-        "frontend/src/native-ranges/geometry.test.ts"
+        "frontend/src/native-ranges/geometry.test.ts",
+        "frontend/src/native-ranges/NativeCoverageMap.test.tsx"
       ],
       "affects": [
         "collection-views-regression",
@@ -529,13 +553,19 @@
     "labels": {
       "backend": [],
       "integration": [],
-      "frontend": ["frontend/src/labels/LabelsScreen.test.tsx"],
+      "frontend": [
+        "frontend/src/labels/LabelsScreen.test.tsx",
+        "frontend/src/labels/qrCode.test.ts"
+      ],
       "affects": []
     },
     "dashboard": {
       "backend": [],
       "integration": [],
-      "frontend": ["frontend/src/collection/DashboardSearch.test.tsx"],
+      "frontend": [
+        "frontend/src/collection/DashboardSearch.test.tsx",
+        "frontend/src/collection/DashboardScreen.test.tsx"
+      ],
       "affects": ["activity", "schedule-regression", "search-regression"]
     },
     "maps": {
@@ -543,7 +573,8 @@
       "integration": [],
       "frontend": [
         "frontend/src/occurrence-map/OccurrenceDensityMap.test.tsx",
-        "frontend/src/occurrence-map/OccurrenceMapPanel.test.tsx"
+        "frontend/src/occurrence-map/OccurrenceMapPanel.test.tsx",
+        "frontend/src/occurrence-map/EvidenceTiles.test.ts"
       ],
       "affects": ["botany-regression"]
     },

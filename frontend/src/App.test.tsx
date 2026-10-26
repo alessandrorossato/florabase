@@ -4570,16 +4570,22 @@ test.each([
 );
 
 test("identity section keyboard navigation retains browser Back and Forward boundaries", async () => {
-  window.history.replaceState(null, "", `#/identities/${botanicalIdentity.id}`);
+  const overviewHash = `#/identities/${botanicalIdentity.id}`;
+  const historyHash = `${overviewHash}?tab=history`;
+  window.history.replaceState(null, "", overviewHash);
   identityVisualFixture();
   const user = userEvent.setup();
   render(<App />);
+  await vi.dynamicImportSettled();
   const overview = await screen.findByRole("tab", {
     name: "Overview",
     selected: true,
   });
   overview.focus();
   await user.keyboard("{End}");
+  await waitFor(() => {
+    expect(window.location.hash).toBe(historyHash);
+  });
   expect(
     await screen.findByRole("tab", { name: "History", selected: true }),
   ).toHaveFocus();
@@ -4587,11 +4593,17 @@ test("identity section keyboard navigation retains browser Back and Forward boun
   act(() => {
     window.history.back();
   });
+  await waitFor(() => {
+    expect(window.location.hash).toBe(overviewHash);
+  });
   expect(
     await screen.findByRole("tab", { name: "Overview", selected: true }),
   ).toBeVisible();
   act(() => {
     window.history.forward();
+  });
+  await waitFor(() => {
+    expect(window.location.hash).toBe(historyHash);
   });
   expect(
     await screen.findByRole("tab", { name: "History", selected: true }),
