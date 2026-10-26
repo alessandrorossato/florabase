@@ -123,9 +123,11 @@ Review action occurred.
 Candidate `feat/taxonomy-visual-001` retains approved commit `fee51be` and is reconciled
 with Geography PR #122 (`3902b921`) by merge commit `ccd8014`. CI-004 later merged
 independently as PR #125 (`c570d0a`) and is now included via a second latest-main
-reconciliation; it was not cherry-picked. Both progress histories and the Taxonomy,
-Geography and general route assertions are retained. The merged `App.test.tsx` suite
-passed **116/116**.
+reconciliation merge `e2fff88`; it was not cherry-picked. Its delivered test inventory
+omitted seven Taxonomy Explorer test files; all eight current Taxonomy test files are
+now listed and the inventory suite passes **24/24**. Both progress histories and the
+Taxonomy, Geography and general route assertions are retained. The merged
+`App.test.tsx` suite passed **116/116**.
 The first canonical FULL attempt caught an invalid `list.append()` return-value
 assignment in a Taxonomy API test; it is corrected with an explicitly typed fake
 search function and no checks were weakened. A corrected rerun passed strict typing

@@ -5798,5 +5798,8 @@ Status remains implemented pending canonical verification.
   `TAXONOMY_INDEPENDENT_QA_IN_PROGRESS`.
 
 - Latest main advanced to CI-004 PR #125 after the first gate attempt. Its changes are
-  being reconciled from `origin/main` before further verification; delivery remains
-  a separate CI-004 history, not a Taxonomy cherry-pick.
+  integrated from `origin/main` with merge `e2fff88`; its delivery remains a separate
+  CI-004 history, not a Taxonomy cherry-pick. The delivered verification inventory
+  omitted seven Taxonomy Explorer tests under its frontend prefix. Added all eight
+  current Taxonomy test files to scope selection; classifier tests passed **24/24**.
+  The final gate must exercise this inventory and all selected suites.
