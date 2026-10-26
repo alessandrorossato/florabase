@@ -121,17 +121,18 @@ Independent QA and protected delivery are underway; no DEV/UAT/production or for
 Review action occurred.
 
 Candidate `feat/taxonomy-visual-001` retains approved commit `fee51be` and is reconciled
-with latest `origin/main` `3902b92146f3afc21184e658dae64385e33f4926` (Geography PR #122)
-by merge commit `ccd8014`. Both progress histories and the Taxonomy, Geography and
-general route assertions are retained. The merged `App.test.tsx` suite passed **116/116**.
-CI-004 remains a separate delivery; no CI-004 branch or changes were cherry-picked.
+with Geography PR #122 (`3902b921`) by merge commit `ccd8014`. CI-004 later merged
+independently as PR #125 (`c570d0a`) and is now included via a second latest-main
+reconciliation; it was not cherry-picked. Both progress histories and the Taxonomy,
+Geography and general route assertions are retained. The merged `App.test.tsx` suite
+passed **116/116**.
 The first canonical FULL attempt caught an invalid `list.append()` return-value
 assignment in a Taxonomy API test; it is corrected with an explicitly typed fake
 search function and no checks were weakened. A corrected rerun passed strict typing
 but exposed **89.97% backend coverage** against the unchanged 90% policy. Focused
 tests now exercise malformed WFO rows, missing metadata and unresolved accepted
 parents (**25/25 Taxonomy unit tests passed**). The exact final tree still needs a
-fresh canonical FULL receipt before protected delivery. Feature status stays
+fresh canonical FULL receipt against the newest main before protected delivery. Feature status stays
 **implemented**, not verified, until that receipt passes.
 Minimap, worldwide taxonomy, new providers, remote image acquisition, a general
 any-cover facet and phylogeny remain deferred.

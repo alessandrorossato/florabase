@@ -195,7 +195,7 @@ def plan_paths(paths: list[str], base: str, *, force_full: bool = False) -> dict
         else ["frontend"]
         if "frontend" in layers
         else [],
-        "remote_ci": "full",
+        "remote_ci": "conservative-impact",
     }
 
 
@@ -229,7 +229,8 @@ def describe(plan: dict[str, Any]) -> str:
         lines.append(f"{key.title()}: {summary}")
     lines += [
         f"Migration: {plan['migration']}",
-        "Remote PR CI: full",
+        "Remote PR CI: docs checks only / affected product skips workflow helpers; "
+        "all product suites and both builds remain exhaustive; main is full",
     ]
     return "\n".join(lines)
 

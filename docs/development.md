@@ -57,7 +57,10 @@ builds both complete production images. `make ci` remains exhaustive. The canoni
 forces exhaustive local verification. Inspect it with `make verification-plan FORMAT=json`.
 True docs-only plans run no Docker/product suites. Product static checks stay global; bounded suites
 and independent production builds are selected by the versioned fail-closed impact map. Unknown,
-workflow, foundational, dependency and migration changes escalate full. Remote PR CI remains full.
+workflow, foundational, dependency and migration changes escalate full. Remote product suites and
+both builds remain exhaustive. Docs-only PRs run graph/whitespace checks in every required job;
+affected product PRs omit workflow helpers. Main stays exhaustive. See
+[CI-004 evidence and recovery](ci-004-verification-efficiency-handoff.md).
 Version 2 receipts prove both the exact source tree and selected completed checks; focused iteration
 never writes delivery evidence. See [the canonical contract](development-workflow.md#review-profiles-and-verification-timing).
 

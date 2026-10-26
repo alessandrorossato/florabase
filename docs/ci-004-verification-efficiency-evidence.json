@@ -1,0 +1,1741 @@
+{
+  "base": "3902b92146f3afc21184e658dae64385e33f4926",
+  "collected_on": "2026-10-26",
+  "historical_runs": {
+    "231": {
+      "url": "https://github.com/alessandrorossato/florabase/actions/runs/40226321036",
+      "jobs": [
+        {
+          "id": 121268356034,
+          "name": "build",
+          "conclusion": "success",
+          "seconds": 42.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "seconds": 1.0
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success",
+              "seconds": 5.0
+            },
+            {
+              "name": "Build production backend and frontend images",
+              "conclusion": "success",
+              "seconds": 34.0
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "seconds": 0.0
+            }
+          ]
+        },
+        {
+          "id": 121268356207,
+          "name": "quality",
+          "conclusion": "failure",
+          "seconds": 337.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success",
+              "seconds": 6.0
+            },
+            {
+              "name": "Test repository workflow helpers",
+              "conclusion": "success",
+              "seconds": 71.0
+            },
+            {
+              "name": "Run formatting, lint, typing, unit, frontend, and API drift checks",
+              "conclusion": "failure",
+              "seconds": 257.0
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "seconds": 0.0
+            }
+          ]
+        },
+        {
+          "id": 121268356311,
+          "name": "integration",
+          "conclusion": "success",
+          "seconds": 206.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success",
+              "seconds": 6.0
+            },
+            {
+              "name": "Run disposable PostgreSQL integration tests",
+              "conclusion": "success",
+              "seconds": 197.0
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "seconds": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    "232": {
+      "url": "https://github.com/alessandrorossato/florabase/actions/runs/40237067768",
+      "jobs": [
+        {
+          "id": 121300785030,
+          "name": "quality",
+          "conclusion": "success",
+          "seconds": 508.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "seconds": 1.0
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success",
+              "seconds": 5.0
+            },
+            {
+              "name": "Test repository workflow helpers",
+              "conclusion": "success",
+              "seconds": 90.0
+            },
+            {
+              "name": "Run formatting, lint, typing, unit, frontend, and API drift checks",
+              "conclusion": "success",
+              "seconds": 410.0
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "seconds": 0.0
+            }
+          ]
+        },
+        {
+          "id": 121300785196,
+          "name": "build",
+          "conclusion": "success",
+          "seconds": 47.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "seconds": 1.0
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success",
+              "seconds": 6.0
+            },
+            {
+              "name": "Build production backend and frontend images",
+              "conclusion": "success",
+              "seconds": 38.0
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "seconds": 0.0
+            }
+          ]
+        },
+        {
+          "id": 121300785201,
+          "name": "integration",
+          "conclusion": "success",
+          "seconds": 213.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "seconds": 1.0
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success",
+              "seconds": 5.0
+            },
+            {
+              "name": "Run disposable PostgreSQL integration tests",
+              "conclusion": "success",
+              "seconds": 205.0
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "seconds": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    "233": {
+      "url": "https://github.com/alessandrorossato/florabase/actions/runs/40237825195",
+      "jobs": [
+        {
+          "id": 121303079695,
+          "name": "build",
+          "conclusion": "success",
+          "seconds": 51.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success",
+              "seconds": 7.0
+            },
+            {
+              "name": "Build production backend and frontend images",
+              "conclusion": "success",
+              "seconds": 41.0
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "seconds": 0.0
+            }
+          ]
+        },
+        {
+          "id": 121303079789,
+          "name": "integration",
+          "conclusion": "success",
+          "seconds": 199.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success",
+              "seconds": 7.0
+            },
+            {
+              "name": "Run disposable PostgreSQL integration tests",
+              "conclusion": "success",
+              "seconds": 190.0
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "seconds": 0.0
+            }
+          ]
+        },
+        {
+          "id": 121303079817,
+          "name": "quality",
+          "conclusion": "success",
+          "seconds": 494.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success",
+              "seconds": 6.0
+            },
+            {
+              "name": "Test repository workflow helpers",
+              "conclusion": "success",
+              "seconds": 77.0
+            },
+            {
+              "name": "Run formatting, lint, typing, unit, frontend, and API drift checks",
+              "conclusion": "success",
+              "seconds": 407.0
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success",
+              "seconds": 1.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "seconds": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    "228": {
+      "url": "https://github.com/alessandrorossato/florabase/actions/runs/40123114379",
+      "jobs": [
+        {
+          "id": 120958751919,
+          "name": "build",
+          "conclusion": "success",
+          "seconds": 41.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success",
+              "seconds": 5.0
+            },
+            {
+              "name": "Build production backend and frontend images",
+              "conclusion": "success",
+              "seconds": 34.0
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "seconds": 0.0
+            }
+          ]
+        },
+        {
+          "id": 120958752015,
+          "name": "integration",
+          "conclusion": "success",
+          "seconds": 293.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "seconds": 1.0
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success",
+              "seconds": 4.0
+            },
+            {
+              "name": "Run disposable PostgreSQL integration tests",
+              "conclusion": "success",
+              "seconds": 286.0
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "seconds": 1.0
+            }
+          ]
+        },
+        {
+          "id": 120958752068,
+          "name": "quality",
+          "conclusion": "failure",
+          "seconds": 488.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "seconds": 1.0
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success",
+              "seconds": 4.0
+            },
+            {
+              "name": "Test repository workflow helpers",
+              "conclusion": "success",
+              "seconds": 84.0
+            },
+            {
+              "name": "Run formatting, lint, typing, unit, frontend, and API drift checks",
+              "conclusion": "failure",
+              "seconds": 398.0
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "seconds": 0.0
+            }
+          ]
+        }
+      ]
+    },
+    "235": {
+      "url": "https://github.com/alessandrorossato/florabase/actions/runs/40270179726",
+      "jobs": [
+        {
+          "id": 121401094768,
+          "name": "quality",
+          "conclusion": "failure",
+          "seconds": 152.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success",
+              "seconds": 6.0
+            },
+            {
+              "name": "Test repository workflow helpers",
+              "conclusion": "success",
+              "seconds": 75.0
+            },
+            {
+              "name": "Run formatting, lint, typing, unit, frontend, and API drift checks",
+              "conclusion": "failure",
+              "seconds": 67.0
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "seconds": 0.0
+            }
+          ]
+        },
+        {
+          "id": 121401094985,
+          "name": "integration",
+          "conclusion": "success",
+          "seconds": 201.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success",
+              "seconds": 5.0
+            },
+            {
+              "name": "Run disposable PostgreSQL integration tests",
+              "conclusion": "success",
+              "seconds": 192.0
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "seconds": 0.0
+            }
+          ]
+        },
+        {
+          "id": 121401095011,
+          "name": "build",
+          "conclusion": "success",
+          "seconds": 45.0,
+          "steps": [
+            {
+              "name": "Set up job",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Check out repository",
+              "conclusion": "success",
+              "seconds": 6.0
+            },
+            {
+              "name": "Build production backend and frontend images",
+              "conclusion": "success",
+              "seconds": 36.0
+            },
+            {
+              "name": "Post Check out repository",
+              "conclusion": "success",
+              "seconds": 0.0
+            },
+            {
+              "name": "Complete job",
+              "conclusion": "success",
+              "seconds": 0.0
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "measurement_limits": [
+    "Historical durations are observational, not a controlled before/after experiment.",
+    "No optimized GitHub execution before operator review/push.",
+    "Local docs-only smoke excludes GitHub runner, checkout and artifact upload overhead."
+  ],
+  "representative_plans": {
+    "small frontend CSS": {
+      "path": "frontend/src/taxonomy/taxonomy.css",
+      "local_before": {
+        "mode": "affected",
+        "test_files": {
+          "backend": 0,
+          "frontend": 4,
+          "integration": 0
+        },
+        "builds": [
+          "frontend"
+        ],
+        "migration": "skip",
+        "local_stage_ids": [
+          "feature-graph",
+          "format-check",
+          "lint",
+          "typecheck",
+          "api-check",
+          "frontend",
+          "production-builds",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "local_after": {
+        "mode": "affected",
+        "test_files": {
+          "backend": 0,
+          "frontend": 5,
+          "integration": 0
+        },
+        "builds": [
+          "frontend"
+        ],
+        "migration": "skip",
+        "local_stage_ids": [
+          "feature-graph",
+          "format-check",
+          "lint",
+          "typecheck",
+          "api-check",
+          "frontend",
+          "production-builds",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "remote_before": {
+        "quality": [
+          "workflow helper suites",
+          "make check"
+        ],
+        "integration": [
+          "make test-integration"
+        ],
+        "build": [
+          "make build"
+        ]
+      },
+      "remote_after": {
+        "quality": [
+          [
+            "python3",
+            "./scripts/check-features.py"
+          ],
+          [
+            "make",
+            "check"
+          ]
+        ],
+        "integration": [
+          [
+            "make",
+            "test-integration"
+          ]
+        ],
+        "build": [
+          [
+            "make",
+            "verify-build",
+            "SERVICES=backend frontend"
+          ]
+        ]
+      },
+      "receipt": "One frozen-tree gate; changes to verified content, recomputed plan, base or policy invalidate evidence. Normal staging/commit of the same verified tree needs no ceremonial rerun."
+    },
+    "isolated React component": {
+      "path": "frontend/src/taxonomy/IdentityTaxonomyPanel.tsx",
+      "local_before": {
+        "mode": "affected",
+        "test_files": {
+          "backend": 0,
+          "frontend": 4,
+          "integration": 0
+        },
+        "builds": [
+          "frontend"
+        ],
+        "migration": "skip",
+        "local_stage_ids": [
+          "feature-graph",
+          "format-check",
+          "lint",
+          "typecheck",
+          "api-check",
+          "frontend",
+          "production-builds",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "local_after": {
+        "mode": "affected",
+        "test_files": {
+          "backend": 0,
+          "frontend": 5,
+          "integration": 0
+        },
+        "builds": [
+          "frontend"
+        ],
+        "migration": "skip",
+        "local_stage_ids": [
+          "feature-graph",
+          "format-check",
+          "lint",
+          "typecheck",
+          "api-check",
+          "frontend",
+          "production-builds",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "remote_before": {
+        "quality": [
+          "workflow helper suites",
+          "make check"
+        ],
+        "integration": [
+          "make test-integration"
+        ],
+        "build": [
+          "make build"
+        ]
+      },
+      "remote_after": {
+        "quality": [
+          [
+            "python3",
+            "./scripts/check-features.py"
+          ],
+          [
+            "make",
+            "check"
+          ]
+        ],
+        "integration": [
+          [
+            "make",
+            "test-integration"
+          ]
+        ],
+        "build": [
+          [
+            "make",
+            "verify-build",
+            "SERVICES=backend frontend"
+          ]
+        ]
+      },
+      "receipt": "One frozen-tree gate; changes to verified content, recomputed plan, base or policy invalidate evidence. Normal staging/commit of the same verified tree needs no ceremonial rerun."
+    },
+    "shared UI component": {
+      "path": "frontend/src/components/actions/OverflowMenu.tsx",
+      "local_before": {
+        "mode": "full",
+        "test_files": {
+          "backend": [
+            "ALL"
+          ],
+          "frontend": [
+            "ALL"
+          ],
+          "integration": [
+            "ALL"
+          ]
+        },
+        "builds": [
+          "backend",
+          "frontend"
+        ],
+        "migration": "full-cycle",
+        "local_stage_ids": [
+          "feature-graph",
+          "test-workflow-helpers",
+          "test-feature-workflow",
+          "test-preview-workflow",
+          "test-environment-workflow",
+          "test-uat-preview",
+          "test-verification-impact",
+          "test-workflow-resources",
+          "workflow-check",
+          "quality",
+          "integration",
+          "production-builds",
+          "migration-cycle",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "local_after": {
+        "mode": "full",
+        "test_files": {
+          "backend": [
+            "ALL"
+          ],
+          "frontend": [
+            "ALL"
+          ],
+          "integration": [
+            "ALL"
+          ]
+        },
+        "builds": [
+          "backend",
+          "frontend"
+        ],
+        "migration": "full-cycle",
+        "local_stage_ids": [
+          "feature-graph",
+          "test-workflow-helpers",
+          "test-feature-workflow",
+          "test-preview-workflow",
+          "test-environment-workflow",
+          "test-uat-preview",
+          "test-verification-impact",
+          "test-workflow-resources",
+          "workflow-check",
+          "quality",
+          "integration",
+          "production-builds",
+          "migration-cycle",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "remote_before": {
+        "quality": [
+          "workflow helper suites",
+          "make check"
+        ],
+        "integration": [
+          "make test-integration"
+        ],
+        "build": [
+          "make build"
+        ]
+      },
+      "remote_after": {
+        "quality": [
+          [
+            "python3",
+            "./scripts/check-features.py"
+          ],
+          [
+            "make",
+            "test-workflow-helpers"
+          ],
+          [
+            "make",
+            "test-feature-workflow"
+          ],
+          [
+            "make",
+            "test-preview-workflow"
+          ],
+          [
+            "make",
+            "test-environment-workflow"
+          ],
+          [
+            "make",
+            "test-uat-preview"
+          ],
+          [
+            "make",
+            "test-verification-impact"
+          ],
+          [
+            "make",
+            "test-workflow-resources"
+          ],
+          [
+            "make",
+            "workflow-check"
+          ],
+          [
+            "make",
+            "check"
+          ]
+        ],
+        "integration": [
+          [
+            "make",
+            "test-integration"
+          ]
+        ],
+        "build": [
+          [
+            "make",
+            "verify-build",
+            "SERVICES=backend frontend"
+          ]
+        ]
+      },
+      "receipt": "One frozen-tree gate; changes to verified content, recomputed plan, base or policy invalidate evidence. Normal staging/commit of the same verified tree needs no ceremonial rerun."
+    },
+    "design token": {
+      "path": "frontend/src/styles/tokens.css",
+      "local_before": {
+        "mode": "full",
+        "test_files": {
+          "backend": [
+            "ALL"
+          ],
+          "frontend": [
+            "ALL"
+          ],
+          "integration": [
+            "ALL"
+          ]
+        },
+        "builds": [
+          "backend",
+          "frontend"
+        ],
+        "migration": "full-cycle",
+        "local_stage_ids": [
+          "feature-graph",
+          "test-workflow-helpers",
+          "test-feature-workflow",
+          "test-preview-workflow",
+          "test-environment-workflow",
+          "test-uat-preview",
+          "test-verification-impact",
+          "test-workflow-resources",
+          "workflow-check",
+          "quality",
+          "integration",
+          "production-builds",
+          "migration-cycle",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "local_after": {
+        "mode": "full",
+        "test_files": {
+          "backend": [
+            "ALL"
+          ],
+          "frontend": [
+            "ALL"
+          ],
+          "integration": [
+            "ALL"
+          ]
+        },
+        "builds": [
+          "backend",
+          "frontend"
+        ],
+        "migration": "full-cycle",
+        "local_stage_ids": [
+          "feature-graph",
+          "test-workflow-helpers",
+          "test-feature-workflow",
+          "test-preview-workflow",
+          "test-environment-workflow",
+          "test-uat-preview",
+          "test-verification-impact",
+          "test-workflow-resources",
+          "workflow-check",
+          "quality",
+          "integration",
+          "production-builds",
+          "migration-cycle",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "remote_before": {
+        "quality": [
+          "workflow helper suites",
+          "make check"
+        ],
+        "integration": [
+          "make test-integration"
+        ],
+        "build": [
+          "make build"
+        ]
+      },
+      "remote_after": {
+        "quality": [
+          [
+            "python3",
+            "./scripts/check-features.py"
+          ],
+          [
+            "make",
+            "test-workflow-helpers"
+          ],
+          [
+            "make",
+            "test-feature-workflow"
+          ],
+          [
+            "make",
+            "test-preview-workflow"
+          ],
+          [
+            "make",
+            "test-environment-workflow"
+          ],
+          [
+            "make",
+            "test-uat-preview"
+          ],
+          [
+            "make",
+            "test-verification-impact"
+          ],
+          [
+            "make",
+            "test-workflow-resources"
+          ],
+          [
+            "make",
+            "workflow-check"
+          ],
+          [
+            "make",
+            "check"
+          ]
+        ],
+        "integration": [
+          [
+            "make",
+            "test-integration"
+          ]
+        ],
+        "build": [
+          [
+            "make",
+            "verify-build",
+            "SERVICES=backend frontend"
+          ]
+        ]
+      },
+      "receipt": "One frozen-tree gate; changes to verified content, recomputed plan, base or policy invalidate evidence. Normal staging/commit of the same verified tree needs no ceremonial rerun."
+    },
+    "backend only": {
+      "path": "backend/src/florabase/taxonomy/service.py",
+      "local_before": {
+        "mode": "affected",
+        "test_files": {
+          "backend": 12,
+          "frontend": 4,
+          "integration": 9
+        },
+        "builds": [
+          "backend"
+        ],
+        "migration": "skip",
+        "local_stage_ids": [
+          "feature-graph",
+          "format-check",
+          "lint",
+          "typecheck",
+          "api-check",
+          "backend",
+          "frontend",
+          "integration",
+          "production-builds",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "local_after": {
+        "mode": "affected",
+        "test_files": {
+          "backend": 12,
+          "frontend": 5,
+          "integration": 9
+        },
+        "builds": [
+          "backend"
+        ],
+        "migration": "skip",
+        "local_stage_ids": [
+          "feature-graph",
+          "format-check",
+          "lint",
+          "typecheck",
+          "api-check",
+          "backend",
+          "frontend",
+          "integration",
+          "production-builds",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "remote_before": {
+        "quality": [
+          "workflow helper suites",
+          "make check"
+        ],
+        "integration": [
+          "make test-integration"
+        ],
+        "build": [
+          "make build"
+        ]
+      },
+      "remote_after": {
+        "quality": [
+          [
+            "python3",
+            "./scripts/check-features.py"
+          ],
+          [
+            "make",
+            "check"
+          ]
+        ],
+        "integration": [
+          [
+            "make",
+            "test-integration"
+          ]
+        ],
+        "build": [
+          [
+            "make",
+            "verify-build",
+            "SERVICES=backend frontend"
+          ]
+        ]
+      },
+      "receipt": "One frozen-tree gate; changes to verified content, recomputed plan, base or policy invalidate evidence. Normal staging/commit of the same verified tree needs no ceremonial rerun."
+    },
+    "documentation only": {
+      "path": "docs/development.md",
+      "local_before": {
+        "mode": "affected",
+        "test_files": {
+          "backend": 0,
+          "frontend": 0,
+          "integration": 0
+        },
+        "builds": [],
+        "migration": "skip",
+        "local_stage_ids": [
+          "feature-graph",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "local_after": {
+        "mode": "affected",
+        "test_files": {
+          "backend": 0,
+          "frontend": 0,
+          "integration": 0
+        },
+        "builds": [],
+        "migration": "skip",
+        "local_stage_ids": [
+          "feature-graph",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "remote_before": {
+        "quality": [
+          "workflow helper suites",
+          "make check"
+        ],
+        "integration": [
+          "make test-integration"
+        ],
+        "build": [
+          "make build"
+        ]
+      },
+      "remote_after": {
+        "quality": [
+          [
+            "python3",
+            "./scripts/check-features.py"
+          ],
+          [
+            "git",
+            "diff",
+            "--check",
+            "3902b92146f3afc21184e658dae64385e33f4926"
+          ],
+          [
+            "git",
+            "diff",
+            "--cached",
+            "--check"
+          ],
+          [
+            "python3",
+            "./scripts/verification_gate.py",
+            "--untracked-whitespace"
+          ]
+        ],
+        "integration": [
+          [
+            "python3",
+            "./scripts/check-features.py"
+          ],
+          [
+            "git",
+            "diff",
+            "--check",
+            "3902b92146f3afc21184e658dae64385e33f4926"
+          ],
+          [
+            "git",
+            "diff",
+            "--cached",
+            "--check"
+          ],
+          [
+            "python3",
+            "./scripts/verification_gate.py",
+            "--untracked-whitespace"
+          ]
+        ],
+        "build": [
+          [
+            "python3",
+            "./scripts/check-features.py"
+          ],
+          [
+            "git",
+            "diff",
+            "--check",
+            "3902b92146f3afc21184e658dae64385e33f4926"
+          ],
+          [
+            "git",
+            "diff",
+            "--cached",
+            "--check"
+          ],
+          [
+            "python3",
+            "./scripts/verification_gate.py",
+            "--untracked-whitespace"
+          ]
+        ]
+      },
+      "receipt": "One frozen-tree gate; changes to verified content, recomputed plan, base or policy invalidate evidence. Normal staging/commit of the same verified tree needs no ceremonial rerun."
+    },
+    "database migration": {
+      "path": "backend/alembic/versions/example.py",
+      "local_before": {
+        "mode": "full",
+        "test_files": {
+          "backend": [
+            "ALL"
+          ],
+          "frontend": [
+            "ALL"
+          ],
+          "integration": [
+            "ALL"
+          ]
+        },
+        "builds": [
+          "backend",
+          "frontend"
+        ],
+        "migration": "full-cycle",
+        "local_stage_ids": [
+          "feature-graph",
+          "test-workflow-helpers",
+          "test-feature-workflow",
+          "test-preview-workflow",
+          "test-environment-workflow",
+          "test-uat-preview",
+          "test-verification-impact",
+          "test-workflow-resources",
+          "workflow-check",
+          "quality",
+          "integration",
+          "production-builds",
+          "migration-cycle",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "local_after": {
+        "mode": "full",
+        "test_files": {
+          "backend": [
+            "ALL"
+          ],
+          "frontend": [
+            "ALL"
+          ],
+          "integration": [
+            "ALL"
+          ]
+        },
+        "builds": [
+          "backend",
+          "frontend"
+        ],
+        "migration": "full-cycle",
+        "local_stage_ids": [
+          "feature-graph",
+          "test-workflow-helpers",
+          "test-feature-workflow",
+          "test-preview-workflow",
+          "test-environment-workflow",
+          "test-uat-preview",
+          "test-verification-impact",
+          "test-workflow-resources",
+          "workflow-check",
+          "quality",
+          "integration",
+          "production-builds",
+          "migration-cycle",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "remote_before": {
+        "quality": [
+          "workflow helper suites",
+          "make check"
+        ],
+        "integration": [
+          "make test-integration"
+        ],
+        "build": [
+          "make build"
+        ]
+      },
+      "remote_after": {
+        "quality": [
+          [
+            "python3",
+            "./scripts/check-features.py"
+          ],
+          [
+            "make",
+            "test-workflow-helpers"
+          ],
+          [
+            "make",
+            "test-feature-workflow"
+          ],
+          [
+            "make",
+            "test-preview-workflow"
+          ],
+          [
+            "make",
+            "test-environment-workflow"
+          ],
+          [
+            "make",
+            "test-uat-preview"
+          ],
+          [
+            "make",
+            "test-verification-impact"
+          ],
+          [
+            "make",
+            "test-workflow-resources"
+          ],
+          [
+            "make",
+            "workflow-check"
+          ],
+          [
+            "make",
+            "check"
+          ]
+        ],
+        "integration": [
+          [
+            "make",
+            "test-integration"
+          ]
+        ],
+        "build": [
+          [
+            "make",
+            "verify-build",
+            "SERVICES=backend frontend"
+          ]
+        ]
+      },
+      "receipt": "One frozen-tree gate; changes to verified content, recomputed plan, base or policy invalidate evidence. Normal staging/commit of the same verified tree needs no ceremonial rerun."
+    },
+    "dependency": {
+      "path": "frontend/pnpm-lock.yaml",
+      "local_before": {
+        "mode": "full",
+        "test_files": {
+          "backend": [
+            "ALL"
+          ],
+          "frontend": [
+            "ALL"
+          ],
+          "integration": [
+            "ALL"
+          ]
+        },
+        "builds": [
+          "backend",
+          "frontend"
+        ],
+        "migration": "full-cycle",
+        "local_stage_ids": [
+          "feature-graph",
+          "test-workflow-helpers",
+          "test-feature-workflow",
+          "test-preview-workflow",
+          "test-environment-workflow",
+          "test-uat-preview",
+          "test-verification-impact",
+          "test-workflow-resources",
+          "workflow-check",
+          "quality",
+          "integration",
+          "production-builds",
+          "migration-cycle",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "local_after": {
+        "mode": "full",
+        "test_files": {
+          "backend": [
+            "ALL"
+          ],
+          "frontend": [
+            "ALL"
+          ],
+          "integration": [
+            "ALL"
+          ]
+        },
+        "builds": [
+          "backend",
+          "frontend"
+        ],
+        "migration": "full-cycle",
+        "local_stage_ids": [
+          "feature-graph",
+          "test-workflow-helpers",
+          "test-feature-workflow",
+          "test-preview-workflow",
+          "test-environment-workflow",
+          "test-uat-preview",
+          "test-verification-impact",
+          "test-workflow-resources",
+          "workflow-check",
+          "quality",
+          "integration",
+          "production-builds",
+          "migration-cycle",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "remote_before": {
+        "quality": [
+          "workflow helper suites",
+          "make check"
+        ],
+        "integration": [
+          "make test-integration"
+        ],
+        "build": [
+          "make build"
+        ]
+      },
+      "remote_after": {
+        "quality": [
+          [
+            "python3",
+            "./scripts/check-features.py"
+          ],
+          [
+            "make",
+            "test-workflow-helpers"
+          ],
+          [
+            "make",
+            "test-feature-workflow"
+          ],
+          [
+            "make",
+            "test-preview-workflow"
+          ],
+          [
+            "make",
+            "test-environment-workflow"
+          ],
+          [
+            "make",
+            "test-uat-preview"
+          ],
+          [
+            "make",
+            "test-verification-impact"
+          ],
+          [
+            "make",
+            "test-workflow-resources"
+          ],
+          [
+            "make",
+            "workflow-check"
+          ],
+          [
+            "make",
+            "check"
+          ]
+        ],
+        "integration": [
+          [
+            "make",
+            "test-integration"
+          ]
+        ],
+        "build": [
+          [
+            "make",
+            "verify-build",
+            "SERVICES=backend frontend"
+          ]
+        ]
+      },
+      "receipt": "One frozen-tree gate; changes to verified content, recomputed plan, base or policy invalidate evidence. Normal staging/commit of the same verified tree needs no ceremonial rerun."
+    },
+    "CI infrastructure": {
+      "path": "scripts/ci-verify.py",
+      "local_before": {
+        "mode": "full",
+        "test_files": {
+          "backend": [
+            "ALL"
+          ],
+          "frontend": [
+            "ALL"
+          ],
+          "integration": [
+            "ALL"
+          ]
+        },
+        "builds": [
+          "backend",
+          "frontend"
+        ],
+        "migration": "full-cycle",
+        "local_stage_ids": [
+          "feature-graph",
+          "test-workflow-helpers",
+          "test-feature-workflow",
+          "test-preview-workflow",
+          "test-environment-workflow",
+          "test-uat-preview",
+          "test-verification-impact",
+          "test-workflow-resources",
+          "workflow-check",
+          "quality",
+          "integration",
+          "production-builds",
+          "migration-cycle",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "local_after": {
+        "mode": "full",
+        "test_files": {
+          "backend": [
+            "ALL"
+          ],
+          "frontend": [
+            "ALL"
+          ],
+          "integration": [
+            "ALL"
+          ]
+        },
+        "builds": [
+          "backend",
+          "frontend"
+        ],
+        "migration": "full-cycle",
+        "local_stage_ids": [
+          "feature-graph",
+          "test-workflow-helpers",
+          "test-feature-workflow",
+          "test-preview-workflow",
+          "test-environment-workflow",
+          "test-uat-preview",
+          "test-verification-impact",
+          "test-workflow-resources",
+          "workflow-check",
+          "quality",
+          "integration",
+          "production-builds",
+          "migration-cycle",
+          "whitespace",
+          "staged-whitespace",
+          "untracked-whitespace"
+        ]
+      },
+      "remote_before": {
+        "quality": [
+          "workflow helper suites",
+          "make check"
+        ],
+        "integration": [
+          "make test-integration"
+        ],
+        "build": [
+          "make build"
+        ]
+      },
+      "remote_after": {
+        "quality": [
+          [
+            "python3",
+            "./scripts/check-features.py"
+          ],
+          [
+            "make",
+            "test-workflow-helpers"
+          ],
+          [
+            "make",
+            "test-feature-workflow"
+          ],
+          [
+            "make",
+            "test-preview-workflow"
+          ],
+          [
+            "make",
+            "test-environment-workflow"
+          ],
+          [
+            "make",
+            "test-uat-preview"
+          ],
+          [
+            "make",
+            "test-verification-impact"
+          ],
+          [
+            "make",
+            "test-workflow-resources"
+          ],
+          [
+            "make",
+            "workflow-check"
+          ],
+          [
+            "make",
+            "check"
+          ]
+        ],
+        "integration": [
+          [
+            "make",
+            "test-integration"
+          ]
+        ],
+        "build": [
+          [
+            "make",
+            "verify-build",
+            "SERVICES=backend frontend"
+          ]
+        ]
+      },
+      "receipt": "One frozen-tree gate; changes to verified content, recomputed plan, base or policy invalidate evidence. Normal staging/commit of the same verified tree needs no ceremonial rerun."
+    }
+  },
+  "local_smoke_seconds": {
+    "quality": 0.645,
+    "integration": 0.611,
+    "build": 0.605
+  },
+  "focused_checks": {
+    "selector_receipt_remote": {
+      "passed": 24,
+      "seconds": 11.321
+    },
+    "resource_helpers": {
+      "passed": 14,
+      "seconds": 0.072
+    },
+    "feature_delivery_helpers": {
+      "passed": 42,
+      "seconds": 30.489
+    },
+    "preview_helpers": {
+      "passed": 19,
+      "seconds": 3.596
+    },
+    "environment_helpers": {
+      "passed": 35,
+      "seconds": 9.42
+    },
+    "uat_preview_helpers": {
+      "passed": 19,
+      "seconds": 1.94
+    },
+    "uat_source_helpers": {
+      "passed": 15,
+      "seconds": 5.942
+    },
+    "shell_workflow_helpers": "passed; suite has no numeric total",
+    "real_resource_smoke": "WORKFLOW_RESOURCE_SMOKE_PASSED",
+    "workflow_static": "Passed Ruff lint/format, strict mypy (17 + 3 files), parsed YAML/dependency policy assertions.",
+    "graph": "114 features valid",
+    "independent_QA": "Two concrete findings corrected: shared PartialDate consumers and wrong-checkout fallback. Re-review passed with no remaining actionable defect; real shallow clone test passed independently."
+  },
+  "always_full_planning_comparison": {
+    "before_seconds": 17.859,
+    "after_seconds": 0.008,
+    "exact_required_job_commands_equal": true,
+    "scope": "Same real repository; planning only, no product suite; verified exact platform SHA and map before direct exhaustive plan."
+  },
+  "selective_full_repository_planning_seconds": 18.345,
+  "production_build_smoke": {
+    "initial_cold_stage_seconds": 72.89,
+    "final_warm_stage_seconds": 4.62,
+    "result": "Both production images built; exact owned outputs removed; zero residual containers/networks/volumes; no local receipt issued.",
+    "limits": "Stage time only, excluding planning; cold versus warm cache conditions differ; not a CI004 performance comparison."
+  },
+  "pending": [
+    "Operator review",
+    "Final frozen-tree canonical feature-verify selecting FULL including complete real migration cycle",
+    "Hosted Actions execution after separately authorized push"
+  ]
+}
