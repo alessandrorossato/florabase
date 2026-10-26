@@ -125,8 +125,11 @@ with latest `origin/main` `3902b92146f3afc21184e658dae64385e33f4926` (Geography 
 by merge commit `ccd8014`. Both progress histories and the Taxonomy, Geography and
 general route assertions are retained. The merged `App.test.tsx` suite passed **116/116**.
 CI-004 remains a separate delivery; no CI-004 branch or changes were cherry-picked.
-Canonical FULL, protected delivery and feature-finish are pending. Feature status stays
-**implemented**, not verified, until the canonical receipt passes.
+The first canonical FULL attempt caught an invalid `list.append()` return-value
+assignment in a Taxonomy API test; it is corrected with an explicitly typed fake
+search function and no checks were weakened. The exact final tree still needs a
+fresh canonical FULL receipt before protected delivery. Feature status stays
+**implemented**, not verified, until that receipt passes.
 Minimap, worldwide taxonomy, new providers, remote image acquisition, a general
 any-cover facet and phylogeny remain deferred.
 

@@ -5715,7 +5715,10 @@ Status remains implemented pending canonical verification.
 - The merged `App.test.tsx` passed **116/116**. CI-004 remains a separate delivery;
   no CI-004 branch or changes were cherry-picked. No protected data or other worktree
   was modified.
-- The impact plan selects canonical FULL. Gate, protected delivery and feature-finish
-  remain pending; physical-device/screen-reader certification and real large-collection
-  performance remain documented limits.
+- The impact plan selects canonical FULL. Its first run reached strict typing and found
+  the Taxonomy test's `list.append()` assignment lacked a return value; replaced it with
+  an explicitly typed fake search function without weakening assertions. Final-tree
+  canonical FULL must be rerun; protected delivery and feature-finish remain pending.
+  Physical-device/screen-reader certification and real large-collection performance
+  remain documented limits.
   `TAXONOMY_INDEPENDENT_QA_IN_PROGRESS`.

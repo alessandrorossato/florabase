@@ -176,7 +176,12 @@ def test_candidate_prefix_is_trimmed_before_length_validation(
     query: str, status: int, normalized: str | None
 ) -> None:
     searches: list[str] = []
-    wfo = cast(WfoSource, SimpleNamespace(search=lambda value: searches.append(value) or []))
+
+    def search(value: str) -> list[WfoCandidate]:
+        searches.append(value)
+        return []
+
+    wfo = cast(WfoSource, SimpleNamespace(search=search))
     application = FastAPI()
     application.include_router(api.router)
     application.dependency_overrides[require_authenticated_actor] = actor
