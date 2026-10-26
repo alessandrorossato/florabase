@@ -536,6 +536,24 @@ class DeliveryTests(unittest.TestCase):
         delivery.wait_for_checks(merged, "ci/ci-002", "feature-sha")
         self.assertEqual(calls, ["feature-sha"])
 
+    def test_manual_same_sha_failed_job_recovery_requires_new_success(self) -> None:
+        delivery = self.delivery()
+        pull = feature_deliver.Delivery.pr_from(json.loads(pr()))
+        delivery.current_pr = lambda _: pull  # type: ignore[method-assign]
+        states = {
+            name: {"status": "completed", "conclusion": "success"}
+            for name in feature_deliver.REQUIRED_CHECKS
+        }
+        states["quality"] = {"status": "completed", "conclusion": "failure"}
+        shas: list[str] = []
+        delivery.check_runs = lambda sha: shas.append(sha) or states  # type: ignore[method-assign]
+        with self.assertRaises(feature_deliver.DeliveryError):
+            delivery.wait_for_checks(pull, "ci/ci-002", "feature-sha")
+        self.assertEqual(shas, ["feature-sha"])  # No automatic assertion retry.
+        states["quality"] = {"status": "completed", "conclusion": "success"}
+        delivery.wait_for_checks(pull, "ci/ci-002", "feature-sha")
+        self.assertEqual(shas, ["feature-sha", "feature-sha"])
+
     def test_check_and_merge_polls_revalidate_branch_repository_and_base(self) -> None:
         for method in ("checks", "merge"):
             for malformed in (

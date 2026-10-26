@@ -1,5 +1,76 @@
 # Engineering progress
 
+## 2026-10-26 — CI-004 verification efficiency ready for operator review
+
+- Implemented on attached worktree `a4b0`, branch `ci/ci-004-verification-efficiency`, base
+  `3902b921` (merged Geography #122). Audited local feedback/QA/gate, PR/main checks, delivery and
+  finish using actual workflow code and GitHub job/step logs. See the
+  [handoff](ci-004-verification-efficiency-handoff.md) and
+  [timing/plan evidence](ci-004-verification-efficiency-evidence.json).
+- Required `quality`/`integration`/`build` jobs stay unconditional and independent. Exact platform SHA
+  mismatch refuses; validated merge parents drive CI-003 classification. Docs-only PRs run graph/
+  whitespace checks; affected product PRs omit only workflow helpers. Product suites, API/static,
+  integration and both production builds remain complete. Main/high-risk/unknown verification stays
+  exhaustive; invalid policy fails. Added stage timing/exit/recovery diagnostics and retained full logs.
+- Repaired 16 missing explicit frontend test entries and conservative shared-map/style/PartialDate
+  FULL boundaries. Independent QA found and corrected the PartialDate consumer gap and an unsafe
+  wrong-checkout FULL fallback; re-review reported no remaining actionable defect. Depth-two shallow
+  Git/event smoke proves exact merge-parent selection; current-SHA recovery never automatically
+  retries failed assertions. Local receipt/freeze, protected delivery and ownership guards remain.
+- Focused checks passed: selector/receipt/remote **24**, resource **14**, feature/delivery **42**,
+  Preview **19**, environment **35**, UAT Preview **19**, UAT source **15**; shell helper suite;
+  `make workflow-check` Ruff/format/strict mypy and parsed CI/Dependabot policy; feature graph
+  **114 valid**; tracked/staged/untracked whitespace. Real `make smoke-workflow-resources` retired
+  all synthetic owned resources while actual operator environment identities remained unchanged.
+  Exact-SHA remote build smoke built both production images and retired both owned outputs.
+- Measured historical helper steps **71–90s**; full-repository always-FULL planning before/after
+  **17.859s → 0.008s**, with exactly equal job command lists. Tiny docs-fixture CLI **0.645/0.611/0.605s**
+  excludes hosted checkout/runner/artifact costs; selective planning over the actual worktree took
+  **18.345s**. No hosted end-to-end percentage improvement is claimed. Remote product sectorization,
+  cross-job caches and skipping main remain deferred. Open dependency #124's lint failure remains
+  separate and cannot be exempted by these changes.
+- CI-004 is `implemented`, not `verified`. Operator review, the final frozen-tree **FULL** canonical
+  gate (including real migration cycle), receipt and hosted execution remain pending before delivery.
+  Changes are unstaged/uncommitted; no push, PR, branch-protection change, real delivery/finish,
+  DEV upgrade or persistent UAT operation occurred.
+
+## 2026-10-26 — CI-004 final canonical verification blocked
+
+- User authorized final FULL verification and protected delivery. One `make verify-full` ran
+  **1352.50s**, then failed during frontend tests: **968/975 passed**; seven failures in
+  `src/App.test.tsx` (Location deep links, Sourcing/Explore destinations, sidebar disclosures,
+  Plants filters, identity Harvests, identity Events, and narrow identity selection). Workflow
+  safety/checks, backend typing and backend unit tests passed. No receipt was issued.
+- Isolated `App.test.tsx`: **114/115 passed** in **75.96s**; the identity section keyboard
+  Back/Forward test reproducibly fails after `history.back()`. The six other failures did not recur
+  in isolation; resource contention is possible but unproven. No test assertions or product code
+  were changed.
+- Candidate remains unstaged/uncommitted; no PR, hosted checks, merge, finish, DEV upgrade or
+  persistent-data operation occurred. CI-004 remains `implemented`, not `verified`. Fix or resolve
+  the app-test blocker, diagnose the suite-only failures and rerun FULL before staging/delivery.
+  `CI004_DELIVERY_BLOCKED`
+
+## 2026-10-26 — CI-004 navigation failure diagnosis
+
+- Corrected the Botanical Identity keyboard-history test to wait for its lazy route import and
+  exact URL state across keyboard selection, browser Back and Forward. Assertions still cover the
+  real jsdom history behavior and selected tabs; no production route behavior or expectations were
+  weakened.
+- Focused validation passed: identity history test **1/1**, full `App.test.tsx` **115/115** in
+  **84.34s**, and related Plant/Saved View/Dashboard Search browser-history checks **4/4** across
+  three files. This accounts for the six other reported App failures as non-reproducing in the
+  complete App file run; their original causes cannot be established because the failed FULL log
+  was not retained. No resource-contention cause is claimed.
+- The App failure behavior predates CI-004 and no production navigation regression was demonstrated.
+  The candidate is ready for its one final FULL gate; the CI-004 handoff records a bounded proposal
+  for a small diagnostic App-navigation preflight, without implementing another gate.
+  `CI004_FINAL_FULL_PENDING`
+- The first FULL attempt after these diagnostics stopped during frontend lint at **201.59s** before
+  app tests: ESLint rejected a void-returning shorthand in the new `waitFor` callback. Changed it to
+  a block; focused ESLint and the exact navigation test pass. No receipt was issued. The final FULL
+  run must cover this frozen correction.
+
+
 ## 2026-10-23 — Themes/Controls integration with delivered Collection origins
 
 - Merged main `46ade479` (MAPS-ORIGINS-001, PR #119) into `feat/themes-001` after reviewed combined

@@ -7,6 +7,7 @@ import argparse
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 from typing import Any
 
@@ -124,15 +125,15 @@ def migration_result(plan: dict[str, Any], completed: list[dict[str, Any]]) -> d
     }
 
 
-def execute(plan: dict[str, Any], path: Path) -> None:
-    print(describe(plan), flush=True)
-    completed = []
-    for check in checks_for(plan):
+def run_checks(plan: dict[str, Any], checks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    completed: list[dict[str, Any]] = []
+    for check in checks:
         print(
             f"\n== feature verification: {check['id']} ==\nCommand: {' '.join(check['command'])}",
             flush=True,
         )
         migration = check["id"] == "migration-cycle"
+        started = time.monotonic()
         result = subprocess.run(
             check["command"], text=True, stdout=subprocess.PIPE if migration else None
         )
@@ -140,7 +141,14 @@ def execute(plan: dict[str, Any], path: Path) -> None:
             print(result.stdout, end="", flush=True)
         if result.returncode:
             print(
-                f"stage failed: {check['id']}; mode={plan['mode']} scopes={','.join(plan['affected_scopes'])}; command={' '.join(check['command'])}; disposable runner reports cleanup and residuals; recovery: make workflow-resources",
+                f"stage failed: {check['id']}; exit={result.returncode}; "
+                f"elapsed={time.monotonic() - started:.2f}s; mode={plan['mode']} "
+                f"scopes={','.join(plan['affected_scopes'])}; command={' '.join(check['command'])}; "
+                f"prior stages passed={','.join(c['id'] for c in completed) or 'none'}; "
+                "no new receipt issued; diagnose the failing command/test from original output; "
+                "local gate failure requires make feature-verify after fixes; "
+                "transient remote failure may rerun only the failed job at the same SHA; "
+                "disposable runner reports cleanup and residuals: make workflow-resources",
                 file=sys.stderr,
             )
             raise SystemExit(result.returncode)
@@ -157,6 +165,13 @@ def execute(plan: dict[str, Any], path: Path) -> None:
                 raise ValueError("migration cycle did not report verified execution and cleanup")
             item["evidence"] = json.loads(reports[0])
         completed.append(item)
+        print(f"stage passed: {check['id']}; elapsed={time.monotonic() - started:.2f}s", flush=True)
+    return completed
+
+
+def execute(plan: dict[str, Any], path: Path) -> None:
+    print(describe(plan), flush=True)
+    completed = run_checks(plan, checks_for(plan))
     validate_execution(plan, completed)
     path.write_text(
         json.dumps(
