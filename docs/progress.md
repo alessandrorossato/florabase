@@ -5779,27 +5779,20 @@ Status remains implemented pending canonical verification.
 
 ### TAXONOMY-VISUAL-001 — independent QA and delivery (2026-10-26)
 
-- Reconciled approved Taxonomy commit `fee51be` with latest main `3902b921` (Geography
-  PR #122) using merge commit `ccd8014`; no reset or rebase. Retained both progress
-  histories, taxonomy and Geography breadcrumb assertions, and latest-main changes.
-- The merged `App.test.tsx` passed **116/116**. CI-004 later merged independently as
-  PR #125 (`c570d0a`); its delivered main changes are now integrated through the
-  latest-main merge, with no cherry-pick. No protected data or other worktree was
-  modified.
-- The impact plan selects canonical FULL. Its first run reached strict typing and found
-  the Taxonomy test's `list.append()` assignment lacked a return value; replaced it with
-  an explicitly typed fake search function without weakening assertions. Final-tree
-  rerun passed typing but backend unit coverage was 89.97% against the unchanged 90%
-  policy. Added tests for malformed WFO rows, missing source metadata and unresolved
-  accepted parents; Taxonomy unit tests passed **25/25**. Canonical FULL must be rerun;
-  protected delivery and feature-finish remain pending.
-  Physical-device/screen-reader certification and real large-collection performance
-  remain documented limits.
-  `TAXONOMY_INDEPENDENT_QA_IN_PROGRESS`.
-
-- Latest main advanced to CI-004 PR #125 after the first gate attempt. Its changes are
-  integrated from `origin/main` with merge `e2fff88`; its delivery remains a separate
-  CI-004 history, not a Taxonomy cherry-pick. The delivered verification inventory
-  omitted seven Taxonomy Explorer tests under its frontend prefix. Added all eight
-  current Taxonomy test files to scope selection; classifier tests passed **24/24**.
-  The final gate must exercise this inventory and all selected suites.
+- Reconciled approved Taxonomy commit `fee51be` with Geography PR #122 (`3902b921`)
+  through `ccd8014`. CI-004 PR #125 (`c570d0a`) later merged independently and was
+  integrated from latest `origin/main` with `e2fff88`, not cherry-picked.
+- Independent regression evidence: merged `App.test.tsx` **116/116**; Taxonomy
+  unit tests **25/25**; CI-004 scope inventory **24/24**. The missing typed fake
+  search fixture, backend coverage gap and delivered test inventory were corrected
+  without weakening checks.
+- Canonical `make feature-verify` against `c570d0a` passed: feature graph **115
+  valid**, backend **969 passed / 1 skipped at 90.04% coverage**, frontend **1,007
+  passed across 94 files**, PostgreSQL integration **744 passed**, static/style/type
+  checks, API drift, production builds, migration cycle and exact-tree receipt.
+  Physical-device and screen-reader certification, live-provider validation and
+  performance beyond the documented synthetic large-tree benchmark remain unverified.
+- Taxonomy status is `verified`. Documentation and registry status were updated after
+  that receipt; a final canonical receipt is required for this exact tracked tree
+  before protected delivery. No protected environment or unrelated worktree changed.
+  `TAXONOMY_QA_VERIFIED_DELIVERY_PENDING`.

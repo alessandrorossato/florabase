@@ -116,9 +116,9 @@ Credentials remain only in ignored owner-readable `.taxonomy-review/credentials.
 ## Remaining boundary
 
 The [impact plan](review/taxonomy-visual-001/final-ux/verification-impact.json) selects
-**FULL** for `.gitignore` and shared UI primitives. It is a plan, not a gate receipt.
-Independent QA and protected delivery are underway; no DEV/UAT/production or foreign
-Review action occurred.
+**FULL** for `.gitignore` and shared UI primitives. A canonical FULL run passed before
+the final registry status update; one exact-tree receipt is being regenerated for the
+new `verified` status. No DEV/UAT/production or foreign Review action occurred.
 
 Candidate `feat/taxonomy-visual-001` retains approved commit `fee51be` and is reconciled
 with Geography PR #122 (`3902b921`) by merge commit `ccd8014`. CI-004 later merged
@@ -128,18 +128,29 @@ omitted seven Taxonomy Explorer test files; all eight current Taxonomy test file
 now listed and the inventory suite passes **24/24**. Both progress histories and the
 Taxonomy, Geography and general route assertions are retained. The merged
 `App.test.tsx` suite passed **116/116**.
-The first canonical FULL attempt caught an invalid `list.append()` return-value
-assignment in a Taxonomy API test; it is corrected with an explicitly typed fake
-search function and no checks were weakened. A corrected rerun passed strict typing
-but exposed **89.97% backend coverage** against the unchanged 90% policy. Focused
-tests now exercise malformed WFO rows, missing metadata and unresolved accepted
-parents (**25/25 Taxonomy unit tests passed**). The exact final tree still needs a
-fresh canonical FULL receipt against the newest main before protected delivery. Feature status stays
-**implemented**, not verified, until that receipt passes.
+
+Canonical FULL passed on the reconciled code tree: **969 backend unit tests at 90.04%
+coverage**, **1,007 frontend tests across 94 files**, **744 PostgreSQL integration
+tests**, static/style/type/API checks, both production builds, feature graph (**115
+valid**), migration cycle and exact-tree receipt. The initial gate caught an invalid
+`list.append()` return-value assignment and **89.97%** coverage; a typed fake search
+and focused fail-closed source tests corrected these without weakening checks. The
+registry is now `verified`; one receipt rerun covers that registry/documentation
+update before protected delivery.
+
+Independent test evidence also includes Taxonomy units **25/25**, CI-004 scope
+inventory **24/24**, and the merged `App.test.tsx` **116/116**. PR #122 merged at
+`3902b921`; CI-004 later merged independently as PR #125 at `c570d0a` and is included
+through latest-main reconciliation `e2fff88`, never cherry-picked. Protected delivery
+and feature-finish remain pending.
 Minimap, worldwide taxonomy, new providers, remote image acquisition, a general
 any-cover facet and phylogeny remain deferred.
 
-`TAXONOMY_INDEPENDENT_QA_IN_PROGRESS`
+Physical-device and screen-reader certification, live-provider checks and real
+large-collection performance beyond the documented synthetic benchmark remain
+unverified. The owned synthetic Review was used; no protected environment was changed.
+
+`TAXONOMY_QA_VERIFIED_DELIVERY_PENDING`
 
 ---
 
