@@ -116,22 +116,21 @@ Credentials remain only in ignored owner-readable `.taxonomy-review/credentials.
 ## Remaining boundary
 
 The [impact plan](review/taxonomy-visual-001/final-ux/verification-impact.json) selects
-**FULL** for `.gitignore` and shared UI primitives. It is a plan, not a gate receipt;
-canonical FULL was explicitly not executed. This operator-approved phase creates a
-local feature commit only; no push, PR, merge, delivery or finish is authorized here.
-No DEV/UAT/production or foreign Review action occurred.
+**FULL** for `.gitignore` and shared UI primitives. It is a plan, not a gate receipt.
+Independent QA and protected delivery are underway; no DEV/UAT/production or foreign
+Review action occurred.
 
-Candidate remains `feat/taxonomy-visual-001` at `5778da7`; latest `origin/main` is
-`3902b92146f3afc21184e658dae64385e33f4926`, where Geography PR #122 has merged.
-The candidate has not been reconciled with that main commit. CI-004 remains a
-separate delivery and was not modified or included here. Shared documentation/App/
-routing reconciliation, independent acceptance, physical touch/screen-reader
-certification, canonical verification and protected delivery remain Luna's phase.
-Feature status stays **implemented**, not verified.
+Candidate `feat/taxonomy-visual-001` retains approved commit `fee51be` and is reconciled
+with latest `origin/main` `3902b92146f3afc21184e658dae64385e33f4926` (Geography PR #122)
+by merge commit `ccd8014`. Both progress histories and the Taxonomy, Geography and
+general route assertions are retained. The merged `App.test.tsx` suite passed **116/116**.
+CI-004 remains a separate delivery; no CI-004 branch or changes were cherry-picked.
+Canonical FULL, protected delivery and feature-finish are pending. Feature status stays
+**implemented**, not verified, until the canonical receipt passes.
 Minimap, worldwide taxonomy, new providers, remote image acquisition, a general
 any-cover facet and phylogeny remain deferred.
 
-`TAXONOMY_FINAL_UX_REFINEMENT_READY_FOR_REVIEW`
+`TAXONOMY_INDEPENDENT_QA_IN_PROGRESS`
 
 ---
 
@@ -145,13 +144,10 @@ The original Classification handoff follows below as historical evidence.
 
 ## Candidate and concurrency boundary
 
-Same `feat/taxonomy-visual-001` worktree, still based on `5778da7` (PR #121).
-No staging, commit, push, PR, merge, feature-deliver, feature-finish or canonical
-verification was performed. Feature status is **implemented**, not verified.
-Final fetch found Geography PR #122 merged at `3902b92146f3afc21184e658dae64385e33f4926`.
-It has not been merged into this dirty candidate. Independent QA must reconcile
-shared `App.test.tsx`, feature/progress documents, routing/breadcrumb and Saved View
-changes against that delivered main while preserving this candidate. No Geography,
+Same `feat/taxonomy-visual-001` worktree, approved feature commit `fee51be`, reconciled
+with delivered main by merge commit `ccd8014`. Geography PR #122 is included through
+`origin/main`; CI-004 remains separate. App navigation regressions pass **116/116**.
+Canonical verification, protected delivery and feature-finish remain pending. No
 IA design, DEV, UAT, production or foreign Review was modified.
 
 ## Implemented architecture and reuse

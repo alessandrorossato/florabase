@@ -5701,8 +5701,21 @@ Focused evidence: 28 frontend tests, 49 backend tests, six PostgreSQL integratio
 cases with disposable cleanup, strict typing, zero-warning ESLint, Ruff, API drift
 and production build passed. The 5,000-identity/5,183-node benchmark and six-theme
 three-width gallery are linked from `docs/taxonomy-visual-001-handoff.md`.
-Latest origin/main is Geography PR #122 (`3902b92`); candidate remains at PR #121
-base and requires shared-document/App-test reconciliation before independent QA.
-Impact plan selects FULL; canonical FULL was explicitly not run. Nothing staged,
-committed, pushed or delivered. Status remains implemented, awaiting operator
-review and Luna's final verification/delivery phase.
+Latest origin/main is Geography PR #122 (`3902b921`); reconciliation merge `ccd8014`
+preserves both route/test and progress histories. The merged App navigation suite
+passed 116/116. Impact plan selects FULL; canonical FULL and protected delivery are
+pending. CI-004 remains a separate delivery and was not cherry-picked.
+Status remains implemented pending canonical verification.
+
+### TAXONOMY-VISUAL-001 — independent QA and delivery (2026-10-26)
+
+- Reconciled approved Taxonomy commit `fee51be` with latest main `3902b921` (Geography
+  PR #122) using merge commit `ccd8014`; no reset or rebase. Retained both progress
+  histories, taxonomy and Geography breadcrumb assertions, and latest-main changes.
+- The merged `App.test.tsx` passed **116/116**. CI-004 remains a separate delivery;
+  no CI-004 branch or changes were cherry-picked. No protected data or other worktree
+  was modified.
+- The impact plan selects canonical FULL. Gate, protected delivery and feature-finish
+  remain pending; physical-device/screen-reader certification and real large-collection
+  performance remain documented limits.
+  `TAXONOMY_INDEPENDENT_QA_IN_PROGRESS`.
