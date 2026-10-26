@@ -87,9 +87,7 @@ def test_hierarchy_exact_parent_synonym_intermediate_and_literal_search(source: 
 
 def test_path_rejects_an_unresolved_accepted_parent(source: WfoSource) -> None:
     nodes = source.hierarchy([SPECIES])
-    nodes[GENUS] = nodes[GENUS].model_copy(
-        update={"parent_source_taxon_id": "wfo-9999999999"}
-    )
+    nodes[GENUS] = nodes[GENUS].model_copy(update={"parent_source_taxon_id": "wfo-9999999999"})
     with pytest.raises(SourceUnavailableError, match="unresolved parent"):
         path(nodes, SPECIES)
 
