@@ -1,0 +1,10 @@
+# Loaded only by this candidate's guarded review.py; never part of a product deployment.
+services:
+  backend:
+    command: [python, /review/runtime.py, serve]
+    environment:
+      FLORABASE_WORKFLOW_MODE: taxonomy-review
+      FLORABASE_TAXONOMY_REVIEW_PROJECT: ${COMPOSE_PROJECT_NAME}
+      FLORABASE_TAXONOMY_REVIEW_SOURCE: ${FLORABASE_SOURCE}
+    volumes:
+      - ./docs/review/taxonomy-visual-001:/review:ro

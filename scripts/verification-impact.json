@@ -404,7 +404,16 @@
         "backend/tests/integration/test_taxonomy.py",
         "backend/tests/integration/test_taxonomy_migration.py"
       ],
-      "frontend": ["frontend/src/taxonomy/TaxonomyScreen.test.tsx"],
+      "frontend": [
+        "frontend/src/taxonomy/TaxonomyFilters.test.tsx",
+        "frontend/src/taxonomy/TaxonomyKpis.test.tsx",
+        "frontend/src/taxonomy/TaxonomyScreen.test.tsx",
+        "frontend/src/taxonomy/TreeExplorer.test.tsx",
+        "frontend/src/taxonomy/api.test.ts",
+        "frontend/src/taxonomy/facets.test.ts",
+        "frontend/src/taxonomy/graph.performance.test.ts",
+        "frontend/src/taxonomy/graph.test.ts"
+      ],
       "affects": ["botany", "collection-views", "security-regression"]
     },
     "suppliers": {

@@ -1,6 +1,7 @@
 import type { ReactNode, SVGProps } from "react";
 
 const shapes = {
+  maximize: <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />,
   menu: <path d="M3 6h18M3 12h18M3 18h18" />,
   "panel-close": (
     <>

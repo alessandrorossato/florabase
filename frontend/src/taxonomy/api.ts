@@ -13,6 +13,7 @@ export function getTree(
   signal: AbortSignal,
 ): Promise<Tree> {
   const params = new URLSearchParams({ scope: state.scope, q: state.q.trim() });
+  params.set("include_covers", "true");
   for (const category of state.record) params.append("record", category);
   return requestJson(`/api/v1/explore/taxonomy/tree?${params}`, { signal });
 }

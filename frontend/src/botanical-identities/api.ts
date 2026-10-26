@@ -85,9 +85,11 @@ export function listBotanicalIdentities(
 
 export function getBotanicalIdentity(
   botanicalIdentityId: string,
+  signal?: AbortSignal,
 ): Promise<BotanicalIdentityResponse> {
   return requestJson(
     `/api/v1/botanical-identities/${encodeURIComponent(botanicalIdentityId)}`,
+    { signal },
   );
 }
 

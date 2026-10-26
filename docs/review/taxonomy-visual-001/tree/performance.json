@@ -1,0 +1,11 @@
+{
+  "fixtureIdentities": 5000,
+  "sourceNodes": 5183,
+  "displayedNodes": 240,
+  "renderLimit": 240,
+  "iterations": 15,
+  "medianMs": 14.174507000000176,
+  "p95Ms": 37.50367000000006,
+  "targetMs": 100,
+  "environment": "Vitest Node 24; pure source indexing and bounded layout, not GPU/frame timing"
+}

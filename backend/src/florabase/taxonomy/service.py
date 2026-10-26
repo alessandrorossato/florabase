@@ -15,6 +15,7 @@ from florabase.taxonomy.model import WfoLink
 from florabase.taxonomy.schemas import (
     IdentityTaxonomy,
     TaxonomyCounts,
+    TaxonomyCover,
     TaxonomyEvidence,
     TaxonomyIdentity,
     TaxonomyLink,
@@ -168,6 +169,7 @@ def tree(
     scope: RepresentationScope = "all",
     record: Sequence[CollectionRecordCategory] = (),
     q: str = "",
+    include_covers: bool = False,
 ) -> TaxonomyTree:
     statement = (
         collection.filtered_projection(scope, record=record)
@@ -256,7 +258,54 @@ def tree(
                 if identity.id in links
                 else "Not linked to taxonomy source"
             )
-    return project(identities, nodes, metadata, message, q)
+    result = project(identities, nodes, metadata, message, q)
+    if include_covers and result.identities:
+        add_covers(database, result.identities)
+    return result
+
+
+def add_covers(database: Session, identities: list[TaxonomyIdentity]) -> None:
+    """One bounded metadata query; images retain the existing authenticated thumbnail route."""
+    from florabase.attachments.model import Attachment, AttachmentState
+    from florabase.collection_photos.model import BotanicalIdentityCoverImage, MediaAsset
+
+    eligible = {identity.id: identity for identity in identities}
+    statement = (
+        select(
+            BotanicalIdentityCoverImage.botanical_identity_id,
+            MediaAsset.id,
+            Attachment.sha256,
+            MediaAsset.attribution,
+            MediaAsset.licence_label,
+            MediaAsset.licence_url,
+            MediaAsset.source_url,
+        )
+        .select_from(BotanicalIdentityCoverImage)
+        .join(MediaAsset, MediaAsset.id == BotanicalIdentityCoverImage.media_asset_id)
+        .join(Attachment, Attachment.id == MediaAsset.attachment_id)
+        .where(
+            BotanicalIdentityCoverImage.botanical_identity_id.in_(eligible),
+            MediaAsset.state == "active",
+            Attachment.state == AttachmentState.ACTIVE,
+        )
+    )
+    for (
+        identity_id,
+        asset_id,
+        checksum,
+        attribution,
+        licence,
+        licence_url,
+        source_url,
+    ) in database.execute(statement):
+        eligible[identity_id].cover = TaxonomyCover(
+            asset_id=asset_id,
+            thumbnail_url=f"/api/v1/media-assets/{asset_id}/thumbnail?v={checksum}",
+            attribution=attribution,
+            licence_label=licence,
+            licence_url=licence_url,
+            source_url=source_url,
+        )
 
 
 def node_detail(result: TaxonomyTree, node_id: str) -> TaxonomyNodeDetail:

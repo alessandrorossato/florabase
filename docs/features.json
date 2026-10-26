@@ -2015,6 +2015,30 @@
       ],
       "priority": "P1",
       "status": "implemented"
+    },
+    {
+      "id": "TAXONOMY-VISUAL-001",
+      "category": "ux",
+      "description": "Collection Taxonomy classification and interactive horizontal Tree Explorer with contextual identity review",
+      "acceptance_criteria": [
+        "Shared search and Filters controls retain representation, category OR semantics, distinct identity counts, canonical URL state and browser navigation",
+        "Classification and Tree explorer share URL-backed selection and collection filters; the horizontal graph preserves actual source parentage and intermediate ranks with independent disclosure, keyboard navigation, pan, pinch, zoom, fit, branch focus and rank depth",
+        "Graph cards and the reused inspector show deterministic eligible identity covers through authenticated bounded thumbnails with attribution and fallbacks; layout and rendering stay bounded at the existing 5,000-identity projection boundary",
+        "Header search, List and Tree explorer controls share collection filters; bounded interactive KPI popovers exactly match authoritative Living, Current and Historical identity subsets without changing the global scope",
+        "Source-backed hierarchy focus, confirmed placement status, stored-thumbnail availability and separate display preferences restore from URL state, with native fullscreen or an accessible full-viewport dialog preserving the mounted graph and camera",
+        "Needs review reuses the canonical explicit source-search, inspection, confirmation and unlink editor without renaming local identities or inferring placement",
+        "Missing-source and source-error states retain local identity access and saved confirmation evidence and explain that Retry only rechecks the configured source",
+        "Candidate prefixes are trimmed before meaningful length validation and retain the 25-result contract; 409 recovery reads the authoritative identity, clears candidates and requires renewed explicit inspection",
+        "An independently owned populated synthetic Review, focused backend/frontend and PostgreSQL checks, production build, six-theme responsive evidence and operator acceptance support independent QA; canonical FULL verification is a separate authorized phase"
+      ],
+      "dependencies": [
+        "TAXONOMY-003",
+        "THEMES-001",
+        "CONTROLS-001",
+        "BOTANICAL-IDENTITIES-VISUAL-001"
+      ],
+      "priority": "P1",
+      "status": "verified"
     }
   ]
 }

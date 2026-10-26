@@ -2,6 +2,7 @@ import copy
 import hashlib
 import json
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 from zipfile import ZipFile
 
@@ -82,6 +83,13 @@ def test_hierarchy_exact_parent_synonym_intermediate_and_literal_search(source: 
     assert source.search("Unplaced")[0].classification == []
     assert path(nodes, "missing") == []
     assert source.metadata() == META
+
+
+def test_path_rejects_an_unresolved_accepted_parent(source: WfoSource) -> None:
+    nodes = source.hierarchy([SPECIES])
+    nodes[GENUS] = nodes[GENUS].model_copy(update={"parent_source_taxon_id": "wfo-9999999999"})
+    with pytest.raises(SourceUnavailableError, match="unresolved parent"):
+        path(nodes, SPECIES)
 
 
 @pytest.mark.parametrize(
@@ -166,6 +174,25 @@ def test_missing_corrupt_wrong_release_schema_and_encoding(tmp_path: Path) -> No
     assert json.loads(META.model_dump_json())["version"] == "2026-06"
 
 
+def test_empty_metadata_table_is_unavailable(tmp_path: Path) -> None:
+    p = tmp_path / "empty.sqlite"
+    with closing(sqlite3.connect(p)) as db:
+        db.execute("CREATE TABLE metadata(payload TEXT NOT NULL)")
+    p.with_suffix(".sha256").write_text(hashlib.sha256(p.read_bytes()).hexdigest())
+    with pytest.raises(SourceUnavailableError, match="unavailable or invalid"):
+        WfoSource(p).metadata()
+
+
+def test_rows_reject_an_extra_tsv_field(tmp_path: Path) -> None:
+    archive = tmp_path / "malformed.zip"
+    header = "\t".join(FIELDS["name.tsv"])
+    row = "\t".join(["x"] * 16)
+    with ZipFile(archive, "w") as result:
+        result.writestr("name.tsv", f"{header}\n{row}\n")
+    with ZipFile(archive) as result, pytest.raises(ValueError, match="Malformed WFO row"):
+        list(rows(result, "name.tsv"))
+
+
 @pytest.mark.parametrize(
     ("field", "value"), [("version", "2025-12"), ("checksum", "0" * 64), ("license", "unreviewed")]
 )
@@ -198,3 +225,24 @@ def test_wrong_archive_checksum_and_index_corruption(tmp_path: Path) -> None:
     )
     with pytest.raises(SourceUnavailableError):
         source.metadata()
+
+
+def test_candidate_search_remains_limited_to_25(tmp_path: Path) -> None:
+    names, concepts, synonyms = data()
+    for number in range(30):
+        ident = f"wfo-{100 + number:010d}"
+        names.append(
+            {
+                "ID": ident,
+                "scientificName": f"Genus specimen {number:02d}",
+                "authorship": "A.Author",
+                "rank": "species",
+            }
+        )
+        concepts.append({"ID": ident, "nameID": ident, "parentID": GENUS})
+    destination = tmp_path / "bounded.sqlite"
+    build_index(destination, names, concepts, synonyms, META)
+    candidates = WfoSource(destination).search("Genus specimen")
+    assert len(candidates) == 25
+    assert candidates[0].taxon.scientific_name == "Genus specimen 00"
+    assert candidates[-1].taxon.scientific_name == "Genus specimen 24"

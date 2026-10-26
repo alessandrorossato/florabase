@@ -61,6 +61,7 @@ import { useCreationDisclosure } from "../components/useCreationDisclosure";
 import { EventFeed } from "../events/EventFeed";
 import { BotanicalIdentityCover } from "../photos/BotanicalIdentityCover";
 import { IdentityTaxonomyPanel } from "../taxonomy/IdentityTaxonomyPanel";
+import { taxonomyReturnHash } from "../taxonomy/state";
 import { ExternalBotanicalDataPanel } from "./ExternalBotanicalDataPanel";
 import {
   conflictExistingId,
@@ -306,9 +307,15 @@ function IdentityDetails({
       );
   }, [initialTab, counts]);
 
+  const taxonomyReturn = taxonomyReturnHash();
+  const taxonomyContext = taxonomyReturn
+    ? `&taxonomy_return=${encodeURIComponent(taxonomyReturn)}`
+    : "";
   const selectTab = (next: IdentityTab) => {
     setTab(next);
-    window.location.hash = `#/identities/${identity.id}?tab=${next}`;
+    const params = new URLSearchParams({ tab: next });
+    if (taxonomyReturn) params.set("taxonomy_return", taxonomyReturn);
+    window.location.hash = `#/identities/${identity.id}?${params}`;
   };
   const openIdentityEditor = (section = "identity") => {
     setEditorSection(section);
@@ -387,6 +394,11 @@ function IdentityDetails({
           { label: identity.display_label },
         ]}
       />
+      {taxonomyReturn && (
+        <a className="identity-taxonomy-return" href={taxonomyReturn}>
+          ← Return to Taxonomy
+        </a>
+      )}
       {!(editing && !edit.modal) && (
         <nav
           aria-label="Adjacent botanical identities"
@@ -396,7 +408,7 @@ function IdentityDetails({
             <a
               title={adjacent.previous.display_label}
               aria-label={`Previous identity: ${adjacent.previous.display_label}`}
-              href={`#/identities/${adjacent.previous.id}?tab=${tab}`}
+              href={`#/identities/${adjacent.previous.id}?tab=${tab}${taxonomyContext}`}
             >
               ← Previous{" "}
               <span className="identity-record-navigation__name">
@@ -410,7 +422,7 @@ function IdentityDetails({
             <a
               title={adjacent.next.display_label}
               aria-label={`Next identity: ${adjacent.next.display_label}`}
-              href={`#/identities/${adjacent.next.id}?tab=${tab}`}
+              href={`#/identities/${adjacent.next.id}?tab=${tab}${taxonomyContext}`}
             >
               Next →{" "}
               <span className="identity-record-navigation__name">
@@ -1034,6 +1046,7 @@ function IdentityDetails({
                     their own source and confirmation.
                   </p>
                   <IdentityTaxonomyPanel
+                    key={`${identity.id}:${identity.updated_at}`}
                     identityId={identity.id}
                     updatedAt={identity.updated_at}
                   />

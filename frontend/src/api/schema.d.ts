@@ -6988,6 +6988,24 @@ export interface components {
              */
             represented: number;
         };
+        /** TaxonomyCover */
+        TaxonomyCover: {
+            /**
+             * Asset Id
+             * Format: uuid
+             */
+            asset_id: string;
+            /** Attribution */
+            attribution: string | null;
+            /** Licence Label */
+            licence_label: string | null;
+            /** Licence Url */
+            licence_url: string | null;
+            /** Source Url */
+            source_url: string | null;
+            /** Thumbnail Url */
+            thumbnail_url: string;
+        };
         /** TaxonomyEvidence */
         TaxonomyEvidence: {
             /** Classification */
@@ -7006,6 +7024,7 @@ export interface components {
             classification_ids?: string[];
             /** Common Name */
             common_name: string | null;
+            cover?: components["schemas"]["TaxonomyCover"] | null;
             /** Cultivar Name */
             cultivar_name: string | null;
             /** Current Records */
@@ -9852,6 +9871,7 @@ export interface operations {
                 scope?: "all" | "living" | "current" | "historical";
                 record?: components["schemas"]["CollectionRecordCategory"][] | null;
                 q?: string;
+                include_covers?: boolean;
             };
             header?: never;
             path?: never;

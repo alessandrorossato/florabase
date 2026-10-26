@@ -1,5 +1,63 @@
 # Engineering progress
 
+## 2026-10-26 — TAXONOMY-VISUAL-001 final operator UX refinement
+
+- Moved search and List/Tree explorer selection beside Filters in the page header.
+  Kept source/version evidence and contextual search help, with bounded desktop
+  panes and responsive controls. Replaced the permanent inspector identity list
+  with exact Identities/Living/Current/Historical KPI popovers using shared control
+  layering, protected covers, attribution and explicit 24-row progressive reveal.
+- Unified hierarchy focus, placement status, stored-thumbnail availability and
+  display preferences in Filters. Collection representation/category/query remain
+  authoritative API inputs; local facets reaggregate the bounded projection using
+  global record evidence. Tree depth/photos are display preferences. Remote-only
+  cover absence is not inferred from missing stored thumbnails.
+- Added native fullscreen with a shared TaskDialog full-viewport fallback. The same
+  graph remains mounted; camera, selection and expansions survive transitions.
+  Native external exit, Escape, focus return, nested filters/popovers and navigation
+  cleanup are handled. Source fallback retained all 12 synthetic identities and was
+  restored. No collection/confirmation/media records or protected environments changed.
+- Focused frontend: **42 unique cases in nine files passed**, including shared
+  control regressions; final fullscreen rerun **2 passed**. Targeted zero-warning
+  ESLint, formatting, TypeScript/production build passed. Backend/API contracts did
+  not change in this refinement, so prior backend evidence was not repeated.
+- Updated handoff and final-UX gallery with measured normal/fullscreen viewport fit,
+  all six themes at 1440/1024/390×844, KPI navigation and combined-filter Back/Forward.
+  Canonical plan remains FULL; it was not executed. Candidate is implemented on
+  `feat/taxonomy-visual-001`; main `3902b92` reconciliation and independent acceptance/
+  final verification remain Luna's next phase. Geography PR #122 is
+  merged into `origin/main` at `3902b92146f3afc21184e658dae64385e33f4926`; the
+  candidate remains unreconciled. CI-004 remains a separate delivery.
+
+## 2026-10-25 — TAXONOMY-VISUAL-001 implementation for operator review
+
+- Implemented the approved compact Taxonomy workspace on delivered main `5778da7`:
+  shared search/Filters, hierarchy/inspector, contextual Needs review, exact identity
+  return navigation, source evidence and useful missing-source fallback. Reused
+  delivered APIs, projections and the canonical confirmation/unlink panel; local
+  names, scope/category semantics and security/version guards remain authoritative.
+- Corrected trim-before-length source prefix validation and stale identity 409
+  recovery. Refresh reads the authoritative identity, discards candidate review and
+  requires renewed explicit confirmation. Source rechecks refresh the selected
+  editor; successful writes refresh counts without losing the inspected identity.
+- Independently owned synthetic full-stack Review: `http://localhost:15278`, own
+  PostgreSQL/media/source fixture, eight identities/six placed/two unresolved; no
+  WFO archive download or protected environment changes. Real HTTP and browser
+  confirm/conflict/refresh/unlink scenarios passed. Browser evidence includes 32
+  native captures, all six themes at 1440/1024/390×844, missing-source evidence,
+  mobile/filter/identity navigation, source restoration and explicit matching.
+- Focused verification: **48 backend**, **5 PostgreSQL integration**, **177 affected
+  frontend** passed, followed by **15 Taxonomy tests** after the final source-retry
+  correction (178 unique affected cases overall). Strict typing, zero-warning
+  frontend lint, backend Ruff/mypy, formatting, both API drift checks, production
+  builds, Review guard checks, feature graph (113) and whitespace passed. Disposable
+  integration/build cleanup verified. Existing Starlette deprecation warning noted.
+- [Handoff and exact limitations](taxonomy-visual-001-handoff.md),
+  [gallery](review/taxonomy-visual-001/gallery.html). Geography remains independently
+  owned/unmerged; shared documentation/App test additions need normal integration
+  QA. AT, physical touch, zoom and full-dataset performance remain pending. Feature
+  is implemented, not verified. No canonical FULL gate, staging, commit, push, PR,
+  delivery, protected upgrade or primary/audit/foreign worktree mutation.
 ## 2026-10-26 — CI-004 verification efficiency ready for operator review
 
 - Implemented on attached worktree `a4b0`, branch `ci/ci-004-verification-efficiency`, base
@@ -5695,3 +5753,46 @@ not the current delivery state.
   delivery, feature-finish and guarded DEV smoke remain pending. Live-provider, physical-device/screen
   reader, true-zoom and contextual breadcrumb improvements remain accepted follow-ups.
   `GEOGRAPHY_QA_VERIFIED_READY_FOR_DELIVERY`.
+
+### TAXONOMY-VISUAL-001 — interactive Tree Explorer extension (2026-10-25)
+
+Added the operator-approved horizontal source-backed graph within the existing
+Taxonomy view: independent selection/disclosure, full ranks, source ancestry,
+URL-backed branch/rank focus, pan/pinch/zoom/fit/reset, keyboard navigation,
+responsive inspector and bounded protected identity thumbnails. Reused Classification,
+collection eligibility and explicit matching/409 recovery. No graph dependency,
+migration, worldwide source request or inferred taxonomy. Default progressive
+expansion, 240 layout nodes, viewport culling and 48 graph thumbnail bounds retain
+the 5,000-identity API boundary. The owned synthetic Review was extended additively
+to 12 identities/three Basil identities/three cover references without undoing
+operator confirmations; source fallback was exercised and restored.
+
+Focused evidence: 28 frontend tests, 49 backend tests, six PostgreSQL integration
+cases with disposable cleanup, strict typing, zero-warning ESLint, Ruff, API drift
+and production build passed. The 5,000-identity/5,183-node benchmark and six-theme
+three-width gallery are linked from `docs/taxonomy-visual-001-handoff.md`.
+Latest origin/main is Geography PR #122 (`3902b921`); reconciliation merge `ccd8014`
+preserves both route/test and progress histories. The merged App navigation suite
+passed 116/116. Impact plan selects FULL; canonical FULL and protected delivery are
+pending. CI-004 remains a separate delivery and was not cherry-picked.
+Status remains implemented pending canonical verification.
+
+### TAXONOMY-VISUAL-001 — independent QA and delivery (2026-10-26)
+
+- Reconciled approved Taxonomy commit `fee51be` with Geography PR #122 (`3902b921`)
+  through `ccd8014`. CI-004 PR #125 (`c570d0a`) later merged independently and was
+  integrated from latest `origin/main` with `e2fff88`, not cherry-picked.
+- Independent regression evidence: merged `App.test.tsx` **116/116**; Taxonomy
+  unit tests **25/25**; CI-004 scope inventory **24/24**. The missing typed fake
+  search fixture, backend coverage gap and delivered test inventory were corrected
+  without weakening checks.
+- Canonical `make feature-verify` against `c570d0a` passed: feature graph **115
+  valid**, backend **969 passed / 1 skipped at 90.04% coverage**, frontend **1,007
+  passed across 94 files**, PostgreSQL integration **744 passed**, static/style/type
+  checks, API drift, production builds, migration cycle and exact-tree receipt.
+  Physical-device and screen-reader certification, live-provider validation and
+  performance beyond the documented synthetic large-tree benchmark remain unverified.
+- Taxonomy status is `verified`. Documentation and registry status were updated after
+  that receipt; a final canonical receipt is required for this exact tracked tree
+  before protected delivery. No protected environment or unrelated worktree changed.
+  `TAXONOMY_QA_VERIFIED_DELIVERY_PENDING`.

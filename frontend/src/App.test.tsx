@@ -3711,7 +3711,11 @@ test("Sourcing and Explore sidebar macroareas and mobile More retain every desti
       name: destination === "Taxonomy" ? "Collection taxonomy" : destination,
       level: 2,
     });
-    if (destination === "Geography") {
+    if (destination === "Taxonomy") {
+      expect(
+        screen.getByRole("navigation", { name: "Breadcrumb" }),
+      ).toHaveTextContent("ExploreTaxonomy");
+    } else if (destination === "Geography") {
       expect(
         within(screen.getByRole("navigation", { name: "Breadcrumb" }))
           .getAllByRole("listitem")
@@ -4351,6 +4355,43 @@ test("identity edit opens a contextual native workspace, saves without losing an
     "aria-selected",
     "true",
   );
+});
+
+test("Taxonomy return context survives identity tabs and contextual editing", async () => {
+  const taxonomyReturn =
+    "#/taxonomy?scope=current&record=plant&taxon=wfo-9000000008";
+  window.history.replaceState(
+    null,
+    "",
+    `#/identities/${botanicalIdentity.id}?taxonomy_return=${encodeURIComponent(taxonomyReturn)}`,
+  );
+  identityVisualFixture();
+  const user = userEvent.setup();
+  render(<App />);
+  expect(
+    await screen.findByRole("link", { name: "← Return to Taxonomy" }),
+  ).toHaveAttribute("href", taxonomyReturn);
+  await user.click(screen.getByRole("tab", { name: "Reference" }));
+  expect(
+    new URLSearchParams(window.location.hash.split("?")[1]).get(
+      "taxonomy_return",
+    ),
+  ).toBe(taxonomyReturn);
+  await user.click(
+    screen.getByRole("button", { name: "Edit botanical identity" }),
+  );
+  const dialog = screen.getByRole("dialog", {
+    name: "Edit botanical identity",
+  });
+  await user.click(
+    within(dialog).getByRole("button", { name: "Close editor" }),
+  );
+  expect(
+    screen.getByRole("link", { name: "← Return to Taxonomy" }),
+  ).toHaveAttribute("href", taxonomyReturn);
+  expect(
+    screen.getByRole("tab", { name: "Reference", selected: true }),
+  ).toBeVisible();
 });
 
 test("identity name save conflict preserves the editor and field values", async () => {

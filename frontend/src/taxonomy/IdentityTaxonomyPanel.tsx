@@ -3,6 +3,12 @@ import { useEffect, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import {
+  getBotanicalIdentity,
+  type BotanicalIdentityResponse,
+} from "../botanical-identities/api";
+import { ActionButton } from "../components/Action";
+import { BotanicalName } from "../components/ReferenceUI";
+import {
   getIdentityTaxonomy,
   searchCandidates,
   confirmLink,
@@ -16,10 +22,14 @@ export function IdentityTaxonomyPanel({
   identityId,
   updatedAt,
   summary = false,
+  onLinkChanged,
+  onIdentityRefreshed,
 }: {
   identityId: string;
   updatedAt: string;
   summary?: boolean;
+  onLinkChanged?: () => void;
+  onIdentityRefreshed?: (identity: BotanicalIdentityResponse) => void;
 }) {
   const auth = useAuth();
   const csrfToken = "csrfToken" in auth.state ? auth.state.csrfToken : null;
@@ -36,7 +46,15 @@ export function IdentityTaxonomyPanel({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
-  const key = `${identityId}:${updatedAt}:${String(attempt)}`;
+  const [conflict, setConflict] = useState(false);
+  const [refreshed, setRefreshed] = useState<{
+    original: string;
+    identity: BotanicalIdentityResponse;
+  } | null>(null);
+  const reviewedIdentity =
+    refreshed?.original === updatedAt ? refreshed.identity : null;
+  const identityVersion = reviewedIdentity?.updated_at ?? updatedAt;
+  const key = `${identityId}:${identityVersion}:${String(attempt)}`;
   useEffect(() => {
     const controller = new AbortController();
     void getIdentityTaxonomy(identityId, controller.signal)
@@ -86,7 +104,7 @@ export function IdentityTaxonomyPanel({
     !data.message;
   const linkUrl = `#/identities/${identityId}?tab=taxonomy`;
   async function mutate(remove = false) {
-    if (!csrfToken || !data || busy) return;
+    if (!csrfToken || !data || busy || (!remove && conflict)) return;
     setBusy(true);
     setError(null);
     setNotice(null);
@@ -99,7 +117,7 @@ export function IdentityTaxonomyPanel({
             source_taxon_id: candidate.taxon.source_taxon_id,
             checksum: data.source.checksum,
             expected_version: link?.version ?? null,
-            identity_updated_at: updatedAt,
+            identity_updated_at: identityVersion,
           },
           csrfToken,
         );
@@ -107,6 +125,7 @@ export function IdentityTaxonomyPanel({
       setCandidates(null);
       setSubmitted(null);
       setAttempt(attempt + 1);
+      onLinkChanged?.();
       setNotice(
         remove
           ? "Taxonomy link removed."
@@ -115,11 +134,42 @@ export function IdentityTaxonomyPanel({
     } catch (error: unknown) {
       if (error instanceof ApiError && error.status === 401)
         auth.sessionExpired();
-      else
+      else {
+        if (error instanceof ApiError && error.status === 409)
+          setConflict(true);
         setError(
           error instanceof ApiError && error.status === 409
-            ? "Identity or link changed. Reload taxonomy and review again."
+            ? "This identity or source link changed. Refresh the identity and inspect the candidate again before confirming."
             : "Could not save the taxonomy link. Retry after reviewing the source.",
+        );
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function refreshIdentity() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const identity = await getBotanicalIdentity(identityId);
+      setRefreshed({ original: updatedAt, identity });
+      onIdentityRefreshed?.(identity);
+      setQuery(identity.scientific_name);
+      setCandidate(null);
+      setCandidates(null);
+      setSubmitted(null);
+      setConflict(false);
+      setError(null);
+      setAttempt((value) => value + 1);
+      setNotice(
+        "Identity refreshed. Search and inspect the source candidate again; no confirmation was retried.",
+      );
+    } catch (error: unknown) {
+      if (error instanceof ApiError && error.status === 401)
+        auth.sessionExpired();
+      else
+        setError(
+          "Could not refresh the botanical identity. Retry before confirming.",
         );
     } finally {
       setBusy(false);
@@ -183,15 +233,15 @@ export function IdentityTaxonomyPanel({
     <section className="taxonomy-panel" aria-label="Taxonomy source">
       <h3>Taxonomy source</h3>
       <p>
-        Confirm a WFO classification after reviewing the exact name, authorship
-        and hierarchy. Local scientific names and collection Lineage remain
-        unchanged.
+        Link a reviewed WFO classification. Local names and material Lineage
+        stay unchanged.
       </p>
       {!current && <p role="status">Loading taxonomy source…</p>}
       {current?.failed && <p role="alert">Could not load taxonomy source.</p>}
       <button
         type="button"
         className="button--secondary"
+        disabled={busy}
         onClick={() => {
           setAttempt(attempt + 1);
           setCandidate(null);
@@ -202,6 +252,30 @@ export function IdentityTaxonomyPanel({
       >
         Reload taxonomy
       </button>
+      {conflict && (
+        <ActionButton
+          icon="refresh"
+          variant="secondary"
+          disabled={busy}
+          onClick={() => {
+            void refreshIdentity();
+          }}
+        >
+          Refresh identity and review again
+        </ActionButton>
+      )}
+      {reviewedIdentity && (
+        <p className="taxonomy-reviewed-identity">
+          Refreshed local identity:{" "}
+          <BotanicalName
+            label={reviewedIdentity.display_label}
+            scientificName={reviewedIdentity.scientific_name}
+          />
+          {reviewedIdentity.common_name
+            ? ` · ${reviewedIdentity.common_name}`
+            : ""}
+        </p>
+      )}
       {data && (
         <>
           {!data.source_available && (
@@ -272,7 +346,12 @@ export function IdentityTaxonomyPanel({
                 setCandidates(null);
                 setCandidate(null);
                 setError(null);
-                setSubmitted({ query: query.trim() });
+                if (query.trim().length < 2) {
+                  setSubmitted(null);
+                  setError(
+                    "Enter at least 2 characters after removing leading and trailing spaces.",
+                  );
+                } else setSubmitted({ query: query.trim() });
               }}
             >
               <label className="taxonomy-search">
@@ -284,12 +363,20 @@ export function IdentityTaxonomyPanel({
                   minLength={2}
                   maxLength={200}
                   required
+                  disabled={busy}
                   onChange={(event) => {
                     setQuery(event.target.value);
                   }}
                 />
               </label>
-              <button type="submit">Search taxonomy source</button>
+              <ActionButton
+                icon="search"
+                variant="secondary"
+                type="submit"
+                disabled={busy}
+              >
+                Search taxonomy source
+              </ActionButton>
             </form>
           )}
           {submitted && !candidates && !error && (
@@ -362,6 +449,7 @@ export function IdentityTaxonomyPanel({
                 type="button"
                 disabled={
                   busy ||
+                  conflict ||
                   !data.source_available ||
                   !candidate.classification.length
                 }

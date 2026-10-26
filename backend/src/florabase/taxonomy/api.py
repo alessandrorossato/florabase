@@ -2,6 +2,7 @@ from typing import Annotated, NoReturn
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import StringConstraints
 from sqlalchemy.orm import Session
 
 from florabase.auth.dependencies import (
@@ -69,9 +70,12 @@ def tree(
     scope: RepresentationScope = "all",
     record: Categories = None,
     q: Search = "",
+    include_covers: bool = False,
 ) -> TaxonomyTree:
     try:
-        return service.tree(database, source, scope=scope, record=record or (), q=q)
+        return service.tree(
+            database, source, scope=scope, record=record or (), q=q, include_covers=include_covers
+        )
     except service.TaxonomyConflictError as error:
         fail(error)
 
@@ -132,7 +136,9 @@ def candidates(
     database: Database,
     _actor: Reader,
     source: Source,
-    q: Annotated[str, Query(min_length=2, max_length=200)],
+    q: Annotated[
+        str, StringConstraints(strip_whitespace=True, min_length=2, max_length=200), Query()
+    ],
 ) -> list[WfoCandidate]:
     from florabase.botanical_identities.model import BotanicalIdentity
 

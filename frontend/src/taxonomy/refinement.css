@@ -1,0 +1,239 @@
+.taxonomy-refined .task-dialog.taxonomy-stage {
+  position: static;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text);
+  overflow: visible;
+  height: calc(100dvh - 3rem);
+  min-height: 32rem;
+}
+.taxonomy-refined .page-header {
+  margin: 0;
+  gap: var(--space-2) var(--space-4);
+  align-items: flex-start;
+}
+.taxonomy-refined .page-header .page-identity {
+  flex: 1 1 17rem;
+}
+.taxonomy-refined .page-actions {
+  flex: 2 1 37rem;
+  justify-content: flex-end;
+}
+.taxonomy-refined .directory-tools {
+  width: 100%;
+  justify-content: flex-end;
+}
+.taxonomy-screen.taxonomy-refined .directory-search {
+  flex: 1 1 15rem;
+  min-width: 10rem;
+  max-width: 24rem;
+}
+.taxonomy-refined .taxonomy-view-switch {
+  flex-shrink: 0;
+  min-width: 13rem;
+}
+.taxonomy-refined .directory-filter-summary {
+  flex-basis: 100%;
+  justify-content: flex-end;
+  margin: 0;
+}
+.taxonomy-source-line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  font: var(--type-small);
+}
+.taxonomy-source-line .taxonomy-source-summary {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  max-width: none;
+}
+.taxonomy-source-line summary {
+  font: var(--type-small);
+}
+.taxonomy-source-line > .control-action {
+  font: var(--type-small);
+  min-height: 2rem;
+  padding-block: 0;
+}
+.taxonomy-screen.taxonomy-refined .taxonomy-stage .taxonomy-workspace {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+.taxonomy-refined .taxonomy-browser {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.taxonomy-refined .taxonomy-tree-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.taxonomy-refined .taxonomy-inspector {
+  overflow: auto;
+}
+.taxonomy-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-1);
+  margin-block: var(--space-2);
+}
+.taxonomy-kpis .overflow-trigger {
+  padding: var(--space-2) var(--space-1);
+  min-width: 0;
+  justify-content: center;
+}
+.taxonomy-kpis .overflow-trigger > span {
+  display: grid;
+  gap: var(--space-1);
+  text-align: center;
+  font: var(--type-small);
+}
+.taxonomy-kpis strong {
+  font: var(--type-h2);
+  font-variant-numeric: tabular-nums;
+}
+.overflow-popover.taxonomy-kpi-popover {
+  width: min(25rem, calc(100vw - 24px));
+  max-width: calc(100vw - 24px);
+  max-height: min(32rem, calc(100dvh - 24px));
+  overflow: auto;
+  padding: var(--space-3);
+  display: block;
+}
+.taxonomy-kpi-popover h4 {
+  margin: 0 0 var(--space-2);
+  font: var(--type-h3);
+}
+.taxonomy-kpi-popover .taxonomy-identities {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.taxonomy-kpi-popover .taxonomy-identities li {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: var(--space-1) var(--space-2);
+  padding-block: var(--space-2);
+  border-top: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+.taxonomy-kpi-popover .taxon-cover {
+  grid-row: 1 / span 4;
+}
+.taxonomy-kpi-popover li > :not(.taxon-cover) {
+  grid-column: 2;
+}
+.taxonomy-kpi-popover .taxonomy-meta {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.taxonomy-refined .task-dialog.taxonomy-stage--fullscreen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  padding: var(--space-3);
+  background: var(--background);
+  overflow: hidden;
+}
+.taxonomy-stage--fullscreen > .breadcrumbs,
+.taxonomy-stage--fullscreen .page-identity > p,
+.taxonomy-stage--fullscreen > .taxonomy-source-line {
+  display: none;
+}
+.taxonomy-refined .taxonomy-stage--fullscreen .taxonomy-workspace {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+.taxonomy-stage--fullscreen .page-header h2 {
+  font: var(--type-h3);
+}
+.taxonomy-stage--fullscreen .page-header {
+  flex: none;
+}
+.taxonomy-fullscreen-notice {
+  font: var(--type-small);
+  margin: 0;
+}
+.taxonomy-fullscreen-exit {
+  align-self: flex-end;
+}
+@media (max-width: 1100px) {
+  .taxonomy-refined .page-actions {
+    flex-basis: 100%;
+  }
+  .taxonomy-screen.taxonomy-refined .directory-search {
+    max-width: none;
+  }
+}
+@media (max-width: 850px) {
+  .taxonomy-refined .page-header .page-identity {
+    flex-basis: 100%;
+  }
+  .taxonomy-screen.taxonomy-refined .directory-search {
+    flex-basis: 100%;
+  }
+  .taxonomy-refined .taxonomy-view-switch {
+    flex: 1;
+  }
+  .taxonomy-refined .task-dialog.taxonomy-stage {
+    height: auto;
+    min-height: 0;
+  }
+  .taxonomy-screen.taxonomy-refined .taxonomy-stage .taxonomy-workspace {
+    flex: none;
+    height: auto;
+  }
+  .taxonomy-refined .task-dialog.taxonomy-stage--fullscreen {
+    height: 100dvh;
+  }
+  .taxonomy-screen.taxonomy-refined
+    .taxonomy-stage--fullscreen
+    .taxonomy-workspace {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    flex-direction: column;
+    overflow: auto;
+  }
+  .taxonomy-stage--fullscreen .taxonomy-browser {
+    flex: 1 0 auto;
+  }
+  .taxonomy-stage--fullscreen .tree-canvas {
+    height: max(12rem, calc(100dvh - 24rem));
+    min-height: 12rem;
+  }
+  .taxonomy-stage--fullscreen .taxonomy-inspector {
+    flex: none;
+    max-height: none;
+    overflow: visible;
+  }
+  .taxonomy-stage--fullscreen .page-identity {
+    display: none;
+  }
+  .taxonomy-screen.taxonomy-refined
+    .taxonomy-stage--fullscreen
+    .directory-search {
+    flex-basis: 100%;
+  }
+}
+
+.taxonomy-refined .taxonomy-view-switch .control-action > span {
+  white-space: nowrap;
+}

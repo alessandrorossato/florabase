@@ -14294,6 +14294,73 @@
         "title": "TaxonomyCounts",
         "type": "object"
       },
+      "TaxonomyCover": {
+        "properties": {
+          "asset_id": {
+            "format": "uuid",
+            "title": "Asset Id",
+            "type": "string"
+          },
+          "attribution": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attribution"
+          },
+          "licence_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Licence Label"
+          },
+          "licence_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Licence Url"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "thumbnail_url": {
+            "title": "Thumbnail Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "asset_id",
+          "thumbnail_url",
+          "attribution",
+          "licence_label",
+          "licence_url",
+          "source_url"
+        ],
+        "title": "TaxonomyCover",
+        "type": "object"
+      },
       "TaxonomyEvidence": {
         "additionalProperties": false,
         "properties": {
@@ -14344,6 +14411,16 @@
               }
             ],
             "title": "Common Name"
+          },
+          "cover": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TaxonomyCover"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "cultivar_name": {
             "anyOf": [
@@ -19832,6 +19909,16 @@
               "maxLength": 200,
               "title": "Q",
               "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "include_covers",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Include Covers",
+              "type": "boolean"
             }
           }
         ],

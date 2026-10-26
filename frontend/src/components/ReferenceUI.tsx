@@ -213,12 +213,18 @@ export function OverflowMenu({
   children,
   disabled = false,
   triggerRef,
+  triggerContent,
+  closeOnAction = true,
+  popoverClassName = "",
 }: {
   label?: string;
   ariaLabel?: string;
   children: ReactNode;
   disabled?: boolean;
   triggerRef?: RefObject<HTMLButtonElement | null>;
+  triggerContent?: ReactNode;
+  closeOnAction?: boolean;
+  popoverClassName?: string;
 }) {
   const id = useId();
   const internalTrigger = useRef<HTMLButtonElement>(null);
@@ -355,15 +361,17 @@ export function OverflowMenu({
       ) : (
         <ActionButton
           {...triggerProps}
-          trailingIcon="chevron-down"
+          trailingIcon={triggerContent ? undefined : "chevron-down"}
           aria-label={ariaLabel}
           icon={
-            label.startsWith("+") || label.startsWith("Quick add")
-              ? "add"
-              : "more"
+            triggerContent
+              ? undefined
+              : label.startsWith("+") || label.startsWith("Quick add")
+                ? "add"
+                : "more"
           }
         >
-          {label.replace(/^\+\s*|\s*▾$/g, "")}
+          {triggerContent ?? label.replace(/^\+\s*|\s*▾$/g, "")}
         </ActionButton>
       )}
       {open &&
@@ -371,14 +379,16 @@ export function OverflowMenu({
           <div
             id={id}
             ref={panel}
-            className="overflow-popover"
+            className={`overflow-popover ${popoverClassName}`}
             role="group"
             aria-label={`${ariaLabel ?? "More actions"} menu`}
             style={position}
             onClick={(event) => {
               if (
                 event.target instanceof Element &&
-                event.target.closest("button,a[href]")
+                event.target.closest(
+                  closeOnAction ? "button,a[href]" : "a[href]",
+                )
               )
                 close(true);
             }}

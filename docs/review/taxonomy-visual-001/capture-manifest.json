@@ -1,0 +1,386 @@
+[
+  {
+    "file": "captures/absent-botanical-dark-1024.jpg",
+    "css_viewport": {
+      "width": 1024,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1009,
+      "height": 832
+    },
+    "label": "absent botanical dark 1024"
+  },
+  {
+    "file": "captures/absent-botanical-dark-1440.jpg",
+    "css_viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1425,
+      "height": 835
+    },
+    "label": "absent botanical dark 1440"
+  },
+  {
+    "file": "captures/absent-botanical-dark-390.jpg",
+    "css_viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 375,
+      "height": 812
+    },
+    "label": "absent botanical dark 390"
+  },
+  {
+    "file": "captures/absent-botanical-light-1024.jpg",
+    "css_viewport": {
+      "width": 1024,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1009,
+      "height": 832
+    },
+    "label": "absent botanical light 1024"
+  },
+  {
+    "file": "captures/absent-botanical-light-1440.jpg",
+    "css_viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1425,
+      "height": 835
+    },
+    "label": "absent botanical light 1440"
+  },
+  {
+    "file": "captures/absent-botanical-light-390.jpg",
+    "css_viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 375,
+      "height": 812
+    },
+    "label": "absent botanical light 390"
+  },
+  {
+    "file": "captures/available-botanical-dark-1024.jpg",
+    "css_viewport": {
+      "width": 1024,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1009,
+      "height": 832
+    },
+    "label": "available botanical dark 1024"
+  },
+  {
+    "file": "captures/available-botanical-dark-1440.jpg",
+    "css_viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1425,
+      "height": 835
+    },
+    "label": "available botanical dark 1440"
+  },
+  {
+    "file": "captures/available-botanical-dark-390.jpg",
+    "css_viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 375,
+      "height": 812
+    },
+    "label": "available botanical dark 390"
+  },
+  {
+    "file": "captures/available-botanical-light-1024.jpg",
+    "css_viewport": {
+      "width": 1024,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1009,
+      "height": 832
+    },
+    "label": "available botanical light 1024"
+  },
+  {
+    "file": "captures/available-botanical-light-1440.jpg",
+    "css_viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1425,
+      "height": 835
+    },
+    "label": "available botanical light 1440"
+  },
+  {
+    "file": "captures/available-botanical-light-390.jpg",
+    "css_viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 375,
+      "height": 812
+    },
+    "label": "available botanical light 390"
+  },
+  {
+    "file": "captures/available-herbarium-dark-1024.jpg",
+    "css_viewport": {
+      "width": 1024,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1009,
+      "height": 832
+    },
+    "label": "available herbarium dark 1024"
+  },
+  {
+    "file": "captures/available-herbarium-dark-1440.jpg",
+    "css_viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1425,
+      "height": 835
+    },
+    "label": "available herbarium dark 1440"
+  },
+  {
+    "file": "captures/available-herbarium-dark-390.jpg",
+    "css_viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 375,
+      "height": 812
+    },
+    "label": "available herbarium dark 390"
+  },
+  {
+    "file": "captures/available-herbarium-light-1024.jpg",
+    "css_viewport": {
+      "width": 1024,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1009,
+      "height": 832
+    },
+    "label": "available herbarium light 1024"
+  },
+  {
+    "file": "captures/available-herbarium-light-1440.jpg",
+    "css_viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1425,
+      "height": 835
+    },
+    "label": "available herbarium light 1440"
+  },
+  {
+    "file": "captures/available-herbarium-light-390.jpg",
+    "css_viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 375,
+      "height": 812
+    },
+    "label": "available herbarium light 390"
+  },
+  {
+    "file": "captures/available-mineral-dark-1024.jpg",
+    "css_viewport": {
+      "width": 1024,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1009,
+      "height": 832
+    },
+    "label": "available mineral dark 1024"
+  },
+  {
+    "file": "captures/available-mineral-dark-1440.jpg",
+    "css_viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1425,
+      "height": 835
+    },
+    "label": "available mineral dark 1440"
+  },
+  {
+    "file": "captures/available-mineral-dark-390.jpg",
+    "css_viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 375,
+      "height": 812
+    },
+    "label": "available mineral dark 390"
+  },
+  {
+    "file": "captures/available-mineral-light-1024.jpg",
+    "css_viewport": {
+      "width": 1024,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1009,
+      "height": 832
+    },
+    "label": "available mineral light 1024"
+  },
+  {
+    "file": "captures/available-mineral-light-1440.jpg",
+    "css_viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1425,
+      "height": 835
+    },
+    "label": "available mineral light 1440"
+  },
+  {
+    "file": "captures/available-mineral-light-390.jpg",
+    "css_viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 375,
+      "height": 812
+    },
+    "label": "available mineral light 390"
+  },
+  {
+    "file": "captures/available-synonym-botanical-dark-1440.jpg",
+    "css_viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1425,
+      "height": 835
+    },
+    "label": "available synonym botanical dark 1440"
+  },
+  {
+    "file": "captures/candidate-review-botanical-dark-1440.jpg",
+    "css_viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1425,
+      "height": 835
+    },
+    "label": "candidate review botanical dark 1440"
+  },
+  {
+    "file": "captures/confirmation-success-botanical-dark-1440.jpg",
+    "css_viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1425,
+      "height": 835
+    },
+    "label": "confirmation success botanical dark 1440"
+  },
+  {
+    "file": "captures/conflict-blocked-botanical-dark-1440.jpg",
+    "css_viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1425,
+      "height": 835
+    },
+    "label": "conflict blocked botanical dark 1440"
+  },
+  {
+    "file": "captures/conflict-refreshed-botanical-dark-1440.jpg",
+    "css_viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1425,
+      "height": 835
+    },
+    "label": "conflict refreshed botanical dark 1440"
+  },
+  {
+    "file": "captures/filters-botanical-light-390.jpg",
+    "css_viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 375,
+      "height": 812
+    },
+    "label": "filters botanical light 390"
+  },
+  {
+    "file": "captures/mobile-inspector-botanical-light-390.jpg",
+    "css_viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 375,
+      "height": 812
+    },
+    "label": "mobile inspector botanical light 390"
+  },
+  {
+    "file": "captures/selected-inspector-botanical-dark-1440.jpg",
+    "css_viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "raster_pixels": {
+      "width": 1425,
+      "height": 835
+    },
+    "label": "selected inspector botanical dark 1440"
+  }
+]
