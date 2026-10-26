@@ -1,0 +1,25 @@
+{
+  "checks": [
+    "Native ranges: legacy/canonical exact query and identity preserved through reload",
+    "Species distribution: legacy/canonical exact query and identity preserved through reload",
+    "Collection origins: legacy/canonical exact query and identity preserved through reload",
+    "Origins filters and same-view Back/Forward restore visible state",
+    "Overview exact identity link mounts real native SVG in comparison mode",
+    "Ctrl-click remains browser-owned and preserves current selection; native href independently opens Origins (headless shell does not create native tabs)",
+    "Occurrence workspace exact Reference cross-link and Back preserve identity without provider traffic",
+    "Site management List/Site map remains local under Provenance sites",
+    "Mobile keyboard navigation reveals focused destination; More has one geographic destination",
+    "Existing persisted owner-private Geography v1 Saved View restores legacy management path, Sites mode and exact search inside unified workspace"
+  ],
+  "errors": [],
+  "external": [],
+  "fixture": "Existing authenticated isolated synthetic fixture; no source record changes or provider requests",
+  "savedViewRestore": {
+    "state": {
+      "q": "Italian",
+      "mode": "sites"
+    },
+    "hash": "#/geography?q=Italian&mode=sites",
+    "errors": []
+  }
+}

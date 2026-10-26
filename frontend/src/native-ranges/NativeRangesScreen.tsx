@@ -1,3 +1,4 @@
+import { GeographyHeader } from "../geography/GeographyHeader";
 import { ActionLink, ActionButton } from "../components/Action";
 import {
   DirectoryFilterSelect,
@@ -7,11 +8,7 @@ import { TaskDialog } from "../components/TaskDialog";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import {
-  BotanicalName,
-  DirectorySearch,
-  PageHeader,
-} from "../components/ReferenceUI";
+import { BotanicalName, DirectorySearch } from "../components/ReferenceUI";
 import { SavedViews } from "../saved-views/SavedViews";
 import {
   directoryState,
@@ -896,12 +893,10 @@ export function NativeRangesScreen() {
   return (
     <section
       className="workspace native-ranges"
-      aria-labelledby="native-ranges-title"
+      aria-labelledby="geography-native-ranges-title"
     >
-      <PageHeader
-        title="Native ranges"
-        titleId="native-ranges-title"
-        eyebrow="Explore"
+      <GeographyHeader
+        view="native-ranges"
         description="Structured botanical ranges, distinct from occurrences and material origins."
         actions={null}
         tools={

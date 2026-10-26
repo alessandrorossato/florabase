@@ -1,0 +1,61 @@
+{
+  "source": "/home/alessandro/.codex/worktrees/5430/florabase",
+  "branch": "feat/geography-visual-001",
+  "head": "e7ade78559803a35b738a669085799f55eb76258",
+  "status": "implemented; operator acceptance and canonical verification pending",
+  "checks": [
+    {
+      "command": "pnpm typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm format:check",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "passed"
+    },
+    {
+      "command": "python3 scripts/check-features.py",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --cached --quiet",
+      "result": "passed"
+    },
+    {
+      "command": "GET http://localhost:15276/api/v1/ready",
+      "result": "passed"
+    }
+  ],
+  "features": 112,
+  "testFiles": 15,
+  "testsPassed": 225,
+  "presentationChecks": 126,
+  "screenshots": 57,
+  "interactionGroups": 10,
+  "canonicalFullRun": false,
+  "staged": false,
+  "committed": false,
+  "apiSchemaBackendChanged": false,
+  "limits": [
+    "Synthetic review fixture; no live provider evidence",
+    "No actual screen-reader, physical device, true browser zoom or real-large-collection benchmark",
+    "Headless modified clicks checked as unprevented native anchors; no native tab creation claim",
+    "Coordinate-less site API lacks exact linked-record IDs"
+  ],
+  "evidenceNotes": [
+    "Existing initial-phase evidence is preserved",
+    "Regional local map captures use existing Fit and Zoom out controls after marker loading and animation completion",
+    "The new cold lazy workspace test uses the existing App.lazy async-query wait convention; no global or pre-existing test timeout changed"
+  ]
+}

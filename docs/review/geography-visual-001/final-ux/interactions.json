@@ -1,0 +1,18 @@
+{
+  "checks": [
+    "Places capped hierarchy: selecting and expanding are independent; canonical preview and exact parent relationships retained",
+    "Clean contextual creation: inside click retained, focus trapped, backdrop closes and returns to actual child-action trigger",
+    "Dirty draft: real native discard confirmation on backdrop/Escape/Cancel; declining retains fields, accepting discards safely with focus return; no record saved",
+    "Desktop list/marker/inspector share selection; unlocated record remains discoverable/editable without an invented marker; one list and one inspector",
+    "Mobile List/Map toggles the same DOM and preserves coordinate-less selection and inspector",
+    "Breadcrumb canonical Overview link from a legacy exact-identity map preserves Back/Forward, reload and unknown query state",
+    "Explicit browser-only 1000-site renderer double at desktop/mobile: bounded list scrolling, 10 real-coordinate double markers only, exact search/coordinate-less inspection and no page overflow; no server data or performance claim"
+  ],
+  "errors": [],
+  "external": [],
+  "files": [
+    "large-sites-renderer-double-1440.png",
+    "large-sites-renderer-double-390.png"
+  ],
+  "fixture": "Existing synthetic records read only; unsaved local draft discarded; 1000 rows are labelled browser response doubles, never persisted"
+}

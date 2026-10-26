@@ -1,0 +1,679 @@
+{
+  "source": "/home/alessandro/.codex/worktrees/5430/florabase",
+  "base": "http://localhost:15276",
+  "fixture": "Authenticated synthetic API-created review records; no fabricated provider links or occurrence cache",
+  "errors": [],
+  "external": [],
+  "captures": [
+    {
+      "file": "overview-1440-botanical-light.png",
+      "name": "overview",
+      "width": 1440,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "places-1440-botanical-light.png",
+      "name": "places",
+      "width": 1440,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "sites-1440-botanical-light.png",
+      "name": "sites",
+      "width": 1440,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "overview-1024-botanical-light.png",
+      "name": "overview",
+      "width": 1024,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "overview-origins-1024-botanical-light.png",
+      "name": "overview-origins",
+      "width": 1024,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "places-1024-botanical-light.png",
+      "name": "places",
+      "width": 1024,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "sites-1024-botanical-light.png",
+      "name": "sites",
+      "width": 1024,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "overview-390-botanical-light.png",
+      "name": "overview",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "overview-origins-390-botanical-light.png",
+      "name": "overview-origins",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "places-390-botanical-light.png",
+      "name": "places",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "places-preview-390-botanical-light.png",
+      "name": "places-preview",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "sites-390-botanical-light.png",
+      "name": "sites",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "sites-preview-390-botanical-light.png",
+      "name": "sites-preview",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "overview-1440-botanical-dark.png",
+      "name": "overview",
+      "width": 1440,
+      "height": 844,
+      "theme": "botanical-dark",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "places-1440-botanical-dark.png",
+      "name": "places",
+      "width": 1440,
+      "height": 844,
+      "theme": "botanical-dark",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "sites-1440-botanical-dark.png",
+      "name": "sites",
+      "width": 1440,
+      "height": 844,
+      "theme": "botanical-dark",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "overview-1024-botanical-dark.png",
+      "name": "overview",
+      "width": 1024,
+      "height": 844,
+      "theme": "botanical-dark",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "overview-origins-1024-botanical-dark.png",
+      "name": "overview-origins",
+      "width": 1024,
+      "height": 844,
+      "theme": "botanical-dark",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "places-1024-botanical-dark.png",
+      "name": "places",
+      "width": 1024,
+      "height": 844,
+      "theme": "botanical-dark",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "sites-1024-botanical-dark.png",
+      "name": "sites",
+      "width": 1024,
+      "height": 844,
+      "theme": "botanical-dark",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "overview-390-botanical-dark.png",
+      "name": "overview",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-dark",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "overview-origins-390-botanical-dark.png",
+      "name": "overview-origins",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-dark",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "places-390-botanical-dark.png",
+      "name": "places",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-dark",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "places-preview-390-botanical-dark.png",
+      "name": "places-preview",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-dark",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "sites-390-botanical-dark.png",
+      "name": "sites",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-dark",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "sites-preview-390-botanical-dark.png",
+      "name": "sites-preview",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-dark",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "overview-1440-herbarium-light.png",
+      "name": "overview",
+      "width": 1440,
+      "height": 844,
+      "theme": "herbarium-light",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "places-1440-herbarium-light.png",
+      "name": "places",
+      "width": 1440,
+      "height": 844,
+      "theme": "herbarium-light",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "sites-1440-herbarium-light.png",
+      "name": "sites",
+      "width": 1440,
+      "height": 844,
+      "theme": "herbarium-light",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "overview-1024-herbarium-light.png",
+      "name": "overview",
+      "width": 1024,
+      "height": 844,
+      "theme": "herbarium-light",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "overview-origins-1024-herbarium-light.png",
+      "name": "overview-origins",
+      "width": 1024,
+      "height": 844,
+      "theme": "herbarium-light",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "places-1024-herbarium-light.png",
+      "name": "places",
+      "width": 1024,
+      "height": 844,
+      "theme": "herbarium-light",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "sites-1024-herbarium-light.png",
+      "name": "sites",
+      "width": 1024,
+      "height": 844,
+      "theme": "herbarium-light",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "overview-390-herbarium-light.png",
+      "name": "overview",
+      "width": 390,
+      "height": 844,
+      "theme": "herbarium-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "overview-origins-390-herbarium-light.png",
+      "name": "overview-origins",
+      "width": 390,
+      "height": 844,
+      "theme": "herbarium-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "places-390-herbarium-light.png",
+      "name": "places",
+      "width": 390,
+      "height": 844,
+      "theme": "herbarium-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "places-preview-390-herbarium-light.png",
+      "name": "places-preview",
+      "width": 390,
+      "height": 844,
+      "theme": "herbarium-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "sites-390-herbarium-light.png",
+      "name": "sites",
+      "width": 390,
+      "height": 844,
+      "theme": "herbarium-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "sites-preview-390-herbarium-light.png",
+      "name": "sites-preview",
+      "width": 390,
+      "height": 844,
+      "theme": "herbarium-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "overview-1440-mineral-dark.png",
+      "name": "overview",
+      "width": 1440,
+      "height": 844,
+      "theme": "mineral-dark",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "places-1440-mineral-dark.png",
+      "name": "places",
+      "width": 1440,
+      "height": 844,
+      "theme": "mineral-dark",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "sites-1440-mineral-dark.png",
+      "name": "sites",
+      "width": 1440,
+      "height": 844,
+      "theme": "mineral-dark",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "overview-1024-mineral-dark.png",
+      "name": "overview",
+      "width": 1024,
+      "height": 844,
+      "theme": "mineral-dark",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "overview-origins-1024-mineral-dark.png",
+      "name": "overview-origins",
+      "width": 1024,
+      "height": 844,
+      "theme": "mineral-dark",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "places-1024-mineral-dark.png",
+      "name": "places",
+      "width": 1024,
+      "height": 844,
+      "theme": "mineral-dark",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "sites-1024-mineral-dark.png",
+      "name": "sites",
+      "width": 1024,
+      "height": 844,
+      "theme": "mineral-dark",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "overview-390-mineral-dark.png",
+      "name": "overview",
+      "width": 390,
+      "height": 844,
+      "theme": "mineral-dark",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "overview-origins-390-mineral-dark.png",
+      "name": "overview-origins",
+      "width": 390,
+      "height": 844,
+      "theme": "mineral-dark",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "places-390-mineral-dark.png",
+      "name": "places",
+      "width": 390,
+      "height": 844,
+      "theme": "mineral-dark",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "places-preview-390-mineral-dark.png",
+      "name": "places-preview",
+      "width": 390,
+      "height": 844,
+      "theme": "mineral-dark",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "sites-390-mineral-dark.png",
+      "name": "sites",
+      "width": 390,
+      "height": 844,
+      "theme": "mineral-dark",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "sites-preview-390-mineral-dark.png",
+      "name": "sites-preview",
+      "width": 390,
+      "height": 844,
+      "theme": "mineral-dark",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "native-1440-botanical-light.png",
+      "name": "native",
+      "width": 1440,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "distribution-1440-botanical-light.png",
+      "name": "distribution",
+      "width": 1440,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "origins-1440-botanical-light.png",
+      "name": "origins",
+      "width": 1440,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "siteMap-1440-botanical-light.png",
+      "name": "siteMap",
+      "width": 1440,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "siteDetail-1440-botanical-light.png",
+      "name": "siteDetail",
+      "width": 1440,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1440,
+      "documentWidth": 1440,
+      "overflow": []
+    },
+    {
+      "file": "native-1024-botanical-light.png",
+      "name": "native",
+      "width": 1024,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "distribution-1024-botanical-light.png",
+      "name": "distribution",
+      "width": 1024,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "origins-1024-botanical-light.png",
+      "name": "origins",
+      "width": 1024,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "siteMap-1024-botanical-light.png",
+      "name": "siteMap",
+      "width": 1024,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "siteDetail-1024-botanical-light.png",
+      "name": "siteDetail",
+      "width": 1024,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 1024,
+      "documentWidth": 1024,
+      "overflow": []
+    },
+    {
+      "file": "native-390-botanical-light.png",
+      "name": "native",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "distribution-390-botanical-light.png",
+      "name": "distribution",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "origins-390-botanical-light.png",
+      "name": "origins",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "siteMap-390-botanical-light.png",
+      "name": "siteMap",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    },
+    {
+      "file": "siteDetail-390-botanical-light.png",
+      "name": "siteDetail",
+      "width": 390,
+      "height": 844,
+      "theme": "botanical-light",
+      "viewport": 390,
+      "documentWidth": 390,
+      "overflow": []
+    }
+  ]
+}

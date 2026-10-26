@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { GeographyHeader } from "../geography/GeographyHeader";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { DirectoryTools } from "../components/DirectoryTools";
-import { DirectorySearch, PageHeader } from "../components/ReferenceUI";
+import { DirectorySearch } from "../components/ReferenceUI";
 import { MapWorkspace } from "../maps/MapWorkspace";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
@@ -24,10 +25,11 @@ export function ProvenanceMapScreen() {
   const [attempt, setAttempt] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [breakdown, setBreakdown] = useState<Breakdown | null>(null);
-  const view = useDirectoryView("provenance_map", () => {
+  const resetInspection = useCallback(() => {
     setSelectedId(null);
     setBreakdown(null);
-  });
+  }, []);
+  const view = useDirectoryView("provenance_map", resetInspection);
   const filters = useMemo(
     () => ({
       seedLots: view.state.seed_lots,
@@ -73,12 +75,10 @@ export function ProvenanceMapScreen() {
   return (
     <section
       className="workspace collection-origins"
-      aria-labelledby="provenance-map-title"
+      aria-labelledby="geography-origins-title"
     >
-      <PageHeader
-        eyebrow="Explore"
-        title="Collection origins"
-        titleId="provenance-map-title"
+      <GeographyHeader
+        view="origins"
         description="Recorded origins of physical collection material."
         tools={
           <DirectoryTools

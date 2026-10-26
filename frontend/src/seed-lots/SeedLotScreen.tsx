@@ -481,6 +481,7 @@ function Detail({
         items={[
           { label: "Collection", href: "#/dashboard" },
           { label: "Seeds", href: "#/seeds" },
+          { label: recordName(lot, "Seed lot") },
         ]}
       />
       <DetailHeader

@@ -1,0 +1,80 @@
+{
+  "date": "2026-10-25",
+  "source": "/home/alessandro/.codex/worktrees/5430/florabase",
+  "branch": "feat/geography-visual-001",
+  "base": "e7ade78559803a35b738a669085799f55eb76258",
+  "latestOriginMain": "5778da7be03bc6030cb0ab3af03b9631bf4fa209",
+  "mainMerged": false,
+  "checks": [
+    {
+      "command": "pnpm typecheck",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm test --pool=threads --maxWorkers=1",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm lint",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm format:check",
+      "result": "passed"
+    },
+    {
+      "command": "pnpm build",
+      "result": "passed"
+    },
+    {
+      "command": "python3 scripts/check-features.py",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --check",
+      "result": "passed"
+    },
+    {
+      "command": "git diff --cached --quiet",
+      "result": "passed"
+    },
+    {
+      "command": "GET http://localhost:15276/api/v1/ready",
+      "result": "passed"
+    }
+  ],
+  "frontend": {
+    "passed": 919,
+    "files": 79,
+    "repeatedFinalConfirmationPassed": 47,
+    "note": "919 unique full-suite cases; repeated 40 component/workspace and 7 App cases are not added to the total"
+  },
+  "features": 112,
+  "browser": {
+    "geographyChecks": 162,
+    "globalChecks": 56,
+    "interactionGroups": 6,
+    "ordinaryMatrixPngs": 84,
+    "additionalSelectionFocusPngs": 3,
+    "rendererDoublePngs": 2,
+    "totalCurrentPngs": 89,
+    "historicalBeforeJpeg": 1,
+    "matrixPageErrors": [],
+    "matrixExternalRequests": [],
+    "interactionPageErrors": [],
+    "interactionExternalRequests": [],
+    "selectionPageErrors": []
+  },
+  "status": "implemented; operator acceptance and canonical verification pending",
+  "staged": false,
+  "committed": false,
+  "pushed": false,
+  "canonicalFullRun": false,
+  "backendApiSchemaChanged": false,
+  "remaining": [
+    "Contextual wizard/module breadcrumb normalization has a dedicated bounded follow-up",
+    "Reconcile main #121 Collection/Saved View and identity work before a later canonical gate/delivery",
+    "Live providers, actual screen reader/touch devices, true zoom and real backend-scale performance are unclaimed"
+  ],
+  "dataPreserved": "Retained existing isolated review records; response doubles and unsaved drafts were not persisted; no protected environment or other worktree changed"
+}

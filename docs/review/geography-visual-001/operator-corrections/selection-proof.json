@@ -1,0 +1,44 @@
+{
+  "files": [
+    "places-selection-focus-1440.png",
+    "places-selection-focus-1024.png",
+    "places-selection-focus-390.png"
+  ],
+  "entries": [
+    {
+      "width": 1440,
+      "height": 844,
+      "file": "places-selection-focus-1440.png",
+      "borderRadius": "10px",
+      "selectionAccent": "rgb(47, 104, 79) 3px 0px 0px 0px inset",
+      "focusStyle": "solid",
+      "focusWidth": "3px",
+      "selectedTop": 390.890625,
+      "selectedBottom": 453.234375
+    },
+    {
+      "width": 1024,
+      "height": 844,
+      "file": "places-selection-focus-1024.png",
+      "borderRadius": "10px",
+      "selectionAccent": "rgb(47, 104, 79) 3px 0px 0px 0px inset",
+      "focusStyle": "solid",
+      "focusWidth": "3px",
+      "selectedTop": 390.890625,
+      "selectedBottom": 502.828125
+    },
+    {
+      "width": 390,
+      "height": 844,
+      "file": "places-selection-focus-390.png",
+      "borderRadius": "10px",
+      "selectionAccent": "rgb(47, 104, 79) 3px 0px 0px 0px inset",
+      "focusStyle": "solid",
+      "focusWidth": "3px",
+      "selectedTop": 600.078125,
+      "selectedBottom": 712.015625
+    }
+  ],
+  "errors": [],
+  "note": "Native list scrolling reveals the deep selected place; keyboard focus is distinct from the selected inset accent. Scroll position is review state, not stored data."
+}

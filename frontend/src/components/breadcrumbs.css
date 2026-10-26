@@ -1,0 +1,13 @@
+.app-content .workspace > .breadcrumbs {
+  flex: none;
+  margin: 0 0 var(--space-2);
+}
+.app-content .breadcrumbs ol {
+  flex-wrap: wrap;
+  overflow: visible;
+}
+.app-content .breadcrumbs li {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  overflow: visible;
+}
