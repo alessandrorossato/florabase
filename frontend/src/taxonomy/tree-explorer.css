@@ -1,0 +1,326 @@
+.taxonomy-view-switch {
+  display: flex;
+  gap: var(--space-1);
+  align-items: center;
+}
+.taxonomy-view-switch button[aria-pressed="true"] {
+  background: var(--primary-subtle);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+.taxonomy-screen .taxonomy-workspace.taxonomy-workspace--graph {
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+  height: max(32rem, calc(100dvh - 19rem));
+  align-items: stretch;
+}
+.taxonomy-screen
+  .taxonomy-workspace.taxonomy-workspace--graph.taxonomy-workspace--wide {
+  grid-template-columns: minmax(0, 1fr);
+}
+.taxonomy-workspace--graph .taxonomy-browser {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.taxonomy-workspace--graph .taxonomy-inspector {
+  overflow: auto;
+  scrollbar-gutter: stable;
+}
+.taxonomy-inspector[hidden] {
+  display: none;
+}
+.tree-explorer {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+}
+.tree-explorer-tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+.tree-explorer-tools .control-action {
+  font: var(--type-small);
+  padding-inline: var(--space-2);
+}
+.tree-branch-controls {
+  position: relative;
+  font: var(--type-small);
+}
+.tree-branch-controls summary {
+  padding: var(--space-2);
+  cursor: pointer;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+  color: var(--primary);
+}
+.tree-branch-controls > div {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 5;
+  width: min(30rem, calc(100vw - 4rem));
+  padding: var(--space-3);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  box-shadow: var(--elevation-overlay);
+}
+.tree-branch-controls label {
+  display: grid;
+  gap: var(--space-1);
+}
+.tree-branch-controls p {
+  grid-column: 1/-1;
+  margin: 0;
+  color: var(--text-muted);
+}
+.tree-camera-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-2);
+}
+.tree-camera-controls .control-action {
+  font: var(--type-small);
+}
+.tree-camera-controls output {
+  min-width: 2.8rem;
+  text-align: center;
+  font: var(--type-small);
+  font-variant-numeric: tabular-nums;
+}
+.tree-camera-help {
+  font: var(--type-small);
+  color: var(--text-muted);
+  flex: 1 1 12rem;
+}
+.tree-canvas {
+  position: relative;
+  isolation: isolate;
+  flex: 1;
+  min-height: 12rem;
+  overflow: hidden;
+  touch-action: none;
+  background: var(--background);
+  cursor: grab;
+  outline-offset: -3px;
+}
+.tree-canvas:active {
+  cursor: grabbing;
+}
+.tree-world {
+  position: absolute;
+  inset: 0 auto auto 0;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+.tree-edges {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.tree-edges path {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 1.8;
+}
+.tree-edges path.tree-edge--selected {
+  stroke: var(--primary);
+  stroke-width: 3;
+}
+.tree-node {
+  position: absolute;
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-normal);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: none;
+}
+.tree-node--ancestor {
+  border-color: var(--primary);
+  background: var(--primary-subtle);
+}
+.tree-node--selected {
+  border: 2px solid var(--primary);
+  background: var(--primary-subtle);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.taxonomy-screen button.tree-node-select {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  border-radius: var(--radius-normal);
+  padding: var(--space-2);
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  font: var(--type-body);
+  cursor: pointer;
+}
+.taxonomy-screen button.tree-node-select:not(:disabled):hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+.tree-node-copy {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.tree-node-copy strong {
+  display: block;
+  font-size: 14px;
+  line-height: 1.2;
+}
+.tree-node-copy small {
+  display: block;
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.taxonomy-screen button.tree-node-expand {
+  position: absolute;
+  right: -13px;
+  top: calc(50% - 15px);
+  width: 28px;
+  min-width: 28px;
+  min-height: 30px;
+  padding: 0;
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  font-size: 18px;
+}
+.taxonomy-screen button.tree-node-expand:not(:disabled):hover {
+  background: var(--primary-subtle);
+}
+.taxon-cover {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 40px;
+  width: 40px;
+  height: 48px;
+  border-radius: var(--radius-small);
+  overflow: hidden;
+  background: var(--surface-subtle);
+  color: var(--text-muted);
+}
+.taxon-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.tree-explorer-caption,
+.tree-focus-note {
+  font: var(--type-small);
+  color: var(--text-muted);
+  padding: var(--space-2) var(--space-3);
+  margin: 0;
+  border-top: 1px solid var(--border);
+}
+.tree-focus-note button {
+  font: inherit;
+  min-height: 2rem;
+  padding: var(--space-1);
+}
+.taxonomy-identity-with-cover {
+  display: flex;
+  gap: var(--space-3);
+  align-items: start;
+}
+.taxonomy-identity-with-cover > .taxon-cover {
+  flex-basis: 48px;
+  width: 48px;
+  height: 56px;
+}
+.taxonomy-cover-credit {
+  font: var(--type-small);
+  color: var(--text-muted);
+  margin: var(--space-1) 0;
+}
+.taxonomy-cover-credit a {
+  margin-right: var(--space-2);
+}
+@media (max-width: 1100px) {
+  .taxonomy-screen .taxonomy-workspace.taxonomy-workspace--graph {
+    grid-template-columns: minmax(0, 1fr) minmax(15rem, 18rem);
+  }
+}
+@media (max-width: 850px) {
+  .taxonomy-screen .taxonomy-workspace.taxonomy-workspace--graph {
+    height: auto;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tree-canvas {
+    flex: none;
+    height: 26rem;
+    min-height: 26rem;
+  }
+  .taxonomy-workspace--graph .taxonomy-inspector {
+    overflow: visible;
+  }
+  .tree-camera-help {
+    display: none;
+  }
+  .tree-branch-controls > div {
+    grid-template-columns: minmax(0, 1fr);
+    max-height: 22rem;
+    overflow: auto;
+  }
+  .tree-node-expand {
+    min-height: 44px !important;
+    min-width: 44px !important;
+    right: -22px !important;
+  }
+  .taxonomy-view-switch .control-action {
+    flex: 1;
+  }
+}
+@media (forced-colors: active) {
+  .tree-edges path {
+    stroke: CanvasText;
+  }
+  .tree-edges path.tree-edge--selected {
+    stroke: Highlight;
+  }
+  .tree-node--selected {
+    outline: 3px solid Highlight;
+  }
+}
+
+.taxonomy-screen.taxonomy-screen--tree {
+  gap: var(--space-2);
+}
+.taxonomy-screen.taxonomy-screen--tree .page-header {
+  margin-top: 0;
+}
+.taxonomy-workspace--graph .taxonomy-identities > li:has(.taxon-cover) {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  column-gap: var(--space-2);
+}
+.taxonomy-workspace--graph .taxonomy-identities > li > .taxon-cover {
+  grid-row: 1 / span 4;
+}
+.taxonomy-workspace--graph
+  .taxonomy-identities
+  > li:has(.taxon-cover)
+  > :not(.taxon-cover) {
+  grid-column: 2;
+}

@@ -387,3 +387,71 @@ def test_concurrent_confirmations_revalidate_expected_absence(
             assert existing is not None
             db.delete(existing)
             db.commit()
+
+
+def test_optional_cover_projection_is_bounded_and_only_exposes_active_local_thumbnails(
+    database_connection: Connection, source: WfoSource
+) -> None:
+    from florabase.attachments.model import Attachment, AttachmentState
+    from florabase.collection_photos.model import BotanicalIdentityCoverImage, MediaAsset
+
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as db:
+        identities = []
+        for number in range(5):
+            ident = identity(db, "Cover " + str(number))
+            identities.append(ident)
+            if number != 4:
+                db.add(SeedLot(botanical_identity_id=ident.id))
+            attachment = Attachment(
+                storage_key="objects/aa/" + uuid7().hex,
+                original_filename="basil.jpg",
+                media_type="image/jpeg",
+                byte_size=100,
+                sha256="a" * 64,
+                state=AttachmentState.PENDING_DELETE if number == 2 else AttachmentState.ACTIVE,
+            )
+            db.add(attachment)
+            db.flush()
+            asset = MediaAsset(
+                kind="local",
+                attachment_id=attachment.id,
+                state="active",
+                attribution="Fixture photographer",
+                licence_label="CC0",
+            )
+            db.add(asset)
+            db.flush()
+            if number not in (2, 3):
+                db.add(
+                    BotanicalIdentityCoverImage(
+                        botanical_identity_id=ident.id, source_mode="local", media_asset_id=asset.id
+                    )
+                )
+            elif number == 3:
+                asset.state = "pending_delete"
+            link(db, ident, SPECIES, source)
+        db.flush()
+        statements: list[str] = []
+
+        def count(_conn: Any, _cursor: Any, sql: str, _params: Any, _ctx: Any, _many: Any) -> None:
+            if sql.lstrip().upper().startswith(("SELECT", "WITH")):
+                statements.append(sql)
+
+        event.listen(database_connection, "before_cursor_execute", count)
+        try:
+            projected = service.tree(db, source, include_covers=True)
+            assert len(statements) == 3
+        finally:
+            event.remove(database_connection, "before_cursor_execute", count)
+        by_id = {i.id: i for i in projected.identities}
+        assert identities[4].id not in by_id
+        for ident in identities[:2]:
+            cover = by_id[ident.id].cover
+            assert cover is not None
+            assert cover.thumbnail_url.startswith("/api/v1/media-assets/")
+            assert "/thumbnail?v=" in cover.thumbnail_url
+            assert cover.attribution == "Fixture photographer"
+            assert cover.source_url is None
+        assert by_id[identities[2].id].cover is None
+        assert by_id[identities[3].id].cover is None
+        assert all(i.cover is None for i in service.tree(db, source).identities)

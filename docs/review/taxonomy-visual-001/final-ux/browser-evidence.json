@@ -1,0 +1,2336 @@
+{
+  "captures": [
+    {
+      "name": "final-theme-botanical-dark-1440",
+      "geometry": {
+        "canvas": {
+          "bottom": 766.015625,
+          "height": 324.96875,
+          "left": 273,
+          "right": 1063,
+          "top": 441.046875,
+          "width": 790,
+          "x": 273,
+          "y": 441.046875
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 272,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1144,
+          "x": 272,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 272,
+          "right": 1416,
+          "top": 24,
+          "width": 1144,
+          "x": 272,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 602.953125,
+          "left": 272,
+          "right": 1416,
+          "top": 217.046875,
+          "width": 1144,
+          "x": 272,
+          "y": 217.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-botanical-dark-1024",
+      "geometry": {
+        "canvas": {
+          "bottom": 783.0390625,
+          "height": 192,
+          "left": 273,
+          "right": 711,
+          "top": 591.0390625,
+          "width": 438,
+          "x": 273,
+          "y": 591.0390625
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 249.046875,
+          "height": 178,
+          "left": 272,
+          "right": 1000,
+          "top": 71.046875,
+          "width": 728,
+          "x": 272,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1024,
+        "search": {
+          "bottom": 196.046875,
+          "height": 44,
+          "left": 303,
+          "right": 662.1796875,
+          "top": 152.046875,
+          "width": 359.1796875,
+          "x": 303,
+          "y": 152.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 272,
+          "right": 1000,
+          "top": 24,
+          "width": 728,
+          "x": 272,
+          "y": 24
+        },
+        "width": 1024,
+        "workspace": {
+          "bottom": 820,
+          "height": 522.953125,
+          "left": 272,
+          "right": 1000,
+          "top": 297.046875,
+          "width": 728,
+          "x": 272,
+          "y": 297.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-botanical-dark-390",
+      "geometry": {
+        "canvas": {
+          "bottom": 1196.2265625,
+          "height": 416,
+          "left": 17,
+          "right": 373,
+          "top": 780.2265625,
+          "width": 356,
+          "x": 17,
+          "y": 780.2265625
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 434.234375,
+          "height": 252,
+          "left": 16,
+          "right": 374,
+          "top": 182.234375,
+          "width": 358,
+          "x": 16,
+          "y": 182.234375
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 2271,
+        "scrollWidth": 390,
+        "search": {
+          "bottom": 329.234375,
+          "height": 44,
+          "left": 47,
+          "right": 373,
+          "top": 285.234375,
+          "width": 326,
+          "x": 47,
+          "y": 285.234375
+        },
+        "stage": {
+          "bottom": 2175.59375,
+          "height": 2040.40625,
+          "left": 16,
+          "right": 374,
+          "top": 135.1875,
+          "width": 358,
+          "x": 16,
+          "y": 135.1875
+        },
+        "width": 390,
+        "workspace": {
+          "bottom": 2175.59375,
+          "height": 1667.3671875,
+          "left": 16,
+          "right": 374,
+          "top": 508.2265625,
+          "width": 358,
+          "x": 16,
+          "y": 508.2265625
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-botanical-light-1440",
+      "geometry": {
+        "canvas": {
+          "bottom": 766.015625,
+          "height": 324.96875,
+          "left": 245,
+          "right": 1063,
+          "top": 441.046875,
+          "width": 818,
+          "x": 245,
+          "y": 441.046875
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 244,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1416,
+          "top": 24,
+          "width": 1172,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 602.953125,
+          "left": 244,
+          "right": 1416,
+          "top": 217.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 217.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-botanical-light-1024",
+      "geometry": {
+        "canvas": {
+          "bottom": 783.0390625,
+          "height": 192,
+          "left": 245,
+          "right": 711,
+          "top": 591.0390625,
+          "width": 466,
+          "x": 245,
+          "y": 591.0390625
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 249.046875,
+          "height": 178,
+          "left": 244,
+          "right": 1000,
+          "top": 71.046875,
+          "width": 756,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1024,
+        "search": {
+          "bottom": 196.046875,
+          "height": 44,
+          "left": 275,
+          "right": 662.1796875,
+          "top": 152.046875,
+          "width": 387.1796875,
+          "x": 275,
+          "y": 152.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1000,
+          "top": 24,
+          "width": 756,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1024,
+        "workspace": {
+          "bottom": 820,
+          "height": 522.953125,
+          "left": 244,
+          "right": 1000,
+          "top": 297.046875,
+          "width": 756,
+          "x": 244,
+          "y": 297.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-botanical-light-390",
+      "geometry": {
+        "canvas": {
+          "bottom": 1196.2265625,
+          "height": 416,
+          "left": 17,
+          "right": 373,
+          "top": 780.2265625,
+          "width": 356,
+          "x": 17,
+          "y": 780.2265625
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 434.234375,
+          "height": 252,
+          "left": 16,
+          "right": 374,
+          "top": 182.234375,
+          "width": 358,
+          "x": 16,
+          "y": 182.234375
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 2271,
+        "scrollWidth": 390,
+        "search": {
+          "bottom": 329.234375,
+          "height": 44,
+          "left": 47,
+          "right": 373,
+          "top": 285.234375,
+          "width": 326,
+          "x": 47,
+          "y": 285.234375
+        },
+        "stage": {
+          "bottom": 2175.59375,
+          "height": 2040.40625,
+          "left": 16,
+          "right": 374,
+          "top": 135.1875,
+          "width": 358,
+          "x": 16,
+          "y": 135.1875
+        },
+        "width": 390,
+        "workspace": {
+          "bottom": 2175.59375,
+          "height": 1667.3671875,
+          "left": 16,
+          "right": 374,
+          "top": 508.2265625,
+          "width": 358,
+          "x": 16,
+          "y": 508.2265625
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-herbarium-light-1440",
+      "geometry": {
+        "canvas": {
+          "bottom": 766.015625,
+          "height": 324.96875,
+          "left": 245,
+          "right": 1063,
+          "top": 441.046875,
+          "width": 818,
+          "x": 245,
+          "y": 441.046875
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 244,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1416,
+          "top": 24,
+          "width": 1172,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 602.953125,
+          "left": 244,
+          "right": 1416,
+          "top": 217.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 217.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-herbarium-light-1024",
+      "geometry": {
+        "canvas": {
+          "bottom": 783.0390625,
+          "height": 192,
+          "left": 245,
+          "right": 711,
+          "top": 591.0390625,
+          "width": 466,
+          "x": 245,
+          "y": 591.0390625
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 249.046875,
+          "height": 178,
+          "left": 244,
+          "right": 1000,
+          "top": 71.046875,
+          "width": 756,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1024,
+        "search": {
+          "bottom": 196.046875,
+          "height": 44,
+          "left": 275,
+          "right": 662.1796875,
+          "top": 152.046875,
+          "width": 387.1796875,
+          "x": 275,
+          "y": 152.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1000,
+          "top": 24,
+          "width": 756,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1024,
+        "workspace": {
+          "bottom": 820,
+          "height": 522.953125,
+          "left": 244,
+          "right": 1000,
+          "top": 297.046875,
+          "width": 756,
+          "x": 244,
+          "y": 297.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-herbarium-light-390",
+      "geometry": {
+        "canvas": {
+          "bottom": 1196.2265625,
+          "height": 416,
+          "left": 17,
+          "right": 373,
+          "top": 780.2265625,
+          "width": 356,
+          "x": 17,
+          "y": 780.2265625
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 434.234375,
+          "height": 252,
+          "left": 16,
+          "right": 374,
+          "top": 182.234375,
+          "width": 358,
+          "x": 16,
+          "y": 182.234375
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 2271,
+        "scrollWidth": 390,
+        "search": {
+          "bottom": 329.234375,
+          "height": 44,
+          "left": 47,
+          "right": 373,
+          "top": 285.234375,
+          "width": 326,
+          "x": 47,
+          "y": 285.234375
+        },
+        "stage": {
+          "bottom": 2175.59375,
+          "height": 2040.40625,
+          "left": 16,
+          "right": 374,
+          "top": 135.1875,
+          "width": 358,
+          "x": 16,
+          "y": 135.1875
+        },
+        "width": 390,
+        "workspace": {
+          "bottom": 2175.59375,
+          "height": 1667.3671875,
+          "left": 16,
+          "right": 374,
+          "top": 508.2265625,
+          "width": 358,
+          "x": 16,
+          "y": 508.2265625
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-herbarium-dark-1440",
+      "geometry": {
+        "canvas": {
+          "bottom": 766.015625,
+          "height": 324.96875,
+          "left": 245,
+          "right": 1063,
+          "top": 441.046875,
+          "width": 818,
+          "x": 245,
+          "y": 441.046875
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 244,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1416,
+          "top": 24,
+          "width": 1172,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 602.953125,
+          "left": 244,
+          "right": 1416,
+          "top": 217.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 217.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-herbarium-dark-1024",
+      "geometry": {
+        "canvas": {
+          "bottom": 783.0390625,
+          "height": 192,
+          "left": 245,
+          "right": 711,
+          "top": 591.0390625,
+          "width": 466,
+          "x": 245,
+          "y": 591.0390625
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 249.046875,
+          "height": 178,
+          "left": 244,
+          "right": 1000,
+          "top": 71.046875,
+          "width": 756,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1024,
+        "search": {
+          "bottom": 196.046875,
+          "height": 44,
+          "left": 275,
+          "right": 662.1796875,
+          "top": 152.046875,
+          "width": 387.1796875,
+          "x": 275,
+          "y": 152.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1000,
+          "top": 24,
+          "width": 756,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1024,
+        "workspace": {
+          "bottom": 820,
+          "height": 522.953125,
+          "left": 244,
+          "right": 1000,
+          "top": 297.046875,
+          "width": 756,
+          "x": 244,
+          "y": 297.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-herbarium-dark-390",
+      "geometry": {
+        "canvas": {
+          "bottom": 1196.2265625,
+          "height": 416,
+          "left": 17,
+          "right": 373,
+          "top": 780.2265625,
+          "width": 356,
+          "x": 17,
+          "y": 780.2265625
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 434.234375,
+          "height": 252,
+          "left": 16,
+          "right": 374,
+          "top": 182.234375,
+          "width": 358,
+          "x": 16,
+          "y": 182.234375
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 2271,
+        "scrollWidth": 390,
+        "search": {
+          "bottom": 329.234375,
+          "height": 44,
+          "left": 47,
+          "right": 373,
+          "top": 285.234375,
+          "width": 326,
+          "x": 47,
+          "y": 285.234375
+        },
+        "stage": {
+          "bottom": 2175.59375,
+          "height": 2040.40625,
+          "left": 16,
+          "right": 374,
+          "top": 135.1875,
+          "width": 358,
+          "x": 16,
+          "y": 135.1875
+        },
+        "width": 390,
+        "workspace": {
+          "bottom": 2175.59375,
+          "height": 1667.3671875,
+          "left": 16,
+          "right": 374,
+          "top": 508.2265625,
+          "width": 358,
+          "x": 16,
+          "y": 508.2265625
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-mineral-light-1440",
+      "geometry": {
+        "canvas": {
+          "bottom": 766.015625,
+          "height": 324.96875,
+          "left": 245,
+          "right": 1063,
+          "top": 441.046875,
+          "width": 818,
+          "x": 245,
+          "y": 441.046875
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 244,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1416,
+          "top": 24,
+          "width": 1172,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 602.953125,
+          "left": 244,
+          "right": 1416,
+          "top": 217.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 217.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-mineral-light-1024",
+      "geometry": {
+        "canvas": {
+          "bottom": 783.0390625,
+          "height": 192,
+          "left": 245,
+          "right": 711,
+          "top": 591.0390625,
+          "width": 466,
+          "x": 245,
+          "y": 591.0390625
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 249.046875,
+          "height": 178,
+          "left": 244,
+          "right": 1000,
+          "top": 71.046875,
+          "width": 756,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1024,
+        "search": {
+          "bottom": 196.046875,
+          "height": 44,
+          "left": 275,
+          "right": 662.1796875,
+          "top": 152.046875,
+          "width": 387.1796875,
+          "x": 275,
+          "y": 152.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1000,
+          "top": 24,
+          "width": 756,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1024,
+        "workspace": {
+          "bottom": 820,
+          "height": 522.953125,
+          "left": 244,
+          "right": 1000,
+          "top": 297.046875,
+          "width": 756,
+          "x": 244,
+          "y": 297.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-mineral-light-390",
+      "geometry": {
+        "canvas": {
+          "bottom": 1196.2265625,
+          "height": 416,
+          "left": 17,
+          "right": 373,
+          "top": 780.2265625,
+          "width": 356,
+          "x": 17,
+          "y": 780.2265625
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 434.234375,
+          "height": 252,
+          "left": 16,
+          "right": 374,
+          "top": 182.234375,
+          "width": 358,
+          "x": 16,
+          "y": 182.234375
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 2271,
+        "scrollWidth": 390,
+        "search": {
+          "bottom": 329.234375,
+          "height": 44,
+          "left": 47,
+          "right": 373,
+          "top": 285.234375,
+          "width": 326,
+          "x": 47,
+          "y": 285.234375
+        },
+        "stage": {
+          "bottom": 2175.59375,
+          "height": 2040.40625,
+          "left": 16,
+          "right": 374,
+          "top": 135.1875,
+          "width": 358,
+          "x": 16,
+          "y": 135.1875
+        },
+        "width": 390,
+        "workspace": {
+          "bottom": 2175.59375,
+          "height": 1667.3671875,
+          "left": 16,
+          "right": 374,
+          "top": 508.2265625,
+          "width": 358,
+          "x": 16,
+          "y": 508.2265625
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-mineral-dark-1440",
+      "geometry": {
+        "canvas": {
+          "bottom": 766.015625,
+          "height": 324.96875,
+          "left": 245,
+          "right": 1063,
+          "top": 441.046875,
+          "width": 818,
+          "x": 245,
+          "y": 441.046875
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 244,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1416,
+          "top": 24,
+          "width": 1172,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 602.953125,
+          "left": 244,
+          "right": 1416,
+          "top": 217.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 217.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-mineral-dark-1024",
+      "geometry": {
+        "canvas": {
+          "bottom": 783.0390625,
+          "height": 192,
+          "left": 245,
+          "right": 711,
+          "top": 591.0390625,
+          "width": 466,
+          "x": 245,
+          "y": 591.0390625
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 249.046875,
+          "height": 178,
+          "left": 244,
+          "right": 1000,
+          "top": 71.046875,
+          "width": 756,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1024,
+        "search": {
+          "bottom": 196.046875,
+          "height": 44,
+          "left": 275,
+          "right": 662.1796875,
+          "top": 152.046875,
+          "width": 387.1796875,
+          "x": 275,
+          "y": 152.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1000,
+          "top": 24,
+          "width": 756,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1024,
+        "workspace": {
+          "bottom": 820,
+          "height": 522.953125,
+          "left": 244,
+          "right": 1000,
+          "top": 297.046875,
+          "width": 756,
+          "x": 244,
+          "y": 297.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-theme-mineral-dark-390",
+      "geometry": {
+        "canvas": {
+          "bottom": 1196.2265625,
+          "height": 416,
+          "left": 17,
+          "right": 373,
+          "top": 780.2265625,
+          "width": 356,
+          "x": 17,
+          "y": 780.2265625
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 434.234375,
+          "height": 252,
+          "left": 16,
+          "right": 374,
+          "top": 182.234375,
+          "width": 358,
+          "x": 16,
+          "y": 182.234375
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 2271,
+        "scrollWidth": 390,
+        "search": {
+          "bottom": 329.234375,
+          "height": 44,
+          "left": 47,
+          "right": 373,
+          "top": 285.234375,
+          "width": 326,
+          "x": 47,
+          "y": 285.234375
+        },
+        "stage": {
+          "bottom": 2175.59375,
+          "height": 2040.40625,
+          "left": 16,
+          "right": 374,
+          "top": 135.1875,
+          "width": 358,
+          "x": 16,
+          "y": 135.1875
+        },
+        "width": 390,
+        "workspace": {
+          "bottom": 2175.59375,
+          "height": 1667.3671875,
+          "left": 16,
+          "right": 374,
+          "top": 508.2265625,
+          "width": 358,
+          "x": 16,
+          "y": 508.2265625
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-tree-header-dark-1440",
+      "geometry": {
+        "canvas": {
+          "bottom": 766.015625,
+          "height": 324.96875,
+          "left": 245,
+          "right": 1063,
+          "top": 441.046875,
+          "width": 818,
+          "x": 245,
+          "y": 441.046875
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 244,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1416,
+          "top": 24,
+          "width": 1172,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 602.953125,
+          "left": 244,
+          "right": 1416,
+          "top": 217.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 217.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-list-header-dark-1440",
+      "geometry": {
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 244,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1416,
+          "top": 24,
+          "width": 1172,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 602.953125,
+          "left": 244,
+          "right": 1416,
+          "top": 217.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 217.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-identities-popover-dark-1440",
+      "geometry": {
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 244,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "popover": {
+          "bottom": 474.5,
+          "height": 435.4296875,
+          "left": 582,
+          "right": 982,
+          "top": 39.0703125,
+          "width": 400,
+          "x": 582,
+          "y": 39.0703125
+        },
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1416,
+          "top": 24,
+          "width": 1172,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 602.953125,
+          "left": 244,
+          "right": 1416,
+          "top": 217.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 217.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-living-popover-dark-1440",
+      "geometry": {
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 244,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "popover": {
+          "bottom": 792.9453125,
+          "height": 234.4609375,
+          "left": 721,
+          "right": 1121,
+          "top": 558.484375,
+          "width": 400,
+          "x": 721,
+          "y": 558.484375
+        },
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1416,
+          "top": 24,
+          "width": 1172,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 602.953125,
+          "left": 244,
+          "right": 1416,
+          "top": 217.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 217.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-historical-popover-dark-1440",
+      "geometry": {
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 244,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "popover": {
+          "bottom": 748.9609375,
+          "height": 190.4765625,
+          "left": 999,
+          "right": 1399,
+          "top": 558.484375,
+          "width": 400,
+          "x": 999,
+          "y": 558.484375
+        },
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1416,
+          "top": 24,
+          "width": 1172,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 602.953125,
+          "left": 244,
+          "right": 1416,
+          "top": 217.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 217.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-extended-filters-dark-1440",
+      "geometry": {
+        "canvas": {
+          "bottom": 766.015625,
+          "height": 324.96875,
+          "left": 245,
+          "right": 1063,
+          "top": 441.046875,
+          "width": 818,
+          "x": 245,
+          "y": 441.046875
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 244,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1416,
+          "top": 24,
+          "width": 1172,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 602.953125,
+          "left": 244,
+          "right": 1416,
+          "top": 217.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 217.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-dependent-hierarchy-dark-1440",
+      "geometry": {
+        "canvas": {
+          "bottom": 766.015625,
+          "height": 324.96875,
+          "left": 245,
+          "right": 1063,
+          "top": 441.046875,
+          "width": 818,
+          "x": 245,
+          "y": 441.046875
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 244,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1416,
+          "top": 24,
+          "width": 1172,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 602.953125,
+          "left": 244,
+          "right": 1416,
+          "top": 217.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 217.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-filter-status-media-display-dark-1440",
+      "geometry": {
+        "canvas": {
+          "bottom": 766.015625,
+          "height": 324.96875,
+          "left": 245,
+          "right": 1063,
+          "top": 441.046875,
+          "width": 818,
+          "x": 245,
+          "y": 441.046875
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 244,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1416,
+          "top": 24,
+          "width": 1172,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 602.953125,
+          "left": 244,
+          "right": 1416,
+          "top": 217.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 217.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-fullscreen-inspector-open-dark-1440",
+      "geometry": {
+        "canvas": {
+          "bottom": 796.0078125,
+          "height": 454.0078125,
+          "left": 13,
+          "right": 1075,
+          "top": 342,
+          "width": 1062,
+          "x": 13,
+          "y": 342
+        },
+        "fullscreen": true,
+        "header": {
+          "bottom": 110,
+          "height": 98,
+          "left": 12,
+          "right": 1428,
+          "top": 12,
+          "width": 1416,
+          "x": 12,
+          "y": 12
+        },
+        "height": 844,
+        "nativeFullscreen": true,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 57,
+          "height": 44,
+          "left": 738.1796875,
+          "right": 1090.1796875,
+          "top": 13,
+          "width": 352,
+          "x": 738.1796875,
+          "y": 13
+        },
+        "stage": {
+          "bottom": 844,
+          "height": 844,
+          "left": 0,
+          "right": 1440,
+          "top": 0,
+          "width": 1440,
+          "x": 0,
+          "y": 0
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 832,
+          "height": 714,
+          "left": 12,
+          "right": 1428,
+          "top": 118,
+          "width": 1416,
+          "x": 12,
+          "y": 118
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-fullscreen-inspector-closed-dark-1440",
+      "geometry": {
+        "canvas": {
+          "bottom": 796.0078125,
+          "height": 454.0078125,
+          "left": 13,
+          "right": 1427,
+          "top": 342,
+          "width": 1414,
+          "x": 13,
+          "y": 342
+        },
+        "fullscreen": true,
+        "header": {
+          "bottom": 110,
+          "height": 98,
+          "left": 12,
+          "right": 1428,
+          "top": 12,
+          "width": 1416,
+          "x": 12,
+          "y": 12
+        },
+        "height": 844,
+        "nativeFullscreen": true,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 57,
+          "height": 44,
+          "left": 738.1796875,
+          "right": 1090.1796875,
+          "top": 13,
+          "width": 352,
+          "x": 738.1796875,
+          "y": 13
+        },
+        "stage": {
+          "bottom": 844,
+          "height": 844,
+          "left": 0,
+          "right": 1440,
+          "top": 0,
+          "width": 1440,
+          "x": 0,
+          "y": 0
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 832,
+          "height": 714,
+          "left": 12,
+          "right": 1428,
+          "top": 118,
+          "width": 1416,
+          "x": 12,
+          "y": 118
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-fullscreen-kpi-dark-1440",
+      "geometry": {
+        "canvas": {
+          "bottom": 796.0078125,
+          "height": 454.0078125,
+          "left": 13,
+          "right": 1075,
+          "top": 342,
+          "width": 1062,
+          "x": 13,
+          "y": 342
+        },
+        "fullscreen": true,
+        "header": {
+          "bottom": 110,
+          "height": 98,
+          "left": 12,
+          "right": 1428,
+          "top": 12,
+          "width": 1416,
+          "x": 12,
+          "y": 12
+        },
+        "height": 844,
+        "nativeFullscreen": true,
+        "popover": {
+          "bottom": 711.390625,
+          "height": 234.4609375,
+          "left": 842,
+          "right": 1242,
+          "top": 476.9296875,
+          "width": 400,
+          "x": 842,
+          "y": 476.9296875
+        },
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 57,
+          "height": 44,
+          "left": 738.1796875,
+          "right": 1090.1796875,
+          "top": 13,
+          "width": 352,
+          "x": 738.1796875,
+          "y": 13
+        },
+        "stage": {
+          "bottom": 844,
+          "height": 844,
+          "left": 0,
+          "right": 1440,
+          "top": 0,
+          "width": 1440,
+          "x": 0,
+          "y": 0
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 832,
+          "height": 714,
+          "left": 12,
+          "right": 1428,
+          "top": 118,
+          "width": 1416,
+          "x": 12,
+          "y": 118
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-fullscreen-dark-1024",
+      "geometry": {
+        "canvas": {
+          "bottom": 778.015625,
+          "height": 392.015625,
+          "left": 13,
+          "right": 723,
+          "top": 386,
+          "width": 710,
+          "x": 13,
+          "y": 386
+        },
+        "fullscreen": true,
+        "header": {
+          "bottom": 154,
+          "height": 142,
+          "left": 12,
+          "right": 1012,
+          "top": 12,
+          "width": 1000,
+          "x": 12,
+          "y": 12
+        },
+        "height": 844,
+        "nativeFullscreen": true,
+        "scrollHeight": 844,
+        "scrollWidth": 1024,
+        "search": {
+          "bottom": 101,
+          "height": 44,
+          "left": 43,
+          "right": 674.1796875,
+          "top": 57,
+          "width": 631.1796875,
+          "x": 43,
+          "y": 57
+        },
+        "stage": {
+          "bottom": 844,
+          "height": 844,
+          "left": 0,
+          "right": 1024,
+          "top": 0,
+          "width": 1024,
+          "x": 0,
+          "y": 0
+        },
+        "width": 1024,
+        "workspace": {
+          "bottom": 832,
+          "height": 670,
+          "left": 12,
+          "right": 1012,
+          "top": 162,
+          "width": 1000,
+          "x": 12,
+          "y": 162
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-fullscreen-dark-390",
+      "geometry": {
+        "canvas": {
+          "bottom": 902,
+          "height": 460,
+          "left": 13,
+          "right": 362,
+          "top": 442,
+          "width": 349,
+          "x": 13,
+          "y": 442
+        },
+        "fullscreen": true,
+        "header": {
+          "bottom": 162,
+          "height": 150,
+          "left": 12,
+          "right": 378,
+          "top": 12,
+          "width": 366,
+          "x": 12,
+          "y": 12
+        },
+        "height": 844,
+        "nativeFullscreen": true,
+        "scrollHeight": 844,
+        "scrollWidth": 390,
+        "search": {
+          "bottom": 57,
+          "height": 44,
+          "left": 43,
+          "right": 377,
+          "top": 13,
+          "width": 334,
+          "x": 43,
+          "y": 13
+        },
+        "stage": {
+          "bottom": 844,
+          "height": 844,
+          "left": 0,
+          "right": 390,
+          "top": 0,
+          "width": 390,
+          "x": 0,
+          "y": 0
+        },
+        "width": 390,
+        "workspace": {
+          "bottom": 832,
+          "height": 662,
+          "left": 12,
+          "right": 378,
+          "top": 170,
+          "width": 366,
+          "x": 12,
+          "y": 170
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-mobile-kpi-dark-390",
+      "geometry": {
+        "canvas": {
+          "bottom": -85.7734375,
+          "height": 416,
+          "left": 17,
+          "right": 373,
+          "top": -501.7734375,
+          "width": 356,
+          "x": 17,
+          "y": -501.7734375
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": -847.765625,
+          "height": 252,
+          "left": 16,
+          "right": 374,
+          "top": -1099.765625,
+          "width": 358,
+          "x": 16,
+          "y": -1099.765625
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "popover": {
+          "bottom": 447.4296875,
+          "height": 435.4296875,
+          "left": 12,
+          "right": 378,
+          "top": 12,
+          "width": 366,
+          "x": 12,
+          "y": 12
+        },
+        "scrollHeight": 2271,
+        "scrollWidth": 390,
+        "search": {
+          "bottom": -952.765625,
+          "height": 44,
+          "left": 47,
+          "right": 373,
+          "top": -996.765625,
+          "width": 326,
+          "x": 47,
+          "y": -996.765625
+        },
+        "stage": {
+          "bottom": 893.09375,
+          "height": 2039.90625,
+          "left": 16,
+          "right": 374,
+          "top": -1146.8125,
+          "width": 358,
+          "x": 16,
+          "y": -1146.8125
+        },
+        "width": 390,
+        "workspace": {
+          "bottom": 893.09375,
+          "height": 1666.8671875,
+          "left": 16,
+          "right": 374,
+          "top": -773.7734375,
+          "width": 358,
+          "x": 16,
+          "y": -773.7734375
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-real-identity-from-kpi-dark-1440",
+      "geometry": {
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-combined-facets-dark-1440",
+      "geometry": {
+        "canvas": {
+          "bottom": 766.015625,
+          "height": 324.96875,
+          "left": 245,
+          "right": 1063,
+          "top": 441.046875,
+          "width": 818,
+          "x": 245,
+          "y": 441.046875
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 244,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1416,
+          "top": 24,
+          "width": 1172,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 602.953125,
+          "left": 244,
+          "right": 1416,
+          "top": 217.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 217.046875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-source-unavailable-dark-1440",
+      "geometry": {
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 244,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 1387,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1416,
+          "top": 24,
+          "width": 1172,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 474.9609375,
+          "left": 244,
+          "right": 1416,
+          "top": 345.0390625,
+          "width": 1172,
+          "x": 244,
+          "y": 345.0390625
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-source-unavailable-dark-390",
+      "geometry": {
+        "fullscreen": false,
+        "header": {
+          "bottom": 434.234375,
+          "height": 252,
+          "left": 16,
+          "right": 374,
+          "top": 182.234375,
+          "width": 358,
+          "x": 16,
+          "y": 182.234375
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 2072,
+        "scrollWidth": 390,
+        "search": {
+          "bottom": 329.234375,
+          "height": 44,
+          "left": 47,
+          "right": 373,
+          "top": 285.234375,
+          "width": 326,
+          "x": 47,
+          "y": 285.234375
+        },
+        "stage": {
+          "bottom": 1976.140625,
+          "height": 1840.953125,
+          "left": 16,
+          "right": 374,
+          "top": 135.1875,
+          "width": 358,
+          "x": 16,
+          "y": 135.1875
+        },
+        "width": 390,
+        "workspace": {
+          "bottom": 1976.140625,
+          "height": 1223.96875,
+          "left": 16,
+          "right": 374,
+          "top": 752.171875,
+          "width": 358,
+          "x": 16,
+          "y": 752.171875
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-fullscreen-light-1440",
+      "geometry": {
+        "canvas": {
+          "bottom": 796.0078125,
+          "height": 454.0078125,
+          "left": 13,
+          "right": 1075,
+          "top": 342,
+          "width": 1062,
+          "x": 13,
+          "y": 342
+        },
+        "fullscreen": true,
+        "header": {
+          "bottom": 110,
+          "height": 98,
+          "left": 12,
+          "right": 1428,
+          "top": 12,
+          "width": 1416,
+          "x": 12,
+          "y": 12
+        },
+        "height": 844,
+        "nativeFullscreen": true,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 57,
+          "height": 44,
+          "left": 738.1796875,
+          "right": 1090.1796875,
+          "top": 13,
+          "width": 352,
+          "x": 738.1796875,
+          "y": 13
+        },
+        "stage": {
+          "bottom": 844,
+          "height": 844,
+          "left": 0,
+          "right": 1440,
+          "top": 0,
+          "width": 1440,
+          "x": 0,
+          "y": 0
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 832,
+          "height": 714,
+          "left": 12,
+          "right": 1428,
+          "top": 118,
+          "width": 1416,
+          "x": 12,
+          "y": 118
+        }
+      },
+      "fullPage": true
+    },
+    {
+      "name": "final-ready-for-review-dark-1440",
+      "geometry": {
+        "canvas": {
+          "bottom": 766.015625,
+          "height": 324.96875,
+          "left": 245,
+          "right": 1063,
+          "top": 441.046875,
+          "width": 818,
+          "x": 245,
+          "y": 441.046875
+        },
+        "fullscreen": false,
+        "header": {
+          "bottom": 169.046875,
+          "height": 98,
+          "left": 244,
+          "right": 1416,
+          "top": 71.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 71.046875
+        },
+        "height": 844,
+        "nativeFullscreen": false,
+        "scrollHeight": 844,
+        "scrollWidth": 1440,
+        "search": {
+          "bottom": 116.046875,
+          "height": 44,
+          "left": 726.1796875,
+          "right": 1078.1796875,
+          "top": 72.046875,
+          "width": 352,
+          "x": 726.1796875,
+          "y": 72.046875
+        },
+        "stage": {
+          "bottom": 820,
+          "height": 796,
+          "left": 244,
+          "right": 1416,
+          "top": 24,
+          "width": 1172,
+          "x": 244,
+          "y": 24
+        },
+        "width": 1440,
+        "workspace": {
+          "bottom": 820,
+          "height": 602.953125,
+          "left": 244,
+          "right": 1416,
+          "top": 217.046875,
+          "width": 1172,
+          "x": 244,
+          "y": 217.046875
+        }
+      },
+      "fullPage": true
+    }
+  ],
+  "checks": {
+    "requestedViewports": [
+      {
+        "width": 1440,
+        "height": 844
+      },
+      {
+        "width": 1024,
+        "height": 844
+      },
+      {
+        "width": 390,
+        "height": 844
+      }
+    ],
+    "sixThemes": true,
+    "headerSearchInsidePageHeader": true,
+    "canonicalIdentityFromKpi": true,
+    "subsetCounts": ["Basil: 3 identities, 1 Living, 2 Current, 1 Historical"],
+    "dependentHierarchy": "Salvia species choices were Salvia officinalis and Salvia rosmarinus; Ocimum species excluded",
+    "combinedFacetsBackForward": true,
+    "fullscreenCameraPreserved": true,
+    "nativeFullscreenViewportCoverage": true,
+    "sourceUnavailable": {
+      "graphNodes": 0,
+      "localIdentities": 12,
+      "localListClientHeight": 528,
+      "localListScrollHeight": 1002
+    },
+    "sourceRestored": true,
+    "nativeFullscreenFilters": true
+  },
+  "limits": [
+    "Screenshots are unaltered full-page JPEG captures. Mobile normal documents scroll vertically; actual raster dimensions are recorded separately.",
+    "Native unavailable/denied fallback, Escape focus return, external exit, exit failure and unmount cleanup are covered by targeted component tests.",
+    "Physical touch and assistive-technology certification remain independent QA."
+  ]
+}

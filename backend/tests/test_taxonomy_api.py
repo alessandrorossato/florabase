@@ -3,12 +3,14 @@ from typing import cast
 from uuid import uuid7
 
 import pytest
-from fastapi import HTTPException
+from fastapi import FastAPI, HTTPException
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 import florabase.taxonomy.service as taxonomy_service
-from florabase.auth.dependencies import AuthenticatedActor
+from florabase.auth.dependencies import AuthenticatedActor, require_authenticated_actor
 from florabase.botanical_identities.model import BotanicalIdentity
+from florabase.db.session import get_database_session
 from florabase.taxonomy import api, service
 from florabase.taxonomy.schemas import (
     IdentityTaxonomy,
@@ -155,3 +157,50 @@ def test_candidates_uses_botanical_identity_lookup(monkeypatch: pytest.MonkeyPat
     wfo = source()
     assert api.candidates(uuid7(), database, actor(), wfo, "Fi") == []
     assert calls[0] is BotanicalIdentity
+
+
+@pytest.mark.parametrize(
+    ("query", "status", "normalized"),
+    [
+        ("", 422, None),
+        ("  \t  ", 422, None),
+        (" O ", 422, None),
+        (" Oc ", 200, "Oc"),
+        ("Ocimum", 200, "Ocimum"),
+        ("x" * 200, 200, "x" * 200),
+        (" " + "x" * 200 + " ", 200, "x" * 200),
+        ("x" * 201, 422, None),
+    ],
+)
+def test_candidate_prefix_is_trimmed_before_length_validation(
+    query: str, status: int, normalized: str | None
+) -> None:
+    searches: list[str] = []
+    wfo = cast(WfoSource, SimpleNamespace(search=lambda value: searches.append(value) or []))
+    application = FastAPI()
+    application.include_router(api.router)
+    application.dependency_overrides[require_authenticated_actor] = actor
+    application.dependency_overrides[get_database_session] = session
+    application.dependency_overrides[api.source_dependency] = lambda: wfo
+    response = TestClient(application).get(
+        f"/botanical-identities/{uuid7()}/taxonomy/candidates", params={"q": query}
+    )
+    assert response.status_code == status
+    assert searches == ([] if normalized is None else [normalized])
+
+
+def test_tree_cover_projection_is_an_explicit_optional_read(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[dict[str, object]] = []
+    result = cast(TaxonomyTree, object())
+
+    def read(*_args: object, **kwargs: object) -> TaxonomyTree:
+        calls.append(kwargs)
+        return result
+
+    monkeypatch.setattr(taxonomy_service, "tree", read)
+    assert api.tree(session(), actor(), source(), include_covers=True) is result
+    assert calls[-1]["include_covers"] is True
+    assert api.tree(session(), actor(), source()) is result
+    assert calls[-1]["include_covers"] is False

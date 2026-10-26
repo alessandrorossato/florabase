@@ -1,0 +1,80 @@
+{
+  "notice": "Synthetic Review fixture only; not an authoritative WFO installation.",
+  "synonyms": [[14, 13]],
+  "taxa": [
+    [0, "Plantae", "kingdom", null, ""],
+    [1, "Tracheophyta", "phylum", 0, ""],
+    [2, "Magnoliopsida", "class", 1, ""],
+    [3, "Lamiales", "order", 2, ""],
+    [4, "Lamiaceae", "family", 3, "Martinov"],
+    [5, "Nepetoideae", "subfamily", 4, ""],
+    [6, "Ocimeae", "tribe", 5, ""],
+    [7, "Ocimum", "genus", 6, "L."],
+    [8, "Ocimum basilicum", "species", 7, "L."],
+    [9, "Ocimum tenuiflorum", "species", 7, "L."],
+    [10, "Mentheae", "tribe", 5, ""],
+    [11, "Salvia", "genus", 10, "L."],
+    [12, "Salvia officinalis", "species", 11, "L."],
+    [13, "Salvia rosmarinus", "species", 11, "Spenn."],
+    [14, "Rosmarinus officinalis", "species", null, "L."],
+    [15, "Asparagales", "order", 2, ""],
+    [16, "Asphodelaceae", "family", 15, "Juss."],
+    [17, "Aloe", "genus", 16, "L."],
+    [18, "Aloe vera", "species", 17, "(L.) Burm.f."],
+    [19, "Brassicales", "order", 2, ""],
+    [20, "Brassicaceae", "family", 19, "Burnett"],
+    [21, "Raphanus", "genus", 20, "L."],
+    [22, "Raphanus sativus", "species", 21, "L."],
+    [23, "Thymus", "genus", 10, "L."],
+    [24, "Thymus vulgaris", "species", 23, "L."],
+    [25, "Lavandula", "genus", 5, "L."],
+    [26, "Lavandula angustifolia", "species", 25, "Mill."],
+    [27, "Ocimum unplaced", "species", null, "Example"]
+  ],
+  "identities": [
+    [
+      "Ocimum basilicum",
+      "Genovese",
+      "Basil",
+      8,
+      [
+        ["seed_lot", 1],
+        ["sowing", 1],
+        ["plant", 1],
+        ["stored_material", 1]
+      ],
+      false
+    ],
+    ["Ocimum tenuiflorum", null, "Holy basil", 9, [["seed_lot", 1]], false],
+    [
+      "Salvia officinalis",
+      null,
+      "Sage",
+      12,
+      [
+        ["seed_lot", 0],
+        ["plant_group", 1]
+      ],
+      false
+    ],
+    [
+      "Rosmarinus officinalis",
+      "Prostratus",
+      "Rosemary",
+      14,
+      [["plant", 1]],
+      false
+    ],
+    ["Aloe vera", null, "Aloe", 18, [["plant", 1]], false],
+    ["Raphanus sativus", null, "Radish", 22, [["seed_lot", 0]], false],
+    [
+      "Lavandula angustifolia",
+      null,
+      "Lavender",
+      null,
+      [["seed_lot", 1]],
+      false
+    ],
+    ["Thymus vulgaris", null, "Thyme", 24, [["plant", 1]], true]
+  ]
+}

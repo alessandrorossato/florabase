@@ -198,3 +198,24 @@ def test_wrong_archive_checksum_and_index_corruption(tmp_path: Path) -> None:
     )
     with pytest.raises(SourceUnavailableError):
         source.metadata()
+
+
+def test_candidate_search_remains_limited_to_25(tmp_path: Path) -> None:
+    names, concepts, synonyms = data()
+    for number in range(30):
+        ident = f"wfo-{100 + number:010d}"
+        names.append(
+            {
+                "ID": ident,
+                "scientificName": f"Genus specimen {number:02d}",
+                "authorship": "A.Author",
+                "rank": "species",
+            }
+        )
+        concepts.append({"ID": ident, "nameID": ident, "parentID": GENUS})
+    destination = tmp_path / "bounded.sqlite"
+    build_index(destination, names, concepts, synonyms, META)
+    candidates = WfoSource(destination).search("Genus specimen")
+    assert len(candidates) == 25
+    assert candidates[0].taxon.scientific_name == "Genus specimen 00"
+    assert candidates[-1].taxon.scientific_name == "Genus specimen 24"

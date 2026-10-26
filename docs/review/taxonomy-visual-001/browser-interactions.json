@@ -1,0 +1,30 @@
+[
+  {
+    "check": "Living plus Seeds is empty and survives reload",
+    "passed": true
+  },
+  {
+    "check": "Back/Forward, filter Escape/focus return, mobile inspector and hierarchy focus jumps",
+    "passed": true
+  },
+  {
+    "check": "Exact identity route and Return to Taxonomy retain source selection",
+    "passed": true
+  },
+  {
+    "check": "Absent source retains eight local identities and selected stored synonym confirmation, with no candidate search",
+    "passed": true
+  },
+  {
+    "check": "Retry source restores source-backed matching in the currently selected identity editor",
+    "passed": true
+  },
+  {
+    "check": "Real stale identity 409 blocks confirmation; authoritative refresh clears candidates; renewed explicit search, inspection and confirmation succeed without renaming",
+    "passed": true
+  },
+  {
+    "check": "Version-guarded unlink succeeds; review returns to two unresolved identities and retains the inspected local identity",
+    "passed": true
+  }
+]

@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>Taxonomy final UX refinement</title
+  ><style>
+    body {
+      font: 16px/1.5 system-ui;
+      margin: 24px;
+      color: #24332b;
+      background: #f7f9f6;
+    }
+    main {
+      max-width: 1440px;
+      margin: auto;
+    }
+    figure {
+      margin: 32px 0;
+      border-top: 1px solid #aaa;
+      padding-top: 16px;
+    }
+    img {
+      display: block;
+      max-width: 100%;
+      max-height: 900px;
+      object-fit: contain;
+      object-position: left top;
+    }
+    figcaption {
+      margin-top: 8px;
+    }
+    a {
+      color: #24583e;
+    }
+  </style>
+  <main>
+    <h1>Taxonomy final UX refinement</h1>
+    <p>
+      38 actual, unaltered Review screenshots. Synthetic source and collection;
+      no mockups.
+      <a href="../../../taxonomy-visual-001-handoff.md">Current handoff</a> ·
+      <a href="browser-evidence.json">Measured geometry and interactions</a> ·
+      <a href="image-dimensions.json">Original raster dimensions and hashes</a>
+      · <a href="../tree/gallery.html">Earlier Tree Explorer gallery</a>.
+    </p>
+    <p>
+      Browser viewports: 1440×844, 1024×844, 390×844. A vertical scrollbar
+      reduces client width by 15px. These are full-page captures: normal mobile
+      documents are intentionally taller than their viewport; fullscreen
+      captures cover the viewport. Open an image for its complete original size.
+    </p>
+    <p>
+      All six themes are represented at each width. Named scenarios cover the
+      compact header and List, exact KPI subsets, unified
+      hierarchy/status/media/display controls, real identity navigation,
+      combined-filter Back/Forward, fullscreen with both inspector states,
+      mobile, and source absence. Source and Botanical Dark were restored. The
+      final ready frame has a 1440×844 document with no document scrolling; the
+      workspace ends at y=820.
+    </p>
+    <figure>
+      <a href="captures/final-theme-botanical-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-botanical-dark-1440.jpg"
+          alt="final-theme-botanical-dark-1440"
+      /></a>
+      <figcaption>
+        final-theme-botanical-dark-1440 · client 1440×844, document height 844;
+        raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-botanical-dark-1024.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-botanical-dark-1024.jpg"
+          alt="final-theme-botanical-dark-1024"
+      /></a>
+      <figcaption>
+        final-theme-botanical-dark-1024 · client 1024×844, document height 844;
+        raster 1024×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-botanical-dark-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-botanical-dark-390.jpg"
+          alt="final-theme-botanical-dark-390"
+      /></a>
+      <figcaption>
+        final-theme-botanical-dark-390 · client 390×844, document height 2271;
+        raster 375×2271
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-botanical-light-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-botanical-light-1440.jpg"
+          alt="final-theme-botanical-light-1440"
+      /></a>
+      <figcaption>
+        final-theme-botanical-light-1440 · client 1440×844, document height 844;
+        raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-botanical-light-1024.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-botanical-light-1024.jpg"
+          alt="final-theme-botanical-light-1024"
+      /></a>
+      <figcaption>
+        final-theme-botanical-light-1024 · client 1024×844, document height 844;
+        raster 1024×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-botanical-light-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-botanical-light-390.jpg"
+          alt="final-theme-botanical-light-390"
+      /></a>
+      <figcaption>
+        final-theme-botanical-light-390 · client 390×844, document height 2271;
+        raster 375×2271
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-herbarium-light-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-herbarium-light-1440.jpg"
+          alt="final-theme-herbarium-light-1440"
+      /></a>
+      <figcaption>
+        final-theme-herbarium-light-1440 · client 1440×844, document height 844;
+        raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-herbarium-light-1024.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-herbarium-light-1024.jpg"
+          alt="final-theme-herbarium-light-1024"
+      /></a>
+      <figcaption>
+        final-theme-herbarium-light-1024 · client 1024×844, document height 844;
+        raster 1024×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-herbarium-light-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-herbarium-light-390.jpg"
+          alt="final-theme-herbarium-light-390"
+      /></a>
+      <figcaption>
+        final-theme-herbarium-light-390 · client 390×844, document height 2271;
+        raster 375×2271
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-herbarium-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-herbarium-dark-1440.jpg"
+          alt="final-theme-herbarium-dark-1440"
+      /></a>
+      <figcaption>
+        final-theme-herbarium-dark-1440 · client 1440×844, document height 844;
+        raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-herbarium-dark-1024.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-herbarium-dark-1024.jpg"
+          alt="final-theme-herbarium-dark-1024"
+      /></a>
+      <figcaption>
+        final-theme-herbarium-dark-1024 · client 1024×844, document height 844;
+        raster 1024×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-herbarium-dark-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-herbarium-dark-390.jpg"
+          alt="final-theme-herbarium-dark-390"
+      /></a>
+      <figcaption>
+        final-theme-herbarium-dark-390 · client 390×844, document height 2271;
+        raster 375×2271
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-mineral-light-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-mineral-light-1440.jpg"
+          alt="final-theme-mineral-light-1440"
+      /></a>
+      <figcaption>
+        final-theme-mineral-light-1440 · client 1440×844, document height 844;
+        raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-mineral-light-1024.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-mineral-light-1024.jpg"
+          alt="final-theme-mineral-light-1024"
+      /></a>
+      <figcaption>
+        final-theme-mineral-light-1024 · client 1024×844, document height 844;
+        raster 1024×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-mineral-light-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-mineral-light-390.jpg"
+          alt="final-theme-mineral-light-390"
+      /></a>
+      <figcaption>
+        final-theme-mineral-light-390 · client 390×844, document height 2271;
+        raster 375×2271
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-mineral-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-mineral-dark-1440.jpg"
+          alt="final-theme-mineral-dark-1440"
+      /></a>
+      <figcaption>
+        final-theme-mineral-dark-1440 · client 1440×844, document height 844;
+        raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-mineral-dark-1024.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-mineral-dark-1024.jpg"
+          alt="final-theme-mineral-dark-1024"
+      /></a>
+      <figcaption>
+        final-theme-mineral-dark-1024 · client 1024×844, document height 844;
+        raster 1024×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-theme-mineral-dark-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-theme-mineral-dark-390.jpg"
+          alt="final-theme-mineral-dark-390"
+      /></a>
+      <figcaption>
+        final-theme-mineral-dark-390 · client 390×844, document height 2271;
+        raster 375×2271
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-tree-header-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-tree-header-dark-1440.jpg"
+          alt="final-tree-header-dark-1440"
+      /></a>
+      <figcaption>
+        final-tree-header-dark-1440 · client 1440×844, document height 844;
+        raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-list-header-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-list-header-dark-1440.jpg"
+          alt="final-list-header-dark-1440"
+      /></a>
+      <figcaption>
+        final-list-header-dark-1440 · client 1440×844, document height 844;
+        raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-identities-popover-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-identities-popover-dark-1440.jpg"
+          alt="final-identities-popover-dark-1440"
+      /></a>
+      <figcaption>
+        final-identities-popover-dark-1440 · client 1440×844, document height
+        844; raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-living-popover-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-living-popover-dark-1440.jpg"
+          alt="final-living-popover-dark-1440"
+      /></a>
+      <figcaption>
+        final-living-popover-dark-1440 · client 1440×844, document height 844;
+        raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-historical-popover-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-historical-popover-dark-1440.jpg"
+          alt="final-historical-popover-dark-1440"
+      /></a>
+      <figcaption>
+        final-historical-popover-dark-1440 · client 1440×844, document height
+        844; raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-extended-filters-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-extended-filters-dark-1440.jpg"
+          alt="final-extended-filters-dark-1440"
+      /></a>
+      <figcaption>
+        final-extended-filters-dark-1440 · client 1440×844, document height 844;
+        raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-dependent-hierarchy-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-dependent-hierarchy-dark-1440.jpg"
+          alt="final-dependent-hierarchy-dark-1440"
+      /></a>
+      <figcaption>
+        final-dependent-hierarchy-dark-1440 · client 1440×844, document height
+        844; raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-filter-status-media-display-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-filter-status-media-display-dark-1440.jpg"
+          alt="final-filter-status-media-display-dark-1440"
+      /></a>
+      <figcaption>
+        final-filter-status-media-display-dark-1440 · client 1440×844, document
+        height 844; raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-fullscreen-inspector-open-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-fullscreen-inspector-open-dark-1440.jpg"
+          alt="final-fullscreen-inspector-open-dark-1440"
+      /></a>
+      <figcaption>
+        final-fullscreen-inspector-open-dark-1440 · client 1440×844, document
+        height 844; raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-fullscreen-inspector-closed-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-fullscreen-inspector-closed-dark-1440.jpg"
+          alt="final-fullscreen-inspector-closed-dark-1440"
+      /></a>
+      <figcaption>
+        final-fullscreen-inspector-closed-dark-1440 · client 1440×844, document
+        height 844; raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-fullscreen-kpi-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-fullscreen-kpi-dark-1440.jpg"
+          alt="final-fullscreen-kpi-dark-1440"
+      /></a>
+      <figcaption>
+        final-fullscreen-kpi-dark-1440 · client 1440×844, document height 844;
+        raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-fullscreen-dark-1024.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-fullscreen-dark-1024.jpg"
+          alt="final-fullscreen-dark-1024"
+      /></a>
+      <figcaption>
+        final-fullscreen-dark-1024 · client 1024×844, document height 844;
+        raster 1024×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-fullscreen-dark-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-fullscreen-dark-390.jpg"
+          alt="final-fullscreen-dark-390"
+      /></a>
+      <figcaption>
+        final-fullscreen-dark-390 · client 390×844, document height 844; raster
+        390×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-mobile-kpi-dark-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-mobile-kpi-dark-390.jpg"
+          alt="final-mobile-kpi-dark-390"
+      /></a>
+      <figcaption>
+        final-mobile-kpi-dark-390 · client 390×844, document height 2271; raster
+        375×2271
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-real-identity-from-kpi-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-real-identity-from-kpi-dark-1440.jpg"
+          alt="final-real-identity-from-kpi-dark-1440"
+      /></a>
+      <figcaption>
+        final-real-identity-from-kpi-dark-1440 · client 1440×844, document
+        height 844; raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-combined-facets-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-combined-facets-dark-1440.jpg"
+          alt="final-combined-facets-dark-1440"
+      /></a>
+      <figcaption>
+        final-combined-facets-dark-1440 · client 1440×844, document height 844;
+        raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-source-unavailable-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-source-unavailable-dark-1440.jpg"
+          alt="final-source-unavailable-dark-1440"
+      /></a>
+      <figcaption>
+        final-source-unavailable-dark-1440 · client 1440×844, document height
+        1387; raster 1425×1387
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-source-unavailable-dark-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-source-unavailable-dark-390.jpg"
+          alt="final-source-unavailable-dark-390"
+      /></a>
+      <figcaption>
+        final-source-unavailable-dark-390 · client 390×844, document height
+        2072; raster 375×2134
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-fullscreen-light-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-fullscreen-light-1440.jpg"
+          alt="final-fullscreen-light-1440"
+      /></a>
+      <figcaption>
+        final-fullscreen-light-1440 · client 1440×844, document height 844;
+        raster 1440×844
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/final-ready-for-review-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/final-ready-for-review-dark-1440.jpg"
+          alt="final-ready-for-review-dark-1440"
+      /></a>
+      <figcaption>
+        final-ready-for-review-dark-1440 · client 1440×844, document height 844;
+        raster 1440×844
+      </figcaption>
+    </figure>
+  </main>
+</html>

@@ -1,0 +1,465 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>Taxonomy implementation review</title
+  ><style>
+    body {
+      font: 16px/1.5 system-ui;
+      margin: 24px;
+      color: #24332b;
+      background: #f7f9f6;
+    }
+    h1 {
+      font-size: 1.7rem;
+    }
+    a {
+      color: #24583e;
+    }
+    section {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    figure {
+      margin: 0;
+      border-top: 1px solid #bdc9bf;
+      padding: 12px 0;
+    }
+    img {
+      display: block;
+      width: 100%;
+      height: 280px;
+      object-fit: contain;
+      object-position: top;
+      background: #e7ece6;
+    }
+    figcaption {
+      font-size: 14px;
+      overflow-wrap: anywhere;
+    }
+    h2 {
+      margin-top: 36px;
+    }
+  </style>
+  <h1>TAXONOMY-VISUAL-001 implementation review</h1>
+  <p><a href="final-ux/gallery.html">Current final UX refinement gallery</a></p>
+  <p>
+    <a href="tree/gallery.html"
+      >Interactive Tree Explorer extension: current gallery</a
+    >
+  </p>
+  <p>
+    32 actual candidate-browser captures. Synthetic source and real
+    PostgreSQL/API workflows. Baseline <code>5778da7</code>. CSS viewport sizes
+    and exported raster dimensions are recorded separately; captures have not
+    been resized or re-encoded.
+  </p>
+  <p>
+    <a href="http://localhost:15278/#/taxonomy?taxon=wfo-9000000008"
+      >Open live Review</a
+    >
+    · <a href="README.md">Scenario guide</a> ·
+    <a href="../../taxonomy-visual-001-handoff.md">Handoff</a> ·
+    <a href="capture-manifest.json">Capture manifest</a>
+  </p>
+  <h2>Six-theme responsive explorer</h2>
+  <section>
+    <figure>
+      <a href="captures/available-botanical-dark-1024.jpg"
+        ><img
+          src="captures/available-botanical-dark-1024.jpg"
+          alt="available botanical dark 1024"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available botanical dark 1024</strong><br />CSS 1024×844; raster
+        1009×832
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-botanical-dark-1440.jpg"
+        ><img
+          src="captures/available-botanical-dark-1440.jpg"
+          alt="available botanical dark 1440"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available botanical dark 1440</strong><br />CSS 1440×844; raster
+        1425×835
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-botanical-dark-390.jpg"
+        ><img
+          src="captures/available-botanical-dark-390.jpg"
+          alt="available botanical dark 390"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available botanical dark 390</strong><br />CSS 390×844; raster
+        375×812
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-botanical-light-1024.jpg"
+        ><img
+          src="captures/available-botanical-light-1024.jpg"
+          alt="available botanical light 1024"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available botanical light 1024</strong><br />CSS 1024×844;
+        raster 1009×832
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-botanical-light-1440.jpg"
+        ><img
+          src="captures/available-botanical-light-1440.jpg"
+          alt="available botanical light 1440"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available botanical light 1440</strong><br />CSS 1440×844;
+        raster 1425×835
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-botanical-light-390.jpg"
+        ><img
+          src="captures/available-botanical-light-390.jpg"
+          alt="available botanical light 390"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available botanical light 390</strong><br />CSS 390×844; raster
+        375×812
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-herbarium-dark-1024.jpg"
+        ><img
+          src="captures/available-herbarium-dark-1024.jpg"
+          alt="available herbarium dark 1024"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available herbarium dark 1024</strong><br />CSS 1024×844; raster
+        1009×832
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-herbarium-dark-1440.jpg"
+        ><img
+          src="captures/available-herbarium-dark-1440.jpg"
+          alt="available herbarium dark 1440"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available herbarium dark 1440</strong><br />CSS 1440×844; raster
+        1425×835
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-herbarium-dark-390.jpg"
+        ><img
+          src="captures/available-herbarium-dark-390.jpg"
+          alt="available herbarium dark 390"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available herbarium dark 390</strong><br />CSS 390×844; raster
+        375×812
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-herbarium-light-1024.jpg"
+        ><img
+          src="captures/available-herbarium-light-1024.jpg"
+          alt="available herbarium light 1024"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available herbarium light 1024</strong><br />CSS 1024×844;
+        raster 1009×832
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-herbarium-light-1440.jpg"
+        ><img
+          src="captures/available-herbarium-light-1440.jpg"
+          alt="available herbarium light 1440"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available herbarium light 1440</strong><br />CSS 1440×844;
+        raster 1425×835
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-herbarium-light-390.jpg"
+        ><img
+          src="captures/available-herbarium-light-390.jpg"
+          alt="available herbarium light 390"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available herbarium light 390</strong><br />CSS 390×844; raster
+        375×812
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-mineral-dark-1024.jpg"
+        ><img
+          src="captures/available-mineral-dark-1024.jpg"
+          alt="available mineral dark 1024"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available mineral dark 1024</strong><br />CSS 1024×844; raster
+        1009×832
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-mineral-dark-1440.jpg"
+        ><img
+          src="captures/available-mineral-dark-1440.jpg"
+          alt="available mineral dark 1440"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available mineral dark 1440</strong><br />CSS 1440×844; raster
+        1425×835
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-mineral-dark-390.jpg"
+        ><img
+          src="captures/available-mineral-dark-390.jpg"
+          alt="available mineral dark 390"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available mineral dark 390</strong><br />CSS 390×844; raster
+        375×812
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-mineral-light-1024.jpg"
+        ><img
+          src="captures/available-mineral-light-1024.jpg"
+          alt="available mineral light 1024"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available mineral light 1024</strong><br />CSS 1024×844; raster
+        1009×832
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-mineral-light-1440.jpg"
+        ><img
+          src="captures/available-mineral-light-1440.jpg"
+          alt="available mineral light 1440"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available mineral light 1440</strong><br />CSS 1440×844; raster
+        1425×835
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/available-mineral-light-390.jpg"
+        ><img
+          src="captures/available-mineral-light-390.jpg"
+          alt="available mineral light 390"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available mineral light 390</strong><br />CSS 390×844; raster
+        375×812
+      </figcaption>
+    </figure>
+  </section>
+  <h2>Source unavailable: retained local evidence</h2>
+  <section>
+    <figure>
+      <a href="captures/absent-botanical-dark-1024.jpg"
+        ><img
+          src="captures/absent-botanical-dark-1024.jpg"
+          alt="absent botanical dark 1024"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>absent botanical dark 1024</strong><br />CSS 1024×844; raster
+        1009×832
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/absent-botanical-dark-1440.jpg"
+        ><img
+          src="captures/absent-botanical-dark-1440.jpg"
+          alt="absent botanical dark 1440"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>absent botanical dark 1440</strong><br />CSS 1440×844; raster
+        1425×835
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/absent-botanical-dark-390.jpg"
+        ><img
+          src="captures/absent-botanical-dark-390.jpg"
+          alt="absent botanical dark 390"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>absent botanical dark 390</strong><br />CSS 390×844; raster
+        375×812
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/absent-botanical-light-1024.jpg"
+        ><img
+          src="captures/absent-botanical-light-1024.jpg"
+          alt="absent botanical light 1024"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>absent botanical light 1024</strong><br />CSS 1024×844; raster
+        1009×832
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/absent-botanical-light-1440.jpg"
+        ><img
+          src="captures/absent-botanical-light-1440.jpg"
+          alt="absent botanical light 1440"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>absent botanical light 1440</strong><br />CSS 1440×844; raster
+        1425×835
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/absent-botanical-light-390.jpg"
+        ><img
+          src="captures/absent-botanical-light-390.jpg"
+          alt="absent botanical light 390"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>absent botanical light 390</strong><br />CSS 390×844; raster
+        375×812
+      </figcaption>
+    </figure>
+  </section>
+  <h2>Selection, mobile, filters and real confirmation recovery</h2>
+  <section>
+    <figure>
+      <a href="captures/available-synonym-botanical-dark-1440.jpg"
+        ><img
+          src="captures/available-synonym-botanical-dark-1440.jpg"
+          alt="available synonym botanical dark 1440"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>available synonym botanical dark 1440</strong><br />CSS
+        1440×844; raster 1425×835
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/candidate-review-botanical-dark-1440.jpg"
+        ><img
+          src="captures/candidate-review-botanical-dark-1440.jpg"
+          alt="candidate review botanical dark 1440"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>candidate review botanical dark 1440</strong><br />CSS 1440×844;
+        raster 1425×835
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/confirmation-success-botanical-dark-1440.jpg"
+        ><img
+          src="captures/confirmation-success-botanical-dark-1440.jpg"
+          alt="confirmation success botanical dark 1440"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>confirmation success botanical dark 1440</strong><br />CSS
+        1440×844; raster 1425×835
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/conflict-blocked-botanical-dark-1440.jpg"
+        ><img
+          src="captures/conflict-blocked-botanical-dark-1440.jpg"
+          alt="conflict blocked botanical dark 1440"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>conflict blocked botanical dark 1440</strong><br />CSS 1440×844;
+        raster 1425×835
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/conflict-refreshed-botanical-dark-1440.jpg"
+        ><img
+          src="captures/conflict-refreshed-botanical-dark-1440.jpg"
+          alt="conflict refreshed botanical dark 1440"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>conflict refreshed botanical dark 1440</strong><br />CSS
+        1440×844; raster 1425×835
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/filters-botanical-light-390.jpg"
+        ><img
+          src="captures/filters-botanical-light-390.jpg"
+          alt="filters botanical light 390"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>filters botanical light 390</strong><br />CSS 390×844; raster
+        375×812
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/mobile-inspector-botanical-light-390.jpg"
+        ><img
+          src="captures/mobile-inspector-botanical-light-390.jpg"
+          alt="mobile inspector botanical light 390"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>mobile inspector botanical light 390</strong><br />CSS 390×844;
+        raster 375×812
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/selected-inspector-botanical-dark-1440.jpg"
+        ><img
+          src="captures/selected-inspector-botanical-dark-1440.jpg"
+          alt="selected inspector botanical dark 1440"
+          loading="lazy"
+      /></a>
+      <figcaption>
+        <strong>selected inspector botanical dark 1440</strong><br />CSS
+        1440×844; raster 1425×835
+      </figcaption>
+    </figure>
+  </section>
+  <p>
+    Viewport emulation does not establish physical touch, browser zoom or
+    assistive-technology acceptance. Canonical FULL verification and operator
+    acceptance remain separate.
+  </p>
+</html>

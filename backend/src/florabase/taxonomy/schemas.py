@@ -31,7 +31,17 @@ class TaxonomyLinkWrite(BaseModel):
     identity_updated_at: datetime
 
 
+class TaxonomyCover(BaseModel):
+    asset_id: UUID
+    thumbnail_url: str
+    attribution: str | None
+    licence_label: str | None
+    licence_url: str | None
+    source_url: str | None
+
+
 class TaxonomyIdentity(CollectionIdentity):
+    cover: TaxonomyCover | None = None
     source_taxon_id: str | None = None
     classification_ids: list[str] = Field(default_factory=list)
     unresolved_reason: str | None = None

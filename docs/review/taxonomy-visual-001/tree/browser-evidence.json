@@ -1,0 +1,655 @@
+{
+  "captures": [
+    {
+      "name": "01-horizontal-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 779.046875,
+          "height": 329.015625,
+          "left": 273,
+          "right": 1415,
+          "top": 450.03125,
+          "width": 1142,
+          "x": 273,
+          "y": 450.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "02-family-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 761.0625,
+          "height": 311.03125,
+          "left": 273,
+          "right": 1063,
+          "top": 450.03125,
+          "width": 790,
+          "x": 273,
+          "y": 450.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "03-focused-family-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 761.0625,
+          "height": 262.03125,
+          "left": 273,
+          "right": 1063,
+          "top": 499.03125,
+          "width": 790,
+          "x": 273,
+          "y": 499.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "04-genus-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 761.0625,
+          "height": 262.03125,
+          "left": 273,
+          "right": 1063,
+          "top": 499.03125,
+          "width": 790,
+          "x": 273,
+          "y": 499.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "05-species-covers-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 761.0625,
+          "height": 262.03125,
+          "left": 273,
+          "right": 1063,
+          "top": 499.03125,
+          "width": 790,
+          "x": 273,
+          "y": 499.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "06-inspector-identity-thumbnails-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 761.0625,
+          "height": 262.03125,
+          "left": 273,
+          "right": 1063,
+          "top": 499.03125,
+          "width": 790,
+          "x": 273,
+          "y": 499.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "07-collapsed-selection-retained-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 761.0625,
+          "height": 262.03125,
+          "left": 273,
+          "right": 1063,
+          "top": 499.03125,
+          "width": 790,
+          "x": 273,
+          "y": 499.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "08-expanded-zoomed-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 761.0625,
+          "height": 262.03125,
+          "left": 273,
+          "right": 1063,
+          "top": 499.03125,
+          "width": 790,
+          "x": 273,
+          "y": 499.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "07-collapsed-selection-retained-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 761.0625,
+          "height": 213.03125,
+          "left": 273,
+          "right": 1063,
+          "top": 548.03125,
+          "width": 790,
+          "x": 273,
+          "y": 548.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "09-botanical-light-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 761.0625,
+          "height": 262.03125,
+          "left": 273,
+          "right": 1063,
+          "top": 499.03125,
+          "width": 790,
+          "x": 273,
+          "y": 499.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "10-botanical-light-1024",
+      "geometry": {
+        "graph": {
+          "bottom": 743.078125,
+          "height": 222.0625,
+          "left": 273,
+          "right": 711,
+          "top": 521.015625,
+          "width": 438,
+          "x": 273,
+          "y": 521.015625
+        },
+        "height": 844,
+        "scrollWidth": 1024,
+        "width": 1024
+      }
+    },
+    {
+      "name": "11-botanical-light-390",
+      "geometry": {
+        "graph": {
+          "bottom": 1166.171875,
+          "height": 416,
+          "left": 17,
+          "right": 358,
+          "top": 750.171875,
+          "width": 341,
+          "x": 17,
+          "y": 750.171875
+        },
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 375
+      }
+    },
+    {
+      "name": "12-mobile-selection-light-390",
+      "geometry": {
+        "graph": {
+          "bottom": 672.171875,
+          "height": 416,
+          "left": 17,
+          "right": 358,
+          "top": 256.171875,
+          "width": 341,
+          "x": 17,
+          "y": 256.171875
+        },
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 375
+      }
+    },
+    {
+      "name": "13-mobile-pan-light-390",
+      "geometry": {
+        "graph": {
+          "bottom": 630.171875,
+          "height": 416,
+          "left": 17,
+          "right": 358,
+          "top": 214.171875,
+          "width": 341,
+          "x": 17,
+          "y": 214.171875
+        },
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 375
+      }
+    },
+    {
+      "name": "botanical-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 761.0625,
+          "height": 262.03125,
+          "left": 245,
+          "right": 1063,
+          "top": 499.03125,
+          "width": 818,
+          "x": 245,
+          "y": 499.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "botanical-dark-1024",
+      "geometry": {
+        "graph": {
+          "bottom": 743.078125,
+          "height": 222.0625,
+          "left": 245,
+          "right": 711,
+          "top": 521.015625,
+          "width": 466,
+          "x": 245,
+          "y": 521.015625
+        },
+        "height": 844,
+        "scrollWidth": 1024,
+        "width": 1024
+      }
+    },
+    {
+      "name": "botanical-dark-390",
+      "geometry": {
+        "graph": {
+          "bottom": 1166.171875,
+          "height": 416,
+          "left": 17,
+          "right": 358,
+          "top": 750.171875,
+          "width": 341,
+          "x": 17,
+          "y": 750.171875
+        },
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 375
+      }
+    },
+    {
+      "name": "herbarium-light-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 761.0625,
+          "height": 262.03125,
+          "left": 245,
+          "right": 1063,
+          "top": 499.03125,
+          "width": 818,
+          "x": 245,
+          "y": 499.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "herbarium-light-1024",
+      "geometry": {
+        "graph": {
+          "bottom": 743.078125,
+          "height": 222.0625,
+          "left": 245,
+          "right": 711,
+          "top": 521.015625,
+          "width": 466,
+          "x": 245,
+          "y": 521.015625
+        },
+        "height": 844,
+        "scrollWidth": 1024,
+        "width": 1024
+      }
+    },
+    {
+      "name": "herbarium-light-390",
+      "geometry": {
+        "graph": {
+          "bottom": 1166.171875,
+          "height": 416,
+          "left": 17,
+          "right": 358,
+          "top": 750.171875,
+          "width": 341,
+          "x": 17,
+          "y": 750.171875
+        },
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 375
+      }
+    },
+    {
+      "name": "herbarium-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 761.0625,
+          "height": 262.03125,
+          "left": 245,
+          "right": 1063,
+          "top": 499.03125,
+          "width": 818,
+          "x": 245,
+          "y": 499.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "herbarium-dark-1024",
+      "geometry": {
+        "graph": {
+          "bottom": 743.078125,
+          "height": 222.0625,
+          "left": 245,
+          "right": 711,
+          "top": 521.015625,
+          "width": 466,
+          "x": 245,
+          "y": 521.015625
+        },
+        "height": 844,
+        "scrollWidth": 1024,
+        "width": 1024
+      }
+    },
+    {
+      "name": "herbarium-dark-390",
+      "geometry": {
+        "graph": {
+          "bottom": 1166.171875,
+          "height": 416,
+          "left": 17,
+          "right": 358,
+          "top": 750.171875,
+          "width": 341,
+          "x": 17,
+          "y": 750.171875
+        },
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 375
+      }
+    },
+    {
+      "name": "mineral-light-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 761.0625,
+          "height": 262.03125,
+          "left": 245,
+          "right": 1063,
+          "top": 499.03125,
+          "width": 818,
+          "x": 245,
+          "y": 499.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "mineral-light-1024",
+      "geometry": {
+        "graph": {
+          "bottom": 743.078125,
+          "height": 222.0625,
+          "left": 245,
+          "right": 711,
+          "top": 521.015625,
+          "width": 466,
+          "x": 245,
+          "y": 521.015625
+        },
+        "height": 844,
+        "scrollWidth": 1024,
+        "width": 1024
+      }
+    },
+    {
+      "name": "mineral-light-390",
+      "geometry": {
+        "graph": {
+          "bottom": 1166.171875,
+          "height": 416,
+          "left": 17,
+          "right": 358,
+          "top": 750.171875,
+          "width": 341,
+          "x": 17,
+          "y": 750.171875
+        },
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 375
+      }
+    },
+    {
+      "name": "mineral-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 761.0625,
+          "height": 262.03125,
+          "left": 245,
+          "right": 1063,
+          "top": 499.03125,
+          "width": 818,
+          "x": 245,
+          "y": 499.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "mineral-dark-1024",
+      "geometry": {
+        "graph": {
+          "bottom": 743.078125,
+          "height": 222.0625,
+          "left": 245,
+          "right": 711,
+          "top": 521.015625,
+          "width": 466,
+          "x": 245,
+          "y": 521.015625
+        },
+        "height": 844,
+        "scrollWidth": 1024,
+        "width": 1024
+      }
+    },
+    {
+      "name": "mineral-dark-390",
+      "geometry": {
+        "graph": {
+          "bottom": 1166.171875,
+          "height": 416,
+          "left": 17,
+          "right": 358,
+          "top": 750.171875,
+          "width": 341,
+          "x": 17,
+          "y": 750.171875
+        },
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 375
+      }
+    },
+    {
+      "name": "30-source-unavailable-dark-1440",
+      "geometry": {
+        "height": 844,
+        "scrollWidth": 1425,
+        "width": 1425
+      }
+    },
+    {
+      "name": "31-source-unavailable-dark-390",
+      "geometry": {
+        "height": 844,
+        "scrollWidth": 375,
+        "width": 375
+      }
+    },
+    {
+      "name": "32-mouse-pan-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 761.0625,
+          "height": 262.03125,
+          "left": 245,
+          "right": 1063,
+          "top": 499.03125,
+          "width": 818,
+          "x": 245,
+          "y": 499.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "33-expanded-all-source-branches-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 779.046875,
+          "height": 329.015625,
+          "left": 245,
+          "right": 1415,
+          "top": 450.03125,
+          "width": 1170,
+          "x": 245,
+          "y": 450.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    },
+    {
+      "name": "34-historical-basil-filter-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 821.0625,
+          "height": 311.03125,
+          "left": 245,
+          "right": 1048,
+          "top": 510.03125,
+          "width": 803,
+          "x": 245,
+          "y": 510.03125
+        },
+        "height": 844,
+        "scrollWidth": 1425,
+        "width": 1425
+      }
+    },
+    {
+      "name": "35-rank-limit-selection-retained-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 821.0625,
+          "height": 262.03125,
+          "left": 245,
+          "right": 1048,
+          "top": 559.03125,
+          "width": 803,
+          "x": 245,
+          "y": 559.03125
+        },
+        "height": 844,
+        "scrollWidth": 1425,
+        "width": 1425
+      }
+    },
+    {
+      "name": "36-final-graph-inspector-dark-1440",
+      "geometry": {
+        "graph": {
+          "bottom": 761.0625,
+          "height": 262.03125,
+          "left": 245,
+          "right": 1063,
+          "top": 499.03125,
+          "width": 818,
+          "x": 245,
+          "y": 499.03125
+        },
+        "height": 844,
+        "scrollWidth": 1440,
+        "width": 1440
+      }
+    }
+  ],
+  "checks": {
+    "allSixThemes": true,
+    "requestedWidths": [1440, 1024, 390],
+    "pageHorizontalOverflow": false,
+    "mousePan": true,
+    "zoom": true,
+    "keyboardPan": true,
+    "selection": true,
+    "branchFocus": true,
+    "focusedBranchCollapseRecovery": true,
+    "historicalEligibility": true,
+    "rankDepthRetainsSelection": true,
+    "identityReturn": true,
+    "backTree": true,
+    "forwardClassification": true,
+    "sourceUnavailableLocalRecords": true,
+    "sourceRestored": true
+  },
+  "limits": [
+    "Pinch simulated in focused component test; no physical touch device or screen-reader certification",
+    "Fit shows an overview at small zoom for a long source hierarchy; readable navigation uses focus or zoom",
+    "Raster sizes are recorded separately; document geometry is the responsive breakpoint evidence"
+  ]
+}

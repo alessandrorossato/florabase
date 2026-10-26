@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>Taxonomy Tree Explorer Review</title
+  ><style>
+    body {
+      font: 16px/1.5 system-ui;
+      margin: 24px;
+      color: #24332b;
+      background: #f7f9f6;
+    }
+    main {
+      max-width: 1440px;
+      margin: auto;
+    }
+    figure {
+      margin: 32px 0;
+      border-top: 1px solid #aaa;
+      padding-top: 16px;
+    }
+    img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+    }
+    figcaption {
+      margin-top: 8px;
+    }
+    a {
+      color: #24583e;
+    }
+  </style>
+  <main>
+    <h1>Interactive Taxonomy Tree Explorer</h1>
+    <p>
+      <a href="../final-ux/gallery.html">Current final UX refinement gallery</a>
+    </p>
+    <p>
+      Actual candidate-owned Review, synthetic source and identities. No mockups
+      or altered screenshots. Screens show the source hierarchy, not
+      evolutionary distance.
+      <a href="../gallery.html">Original Classification gallery</a> ·
+      <a href="../../../taxonomy-visual-001-handoff.md">Handoff</a> ·
+      <a href="browser-evidence.json">Geometry and interaction evidence</a> ·
+      <a href="performance.json">5,000-identity measurement</a>.
+    </p>
+    <p>
+      1440×844, 1024×844 and 390×844 were applied as browser document sizes. A
+      vertical scrollbar can reduce client width by 15 pixels. Captures preserve
+      their original raster sizes. Mobile graph and inspector require ordinary
+      vertical scrolling; the diagram itself pans and zooms independently.
+    </p>
+    <p>
+      01/33: horizontal overview and all source branches. 02–04: family and
+      genus. 05/06/36: covered species, multiple identities and attribution.
+      07/08: collapse/expansion. 09–29: six-theme responsive matrix and mobile
+      selection/pan. 30/31: unavailable source. 32: mouse pan. 34/35: Historical
+      eligibility versus rank depth. Source restored after capture. Physical
+      touch and assistive-technology acceptance remain independent QA.
+    </p>
+    <figure>
+      <a href="captures/01-horizontal-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/01-horizontal-dark-1440.jpg"
+          alt="01-horizontal-dark-1440"
+      /></a>
+      <figcaption>
+        01-horizontal-dark-1440 · document 1440×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/02-family-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/02-family-dark-1440.jpg"
+          alt="02-family-dark-1440"
+      /></a>
+      <figcaption>
+        02-family-dark-1440 · document 1440×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/03-focused-family-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/03-focused-family-dark-1440.jpg"
+          alt="03-focused-family-dark-1440"
+      /></a>
+      <figcaption>
+        03-focused-family-dark-1440 · document 1440×844; horizontal overflow:
+        False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/04-genus-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/04-genus-dark-1440.jpg"
+          alt="04-genus-dark-1440"
+      /></a>
+      <figcaption>
+        04-genus-dark-1440 · document 1440×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/05-species-covers-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/05-species-covers-dark-1440.jpg"
+          alt="05-species-covers-dark-1440"
+      /></a>
+      <figcaption>
+        05-species-covers-dark-1440 · document 1440×844; horizontal overflow:
+        False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/06-inspector-identity-thumbnails-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/06-inspector-identity-thumbnails-dark-1440.jpg"
+          alt="06-inspector-identity-thumbnails-dark-1440"
+      /></a>
+      <figcaption>
+        06-inspector-identity-thumbnails-dark-1440 · document 1440×844;
+        horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/07-collapsed-selection-retained-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/07-collapsed-selection-retained-dark-1440.jpg"
+          alt="07-collapsed-selection-retained-dark-1440"
+      /></a>
+      <figcaption>
+        07-collapsed-selection-retained-dark-1440 · document 1440×844;
+        horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/08-expanded-zoomed-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/08-expanded-zoomed-dark-1440.jpg"
+          alt="08-expanded-zoomed-dark-1440"
+      /></a>
+      <figcaption>
+        08-expanded-zoomed-dark-1440 · document 1440×844; horizontal overflow:
+        False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/07-collapsed-selection-retained-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/07-collapsed-selection-retained-dark-1440.jpg"
+          alt="07-collapsed-selection-retained-dark-1440"
+      /></a>
+      <figcaption>
+        07-collapsed-selection-retained-dark-1440 · document 1440×844;
+        horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/09-botanical-light-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/09-botanical-light-1440.jpg"
+          alt="09-botanical-light-1440"
+      /></a>
+      <figcaption>
+        09-botanical-light-1440 · document 1440×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/10-botanical-light-1024.jpg"
+        ><img
+          loading="lazy"
+          src="captures/10-botanical-light-1024.jpg"
+          alt="10-botanical-light-1024"
+      /></a>
+      <figcaption>
+        10-botanical-light-1024 · document 1024×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/11-botanical-light-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/11-botanical-light-390.jpg"
+          alt="11-botanical-light-390"
+      /></a>
+      <figcaption>
+        11-botanical-light-390 · document 375×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/12-mobile-selection-light-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/12-mobile-selection-light-390.jpg"
+          alt="12-mobile-selection-light-390"
+      /></a>
+      <figcaption>
+        12-mobile-selection-light-390 · document 375×844; horizontal overflow:
+        False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/13-mobile-pan-light-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/13-mobile-pan-light-390.jpg"
+          alt="13-mobile-pan-light-390"
+      /></a>
+      <figcaption>
+        13-mobile-pan-light-390 · document 375×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/botanical-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/botanical-dark-1440.jpg"
+          alt="botanical-dark-1440"
+      /></a>
+      <figcaption>
+        botanical-dark-1440 · document 1440×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/botanical-dark-1024.jpg"
+        ><img
+          loading="lazy"
+          src="captures/botanical-dark-1024.jpg"
+          alt="botanical-dark-1024"
+      /></a>
+      <figcaption>
+        botanical-dark-1024 · document 1024×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/botanical-dark-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/botanical-dark-390.jpg"
+          alt="botanical-dark-390"
+      /></a>
+      <figcaption>
+        botanical-dark-390 · document 375×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/herbarium-light-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/herbarium-light-1440.jpg"
+          alt="herbarium-light-1440"
+      /></a>
+      <figcaption>
+        herbarium-light-1440 · document 1440×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/herbarium-light-1024.jpg"
+        ><img
+          loading="lazy"
+          src="captures/herbarium-light-1024.jpg"
+          alt="herbarium-light-1024"
+      /></a>
+      <figcaption>
+        herbarium-light-1024 · document 1024×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/herbarium-light-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/herbarium-light-390.jpg"
+          alt="herbarium-light-390"
+      /></a>
+      <figcaption>
+        herbarium-light-390 · document 375×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/herbarium-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/herbarium-dark-1440.jpg"
+          alt="herbarium-dark-1440"
+      /></a>
+      <figcaption>
+        herbarium-dark-1440 · document 1440×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/herbarium-dark-1024.jpg"
+        ><img
+          loading="lazy"
+          src="captures/herbarium-dark-1024.jpg"
+          alt="herbarium-dark-1024"
+      /></a>
+      <figcaption>
+        herbarium-dark-1024 · document 1024×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/herbarium-dark-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/herbarium-dark-390.jpg"
+          alt="herbarium-dark-390"
+      /></a>
+      <figcaption>
+        herbarium-dark-390 · document 375×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/mineral-light-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/mineral-light-1440.jpg"
+          alt="mineral-light-1440"
+      /></a>
+      <figcaption>
+        mineral-light-1440 · document 1440×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/mineral-light-1024.jpg"
+        ><img
+          loading="lazy"
+          src="captures/mineral-light-1024.jpg"
+          alt="mineral-light-1024"
+      /></a>
+      <figcaption>
+        mineral-light-1024 · document 1024×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/mineral-light-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/mineral-light-390.jpg"
+          alt="mineral-light-390"
+      /></a>
+      <figcaption>
+        mineral-light-390 · document 375×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/mineral-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/mineral-dark-1440.jpg"
+          alt="mineral-dark-1440"
+      /></a>
+      <figcaption>
+        mineral-dark-1440 · document 1440×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/mineral-dark-1024.jpg"
+        ><img
+          loading="lazy"
+          src="captures/mineral-dark-1024.jpg"
+          alt="mineral-dark-1024"
+      /></a>
+      <figcaption>
+        mineral-dark-1024 · document 1024×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/mineral-dark-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/mineral-dark-390.jpg"
+          alt="mineral-dark-390"
+      /></a>
+      <figcaption>
+        mineral-dark-390 · document 375×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/30-source-unavailable-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/30-source-unavailable-dark-1440.jpg"
+          alt="30-source-unavailable-dark-1440"
+      /></a>
+      <figcaption>
+        30-source-unavailable-dark-1440 · document 1425×844; horizontal
+        overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/31-source-unavailable-dark-390.jpg"
+        ><img
+          loading="lazy"
+          src="captures/31-source-unavailable-dark-390.jpg"
+          alt="31-source-unavailable-dark-390"
+      /></a>
+      <figcaption>
+        31-source-unavailable-dark-390 · document 375×844; horizontal overflow:
+        False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/32-mouse-pan-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/32-mouse-pan-dark-1440.jpg"
+          alt="32-mouse-pan-dark-1440"
+      /></a>
+      <figcaption>
+        32-mouse-pan-dark-1440 · document 1440×844; horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/33-expanded-all-source-branches-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/33-expanded-all-source-branches-dark-1440.jpg"
+          alt="33-expanded-all-source-branches-dark-1440"
+      /></a>
+      <figcaption>
+        33-expanded-all-source-branches-dark-1440 · document 1440×844;
+        horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/34-historical-basil-filter-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/34-historical-basil-filter-dark-1440.jpg"
+          alt="34-historical-basil-filter-dark-1440"
+      /></a>
+      <figcaption>
+        34-historical-basil-filter-dark-1440 · document 1425×844; horizontal
+        overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/35-rank-limit-selection-retained-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/35-rank-limit-selection-retained-dark-1440.jpg"
+          alt="35-rank-limit-selection-retained-dark-1440"
+      /></a>
+      <figcaption>
+        35-rank-limit-selection-retained-dark-1440 · document 1425×844;
+        horizontal overflow: False
+      </figcaption>
+    </figure>
+    <figure>
+      <a href="captures/36-final-graph-inspector-dark-1440.jpg"
+        ><img
+          loading="lazy"
+          src="captures/36-final-graph-inspector-dark-1440.jpg"
+          alt="36-final-graph-inspector-dark-1440"
+      /></a>
+      <figcaption>
+        36-final-graph-inspector-dark-1440 · document 1440×844; horizontal
+        overflow: False
+      </figcaption>
+    </figure>
+  </main>
+</html>

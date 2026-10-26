@@ -25,6 +25,7 @@ export function TaskDialog({
   className,
   dismissOnBackdrop = false,
   returnFocusTo,
+  modal = true,
 }: {
   id?: string;
   title: string;
@@ -33,6 +34,7 @@ export function TaskDialog({
   className?: string;
   dismissOnBackdrop?: boolean;
   returnFocusTo?: RefObject<HTMLElement | null>;
+  modal?: boolean;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
@@ -40,6 +42,11 @@ export function TaskDialog({
   useEffect(() => {
     const element = dialog.current;
     if (!element) return;
+    if (!modal) {
+      element.setAttribute("open", "");
+      return;
+    }
+    if (element.open) element.removeAttribute("open");
     returnFocus.current =
       returnFocusTo?.current ??
       (document.activeElement instanceof HTMLElement
@@ -53,12 +60,14 @@ export function TaskDialog({
       else element.removeAttribute("open");
       returnFocus.current?.focus();
     };
-  }, [returnFocusTo]);
+  }, [returnFocusTo, modal]);
 
   return (
     <dialog
       id={id}
       aria-label={title}
+      aria-modal={modal || undefined}
+      role={modal ? "dialog" : "region"}
       className={`task-dialog${className ? ` ${className}` : ""}`}
       ref={dialog}
       onClick={(event) => {
@@ -77,7 +86,7 @@ export function TaskDialog({
         if (!dismissDialogControlLayer(event.currentTarget)) onClose();
       }}
       onKeyDown={(event) => {
-        if (event.defaultPrevented) return;
+        if (!modal || event.defaultPrevented) return;
         if (event.key === "Escape") {
           event.preventDefault();
           onClose();
