@@ -1,10 +1,18 @@
+import "./media.css";
 import { ActionButton } from "../components/Action";
 import { FieldLabel } from "../components/FieldLabel";
 import { DirectoryTools } from "../components/DirectoryTools";
 import { DirectoryResults } from "../components/DirectoryResults";
 import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
-import { useEffect, useId, useState, type SyntheticEvent } from "react";
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type SyntheticEvent,
+} from "react";
 import { useAuth } from "../auth/context";
 import { ApiError } from "../auth/api";
 import {
@@ -12,7 +20,7 @@ import {
   DetailHeader,
   WorkspaceIntro,
 } from "../components/CollectionUI";
-import { DirectorySearch, QuickPreview } from "../components/ReferenceUI";
+import { DirectorySearch } from "../components/ReferenceUI";
 import { PhotoDialog } from "../photos/PhotosSection";
 import { clearPrimaryPhoto, setPrimaryPhoto } from "../photos/api";
 import {
@@ -33,19 +41,24 @@ import {
 import { MediaEditor } from "./MediaEditor";
 import { formText, mediaError } from "./helpers";
 import { MediaPreview } from "./MediaPreview";
+import { MediaQuickPreview } from "./MediaQuickPreview";
+import { readDirectoryState } from "../saved-views/state";
+import {
+  mediaDirectoryHash,
+  mediaDetailHash,
+  mediaOffset,
+  mediaFocusId,
+  navigateMedia,
+  rememberMediaCard,
+  subscribeMediaRoute,
+} from "./navigation";
 import { MediaLinker } from "./MediaLinker";
 import { mediaTargets } from "./targets";
 
 function title(asset: MediaAsset): string {
   return asset.title ?? asset.original_filename ?? "External image reference";
 }
-function Metadata({
-  asset,
-  compact = false,
-}: {
-  asset: MediaAsset;
-  compact?: boolean;
-}) {
+function Metadata({ asset }: { asset: MediaAsset }) {
   return (
     <dl className="media-facts">
       <div>
@@ -64,13 +77,13 @@ function Metadata({
           <dd>{asset.fetched_at.slice(0, 10)}</dd>
         </div>
       )}
-      {!compact && asset.media_type && (
+      {asset.media_type && (
         <div>
           <dt>File type</dt>
           <dd>{asset.media_type}</dd>
         </div>
       )}
-      {!compact && asset.width && asset.height && (
+      {asset.width && asset.height && (
         <div>
           <dt>Dimensions</dt>
           <dd>
@@ -78,7 +91,7 @@ function Metadata({
           </dd>
         </div>
       )}
-      {!compact && asset.byte_size !== null && (
+      {asset.byte_size !== null && (
         <div>
           <dt>Original size</dt>
           <dd>{(asset.byte_size / 1024).toFixed(1)} KiB</dd>
@@ -96,13 +109,13 @@ function Metadata({
         <dt>BotanicalIdentity covers</dt>
         <dd>{asset.cover_reference_count}</dd>
       </div>
-      {!compact && asset.attribution && (
+      {asset.attribution && (
         <div>
           <dt>Attribution</dt>
           <dd>{asset.attribution}</dd>
         </div>
       )}
-      {!compact && asset.source_url && (
+      {asset.source_url && (
         <div>
           <dt>Source page</dt>
           <dd>
@@ -112,13 +125,13 @@ function Metadata({
           </dd>
         </div>
       )}
-      {!compact && asset.licence_label && (
+      {asset.licence_label && (
         <div>
           <dt>Licence</dt>
           <dd>{asset.licence_label}</dd>
         </div>
       )}
-      {!compact && asset.licence_url && (
+      {asset.licence_url && (
         <div>
           <dt>Licence source</dt>
           <dd>
@@ -135,14 +148,24 @@ function Metadata({
 export function MediaScreen({ initialId }: { initialId?: string }) {
   const auth = useAuth();
   const headingId = useId();
-  const [offset, setOffset] = useState(0);
-  const [page, setPage] = useState<MediaPage | null>(null);
+  const hash = useSyncExternalStore(
+    subscribeMediaRoute,
+    () => window.location.hash,
+  );
+  const offset = mediaOffset(hash);
+  const directoryHash = mediaDirectoryHash(hash);
+  const detailHeading = useRef<HTMLHeadingElement>(null);
+  const focusedRoute = useRef<string | null>(null);
+  const [pageResult, setPage] = useState<{
+    value: MediaPage;
+    key: string;
+  } | null>(null);
   const [selected, setSelected] = useState<MediaAsset | null>(null);
-  const view = useDirectoryView("media", () => {
-    setOffset(0);
-    setPage(null);
-    setSelected(null);
-  });
+  const view = useDirectoryView(
+    "media",
+    undefined,
+    initialId ? readDirectoryState("media", directoryHash) : undefined,
+  );
   const query = view.state.q;
   const setQuery = (value: string) => {
     view.update("q", value);
@@ -159,6 +182,10 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
   const setTarget = (value: MediaTargetFilter | "") => {
     view.update("target", value);
   };
+
+  const pageKey = JSON.stringify([query, kind, association, target, offset]);
+  const page =
+    !initialId && pageResult?.key === pageKey ? pageResult.value : null;
 
   const [loadedDetail, setDetail] = useState<MediaDetail | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -200,7 +227,23 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
         controller.signal,
       )
         .then((value) => {
-          if (!controller.signal.aborted) setPage(value);
+          if (controller.signal.aborted) return;
+          if (offset > 0 && offset >= value.total) {
+            const params = new URLSearchParams(
+              mediaDirectoryHash().split("?", 2)[1],
+            );
+            const last =
+              Math.floor(Math.max(0, value.total - 1) / value.limit) *
+              value.limit;
+            if (last) params.set("offset", String(last));
+            else params.delete("offset");
+            const focusId = mediaFocusId();
+            navigateMedia(
+              `#/media${params.size ? `?${params}` : ""}`,
+              typeof focusId === "string" ? focusId : undefined,
+              true,
+            );
+          } else setPage({ value, key: pageKey });
         })
         .catch((failure: unknown) => {
           if (!controller.signal.aborted) failureHandler(failure);
@@ -227,8 +270,36 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
     target,
     offset,
     attempt,
+    pageKey,
     auth,
   ]);
+  useEffect(() => {
+    if (initialId) {
+      if (detail && focusedRoute.current !== `${initialId}:${hash}`) {
+        detailHeading.current?.focus();
+        focusedRoute.current = `${initialId}:${hash}`;
+      }
+      return;
+    }
+    if (!page || focusedRoute.current === hash) return;
+    const focusId = mediaFocusId();
+    if (typeof focusId === "string") {
+      const card = document.getElementById(`media-asset-${focusId}`);
+      const target = card ?? document.getElementById(headingId);
+      if (target) {
+        if (!card) target.tabIndex = -1;
+        target.focus();
+      }
+    }
+    focusedRoute.current = hash;
+  }, [initialId, detail, page, hash, headingId]);
+  useEffect(() => {
+    function clearRouteOverlays() {
+      setSelected(null);
+      setError(null);
+    }
+    return subscribeMediaRoute(clearRouteOverlays);
+  }, []);
   const token =
     auth.state.status === "authenticated" ? auth.state.csrfToken : "";
   function refresh(message: string) {
@@ -239,7 +310,13 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
   function changeFilters() {
     setPage(null);
     setSelected(null);
-    setOffset(0);
+    const params = new URLSearchParams(window.location.hash.split("?", 2)[1]);
+    params.delete("offset");
+    window.history.replaceState(
+      null,
+      "",
+      `#/media${params.size ? `?${params}` : ""}`,
+    );
     setError(null);
   }
   async function action(run: () => Promise<void>, message: string) {
@@ -260,8 +337,9 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
     }
   }
   function choose(asset: MediaAsset) {
-    if (window.matchMedia("(max-width: 64rem)").matches)
-      window.location.assign(`#/media/${asset.id}`);
+    rememberMediaCard(asset.id);
+    if (window.matchMedia("(max-width: 48rem)").matches)
+      navigateMedia(mediaDetailHash(asset.id));
     else setSelected(asset);
   }
   async function saveLink(event: SyntheticEvent<HTMLFormElement>) {
@@ -280,12 +358,31 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
     }, "Record link details saved.");
   }
   return (
-    <section className="media-workspace" aria-labelledby={headingId}>
+    <section
+      className="media-workspace"
+      aria-labelledby={headingId}
+      onClick={(event) => {
+        const anchor =
+          event.target instanceof Element ? event.target.closest("a") : null;
+        if (
+          !initialId ||
+          anchor?.getAttribute("href") !== directoryHash ||
+          event.button ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey
+        )
+          return;
+        event.preventDefault();
+        navigateMedia(directoryHash, initialId);
+      }}
+    >
       {initialId ? (
         <>
           <Breadcrumbs
             items={[
-              { label: "Media", href: "#/media" },
+              { label: "Media", href: directoryHash },
               { label: detail ? title(detail) : "Media detail" },
             ]}
           />
@@ -298,7 +395,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
           eyebrow="Explore"
           title="Media"
           titleId={headingId}
-          description="One image, many records. Unlinked assets stay available for future use."
+          description="Photographs and image references from your collection."
           tools={
             <DirectoryTools
               onReset={() => {
@@ -372,6 +469,10 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                       <option value="linked">Linked media</option>
                       <option value="unlinked">Unlinked media</option>
                     </select>
+                    <p className="field-help">
+                      Unlinked means no record links. An identity cover may
+                      still reference the asset.
+                    </p>
                   </div>
                   <div className="field">
                     <label htmlFor="media-target-filter">Target</label>
@@ -467,6 +568,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
         ) : (
           <article className="media-detail" key={detail.id}>
             <DetailHeader
+              headingRef={detailHeading}
               eyebrow="Media asset"
               title={title(detail)}
               secondary={
@@ -497,7 +599,19 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                 full
                 allowExternal
               />
-              <Metadata asset={detail} />
+              <section aria-label="Shared asset metadata">
+                <h3>Shared asset metadata</h3>
+                <Metadata asset={detail} />
+                <p className="field-help">
+                  Title, attribution and licence belong to this reusable asset.
+                  Captions and display order belong to each record link.
+                </p>
+                {detail.content_url && !detail.deletion_pending && (
+                  <a href={detail.content_url} target="_blank" rel="noreferrer">
+                    Open original image
+                  </a>
+                )}
+              </section>
             </div>
             {detail.kind === "external" && (
               <section aria-label="Local copy" className="media-links-section">
@@ -700,10 +814,6 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
         )
       ) : (
         <>
-          <p className="field-help">
-            Unlinked means no record links. An identity cover may still
-            reference the asset.
-          </p>
           {!page && !error && <p role="status">Loading media…</p>}
           {page && (
             <div className="media-directory-layout">
@@ -718,13 +828,14 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                       className="media-choice button--secondary"
                       type="button"
                       key={asset.id}
+                      id={`media-asset-${asset.id}`}
                       aria-pressed={selected?.id === asset.id}
                       onClick={() => {
                         choose(asset);
                       }}
                     >
                       <MediaPreview asset={asset} />
-                      <strong>{title(asset)}</strong>
+                      <strong title={title(asset)}>{title(asset)}</strong>
                       <span>
                         {asset.kind === "local"
                           ? "Local image"
@@ -753,7 +864,15 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                     type="button"
                     disabled={offset === 0}
                     onClick={() => {
-                      setOffset(Math.max(0, offset - page.limit));
+                      const params = new URLSearchParams(
+                        directoryHash.split("?", 2)[1],
+                      );
+                      const next = Math.max(0, offset - page.limit);
+                      if (next) params.set("offset", String(next));
+                      else params.delete("offset");
+                      navigateMedia(
+                        `#/media${params.size ? `?${params}` : ""}`,
+                      );
                       setPage(null);
                       setSelected(null);
                     }}
@@ -769,7 +888,11 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                     type="button"
                     disabled={offset + page.limit >= page.total}
                     onClick={() => {
-                      setOffset(offset + page.limit);
+                      const params = new URLSearchParams(
+                        directoryHash.split("?", 2)[1],
+                      );
+                      params.set("offset", String(offset + page.limit));
+                      navigateMedia(`#/media?${params}`);
                       setPage(null);
                       setSelected(null);
                     }}
@@ -778,27 +901,21 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                   </button>
                 </div>
               </div>
-              {selected ? (
-                <QuickPreview>
-                  <MediaPreview key={selected.id} asset={selected} />
-                  <h3>{title(selected)}</h3>
-                  <Metadata asset={selected} compact />
-                  <a className="button-link" href={`#/media/${selected.id}`}>
-                    Open media details
-                  </a>
-                </QuickPreview>
-              ) : (
-                <QuickPreview>
-                  <h3>Select media</h3>
-                  <p>
-                    Inspect its source and reference counts, then open details
-                    to manage links.
-                  </p>
-                </QuickPreview>
-              )}
             </div>
           )}
         </>
+      )}
+      {selected && !initialId && (
+        <MediaQuickPreview
+          key={selected.id}
+          asset={selected}
+          onSaved={() => {
+            refresh("Local copy saved.");
+          }}
+          onClose={() => {
+            setSelected(null);
+          }}
+        />
       )}
       {editor && (
         <MediaEditor
@@ -806,12 +923,11 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
           onClose={() => {
             setEditor(null);
           }}
-          onSaved={(asset) => {
+          onSaved={() => {
             setEditor(null);
             if (initialId) refresh("Media details saved.");
             else {
-              setOffset(0);
-              setSelected(asset);
+              changeFilters();
               refresh("Media asset added to the library.");
             }
           }}
@@ -920,6 +1036,17 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
           )}
           <div className="actions">
             <button
+              className="button--secondary"
+              disabled={pending}
+              type="button"
+              onClick={() => {
+                setRemoving(null);
+                setError(null);
+              }}
+            >
+              Cancel
+            </button>
+            <button
               className="button--danger"
               disabled={pending}
               type="button"
@@ -927,7 +1054,7 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                 if (removing === "asset")
                   void action(async () => {
                     await deleteMedia(detail.id, token);
-                    window.location.hash = "/media";
+                    navigateMedia(directoryHash, detail.id);
                     setDetail(null);
                     setPage(null);
                   }, "Media asset deleted.");
@@ -948,17 +1075,6 @@ export function MediaScreen({ initialId }: { initialId?: string }) {
                   : removing === "copy"
                     ? "Remove local copy"
                     : "Unlink from this record"}
-            </button>
-            <button
-              className="button--secondary"
-              disabled={pending}
-              type="button"
-              onClick={() => {
-                setRemoving(null);
-                setError(null);
-              }}
-            >
-              Cancel
             </button>
           </div>
         </PhotoDialog>

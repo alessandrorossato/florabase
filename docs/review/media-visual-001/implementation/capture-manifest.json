@@ -1,0 +1,499 @@
+{
+  "captures": [
+    {
+      "file": "active-filters-880.jpg",
+      "sha256": "76da46248498d00a87de672099795ffe2d125d30323485ec9e6a6c6ae6b7ac09",
+      "raster": [
+        865,
+        830
+      ],
+      "dom": {
+        "height": 844,
+        "width": 880
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local&association=linked&target=seed_lot",
+      "sidecar": "active-filters-880.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "active-filters-mobile-390.jpg",
+      "sha256": "ffe2c8fee69f3d085ddaa0e313576471cf5a02e244ddaa990334e7628283ec41",
+      "raster": [
+        375,
+        812
+      ],
+      "dom": {
+        "height": 844,
+        "width": 390
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local&association=linked&target=seed_lot",
+      "sidecar": "active-filters-mobile-390.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "cover-only-detail-1440.jpg",
+      "sha256": "ccb29b8ba9eecd4078b394967817895bdf99803e22875041e6c8f339d5875cab",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media/01a178d7-ed12-7208-80fe-0a1cde483499",
+      "sidecar": "cover-only-detail-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "cover-only-preview-1440.jpg",
+      "sha256": "ec6efd65ffcb9a7ca361825894ba9400ae32f4bf8e1c62b321cf7b7e71a75417",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media",
+      "sidecar": "cover-only-preview-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "detail-mobile-390.jpg",
+      "sha256": "cafea5c9abfde2ce9578157edcdc37470ec81486ff29a2706ac91925f657d187",
+      "raster": [
+        375,
+        812
+      ],
+      "dom": {
+        "height": 844,
+        "width": 390
+      },
+      "url": "http://localhost:15280/#/media/01a178d7-e664-77ea-ba12-1cdd7029fc59?q=Review+v5&kind=local&association=linked&target=seed_lot",
+      "sidecar": "detail-mobile-390.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "detail-mobile-photo-390.jpg",
+      "sha256": "5767927d63c59cd9ef25162f9296973ebe4ff9b0f658e277fef32a0b67d709a0",
+      "raster": [
+        375,
+        812
+      ],
+      "dom": {
+        "height": 844,
+        "width": 390
+      },
+      "url": "http://localhost:15280/#/media/01a178d7-e664-77ea-ba12-1cdd7029fc59?q=Review+v5&kind=local&association=linked&target=seed_lot",
+      "sidecar": "detail-mobile-photo-390.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "detail-shared-1440.jpg",
+      "sha256": "85f9724a95e8d7d8877ba3241afd87c07f3b461ca8a8f998af3f8d8e1ba716b5",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media/01a178d7-e537-74bd-b04e-55ae8368d037?q=Review+v5&kind=local",
+      "sidecar": "detail-shared-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "detail-shared-full-1440.jpg",
+      "sha256": "65fdd4b7aa3e83e63bcefbc09879060503a8584c5e3db71d14858274a527b758",
+      "raster": [
+        1425,
+        1534
+      ],
+      "dom": null,
+      "url": null,
+      "sidecar": null,
+      "source": "actual populated React Media Review",
+      "scope": "full page"
+    },
+    {
+      "file": "external-opt-in-preview-1440.jpg",
+      "sha256": "802add809cc8df3bfb4bbefa9577f58be86515b0a2c4c80bb4ebfe7d708345ab",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media",
+      "sidecar": "external-opt-in-preview-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "filters-mobile-390.jpg",
+      "sha256": "c657820b647836e046682f50494a4eaae5e563860628b419fe9c5abb47724007",
+      "raster": [
+        375,
+        812
+      ],
+      "dom": {
+        "height": 844,
+        "width": 390
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local",
+      "sidecar": "filters-mobile-390.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "gallery-botanical-dark-1440.jpg",
+      "sha256": "addf9bd9d4542b5933bcd4947c88aa7080ea674d7e3394cf42965c32c14bd556",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local",
+      "sidecar": "gallery-botanical-dark-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "gallery-botanical-light-1024.jpg",
+      "sha256": "0d8b7daa249ff24026af1b5381819d36f9d535232725c566abb11af196189247",
+      "raster": [
+        1009,
+        832
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1024
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local",
+      "sidecar": "gallery-botanical-light-1024.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "gallery-botanical-light-1440.jpg",
+      "sha256": "e1811f1af0d1af73ba1af9f33ec9b54deb8be40ddac7f23fc01720cc69c9d547",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local",
+      "sidecar": "gallery-botanical-light-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "gallery-botanical-light-390.jpg",
+      "sha256": "a6264145519d3aba68b33acfd24a9b67becc6682951bce75f3e234c2dc7df0b3",
+      "raster": [
+        375,
+        812
+      ],
+      "dom": {
+        "height": 844,
+        "width": 390
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local",
+      "sidecar": "gallery-botanical-light-390.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "gallery-botanical-light-880-collapsed.jpg",
+      "sha256": "713928c2848e7c9343c9d18d2f2a9d7752784782883da1d4390d9f831cb04d7f",
+      "raster": [
+        865,
+        830
+      ],
+      "dom": {
+        "height": 844,
+        "width": 880
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local",
+      "sidecar": "gallery-botanical-light-880-collapsed.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "gallery-botanical-light-880.jpg",
+      "sha256": "f5b4cbbb4071c5f984a13e1ba0ec7e45904072e2c8119fb95b13f50ef8163df0",
+      "raster": [
+        865,
+        830
+      ],
+      "dom": {
+        "height": 844,
+        "width": 880
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local",
+      "sidecar": "gallery-botanical-light-880.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "gallery-herbarium-dark-1440.jpg",
+      "sha256": "110fe424f366d11d1cc5bf3473d1dca270703eadf91939da9234a1953defb248",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local",
+      "sidecar": "gallery-herbarium-dark-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "gallery-herbarium-light-1440.jpg",
+      "sha256": "5f0536a478877b212268e0b75f479331a7b53b0559a26e21373a0f97dad0cd60",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local",
+      "sidecar": "gallery-herbarium-light-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "gallery-mineral-dark-1440.jpg",
+      "sha256": "20643fbc65df03941c1550b83a2e958ae7de6c940ee4679e051e60d05d389c8f",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local",
+      "sidecar": "gallery-mineral-dark-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "gallery-mineral-light-1440.jpg",
+      "sha256": "791f3e16849bf01574474003b1b4f28883216e4727fcfc6f2020c54360102cc0",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local",
+      "sidecar": "gallery-mineral-light-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "linked-record-photos-1440.jpg",
+      "sha256": "2b7f6bca8f07744888a7eb601dc075bd6501f3bcc6f299d99058394eeeedf526",
+      "raster": [
+        1440,
+        844
+      ],
+      "dom": null,
+      "url": null,
+      "sidecar": null,
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "mixed-aspects-page1-1440.jpg",
+      "sha256": "9b4340cbb1c52d63303e8fcf3d41ba52e510f81ea7c8c08889a46347cedd66d5",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media",
+      "sidecar": "mixed-aspects-page1-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "pagination-page2-1440.jpg",
+      "sha256": "f997f398da40a4e09f20d639d003867bb60718b66fa9b91a094846223596a56d",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media?offset=24",
+      "sidecar": "pagination-page2-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "preview-landscape-1440.jpg",
+      "sha256": "642d6683ff6d4e31105ac1075fb3fdb3b02257cdd557ac7e5c0a71d66491094e",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local",
+      "sidecar": "preview-landscape-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "preview-portrait-shared-1440.jpg",
+      "sha256": "c8f31ef2eefd699d93eea64a13e8845393edd81ac1d240659b747cf037d69aec",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local",
+      "sidecar": "preview-portrait-shared-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "preview-tablet-1024.jpg",
+      "sha256": "7eaac64f6c74f9fe68bddf0b0c1763e5ca2c630480bbeefae5165a4bb6e90714",
+      "raster": [
+        1009,
+        832
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1024
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local&association=linked&target=seed_lot",
+      "sidecar": "preview-tablet-1024.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "reload-mobile-focus-390.jpg",
+      "sha256": "e33b70d361c71c86cbcf3301882768d6110933df6518633b809dc9e576d3bc37",
+      "raster": [
+        375,
+        812
+      ],
+      "dom": {
+        "height": 844,
+        "width": 390
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local&association=linked&target=seed_lot",
+      "sidecar": "reload-mobile-focus-390.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "restored-filter-focus-1440.jpg",
+      "sha256": "fb1e64ea6e5a1bd66064093598cbab162d11a5d277578137e51e1384c4678c68",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local",
+      "sidecar": "restored-filter-focus-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "restored-mobile-focus-390.jpg",
+      "sha256": "ffe2c8fee69f3d085ddaa0e313576471cf5a02e244ddaa990334e7628283ec41",
+      "raster": [
+        375,
+        812
+      ],
+      "dom": {
+        "height": 844,
+        "width": 390
+      },
+      "url": "http://localhost:15280/#/media?q=Review+v5&kind=local&association=linked&target=seed_lot",
+      "sidecar": "restored-mobile-focus-390.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "restored-page2-focus-1440.jpg",
+      "sha256": "9490f85c8666ab1e1a21f00eb1c62e7759f48660b52b461e9c028a493efed098",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media?offset=24",
+      "sidecar": "restored-page2-focus-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    },
+    {
+      "file": "safe-delete-focus-1440.jpg",
+      "sha256": "326d38e29ade297e4decbdb381ff961adcfe58d196fd454d21ee8b90aff2010c",
+      "raster": [
+        1425,
+        835
+      ],
+      "dom": {
+        "height": 844,
+        "width": 1440
+      },
+      "url": "http://localhost:15280/#/media/01a178d7-edd8-758a-a776-e0465a32b195",
+      "sidecar": "safe-delete-focus-1440.json",
+      "source": "actual populated React Media Review",
+      "scope": "viewport"
+    }
+  ],
+  "notes": [
+    "All final saved pixels inspected in a contact sheet; mismatched/early paint captures replaced.",
+    "Requested DOM viewports are 1440/1024/880/390 by844. Browser screenshot rasters exclude scrollbars and may be proportionally scaled by the capture surface; sidecars preserve exact DOM sizes.",
+    "Eight distinct licensed photos; generated drawings exercise mixed geometry/pagination, not photographic volume."
+  ]
+}

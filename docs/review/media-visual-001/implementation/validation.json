@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-26",
+  "base": "ee3487412fe458cbdf7145154c54a58b66132cae",
+  "checks": {
+    "focused_regression": {
+      "result": "pass",
+      "files": 9,
+      "tests": 122
+    },
+    "frontend_lint": "pass",
+    "typescript_and_frontend_build": "pass",
+    "media_prettier": "pass",
+    "retained_dataset": "pass",
+    "git_diff_check": "pass",
+    "staged_files": "none",
+    "final_affected_regression": {
+      "result": "pass",
+      "files": 3,
+      "tests": 40,
+      "includes": "real App Back/Forward/reload, URL facet removal and detail/card focus"
+    }
+  },
+  "canonical_FULL": "not run; operator boundary",
+  "live_implementation_screenshots": {
+    "result": "complete",
+    "captures": 31,
+    "viewports": [
+      1440,
+      1024,
+      880,
+      390
+    ],
+    "palettes": [
+      "botanical",
+      "herbarium",
+      "mineral"
+    ],
+    "appearances": [
+      "light",
+      "dark"
+    ]
+  },
+  "device_AT_zoom": "not performed",
+  "account_recovery": "Operator explicitly approved existing synthetic owner password recovery; same owner ID, four prior sessions revoked; no collection/media changes.",
+  "source_sha256": {
+    "frontend/src/media/ExternalCopyChoice.tsx": "da2a47b7a6dc72172cbe0b2aecaecea69a3c9fdb66a73411e8c53842c93fe383",
+    "frontend/src/media/MediaEditor.tsx": "d945c725d671ddcd5a77d07bb66dba3cd5787296f6a1bc42649f4ca7cde8362d",
+    "frontend/src/media/MediaLinker.tsx": "b3fd9e3dbd5b24428f20af679a578fd65eeb1c22150b5802ab14d7f6ad288d73",
+    "frontend/src/media/MediaNavigation.test.tsx": "dcce9d5ed02d011c3dcab9eb18a82f4276c28d642f115457e1e334ed2f958b0d",
+    "frontend/src/media/MediaPicker.tsx": "c0ef4bc70a95e6a5b42eb05a13483961b1b32543e598576bebda8883f50c3940",
+    "frontend/src/media/MediaPreview.tsx": "8578200d2b6eed6d5ad9c8f1177e981933eb852ef2ecd692723095aa3c054303",
+    "frontend/src/media/MediaQuickPreview.tsx": "7dfb447984ccfbf5e8974f54dee51152e97212ab503fd35aec2d8699d9af78a3",
+    "frontend/src/media/MediaScreen.test.tsx": "969354b3804c83e3f45e33fa66b1d2de5202eefd82f966e80990009a257efdff",
+    "frontend/src/media/MediaScreen.tsx": "9391bb0fc285044d65aea89026e764e2017880d3db1582392ca0fdab537e12e3",
+    "frontend/src/media/api.ts": "c3a3b81ba09f329505480bdfd1f0b03dc76c2a8c658f7a016dfaa62478d5a3d4",
+    "frontend/src/media/helpers.ts": "b9f03dc587edee3fce26d64abe12b450abf0806c8de1d53e46c1fc8ea19a82c5",
+    "frontend/src/media/media.css": "33ce55fc3baa631e592a70448fd97e362988c6d71a0bbd77e9b6c3335d47f38e",
+    "frontend/src/media/navigation.test.ts": "0986187b155cf986f97daec4357a154c895396048ee602e8698b267e6a479822",
+    "frontend/src/media/navigation.ts": "71188a50dcc1fd991f5495c5a31987a5fc564eed2098f23d173059a4bc5f9f2e",
+    "frontend/src/media/targets.ts": "4b92ca1f213ad3b0265f97e31614437f94bdaca72ece78cd3af0bbabb1947f1c"
+  }
+}

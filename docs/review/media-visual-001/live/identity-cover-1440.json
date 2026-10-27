@@ -1,0 +1,35 @@
+{
+  "appearance": "light",
+  "documentWidth": 1425,
+  "focus": "Media",
+  "height": 844,
+  "images": [
+    {
+      "fit": "cover",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/botanical-identities/01a178d7-cea2-76f9-986a-c1b25c9c80f5/cover-image/thumbnail"
+    },
+    {
+      "fit": "contain",
+      "natural": [
+        480,
+        640
+      ],
+      "src": "/api/v1/attachments/01a178d7-ed11-76d0-9213-703207b626d1/content"
+    },
+    {
+      "fit": "contain",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e57d-76a9-8267-ff55243bc95f/thumbnail"
+    }
+  ],
+  "palette": "botanical",
+  "url": "http://localhost:15280/#/identities/01a178d7-cea2-76f9-986a-c1b25c9c80f5?tab=media",
+  "width": 1440
+}

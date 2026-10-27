@@ -1,4 +1,101 @@
-# Engineering progress
+## 2026-10-27 — MEDIA-VISUAL-001 approved Quick Preview enhancement and QA
+
+- Added an explicit **Save local copy** action only for external MediaAssets without a snapshot.
+  Reused the existing authenticated CSRF API; pending, duplicate-submit protection, retryable failure,
+  protected-original transition, success focus, and gallery refresh retain current selection and
+  filter/page URL. Local and already-saved assets do not expose the action; detail Refresh/Remove
+  remain unchanged. No backend, API, schema or shared UI code changed.
+- Focused regressions: **42/42** passed across MediaScreen, MediaNavigation and URL navigation.
+  Affected-file ESLint, Prettier, TypeScript and production frontend build passed. Tests cover saved,
+  unsaved and local assets, no remote request on render, CSRF, success/failure, pending/double click,
+  protected image refresh, selected preview, preserved filters/page and success focus.
+- Reconciled against fetched `origin/main` `ee3487412fe458cbdf7145154c54a58b66132cae`; it is already
+  an ancestor of the complete candidate, so no merge/reset was required. Independently reviewed the
+  Media-only change; global PageHeader/dialog/filter ownership remains with the UI System audit.
+- Rebuilt only the guarded `florabase-media-review-1d44` project through its owner adapter. Existing
+  DB/media volumes and schema `20261013_0042` were retained. Actual Quick Preview confirmed external
+  consent and actionable failure after two explicit Wikimedia fetch attempts. The source host did not
+  yield a copy; the UI/API test success path is not represented as live success. Fixture check passed;
+  no seed/reset, association mutation, copy write, primary/cover change or foreign environment change.
+- The authenticated live failure state was visually inspected. Existing 1440/1024/880/390 captures,
+  six-theme grid, and P1 acceptance records remain available. No new live success screenshot exists;
+  external-fetch success, physical mobile/touch, assistive technology, real zoom and large-library
+  performance remain limitations.
+- Candidate remains unstaged/uncommitted pending exact-tree canonical verification and protected
+  delivery. The feature remains `implemented` until all acceptance and receipt evidence is complete.
+
+## 2026-10-26 — MEDIA-VISUAL-001 implementation ready for operator review
+
+- Implemented full-width responsive4:3 photographic cards, deliberate contained PhotoDialog preview
+  with actual record/cover context, prominent contained detail originals and shared-vs-link metadata.
+  Protected lazy thumbnails, external opt-in and all existing mutation/retention contracts remain.
+- Fixed the three P1 causes locally: Media wrapping header (98px desktop;186px at1024/880), Cancel-first
+  destructive focus/safe detail title, and filter/offset/browser-history/card-focus restoration.
+  Live URL-removal testing found and fixed an inherited-facet fallback; Back restores the prior state.
+- origin/main remains ee348741; all earlier audit/evidence preserved. Global UI audit/UI System v1
+  coordination confirms no shared primitive conflict. No shared UI, backend/schema/API or sidebar move.
+- Regression122 tests/nine files passed; final affected40 tests/three files passed. Full/final ESLint,
+  Media Prettier, TypeScript/build,116-feature graph and diff whitespace passed. No canonical FULL.
+- Live Review15280:1440/1024/880/390, expanded/collapsed navigation, all six themes, preview/detail,
+  record Photos, cover blocking, filters/pagination, safe cancellation and navigation inspected.
+  31 inspected implementation captures added to the before/after gallery; historical proposal retained.
+- Operator explicitly approved recovery of the existing synthetic media-review owner's lost password;
+  same ID/data retained, four old sessions revoked. Private access file stays outside served evidence.
+  Final read-only comparison confirms every detail on35 assets/20 links/two covers unchanged; no seed,
+  domain deletion/primary/link mutation, or foreign environment change occurred.
+- Physical touch/AT/real zoom and live storage-failure/race/high-resolution performance remain limits.
+  MEDIA-VISUAL-001 implemented, not verified. All work unstaged/uncommitted; no PR/merge/delivery.
+  Handoff: `MEDIA_VISUAL_001_IMPLEMENTATION_READY_FOR_REVIEW`.
+
+## 2026-10-26 — MEDIA-VISUAL-001 populated live review ready for approval
+
+- Established independently owned actual Review at **http://localhost:15280/#/media** using the
+  existing Environment guards, a distinct project/database and project-owned network/media/dependency
+  volumes. Standard Review volumes, DEV, UAT, Taxonomy, CI, global audit and production were preserved.
+  Product code/API/schema/navigation remain unchanged; feature remains **planned** pending approval.
+- Reused unchanged v4/80 and v5/252 fixtures; added a separate guarded Media ledger: **35 assets,
+  27 stored locally, 20 record links, 11 primary uses and 2 Identity covers**. There are eight distinct
+  licensed photographs, two explicit cover-upload reuse cases and 17 generated drawings, not 35 photos.
+  Repeat seed preserved IDs/relationships; exact original hashes and six foreign-runtime refusals passed.
+- Actual browser evidence covers requested 1440/1024/390×844 viewports in Botanical Light/Dark,
+  representative Herbarium/Mineral appearances, 24/11 pagination, real photo/record/primary/cover
+  relationships, contextual Photos, mobile filtering/Back, contained originals, linker Escape/focus,
+  blocked deletion and explicit controlled external-preview failure. No browser domain write/delete.
+- Confirmed **P1** shared tablet header at **880px** after clean reload (grid top 1102.8px), independently
+  coordinated as global audit F09/Wave A0; **P1** destructive initial focus in Media confirmation;
+  **P1** breadcrumb filter loss and missing invoking-card focus on mobile Back. No production fix yet.
+  [Updated audit/plan](media-visual-001-design-review.md) defines shared/component ownership and risks.
+- [Updated comparison gallery](review/media-visual-001/gallery.html): **42 new captures** (30 owned
+  actual-application, 8 current-data proposal, 4 attributed audit supplements) plus the original 30
+  historical captures. Current/proposed are explicitly distinguished; same eight photographs, current
+  order/counts/association labels are used. Long metadata prompted reachable preview-header actions.
+- Focused checks: **4 adapter tests**, 3 host-identity refusals, 6 runtime-identity refusals, repeat-seed
+  equality, protected original/thumbnail HTTP401, Ruff, Python syntax, proposal JavaScript syntax,
+  feature graph, artifact links and whitespace. Canonical FULL, staging, commit, push, PR and merge
+  remain unstarted. Physical touch/AT/actual zoom, saved external-copy and cleanup/race cases, and
+  high-volume/high-resolution photographic performance remain explicit limitations.
+- Handoff: `MEDIA_VISUAL_001_LIVE_REVIEW_READY_FOR_APPROVAL`.
+
+## 2026-10-26 — MEDIA-VISUAL-001 design review packet
+
+- Audited delivered MediaAsset, RecordMediaLink, contextual Photos and separate Identity cover/
+  primary contracts on verified main `ee348741`; attached `docs/media-visual-001` through feature-init.
+  [Audit and prioritized plan](media-visual-001-design-review.md) separates current capability,
+  source findings, real browser evidence and proposals. Feature remains **planned**.
+- Read-only retained v5 DB snapshot: 17 assets (9 local/8 external-only), 18 record links, 37 identities,
+  zero covers/saved external copies. All eight packaged photograph sizes/SHA-256 match manifest and
+  retained attachments. No fixture, record, media or environment lifecycle writes occurred.
+- Captured limited actual desktop gallery/preview/detail/blocked cover deletion/linker and Escape
+  focus return in the existing two-photo Taxonomy Review. c902 Review ownership refused correctly;
+  its frontend/backend were absent. Available runtimes became unavailable during inspection; no
+  populated Media-owned Review URL, live mobile or complete product theme acceptance is claimed.
+- [Visual study and evidence gallery](review/media-visual-001/gallery.html) proposes a full-width 4:3
+  photo grid, on-demand uncropped preview and larger detail image using actual v5 data. Study-only
+  checks: 18 captures across 1440/1024/390×844 and six token themes, 4/3/2 columns, eight loaded photos,
+  no horizontal overflow; filters, keyboard activation/Escape/focus and detail return exercised.
+- Documentation graph, packaged image integrity, study artifact/link checks and whitespace were
+  checked. Broad product implementation, canonical verification, staging, commit and protected
+  delivery remain unstarted. Handoff: `MEDIA_VISUAL_001_DESIGN_READY_FOR_REVIEW`.
 
 ## 2026-10-26 — TAXONOMY-VISUAL-001 final operator UX refinement
 

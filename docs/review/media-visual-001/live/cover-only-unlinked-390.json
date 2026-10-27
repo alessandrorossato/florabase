@@ -1,0 +1,21 @@
+{
+  "appearance": "light",
+  "documentWidth": 375,
+  "focus": "Filters (2)",
+  "gridTop": 617.9765625,
+  "headerHeight": 308,
+  "height": 844,
+  "images": [
+    {
+      "fit": "contain",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-ed12-7208-80fe-0a1cde483499/thumbnail"
+    }
+  ],
+  "palette": "botanical",
+  "url": "http://localhost:15280/#/media?q=explicit+Identity+cover+upload&kind=local&association=unlinked",
+  "width": 390
+}

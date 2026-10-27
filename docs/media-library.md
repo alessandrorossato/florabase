@@ -94,11 +94,21 @@ these intentional removal semantics. OpenAPI and generated TypeScript declaratio
 
 Open **Collection → Media**. Browse 24 assets at a time; search title, original filename or
 attribution, and filter source, record-link state or linked record type. Cards show source,
-record count and separate cover count. Desktop selection opens compact Quick Preview; opening
-details shows the preview, technical/source metadata, links, captions, order and primary state.
-Narrow screens open details directly. Detail supports editing shared metadata, linking one supported
+record count and separate cover count. Desktop selection deliberately opens a bounded Quick Preview with the complete protected original,
+attribution/licence and actual linked-record and separate Identity-cover context. Gallery cards use
+4:3 cropped thumbnails; preview and detail preserve the complete image framing. Opening
+details shows a prominent original, technical/source metadata, links, captions, order and primary state.
+Narrow screens open details directly. Detail URLs preserve search/source/association/target and the
+validated 24-row offset; the Media breadcrumb and browser history restore applicable gallery
+context and invoking-card focus, with a heading fallback when the card is absent. Offsets remain
+navigation state, excluded from Saved Views. Detail supports editing shared metadata, linking one supported
 record at a time, editing its context/order, selecting/clearing primary where eligible and unlinking.
 Guarded asset deletion is visually separate and unavailable while references remain.
+
+Quick Preview offers **Save local copy** only for an external reference without a saved snapshot.
+The action tells the operator it contacts the source, uses the existing authenticated copy endpoint,
+and updates the open preview and gallery without discarding the selected asset or directory state.
+Saved and ordinary local assets do not show that action; Refresh and Remove remain in detail.
 
 Record Photos offers **Add new media**, **Add external image** and **Link existing media**. Choose
 one asset, supply record-specific caption/order, then explicitly designate primary if desired.
@@ -172,7 +182,7 @@ The synthetic browser fixture stores originals of 4,715/5,484/4,793 bytes and de
 measurements, not real-photo compression guarantees. Unnamed record labels and picker options use
 the trailing ID characters; UUIDv7 timestamp prefixes cannot distinguish nearby creations.
 Frontend workspaces remain lazy chunks and grid/picker images use thumbnails with lazy decoding;
-full originals load only on dedicated detail. This is basic evidence, not the later resource project.
+full originals load only for deliberate Quick Preview or dedicated detail. This is basic evidence, not the later resource project.
 
 ## Migration and rollback
 

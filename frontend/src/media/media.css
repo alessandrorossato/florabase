@@ -1,0 +1,126 @@
+/* Media composes the shared header without inheriting column-axis flex bases. */
+.app-content .media-workspace > .page-header {
+  flex-direction: row;
+  align-items: center;
+  margin-bottom: 0;
+}
+.app-content .media-workspace > .page-header > .page-identity {
+  flex: 1 1 14rem;
+}
+.app-content .media-workspace > .page-header > .page-tools {
+  flex: 2 1 34rem;
+}
+.media-workspace .media-directory-layout {
+  display: flex;
+  flex-direction: column;
+}
+.media-workspace .media-directory-results {
+  flex: 1;
+}
+.media-workspace .media-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  gap: var(--space-3);
+}
+.media-workspace .media-grid .media-choice {
+  padding: 0;
+  gap: var(--space-2);
+  overflow: hidden;
+  border-radius: var(--radius-small);
+  background: var(--surface);
+  justify-content: start;
+}
+.media-workspace .media-grid .media-image {
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 0;
+}
+.media-workspace .media-grid .media-choice > strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2lh;
+  font: var(--type-strong);
+}
+.media-workspace .media-grid .media-choice > :not(.media-image) {
+  margin-inline: var(--space-3);
+}
+.media-workspace .media-grid .media-choice > span {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.media-workspace .media-grid .media-choice > :last-child {
+  margin-bottom: var(--space-3);
+}
+.media-workspace .media-detail-overview {
+  grid-template-columns: minmax(0, 2fr) minmax(16rem, 1fr);
+  align-items: start;
+}
+.media-workspace .media-detail-overview .media-image {
+  height: min(70vh, 48rem);
+  object-fit: contain;
+}
+.media-workspace .media-detail-overview h3 {
+  margin-top: 0;
+}
+.media-preview-dialog {
+  width: min(70rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+}
+.media-preview-actions {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding-block: var(--space-2);
+  background: var(--surface);
+}
+.media-preview-dialog h4 {
+  overflow-wrap: anywhere;
+  margin-block: var(--space-3);
+}
+.media-preview-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(14rem, 1fr);
+  gap: var(--space-6);
+}
+.media-preview-layout .media-image {
+  height: min(64vh, 42rem);
+  object-fit: contain;
+}
+.media-preview-layout > div {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.media-preview-credit,
+.media-preview-links p {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.media-preview-links {
+  padding-left: var(--space-6);
+}
+.media-preview-links li + li {
+  margin-top: var(--space-4);
+}
+@media (max-width: 48rem) {
+  .media-workspace .media-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .media-workspace .media-detail-overview,
+  .media-preview-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .media-workspace .media-detail-overview .media-image {
+    height: min(60vh, 36rem);
+  }
+}
+/* At 880px with the 248px sidebar, these controls share a 569px row. */
+.media-workspace .directory-tools .directory-search {
+  flex-basis: 10rem;
+}
+@media (max-width: 48rem) {
+  .media-workspace > .page-header .page-identity > p {
+    display: none;
+  }
+}

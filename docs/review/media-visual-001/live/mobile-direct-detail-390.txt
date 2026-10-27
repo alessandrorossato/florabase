@@ -1,0 +1,89 @@
+- main:
+  - complementary "Application sidebar":
+    - heading "Florabase" [level=1]:
+      - link "Florabase":
+        - /url: "#/dashboard"
+    - button "Hide navigation":
+      - generic: Hide
+    - link "Settings":
+      - /url: "#/settings"
+      - text: Settings
+    - 'button "Appearance: Light, Botanical. Switch to Dark."':
+      - generic: Appearance
+    - button "Sign out"
+  - region "Workspace content":
+    - region "Media detail":
+      - navigation "Breadcrumb":
+        - list:
+          - listitem: Explore/
+          - link "Media":
+            - /url: "#/media"
+          - text: /
+          - listitem: Review v5 — Aloe vera — protected local illustration
+      - heading "Media detail" [level=2]
+      - article:
+        - paragraph: Media asset
+        - heading "Review v5 — Aloe vera — protected local illustration" [level=3]
+        - generic: Managed local image
+        - group "Record actions":
+          - button "Link to another record"
+          - button "Edit media details":
+            - generic: Edit media details
+        - img "Review v5 — Aloe vera — protected local illustration"
+        - term: Source
+        - definition: Local image
+        - term: File type
+        - definition: image/jpeg
+        - term: Dimensions
+        - definition: 480 × 640 px
+        - term: Original size
+        - definition: 77.7 KiB
+        - term: Record links
+        - definition: "2"
+        - term: BotanicalIdentity covers
+        - definition: "0"
+        - term: Attribution
+        - definition: Merstel007; https://commons.wikimedia.org/wiki/File:Aloe_Vera%2C.jpg; Resized to at most 640px; recompressed JPEG; EXIF removed. Synthetic review illustration, not a collection specimen.
+        - term: Licence
+        - definition: CC0-1.0
+        - term: Licence source
+        - definition:
+          - link "Read licence":
+            - /url: https://creativecommons.org/publicdomain/zero/1.0/
+        - heading "Linked records" [level=3]
+        - paragraph: Each link has its own caption, display order and primary designation.
+        - list:
+          - link "Review v5 — protected photo example Aloe vera":
+            - /url: "#/seeds/01a178d7-e545-7564-9ba4-513619de47d0"
+          - generic: Seed lot · Primary image
+          - paragraph: Licensed species illustration for synthetic review; not this collection specimen.
+          - paragraph: "Display order: 0"
+          - button "Edit link details":
+            - generic: Edit link details
+          - button "Clear primary"
+          - button "Unlink from this record"
+          - link "Preview — Aloe unknown stock":
+            - /url: "#/seeds/01a178d7-d113-718c-bfdb-e7f85d67aa9c"
+          - generic: Seed lot
+          - paragraph: Synthetic shared species illustration. This caption is specific to this second record.
+          - paragraph: "Display order: 2"
+          - button "Edit link details":
+            - generic: Edit link details
+          - button "Set as primary"
+          - button "Unlink from this record"
+        - heading "BotanicalIdentity cover references" [level=3]
+        - paragraph: No cover references.
+        - paragraph: Cover references are separate from record links and also block asset deletion.
+        - heading "Delete media asset" [level=3]
+        - paragraph: "Deletion blocked: 2 record link(s) and 0 cover reference(s) remain. Remove these references first."
+        - button "Delete media asset" [disabled]
+  - navigation "Mobile primary navigation":
+    - link "Home":
+      - /url: "#/dashboard"
+    - link "Seeds":
+      - /url: "#/seeds"
+    - link "Sowings":
+      - /url: "#/sowings"
+    - link "Plants":
+      - /url: "#/plants"
+    - button "More"

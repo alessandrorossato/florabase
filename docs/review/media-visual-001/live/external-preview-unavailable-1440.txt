@@ -1,0 +1,118 @@
+- main:
+  - complementary "Application sidebar":
+    - heading "Florabase" [level=1]:
+      - link "Florabase":
+        - /url: "#/dashboard"
+    - button "Hide navigation":
+      - generic: Hide
+    - navigation "Primary navigation":
+      - region "Overview":
+        - heading "Overview" [level=2]:
+          - button "Overview" [expanded]:
+            - text: Overview
+        - link "Dashboard":
+          - /url: "#/dashboard"
+      - region "Collection":
+        - heading "Collection" [level=2]:
+          - button "Collection" [expanded]:
+            - text: Collection
+        - link "Seeds":
+          - /url: "#/seeds"
+        - link "Sowings":
+          - /url: "#/sowings"
+        - link "Plants":
+          - /url: "#/plants"
+        - link "Harvests":
+          - /url: "#/harvests"
+        - link "Locations":
+          - /url: "#/locations"
+      - region "Activity":
+        - heading "Activity" [level=2]:
+          - button "Activity" [expanded]:
+            - text: Activity
+        - link "Journal":
+          - /url: "#/events"
+        - link "History":
+          - /url: "#/history"
+        - link "Schedule":
+          - /url: "#/schedule"
+      - region "Explore":
+        - heading "Explore" [level=2]:
+          - button "Explore" [expanded]:
+            - text: Explore
+        - link "Botanical identities":
+          - /url: "#/identities"
+        - link "Taxonomy":
+          - /url: "#/taxonomy"
+        - link "Media":
+          - /url: "#/media"
+        - link "Geography":
+          - /url: "#/geography"
+      - region "Sourcing":
+        - heading "Sourcing" [level=2]:
+          - button "Sourcing" [expanded]:
+            - text: Sourcing
+        - link "Suppliers":
+          - /url: "#/suppliers"
+        - link "Orders":
+          - /url: "#/orders"
+    - paragraph: Signed in as Media Review (synthetic)
+    - link "Settings":
+      - /url: "#/settings"
+      - text: Settings
+    - 'button "Appearance: Dark, Mineral. Switch to System."':
+      - generic: Appearance
+    - button "Sign out"
+    - separator "Resize navigation"
+  - region "Workspace content":
+    - region "Media detail":
+      - navigation "Breadcrumb":
+        - list:
+          - listitem: Explore/
+          - link "Media":
+            - /url: "#/media"
+          - text: /
+          - listitem: Preview — External reference (intentionally offline)
+      - heading "Media detail" [level=2]
+      - article:
+        - paragraph: Media asset
+        - heading "Preview — External reference (intentionally offline)" [level=3]
+        - generic: External image reference
+        - group "Record actions":
+          - button "Link to another record"
+          - button "Edit media details":
+            - generic: Edit media details
+        - status: Image unavailable
+        - term: Source
+        - definition: External reference · not stored locally
+        - term: Record links
+        - definition: "1"
+        - term: BotanicalIdentity covers
+        - definition: "0"
+        - term: Attribution
+        - definition: Synthetic reference-only REVIEW example
+        - term: Source page
+        - definition:
+          - link "Open source page":
+            - /url: https://example.invalid/preview
+        - region "Local copy":
+          - heading "Local copy" [level=3]
+          - paragraph: Save the image in Florabase to use it throughout your collection. This explicitly contacts the external source.
+          - button "Save local copy"
+        - heading "Linked records" [level=3]
+        - paragraph: Each link has its own caption, display order and primary designation.
+        - list:
+          - link "Preview — Nursery aloe":
+            - /url: "#/plants/01a178d7-d151-75fb-85fb-642176953851"
+          - generic: Plant
+          - paragraph: "Display order: 0"
+          - button "Edit link details":
+            - generic: Edit link details
+          - button "Set as primary"
+          - button "Unlink from this record"
+        - heading "BotanicalIdentity cover references" [level=3]
+        - paragraph: No cover references.
+        - paragraph: Cover references are separate from record links and also block asset deletion.
+        - heading "Delete media asset" [level=3]
+        - paragraph: "Deletion blocked: 1 record link(s) and 0 cover reference(s) remain. Remove these references first."
+        - button "Delete media asset" [disabled]

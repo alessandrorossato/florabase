@@ -1,0 +1,185 @@
+- main:
+  - complementary "Application sidebar":
+    - heading "Florabase" [level=1]:
+      - link "Florabase":
+        - /url: "#/dashboard"
+    - button "Hide navigation":
+      - generic: Hide
+    - navigation "Primary navigation":
+      - region "Overview":
+        - heading "Overview" [level=2]:
+          - button "Overview" [expanded]:
+            - text: Overview
+        - link "Dashboard":
+          - /url: "#/dashboard"
+      - region "Collection":
+        - heading "Collection" [level=2]:
+          - button "Collection" [expanded]:
+            - text: Collection
+        - link "Seeds":
+          - /url: "#/seeds"
+        - link "Sowings":
+          - /url: "#/sowings"
+        - link "Plants":
+          - /url: "#/plants"
+        - link "Harvests":
+          - /url: "#/harvests"
+        - link "Locations":
+          - /url: "#/locations"
+      - region "Activity":
+        - heading "Activity" [level=2]:
+          - button "Activity" [expanded]:
+            - text: Activity
+        - link "Journal":
+          - /url: "#/events"
+        - link "History":
+          - /url: "#/history"
+        - link "Schedule":
+          - /url: "#/schedule"
+      - region "Explore":
+        - heading "Explore" [level=2]:
+          - button "Explore" [expanded]:
+            - text: Explore
+        - link "Botanical identities":
+          - /url: "#/identities"
+        - link "Taxonomy":
+          - /url: "#/taxonomy"
+        - link "Media":
+          - /url: "#/media"
+        - link "Geography":
+          - /url: "#/geography"
+      - region "Sourcing":
+        - heading "Sourcing" [level=2]:
+          - button "Sourcing" [expanded]:
+            - text: Sourcing
+        - link "Suppliers":
+          - /url: "#/suppliers"
+        - link "Orders":
+          - /url: "#/orders"
+    - paragraph: Signed in as Synthetic UI Audit
+    - link "Settings":
+      - /url: "#/settings"
+      - text: Settings
+    - 'button "Appearance: Light, Herbarium. Switch to Dark."':
+      - generic: Appearance
+    - button "Sign out"
+    - separator "Resize navigation"
+  - region "Workspace content":
+    - region "Media":
+      - navigation "Breadcrumb":
+        - list:
+          - listitem: Explore/
+          - listitem: Media
+      - heading "Media" [level=2]
+      - paragraph: One image, many records. Unlinked assets stay available for future use.
+      - group "Media toolbar":
+        - generic: Search media
+        - searchbox "Search media"
+        - button "Filters":
+          - generic: Filters
+        - button "Saved views":
+          - generic: Saved views
+        - button "Add new media"
+      - paragraph: Unlinked means no record links. An identity cover may still reference the asset.
+      - paragraph: 17 records
+      - generic "Media assets":
+        - button "Review v5 — Solanum lycopersicum — protected local illustration Review v5 — Solanum lycopersicum — protected local illustration Local image Unlinked":
+          - img "Review v5 — Solanum lycopersicum — protected local illustration"
+          - strong: Review v5 — Solanum lycopersicum — protected local illustration
+          - generic: Local image
+          - generic: Unlinked
+        - button "Not stored locally Review v5 — Helianthus annuus — external reference External reference · not stored locally Unlinked":
+          - generic: ▧
+          - generic: Not stored locally
+          - strong: Review v5 — Helianthus annuus — external reference
+          - generic: External reference · not stored locally
+          - generic: Unlinked
+        - button "Review v5 — Helianthus annuus — protected local illustration Review v5 — Helianthus annuus — protected local illustration Local image 1 record links":
+          - img "Review v5 — Helianthus annuus — protected local illustration"
+          - strong: Review v5 — Helianthus annuus — protected local illustration
+          - generic: Local image
+          - generic: 1 record links
+        - button "Not stored locally Review v5 — Echinacea purpurea — external reference External reference · not stored locally 1 record links":
+          - generic: ▧
+          - generic: Not stored locally
+          - strong: Review v5 — Echinacea purpurea — external reference
+          - generic: External reference · not stored locally
+          - generic: 1 record links
+        - button "Review v5 — Echinacea purpurea — protected local illustration Review v5 — Echinacea purpurea — protected local illustration Local image 1 record links":
+          - img "Review v5 — Echinacea purpurea — protected local illustration"
+          - strong: Review v5 — Echinacea purpurea — protected local illustration
+          - generic: Local image
+          - generic: 1 record links
+        - button "Not stored locally Review v5 — Ocimum basilicum — external reference External reference · not stored locally 1 record links":
+          - generic: ▧
+          - generic: Not stored locally
+          - strong: Review v5 — Ocimum basilicum — external reference
+          - generic: External reference · not stored locally
+          - generic: 1 record links
+        - button "Review v5 — Ocimum basilicum — protected local illustration Review v5 — Ocimum basilicum — protected local illustration Local image 1 record links":
+          - img "Review v5 — Ocimum basilicum — protected local illustration"
+          - strong: Review v5 — Ocimum basilicum — protected local illustration
+          - generic: Local image
+          - generic: 1 record links
+        - button "Not stored locally Review v5 — Ficus carica — external reference External reference · not stored locally 1 record links":
+          - generic: ▧
+          - generic: Not stored locally
+          - strong: Review v5 — Ficus carica — external reference
+          - generic: External reference · not stored locally
+          - generic: 1 record links
+        - button "Review v5 — Ficus carica — protected local illustration Review v5 — Ficus carica — protected local illustration Local image 1 record links":
+          - img "Review v5 — Ficus carica — protected local illustration"
+          - strong: Review v5 — Ficus carica — protected local illustration
+          - generic: Local image
+          - generic: 1 record links
+        - button "Not stored locally Review v5 — Salvia officinalis — external reference External reference · not stored locally 1 record links":
+          - generic: ▧
+          - generic: Not stored locally
+          - strong: Review v5 — Salvia officinalis — external reference
+          - generic: External reference · not stored locally
+          - generic: 1 record links
+        - button "Review v5 — Salvia officinalis — protected local illustration Review v5 — Salvia officinalis — protected local illustration Local image 1 record links":
+          - img "Review v5 — Salvia officinalis — protected local illustration"
+          - strong: Review v5 — Salvia officinalis — protected local illustration
+          - generic: Local image
+          - generic: 1 record links
+        - button "Not stored locally Review v5 — Lavandula angustifolia — external reference External reference · not stored locally 1 record links":
+          - generic: ▧
+          - generic: Not stored locally
+          - strong: Review v5 — Lavandula angustifolia — external reference
+          - generic: External reference · not stored locally
+          - generic: 1 record links
+        - button "Review v5 — Lavandula angustifolia — protected local illustration Review v5 — Lavandula angustifolia — protected local illustration Local image 1 record links":
+          - img "Review v5 — Lavandula angustifolia — protected local illustration"
+          - strong: Review v5 — Lavandula angustifolia — protected local illustration
+          - generic: Local image
+          - generic: 1 record links
+        - button "Not stored locally Review v5 — Aloe vera — external reference External reference · not stored locally 1 record links":
+          - generic: ▧
+          - generic: Not stored locally
+          - strong: Review v5 — Aloe vera — external reference
+          - generic: External reference · not stored locally
+          - generic: 1 record links
+        - button "Review v5 — Aloe vera — protected local illustration Review v5 — Aloe vera — protected local illustration Local image 1 record links":
+          - img "Review v5 — Aloe vera — protected local illustration"
+          - strong: Review v5 — Aloe vera — protected local illustration
+          - generic: Local image
+          - generic: 1 record links
+        - button "Not stored locally Preview — External reference (intentionally offline) External reference · not stored locally 1 record links":
+          - generic: ▧
+          - generic: Not stored locally
+          - strong: Preview — External reference (intentionally offline)
+          - generic: External reference · not stored locally
+          - generic: 1 record links
+        - button "Preview — Synthetic leaf illustration Preview — Synthetic leaf illustration Local image 4 record links":
+          - img "Preview — Synthetic leaf illustration"
+          - strong: Preview — Synthetic leaf illustration
+          - generic: Local image
+          - generic: 4 record links
+      - button "Previous media" [disabled]
+      - generic: 1–17 of 17
+      - button "Next media" [disabled]
+      - complementary "Quick preview":
+        - paragraph: Quick preview
+        - heading "Select media" [level=3]
+        - paragraph: Inspect its source and reference counts, then open details to manage links.

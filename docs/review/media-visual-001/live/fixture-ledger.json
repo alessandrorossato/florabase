@@ -1,0 +1,41 @@
+{
+  "baseline_references": 80,
+  "v5_references": 252,
+  "extension": {
+    "version": 1,
+    "state": "ready",
+    "assets": {
+      "cover:0": "01a178d7-ec50-732f-96cf-54668063f329",
+      "cover:1": "01a178d7-ed12-7208-80fe-0a1cde483499",
+      "calibration:0": "01a178d7-edd8-758a-a776-e0465a32b195",
+      "calibration:1": "01a178d7-ee29-7557-8ef8-5a0d9890e54b",
+      "calibration:2": "01a178d7-ee7a-7041-ac7e-ede81865d386",
+      "calibration:3": "01a178d7-eecc-70f1-bfa6-883adb633d32",
+      "calibration:4": "01a178d7-ef1f-725e-b477-79d129b0fb57",
+      "calibration:5": "01a178d7-ef78-7415-8189-7a963c0408b0",
+      "calibration:6": "01a178d7-efd7-77ad-a202-6157009df95e",
+      "calibration:7": "01a178d7-f041-7365-a586-e87917df01da",
+      "calibration:8": "01a178d7-f096-7203-92dc-0aded503016e",
+      "calibration:9": "01a178d7-f11f-734d-aac1-ba1902a8f22c",
+      "calibration:10": "01a178d7-f1ae-7685-8562-d1269b3e41a0",
+      "calibration:11": "01a178d7-f25b-730d-bcb9-d0c1ac9af8a8",
+      "calibration:12": "01a178d7-f30a-7099-9a86-3ef726a7583f",
+      "calibration:13": "01a178d7-f37e-7657-991a-d05da6d9f76f",
+      "calibration:14": "01a178d7-f3f2-7211-9529-640133230710",
+      "calibration:15": "01a178d7-f44d-7446-8b8c-acdf252ecec6"
+    },
+    "links": [
+      "01a178d7-ecd4-7176-8c7f-ad7ece30d0a9",
+      "01a178d7-ed65-7181-bd3f-3e1ad4cea865"
+    ],
+    "covers": [
+      "01a178d7-ec59-7580-91e9-d346ce15782a",
+      "01a178d7-ed1c-702c-942a-c0e8701ad5e7"
+    ]
+  },
+  "counts": {
+    "media_assets": 35,
+    "record_links": 20,
+    "identity_covers": 2
+  }
+}

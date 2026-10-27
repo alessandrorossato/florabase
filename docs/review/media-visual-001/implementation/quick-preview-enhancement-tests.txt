@@ -1,0 +1,8 @@
+
+ RUN  v4.1.11 /home/alessandro/.codex/worktrees/1d44/florabase/frontend
+
+
+ Test Files  3 passed (3)
+      Tests  42 passed (42)
+   Start at  08:01:54
+   Duration  36.45s (transform 2.24s, setup 2.04s, import 3.42s, tests 19.51s, environment 9.81s)
