@@ -5893,3 +5893,10 @@ Status remains implemented pending canonical verification.
   that receipt; a final canonical receipt is required for this exact tracked tree
   before protected delivery. No protected environment or unrelated worktree changed.
   `TAXONOMY_QA_VERIFIED_DELIVERY_PENDING`.
+## 2026-10-27 — CI Media frontend test inventory hotfix
+
+- On clean `ci/media-test-inventory-hotfix` from `origin/main` `69814bba`, added the two omitted
+  Media navigation tests to the `media` frontend impact inventory. The existing drift regression
+  already asserts every `.test.` file under classified frontend prefixes is listed, so no duplicate
+  assertion was needed. `make test-verification-impact` passed all 24 cases. No production Media
+  behavior changed. FULL canonical verification and protected delivery remain pending.
