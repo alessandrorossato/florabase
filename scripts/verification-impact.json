@@ -312,7 +312,11 @@
         "backend/tests/integration/test_shared_media_concurrency.py",
         "backend/tests/integration/test_shared_media_migration.py"
       ],
-      "frontend": ["frontend/src/media/MediaScreen.test.tsx"],
+      "frontend": [
+        "frontend/src/media/MediaNavigation.test.tsx",
+        "frontend/src/media/MediaScreen.test.tsx",
+        "frontend/src/media/navigation.test.ts"
+      ],
       "affects": [
         "attachments-regression",
         "plants-regression",
