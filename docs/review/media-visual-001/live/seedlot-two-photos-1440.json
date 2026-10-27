@@ -1,0 +1,115 @@
+{
+  "appearance": "dark",
+  "documentWidth": 1440,
+  "focus": "Photos",
+  "height": 844,
+  "images": [
+    {
+      "fit": "cover",
+      "natural": [
+        0,
+        0
+      ],
+      "src": "/api/v1/botanical-identities/01a178d7-ceab-7456-93ca-93265f2de2f3/cover-image/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e537-74bd-b04e-55ae8368d037/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "natural": [
+        214,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e664-77ea-ba12-1cdd7029fc59/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e5f6-7674-9c5c-cd47667277bb/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e69c-70be-9d02-e3534e50b437/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "natural": [
+        0,
+        0
+      ],
+      "src": "/api/v1/botanical-identities/01a178d7-cea2-76f9-986a-c1b25c9c80f5/cover-image/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e57d-76a9-8267-ff55243bc95f/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "natural": [
+        0,
+        0
+      ],
+      "src": "/api/v1/media-assets/01a178d7-d230-75a0-9032-0e63b0d81985/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e62d-7515-a845-430f17a87699/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "natural": [
+        214,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e5ba-7791-83b6-33ced6176b2e/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e537-74bd-b04e-55ae8368d037/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e537-74bd-b04e-55ae8368d037/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-ec50-732f-96cf-54668063f329/thumbnail"
+    }
+  ],
+  "palette": "mineral",
+  "url": "http://localhost:15280/#/seeds/01a178d7-e545-7564-9ba4-513619de47d0?tab=photos",
+  "width": 1440
+}

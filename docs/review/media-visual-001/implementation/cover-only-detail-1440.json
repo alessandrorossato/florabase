@@ -1,0 +1,31 @@
+{
+  "appearance": "light",
+  "bodyWidth": 1425,
+  "columns": null,
+  "focus": {
+    "id": "",
+    "tag": "H3",
+    "text": "Media Review — Lavandula angustifolia — explicit Identity cover upload"
+  },
+  "images": [
+    {
+      "fit": "contain",
+      "frame": [
+        750,
+        591
+      ],
+      "loading": "lazy",
+      "natural": [
+        480,
+        640
+      ],
+      "src": "/api/v1/attachments/01a178d7-ed11-76d0-9213-703207b626d1/content"
+    }
+  ],
+  "palette": "botanical",
+  "url": "http://localhost:15280/#/media/01a178d7-ed12-7208-80fe-0a1cde483499",
+  "viewport": {
+    "height": 844,
+    "width": 1440
+  }
+}

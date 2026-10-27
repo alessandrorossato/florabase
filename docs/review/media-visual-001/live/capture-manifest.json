@@ -1,0 +1,590 @@
+[
+  {
+    "file": "all-page-1-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "all-page-2-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "audit-media-herbarium-dark-1440.jpg",
+    "source": "global UI audit, separate v5 Review",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "audit-media-herbarium-light-1440.jpg",
+    "source": "global UI audit, separate v5 Review",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "audit-media-mineral-dark-1440.jpg",
+    "source": "global UI audit, separate v5 Review",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "audit-media-mineral-light-1440.jpg",
+    "source": "global UI audit, separate v5 Review",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "cover-only-detail-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "cover-only-unlinked-390.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "measurements": "cover-only-unlinked-390.json",
+    "dom": "cover-only-unlinked-390.txt"
+  },
+  {
+    "file": "delete-confirmation-focus-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "detail-aloe-1024.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "detail-aloe-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "detail-aloe-390.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "external-preview-unavailable-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "measurements": "external-preview-unavailable-1440.json",
+    "dom": "external-preview-unavailable-1440.txt"
+  },
+  {
+    "file": "external-reference-unloaded-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "measurements": "external-reference-unloaded-1440.json",
+    "dom": "external-reference-unloaded-1440.txt"
+  },
+  {
+    "file": "filters-390.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "identity-cover-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "measurements": "identity-cover-1440.json",
+    "dom": "identity-cover-1440.txt"
+  },
+  {
+    "file": "identity-cover-390.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "measurements": "identity-cover-390.json",
+    "dom": "identity-cover-390.txt"
+  },
+  {
+    "file": "linker-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "mobile-direct-detail-390.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "measurements": "mobile-direct-detail-390.json",
+    "dom": "mobile-direct-detail-390.txt"
+  },
+  {
+    "file": "photos-botanical-dark-1024.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "photos-botanical-dark-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "photos-botanical-dark-390.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "photos-botanical-light-1024.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "photos-botanical-light-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "photos-botanical-light-390.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "photos-herbarium-dark-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "measurements": "photos-herbarium-dark-1440.json",
+    "dom": "photos-herbarium-dark-1440.txt"
+  },
+  {
+    "file": "photos-herbarium-light-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "measurements": "photos-herbarium-light-1440.json",
+    "dom": "photos-herbarium-light-1440.txt"
+  },
+  {
+    "file": "photos-mineral-dark-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "measurements": "photos-mineral-dark-1440.json",
+    "dom": "photos-mineral-dark-1440.txt"
+  },
+  {
+    "file": "photos-mineral-light-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "measurements": "photos-mineral-light-1440.json",
+    "dom": "photos-mineral-light-1440.txt"
+  },
+  {
+    "file": "preview-aloe-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "proposal-detail-390.jpg",
+    "source": "proposal artifact",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "proposal-photos-dark-1024.jpg",
+    "source": "proposal artifact",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 1024,
+      "height": 844
+    },
+    "measurements": "proposal-photos-dark-1024.json",
+    "dom": null
+  },
+  {
+    "file": "proposal-photos-dark-1440.jpg",
+    "source": "proposal artifact",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "measurements": "proposal-photos-dark-1440.json",
+    "dom": null
+  },
+  {
+    "file": "proposal-photos-dark-390.jpg",
+    "source": "proposal artifact",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "measurements": "proposal-photos-dark-390.json",
+    "dom": null
+  },
+  {
+    "file": "proposal-photos-light-1024.jpg",
+    "source": "proposal artifact",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 1024,
+      "height": 844
+    },
+    "measurements": "proposal-photos-light-1024.json",
+    "dom": null
+  },
+  {
+    "file": "proposal-photos-light-1440.jpg",
+    "source": "proposal artifact",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "measurements": "proposal-photos-light-1440.json",
+    "dom": null
+  },
+  {
+    "file": "proposal-photos-light-390.jpg",
+    "source": "proposal artifact",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "measurements": "proposal-photos-light-390.json",
+    "dom": null
+  },
+  {
+    "file": "proposal-preview-390.jpg",
+    "source": "proposal artifact",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  },
+  {
+    "file": "seedlot-two-photos-1440.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 1440,
+      "height": 844
+    },
+    "measurements": "seedlot-two-photos-1440.json",
+    "dom": "seedlot-two-photos-1440.txt"
+  },
+  {
+    "file": "seedlot-two-photos-390.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "measurements": "seedlot-two-photos-390.json",
+    "dom": "seedlot-two-photos-390.txt"
+  },
+  {
+    "file": "tablet-reload-1024.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": 1024,
+      "height": 844
+    },
+    "measurements": "tablet-reload-1024.json",
+    "dom": "tablet-reload-1024.txt"
+  },
+  {
+    "file": "unlinked-photo-390.jpg",
+    "source": "Media-owned live application",
+    "raster": [
+      1,
+      1
+    ],
+    "viewport": {
+      "width": null,
+      "height": null
+    },
+    "measurements": null,
+    "dom": null
+  }
+]

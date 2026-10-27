@@ -2039,6 +2039,27 @@
       ],
       "priority": "P1",
       "status": "verified"
+    },
+    {
+      "id": "MEDIA-VISUAL-001",
+      "category": "ux",
+      "description": "Refine shared Media with a photographic responsive gallery, deliberate full-image preview, safe focus and persistent navigation context within existing asset, record-link and identity-cover contracts",
+      "acceptance_criteria": [
+        "A guarded Media-owned populated Review and licensed deterministic photo coverage distinguish observed data from mockup examples and preserve foreign environments and operator edits",
+        "A concrete UX audit, responsive visual proposal and prioritized bounded implementation plan receive operator direction approval before broad implementation",
+        "Approved gallery, preview and detail polish preserves existing source and association filters, URL and Saved Views, protected thumbnail/original loading, attribution, accessibility and exact record-specific primary and separate identity-cover semantics",
+        "Contextual Photos, linking, retention and deletion safeguards retain their existing supported targets and independently verifiable behavior",
+        "Live responsive and six-theme evidence, focused checks and separately authorized canonical verification support later implementation acceptance; design artifacts alone do not mark the feature implemented or verified"
+      ],
+      "dependencies": [
+        "ATTACHMENT-005",
+        "SUPPLIER-003",
+        "GLOBAL-VISUAL-001",
+        "THEMES-001",
+        "CONTROLS-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
     }
   ]
 }

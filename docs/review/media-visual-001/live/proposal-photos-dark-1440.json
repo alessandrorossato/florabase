@@ -1,0 +1,43 @@
+{
+  "appearance": "dark",
+  "columns": "281.75px 281.75px 281.75px 281.75px",
+  "documentWidth": 1425,
+  "focus": "\nDesign study · packaged v5 photographs · no collection writesPalette BotanicalHerbariumMineralAppearance LightDarkThumbnail framing FillFit whole image\nFlorabase / Media\nFlorabase",
+  "height": 844,
+  "palette": "botanical",
+  "photos": [
+    {
+      "fit": "cover",
+      "loaded": true
+    },
+    {
+      "fit": "cover",
+      "loaded": true
+    },
+    {
+      "fit": "cover",
+      "loaded": true
+    },
+    {
+      "fit": "cover",
+      "loaded": true
+    },
+    {
+      "fit": "cover",
+      "loaded": true
+    },
+    {
+      "fit": "cover",
+      "loaded": true
+    },
+    {
+      "fit": "cover",
+      "loaded": true
+    },
+    {
+      "fit": "cover",
+      "loaded": true
+    }
+  ],
+  "width": 1440
+}

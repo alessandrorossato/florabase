@@ -1,0 +1,19 @@
+{
+  "appearance": "light",
+  "documentWidth": 375,
+  "focus": "\n    FlorabaseHideOverviewDashboardCollectionSeedsSowingsPlantsHarvestsLocationsActivityJournalHistoryScheduleExploreBotanical identitiesTaxonomyMediaGeographySourcingSuppliersOrde",
+  "height": 844,
+  "images": [
+    {
+      "fit": "contain",
+      "natural": [
+        480,
+        640
+      ],
+      "src": "/api/v1/attachments/01a178d7-e535-7616-b811-90aacf3e4da6/content"
+    }
+  ],
+  "palette": "botanical",
+  "url": "http://localhost:15280/#/media/01a178d7-e537-74bd-b04e-55ae8368d037",
+  "width": 390
+}

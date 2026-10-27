@@ -1,0 +1,31 @@
+{
+  "appearance": "light",
+  "bodyWidth": 375,
+  "columns": null,
+  "focus": {
+    "id": "",
+    "tag": "H3",
+    "text": "Review v5 — Echinacea purpurea — protected local illustration"
+  },
+  "images": [
+    {
+      "fit": "contain",
+      "frame": [
+        335,
+        506
+      ],
+      "loading": "lazy",
+      "natural": [
+        427,
+        640
+      ],
+      "src": "/api/v1/attachments/01a178d7-e664-77ea-ba12-1cdc0d0a3a01/content"
+    }
+  ],
+  "palette": "botanical",
+  "url": "http://localhost:15280/#/media/01a178d7-e664-77ea-ba12-1cdd7029fc59?q=Review+v5&kind=local&association=linked&target=seed_lot",
+  "viewport": {
+    "height": 844,
+    "width": 390
+  }
+}

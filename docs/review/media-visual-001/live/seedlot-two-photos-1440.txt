@@ -1,0 +1,123 @@
+- main:
+  - complementary "Application sidebar":
+    - heading "Florabase" [level=1]:
+      - link "Florabase":
+        - /url: "#/dashboard"
+    - button "Hide navigation":
+      - generic: Hide
+    - navigation "Primary navigation":
+      - region "Overview":
+        - heading "Overview" [level=2]:
+          - button "Overview" [expanded]:
+            - text: Overview
+        - link "Dashboard":
+          - /url: "#/dashboard"
+      - region "Collection":
+        - heading "Collection" [level=2]:
+          - button "Collection" [expanded]:
+            - text: Collection
+        - link "Seeds":
+          - /url: "#/seeds"
+        - link "Sowings":
+          - /url: "#/sowings"
+        - link "Plants":
+          - /url: "#/plants"
+        - link "Harvests":
+          - /url: "#/harvests"
+        - link "Locations":
+          - /url: "#/locations"
+      - region "Activity":
+        - heading "Activity" [level=2]:
+          - button "Activity" [expanded]:
+            - text: Activity
+        - link "Journal":
+          - /url: "#/events"
+        - link "History":
+          - /url: "#/history"
+        - link "Schedule":
+          - /url: "#/schedule"
+      - region "Explore":
+        - heading "Explore" [level=2]:
+          - button "Explore" [expanded]:
+            - text: Explore
+        - link "Botanical identities":
+          - /url: "#/identities"
+        - link "Taxonomy":
+          - /url: "#/taxonomy"
+        - link "Media":
+          - /url: "#/media"
+        - link "Geography":
+          - /url: "#/geography"
+      - region "Sourcing":
+        - heading "Sourcing" [level=2]:
+          - button "Sourcing" [expanded]:
+            - text: Sourcing
+        - link "Suppliers":
+          - /url: "#/suppliers"
+        - link "Orders":
+          - /url: "#/orders"
+    - paragraph: Signed in as Media Review (synthetic)
+    - link "Settings":
+      - /url: "#/settings"
+      - text: Settings
+    - 'button "Appearance: Dark, Mineral. Switch to System."':
+      - generic: Appearance
+    - button "Sign out"
+    - separator "Resize navigation"
+  - region "Workspace content":
+    - region "Seeds":
+      - heading "Seeds" [level=2]
+      - region "Seed lot detail and editor":
+        - region "Seed lot detail":
+          - navigation "Breadcrumb":
+            - list:
+              - listitem: Collection/
+              - link "Seeds":
+                - /url: "#/seeds"
+              - text: /
+              - listitem: Review v5 — protected photo example Aloe vera
+          - img "Primary photo for Review v5 — protected photo example Aloe vera"
+          - paragraph: Seed lot
+          - heading "Review v5 — protected photo example Aloe vera" [level=3]
+          - link "Aloe vera":
+            - /url: "#/identities/01a178d7-ceab-7456-93ca-93265f2de2f3"
+          - generic: Active
+          - group "Record actions":
+            - link "Start sowing":
+              - /url: "#/sowings?action=start&seedLot=01a178d7-e545-7564-9ba4-513619de47d0"
+            - button "Edit seed lot":
+              - generic: Edit seed lot
+            - link "Print label":
+              - /url: "#/labels?kind=seed-lot&record=01a178d7-e545-7564-9ba4-513619de47d0"
+              - generic: Print label
+          - tablist "Record sections":
+            - tab "Overview"
+            - tab "Sowings"
+            - tab "Photos" [active] [selected]
+            - tab "Lineage"
+          - tabpanel "Photos":
+            - region "Photos":
+              - heading "Photos" [level=4]
+              - button "Add media"
+              - button "Link existing"
+              - button "External"
+              - article:
+                - link "Open media details for Licensed species illustration for synthetic review; not this collection specimen.":
+                  - /url: "#/media/01a178d7-e537-74bd-b04e-55ae8368d037"
+                  - img "Licensed species illustration for synthetic review; not this collection specimen."
+                  - generic: Open
+                - paragraph:
+                  - text: Uploaded
+                  - generic: Primary
+                - paragraph: Licensed species illustration for synthetic review; not this collection specimen.
+                - button "Actions for Licensed species illustration for synthetic review; not this collection specimen.":
+                  - generic: More
+              - article:
+                - link "Open media details for Synthetic species illustration reuse; not evidence of the owned specimen.":
+                  - /url: "#/media/01a178d7-ec50-732f-96cf-54668063f329"
+                  - img "Synthetic species illustration reuse; not evidence of the owned specimen."
+                  - generic: Open
+                - paragraph: Uploaded
+                - paragraph: Synthetic species illustration reuse; not evidence of the owned specimen.
+                - button "Actions for Synthetic species illustration reuse; not evidence of the owned specimen.":
+                  - generic: More

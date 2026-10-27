@@ -1,0 +1,311 @@
+{
+  "appearance": "light",
+  "bodyWidth": 1425,
+  "columns": "271.25px 271.25px 271.25px 271.25px",
+  "focus": {
+    "id": "",
+    "tag": "BODY",
+    "text": "\n    FlorabaseHideOverviewDashboardCollectionSeedsSowingsPlantsHarvestsLocationsActivityJournalHistoryScheduleExploreBotanical identitiesTaxonomyMediaGeographySourcingSuppliersOrdersSigned in as Media"
+  },
+  "grid": {
+    "bottom": 2212.234375,
+    "height": 1979.4375,
+    "left": 276,
+    "right": 1397,
+    "top": 232.796875,
+    "width": 1121,
+    "x": 276,
+    "y": 232.796875
+  },
+  "header": {
+    "bottom": 173.046875,
+    "height": 94,
+    "left": 272,
+    "right": 1401,
+    "top": 79.046875,
+    "width": 1129,
+    "x": 272,
+    "y": 79.046875
+  },
+  "images": [
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-f44d-7446-8b8c-acdf252ecec6/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-f3f2-7211-9529-640133230710/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-f37e-7657-991a-d05da6d9f76f/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-f30a-7099-9a86-3ef726a7583f/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-f25b-730d-bcb9-d0c1ac9af8a8/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-f1ae-7685-8562-d1269b3e41a0/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-f11f-734d-aac1-ba1902a8f22c/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-f096-7203-92dc-0aded503016e/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-f041-7365-a586-e87917df01da/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-efd7-77ad-a202-6157009df95e/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-ef78-7415-8189-7a963c0408b0/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-ef1f-725e-b477-79d129b0fb57/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-eecc-70f1-bfa6-883adb633d32/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-ee7a-7041-ac7e-ede81865d386/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-ee29-7557-8ef8-5a0d9890e54b/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-edd8-758a-a776-e0465a32b195/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-ed12-7208-80fe-0a1cde483499/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-ec50-732f-96cf-54668063f329/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e6c3-7125-a6bc-9608ce141b09/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e69c-70be-9d02-e3534e50b437/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        214,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e664-77ea-ba12-1cdd7029fc59/thumbnail"
+    }
+  ],
+  "palette": "botanical",
+  "url": "http://localhost:15280/#/media",
+  "viewport": {
+    "height": 844,
+    "width": 1440
+  }
+}

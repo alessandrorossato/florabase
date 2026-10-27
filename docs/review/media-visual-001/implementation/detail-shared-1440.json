@@ -1,0 +1,31 @@
+{
+  "appearance": "light",
+  "bodyWidth": 1425,
+  "columns": null,
+  "focus": {
+    "id": "",
+    "tag": "H3",
+    "text": "Review v5 — Aloe vera — protected local illustration"
+  },
+  "images": [
+    {
+      "fit": "contain",
+      "frame": [
+        731,
+        591
+      ],
+      "loading": "lazy",
+      "natural": [
+        480,
+        640
+      ],
+      "src": "/api/v1/attachments/01a178d7-e535-7616-b811-90aacf3e4da6/content"
+    }
+  ],
+  "palette": "botanical",
+  "url": "http://localhost:15280/#/media/01a178d7-e537-74bd-b04e-55ae8368d037?q=Review+v5&kind=local",
+  "viewport": {
+    "height": 844,
+    "width": 1440
+  }
+}

@@ -1,0 +1,55 @@
+- main:
+  - complementary "Application sidebar":
+    - heading "Florabase" [level=1]:
+      - link "Florabase":
+        - /url: "#/dashboard"
+    - button "Hide navigation":
+      - generic: Hide
+    - link "Settings":
+      - /url: "#/settings"
+      - text: Settings
+    - 'button "Appearance: Light, Botanical. Switch to Dark."':
+      - generic: Appearance
+    - button "Sign out"
+  - region "Workspace content":
+    - region "Media":
+      - navigation "Breadcrumb":
+        - list:
+          - listitem: Explore/
+          - listitem: Media
+      - heading "Media" [level=2]
+      - paragraph: One image, many records. Unlinked assets stay available for future use.
+      - group "Media toolbar":
+        - generic: Search media
+        - searchbox "Search media": explicit Identity cover upload
+        - button "Filters (2)" [active]:
+          - generic: Filters (2)
+        - button "Saved views":
+          - generic: Saved views
+        - button "Add new media"
+      - group "Active filters":
+        - button "Remove source filter":
+          - generic: "Source: Local images"
+        - button "Remove record links filter":
+          - generic: "Record links: Unlinked"
+      - paragraph: Unlinked means no record links. An identity cover may still reference the asset.
+      - paragraph: 1 record
+      - generic "Media assets":
+        - button "Media Review — Lavandula angustifolia — explicit Identity cover upload Media Review — Lavandula angustifolia — explicit Identity cover upload Local image Unlinked · 1 cover reference(s)":
+          - img "Media Review — Lavandula angustifolia — explicit Identity cover upload"
+          - strong: Media Review — Lavandula angustifolia — explicit Identity cover upload
+          - generic: Local image
+          - generic: Unlinked · 1 cover reference(s)
+      - button "Previous media" [disabled]
+      - generic: 1–1 of 1
+      - button "Next media" [disabled]
+  - navigation "Mobile primary navigation":
+    - link "Home":
+      - /url: "#/dashboard"
+    - link "Seeds":
+      - /url: "#/seeds"
+    - link "Sowings":
+      - /url: "#/sowings"
+    - link "Plants":
+      - /url: "#/plants"
+    - button "More"

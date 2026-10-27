@@ -1,0 +1,9 @@
+$ vitest run --configLoader runner src/media/MediaNavigation.test.tsx src/media/MediaScreen.test.tsx src/media/navigation.test.ts src/photos/PhotosSection.test.tsx src/photos/PrimaryPhotoVisual.test.tsx src/botanical-identities/IdentityMedia.test.tsx src/botanical-identities/IdentityRecordMedia.test.tsx src/components/DirectoryTools.test.tsx src/saved-views/state.test.ts --maxWorkers=2
+
+ RUN  v4.1.11 /home/alessandro/.codex/worktrees/1d44/florabase/frontend
+
+
+ Test Files  9 passed (9)
+      Tests  122 passed (122)
+   Start at  19:36:53
+   Duration  61.54s (transform 1.60s, setup 4.50s, import 3.66s, tests 25.96s, environment 22.94s)

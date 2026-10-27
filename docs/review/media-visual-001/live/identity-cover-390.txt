@@ -1,0 +1,89 @@
+- main:
+  - complementary "Application sidebar":
+    - heading "Florabase" [level=1]:
+      - link "Florabase":
+        - /url: "#/dashboard"
+    - button "Hide navigation":
+      - generic: Hide
+    - link "Settings":
+      - /url: "#/settings"
+      - text: Settings
+    - 'button "Appearance: Light, Botanical. Switch to Dark."':
+      - generic: Appearance
+    - button "Sign out"
+  - region "Workspace content":
+    - region "Botanical identity detail":
+      - navigation "Breadcrumb":
+        - list:
+          - listitem: Explore/
+          - link "Botanical identities":
+            - /url: "#/identities"
+          - text: /
+          - listitem: Lavandula angustifolia
+      - navigation "Adjacent botanical identities":
+        - 'link "Previous identity: Lactuca sativa ‘Lollo Rossa’"':
+          - /url: "#/identities/01a178d7-d6bf-7429-8332-2f1ec3542204?tab=media"
+          - text: ← Previous
+        - 'link "Next identity: Mentha spicata"':
+          - /url: "#/identities/01a178d7-d782-7368-bc1c-f03ee45e83d7?tab=media"
+          - text: Next →
+      - region "Lavandula angustifolia":
+        - img "Cover for Lavandula angustifolia"
+        - heading "Lavandula angustifolia" [level=2]:
+          - generic: Lavandula angustifolia
+        - paragraph: Preview — Lavender
+        - button "Add to collection":
+          - generic: Add to collection
+        - button "Edit botanical identity":
+          - generic: Edit
+      - tablist "Record sections":
+        - tab "Overview"
+        - tab "Reference"
+        - tab "Taxonomy"
+        - tab "Maps"
+        - tab "Media" [active] [selected]
+        - tab "History"
+      - tabpanel "Media":
+        - heading "Identity media" [level=3]
+        - paragraph: The featured image represents this identity. Collection images below stay with their own records.
+        - region "Representative image":
+          - paragraph: Cover
+          - heading "Featured identity image" [level=3]
+          - generic "Manage cover"
+          - img "Representative image for Lavandula angustifolia"
+          - generic "Cover attribution":
+            - paragraph: Media Review — Lavandula angustifolia — explicit Identity cover upload
+            - paragraph: Daria Sitnikova; https://commons.wikimedia.org/wiki/File:Field_Lavandula_angustifolia.jpg; Resized to at most 640px; recompressed JPEG; EXIF removed. Synthetic review illustration, not a collection specimen.
+            - paragraph:
+              - link "CC-BY-4.0":
+                - /url: https://creativecommons.org/licenses/by/4.0/
+          - link "Open cover media record":
+            - /url: "#/media/01a178d7-ed12-7208-80fe-0a1cde483499"
+        - region "Collection record media":
+          - heading "Images on collection records" [level=3]
+          - paragraph: Actual images attached to linked packets, Sowings, Plants, Plant groups and Harvests. These remain collection-record media, not identity covers.
+          - figure "Uploaded image Licensed species illustration for synthetic review; not this collection specimen. Review v5 — protected photo example Lavandula angustifolia Seed lot Daria Sitnikova; https://commons.wikimedia.org/wiki/File:Field_Lavandula_angustifolia.jpg; Resized to at most 640px; recompressed JPEG; EXIF removed. Synthetic review illustration, not a collection specimen. CC-BY-4.0":
+            - link "Open media details for Licensed species illustration for synthetic review; not this collection specimen.":
+              - /url: "#/media/01a178d7-e57d-76a9-8267-ff55243bc95f"
+              - img "Review v5 — Lavandula angustifolia — protected local illustration"
+            - generic: Uploaded image
+            - paragraph: Licensed species illustration for synthetic review; not this collection specimen.
+            - link "Review v5 — protected photo example Lavandula angustifolia":
+              - /url: "#/seeds/01a178d7-e58a-7121-b290-f09882234e3b?tab=photos"
+            - generic: Seed lot
+            - generic: Daria Sitnikova; https://commons.wikimedia.org/wiki/File:Field_Lavandula_angustifolia.jpg; Resized to at most 640px; recompressed JPEG; EXIF removed. Synthetic review illustration, not a collection specimen.
+            - link "CC-BY-4.0":
+              - /url: https://creativecommons.org/licenses/by/4.0/
+          - paragraph: Checked 3 of 3 linked records. External references without a saved copy open in Media; no remote image is loaded here.
+          - generic "Open linked record photo sections"
+          - paragraph: The current identity-level media contract supports one cover, not arbitrary direct attachments.
+  - navigation "Mobile primary navigation":
+    - link "Home":
+      - /url: "#/dashboard"
+    - link "Seeds":
+      - /url: "#/seeds"
+    - link "Sowings":
+      - /url: "#/sowings"
+    - link "Plants":
+      - /url: "#/plants"
+    - button "More"

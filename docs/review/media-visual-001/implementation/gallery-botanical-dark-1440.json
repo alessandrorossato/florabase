@@ -1,0 +1,142 @@
+{
+  "appearance": "dark",
+  "bodyWidth": 1425,
+  "columns": "278.25px 278.25px 278.25px 278.25px",
+  "focus": {
+    "id": "",
+    "tag": "BODY",
+    "text": "\n    FlorabaseHideOverviewDashboardCollectionSeedsSowingsPlantsHarvestsLocationsActivityJournalHistoryScheduleExploreBotanical identitiesTaxonomyMediaGeographySourcingSuppliersOrdersSigned in as Media"
+  },
+  "grid": {
+    "bottom": 899.109375,
+    "height": 662.3125,
+    "left": 248,
+    "right": 1397,
+    "top": 236.796875,
+    "width": 1149,
+    "x": 248,
+    "y": 236.796875
+  },
+  "header": {
+    "bottom": 177.046875,
+    "height": 98,
+    "left": 244,
+    "right": 1401,
+    "top": 79.046875,
+    "width": 1157,
+    "x": 244,
+    "y": 79.046875
+  },
+  "images": [
+    {
+      "fit": "cover",
+      "frame": [
+        276,
+        207
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e6c3-7125-a6bc-9608ce141b09/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        276,
+        207
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e69c-70be-9d02-e3534e50b437/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        276,
+        207
+      ],
+      "loading": "lazy",
+      "natural": [
+        214,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e664-77ea-ba12-1cdd7029fc59/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        276,
+        207
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e62d-7515-a845-430f17a87699/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        276,
+        207
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e5f6-7674-9c5c-cd47667277bb/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        276,
+        207
+      ],
+      "loading": "lazy",
+      "natural": [
+        214,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e5ba-7791-83b6-33ced6176b2e/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        276,
+        207
+      ],
+      "loading": "lazy",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e57d-76a9-8267-ff55243bc95f/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        276,
+        207
+      ],
+      "loading": "lazy",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e537-74bd-b04e-55ae8368d037/thumbnail"
+    }
+  ],
+  "palette": "botanical",
+  "url": "http://localhost:15280/#/media?q=Review+v5&kind=local",
+  "viewport": {
+    "height": 844,
+    "width": 1440
+  }
+}

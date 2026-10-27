@@ -107,15 +107,13 @@ function mount(node: React.ReactNode) {
 }
 afterEach(() => {
   cleanup();
+  window.history.replaceState(null, "", "#/media");
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
 
 test("Gallery distinguishes source and references, uses thumbnails and filters/paginates", async () => {
-  vi.stubGlobal(
-    "matchMedia",
-    vi.fn(() => ({ matches: false })),
-  );
+  window.matchMedia = vi.fn(() => ({ matches: false }) as MediaQueryList);
   const external = asset({
     id: recordId,
     kind: "external",
@@ -129,6 +127,10 @@ test("Gallery distinguishes source and references, uses thumbnails and filters/p
   });
   const fetch = vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
     const url = requestUrl(input);
+    if (url === `/api/v1/media-assets/${assetId}`)
+      return Promise.resolve(
+        json(detail({ cover_reference_count: 1, can_delete: false })),
+      );
     return Promise.resolve(
       json(
         page(
@@ -162,6 +164,7 @@ test("Gallery distinguishes source and references, uses thumbnails and filters/p
   expect(
     screen.getByRole("link", { name: "Open media details" }),
   ).toHaveAttribute("href", `#/media/${assetId}`);
+  await user.click(screen.getByRole("button", { name: "Close preview" }));
   await selectDirectoryFilter(user, "Record links", "unlinked");
   await waitFor(() => {
     expect(fetch).toHaveBeenLastCalledWith(
@@ -594,6 +597,194 @@ test("external detail explicitly saves, refreshes and removes the persistent loc
   ]);
 });
 
+test("Quick Preview saves an external reference only on request and refreshes gallery and preview", async () => {
+  const user = userEvent.setup();
+  window.matchMedia = vi.fn(() => ({ matches: false }) as MediaQueryList);
+  const local = asset();
+  const alreadySaved = asset({
+    id: recordId,
+    kind: "external",
+    title: "Saved external image",
+    image_url: "https://images.example.test/saved.jpg",
+    source_url: "https://example.test/saved",
+    content_url: `/api/v1/attachments/${recordId}/content`,
+    thumbnail_url: `/api/v1/media-assets/${recordId}/thumbnail`,
+  });
+  const remoteId = "01900000-0000-7000-8000-000000000913";
+  let remote = asset({
+    id: remoteId,
+    kind: "external",
+    title: "Unsaved external image",
+    image_url: "https://images.example.test/remote.jpg",
+    source_url: "https://example.test/remote",
+    content_url: null,
+    thumbnail_url: null,
+    original_filename: null,
+    media_type: null,
+  });
+  const paths: string[] = [];
+  const directory =
+    "#/media?q=Review+v5&kind=external&association=unlinked&offset=24";
+  window.history.replaceState(null, "", directory);
+  window.matchMedia = vi.fn(() => ({ matches: false }) as MediaQueryList);
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: RequestInfo | URL, options?: RequestInit) => {
+      const path = requestUrl(input);
+      paths.push(path);
+      if (path.startsWith("/api/v1/media-assets?"))
+        return Promise.resolve(
+          json(page([local, alreadySaved, remote], 27, 24)),
+        );
+      if (path === `/api/v1/media-assets/${remoteId}/save-local-copy`) {
+        expect(options?.method).toBe("POST");
+        expect(new Headers(options?.headers).get("X-CSRF-Token")).toBe(
+          "test-csrf",
+        );
+        remote = {
+          ...remote,
+          content_url: `/api/v1/attachments/${remoteId}/content`,
+          thumbnail_url: `/api/v1/media-assets/${remoteId}/thumbnail`,
+          fetched_at: "2026-10-01T12:00:00Z",
+        };
+        return Promise.resolve(json(remote));
+      }
+      const id = path.split("/").at(-1);
+      return Promise.resolve(
+        json(detail(id === remoteId ? remote : alreadySaved)),
+      );
+    }),
+  );
+  mount(<MediaScreen />);
+  const localCard = await waitFor(() => {
+    const card = document.getElementById(
+      `media-asset-${assetId}`,
+    ) as HTMLButtonElement | null;
+    expect(card).toBeInTheDocument();
+    if (!card) throw new Error("Media card did not render");
+    return card;
+  });
+  await user.click(localCard);
+  expect(screen.queryByRole("button", { name: "Save local copy" })).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Close preview" }));
+  await user.click(
+    screen.getByRole("button", { name: /Saved external image/ }),
+  );
+  expect(screen.queryByRole("button", { name: "Save local copy" })).toBeNull();
+  expect(screen.queryByText("Protected local copy saved.")).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Close preview" }));
+
+  // Select the no-copy asset by its stable gallery button ID, as its title is shared.
+  await user.click(
+    await screen.findByRole("button", { name: /Unsaved external image/ }),
+  );
+  const preview = screen.getByRole("dialog", { name: "Quick Preview" });
+  expect(
+    within(preview).getByText("External reference · not stored locally"),
+  ).toBeVisible();
+  expect(
+    within(preview).getByRole("button", { name: "Preview once" }),
+  ).toBeVisible();
+  expect(
+    within(preview).getByRole("button", { name: "Save local copy" }),
+  ).toBeVisible();
+  expect(paths).not.toContain("https://images.example.test/remote.jpg");
+
+  await user.click(
+    within(preview).getByRole("button", { name: "Save local copy" }),
+  );
+  expect(
+    await within(preview).findByText("Protected local copy saved."),
+  ).toBeVisible();
+  expect(
+    within(preview).getByText("Protected local copy saved."),
+  ).toHaveFocus();
+  expect(within(preview).getByRole("img")).toHaveAttribute(
+    "src",
+    `/api/v1/attachments/${remoteId}/content`,
+  );
+  expect(
+    within(preview).queryByRole("button", { name: "Save local copy" }),
+  ).toBeNull();
+  expect(window.location.hash).toBe(directory);
+  expect(screen.getByRole("searchbox", { name: "Search media" })).toHaveValue(
+    "Review v5",
+  );
+  await waitFor(() => {
+    expect(
+      paths.filter((path) => path.startsWith("/api/v1/media-assets?")),
+    ).toHaveLength(2);
+  });
+  expect(preview).toBeVisible();
+});
+
+test("Quick Preview prevents duplicate saves and reports retryable save failures", async () => {
+  const user = userEvent.setup();
+  const remoteId = "01900000-0000-7000-8000-000000000913";
+  const remote = asset({
+    id: remoteId,
+    kind: "external",
+    title: "Unsaved external image",
+    image_url: "https://images.example.test/remote.jpg",
+    source_url: "https://example.test/remote",
+    content_url: null,
+    thumbnail_url: null,
+    original_filename: null,
+    media_type: null,
+  });
+  let resolveSave: ((response: Response) => void) | undefined;
+  let saves = 0;
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => ({ matches: false })),
+  );
+  vi.stubGlobal(
+    "fetch",
+    vi.fn((input: RequestInfo | URL) => {
+      const path = requestUrl(input);
+      if (path.startsWith("/api/v1/media-assets?"))
+        return Promise.resolve(json(page([remote])));
+      if (path.endsWith("/save-local-copy")) {
+        saves += 1;
+        return new Promise<Response>((resolve) => {
+          resolveSave = resolve;
+        });
+      }
+      if (path.endsWith(remoteId)) return Promise.resolve(json(detail(remote)));
+      return Promise.resolve(json(page([remote])));
+    }),
+  );
+  mount(<MediaScreen />);
+  await user.click(
+    await screen.findByRole("button", { name: /Unsaved external image/ }),
+  );
+  const save = screen.getByRole("button", { name: "Save local copy" });
+  await user.click(save);
+  expect(
+    await screen.findByRole("button", { name: "Saving local copy…" }),
+  ).toBeDisabled();
+  await user.dblClick(
+    screen.getByRole("button", { name: "Saving local copy…" }),
+  );
+  expect(saves).toBe(1);
+  resolveSave?.(
+    json(
+      {
+        detail: {
+          code: "external_fetch_failed",
+          message: "The external image is unavailable. Try again.",
+        },
+      },
+      422,
+    ),
+  );
+  expect(await screen.findByRole("alert")).toHaveTextContent(
+    "The external image is unavailable.",
+  );
+  expect(screen.getByRole("dialog", { name: "Quick Preview" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Save local copy" })).toBeEnabled();
+});
+
 test("failed refresh explains the error and keeps the saved image", async () => {
   const user = userEvent.setup();
   const current = detail({
@@ -642,15 +833,23 @@ test("Gallery and Quick Preview use only the protected snapshot of an external a
   );
   vi.stubGlobal(
     "fetch",
-    vi.fn(() => Promise.resolve(json(page([stored])))),
+    vi.fn((input: RequestInfo | URL) =>
+      Promise.resolve(
+        json(requestUrl(input).includes("?") ? page([stored]) : detail(stored)),
+      ),
+    ),
   );
   mount(<MediaScreen />);
   await user.click(await screen.findByRole("button", { name: /Garden image/ }));
-  expect(
-    screen
-      .getAllByRole("img")
-      .every((image) => image.getAttribute("src") === stored.thumbnail_url),
-  ).toBe(true);
+  const preview = await screen.findByRole("dialog", { name: "Quick Preview" });
+  expect(await within(preview).findByRole("img")).toHaveAttribute(
+    "src",
+    stored.content_url,
+  );
+  expect(screen.getAllByRole("img")[0]).toHaveAttribute(
+    "src",
+    stored.thumbnail_url,
+  );
   expect(
     screen.queryByRole("button", { name: "Preview once" }),
   ).not.toBeInTheDocument();
@@ -934,3 +1133,287 @@ test.each(["saved", "reference", "retry", "retain"] as const)(
     );
   },
 );
+
+test("deliberate preview loads one original and exact shared records, Escape restores the card", async () => {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => ({ matches: false })),
+  );
+  const fetch = vi.spyOn(globalThis, "fetch").mockImplementation((input) =>
+    Promise.resolve(
+      json(
+        requestUrl(input).includes("?")
+          ? page([asset()])
+          : detail({
+              links: [
+                link(),
+                link({
+                  id: recordId,
+                  target_label: "Plant B",
+                  is_primary: true,
+                }),
+              ],
+            }),
+      ),
+    ),
+  );
+  const user = userEvent.setup();
+  mount(<MediaScreen />);
+  const card = await screen.findByRole("button", { name: /Garden image/ });
+  expect(fetch).toHaveBeenCalledTimes(1);
+  card.focus();
+  await user.keyboard("{Enter}");
+  const preview = screen.getByRole("dialog", { name: "Quick Preview" });
+  expect(
+    within(preview).getByRole("button", { name: "Close preview" }),
+  ).toHaveFocus();
+  expect(
+    await within(preview).findByRole("link", { name: "Plant B" }),
+  ).toBeVisible();
+  expect(
+    within(preview).getByText("Plant · Primary image for this record"),
+  ).toBeVisible();
+  expect(within(preview).getByRole("img")).toHaveAttribute(
+    "src",
+    asset().content_url,
+  );
+  expect(fetch).toHaveBeenCalledTimes(2);
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(card).toHaveFocus();
+});
+
+test("safe initial Cancel, Escape and retry deletion preserve reference conflict and pending safeguards", async () => {
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation((_input, init) =>
+      Promise.resolve(
+        init?.method === "DELETE"
+          ? json({ detail: { message: "Still referenced" } }, 409)
+          : json(detail({ deletion_pending: true })),
+      ),
+    );
+  const user = userEvent.setup();
+  mount(<MediaScreen initialId={assetId} />);
+  const trigger = await screen.findByRole("button", {
+    name: "Retry asset deletion",
+  });
+  expect(screen.getByRole("heading", { name: "Garden image" })).toHaveFocus();
+  trigger.focus();
+  await user.keyboard("{Enter}");
+  let dialog = screen.getByRole("dialog");
+  expect(within(dialog).getByRole("button", { name: "Cancel" })).toHaveFocus();
+  await user.keyboard("{Escape}");
+  expect(trigger).toHaveFocus();
+  await user.click(trigger);
+  dialog = screen.getByRole("dialog");
+  expect(within(dialog).getByRole("button", { name: "Cancel" })).toHaveFocus();
+  await user.click(
+    within(dialog).getByRole("button", { name: "Delete media asset" }),
+  );
+  expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+    "Still referenced",
+  );
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(trigger).toHaveFocus();
+  expect(
+    fetch.mock.calls.filter(([, init]) => init?.method === "DELETE"),
+  ).toHaveLength(1);
+  expect(screen.queryByRole("img")).toBeNull();
+});
+
+test("detail return preserves filters and page, restores initiating card and falls back when absent", async () => {
+  const directory =
+    "#/media?q=leaf&kind=local&association=linked&target=plant&offset=24";
+  window.history.replaceState(
+    { mediaFocus: assetId },
+    "",
+    directory.replace("#/media", `#/media/${assetId}`),
+  );
+  let exists = true;
+  vi.spyOn(globalThis, "fetch").mockImplementation((input) =>
+    Promise.resolve(
+      json(
+        requestUrl(input).includes("?")
+          ? page(exists ? [asset()] : [], exists ? 25 : 0, 24)
+          : detail(),
+      ),
+    ),
+  );
+  const user = userEvent.setup();
+  const view = mount(<MediaScreen initialId={assetId} />);
+  await screen.findByRole("heading", { name: "Garden image" });
+  const back = screen.getByRole("link", { name: "Media" });
+  expect(back).toHaveAttribute("href", directory);
+  await user.click(back);
+  view.rerender(
+    <AuthContext.Provider value={auth}>
+      <MediaScreen />
+    </AuthContext.Provider>,
+  );
+  const card = await screen.findByRole("button", { name: /Garden image/ });
+  await waitFor(() => {
+    expect(card).toHaveFocus();
+  });
+  expect(screen.getByRole("searchbox")).toHaveValue("leaf");
+  expect(window.location.hash).toBe(directory);
+  expect(screen.getByText("25–25 of 25")).toBeVisible();
+  exists = false;
+  view.unmount();
+  mount(<MediaScreen />);
+  await screen.findByText(/No matching media/);
+  expect(screen.getByRole("heading", { name: "Media" })).toHaveFocus();
+});
+
+test("mobile activation carries exact filters and offset straight to details without an inspector", async () => {
+  window.history.replaceState(
+    null,
+    "",
+    "#/media?kind=local&target=plant&offset=24",
+  );
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => ({ matches: true })),
+  );
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    json(page([asset()], 25, 24)),
+  );
+  const user = userEvent.setup();
+  mount(<MediaScreen />);
+  await user.click(await screen.findByRole("button", { name: /Garden image/ }));
+  expect(window.location.hash).toBe(
+    `#/media/${assetId}?kind=local&target=plant&offset=24`,
+  );
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+test("preview failure is recoverable and does not load an external reference without opt-in", async () => {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => ({ matches: false })),
+  );
+  const external = asset({
+    kind: "external",
+    content_url: null,
+    thumbnail_url: null,
+    image_url: "https://images.example.test/image.jpg",
+  });
+  let reads = 0;
+  vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    if (requestUrl(input).includes("?"))
+      return Promise.resolve(json(page([external])));
+    return Promise.resolve(
+      ++reads === 1
+        ? json({ detail: { message: "Unavailable" } }, 503)
+        : json(detail(external)),
+    );
+  });
+  const user = userEvent.setup();
+  mount(<MediaScreen />);
+  await user.click(await screen.findByRole("button", { name: /Garden image/ }));
+  const preview = screen.getByRole("dialog");
+  expect(await within(preview).findByRole("alert")).toBeVisible();
+  await user.click(
+    within(preview).getByRole("button", { name: "Retry preview" }),
+  );
+  expect(
+    await within(preview).findByRole("button", { name: "Preview once" }),
+  ).toBeVisible();
+  expect(screen.queryByRole("img")).toBeNull();
+  await user.click(
+    within(preview).getByRole("button", { name: "Close preview" }),
+  );
+});
+
+test("a deleted last page clamps to the final existing page and safely focuses the heading", async () => {
+  window.history.replaceState(
+    { mediaFocus: assetId },
+    "",
+    "#/media?kind=local&offset=24",
+  );
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation((input) =>
+      Promise.resolve(
+        json(page([], 0, requestUrl(input).includes("offset=24") ? 24 : 0)),
+      ),
+    );
+  mount(<MediaScreen />);
+  await screen.findByText(/No matching media/);
+  expect(window.location.hash).toBe("#/media?kind=local");
+  await waitFor(() => {
+    expect(screen.getByRole("heading", { name: "Media" })).toHaveFocus();
+  });
+  expect(fetch).toHaveBeenCalledWith(
+    expect.stringContaining("offset=0"),
+    expect.anything(),
+  );
+});
+
+test("confirmation success retains filtered directory context without touching other media", async () => {
+  window.history.replaceState(null, "", `#/media/${assetId}?q=leaf&kind=local`);
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation((_input, init) =>
+      Promise.resolve(
+        init?.method === "DELETE"
+          ? new Response(null, { status: 204 })
+          : json(detail()),
+      ),
+    );
+  const user = userEvent.setup();
+  mount(<MediaScreen initialId={assetId} />);
+  await user.click(
+    await screen.findByRole("button", { name: "Delete media asset" }),
+  );
+  const dialog = screen.getByRole("dialog");
+  expect(within(dialog).getByRole("button", { name: "Cancel" })).toHaveFocus();
+  await user.click(
+    within(dialog).getByRole("button", { name: "Delete media asset" }),
+  );
+  await waitFor(() => {
+    expect(window.location.hash).toBe("#/media?q=leaf&kind=local");
+  });
+  expect(
+    fetch.mock.calls
+      .filter(([, init]) => init?.method === "DELETE")
+      .map(([input]) => input),
+  ).toEqual([`/api/v1/media-assets/${assetId}`]);
+});
+
+test("a missing thumbnail falls back without trying an original or remote URL", () => {
+  mount(<MediaPreview asset={asset()} />);
+  fireEvent.error(screen.getByRole("img"));
+  expect(screen.getByRole("status")).toHaveTextContent("Image unavailable");
+  expect(screen.queryByRole("img")).toBeNull();
+});
+
+test("closing a loading preview aborts its request and ignores a late detail response", async () => {
+  vi.stubGlobal(
+    "matchMedia",
+    vi.fn(() => ({ matches: false })),
+  );
+  let finish: ((value: Response) => void) | undefined;
+  let signal: AbortSignal | null | undefined;
+  vi.spyOn(globalThis, "fetch").mockImplementation((input, options) => {
+    if (requestUrl(input).includes("?"))
+      return Promise.resolve(json(page([asset()])));
+    signal = options?.signal;
+    return new Promise<Response>((resolve) => {
+      finish = resolve;
+    });
+  });
+  const user = userEvent.setup();
+  mount(<MediaScreen />);
+  const card = await screen.findByRole("button", { name: /Garden image/ });
+  await user.click(card);
+  expect(await screen.findByText("Loading preview…")).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Close preview" }));
+  expect(signal?.aborted).toBe(true);
+  finish?.(json(detail()));
+  await waitFor(() => {
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+  expect(card).toHaveFocus();
+  expect(screen.getByRole("img")).toHaveAttribute("src", asset().thumbnail_url);
+});

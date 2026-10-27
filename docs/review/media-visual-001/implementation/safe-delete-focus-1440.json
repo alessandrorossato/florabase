@@ -1,0 +1,31 @@
+{
+  "appearance": "light",
+  "bodyWidth": 1425,
+  "columns": null,
+  "focus": {
+    "id": "",
+    "tag": "BUTTON",
+    "text": "Cancel"
+  },
+  "images": [
+    {
+      "fit": "contain",
+      "frame": [
+        750,
+        591
+      ],
+      "loading": "lazy",
+      "natural": [
+        640,
+        480
+      ],
+      "src": "/api/v1/attachments/01a178d7-edd8-758a-a776-e045ff1ec983/content"
+    }
+  ],
+  "palette": "botanical",
+  "url": "http://localhost:15280/#/media/01a178d7-edd8-758a-a776-e0465a32b195",
+  "viewport": {
+    "height": 844,
+    "width": 1440
+  }
+}

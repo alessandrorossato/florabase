@@ -1,0 +1,116 @@
+{
+  "appearance": "light",
+  "bodyWidth": 1425,
+  "columns": "271.25px 271.25px 271.25px 271.25px",
+  "focus": {
+    "id": "media-asset-01a178d7-e537-74bd-b04e-55ae8368d037",
+    "tag": "BUTTON",
+    "text": "Review v5 — Aloe vera — protected local illustrationLocal image2 record links"
+  },
+  "grid": {
+    "bottom": 747.515625,
+    "height": 983.71875,
+    "left": 276,
+    "right": 1397,
+    "top": -236.203125,
+    "width": 1121,
+    "x": 276,
+    "y": -236.203125
+  },
+  "header": {
+    "bottom": -295.953125,
+    "height": 94,
+    "left": 272,
+    "right": 1401,
+    "top": -389.953125,
+    "width": 1129,
+    "x": 272,
+    "y": -389.953125
+  },
+  "images": [
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e62d-7515-a845-430f17a87699/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        320,
+        240
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e5f6-7674-9c5c-cd47667277bb/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        214,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e5ba-7791-83b6-33ced6176b2e/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e57d-76a9-8267-ff55243bc95f/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        240,
+        320
+      ],
+      "src": "/api/v1/media-assets/01a178d7-e537-74bd-b04e-55ae8368d037/thumbnail"
+    },
+    {
+      "fit": "cover",
+      "frame": [
+        269,
+        202
+      ],
+      "loading": "lazy",
+      "natural": [
+        96,
+        96
+      ],
+      "src": "/api/v1/media-assets/01a178d7-d230-75a0-9032-0e63b0d81985/thumbnail"
+    }
+  ],
+  "palette": "botanical",
+  "url": "http://localhost:15280/#/media?offset=24",
+  "viewport": {
+    "height": 844,
+    "width": 1440
+  }
+}
