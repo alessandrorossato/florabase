@@ -4698,3 +4698,31 @@ test("Dashboard Quick add keeps all destinations and labels with distinct decora
   });
   expect(new Set(icons).size).toBe(9);
 });
+
+test("Location creation protects changed names and scopes on Escape and Cancel", async () => {
+  authenticatedThen((path) => {
+    if (path === "/api/v1/locations") return jsonResponse([houseLocation]);
+    throw new Error(`unexpected request: ${path}`);
+  });
+  const user = await openLocations();
+  const trigger = screen.getByRole("button", { name: "New location" });
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  await user.click(trigger);
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(confirm).not.toHaveBeenCalled();
+  expect(trigger).toHaveFocus();
+  await user.click(trigger);
+  await user.type(screen.getByLabelText("Name"), "Keep this shelf");
+  await user.keyboard("{Escape}");
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.getByLabelText("Name")).toHaveValue("Keep this shelf");
+  confirm.mockReturnValue(true);
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(trigger).toHaveFocus();
+  await user.click(trigger);
+  confirm.mockReturnValue(false);
+  await user.click(screen.getByRole("checkbox", { name: "Plants" }));
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.getByRole("dialog", { name: "New location" })).toBeVisible();
+  confirm.mockRestore();
+});

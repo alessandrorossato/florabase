@@ -457,6 +457,8 @@ export function LocationScreen({
   }>({ key: "", overrides: new Map() });
   const createName = useRef<HTMLInputElement>(null);
   const editForm = useRef<HTMLFormElement>(null);
+  const createForm = useRef<HTMLFormElement>(null);
+  const createBaseline = useRef("");
   const feedback = useRef<HTMLDivElement>(null);
   const {
     expanded: creationExpanded,
@@ -480,6 +482,24 @@ export function LocationScreen({
     openCreation();
   }, [directory.status, openCreation, startCreating]);
   const pending = save.status === "saving";
+  useEffect(() => {
+    if (creationExpanded && createForm.current)
+      createBaseline.current = JSON.stringify(payloadFrom(createForm.current));
+  }, [creationExpanded]);
+  function dismissCreate() {
+    if (pending) return;
+    if (
+      createForm.current &&
+      JSON.stringify(payloadFrom(createForm.current)) !==
+        createBaseline.current &&
+      !window.confirm("Discard unsaved Location changes?")
+    )
+      return;
+    setCreateNameValue("");
+    setCreateParentId("");
+    setSave({ status: "idle" });
+    closeCreation({ returnFocus: false });
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -1255,12 +1275,11 @@ export function LocationScreen({
       {creationExpanded && (
         <TaskDialog
           title={createParentId ? "New child location" : "New location"}
-          onClose={() => {
-            if (!pending) closeCreation({ returnFocus: false });
-          }}
+          onClose={dismissCreate}
         >
           <div ref={creationPanelRef}>
             <form
+              ref={createForm}
               className="identity-form"
               aria-busy={pending}
               onSubmit={submitCreate}
@@ -1324,12 +1343,7 @@ export function LocationScreen({
                   type="button"
                   className="button--secondary"
                   disabled={pending}
-                  onClick={() => {
-                    setCreateNameValue("");
-                    setCreateParentId("");
-                    setSave({ status: "idle" });
-                    closeCreation({ returnFocus: false });
-                  }}
+                  onClick={dismissCreate}
                 >
                   Cancel
                 </button>

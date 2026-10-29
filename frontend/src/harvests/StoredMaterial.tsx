@@ -420,21 +420,23 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
             <button
               type="button"
               disabled={pending}
-              onClick={() => {
-                void remove();
-              }}
-            >
-              Remove tracking
-            </button>
-            <button
-              type="button"
-              disabled={pending}
               className="button--secondary"
               onClick={() => {
                 setRemoving(null);
               }}
             >
               Cancel
+            </button>
+
+            <button
+              type="button"
+              className="button--danger"
+              disabled={pending}
+              onClick={() => {
+                void remove();
+              }}
+            >
+              Remove tracking
             </button>
           </div>
           {error && <p role="alert">{error}</p>}

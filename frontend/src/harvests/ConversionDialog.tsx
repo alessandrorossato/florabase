@@ -69,6 +69,26 @@ export function ConversionDialog({
     useState<ConversionCreate["expected_viability_until"]>(null);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const draft = JSON.stringify({
+    identity,
+    location,
+    label,
+    notes,
+    mode,
+    quantity,
+    remainder,
+    viability,
+  });
+  const baseline = useRef(draft);
+  function dismiss() {
+    if (pending) return;
+    if (
+      draft !== baseline.current &&
+      !window.confirm("Discard unsaved Seed lot conversion changes?")
+    )
+      return;
+    onClose();
+  }
   useEffect(() => {
     const controller = new AbortController();
     void Promise.all([
@@ -152,9 +172,7 @@ export function ConversionDialog({
     <EditWorkspace
       modal
       title="Create Seed lot from stored seeds"
-      onClose={() => {
-        if (!pending) onClose();
-      }}
+      onClose={dismiss}
     >
       <form
         className="collection-form inventory-form harvest-conversion-form"
@@ -389,7 +407,7 @@ export function ConversionDialog({
               type="button"
               className="button--secondary"
               disabled={pending}
-              onClick={onClose}
+              onClick={dismiss}
             >
               Cancel
             </button>

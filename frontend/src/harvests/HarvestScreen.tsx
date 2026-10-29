@@ -796,15 +796,6 @@ export function HarvestScreen({
           <div className="actions">
             <button
               type="button"
-              disabled={pending}
-              onClick={() => {
-                void remove();
-              }}
-            >
-              {pending ? "Deleting…" : "Delete harvest and Event"}
-            </button>
-            <button
-              type="button"
               className="button--secondary"
               disabled={pending}
               onClick={() => {
@@ -812,6 +803,17 @@ export function HarvestScreen({
               }}
             >
               Cancel
+            </button>
+
+            <button
+              type="button"
+              className="button--danger"
+              disabled={pending}
+              onClick={() => {
+                void remove();
+              }}
+            >
+              {pending ? "Deleting…" : "Delete harvest and Event"}
             </button>
           </div>
           {error && <p role="alert">{error}</p>}

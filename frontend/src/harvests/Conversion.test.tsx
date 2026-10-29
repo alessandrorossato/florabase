@@ -446,3 +446,33 @@ it("retains a conversion dialog on conflict and moves focus to the explanation",
   );
   expect(screen.getByRole("dialog")).toBeInTheDocument();
 });
+
+it("protects a changed conversion on Escape and Cancel while pristine dismissal is immediate", async () => {
+  const user = userEvent.setup();
+  const close = vi.fn();
+  const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+  wrap(
+    <ConversionDialog
+      inventory={inventory}
+      harvest={harvest}
+      onClose={close}
+      onSaved={vi.fn()}
+    />,
+  );
+  await screen.findByRole("combobox", { name: "Botanical identity" });
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(close).toHaveBeenCalledOnce();
+  expect(confirm).not.toHaveBeenCalled();
+  close.mockClear();
+  await user.type(screen.getByLabelText("Seed lot label"), "retain conversion");
+  await user.keyboard("{Escape}");
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(close).not.toHaveBeenCalled();
+  expect(screen.getByLabelText("Seed lot label")).toHaveValue(
+    "retain conversion",
+  );
+  confirm.mockReturnValue(true);
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(close).toHaveBeenCalledOnce();
+  confirm.mockRestore();
+});

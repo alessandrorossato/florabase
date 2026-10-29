@@ -567,3 +567,94 @@ it("restores focus to More after cancelling an inventory correction", async () =
   await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
   expect(more).toHaveFocus();
 });
+
+it("tracking removal opens safely on Cancel and restores More", async () => {
+  const user = userEvent.setup();
+  vi.mocked(api.inventoryList).mockResolvedValue([inventory]);
+  wrap(<StoredMaterialSection harvest={harvest} />);
+  const more = await screen.findByRole("button", {
+    name: "More Seeds actions",
+  });
+  await user.click(more);
+  await user.click(screen.getByRole("button", { name: "Remove tracking" }));
+  const dialog = screen.getByRole("dialog", {
+    name: "Remove inventory tracking",
+  });
+  expect(within(dialog).getByRole("button", { name: "Cancel" })).toHaveFocus();
+  expect(
+    within(dialog).getByRole("button", { name: "Remove tracking" }),
+  ).toHaveClass("button--danger");
+  await user.keyboard("{Enter}");
+  expect(api.removeInventory).not.toHaveBeenCalled();
+  expect(more).toHaveFocus();
+});
+
+it.each([false, true])(
+  "protects changed inventory/disposition drafts (%s) and closes pristine forms",
+  async (disposition) => {
+    const user = userEvent.setup();
+    const close = vi.fn();
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    const rendered = wrap(
+      <InventoryDialog
+        item={item}
+        inventory={inventory}
+        disposition={disposition}
+        onClose={close}
+        onSaved={vi.fn()}
+      />,
+    );
+    await user.click(await screen.findByRole("button", { name: "Cancel" }));
+    expect(close).toHaveBeenCalledOnce();
+    expect(confirm).not.toHaveBeenCalled();
+    close.mockClear();
+    if (disposition)
+      await user.type(screen.getByLabelText("Notes"), "retain draft");
+    else
+      await user.selectOptions(
+        screen.getByLabelText("Inventory state"),
+        "depleted",
+      );
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(close).not.toHaveBeenCalled();
+    confirm.mockReturnValue(true);
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(close).toHaveBeenCalledOnce();
+    rendered.unmount();
+    confirm.mockRestore();
+  },
+);
+
+it("retains tracking removal through pending Escape and failure", async () => {
+  const user = userEvent.setup();
+  let rejectRemoval!: (reason: Error) => void;
+  vi.mocked(api.removeInventory).mockImplementation(
+    () =>
+      new Promise<void>((_, reject) => {
+        rejectRemoval = reject;
+      }),
+  );
+  vi.mocked(api.inventoryList).mockResolvedValue([inventory]);
+  wrap(<StoredMaterialSection harvest={harvest} />);
+  const more = await screen.findByRole("button", {
+    name: "More Seeds actions",
+  });
+  await user.click(more);
+  await user.click(screen.getByRole("button", { name: "Remove tracking" }));
+  const dialog = screen.getByRole("dialog", {
+    name: "Remove inventory tracking",
+  });
+  await user.click(
+    within(dialog).getByRole("button", { name: "Remove tracking" }),
+  );
+  expect(within(dialog).getByRole("button", { name: "Cancel" })).toBeDisabled();
+  await user.keyboard("{Escape}");
+  expect(dialog).toBeInTheDocument();
+  rejectRemoval(new Error("offline"));
+  await waitFor(() => {
+    expect(within(dialog).getByRole("alert")).toBeVisible();
+  });
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(more).toHaveFocus();
+});

@@ -595,3 +595,41 @@ it("saves contextual corrections and restores focus to the retained detail actio
   ).not.toBeInTheDocument();
   expect(edit).toHaveFocus();
 });
+
+it("Harvest deletion opens on Cancel and retains pending and failed confirmation", async () => {
+  const user = userEvent.setup();
+  let rejectDelete!: (reason: Error) => void;
+  vi.mocked(api.deleteHarvest).mockImplementation(
+    () =>
+      new Promise<void>((_, reject) => {
+        rejectDelete = reject;
+      }),
+  );
+  wrap(<HarvestScreen initialId={harvest.id} />);
+  const more = await screen.findByRole("button", {
+    name: "More harvest actions",
+  });
+  await user.click(more);
+  await user.click(screen.getByRole("button", { name: "Delete harvest" }));
+  let dialog = screen.getByRole("dialog", { name: "Delete harvest" });
+  expect(within(dialog).getByRole("button", { name: "Cancel" })).toHaveFocus();
+  await user.keyboard("{Enter}");
+  expect(api.deleteHarvest).not.toHaveBeenCalled();
+  expect(more).toHaveFocus();
+  await user.click(more);
+  await user.click(screen.getByRole("button", { name: "Delete harvest" }));
+  dialog = screen.getByRole("dialog", { name: "Delete harvest" });
+  const confirm = within(dialog).getByRole("button", {
+    name: "Delete harvest and Event",
+  });
+  expect(confirm).toHaveClass("button--danger");
+  await user.click(confirm);
+  await user.keyboard("{Escape}");
+  expect(dialog).toBeInTheDocument();
+  act(() => {
+    rejectDelete(new Error("offline"));
+  });
+  expect(await within(dialog).findByRole("alert")).toBeVisible();
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(more).toHaveFocus();
+});

@@ -6102,3 +6102,23 @@ Status remains implemented pending canonical verification.
   boundary test to avoid repeating expensive accessible-name queries.
 - Focused checks passed: Propagation/UX/Dashboard **34/34**, bulk cap **1/1**, media return focus
   **1/1**, and UI Lab **4/4**. Canonical FULL verification passed on the final reconciled tree.
+
+### UI-SYSTEM-001 — Wave 3 Batch 1 safety handoff (2026-10-29)
+
+- Dedicated isolated `548f` checkout attached through `make feature-init` to
+  `feat/ui-system-v1-wave3`, base `5b2e2a1`. Wave 1 #129 is merged; Wave 2 is
+  still unmerged. Batches 2–4 deliberately remain unstarted.
+- Page-owned Cancel-first/danger confirmations correct Harvest deletion and Stored
+  material tracking removal. Existing pending locks, error retention and stable
+  More-trigger focus return remain. Location creation and inventory/disposition/
+  conversion tasks protect changed drafts while pristine dismissal remains immediate.
+  Shared TaskDialog/EditWorkspace, APIs, schema and domain rules are unchanged.
+- Focused baseline: 44 domain tests passed. Changed-tree checks cover 16 Harvest,
+  24 Stored material, 10 Conversion and 19 selected Location tests (69 distinct
+  cases; 99 unrelated App cases excluded). Final static results and exact limits
+  are in the Batch 1 handoff. Test-only lint corrections preserved all assertions.
+- One worktree-owned Quality project was used serially; Wave 2 and all Review,
+  DEV/UAT environments were preserved. No canonical gate, production build, live
+  browser/theme/viewport/zoom/device/AT acceptance, commit, push, PR or merge.
+  UI-SYSTEM-001 remains in_progress. See
+  [Batch 1 handoff and UAT checklist](design/ui-system-v1/wave3/README.md).
