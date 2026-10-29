@@ -524,3 +524,14 @@ for a visit and links to Plant details. Only permitted stored primary/reference 
 reference and missing imagery are explicit. Eight distinct Plant cards, the KPI strip and all five
 Next work items fit the measured desktop baseline. No missing photo is replaced by an invented
 record relationship. Future bulk operations and Settings widget customization remain proposals.
+
+### UI System v1 Wave 2 candidate — Activity and Sourcing
+
+[Wave 2](design/ui-system-v1/wave2/README.md) applies ActivityPage/DirectoryTools to Journal,
+History and Schedule, and the approved DirectoryPage List/Gallery/explicit actions/overlay preview
+compositions to Suppliers and Orders. Canonical capability filters, Saved Views support, paging,
+date/source semantics, forms and domain actions retain their owners. Calendar keeps its own
+period/day/agenda controls and `view=list|calendar`; Suppliers keeps its search-only toolbar.
+Sourcing presentation is browser-local/URL-only and never enters Saved Views or domain requests.
+All six operator UAT scenarios have passed and the UI/UX scope is frozen. Independent correctness
+review, reconciliation with PR #130 and canonical FULL verification remain pending.

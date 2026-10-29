@@ -4,6 +4,7 @@ import { Page } from "./WorkspaceUI";
 /** Source labels and occurrence/recorded-time semantics stay in the supplied chronology. */
 export function ActivityPage({
   titleId,
+  className = "",
   header,
   toolbar,
   chronology,
@@ -11,6 +12,7 @@ export function ActivityPage({
   pagination,
 }: {
   titleId: string;
+  className?: string;
   header: ReactNode;
   toolbar?: ReactNode;
   chronology: ReactNode;
@@ -18,7 +20,7 @@ export function ActivityPage({
   pagination?: ReactNode;
 }) {
   return (
-    <Page titleId={titleId}>
+    <Page titleId={titleId} className={className}>
       {header}
       {toolbar}
       {feedback}

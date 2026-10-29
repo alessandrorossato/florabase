@@ -1,3 +1,14 @@
+import {
+  DirectoryPage,
+  DirectoryRecords,
+  DirectoryRow,
+  DirectoryCard,
+  DirectoryRecordActions,
+  DirectoryInspector,
+  DirectoryViewSwitcher,
+} from "../components/DirectoryPage";
+import { useDirectoryPresentation } from "../components/directoryPresentation";
+import "../styles/sourcing-directory.css";
 import { ActionButton } from "../components/Action";
 import "../components/collection-page.css";
 import "../components/collection-directory.css";
@@ -16,6 +27,7 @@ import { SavedViews } from "../saved-views/SavedViews";
 import { useDirectoryView } from "../saved-views/useDirectoryView";
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -751,6 +763,13 @@ export function SupplierScreen({
   startCreating = false,
 }: { initialId?: string; initialTab?: string; startCreating?: boolean } = {}) {
   const auth = useAuth();
+  const presentation = useDirectoryPresentation("suppliers");
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const selectedTrigger = useRef<HTMLButtonElement | null>(null);
+  const directoryList = useRef<HTMLUListElement | null>(null);
+  const DirectoryItem =
+    presentation.view === "gallery" ? DirectoryCard : DirectoryRow;
+
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
   });
@@ -771,6 +790,12 @@ export function SupplierScreen({
     setEditing(false);
     setTarget(null);
   });
+  useLayoutEffect(() => {
+    const trigger = directoryList.current?.querySelector<HTMLButtonElement>(
+      `[data-preview-id="${selectedId ?? ""}"] button`,
+    );
+    if (trigger) selectedTrigger.current = trigger;
+  }, [presentation.view, selectedId]);
   const filter = view.state.q;
   const setFilter = (value: string) => {
     view.update("q", value);
@@ -987,14 +1012,17 @@ export function SupplierScreen({
       return;
     restorePreviewEdit.current = false;
     const frame = requestAnimationFrame(() => {
-      document
-        .querySelector<HTMLElement>("[data-supplier-preview-edit]")
-        ?.focus();
+      const trigger = previewOpen
+        ? document.querySelector<HTMLElement>("[data-supplier-preview-edit]")
+        : directoryList.current?.querySelector<HTMLElement>(
+            `[data-preview-id="${selected.id}"] button[aria-label^="Edit "]`,
+          );
+      trigger?.focus();
     });
     return () => {
       cancelAnimationFrame(frame);
     };
-  }, [edit.modal, editing, initialId, selected]);
+  }, [edit.modal, editing, initialId, selected, previewOpen]);
 
   // A route change can mount the detail after save success; wait for its heading.
   useEffect(() => {
@@ -1119,6 +1147,10 @@ export function SupplierScreen({
         const refreshed = await listSuppliers();
         setDirectory({ status: "ready", suppliers: refreshed });
         setSelectedId(supplier.id);
+        if (wasCreating) {
+          selectedTrigger.current = creationTriggerRef.current;
+          setPreviewOpen(true);
+        }
         if (edit.modal) edit.close(true);
         else {
           setEditing(false);
@@ -1338,219 +1370,237 @@ export function SupplierScreen({
     );
 
   return (
-    <section
-      aria-labelledby="suppliers-title"
-      className="workspace suppliers-workspace"
-    >
+    <div className="workspace suppliers-workspace">
       <div
         className="collection-context-page"
         inert={edit.modal}
         aria-hidden={edit.modal || undefined}
       >
-        <WorkspaceIntro
-          contextOnly={creationExpanded}
-          {...supplierPage}
-          tools={
-            !creationExpanded && (
-              <DirectoryTools
-                name="Suppliers"
-                search={
-                  <DirectorySearch
-                    hideLabel
-                    id="supplier-filter"
-                    label="Filter suppliers"
-                    placeholder="Search supplier names"
-                    value={filter}
-                    onChange={setFilter}
-                    disabled={directory.status !== "ready"}
+        <DirectoryPage
+          titleId="suppliers-title"
+          className="sourcing-directory"
+          header={
+            <WorkspaceIntro
+              contextOnly={creationExpanded}
+              {...supplierPage}
+              tools={
+                !creationExpanded && (
+                  <DirectoryTools
+                    name="Suppliers"
+                    presentation={
+                      <DirectoryViewSwitcher
+                        value={presentation.view}
+                        onChange={presentation.select}
+                      />
+                    }
+                    search={
+                      <DirectorySearch
+                        hideLabel
+                        id="supplier-filter"
+                        label="Filter suppliers"
+                        placeholder="Search supplier names"
+                        value={filter}
+                        onChange={setFilter}
+                        disabled={directory.status !== "ready"}
+                      />
+                    }
+                    savedViews={
+                      <SavedViews
+                        presentation="dialog"
+                        surface="suppliers"
+                        state={view.savedState}
+                      />
+                    }
+                    actions={
+                      <ActionButton
+                        icon="add"
+                        type="button"
+                        ref={creationTriggerRef}
+                        data-collection-return="create"
+                        aria-expanded={creationExpanded}
+                        aria-controls="new-supplier-panel"
+                        onClick={() => {
+                          if (editing) {
+                            setEditing(false);
+                            setTarget(null);
+                            setSave({ status: "idle" });
+                          }
+                          startCreate();
+                        }}
+                      >
+                        New supplier
+                      </ActionButton>
+                    }
                   />
-                }
-                savedViews={
-                  <SavedViews
-                    presentation="dialog"
-                    surface="suppliers"
-                    state={view.savedState}
-                  />
-                }
-                actions={
-                  <ActionButton
-                    icon="add"
-                    type="button"
-                    ref={creationTriggerRef}
-                    data-collection-return="create"
-                    aria-expanded={creationExpanded}
-                    aria-controls="new-supplier-panel"
-                    onClick={() => {
-                      if (editing) {
-                        setEditing(false);
-                        setTarget(null);
-                        setSave({ status: "idle" });
-                      }
-                      startCreate();
+                )
+              }
+            />
+          }
+          content={
+            <>
+              <div
+                className={`supplier-master-detail operational-layout directory-preview-layout${creationExpanded ? " is-detail-view" : ""}`}
+              >
+                <section
+                  className="seed-master supplier-master"
+                  aria-labelledby="supplier-directory-title"
+                >
+                  <h3 className="sr-only" id="supplier-directory-title">
+                    Supplier directory
+                  </h3>
+                  {directory.status === "ready" && (
+                    <DirectoryResults count={visible.length} />
+                  )}
+                  {directory.status === "loading" && (
+                    <p aria-live="polite" className="notice">
+                      Loading suppliers…
+                    </p>
+                  )}
+                  {directory.status === "error" && (
+                    <div className="notice notice--error" role="alert">
+                      <p>Florabase could not load the supplier directory.</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDirectory({ status: "loading" });
+                          refreshDirectory();
+                        }}
+                      >
+                        Retry directory
+                      </button>
+                    </div>
+                  )}
+                  {directory.status === "ready" && suppliers.length === 0 && (
+                    <div className="empty-state">
+                      <h3>No suppliers yet</h3>
+                      <p>
+                        Add a supplier to record where collection material was
+                        acquired.
+                      </p>
+                    </div>
+                  )}
+                  {directory.status === "ready" &&
+                    suppliers.length > 0 &&
+                    visible.length === 0 && (
+                      <p className="notice" role="status">
+                        No suppliers match this search.
+                      </p>
+                    )}
+                  {visible.length > 0 && (
+                    <DirectoryRecords
+                      view={presentation.view}
+                      label="Suppliers"
+                      listRef={directoryList}
+                    >
+                      {visible.map((supplier) => (
+                        <DirectoryItem
+                          key={supplier.id}
+                          selected={previewOpen && selectedId === supplier.id}
+                        >
+                          <div className="sourcing-record-identity">
+                            <RecordVisual
+                              kind="supplier"
+                              label={supplier.name}
+                              photo={supplier.primary_photo ?? null}
+                              compact
+                              showSource={presentation.view === "gallery"}
+                            />
+                            <div className="sourcing-record-name">
+                              <a href={`#/suppliers/${supplier.id}`}>
+                                {supplier.name}
+                              </a>
+                              <small>{kindLabels[supplier.kind]}</small>
+                            </div>
+                          </div>
+                          <div className="sourcing-record-facts">
+                            <strong>
+                              {supplier.usage_counts.direct_records_total}
+                            </strong>{" "}
+                            direct records
+                            <span
+                              className={`lifecycle-badge lifecycle-badge--${supplier.retired_at ? "retired" : "active"}`}
+                            >
+                              {supplier.retired_at ? "Retired" : "Active"}
+                            </span>
+                          </div>
+                          <div data-preview-id={supplier.id}>
+                            <DirectoryRecordActions
+                              label={supplier.name}
+                              onPreview={(trigger) => {
+                                selectedTrigger.current = trigger;
+                                setSelectedId(supplier.id);
+                                setPreviewOpen(true);
+                              }}
+                              onDetails={() => {
+                                setRecordRoute(`#/suppliers/${supplier.id}`);
+                              }}
+                              onEdit={(trigger) => {
+                                setPreviewOpen(false);
+                                startEdit(supplier, trigger);
+                              }}
+                            />
+                          </div>
+                        </DirectoryItem>
+                      ))}
+                    </DirectoryRecords>
+                  )}
+                </section>
+                {editing && !edit.modal && (
+                  <section
+                    id={creationExpanded ? "new-supplier-panel" : undefined}
+                    className="seed-detail-pane supplier-detail-pane seed-creation-panel"
+                    ref={creationExpanded ? creationPanelRef : undefined}
+                    aria-label="Supplier detail and editor"
+                  >
+                    {editor}
+                  </section>
+                )}
+                {selected && previewOpen && !editing && !edit.modal && (
+                  <DirectoryInspector
+                    title="Supplier inspection"
+                    returnFocusTo={selectedTrigger}
+                    fallbackFocusTo={directoryList}
+                    onClose={() => {
+                      setPreviewOpen(false);
                     }}
                   >
-                    New supplier
-                  </ActionButton>
-                }
-              />
-            )
-          }
-        />
-        <div
-          className={`supplier-master-detail operational-layout directory-preview-layout${creationExpanded ? " is-detail-view" : ""}`}
-        >
-          <section
-            className="seed-master supplier-master"
-            aria-labelledby="supplier-directory-title"
-          >
-            <h3 className="sr-only" id="supplier-directory-title">
-              Supplier directory
-            </h3>
-            {directory.status === "ready" && (
-              <DirectoryResults count={visible.length} />
-            )}
-            {directory.status === "loading" && (
-              <p aria-live="polite" className="notice">
-                Loading suppliers…
-              </p>
-            )}
-            {directory.status === "error" && (
-              <div className="notice notice--error" role="alert">
-                <p>Florabase could not load the supplier directory.</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDirectory({ status: "loading" });
-                    refreshDirectory();
-                  }}
-                >
-                  Retry directory
-                </button>
-              </div>
-            )}
-            {directory.status === "ready" && suppliers.length === 0 && (
-              <div className="empty-state">
-                <h3>No suppliers yet</h3>
-                <p>
-                  Add a supplier to record where collection material was
-                  acquired.
-                </p>
-              </div>
-            )}
-            {directory.status === "ready" &&
-              suppliers.length > 0 &&
-              visible.length === 0 && (
-                <p className="notice" role="status">
-                  No suppliers match this search.
-                </p>
-              )}
-            {visible.length > 0 && (
-              <ul
-                className="seed-list supplier-list"
-                aria-label="Suppliers"
-                tabIndex={0}
-              >
-                {visible.map((supplier) => (
-                  <li key={supplier.id}>
-                    <button
-                      type="button"
-                      className="seed-row supplier-row"
-                      aria-pressed={selectedId === supplier.id}
-                      onClick={() => {
-                        if (creationExpanded)
-                          closeCreation({ returnFocus: false });
-                        setSelectedId(supplier.id);
-                        if (window.matchMedia("(max-width: 48rem)").matches)
-                          setRecordRoute(`#/suppliers/${supplier.id}`);
-                        setEditing(false);
-                        setTarget(null);
+                    <SupplierPreview
+                      supplier={selected}
+                      onOpen={() => {
                         setSave({ status: "idle" });
                       }}
-                    >
-                      <span className="seed-primary">
-                        <RecordVisual
-                          kind="supplier"
-                          label={supplier.name}
-                          photo={supplier.primary_photo ?? null}
-                          compact
-                        />
-                        <span className="supplier-row__identity">
-                          <strong>{supplier.name}</strong>
-                          <small>{kindLabels[supplier.kind]}</small>
-                        </span>
-                      </span>
-                      <span className="supplier-row__tracking">
-                        <strong>
-                          {supplier.usage_counts.direct_records_total}
-                        </strong>{" "}
-                        direct records
-                      </span>
-                      <span
-                        className={`lifecycle-badge lifecycle-badge--${supplier.retired_at ? "retired" : "active"}`}
-                      >
-                        {supplier.retired_at ? "Retired" : "Active"}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-          <section
-            id={creationExpanded ? "new-supplier-panel" : undefined}
-            className={
-              creationExpanded
-                ? "seed-detail-pane supplier-detail-pane seed-creation-panel"
-                : "seed-detail-pane supplier-detail-pane"
-            }
-            ref={creationExpanded ? creationPanelRef : undefined}
-            aria-label="Supplier detail and editor"
-          >
-            {editing && !edit.modal ? (
-              editor
-            ) : selected ? (
-              <SupplierPreview
-                supplier={selected}
-                onOpen={() => {
-                  setSave({ status: "idle" });
-                }}
-                onEdit={(event) => {
-                  startEdit(selected, event.currentTarget);
-                }}
-              />
-            ) : (
-              <div className="empty-state seed-detail-empty">
-                <h3>Select a supplier</h3>
-                <p>
-                  Choose a supplier for a Quick Preview, then open details to
-                  inspect linked acquisitions.
-                </p>
+                      onEdit={(event) => {
+                        startEdit(selected, event.currentTarget);
+                      }}
+                    />
+                  </DirectoryInspector>
+                )}
               </div>
-            )}
-          </section>
-        </div>
-        <div aria-live="polite">
-          {save.status === "saving" && (
-            <p className="notice">Saving the supplier…</p>
-          )}
-          {save.status === "success" && (
-            <p className="notice notice--success" role="status">
-              {save.message}
-            </p>
-          )}
-          {save.status === "error" && !creationExpanded && (
-            <p
-              className="notice notice--error"
-              role="alert"
-              ref={feedback}
-              tabIndex={-1}
-            >
-              {save.messages.join(" ")}
-            </p>
-          )}
-        </div>
+              <div aria-live="polite">
+                {save.status === "saving" && (
+                  <p className="notice">Saving the supplier…</p>
+                )}
+                {save.status === "success" && (
+                  <p className="notice notice--success" role="status">
+                    {save.message}
+                  </p>
+                )}
+                {save.status === "error" && !creationExpanded && (
+                  <p
+                    className="notice notice--error"
+                    role="alert"
+                    ref={feedback}
+                    tabIndex={-1}
+                  >
+                    {save.messages.join(" ")}
+                  </p>
+                )}
+              </div>
+            </>
+          }
+        />
       </div>
       {edit.modal && editor}
-    </section>
+    </div>
   );
 }

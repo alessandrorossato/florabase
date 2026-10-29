@@ -1,6 +1,18 @@
+import {
+  DirectoryPage,
+  DirectoryRecords,
+  DirectoryRow,
+  DirectoryCard,
+  DirectoryRecordActions,
+  DirectoryInspector,
+  DirectoryViewSwitcher,
+} from "../components/DirectoryPage";
+import { useDirectoryPresentation } from "../components/directoryPresentation";
+import "../styles/sourcing-directory.css";
 import { ActionButton } from "../components/Action";
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -674,6 +686,13 @@ export function OrderScreen({
   startCreating?: boolean;
 } = {}) {
   const auth = useAuth();
+  const presentation = useDirectoryPresentation("orders");
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const selectedTrigger = useRef<HTMLButtonElement | null>(null);
+  const directoryList = useRef<HTMLUListElement | null>(null);
+  const DirectoryItem =
+    presentation.view === "gallery" ? DirectoryCard : DirectoryRow;
+
   const [offset, setOffset] = useState(0);
   const [lotOffsetState, setLotOffsetState] = useState({
     id: initialId ?? "",
@@ -925,6 +944,12 @@ export function OrderScreen({
     if (detail?.id === selectedId) return detail;
     return null;
   }, [detail, selectedId, visible]);
+  useLayoutEffect(() => {
+    const trigger = directoryList.current?.querySelector<HTMLButtonElement>(
+      `[data-preview-id="${selectedId ?? ""}"] button`,
+    );
+    if (trigger) selectedTrigger.current = trigger;
+  }, [presentation.view, selectedId]);
   const supplierChoices = useMemo(() => {
     const choices = (suppliers ?? []).map((supplier) => ({
       id: supplier.id,
@@ -975,12 +1000,17 @@ export function OrderScreen({
       return;
     restorePreviewEdit.current = false;
     const frame = requestAnimationFrame(() => {
-      document.querySelector<HTMLElement>("[data-order-preview-edit]")?.focus();
+      const trigger = previewOpen
+        ? document.querySelector<HTMLElement>("[data-order-preview-edit]")
+        : directoryList.current?.querySelector<HTMLElement>(
+            `[data-preview-id="${selected.id}"] button[aria-label^="Edit "]`,
+          );
+      trigger?.focus();
     });
     return () => {
       cancelAnimationFrame(frame);
     };
-  }, [edit.modal, editing, initialId, selected]);
+  }, [edit.modal, editing, initialId, selected, previewOpen]);
 
   if (
     auth.state.status !== "authenticated" &&
@@ -1053,6 +1083,7 @@ export function OrderScreen({
   }
 
   function startEdit(record: OrderRecord, trigger: HTMLButtonElement | null) {
+    setSelectedId(record.id);
     editTrigger.current = trigger;
     directEditHandled.current = true;
     restorePreviewEdit.current = !initialId;
@@ -1256,254 +1287,280 @@ export function OrderScreen({
     );
 
   return (
-    <section
-      aria-labelledby="orders-title"
-      className="workspace orders-workspace"
-    >
+    <div className="workspace orders-workspace">
       <div
         className="collection-context-page"
-        inert={formOpen}
-        aria-hidden={formOpen || undefined}
+        inert={formOpen || edit.modal}
+        aria-hidden={formOpen || edit.modal || undefined}
       >
-        <WorkspaceIntro
-          {...orderPage}
-          tools={
-            <DirectoryTools
-              onReset={() => {
-                view.update("supplier_id", "");
-                setOffset(0);
-              }}
-              name="Orders"
-              search={
-                <DirectorySearch
-                  hideLabel
-                  id="order-search"
-                  label="Search Orders"
-                  placeholder="Reference, Supplier or notes"
-                  value={view.state.q}
-                  onChange={(value) => {
-                    view.update("q", value);
+        <DirectoryPage
+          titleId="orders-title"
+          className="sourcing-directory"
+          header={
+            <WorkspaceIntro
+              {...orderPage}
+              tools={
+                <DirectoryTools
+                  onReset={() => {
+                    view.update("supplier_id", "");
                     setOffset(0);
                   }}
-                />
-              }
-              savedViews={
-                <SavedViews
-                  presentation="dialog"
-                  surface="orders"
-                  state={view.savedState}
-                />
-              }
-              actions={
-                <ActionButton
-                  icon="add"
-                  type="button"
-                  ref={createTrigger}
-                  data-collection-return="create"
-                  disabled={!suppliers}
-                  onClick={startCreate}
-                >
-                  New Order
-                </ActionButton>
-              }
-              filters={
-                <div className="order-supplier-filter">
-                  <ReferencePicker
-                    label="Supplier"
-                    choices={supplierChoices}
-                    value={view.state.supplier_id}
-                    onChange={(supplierId) => {
-                      view.update("supplier_id", supplierId);
-                      setOffset(0);
-                    }}
-                    disabled={!suppliers}
-                    placeholder="All Suppliers"
-                    help="Optional. Narrow the directory to one recorded Supplier."
-                    openOnFocus={false}
-                  />
-                </div>
-              }
-              activeFilters={
-                view.state.supplier_id
-                  ? [
-                      {
-                        label: "Supplier",
-                        value: activeSupplierName,
-                        onRemove: () => {
-                          view.update("supplier_id", "");
+                  name="Orders"
+                  presentation={
+                    <DirectoryViewSwitcher
+                      value={presentation.view}
+                      onChange={presentation.select}
+                    />
+                  }
+                  search={
+                    <DirectorySearch
+                      hideLabel
+                      id="order-search"
+                      label="Search Orders"
+                      placeholder="Reference, Supplier or notes"
+                      value={view.state.q}
+                      onChange={(value) => {
+                        view.update("q", value);
+                        setOffset(0);
+                      }}
+                    />
+                  }
+                  savedViews={
+                    <SavedViews
+                      presentation="dialog"
+                      surface="orders"
+                      state={view.savedState}
+                    />
+                  }
+                  actions={
+                    <ActionButton
+                      icon="add"
+                      type="button"
+                      ref={createTrigger}
+                      data-collection-return="create"
+                      disabled={!suppliers}
+                      onClick={startCreate}
+                    >
+                      New Order
+                    </ActionButton>
+                  }
+                  filters={
+                    <div className="order-supplier-filter">
+                      <ReferencePicker
+                        label="Supplier"
+                        choices={supplierChoices}
+                        value={view.state.supplier_id}
+                        onChange={(supplierId) => {
+                          view.update("supplier_id", supplierId);
                           setOffset(0);
-                        },
-                      },
-                    ]
-                  : []
+                        }}
+                        disabled={!suppliers}
+                        placeholder="All Suppliers"
+                        help="Optional. Narrow the directory to one recorded Supplier."
+                        openOnFocus={false}
+                      />
+                    </div>
+                  }
+                  activeFilters={
+                    view.state.supplier_id
+                      ? [
+                          {
+                            label: "Supplier",
+                            value: activeSupplierName,
+                            onRemove: () => {
+                              view.update("supplier_id", "");
+                              setOffset(0);
+                            },
+                          },
+                        ]
+                      : []
+                  }
+                />
               }
             />
           }
-        />
-        {suppliersError && (
-          <div className="notice notice--error" role="alert">
-            <p>{suppliersError}</p>
-            <button
-              type="button"
-              onClick={() => {
-                setSuppliers(null);
-                setSuppliersError("");
-                setSupplierAttempt((value) => value + 1);
-              }}
-            >
-              Retry Suppliers
-            </button>
-          </div>
-        )}
-        <div className="order-master-detail operational-layout directory-preview-layout">
-          <section
-            className="seed-master order-master"
-            aria-labelledby="order-directory-title"
-          >
-            <h3 className="sr-only" id="order-directory-title">
-              Order directory
-            </h3>
-            {page && (
-              <DirectoryResults count={page.items.length} total={page.total} />
-            )}
-            {!page && !pageError && (
-              <p aria-live="polite" className="notice">
-                Loading Orders…
-              </p>
-            )}
-            {pageError && (
-              <div className="notice notice--error" role="alert">
-                <p>{pageError}</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAttempt((value) => value + 1);
-                  }}
+          content={
+            <>
+              {suppliersError && (
+                <div className="notice notice--error" role="alert">
+                  <p>{suppliersError}</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSuppliers(null);
+                      setSuppliersError("");
+                      setSupplierAttempt((value) => value + 1);
+                    }}
+                  >
+                    Retry Suppliers
+                  </button>
+                </div>
+              )}
+              <div className="order-master-detail operational-layout directory-preview-layout">
+                <section
+                  className="seed-master order-master"
+                  aria-labelledby="order-directory-title"
                 >
-                  Retry Orders
-                </button>
-              </div>
-            )}
-            {page?.total === 0 && (
-              <div className="empty-state">
-                <h3>No Orders found</h3>
-                <p>
-                  {view.state.q || view.state.supplier_id
-                    ? "Try another search or Supplier."
-                    : "Record a purchase, then add or link its physical seed lots."}
-                </p>
-              </div>
-            )}
-            {page && page.total > 0 && page.items.length === 0 && (
-              <p className="notice" role="status">
-                No Orders on this page. Go to the previous page.
-              </p>
-            )}
-            {visible.length > 0 && (
-              <ul
-                className="seed-list order-list-directory"
-                aria-label="Orders"
-                tabIndex={0}
-              >
-                {visible.map((order) => (
-                  <li key={order.id}>
-                    <button
-                      type="button"
-                      className="seed-row order-row"
-                      aria-pressed={selectedId === order.id}
-                      onClick={() => {
-                        setSelectedId(order.id);
-                        setSuccess("");
-                        if (window.matchMedia("(max-width: 48rem)").matches)
-                          setRecordRoute(`#/orders/${order.id}`);
-                      }}
+                  <h3 className="sr-only" id="order-directory-title">
+                    Order directory
+                  </h3>
+                  {page && (
+                    <DirectoryResults
+                      count={page.items.length}
+                      total={page.total}
+                    />
+                  )}
+                  {!page && !pageError && (
+                    <p aria-live="polite" className="notice">
+                      Loading Orders…
+                    </p>
+                  )}
+                  {pageError && (
+                    <div className="notice notice--error" role="alert">
+                      <p>{pageError}</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAttempt((value) => value + 1);
+                        }}
+                      >
+                        Retry Orders
+                      </button>
+                    </div>
+                  )}
+                  {page?.total === 0 && (
+                    <div className="empty-state">
+                      <h3>No Orders found</h3>
+                      <p>
+                        {view.state.q || view.state.supplier_id
+                          ? "Try another search or Supplier."
+                          : "Record a purchase, then add or link its physical seed lots."}
+                      </p>
+                    </div>
+                  )}
+                  {page && page.total > 0 && page.items.length === 0 && (
+                    <p className="notice" role="status">
+                      No Orders on this page. Go to the previous page.
+                    </p>
+                  )}
+                  {visible.length > 0 && (
+                    <DirectoryRecords
+                      view={presentation.view}
+                      label="Orders"
+                      listRef={directoryList}
                     >
-                      <span className="seed-primary">
-                        <RecordVisual
-                          kind="order"
-                          label={orderTitle(order)}
-                          photo={null}
-                          compact
-                        />
-                        <span className="order-row__identity">
-                          <strong>{orderTitle(order)}</strong>
-                          <small>
-                            {orderDate(order.ordered_on)} ·{" "}
-                            {order.supplier?.name ?? "Supplier unknown"}
-                          </small>
-                        </span>
-                      </span>
-                      <span className="order-row__amount">
-                        <strong>{orderPrice(order)}</strong>
-                        <small>
-                          {order.seed_lot_count} seed{" "}
-                          {order.seed_lot_count === 1 ? "lot" : "lots"}
-                        </small>
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {page && (
-              <div className="actions order-pagination">
-                {offset > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOffset((value) => Math.max(0, value - page.limit));
+                      {visible.map((order) => (
+                        <DirectoryItem
+                          key={order.id}
+                          selected={previewOpen && selectedId === order.id}
+                        >
+                          <div className="sourcing-record-identity">
+                            <RecordVisual
+                              kind="order"
+                              label={orderTitle(order)}
+                              photo={null}
+                              compact
+                              showSource={presentation.view === "gallery"}
+                            />
+                            <div className="sourcing-record-name">
+                              <a href={`#/orders/${order.id}`}>
+                                {orderTitle(order)}
+                              </a>
+                              <small>
+                                {orderDate(order.ordered_on)} ·{" "}
+                                {order.supplier?.name ?? "Supplier unknown"}
+                              </small>
+                            </div>
+                          </div>
+                          <div className="sourcing-record-facts">
+                            <strong>{orderPrice(order)}</strong>
+                            <small>
+                              {order.seed_lot_count} seed{" "}
+                              {order.seed_lot_count === 1 ? "lot" : "lots"}
+                            </small>
+                          </div>
+                          <div data-preview-id={order.id}>
+                            <DirectoryRecordActions
+                              label={orderTitle(order)}
+                              onPreview={(trigger) => {
+                                selectedTrigger.current = trigger;
+                                setSelectedId(order.id);
+                                setPreviewOpen(true);
+                              }}
+                              onDetails={() => {
+                                setRecordRoute(`#/orders/${order.id}`);
+                              }}
+                              onEdit={(trigger) => {
+                                setPreviewOpen(false);
+                                startEdit(order, trigger);
+                              }}
+                            />
+                          </div>
+                        </DirectoryItem>
+                      ))}
+                    </DirectoryRecords>
+                  )}
+                  {page && (
+                    <div className="actions order-pagination">
+                      {offset > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOffset((value) =>
+                              Math.max(0, value - page.limit),
+                            );
+                          }}
+                        >
+                          Previous Orders
+                        </button>
+                      )}
+                      {offset + page.items.length < page.total && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOffset((value) => value + page.limit);
+                          }}
+                        >
+                          Next Orders
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </section>
+                {selected && previewOpen && !editing && !formOpen && (
+                  <DirectoryInspector
+                    title="Order inspection"
+                    returnFocusTo={selectedTrigger}
+                    fallbackFocusTo={directoryList}
+                    onClose={() => {
+                      setPreviewOpen(false);
                     }}
                   >
-                    Previous Orders
-                  </button>
-                )}
-                {offset + page.items.length < page.total && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOffset((value) => value + page.limit);
-                    }}
-                  >
-                    Next Orders
-                  </button>
+                    <OrderPreview
+                      order={selected}
+                      onOpen={() => {
+                        setSuccess("");
+                      }}
+                      onEdit={(event) => {
+                        startEdit(selected, event.currentTarget);
+                      }}
+                    />
+                  </DirectoryInspector>
                 )}
               </div>
-            )}
-          </section>
-          <section
-            className="seed-detail-pane order-detail-pane"
-            aria-label="Order detail and quick preview"
-          >
-            {selected ? (
-              <OrderPreview
-                order={selected}
-                onOpen={() => {
-                  setSuccess("");
-                }}
-                onEdit={(event) => {
-                  startEdit(selected, event.currentTarget);
-                }}
-              />
-            ) : (
-              <div className="empty-state seed-detail-empty">
-                <h3>Select an Order</h3>
-                <p>
-                  Choose a purchase for a Quick Preview, then open details to
-                  inspect its transaction and linked physical seed lots.
-                </p>
+              <div aria-live="polite">
+                {success && (
+                  <p className="notice notice--success" role="status">
+                    {success}
+                  </p>
+                )}
               </div>
-            )}
-          </section>
-        </div>
-        <div aria-live="polite">
-          {success && (
-            <p className="notice notice--success" role="status">
-              {success}
-            </p>
-          )}
-        </div>
+            </>
+          }
+        />
       </div>
+      {edit.modal && editing && target && editor(target)}
       {formOpen && suppliers && editor()}
-    </section>
+    </div>
   );
 }

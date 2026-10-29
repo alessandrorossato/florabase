@@ -1,0 +1,91 @@
+/* Sourcing supplies its own facts inside the approved directory compositions. */
+.sourcing-directory .ui-directory-row--composed {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(8rem, auto) auto;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3);
+}
+.sourcing-record-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.sourcing-record-identity .record-visual {
+  width: 4rem;
+  height: 4rem;
+  flex-shrink: 0;
+}
+.sourcing-record-name,
+.sourcing-record-facts {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.sourcing-record-name > a {
+  font: 400 1.16rem/1.3 var(--font-editorial);
+}
+.sourcing-record-name > small,
+.sourcing-record-facts {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.sourcing-record-facts > strong {
+  font: var(--type-strong);
+  color: var(--text);
+}
+.sourcing-directory .ui-directory-card--composed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-3);
+}
+.sourcing-directory .ui-directory-card--composed .sourcing-record-identity {
+  display: grid;
+}
+.sourcing-directory .ui-directory-card--composed .record-visual {
+  position: relative;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+.sourcing-directory .ui-directory-card--composed .record-visual > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.sourcing-directory .ui-directory-card--composed > [data-preview-id] {
+  margin-top: auto;
+}
+.sourcing-directory .ui-directory-card--composed .ui-directory-record-actions {
+  justify-content: end;
+}
+.sourcing-directory .ui-directory-preview-overlay .quick-preview {
+  position: static;
+  padding: 0;
+  border: 0;
+  max-height: none;
+  overflow: visible;
+}
+@media (max-width: 48rem) {
+  .sourcing-directory .ui-directory-row--composed {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--space-2);
+  }
+  .sourcing-directory .ui-directory-row .sourcing-record-facts {
+    grid-column: 1;
+  }
+  .sourcing-directory .ui-directory-row > [data-preview-id] {
+    grid-column: 2;
+    grid-row: 1 / 3;
+  }
+  .sourcing-directory .ui-directory-row .ui-directory-record-actions {
+    display: flex;
+    flex-direction: column;
+  }
+}
