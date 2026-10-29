@@ -3164,9 +3164,7 @@ test.each(["plant", "group"] as const)(
     expect(window.location.hash).toBe("#/plants");
     await user.keyboard("{Escape}");
     expect(trigger).toHaveFocus();
-    await user.click(
-      screen.getByRole("button", { name: `Edit ${label}` }),
-    );
+    await user.click(screen.getByRole("button", { name: `Edit ${label}` }));
     expect(await screen.findByLabelText("Label")).toHaveValue(label);
     expect(window.location.hash).toBe(
       `#/${kind === "plant" ? "plants" : "plant-groups"}/${kind === "plant" ? plantId : groupId}?tab=edit`,
