@@ -17251,6 +17251,20 @@
             }
           },
           {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "default": "15",
+              "enum": [
+                "15",
+                "16"
+              ],
+              "title": "Version",
+              "type": "string"
+            }
+          },
+          {
             "in": "header",
             "name": "X-CSRF-Token",
             "required": false,
@@ -17361,6 +17375,20 @@
             "schema": {
               "format": "uuid",
               "title": "Identity Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "default": "15",
+              "enum": [
+                "15",
+                "16"
+              ],
+              "title": "Version",
               "type": "string"
             }
           },
@@ -17554,6 +17582,20 @@
               "title": "Identity Id",
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "default": "15",
+              "enum": [
+                "15",
+                "16"
+              ],
+              "title": "Version",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -17606,6 +17648,20 @@
               "maxLength": 200,
               "minLength": 2,
               "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "required": false,
+            "schema": {
+              "default": "15",
+              "enum": [
+                "15",
+                "16"
+              ],
+              "title": "Version",
               "type": "string"
             }
           }

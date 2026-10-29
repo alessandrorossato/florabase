@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+import fcntl
 import hashlib
 import io
 import json
@@ -17,10 +18,13 @@ from zipfile import ZipFile
 import httpx
 
 from florabase.native_range_enrichment.source import (
-    ARCHIVE_SHA256,
-    ARCHIVE_URL,
+    RELEASES,
     SourceMetadata,
+    SourceUnavailableError,
     Taxon,
+    WcvpSource,
+    WcvpVersion,
+    reviewed_release,
 )
 
 NAMES_FIELDS = [
@@ -85,12 +89,33 @@ def csv_rows(archive: ZipFile, name: str, fields: list[str]) -> Iterator[dict[st
             yield dict(zip(fields, row, strict=True))
 
 
+def check_destination(destination: Path, metadata: SourceMetadata) -> None:
+    if destination.exists():
+        try:
+            WcvpSource(destination, metadata.reviewed_release().version).metadata()
+        except SourceUnavailableError as error:
+            raise ValueError(
+                "Refusing to overwrite an index of another or unknown release"
+            ) from error
+
+
+def publish_index(temporary: Path, destination: Path, metadata: SourceMetadata) -> None:
+    # Serialize the ownership check and rename across simultaneous provisioning processes.
+    fd = os.open(str(destination) + ".lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
+    with os.fdopen(fd, "a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        check_destination(destination, metadata)
+        os.replace(temporary, destination)
+
+
 def build_index(
     destination: Path,
     names: Iterable[dict[str, str]],
     distributions: Iterable[dict[str, str]],
     metadata: SourceMetadata,
 ) -> None:
+    metadata.reviewed_release()
+    check_destination(destination, metadata)
     destination.parent.mkdir(parents=True, exist_ok=True)
     fd, temporary_name = tempfile.mkstemp(prefix="wcvp-", suffix=".sqlite", dir=destination.parent)
     os.close(fd)
@@ -156,22 +181,25 @@ def build_index(
         if temporary.stat().st_size > 2_000_000_000:
             raise ValueError("WCVP index exceeds disk bound")
         temporary.chmod(0o600)
-        os.replace(temporary, destination)
+        publish_index(temporary, destination, metadata)
     finally:
         temporary.unlink(missing_ok=True)
 
 
-def install_archive(archive_path: Path, destination: Path, retrieved_at: str) -> None:
+def install_archive(
+    archive_path: Path, destination: Path, retrieved_at: str, version: WcvpVersion = "15"
+) -> None:
+    release = reviewed_release(version)
     if archive_path.stat().st_size > MAX_ARCHIVE_BYTES:
         raise ValueError("WCVP archive exceeds size bound")
     with archive_path.open("rb") as stream:
-        if hashlib.file_digest(stream, "sha256").hexdigest() != ARCHIVE_SHA256:
-            raise ValueError("WCVP archive checksum does not match reviewed version 15")
+        if hashlib.file_digest(stream, "sha256").hexdigest() != release.checksum:
+            raise ValueError(f"WCVP archive checksum does not match reviewed version {version}")
     with ZipFile(archive_path) as archive:
         expected = {
-            "README_WCVP.xlsx": 17_827,
-            "wcvp_names.csv": 298_218_467,
-            "wcvp_distribution.csv": 141_066_449,
+            "README_WCVP.xlsx": release.member_sizes[0],
+            "wcvp_names.csv": release.member_sizes[1],
+            "wcvp_distribution.csv": release.member_sizes[2],
         }
         members = archive.infolist()
         if len(members) != 3 or {m.filename: m.file_size for m in members} != expected:
@@ -184,18 +212,21 @@ def install_archive(archive_path: Path, destination: Path, retrieved_at: str) ->
             destination,
             csv_rows(archive, "wcvp_names.csv", NAMES_FIELDS),
             csv_rows(archive, "wcvp_distribution.csv", DISTRIBUTION_FIELDS),
-            SourceMetadata(retrieved_at=retrieved_at),
+            SourceMetadata.for_release(version, retrieved_at),
         )
 
 
-def download(destination: Path) -> None:
+def download(destination: Path, version: WcvpVersion = "15") -> None:
+    release = reviewed_release(version)
     with tempfile.TemporaryDirectory(prefix="florabase-wcvp-") as directory:
         archive = Path(directory) / "wcvp.zip"
         size = 0
         started = time.monotonic()
         with (
             httpx.Client(timeout=httpx.Timeout(60, connect=10), follow_redirects=False) as client,
-            client.stream("GET", ARCHIVE_URL, headers={"Accept": "application/zip"}) as response,
+            client.stream(
+                "GET", release.archive_url, headers={"Accept": "application/zip"}
+            ) as response,
         ):
             response.raise_for_status()
             if response.headers.get("content-type", "").split(";")[0] not in {
@@ -209,12 +240,18 @@ def download(destination: Path) -> None:
                     if size > MAX_ARCHIVE_BYTES or time.monotonic() - started > 240:
                         raise ValueError("WCVP download exceeds size bound")
                     output.write(chunk)
-        install_archive(archive, destination, datetime.now(UTC).isoformat())
+        install_archive(archive, destination, datetime.now(UTC).isoformat(), version)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("destination", type=Path)
+    parser.add_argument(
+        "--version",
+        choices=list(RELEASES),
+        default="15",
+        help="Explicit reviewed release (default: 15)",
+    )
     parser.add_argument("--archive", type=Path, help="Already downloaded exact official archive")
     parser.add_argument(
         "--retrieved-at", help="Actual archive retrieval timestamp (required with --archive)"
@@ -223,9 +260,9 @@ def main() -> None:
     if args.archive:
         if not args.retrieved_at:
             parser.error("--archive requires the actual --retrieved-at timestamp")
-        install_archive(args.archive, args.destination, args.retrieved_at)
+        install_archive(args.archive, args.destination, args.retrieved_at, args.version)
     else:
-        download(args.destination)
+        download(args.destination, args.version)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,11 @@
+# Only the explicitly named WCVP Review adapter loads this overlay.
+services:
+  backend:
+    environment:
+      FLORABASE_WCVP_SNAPSHOT_PATH: /app/src/.source-cache/wcvp-version-001/wcvp-v15.sqlite
+      FLORABASE_WCVP_V16_SNAPSHOT_PATH: /app/src/.source-cache/wcvp-version-001/wcvp-v16.sqlite
+networks:
+  internal:
+    ipam:
+      config:
+        - subnet: 10.254.241.0/28

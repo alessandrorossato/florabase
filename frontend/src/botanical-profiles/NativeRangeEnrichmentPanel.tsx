@@ -11,6 +11,7 @@ import {
   applyRangeProposal,
   type SourceStatus,
   type WcvpTaxon,
+  type WcvpVersion,
   type RangeProposal,
 } from "./enrichment-api";
 import "./native-range-enrichment.css";
@@ -32,6 +33,7 @@ export function NativeRangeEnrichmentPanel({
 }) {
   const auth = useAuth();
   const [open, setOpen] = useState(false);
+  const [version, setVersion] = useState<WcvpVersion>("15");
   const [source, setSource] = useState<SourceStatus | null>(null);
   const [query, setQuery] = useState("");
   const [taxa, setTaxa] = useState<WcvpTaxon[]>([]);
@@ -53,10 +55,11 @@ export function NativeRangeEnrichmentPanel({
     if (!open) return;
     const abort = new AbortController();
     void Promise.all([
-      getRangeSource(identityId, abort.signal),
+      getRangeSource(identityId, abort.signal, version),
       listRangeProposals(identityId, abort.signal),
     ])
       .then(([status, previous]) => {
+        if (abort.signal.aborted) return;
         setSource(status);
         setHistory(previous);
       })
@@ -70,7 +73,7 @@ export function NativeRangeEnrichmentPanel({
     return () => {
       abort.abort();
     };
-  }, [open, identityId, attempt, auth]);
+  }, [open, identityId, version, attempt, auth]);
   useEffect(() => {
     if (source?.available) search.current?.focus();
   }, [source?.available]);
@@ -138,6 +141,39 @@ export function NativeRangeEnrichmentPanel({
             Compare Kew WCVP evidence with your recorded range. Only reviewed
             mapped Native assertions can be added. Existing ranges are kept.
           </p>
+          <div className="field">
+            <FieldLabel htmlFor={`wcvp-version-${identityId}`}>
+              WCVP source version
+            </FieldLabel>
+            <select
+              id={`wcvp-version-${identityId}`}
+              value={version}
+              disabled={busy}
+              onChange={(event) => {
+                const next = event.currentTarget.value;
+                if (next !== "15" && next !== "16") return;
+                controller.current?.abort();
+                setVersion(next);
+                setSource(null);
+                setTaxa([]);
+                setCandidate(null);
+                setSearched(false);
+                setProposal(null);
+                setSelected([]);
+                setConfirming(false);
+                setError("");
+                setSuccess("");
+              }}
+            >
+              <option value="15">WCVP v15 (default)</option>
+              <option value="16">WCVP v16</option>
+            </select>
+            <p>
+              Choosing a version only changes source review. Confirming a new
+              match replaces the current link and makes earlier unapplied
+              proposals stale. Recorded ranges and applied evidence are kept.
+            </p>
+          </div>
           {!source && !error && <p role="status">Loading source status…</p>}
           {error && (
             <p
@@ -219,7 +255,8 @@ export function NativeRangeEnrichmentPanel({
               <strong>
                 {source.link.taxon.name} {source.link.taxon.authorship}
               </strong>{" "}
-              · {source.link.taxon.rank} · WCVP {source.link.taxon.external_id}
+              · {source.link.taxon.rank} · WCVP v{source.link.source.version} ·{" "}
+              {source.link.taxon.external_id}
               {source.link.stale &&
                 " · Identity or source changed: confirm a match again."}
             </p>
@@ -237,6 +274,7 @@ export function NativeRangeEnrichmentPanel({
                       identityId,
                       query,
                       abort.signal,
+                      version,
                     );
                     if (abort.signal.aborted) return;
                     setTaxa(results);
@@ -317,8 +355,9 @@ export function NativeRangeEnrichmentPanel({
                     <strong>
                       {candidate.name} {candidate.authorship}
                     </strong>
-                    , WCVP {candidate.external_id}, for this Florabase identity.
-                    Scientific-name similarity alone does not establish a match.
+                    , WCVP v{version} · {candidate.external_id}, for this
+                    Florabase identity. Scientific-name similarity alone does
+                    not establish a match.
                   </p>
                   <button
                     type="button"
@@ -331,6 +370,7 @@ export function NativeRangeEnrichmentPanel({
                           candidate,
                           source.source.checksum,
                           csrf,
+                          version,
                         );
                         setSource({ ...source, link });
                         setCandidate(null);
@@ -346,26 +386,32 @@ export function NativeRangeEnrichmentPanel({
                   </button>
                 </div>
               )}
-              {source.link && !source.link.stale && (
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => {
-                    void run(async () => {
-                      const next = await createRangeProposal(identityId, csrf);
-                      setProposal(next);
-                      setSelected(
-                        next.choices
-                          .filter((c) => c.change === "ADD")
-                          .map((c) => c.place_id),
-                      );
-                      setHistory(await listRangeProposals(identityId));
-                    });
-                  }}
-                >
-                  Retrieve source proposal
-                </button>
-              )}
+              {source.link &&
+                !source.link.stale &&
+                source.link.source.version === version && (
+                  <button
+                    type="button"
+                    disabled={busy}
+                    onClick={() => {
+                      void run(async () => {
+                        const next = await createRangeProposal(
+                          identityId,
+                          csrf,
+                          version,
+                        );
+                        setProposal(next);
+                        setSelected(
+                          next.choices
+                            .filter((c) => c.change === "ADD")
+                            .map((c) => c.place_id),
+                        );
+                        setHistory(await listRangeProposals(identityId));
+                      });
+                    }}
+                  >
+                    Retrieve source proposal
+                  </button>
+                )}
             </>
           )}
           {busy && <p role="status">Working with trusted-source evidence…</p>}

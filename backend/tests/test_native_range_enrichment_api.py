@@ -274,3 +274,37 @@ def inspect_and_record(
 ) -> Any:
     seen.append((target, proposal))
     return response
+
+
+@pytest.mark.parametrize("installed", [(), ("15",), ("16",), ("15", "16")])
+def test_version_path_selection_keeps_v15_default(installed: tuple[str, ...]) -> None:
+    from pathlib import Path
+
+    settings = Settings(
+        wcvp_snapshot_path=Path("/v15.sqlite") if "15" in installed else None,
+        wcvp_v16_snapshot_path=Path("/v16.sqlite") if "16" in installed else None,
+    )
+    assert api.source_dependency(settings).release.version == "15"
+    assert api.source_dependency(settings).path == settings.wcvp_snapshot_path
+    assert api.source_dependency(settings, "16").path == settings.wcvp_v16_snapshot_path
+    assert api.source_dependency(settings, "16").release.version == "16"
+
+
+def test_browsing_v16_keeps_a_v15_link_current(monkeypatch: pytest.MonkeyPatch) -> None:
+    previous = link(source_metadata())
+    monkeypatch.setattr(service, "link_response", lambda *_: previous)
+    response = api.source_status(
+        uuid7(),
+        as_session(),
+        actor(),
+        source(
+            SimpleNamespace(
+                metadata=lambda: SourceMetadata.for_release("16", "2026-10-28T00:00:00Z")
+            )
+        ),
+    )
+    assert response.link is not None
+    assert response.link.stale is False
+    assert response.link.source.version == "15"
+    assert response.source is not None
+    assert response.source.version == "16"

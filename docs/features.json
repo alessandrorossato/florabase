@@ -1500,6 +1500,23 @@
       "status": "verified"
     },
     {
+      "id": "WCVP-VERSION-001",
+      "category": "enrichment",
+      "description": "Support explicitly selected pinned WCVP v15 and v16 while preserving frozen source evidence and all recorded native ranges",
+      "acceptance_criteria": [
+        "Exactly the reviewed v15 and v16 releases are provisioned separately with strict archive pins, schema and destination ownership validation; v15 remains the default",
+        "Search, confirmation and proposals use an explicit release selection; v16 reconfirmation rotates the existing link version and invalidates unapplied older proposals without renaming identities",
+        "Frozen Apply dispatches using the original approved release and crosswalk without an optional index; historical applications and operator ranges and profile text remain unchanged",
+        "The exact twelve approved geographic equivalences have distinct release-specific crosswalk identifiers; unsupported geography and non-native assertions remain context only",
+        "Backend, PostgreSQL and frontend checks cover release configurations, source failures, transitions and concurrency; an isolated synthetic Review, production index measurement and operator checklist are provided"
+      ],
+      "dependencies": [
+        "ENRICHMENT-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
       "id": "ENRICHMENT-002",
       "category": "enrichment",
       "description": "Automate refresh of approved source-scoped enrichment",
@@ -1883,7 +1900,7 @@
         "A pre-implementation design audits current renderers, sources, precision, URL and Saved Views, accessibility, privacy, performance and the independent evidence contracts of all three Maps workspaces",
         "Native ranges prioritizes a local map and scoped territory inspector, Collection-style header search, exact recorded evidence and up to five stable color layers without changing geometry or domain assertions",
         "Territory polygons and textual controls share independent multi-selection, distinct union/intersection results, labelled overlap stripes and keyboard navigation, preserving transient previews and color-independent contributor information",
-        "Responsive map/inspector panels, grounded KPI destinations and a bounded species chooser retain explicit selection and existing URL and Saved View behavior, including non-destructive 6–20 identity compatibility and loading, failure, empty, unsupported and excluded states",
+        "Responsive map/inspector panels, grounded KPI destinations and a bounded species chooser retain explicit selection and existing URL and Saved View behavior, including non-destructive 6\u201320 identity compatibility and loading, failure, empty, unsupported and excluded states",
         "The reuse plan separates the small shared shell and legend from renderer-specific behavior and explicit occurrence loading or provenance basemap privacy; the other two screens remain planned",
         "Focused map and Saved View tests, frontend static checks, production build and scoped responsive evidence are recorded with explicit live Review and accessibility limitations; independent acceptance and canonical verification remain separate"
       ],
