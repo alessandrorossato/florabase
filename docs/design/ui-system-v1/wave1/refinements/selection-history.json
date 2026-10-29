@@ -1,0 +1,18 @@
+{
+  "before": {
+    "checked": 2,
+    "hash": "#/plants?view=list"
+  },
+  "back": {
+    "checked": 2,
+    "hash": "#/plants?view=gallery"
+  },
+  "forward": {
+    "checked": 2,
+    "hash": "#/plants?view=list"
+  },
+  "reset": {
+    "checkboxes": 0,
+    "hash": "#/plants?view=list&q=Capsicum"
+  }
+}

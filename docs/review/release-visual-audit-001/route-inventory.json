@@ -1,0 +1,191 @@
+[
+  {
+    "area": "Overview",
+    "page": "dashboard",
+    "title": "Dashboard",
+    "route": "#/dashboard",
+    "states": "Summary, attention, recent Journal/History; search, Filters, Saved Views, Quick add"
+  },
+  {
+    "area": "Collection",
+    "page": "seeds",
+    "title": "Seeds",
+    "route": "#/seeds",
+    "states": "Select, detail /{id}; Overview/Sowings/Photos/Lineage; ?action=create; ?tab=edit; source-aware Start sowing; bulk"
+  },
+  {
+    "area": "Collection",
+    "page": "sowings",
+    "title": "Sowings",
+    "route": "#/sowings",
+    "states": "/{id}; Overview/Germination/Photos/Lineage; ?action=create; ?tab=edit; guided descendants"
+  },
+  {
+    "area": "Collection",
+    "page": "plants",
+    "title": "Plants",
+    "route": "#/plants?type=plant",
+    "states": "/{id}; Overview/Journal/Photos/Lineage; ?action=create&kind=plant; edit; Harvest/extraction/transfer operations"
+  },
+  {
+    "area": "Collection",
+    "page": "plant-groups",
+    "title": "PlantGroups",
+    "route": "#/plants?type=group",
+    "states": "Filtered Plants directory, not sidebar route; #/plant-groups/{id} details/edit; ?action=create&kind=group; extraction"
+  },
+  {
+    "area": "Collection",
+    "page": "harvests",
+    "title": "Harvests",
+    "route": "#/harvests",
+    "states": "/{id}; historical material lines, photos, inventory access; ?action=create; ?action=edit"
+  },
+  {
+    "area": "Collection",
+    "page": "stored-material",
+    "title": "Stored material",
+    "route": "#/harvests?tab=stored-material",
+    "states": "Existing Harvest subview, inventory editor, Print label, eligible Create SeedLot; separate from collected quantity"
+  },
+  {
+    "area": "Collection",
+    "page": "locations",
+    "title": "Locations",
+    "route": "#/locations",
+    "states": "Expand hierarchy; select/preview; /{id} details; contextual create/edit, parent/root picker, scopes, retirement guards"
+  },
+  {
+    "area": "Activity",
+    "page": "journal",
+    "title": "Journal",
+    "route": "#/events",
+    "states": "Operator-recorded entries; target links; +Record menu and notebook forms; filters, Saved Views"
+  },
+  {
+    "area": "Activity",
+    "page": "history",
+    "title": "History",
+    "route": "#/history",
+    "states": "Read-only authoritative fact projection; filters, Saved Views and source links; no Create/Edit"
+  },
+  {
+    "area": "Activity",
+    "page": "schedule-list",
+    "title": "Schedule List",
+    "route": "#/schedule?view=list",
+    "states": "Activity details/create/edit/complete/cancel; due windows, status filters; no Saved Views"
+  },
+  {
+    "area": "Activity",
+    "page": "schedule-calendar",
+    "title": "Schedule Calendar",
+    "route": "#/schedule?view=calendar",
+    "states": "?month=YYYY-MM; day agenda, overflow, activity dialog; same future-work contract"
+  },
+  {
+    "area": "Explore",
+    "page": "identities",
+    "title": "Botanical identities",
+    "route": "#/identities",
+    "states": "/{id}; six sections Overview/Reference/Taxonomy/Maps/Media/History; four-section contextual editor; direct ?tab=edit; task menus"
+  },
+  {
+    "area": "Explore",
+    "page": "taxonomy-list",
+    "title": "Taxonomy Classification",
+    "route": "#/taxonomy",
+    "states": "List/classification, collection facets/KPI subsets, canonical explicit source editor; source-unavailable fallback"
+  },
+  {
+    "area": "Explore",
+    "page": "taxonomy-tree",
+    "title": "Taxonomy Tree Explorer",
+    "route": "#/taxonomy?view=tree",
+    "states": "Graph pan/zoom/fit/branch/rank/photos/selection/fullscreen; requires configured WFO. Local identity fallback remains"
+  },
+  {
+    "area": "Explore",
+    "page": "media",
+    "title": "Media",
+    "route": "#/media",
+    "states": "Select, /{id} detail, create/edit/link dialogs, primary/cover evidence, copy/delete guards, paginated gallery"
+  },
+  {
+    "area": "Explore",
+    "page": "geography",
+    "title": "Geography Overview",
+    "route": "#/geography/overview",
+    "states": "Canonical hub: local range/occurrence/origin evidence cards; contextual links to six existing views"
+  },
+  {
+    "area": "Explore",
+    "page": "native-ranges",
+    "title": "Native ranges",
+    "route": "#/geography/native-ranges",
+    "states": "Explore all, up to five compare layers, territory inspector/legend, picker, Filters, Saved Views"
+  },
+  {
+    "area": "Explore",
+    "page": "species-distribution",
+    "title": "Species distribution",
+    "route": "#/geography/species-distribution",
+    "states": "Single explicit identity + provider loading; retained evidence/provider limits; no automatic fetch"
+  },
+  {
+    "area": "Explore",
+    "page": "origins",
+    "title": "Collection origins",
+    "route": "#/geography/origins",
+    "states": "Recorded source map, site/record inspector, precision/camera/Saved Views, explicit online basemap"
+  },
+  {
+    "area": "Explore",
+    "page": "places",
+    "title": "Geographic places",
+    "route": "#/geography/places",
+    "states": "Hierarchy/select/preview, create custom place, canonical/local restrictions, exact associated sites"
+  },
+  {
+    "area": "Explore",
+    "page": "sites",
+    "title": "Provenance sites",
+    "route": "#/geography/sites",
+    "states": "Left directory/inspector + right map; coordinate-less sites; #/geography/{id} detail/edit"
+  },
+  {
+    "area": "Sourcing",
+    "page": "suppliers",
+    "title": "Suppliers",
+    "route": "#/suppliers",
+    "states": "/{id} Overview/Photos/acquisition links; ?action=create; ?tab=edit; current search, Saved Views, no invented Filters"
+  },
+  {
+    "area": "Sourcing",
+    "page": "orders",
+    "title": "Orders",
+    "route": "#/orders",
+    "states": "/{id} overview/linked packets; ?action=create; ?tab=edit; Supplier picker/reconciliation, filters/Saved Views"
+  },
+  {
+    "area": "Tools",
+    "page": "labels",
+    "title": "Labels",
+    "route": "#/labels",
+    "states": "?kind=seed-lot|plant|plant-group|stored-material&record={id}; four-kind batch, copies, totals/pages, physical presets, QR settings dialog/Print"
+  },
+  {
+    "area": "Tools",
+    "page": "import-export",
+    "title": "Import / Export",
+    "route": "#/import-export",
+    "states": "Template/upload/validate-preview/commit stages, CSV export; no import committed during audit"
+  },
+  {
+    "area": "Tools",
+    "page": "settings",
+    "title": "Settings",
+    "route": "#/settings",
+    "states": "Browser-local three palettes \u00d7 System/Light/Dark; server General QR setting; Labels and Import/Export tools links"
+  }
+]

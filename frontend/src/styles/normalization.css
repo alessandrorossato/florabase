@@ -109,6 +109,8 @@ input:is([type="checkbox"], [type="radio"]) {
 }
 .app-content :is(.page-header, .screen-heading) {
   display: flex;
+  /* Keep flex bases on the inline axis when the toolbar wraps at tablet widths. */
+  flex-direction: row;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;

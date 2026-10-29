@@ -147,3 +147,21 @@ test("Harvest falls through direct primary, source primary, safe cover and its o
   fireEvent.error(screen.getByRole("img"));
   expect(screen.getByText("Harvest image placeholder")).toBeVisible();
 });
+
+test("gallery source labels follow primary-to-reference fallback and never call an external cover a specimen", () => {
+  render(
+    <RecordVisual
+      kind="plant"
+      label="Aloe"
+      identity={identity}
+      showSource
+      photo={{ kind: "local", photo_id: "primary", thumbnail_url: "/primary" }}
+    />,
+  );
+  expect(screen.getByText("Record primary photo")).toBeVisible();
+  fireEvent.error(screen.getByRole("img"));
+  expect(screen.getByText("Identity cover · reference")).toBeVisible();
+  fireEvent.error(screen.getByRole("img"));
+  expect(screen.getByText("Image unavailable")).toBeVisible();
+  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+});

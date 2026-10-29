@@ -14,6 +14,8 @@ import { StrictMode } from "react";
 import { afterEach, beforeEach, expect, test, vi } from "vitest";
 
 import { App } from "./App";
+// Interaction tests start with the module ready; App.lazy owns deferred chunk loading.
+import "./botanical-identities/BotanicalIdentityScreen";
 import type { GeographicPlaceResponse } from "./geographic-places/api";
 import type { LocationResponse } from "./locations/api";
 
@@ -4666,4 +4668,33 @@ test("identity section keyboard navigation retains browser Back and Forward boun
   expect(
     screen.getByRole("button", { name: "Add to collection" }),
   ).toHaveFocus();
+});
+
+test("Dashboard Quick add keeps all destinations and labels with distinct decorative icons", async () => {
+  window.history.replaceState(null, "", "#/dashboard");
+  authenticatedThen(() => jsonResponse({ status: "ok" }));
+  const user = userEvent.setup();
+  render(<App />);
+  await user.click(await screen.findByRole("button", { name: "Quick add" }));
+  const actions = screen.getByRole("navigation", { name: "Quick actions" });
+  const expected = [
+    ["New seed lot", "#/seeds?action=create"],
+    ["New sowing", "#/sowings?action=create"],
+    ["New plant", "#/plants?action=create&kind=plant"],
+    ["New plant group", "#/plants?action=create&kind=group"],
+    ["Record harvest", "#/harvests?action=create"],
+    ["New botanical identity", "#/identities?action=create"],
+    ["New supplier", "#/suppliers?action=create"],
+    ["New location", "#/locations?action=create"],
+    ["New local place", "#/geography?action=create"],
+  ];
+  const icons = expected.map(([label, href]) => {
+    const action = within(actions).getByRole("link", {
+      name: label,
+    });
+    expect(action).toHaveAttribute("href", href);
+    expect(action.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+    return action.querySelector("svg")?.getAttribute("data-icon");
+  });
+  expect(new Set(icons).size).toBe(9);
 });

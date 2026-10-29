@@ -1,0 +1,192 @@
+{
+  "base_commit": "c77a1c5330de949168bf5f7c90d0f533af1bc320",
+  "branch": "feat/ui-system-v1",
+  "status": "unstaged and uncommitted review candidate; not a canonical receipt",
+  "fingerprint": "2dbf43095e698db7f3d3464782d4ca22a0012a14afb7b8d9493c397227afd182",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "dca90f0c622f5d0872e44b8908c0297de1110660f8145c5a55155b594b8473a4"
+    },
+    {
+      "path": "Makefile",
+      "sha256": "88861a63504c2e72ad8bf0d0b1aa191ffe60fb492eade43e5ed0847659296154"
+    },
+    {
+      "path": "backend/openapi.json",
+      "sha256": "6569695accd0766859f8baecb1b1070ff39fc63bb4ef4706958b8c7a42443327"
+    },
+    {
+      "path": "backend/src/florabase/collection_views/dashboard.py",
+      "sha256": "5efac6bdf0aaeac1983977637688d99a0b9011c68fc8acde7290858e5a59c83c"
+    },
+    {
+      "path": "backend/src/florabase/collection_views/schemas.py",
+      "sha256": "6c15964a0aa64a773f9c987b0bb4111117e7431c977b6cbafa2e87b64db4cfbf"
+    },
+    {
+      "path": "backend/src/florabase/collection_views/service.py",
+      "sha256": "32c136008a5012ab1b552a952e9125e0cf7504dab92002fc8c9b2a19729809f8"
+    },
+    {
+      "path": "backend/tests/integration/test_dashboard.py",
+      "sha256": "3c435a6598acb74dce1b194fd50cd3b0045ccd3966408ab472638bc9bb45a95c"
+    },
+    {
+      "path": "frontend/src/App.test.tsx",
+      "sha256": "7d38ceb5ee661d33eb5647272db28eb467fa8a324634ff07f486bb03c788627b"
+    },
+    {
+      "path": "frontend/src/App.tsx",
+      "sha256": "733ef0bc375a46549576783c59b14715b8cd282503adfdaf270c6aa92eb137b6"
+    },
+    {
+      "path": "frontend/src/api/schema.d.ts",
+      "sha256": "12207d6e7c30a45422f1c00e8f81ba62dd2304e52a9df4450a66d92038bf4491"
+    },
+    {
+      "path": "frontend/src/bulk/useBulkSelection.ts",
+      "sha256": "67c3312584c71d8ab048b5976801ed64b299a2fa3e6250e4cdce10a139774eb7"
+    },
+    {
+      "path": "frontend/src/collection/DashboardPhotos.tsx",
+      "sha256": "3592a808a73e1e36a89905526c0c04ef12fcded79167fc0aff33e4e343a06f11"
+    },
+    {
+      "path": "frontend/src/collection/DashboardScreen.test.tsx",
+      "sha256": "88a66244511eb665eadc300b0e14cf935e206cd754871c7b980886b3b02dd139"
+    },
+    {
+      "path": "frontend/src/collection/DashboardScreen.tsx",
+      "sha256": "73dcfd6cfc7ed6878d4dbd6aba821126cec1911332c559e68c2829aaca959cb6"
+    },
+    {
+      "path": "frontend/src/collection/dashboard.css",
+      "sha256": "f004e234cbf23ce2858e7f13297c030bc3ebb359c40938efd0001cf900085913"
+    },
+    {
+      "path": "frontend/src/components/ActivityPage.tsx",
+      "sha256": "43171d206360e478897a77cc92f3b0a2596896a89dc93583836f96454936a8f2"
+    },
+    {
+      "path": "frontend/src/components/DirectoryPage.test.tsx",
+      "sha256": "e5d12f912c1e253c805efa7300418f7fdcfb6e4e88fba450ebb9bee74702ac31"
+    },
+    {
+      "path": "frontend/src/components/DirectoryPage.tsx",
+      "sha256": "d9dc1a5692f507f9d2868f7fc58bc78c74f728c84fbd0017784f3ab0b8b83ee4"
+    },
+    {
+      "path": "frontend/src/components/DirectoryTools.tsx",
+      "sha256": "0ab2fc4739628a614a0b348b5d763eadfbea3a59cd6c65053bfc6eaaa382cefd"
+    },
+    {
+      "path": "frontend/src/components/Icon.tsx",
+      "sha256": "6477ae9f11f5bceecf77d0532c7c1c043721909e1951815145fa7be1283e2569"
+    },
+    {
+      "path": "frontend/src/components/TaskDialog.tsx",
+      "sha256": "054ff49527dde1eefb2e15b30f6d2dbc3201bdff32c6052ddb80cbec3ebbd89e"
+    },
+    {
+      "path": "frontend/src/components/directoryPresentation.ts",
+      "sha256": "3ef8e95df956b88d145db8e84b07285829826f6ca06f6b8c5659d08eca296b01"
+    },
+    {
+      "path": "frontend/src/components/navigationIcons.ts",
+      "sha256": "0617b8e25ceb3a35daec552f2fe66d42d92468a28049a6725e0248ba0fa31966"
+    },
+    {
+      "path": "frontend/src/photos/RecordVisual.test.tsx",
+      "sha256": "439e538549af9f887558c7bd5166597310dec80a02e9b917e0563f0eaa249c2c"
+    },
+    {
+      "path": "frontend/src/photos/RecordVisual.tsx",
+      "sha256": "2018d04ed7a76f476608b0c67e3e41397d154d27ea9f7f79eb9f95cec494c7a4"
+    },
+    {
+      "path": "frontend/src/plants/PlantScreen.test.tsx",
+      "sha256": "5523eafb1ff1202137e7856164e2490aa7266cb68c82e38db66828c3b4708fcf"
+    },
+    {
+      "path": "frontend/src/plants/PlantScreen.tsx",
+      "sha256": "cc9593aa02d2a8702570c33389686edcf830c1577f188167c6b6edb4df8dcf96"
+    },
+    {
+      "path": "frontend/src/seed-lots/SeedLotScreen.test.tsx",
+      "sha256": "2cabab29a07fffbbc74b5fb27f86f4963dba4d5f2b159c10fae052c444bcd46d"
+    },
+    {
+      "path": "frontend/src/seed-lots/SeedLotScreen.tsx",
+      "sha256": "181ec56647198094254b76c96a8b9253afdb4eae5d3c52ce09267e408539c10a"
+    },
+    {
+      "path": "frontend/src/styles/controls.css",
+      "sha256": "bf3295c6575eac421ce8ecc22558ba8a0df116dee0c75517d09b502add29fe78"
+    },
+    {
+      "path": "frontend/src/styles/directory.css",
+      "sha256": "829e07c414b69951bf7db8089445fcc3b7a533a1e064d6080793a3f5e99638cc"
+    },
+    {
+      "path": "frontend/src/styles/normalization.css",
+      "sha256": "85495c819696cc7bef0dccf36fc442f50a4fab4ee22de9d2c35d2d42e9ab2e48"
+    },
+    {
+      "path": "frontend/src/test/history.ts",
+      "sha256": "fa811fc7182fd4e281efeda59d667ca4f04361d986e4a88f02d062e94095132f"
+    },
+    {
+      "path": "frontend/src/ui-lab/Lab.test.tsx",
+      "sha256": "f30c9679c952664b8a3934e1209984492958e7335b375038ff43aece1da85112"
+    },
+    {
+      "path": "frontend/src/ui-lab/Lab.tsx",
+      "sha256": "21130d56466f2881b4b1fd6c8e95fcab77785f31e6c22ae19453234ab589aa86"
+    },
+    {
+      "path": "frontend/src/ui-lab/fixtures.ts",
+      "sha256": "f59533a35efc01e2b7c83161ef36f060243e2af00b9cdb35b0961f82c38f41e2"
+    },
+    {
+      "path": "frontend/src/ui-lab/lab.css",
+      "sha256": "7a7484a12a714c527fa1dfa34c8704b698717887a0e200e7df18385cb11b654f"
+    },
+    {
+      "path": "frontend/src/ui-lab/main.tsx",
+      "sha256": "81e8d8d17f8d083e371ea7ad4f1239b9dc41aa9eec36a63bb33f9c1a9292c9b7"
+    },
+    {
+      "path": "frontend/src/ui-lab/mount.tsx",
+      "sha256": "77f3ae61bebaeec678421cb9c083dc3dd07b0298f79972f8f1bf647d9aea2aea"
+    },
+    {
+      "path": "frontend/src/ui-pages/ScaffoldDirectoryExample/README.md",
+      "sha256": "e5171920a2f1128261d3a4723b4bfc1a90554773a20f2728a9bceff46aae5ef4"
+    },
+    {
+      "path": "frontend/src/ui-pages/ScaffoldDirectoryExample/ScaffoldDirectoryExample.test.tsx",
+      "sha256": "9c633b50885084022c4dc4582dd348820ce79e40769db4c6e6dfa0b871f68715"
+    },
+    {
+      "path": "frontend/src/ui-pages/ScaffoldDirectoryExample/ScaffoldDirectoryExample.tsx",
+      "sha256": "2c04a0148d4937b20d93db1071bfa488258b29178c5644c8fca7127c877b0410"
+    },
+    {
+      "path": "frontend/ui-lab/index.html",
+      "sha256": "337d6acb53f0cfe041991af0c39c6f793395ee38045f77d375b2dbf3166fd09d"
+    },
+    {
+      "path": "scripts/check_ui_lab_build.py",
+      "sha256": "774f23e9fc34902c3520261cfb841c08a01b15fbd960f4d2c2961c45ba3fc361"
+    },
+    {
+      "path": "scripts/test_ui_page.py",
+      "sha256": "abbf9d408c8e6db5435822fc3aef79436d128584a4ce2f15dbaebec32c5eb0e1"
+    },
+    {
+      "path": "scripts/ui_page.py",
+      "sha256": "ef7327a3a1bec34db7d01f9dcd4b3d8115cedda76a41a9c135e7e57d4824bff7"
+    }
+  ]
+}

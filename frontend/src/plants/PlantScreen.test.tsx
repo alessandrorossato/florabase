@@ -1,4 +1,4 @@
-import { browserBack } from "../test/history";
+import { browserBack, browserForward } from "../test/history";
 import { openFormSection } from "../test/formSections";
 import { selectDirectoryFilter } from "../test/directoryFilters";
 import {
@@ -526,14 +526,14 @@ test("unified rows, search, lifecycle and type filters, detail, and Back remain 
   mockApi(plantHandler([plant()], [group()]));
   const user = await openPlants();
   const plantRow = await screen.findByRole("button", {
-    name: /Avocado #1.*Persea americana.*Plant/s,
+    name: /^(?!Quick preview |Details |Edit ).*Avocado #1.*Persea americana.*Plant/s,
   });
   expect(within(plantRow).getByText("Plant")).toBeInTheDocument();
   expect(screen.queryByText("Seedlings 2026")).not.toBeInTheDocument();
 
   await selectDirectoryFilter(user, "Lifecycle", "history");
   const groupRow = screen.getByRole("button", {
-    name: /Seedlings 2026.*Cyphomandra betacea.*Group.*0 plants/s,
+    name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026.*Cyphomandra betacea.*Group.*0 plants/s,
   });
   expect(within(groupRow).getByText("Group")).toBeInTheDocument();
   await selectDirectoryFilter(user, "Lifecycle", "all");
@@ -559,7 +559,9 @@ test("unified rows, search, lifecycle and type filters, detail, and Back remain 
   expect(screen.getByText(/No Plants match/)).toBeInTheDocument();
   await selectDirectoryFilter(user, "Lifecycle", "all");
   await selectDirectoryFilter(user, "Record type", "plant");
-  const selectedRow = screen.getByRole("button", { name: /Avocado #1/ });
+  const selectedRow = screen.getByRole("button", {
+    name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+  });
   await user.click(selectedRow);
   expect(
     await screen.findByRole("heading", { name: "Avocado #1" }),
@@ -1000,7 +1002,11 @@ test("full Plant and group PUT edits preserve form state on failure and apply co
     }),
   );
   const user = await openPlants();
-  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
   await user.click(await screen.findByRole("button", { name: "Edit Plant" }));
   const label = screen.getByLabelText("Label");
   await user.clear(label);
@@ -1018,7 +1024,11 @@ test("full Plant and group PUT edits preserve form state on failure and apply co
   ).toBeInTheDocument();
 
   await selectDirectoryFilter(user, "Lifecycle", "history");
-  await user.click(screen.getByRole("button", { name: /Seedlings 2026/ }));
+  await user.click(
+    screen.getByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+    }),
+  );
   await user.click(
     await screen.findByRole("button", { name: "Edit Plant group" }),
   );
@@ -1050,7 +1060,11 @@ test("detail loading, detail failure, authorization, and session expiry are expl
     ),
   );
   const user = await openPlants();
-  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
   expect(await screen.findByRole("alert")).toHaveTextContent(
     "could not load this record",
   );
@@ -1160,7 +1174,9 @@ test("active group extraction is focused, updates exact quantity, opens the Plan
   );
   const user = await openPlants();
   await user.click(
-    await screen.findByRole("button", { name: /Seedlings 2026/ }),
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+    }),
   );
   await user.click(
     await screen.findByRole("button", { name: "Extract plant" }),
@@ -1278,7 +1294,9 @@ test("group extraction availability and quantity explanations cover inactive, ex
       await selectDirectoryFilter(user, "Lifecycle", "history");
     }
     await user.click(
-      await screen.findByRole("button", { name: /Seedlings 2026/ }),
+      await screen.findByRole("button", {
+        name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+      }),
     );
     if (scenario.actionable) {
       const action = await screen.findByRole("button", {
@@ -1384,7 +1402,11 @@ test("recorded extraction reintegration explains eligibility, restores authorita
     }),
   );
   const user = await openPlants();
-  await user.click(await screen.findByRole("button", { name: /Chosen one/ }));
+  await user.click(
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Chosen one/,
+    }),
+  );
   await user.click(
     await screen.findByRole("button", { name: "Reintegrate into group" }),
   );
@@ -1427,7 +1449,9 @@ test("recorded extraction reintegration explains eligibility, restores authorita
   );
   const blockedUser = await openPlants();
   await blockedUser.click(
-    await screen.findByRole("button", { name: /Chosen one/ }),
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Chosen one/,
+    }),
   );
   expect(
     await screen.findByText("Reintegrate the later extracted Plant first."),
@@ -1466,7 +1490,9 @@ test("extraction conflict preserves the form, refreshes the group, and does not 
   );
   const user = await openPlants();
   await user.click(
-    await screen.findByRole("button", { name: /Seedlings 2026/ }),
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+    }),
   );
   await user.click(
     await screen.findByRole("button", { name: "Extract plant" }),
@@ -1512,7 +1538,9 @@ test("source PlantGroup context is searchable for extracted Plants", async () =>
     await screen.findByRole("searchbox", { name: "Search Plants" }),
     "Tamarillo extraction source",
   );
-  const result = screen.getByRole("button", { name: /Avocado #1/ });
+  const result = screen.getByRole("button", {
+    name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+  });
   expect(result).not.toHaveTextContent("Tamarillo extraction source");
   setViewportMatches(false);
   await user.click(result);
@@ -1525,7 +1553,9 @@ test("source PlantGroup context is searchable for extracted Plants", async () =>
     "Cyphomandra betacea",
   );
   expect(
-    screen.getByRole("button", { name: /Avocado #1/ }),
+    screen.getByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    }),
   ).toBeInTheDocument();
 });
 
@@ -1576,7 +1606,11 @@ test("explicit Plant transfer records recipient and keeps the historical detail 
     }),
   );
   const user = await openPlants();
-  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
   expect(
     screen.queryByRole("button", { name: "Transfer" }),
   ).not.toBeInTheDocument();
@@ -1654,7 +1688,9 @@ test("whole-group transfer has no quantity control and extraction Events link th
   );
   const user = await openPlants();
   await user.click(
-    await screen.findByRole("button", { name: /Seedlings 2026/ }),
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+    }),
   );
   await user.click(screen.getByRole("button", { name: "More record actions" }));
   await user.click(screen.getByRole("button", { name: "Transfer group" }));
@@ -1731,7 +1767,11 @@ test("Plant Journal entries preserves API order, every label and partial-date pr
     ),
   );
   const user = await openPlants();
-  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
   await user.click(screen.getByRole("tab", { name: "Journal" }));
   const timeline = await screen.findByRole("list", { name: "Journal entries" });
   const items = within(timeline).getAllByRole("listitem");
@@ -1782,7 +1822,9 @@ test("PlantGroup detail has the same responsive Event journal and a useful empty
   const user = await openPlants();
   await selectDirectoryFilter(user, "Lifecycle", "history");
   await user.click(
-    await screen.findByRole("button", { name: /Seedlings 2026/ }),
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+    }),
   );
   await user.click(screen.getByRole("tab", { name: "Journal" }));
   expect(
@@ -1818,7 +1860,9 @@ test("PlantGroup detail has the same responsive Event journal and a useful empty
   const parityUser = await openPlants();
   await selectDirectoryFilter(parityUser, "Lifecycle", "history");
   await parityUser.click(
-    await screen.findByRole("button", { name: /Seedlings 2026/ }),
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+    }),
   );
   await parityUser.click(screen.getByRole("tab", { name: "Journal" }));
   expect(
@@ -1870,7 +1914,11 @@ test("Event creation validates movement, explains side effects and authoritative
     }),
   );
   const user = await openPlants();
-  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
   await user.click(screen.getByRole("tab", { name: "Journal" }));
   await user.click(await screen.findByRole("button", { name: "Add entry" }));
   expect(screen.getByLabelText("Entry type")).toHaveAccessibleDescription(
@@ -1977,7 +2025,11 @@ test("historical edit and delete refresh the target without synthesizing rollbac
     }),
   );
   const user = await openPlants();
-  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
   await user.click(screen.getByRole("tab", { name: "Journal" }));
   await screen.findByText("Moved for winter.");
   const readsAfterOpen = targetReads;
@@ -2017,7 +2069,11 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
     ),
   );
   const user = await openPlants();
-  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
   await user.click(screen.getByRole("tab", { name: "Journal" }));
   expect(await screen.findByRole("status", { name: "" })).toHaveTextContent(
     "Loading Journal entries",
@@ -2038,7 +2094,9 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
   );
   const failingUser = await openPlants();
   await failingUser.click(
-    await screen.findByRole("button", { name: /Avocado #1/ }),
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    }),
   );
   await failingUser.click(screen.getByRole("tab", { name: "Journal" }));
   expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -2063,7 +2121,9 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
   );
   const mutationUser = await openPlants();
   await mutationUser.click(
-    await screen.findByRole("button", { name: /Avocado #1/ }),
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    }),
   );
   await mutationUser.click(screen.getByRole("tab", { name: "Journal" }));
   await mutationUser.click(
@@ -2084,7 +2144,11 @@ test("desktop Plant selection previews record facts without mounting Events", as
   mockApi(plantHandler([plant()], [group()]));
   const user = await openPlants();
   setViewportMatches(false);
-  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
   const preview = await screen.findByRole("complementary", {
     name: "Quick preview",
   });
@@ -2104,12 +2168,20 @@ test("reselecting a previewed record after narrowing the viewport opens its deta
   mockApi(plantHandler([plant()], [group()]));
   const user = await openPlants();
   setViewportMatches(false);
-  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
   expect(
     await screen.findByRole("complementary", { name: "Quick preview" }),
   ).toBeInTheDocument();
   setViewportMatches(true);
-  await user.click(screen.getByRole("button", { name: /Avocado #1/ }));
+  await user.click(
+    screen.getByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
   expect(
     await screen.findByRole("tab", { name: "Journal" }),
   ).toBeInTheDocument();
@@ -2226,7 +2298,9 @@ test.each([
     mockApi(plantHandler([], [group({ lifecycle: "active", quantity })]));
     const user = await openPlants();
     setViewportMatches(false);
-    const row = screen.getByRole("button", { name: /Seedlings 2026/ });
+    const row = screen.getByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+    });
     expect(row).toHaveTextContent(expected);
     await user.click(row);
     const preview = await screen.findByRole("complementary", {
@@ -2288,7 +2362,11 @@ test("group extraction history uses only recorded group origin and includes reta
     ),
   );
   const user = await openPlants();
-  await user.click(screen.getByRole("button", { name: /Seedlings 2026/ }));
+  await user.click(
+    screen.getByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+    }),
+  );
   const history = screen.getByRole("region", { name: "Extracted Plants" });
   expect(
     within(history).getByRole("link", { name: "Returned specimen" }),
@@ -2306,7 +2384,11 @@ test("group extraction history uses only recorded group origin and includes reta
 test("transfer dialog contains keyboard focus and restores the operation trigger on escape", async () => {
   mockApi(plantHandler([plant()], []));
   const user = await openPlants();
-  await user.click(screen.getByRole("button", { name: /Avocado #1/ }));
+  await user.click(
+    screen.getByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
   const trigger = screen.getByRole("button", { name: "More record actions" });
   await user.click(trigger);
   await user.click(screen.getByRole("button", { name: "Transfer" }));
@@ -2336,7 +2418,11 @@ test.each(["local", "external"] as const)(
     mockApi(plantHandler([plant({ primary_photo: photo })], []));
     const user = await openPlants();
     setViewportMatches(false);
-    await user.click(screen.getByRole("button", { name: /Avocado #1/ }));
+    await user.click(
+      screen.getByRole("button", {
+        name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      }),
+    );
     const preview = await screen.findByRole("complementary", {
       name: "Quick preview",
     });
@@ -2369,7 +2455,11 @@ test("historical group detail labels retained location and zero count without cl
   );
   const user = await openPlants();
   await selectDirectoryFilter(user, "Lifecycle", "history");
-  await user.click(screen.getByRole("button", { name: /Seedlings 2026/ }));
+  await user.click(
+    screen.getByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+    }),
+  );
   expect(screen.getByRole("region", { name: "At a glance" })).toHaveTextContent(
     "Last recorded location",
   );
@@ -2421,7 +2511,11 @@ test("server validation focuses the visible error and preserves field values", a
 test("Plant detail and correction share a clear record header and identity context", async () => {
   mockApi(plantHandler([plant()], []));
   const user = await openPlants();
-  await user.click(screen.getByRole("button", { name: /Avocado #1/ }));
+  await user.click(
+    screen.getByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
   const heading = screen.getByRole("heading", { name: "Avocado #1" });
   const header = heading.closest("header");
   if (!header) throw new Error("The record heading must belong to its header.");
@@ -2473,7 +2567,11 @@ test("BULK-001 mixed Plant and Group directory selection retains concrete kind",
 test("Journal editor dismisses pristine forms, protects changed notes and restores focus", async () => {
   mockApi(plantHandler([plant()], []));
   const user = await openPlants();
-  await user.click(await screen.findByRole("button", { name: /Avocado #1/ }));
+  await user.click(
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    }),
+  );
   await user.click(screen.getByRole("tab", { name: "Journal" }));
   const add = await screen.findByRole("button", { name: "Add entry" });
   await user.click(add);
@@ -2568,7 +2666,12 @@ test("contextual Plant edit preserves directory, guards dismissal, traps focus a
   await waitFor(() => {
     expect(window.location.hash).toBe(oldHash);
   });
-  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("dialog", { name: /Edit/ }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("dialog", { name: "Plant inspection" }),
+  ).toBeVisible();
   expect(
     screen.getByRole("complementary", { name: "Quick preview" }),
   ).toBeVisible();
@@ -2701,7 +2804,7 @@ test("saving Plant edit retains its detail tab and connected focus trigger acros
 });
 
 test.each(["plant", "group"] as const)(
-  "minimal %s row retains metrics and Quick Preview exposes media, context and Harvest",
+  "%s directory retains metrics/location and Quick Preview exposes media, context and Harvest",
   async (kind) => {
     mockApi(
       plantHandler(
@@ -2710,6 +2813,8 @@ test.each(["plant", "group"] as const)(
           group({
             lifecycle: "active",
             quantity: { value: 6, is_approximate: false },
+            location: { id: locationId, display_path: location.display_path },
+            location_id: locationId,
           }),
         ],
       ),
@@ -2717,7 +2822,10 @@ test.each(["plant", "group"] as const)(
     const user = await openPlants();
     setViewportMatches(false);
     const row = screen.getByRole("button", {
-      name: kind === "plant" ? /Avocado #1/ : /Seedlings 2026/,
+      name:
+        kind === "plant"
+          ? /^(?!Quick preview |Details |Edit ).*Avocado #1/
+          : /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
     });
     expect(row).not.toHaveTextContent(location.display_path);
     expect(row).not.toHaveTextContent("Purchased");
@@ -2806,7 +2914,9 @@ test("Extract Plant browser Back and direct-route Cancel return to the same sour
   );
   const user = await openPlants();
   await user.click(
-    await screen.findByRole("button", { name: /Seedlings 2026/ }),
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+    }),
   );
   await user.click(screen.getByRole("button", { name: "Extract plant" }));
   expect(window.location.hash).toBe(
@@ -2868,7 +2978,10 @@ test.each(["plant", "group"] as const)(
     const user = await openPlants();
     await user.click(
       await screen.findByRole("button", {
-        name: kind === "plant" ? /Avocado #1/ : /Seedlings 2026/,
+        name:
+          kind === "plant"
+            ? /^(?!Quick preview |Details |Edit ).*Avocado #1/
+            : /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
       }),
     );
     expect(
@@ -2942,19 +3055,119 @@ test("identity scope composes with the Plants ownership model and separate group
   const user = userEvent.setup();
   render(<App />);
   expect(
-    await screen.findByRole("button", { name: /Scoped group/ }),
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Scoped group/,
+    }),
   ).toBeVisible();
-  expect(screen.queryByRole("button", { name: /Scoped plant/ })).toBeNull();
-  expect(screen.queryByRole("button", { name: /Other plant/ })).toBeNull();
+  expect(
+    screen.queryByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Scoped plant/,
+    }),
+  ).toBeNull();
+  expect(
+    screen.queryByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Other plant/,
+    }),
+  ).toBeNull();
   await selectDirectoryFilter(user, "Record type", "all");
   expect(
-    await screen.findByRole("button", { name: /Scoped plant/ }),
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Scoped plant/,
+    }),
   ).toBeVisible();
-  expect(screen.queryByRole("button", { name: /Other plant/ })).toBeNull();
+  expect(
+    screen.queryByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Other plant/,
+    }),
+  ).toBeNull();
   await user.click(
     screen.getByRole("button", { name: "Remove botanical identity filter" }),
   );
   expect(
-    await screen.findByRole("button", { name: /Other plant/ }),
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Other plant/,
+    }),
   ).toBeVisible();
 });
+
+test("Plants Gallery/List keeps group scope, search, preview focus and bulk choices", async () => {
+  localStorage.clear();
+  mockApi(
+    plantHandler(
+      [plant()],
+      [group({ lifecycle: "active", label: "Tamarillo cohort" })],
+    ),
+  );
+  const user = await openPlants();
+  setViewportMatches(false);
+  expect(
+    screen.getByRole("button", { name: "Gallery", pressed: true }),
+  ).toBeVisible();
+  await selectDirectoryFilter(user, "Record type", "group");
+  await user.type(screen.getByLabelText("Search Plants"), "Tamarillo");
+  const row = within(
+    screen.getByRole("list", { name: "Plants collection" }),
+  ).getByRole("button", {
+    name: /^(?!Quick preview |Details |Edit ).*Tamarillo/,
+  });
+  await user.click(row);
+  await user.click(screen.getByRole("button", { name: "List" }));
+  expect(screen.getByLabelText("Search Plants")).toHaveValue("Tamarillo");
+  expect(window.location.hash).toContain("type=group");
+  expect(
+    screen.getByRole("complementary", { name: "Quick preview" }),
+  ).toHaveTextContent("Tamarillo");
+  await user.click(screen.getByRole("button", { name: "Close preview" }));
+  expect(screen.getByRole("list", { name: "Plants collection" })).toHaveFocus();
+  await user.click(screen.getByRole("button", { name: "Select records" }));
+  await user.click(screen.getByRole("button", { name: "Select visible" }));
+  await user.click(screen.getByRole("button", { name: "Gallery" }));
+  expect(
+    screen.getByRole("checkbox", {
+      name: /^(?!Quick preview |Details |Edit ).*Select Plant group.*Tamarillo/i,
+    }),
+  ).toBeChecked();
+  await browserBack();
+  expect(
+    await screen.findByRole("button", { name: "List", pressed: true }),
+  ).toBeVisible();
+  expect(screen.getByLabelText("Search Plants")).toHaveValue("Tamarillo");
+  expect(
+    screen.getByRole("checkbox", {
+      name: /^(?!Quick preview |Details |Edit ).*Select Plant group.*Tamarillo/i,
+    }),
+  ).toBeChecked();
+  localStorage.clear();
+  await browserForward();
+  expect(
+    await screen.findByRole("button", { name: "Gallery", pressed: true }),
+  ).toBeVisible();
+});
+
+test.each(["plant", "group"] as const)(
+  "%s explicit preview remains an overlay on mobile and Edit uses its canonical workflow",
+  async (kind) => {
+    mockApi(plantHandler([plant()], [group({ lifecycle: "active" })]));
+    const user = await openPlants();
+    setViewportMatches(true);
+    const label = kind === "plant" ? "Avocado #1" : "Seedlings 2026";
+    const trigger = screen.getByRole("button", {
+      name: `Quick preview ${label}`,
+    });
+    await user.click(trigger);
+    const preview = await screen.findByRole("dialog", {
+      name: "Plant inspection",
+    });
+    expect(
+      within(preview).getByRole("button", { name: "Close preview" }),
+    ).toHaveFocus();
+    expect(window.location.hash).toBe("#/plants");
+    await user.keyboard("{Escape}");
+    expect(trigger).toHaveFocus();
+    await user.click(screen.getByRole("button", { name: `Edit ${label}` }));
+    expect(await screen.findByLabelText("Label")).toHaveValue(label);
+    expect(window.location.hash).toBe(
+      `#/${kind === "plant" ? "plants" : "plant-groups"}/${kind === "plant" ? plantId : groupId}?tab=edit`,
+    );
+  },
+);

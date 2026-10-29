@@ -1,0 +1,2746 @@
+[
+  {
+    "id": "plants-gallery-selection-1440-botanical-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          279,
+          209.25
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      1440,
+      844
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      1440,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:07.311Z",
+    "sha256": "b4b180b550da35fef3948017e48e611d9b22a54d52a3bbe5a28d5759a697f2d8",
+    "raster": [
+      1440,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-1440-botanical-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          279,
+          209.25
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      1440,
+      844
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      1440,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:02.990Z",
+    "sha256": "351ca24ad9288e29568f904653ae26c2971283746cb5ca3cf4a39f3e9cff3967",
+    "raster": [
+      1440,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-1024-botanical-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          239.3359375,
+          179.5
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      1024,
+      844
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      1024,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:03.149Z",
+    "sha256": "f1c469d7d64947f5d69c93c9f52dd5e6ed613a44036ffc323620e372e81ab629",
+    "raster": [
+      1024,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-390-botanical-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          165.5,
+          124.125
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      375,
+      1301
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      390,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:03.310Z",
+    "sha256": "455e7012f5b40bdca27c7ad1f49dd71ecd8fafd5d4640ed5806775121e501d1c",
+    "raster": [
+      375,
+      812
+    ]
+  },
+  {
+    "id": "plants-gallery-long-1440-botanical-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      1440,
+      844
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      1440,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:03.922Z",
+    "sha256": "b6b7f6e899c8710e73584591b1f5e3f2b7d232122ebd9ce310f29430038ca08b",
+    "raster": [
+      1440,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-long-1024-botanical-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      1024,
+      844
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      1024,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:04.069Z",
+    "sha256": "aeb91db413b6ae3bc58322e0e796b4bf76006ee50815c1a548daf2564f33aa61",
+    "raster": [
+      1024,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-long-390-botanical-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      375,
+      884
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      390,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:04.196Z",
+    "sha256": "f0d9d313597002d4f27899c08d50b7c1f78fc8a8fc35dc847f1f6f04cee37c2e",
+    "raster": [
+      375,
+      812
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-1024-botanical-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          239.3359375,
+          179.5
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      1024,
+      844
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      1024,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:07.464Z",
+    "sha256": "1b220b4ad9c2e65203be53b69181a00e0322b43735895883cf08b9bdd91ffd8f",
+    "raster": [
+      1024,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-390-botanical-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          165.5,
+          124.125
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      375,
+      1301
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      390,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:07.600Z",
+    "sha256": "c96ff91b22f0f181656e5023850179b7e496aac92d3bcbaceb9955336b63bdb6",
+    "raster": [
+      375,
+      812
+    ]
+  },
+  {
+    "id": "plants-gallery-long-1440-botanical-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      1440,
+      844
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      1440,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:08.105Z",
+    "sha256": "f217c62babf7c28a995be27612197a8cded5e224e8eb950cc819f6d15a9729d3",
+    "raster": [
+      1440,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-long-1024-botanical-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      1024,
+      844
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      1024,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:08.260Z",
+    "sha256": "1dd7ab918b051b071e7fff3c231f1f06aa2be354dfc840e9cb6e418e5d43514d",
+    "raster": [
+      1024,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-long-390-botanical-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      375,
+      884
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      390,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:08.397Z",
+    "sha256": "1ac2aa5c8db43f628b5feb040c769de024c85f7f5c241f4752d37d5c389813c1",
+    "raster": [
+      375,
+      812
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-1440-herbarium-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          279,
+          209.25
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      1440,
+      844
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "herbarium"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      1440,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:11.712Z",
+    "sha256": "52b298e3a7b90a60dfa3a505e956082cca37f3a0662c709b1f2dca66143eed6a",
+    "raster": [
+      1440,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-1024-herbarium-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          239.3359375,
+          179.5
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      1024,
+      844
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "herbarium"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      1024,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:11.868Z",
+    "sha256": "74a51a8bf79452e7a5e0b82d2d99197b315ee941e455151ebb2d79094f86da40",
+    "raster": [
+      1024,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-390-herbarium-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          165.5,
+          124.125
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      375,
+      1301
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "herbarium"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      390,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:11.996Z",
+    "sha256": "48338f6966970486d554eb7a56d3aaff6c651db2decc90e75b56d5da01b73b75",
+    "raster": [
+      375,
+      812
+    ]
+  },
+  {
+    "id": "plants-gallery-long-1440-herbarium-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      1440,
+      844
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "herbarium"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      1440,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:12.521Z",
+    "sha256": "eaf8a7fef6275311bcd555cdfe4298d95630107346e60d6631c6348f3b604100",
+    "raster": [
+      1440,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-long-1024-herbarium-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      1024,
+      844
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "herbarium"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      1024,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:12.708Z",
+    "sha256": "367e17e6c050c2b85b83d7bebfbd9d95a5e800c8e390ba6af5aad23fc7c385c6",
+    "raster": [
+      1024,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-long-390-herbarium-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      375,
+      884
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "herbarium"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      390,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:12.931Z",
+    "sha256": "fbf67edd7ac0b0a6c41e38177b9a406f5dab768ab842af6baa2d92d28b0abd64",
+    "raster": [
+      375,
+      812
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-1440-herbarium-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          279,
+          209.25
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      1440,
+      844
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "herbarium"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      1440,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:22.762Z",
+    "sha256": "731e54147bd8ddf3b9a7dc4539b37ce7393efccf6cce9ab14fa4392837d16b10",
+    "raster": [
+      1440,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-1024-herbarium-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          239.3359375,
+          179.5
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      1024,
+      844
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "herbarium"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      1024,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:23.034Z",
+    "sha256": "44548c63894a9e617bf3d3ee8939d20b78de08aed049a001d8507375d10f977e",
+    "raster": [
+      1024,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-390-herbarium-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          165.5,
+          124.125
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      375,
+      1301
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "herbarium"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      390,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:23.231Z",
+    "sha256": "026fe7b4e745292242cae3ef72f14a3dfc6f27de02a30926657f2ab10df8c54e",
+    "raster": [
+      375,
+      812
+    ]
+  },
+  {
+    "id": "plants-gallery-long-1440-herbarium-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      1440,
+      844
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "herbarium"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      1440,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:23.868Z",
+    "sha256": "9ac49d824d52d3c7e5d67344f88d412190f204e9e237eb300b5960120ee061d3",
+    "raster": [
+      1440,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-long-1024-herbarium-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      1024,
+      844
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "herbarium"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      1024,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:24.051Z",
+    "sha256": "c7815ca8d52dede6893a3a4b3939f7bfdfc8704a499908499e3b1edaba32f3dd",
+    "raster": [
+      1024,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-long-390-herbarium-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      375,
+      884
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "herbarium"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      390,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:24.207Z",
+    "sha256": "bb5bfb133e0a473086d21de3be37fb005ea8de751a9207c6617c5da6872949f4",
+    "raster": [
+      375,
+      309
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-1440-mineral-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          279,
+          209.25
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      1440,
+      844
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "mineral"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      1440,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:27.844Z",
+    "sha256": "b90531f26985673d16ed4a92cbcd5bd82e2d92072a6658aeef829728ae3efdc4",
+    "raster": [
+      1440,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-1024-mineral-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          239.3359375,
+          179.5
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      1024,
+      844
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "mineral"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      1024,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:28.001Z",
+    "sha256": "2bceb72b02a1807f6934487e757f1afb1c956360c79500fa967d4adc3b60f6d1",
+    "raster": [
+      1024,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-390-mineral-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          165.5,
+          124.125
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      375,
+      1301
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "mineral"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      390,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:28.185Z",
+    "sha256": "cdef2cda884272041912e2f476ea98a859bd3e6ca58e3e5f3ca859bfb11b534a",
+    "raster": [
+      375,
+      812
+    ]
+  },
+  {
+    "id": "plants-gallery-long-1440-mineral-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      1440,
+      844
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "mineral"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      1440,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:28.794Z",
+    "sha256": "532d8fb738029b6452185b68dacdccc9827eacbe277a1f4d6df97d2cac17f18d",
+    "raster": [
+      1440,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-long-1024-mineral-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      1024,
+      844
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "mineral"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      1024,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:28.952Z",
+    "sha256": "f8f297734088a091e96a6c5d534437a68ba149dcbdc6f7f96697278567ea7047",
+    "raster": [
+      1024,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-long-390-mineral-light",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      375,
+      884
+    ],
+    "theme": {
+      "appearance": "light",
+      "palette": "mineral"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      390,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:29.096Z",
+    "sha256": "dc96e4cc119aa372eefda37782f51f332d1315107588048e3a37988c5038b635",
+    "raster": [
+      375,
+      812
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-1440-mineral-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          279,
+          209.25
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      1440,
+      844
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "mineral"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      1440,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:32.186Z",
+    "sha256": "6c360fd8d65a12aa9608179c986c116c8dc1acb01c98cbbcb431ccb084af48d0",
+    "raster": [
+      1440,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-1024-mineral-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          239.3359375,
+          179.5
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      1024,
+      844
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "mineral"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      1024,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:32.365Z",
+    "sha256": "f44c88ae916c2a9d7f34f931213a7f34304301a62af3e53836db5fca5b75c312",
+    "raster": [
+      1024,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-selection-390-mineral-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          165.5,
+          124.125
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 3,
+    "document": [
+      375,
+      1301
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "mineral"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      390,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:32.513Z",
+    "sha256": "95c724726fd9f8cfb3c66d18f8cc5cdb0fffa0731f97f1919cd7521385e1a617",
+    "raster": [
+      375,
+      812
+    ]
+  },
+  {
+    "id": "plants-gallery-long-1440-mineral-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      1440,
+      844
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "mineral"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      1440,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:33.069Z",
+    "sha256": "bdba8964cc57ce73b82c04219a7da1b55032149d543ecd7e3b4ef15f37e660cf",
+    "raster": [
+      1440,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-long-1024-mineral-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      1024,
+      844
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "mineral"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      1024,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:33.226Z",
+    "sha256": "3a13faaf6fa32847698c89a25da3f9c8ecfd194ce8f3b2b2aba634b29f0835e0",
+    "raster": [
+      1024,
+      844
+    ]
+  },
+  {
+    "id": "plants-gallery-long-390-mineral-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Review v5 \u2014 direct plant 08",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Review v5 \u2014 direct plant 08",
+            "width": 44
+          }
+        ],
+        "text": "Plant image placeholderNo imageReview v5 \u2014 direct plant 08Capsicum annuum \u2018Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing\u2019PlantActiveQuick preview Review v5 \u2014 direct plant 08Details Review v5 \u2014 direct plant 08Edit Review v5 \u2014 direct plant 08",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 0,
+    "document": [
+      375,
+      884
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "mineral"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=direct+plant+08",
+    "viewport": [
+      390,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:27:33.387Z",
+    "sha256": "fdcafee8b0ca9f01970fdf7b6f69ddc900c172e62f9bee24c36e07a562541f15",
+    "raster": [
+      375,
+      812
+    ]
+  },
+  {
+    "id": "plants-gallery-mobile-body-botanical-dark",
+    "cards": [
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Nursery aloe",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Nursery aloe",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant image placeholderNo imagePreview \u2014 Nursery aloeAloe veraPlantActiveQuick preview Preview \u2014 Nursery aloeDetails Preview \u2014 Nursery aloeEdit Preview \u2014 Nursery aloe",
+        "visual": [
+          48,
+          48
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil mother plant",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil mother plant",
+            "width": 44
+          }
+        ],
+        "image": "Primary photo for Preview \u2014 Basil mother plant",
+        "text": "Current recordRecord primary photoPreview \u2014 Basil mother plantOcimum basilicumPlantActiveQuick preview Preview \u2014 Basil mother plantDetails Preview \u2014 Basil mother plantEdit Preview \u2014 Basil mother plant",
+        "visual": [
+          165.5,
+          124.125
+        ]
+      },
+      {
+        "actions": [
+          {
+            "height": 44,
+            "label": "Quick preview Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Details Preview \u2014 Basil seedlings",
+            "width": 44
+          },
+          {
+            "height": 44,
+            "label": "Edit Preview \u2014 Basil seedlings",
+            "width": 44
+          }
+        ],
+        "text": "Current recordPlant group image placeholderNo imagePreview \u2014 Basil seedlingsOcimum basilicumGroup6 plantsActiveQuick preview Preview \u2014 Basil seedlingsDetails Preview \u2014 Basil seedlingsEdit Preview \u2014 Basil seedlings",
+        "visual": [
+          48,
+          48
+        ]
+      }
+    ],
+    "checked": 1,
+    "document": [
+      375,
+      1301
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Preview",
+    "viewport": [
+      390,
+      844
+    ],
+    "capturedAt": "2026-10-29T11:28:10.852Z",
+    "sha256": "d517923aaf9952042ff15eee2ee81a63a140179a3975974462959e311314bc5b",
+    "raster": [
+      375,
+      812
+    ]
+  }
+]

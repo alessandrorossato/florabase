@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en" data-palette="botanical" data-appearance="light">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>
+    Full-width photography with contextual inspection · Florabase proposal</title
+  ><style>
+    @import url("/source/frontend/src/styles/tokens.css");
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: var(--background, #f6f7f3);
+      color: var(--text, #1e2621);
+      font: 15px/1.5 var(--font-ui, system-ui);
+    }
+    body > header,
+    body > main {
+      padding: 24px;
+    }
+    a {
+      color: var(--primary, #2f684f);
+    }
+    h1 {
+      font-size: 28px;
+    }
+    h2 {
+      font-size: 24px;
+      margin: 0 0 8px;
+    }
+    h3 {
+      font-size: 18px;
+      margin: 0 0 12px;
+    }
+    p {
+      margin: 8px 0 16px;
+    }
+    .comparison {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 24px;
+    }
+    .comparison > section {
+      min-width: 0;
+    }
+    .baseline {
+      width: 100%;
+      height: 420px;
+      object-fit: contain;
+      object-position: top;
+      background: var(--surface-subtle, #eef1ec);
+    }
+    figure {
+      margin: 0 0 16px;
+    }
+    figcaption,
+    .muted,
+    small {
+      font-size: 13px;
+      color: var(--text-muted, #667068);
+    }
+    .specimen {
+      padding: 24px;
+      background: var(--surface, #fff);
+      border: 1px solid var(--border, #dde3dc);
+      border-radius: 10px;
+      min-height: 420px;
+    }
+    .specimen > section {
+      padding: 16px 0;
+    }
+    .head,
+    .line {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .head > div:first-child {
+      flex: 1 1 230px;
+    }
+    .head {
+      flex-wrap: wrap;
+    }
+    .tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-start;
+      flex: 2 1 320px;
+    }
+    .search {
+      flex: 1 1 224px;
+    }
+    .crumb {
+      font-size: 13px;
+      margin-bottom: 24px;
+      color: var(--text-muted);
+    }
+    button,
+    input,
+    select {
+      font: inherit;
+      min-height: 44px;
+      border: 1px solid var(--border-strong, #7c8980);
+      border-radius: 6px;
+      padding: 8px 12px;
+      background: var(--surface, #fff);
+      color: inherit;
+      max-width: 100%;
+    }
+    button {
+      cursor: default;
+    }
+    input,
+    select {
+      width: 100%;
+      display: block;
+    }
+    label {
+      display: block;
+      margin-bottom: 16px;
+    }
+    .primary {
+      background: var(--primary, #2f684f);
+      color: var(--on-primary, #fff);
+    }
+    .danger {
+      background: var(--danger, #b54747);
+      color: var(--on-primary, #fff);
+    }
+    .safe-focus {
+      outline: 3px solid var(--focus-ring, #3d6f8e);
+      outline-offset: 3px;
+    }
+    .footer {
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+      margin-top: 24px;
+    }
+    .chips {
+      margin: 12px 0 24px;
+      font-size: 13px;
+    }
+    .drawer {
+      max-width: 360px;
+      margin-left: auto;
+    }
+    .phone {
+      max-width: 390px;
+      border: 1px solid var(--border);
+    }
+    .phone main {
+      padding: 16px;
+    }
+    .mobilehead {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .phone .head {
+      display: block;
+    }
+    .phone .tools {
+      display: flex;
+    }
+    .phone .search {
+      flex-basis: 100%;
+    }
+    .record {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+      overflow-wrap: anywhere;
+    }
+    .record p {
+      margin: 4px 0;
+    }
+    .placeholder {
+      width: 64px;
+      height: 64px;
+      flex-shrink: 0;
+      background: var(--surface-subtle);
+      display: grid;
+      place-items: center;
+    }
+    .bottom {
+      padding: 12px;
+      background: var(--surface-subtle);
+      font-size: 13px;
+    }
+    .tabs {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 0 16px;
+      margin-bottom: 24px;
+    }
+    .tabs span {
+      color: var(--primary);
+      font-weight: bold;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .metrics b,
+    .metrics small {
+      display: block;
+    }
+    .metrics b {
+      font-size: 28px;
+    }
+    .rule {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+    }
+    .confirm {
+      max-width: 440px;
+      margin: 48px auto;
+    }
+    .form {
+      max-width: 560px;
+    }
+    fieldset {
+      border: 0;
+      padding: 16px 0;
+      margin: 0;
+      border-top: 1px solid var(--border);
+    }
+    legend {
+      font-weight: bold;
+    }
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .photo {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    .ratio {
+      aspect-ratio: 4/3;
+      background: var(--surface-subtle);
+      padding: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .sr {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    .facts {
+      max-width: 100ch;
+    }
+    .facts dt {
+      font-weight: 600;
+      margin-top: 12px;
+    }
+    .facts dd {
+      margin-left: 0;
+    }
+    :focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 3px;
+    }
+    @media (max-width: 1000px) {
+      .comparison {
+        grid-template-columns: 1fr;
+      }
+      .photo-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .metrics {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+  <header>
+    <a href="index.html">All eight proposals</a> ·
+    <a href="../gallery.html">Real screenshot gallery</a>
+    <h1>Full-width photography with contextual inspection</h1>
+    <p>
+      Proposed static composition · audit only · no production behavior, saved
+      data or implementation acceptance.
+    </p>
+  </header>
+  <main>
+    <div class="comparison">
+      <section>
+        <h2>Before · real Florabase</h2>
+        <figure>
+          <a href="/evidence/assets/052-media-primary-1440-botanical-light.jpg"
+            ><img
+              class="baseline"
+              src="/evidence/assets/052-media-primary-1440-botanical-light.jpg"
+              alt="Real Florabase media, primary"
+          /></a>
+          <figcaption>
+            Real baseline 052 · 1440×844 CSS · botanical light · main ee34874
+          </figcaption>
+        </figure>
+      </section>
+      <section>
+        <h2>After · proposed structure</h2>
+        <div class="specimen">
+          <div class="crumb">Explore / Media</div>
+          <h2>Media</h2>
+          <p>
+            Shared header grammar; photographic layout owned by
+            MEDIA-VISUAL-001.
+          </p>
+          <div class="photo-grid">
+            <div class="photo">
+              <div class="ratio">Protected local image</div>
+              <strong>Solanum lycopersicum</strong>
+              <p>Unlinked asset</p>
+            </div>
+            <div class="photo">
+              <div class="ratio">External reference · not loaded</div>
+              <strong>Helianthus annuus</strong>
+              <p>1 record link</p>
+            </div>
+            <div class="photo">
+              <div class="ratio">Protected local image</div>
+              <strong>Echinacea purpurea</strong>
+              <p>1 record link</p>
+            </div>
+            <div class="photo">
+              <div class="ratio">External reference · not loaded</div>
+              <strong>Ocimum basilicum</strong>
+              <p>1 record link</p>
+            </div>
+          </div>
+          <p>
+            Choose an asset to open a contained preview; details retain licence
+            and record/cover references separately.
+          </p>
+        </div>
+        <p>
+          Uses the existing token source and font stack; local fallback fonts
+          may differ. Controls are inert layout specimens. This is not a
+          screenshot of an implemented result.
+        </p>
+      </section>
+    </div>
+    <dl class="facts">
+      <dt>Current inconsistency</dt>
+      <dd>
+        F04: an unused permanent preview rail narrows the gallery and reduces
+        photographic density.
+      </dd>
+      <dt>Recommendation</dt>
+      <dd>
+        Show Media’s separate full-width 4:3 proposal with on-demand contained
+        preview. This structural sketch intentionally uses placeholders; actual
+        crop/containment/ratio proof belongs to Media’s real-photo review.
+      </dd>
+      <dt>Reuse/extend</dt>
+      <dd>
+        Existing MediaScreen, MediaPreview and shared header/dialog contracts;
+        no parallel gallery implementation.
+      </dd>
+      <dt>Pages affected</dt>
+      <dd>
+        Media only, then shared photo consumers only if separately approved.
+      </dd>
+      <dt>Expected improvement</dt>
+      <dd>More visible images and context only when requested.</dd>
+      <dt>Accessibility</dt>
+      <dd>
+        No automatic external loads, preserve attribution/alt/keyboard
+        selection, record primary distinct from Identity cover; no unsupported
+        cover toggle.
+      </dd>
+      <dt>Complexity</dt>
+      <dd>Medium</dd>
+      <dt>Regression risk</dt>
+      <dd>
+        Medium/high: ratios, reuse, pagination and privacy; independent Media
+        acceptance.
+      </dd>
+    </dl>
+  </main>
+</html>

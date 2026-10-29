@@ -482,3 +482,115 @@ test("backdrop, Escape and Cancel cannot dismiss an Apply in flight", async () =
   });
   expect(success).toHaveBeenCalledOnce();
 });
+
+test.each(["ctrlKey", "metaKey"])(
+  "%s starts selection and ignores record actions",
+  (modifier) => {
+    function RecordHarness({ scope = "plants" }: { scope?: string }) {
+      const selection = useBulkSelection(scope, choices, true);
+      return (
+        <AuthContext.Provider value={auth}>
+          <BulkSelect selection={selection} visible={choices} />
+          <BulkToolbar
+            selection={selection}
+            visible={choices}
+            onSuccess={success}
+          />
+          {choices.map((row) => (
+            <div
+              key={row.id}
+              onClick={(event) => {
+                selection.recordClick(event, row);
+              }}
+            >
+              <button className="ui-directory-trigger">Body {row.label}</button>
+              <div className="ui-directory-record-actions">
+                <button>Details {row.label}</button>
+              </div>
+              <BulkCheckbox selection={selection} choice={row} />
+            </div>
+          ))}
+        </AuthContext.Provider>
+      );
+    }
+    window.history.replaceState(null, "", "#/plants");
+    const rendered = render(<RecordHarness />);
+    expect(screen.queryByRole("checkbox")).toBeNull();
+    fireEvent.click(
+      screen.getByRole("button", { name: `Details ${choices[0].label}` }),
+      { [modifier]: true },
+    );
+    expect(screen.queryByRole("checkbox")).toBeNull();
+    fireEvent.click(
+      screen.getByRole("button", { name: `Body ${choices[0].label}` }),
+      { [modifier]: true },
+    );
+    expect(
+      screen.getByRole("checkbox", { name: `Select ${choices[0].label}` }),
+    ).toBeChecked();
+    expect(
+      screen.getByRole("group", { name: "Selected records" }),
+    ).toHaveTextContent("1 selected");
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: `Select ${choices[1].label}` }),
+    );
+    expect(
+      screen.getByRole("group", { name: "Selected records" }),
+    ).toHaveTextContent("2 selected");
+    act(() => {
+      window.history.pushState(null, "", "#/plants?view=list");
+      window.dispatchEvent(new PopStateEvent("popstate"));
+    });
+    expect(
+      screen.getByRole("group", { name: "Selected records" }),
+    ).toHaveTextContent("2 selected");
+    fireEvent.click(
+      screen.getByRole("button", { name: `Body ${choices[0].label}` }),
+    );
+    expect(
+      screen.getByRole("group", { name: "Selected records" }),
+    ).toHaveTextContent("1 selected");
+    rendered.rerender(<RecordHarness scope="changed" />);
+    expect(screen.queryByRole("checkbox")).toBeNull();
+  },
+);
+
+test("modifier selection never exceeds 100 and cannot start from an ineligible record", () => {
+  const rows: BulkChoice[] = Array.from({ length: 102 }, (_, index) => ({
+    kind: "plant",
+    id: String(index),
+    label: `Plant ${String(index)}`,
+    eligible: index < 101,
+  }));
+  function LimitHarness() {
+    const selection = useBulkSelection("limit", rows, true);
+    return (
+      <>
+        <output aria-label="Selected count">{selection.selected.length}</output>
+        <output aria-label="Selection mode">{String(selection.active)}</output>
+        {rows.map((row) => (
+          <button
+            key={row.id}
+            className="ui-directory-trigger"
+            onClick={(event) => {
+              selection.recordClick(event, row);
+            }}
+          >
+            {row.label}
+          </button>
+        ))}
+      </>
+    );
+  }
+  const { container } = render(<LimitHarness />);
+  const buttons = container.querySelectorAll<HTMLButtonElement>("button");
+  fireEvent.click(buttons[101], { ctrlKey: true });
+  expect(screen.getByLabelText("Selection mode")).toHaveTextContent("false");
+  for (let index = 0; index < 101; index++)
+    fireEvent.click(buttons[index], { ctrlKey: true });
+  expect(screen.getByLabelText("Selected count")).toHaveTextContent("100");
+  fireEvent.click(buttons[0], { metaKey: true });
+  expect(screen.getByLabelText("Selected count")).toHaveTextContent("99");
+  fireEvent.click(buttons[100], { metaKey: true });
+  expect(screen.getByLabelText("Selected count")).toHaveTextContent("100");
+});

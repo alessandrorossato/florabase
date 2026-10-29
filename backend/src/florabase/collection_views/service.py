@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
 from florabase.botanical_identities.service import get_botanical_identity
-from florabase.collection_views.dashboard import overview
+from florabase.collection_views.dashboard import overview, photographs
 from florabase.collection_views.schemas import (
     BotanicalIdentityCollectionResponse,
     DashboardCounts,
@@ -60,6 +60,7 @@ def dashboard(database: Session, today: date | None = None) -> DashboardResponse
         counts=DashboardCounts.model_validate(dict(counts)),
         overview=overview(database, today or datetime.now(UTC).date()),
         recent_events=event_responses(database, list_all_events(database, limit=6)),
+        photos=photographs(database),
     )
 
 

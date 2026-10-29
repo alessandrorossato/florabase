@@ -1,3 +1,72 @@
+# Engineering progress
+
+## 2026-10-27 — UI-SYSTEM-001 Gate B review candidate, Proposal B refined
+
+- Operator selected B and authorized bounded React implementation in the existing `bc88` worktree,
+  branch `feat/ui-system-v1`, base `ee34874`. Preserved Gate A research, alternatives and all prior
+  evidence. [Gate B package](design/ui-system-v1/gate-b/README.md),
+  [before/after](http://localhost:15283/gate-b/index.html) and
+  [working lab](http://localhost:15284/ui-lab/#/dashboard) are available locally.
+- Implemented DirectoryPage, controlled List/Gallery, reusable row/card, responsive optional inspector,
+  ActivityPage, safe `make ui-page` with two actual archetypes and dev-only `make ui-lab`. Reused
+  PageHeader/DirectoryTools, canonical filter adapters, house dialogs, photo semantics and tokens.
+  Presentation has a view-only URL/browser preference contract; Saved Views v1 is unchanged.
+- Semantic typed icons preserve all navigation labels/groups/routes. Corrected the shared header's
+  legacy flex-axis/basis collision. Optional TaskDialog fallback handles disappearing/remounted
+  triggers; filtering does not pull focus from search. Production directories/Dashboard are not migrated.
+- Refined Dashboard uses factual 17 individual Plants / 7 groups / 40 SeedLots / 12 active Sowings,
+  eight distinct licensed reference photos without ownership/cover assignment, and Next work.
+  At measured 1440×844, all eight photos load; last complete card ends at 730.453125px and the full
+  Next work panel at 787.171875px; document extent is 1440×844. Smaller viewports scroll naturally.
+- Focused frontend: 203 unique tests in 9 files passed; final overlapping 16-case shared/navigation
+  rerun and subsequent 4-case Lab rerun passed. Scaffold 3/3, strict TypeScript, targeted zero-warning
+  ESLint, formatting, Ruff, default production build and lab/fixture exclusion, graph 117 valid,
+  whitespace and evidence validation passed. 72 JPEGs cover 27 primary, 36 six-theme and 9 contextual
+  states. No horizontal overflow in primary/theme captures. Exact commands/limits are in the package.
+- Initial worker-startup and browser/service failures were corrected and are not counted as passes;
+  final artifacts were reacquired with all eight photos loaded. Actual zoom, physical-device, AT and
+  live scale checks remain unperformed. The laboratory cannot mutate records and is not a live API pilot.
+- Fresh main check found independently delivered Media #127 (`69814bba`), with a clean Media worktree
+  and no shared-file overlap. No Media code/environment was replaced. Main alignment and CI-004
+  canonical verification remain for the separately authorized delivery phase. UI-SYSTEM-001 stays
+  `in_progress`; changes remain unstaged/uncommitted, with no FULL, push, PR or merge.
+- Operator review of working templates and final Dashboard precedes production migration.
+  Stop marker: `FLORABASE_UI_SYSTEM_V1_GATE_B_READY_FOR_REVIEW`.
+
+## 2026-10-26 — RELEASE-VISUAL-AUDIT-001 audit/design review candidate
+
+- Audited delivered main `ee3487412fe458cbdf7145154c54a58b66132cae` (#126) in existing
+  Codex worktree `bc88`, branch `docs/release-visual-audit-001`. Source-derived inventory covers
+  27 primary states and their contextual/direct routes. Existing UI Foundation remains authoritative;
+  no production UI, API/schema/domain change or broad refactor.
+- New independently owned Review `florabase-ui-audit-bc88` at `http://localhost:15279` retains
+  exact source/resource guards and approved synthetic v4/80 + v5/252 fixture references. Existing
+  c902 Review, Media, DEV/UAT/Preview/Sourcing/production and primary main were preserved.
+  Media coordination was explicitly operator-authorized; localhost cookie collisions required
+  sequential login-dependent capture batches, with invalid acquisitions excluded and repeated.
+- [Review package](review/release-visual-audit-001/README.md) and
+  [live gallery](http://localhost:15282/gallery.html): **270 selected screenshots**, including
+  **162/162** primary combinations (27 states × three measured CSS viewports × Botanical Light/Dark),
+  six-theme shared/difficult-workspace samples, real forms/inspectors/menus/filters/validation,
+  contextual/direct editors, long content and truthful unavailable states. Raster sizes are recorded
+  separately because the browser API scales its JPEG output. Large binaries remain outside Git.
+- Nine findings include two reproduced P1s: Media permanent-delete initial focus is destructive;
+  shared tablet header has an axis/basis CSS collision (880 px header, Media gallery starts at 1102.8 px,
+  Seeds inventory at 1031 px). Eight static before/after proposals, existing component ownership and
+  scoped implementation waves prioritize these corrections without implementing them. Media owns
+  photography/preview workflows; delivered Taxonomy keeps its accepted graph model.
+- Focused audit verification: source feature graph baseline **115 valid**; final graph **116 valid**;
+  **270/270** screenshot digests/files/DOM sidecars, complete primary coverage, **863** local HTML
+  references, gallery script syntax, browser filter/comparison and eight-proposal render checks pass.
+  Audit-only formatting and whitespace checks recorded in package validation; no canonical FULL gate,
+  application suites/build, staging, commit, push, PR or merge.
+- Explicit acceptance gaps: absent WFO means graph/fullscreen not captured; QR base URL unset means
+  native print/QR/printer checks pending; actual 125%/150% zoom was unavailable (Ctrl+Plus did not change
+  layout/DPR/scale); AT, physical touch, soft keyboard, forced colors/reduced motion and 320px remain
+  manual. Coverage matrix lists additional missing states. No application records were saved or
+  deleted after isolated fixture initialization. Audit feature is `implemented`, not `verified`.
+- Operator decision pending; exact stop marker: `FLORABASE_GLOBAL_UI_AUDIT_READY_FOR_REVIEW`.
+
 ## 2026-10-27 — MEDIA-VISUAL-001 approved Quick Preview enhancement and QA
 
 - Added an explicit **Save local copy** action only for external MediaAssets without a snapshot.
@@ -155,6 +224,7 @@
   QA. AT, physical touch, zoom and full-dataset performance remain pending. Feature
   is implemented, not verified. No canonical FULL gate, staging, commit, push, PR,
   delivery, protected upgrade or primary/audit/foreign worktree mutation.
+
 ## 2026-10-26 — CI-004 verification efficiency ready for operator review
 
 - Implemented on attached worktree `a4b0`, branch `ci/ci-004-verification-efficiency`, base
@@ -225,7 +295,6 @@
   a block; focused ESLint and the exact navigation test pass. No receipt was issued. The final FULL
   run must cover this frozen correction.
 
-
 ## 2026-10-23 — Themes/Controls integration with delivered Collection origins
 
 - Merged main `46ade479` (MAPS-ORIGINS-001, PR #119) into `feat/themes-001` after reviewed combined
@@ -268,7 +337,6 @@
   feature-graph checks remain passing evidence. The canonical FULL gate and exact-tree receipt are
   pending and must cover the final committed handoff.
 
-
 ## 2026-10-23 — THEMES-001 + CONTROLS-001 combined visual-review candidate
 
 - Implemented one local semantic SVG vocabulary, native action/link adapters, three action patterns,
@@ -294,7 +362,6 @@
 - Both features are **implemented**, not verified. Operator approval supersedes the historical
   separate-PR plan with one branch, combined visual review and later protected PR. No canonical FULL
   gate, staging, commit, push, PR or delivery. Stop at `READY_FOR_THEMES_CONTROLS_VISUAL_REVIEW`.
-
 
 ## 2026-10-22 — THEMES-001 implementation candidate
 
@@ -322,7 +389,6 @@
   fixture has no downloaded raster, and unmerged MAPS-ORIGINS-001 needs later integration review.
   THEMES is **implemented**, not verified; CONTROLS remains **planned**, scheduled before remaining-page
   normalization. No canonical gate, staging, commit, push or delivery in this phase.
-
 
 ## 2026-10-22 — THEMES-001 and CONTROLS-001 design contracts
 
@@ -5113,7 +5179,6 @@ not the current delivery state.
   focus rather than asserting synchronously. The correction is bounded to accessibility; final
   verification and protected delivery must be rerun for the follow-up commit.
 
-
 ## 2026-10-18 — MAPS-FOUNDATION-001 architecture and Native ranges slice
 
 - Audited all three Maps workspaces before implementation; [design](maps-foundation-001-design.md)
@@ -5255,7 +5320,6 @@ not the current delivery state.
   Candidate changes remain unstaged and uncommitted; protected delivery and `make feature-finish`
   remain outstanding. Maps Review remains running; protected environments remain untouched.
 
-
 ## 2026-10-21 — MAPS-DISTRIBUTION-001 visual-review candidate
 
 - New independent `b139` / `feat/maps-distribution-001` candidate from fetched clean main
@@ -5283,7 +5347,6 @@ not the current delivery state.
 - Graph status is `implemented`. [Handoff](maps-distribution-001-handoff.md) records architecture,
   scientific/privacy boundaries, exact checks, ownership and pending operator product, actual zoom,
   screen-reader and touch acceptance. No canonical gate, staging, commit, push or delivery.
-
 
 ## 2026-10-21 — MAPS-DISTRIBUTION-001 durable evidence refinement
 
@@ -5528,7 +5591,6 @@ not the current delivery state.
   remain pending. Feature is `implemented`; no FULL gate, staging, commit, push, PR, merge or delivery.
   `BOTANICAL_IDENTITIES_VISUAL_REVIEW_READY`.
 
-
 ## 2026-10-23 — BOTANICAL-IDENTITIES-VISUAL-001 operator refinement
 
 - Replaced nested Collection/Reference read navigation with flat bounded sections; Overview now
@@ -5629,7 +5691,6 @@ not the current delivery state.
 - Status remains `implemented`; all changes unstaged/uncommitted. No canonical FULL gate, push,
   PR, delivery or global IA-NAV-001 redesign. `BOTANICAL_IDENTITY_VISUAL_COMPOSITION_READY`.
 
-
 ## 2026-10-24 — GEOGRAPHY-VISUAL-001 exploration review candidate
 
 - Initialized `feat/geography-visual-001` in the provided clean Codex worktree from freshly fetched
@@ -5667,7 +5728,6 @@ not the current delivery state.
   phase changes no backend/API/schema and reserves the final gate for acceptance. True zoom,
   screen-reader/physical-device use, real-large-collection performance and live-provider checks remain
   explicit limits. No staging, commit, push, PR or delivery. `GEOGRAPHY_EXPLORATION_REVIEW_READY`.
-
 
 ## 2026-10-24 — Geography review runtime persistence
 
@@ -5760,7 +5820,6 @@ not the current delivery state.
   current evidence is `docs/review/geography-visual-001/final-ux/`.
 - Feature remains `implemented`, unstaged and uncommitted. Operator acceptance and canonical FULL
   remain separate; no push, PR, merge, feature-finish, receipt or live-provider/physical-device claim.
-
 
 ## 2026-10-25 — Geography final UX handoff completion
 
@@ -5893,6 +5952,7 @@ Status remains implemented pending canonical verification.
   that receipt; a final canonical receipt is required for this exact tracked tree
   before protected delivery. No protected environment or unrelated worktree changed.
   `TAXONOMY_QA_VERIFIED_DELIVERY_PENDING`.
+
 ## 2026-10-27 — CI Media frontend test inventory hotfix
 
 - On clean `ci/media-test-inventory-hotfix` from `origin/main` `69814bba`, added the two omitted
@@ -5900,3 +5960,118 @@ Status remains implemented pending canonical verification.
   already asserts every `.test.` file under classified frontend prefixes is listed, so no duplicate
   assertion was needed. `make test-verification-impact` passed all 24 cases. No production Media
   behavior changed. FULL canonical verification and protected delivery remain pending.
+
+### UI-SYSTEM-001 — Gate A product direction candidate (2026-10-26)
+
+- Fetched delivered `origin/main ee3487412fe458cbdf7145154c54a58b66132cae`
+  and inspected parallel Media ownership before creating `docs/ui-system-v1-design`
+  in the existing bc88 managed worktree. Preserved the preceding unstaged audit.
+- Added `docs/design/ui-system-v1/`: critical KEEP/REFINE/REDESIGN review of 28
+  families including shell (13 KEEP, 8 REFINE, 7 REDESIGN), five structural A/B
+  comparisons, 25 main design variants, seven proposed archetypes and 22 component
+  contracts. Reused actual Foundation tokens and v5 data; no production UI edits.
+- Read/hash-checked 270 audit images and paired DOM evidence; reviewed 17 baseline
+  contact sheets and 15 design sheets. Corrected the interpretation of Location 297
+  as transient/unselected. Identity covers, specimen photos, recorded provenance,
+  native ranges and observed occurrences remain distinct.
+- Working read-only review: `http://localhost:15283/`. Captured 75 desktop/tablet/
+  mobile renders, 12 six-theme examples and 8 contextual Group/Edit states. No
+  document horizontal overflow or broken images in this matrix; 22 bounded local
+  interaction assertions and 30 sampled semantic-role contrast checks passed.
+  Tablet Seeds header is 132.5px in the proposed layout. These are design renders,
+  not production regression certification or real browser-zoom evidence.
+- Checks: `python3 docs/design/ui-system-v1/validate.py` passed 221 local HTML
+  references, 124 fixture records, 8 photo hashes, 28 decisions and capture/focus
+  assertions; `node --check` passed; Python compilation passed; feature graph
+  **117 valid**. Package formatting and final diff hygiene are checked separately.
+- Documented Media's independently reported scoped F01/F09 corrections and
+  integration requirements without copying code or taking over its environment.
+  Maps/Taxonomy retain accepted specialist architecture and evidence contracts.
+- Gate B remains pending operator direction acceptance: actual React templates,
+  safe scaffold, dev-only living React lab, two real integrations and policy-selected
+  canonical verification. `UI-SYSTEM-001` remains `in_progress`. No canonical FULL,
+  staging, commit, push, PR, application mutation or protected environment change.
+  Physical devices, assistive technology, actual zoom and print/provider acceptance
+  remain unverified. `FLORABASE_UI_SYSTEM_V1_DESIGN_READY_FOR_REVIEW`.
+
+### UI-SYSTEM-001 — approved Gate B, production Wave 1 review (2026-10-27)
+
+- Preserved the complete dirty candidate and normally fast-forwarded this managed feature branch to
+  delivered Media #127 and its separate CI inventory hotfix #128, `c77a1c5`; a fresh fetch confirmed
+  the same main. No unrelated CI implementation, new worktree, history rewrite or primary change.
+- Migrated actual Dashboard, Seeds and Plants through composed Directory primitives, optional native/
+  inline inspectors, truthful image-source fallbacks and typed semantic icons. Existing domain APIs,
+  quantities/precision, Active/History, groups/lineage/transfers, editing, Saved Views, bulk moves and
+  navigation remain owned by their capabilities. View-only Back/Forward retains safe bulk choices.
+- Dashboard's existing endpoint gains one bounded read-only photo projection, deduplicated by stored
+  content before its limit; generated OpenAPI/TypeScript artifacts are checked. No schema migration,
+  provider fetch or fabricated specimen association. Eight protected images and all five Next work
+  entries fit the measured 1440×844 Light/Dark viewport; all recent facts remain in a native disclosure.
+- Actual Review `localhost:15279` preserves its v4/v5 data. Explicit operator approval initialized a
+  separate two-image/zero-collection Review at `127.0.0.1:15285`; cookie hosts stay separate. No foreign
+  Review, DEV/UAT/stable/production reset. Read-only comparison portal: `localhost:15283/wave1/`.
+- Final scoped frontend evidence: **402 distinct tests / 20 files** across passing screen/shared runs,
+  including the final **134/134** App/Dashboard/Directory rerun. Backend contract **3/3**, PostgreSQL
+  Dashboard **5/5** with zero residual disposable resources, scaffold generator **3/3**, impact policy
+  **24/24**, strict typing/lint/format, API drift, feature graph **118 valid**, production build and lab/
+  generated-example exclusion. No assertion weakening or timeout increase. App interaction fixtures
+  preload their lazy identity module; dedicated lazy-loading acceptance remains separate and passing.
+- `docs/design/ui-system-v1/wave1/` contains architecture/source inventory, generated scaffold demo,
+  before/after gallery, 58 real/context/developer captures (40-case production matrix), Dashboard
+  geometry, exact evidence limits and a recommended unimplemented Wave 2. All prior evidence retained.
+- UI-SYSTEM-001 remains `in_progress`. Canonical FULL, coverage/full integration/migration cycle,
+  physical devices, assistive technology and actual browser zoom remain pending. No staging, commit,
+  push, PR or merge. `FLORABASE_UI_SYSTEM_V1_WAVE1_READY_FOR_REVIEW`.
+
+### UI-SYSTEM-001 — Wave 1 final UX refinements (2026-10-29)
+
+- Retained the approved architecture and unstaged candidate. Refined Seeds/Plants List/Gallery
+  hierarchy, bounded names, exact/approximate/unknown quantities and distinct always-visible
+  Preview/Details/Edit controls. Native TaskDialog now provides desktop/mobile overlays without
+  reducing directory width; source/location and domain operations remain accessible.
+- Extended existing bulk selection with Ctrl/Cmd entry, visible checkboxes, explicit exit and safe
+  representation/history retention. Preserved the 100-record cap and existing atomic server preview/
+  Apply contract. A focus race on extraction Cancel was corrected without weakening its assertion.
+- Dashboard now samples up to eight actual active individual Plants across the full relation,
+  retains a visit's sample, links to Plant details and separates protected primary/reference/missing
+  imagery. Nine existing Quick add destinations retain labels and gain distinct typed icons.
+- Final report/comparison gallery: `docs/design/ui-system-v1/wave1/refinements/`, 80 real JPEGs,
+  complete 40-case responsive Light/Dark matrix, 32 overlay/selection captures and contextual proof.
+  Both 1440x844 Dashboard extents fit all eight Plant cards, KPIs and five Next work entries.
+- Focused frontend evidence totals 317 distinct cases/13 files across scoped runs, backend contract
+  3/3; scoped typing/lint/format/API/build and production lab exclusion pass. Final isolated PostgreSQL
+  result and exact limits are recorded in the refinement verification report. Earlier raw /tmp logs
+  were lost on host restart; passing tool outputs remain in the chat. Review DB/media were preserved;
+  only its verified stopped application containers were restarted.
+- Audited cross-domain bulk recommendations remain proposals. DASHBOARD-CUSTOMIZATION-001 is planned
+  only. UI-SYSTEM-001 remains in_progress. No canonical FULL, staging, commit, push, PR or merge.
+  Final production UI approval precedes independent QA and delivery.
+
+### UI-SYSTEM-001 — final Plants Gallery and QA handoff (2026-10-29)
+
+- Operator approved the Wave 1 framework subject to the Gallery correction. Only Plants/PlantGroups
+  opt into photographic titles: 4:3 cover images, dark title gradient, two-line names clear of
+  selection, compact honest placeholders and a light shared 44px three-action toolbar.
+- Preserved primary/reference labels and all existing selection, Preview, navigation and Edit
+  callbacks. Independent source review corrected checkbox/title overlap and found no further
+  concrete blocker. No fixture or collection writes.
+- Final Gallery evidence contains 36 six-theme/three-size/context captures plus one mobile body
+  capture, source/hash/geometry checks and a disclosed historical comparison. Unaffected evidence
+  is retained. Final focused checks and environmental limits are in gallery-final.md.
+- Operator now authorizes a reviewed implementation commit and independent QA handoff. Feature
+  remains in_progress until acceptance and the policy-selected FULL gate succeed. Independent QA
+  owns canonical verification and protected delivery; no push, PR or merge in implementation.
+  FLORABASE_UI_SYSTEM_V1_WAVE1_READY_FOR_INDEPENDENT_QA.
+
+### UI-SYSTEM-001 — independent QA corrections (2026-10-29)
+
+- Corrected the UI Lab fixture boundary by keeping the already approved, attributed botanical images
+  beside the frontend module that uses them; the canonical Docker context can now resolve them.
+- Kept Dashboard recent activity visible on entry, preserving its existing content and native
+  disclosure behavior. Updated only accessible-name assertions to match the approved
+  `Individual Plants` metric label; counts and destinations are unchanged.
+- Gave the lazy SeedLot creation assertion enough time for its route chunk to load, without changing
+  the expected form or identity assertion. Reused stable button nodes in the 100-record selection
+  boundary test to avoid repeating expensive accessible-name queries.
+- Focused checks passed: Propagation/UX/Dashboard **34/34**, bulk cap **1/1**, media return focus
+  **1/1**, and UI Lab **4/4**. Canonical FULL verification passed on the final reconciled tree.

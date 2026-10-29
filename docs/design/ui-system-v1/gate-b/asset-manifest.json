@@ -1,0 +1,437 @@
+{
+  "root": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/gate-b",
+  "screenshots": [
+    {
+      "file": "activity-desktop.jpg",
+      "sha256": "361480cf3f968b8de9b3a5dbf18c8f89754737ba83bcfe82b87a9af98fc3a21d",
+      "raster": [1440, 844],
+      "bytes": 52905
+    },
+    {
+      "file": "activity-mobile.jpg",
+      "sha256": "8a033ef424f0458fc559520ad3e84296b757e46c9c7940a26287a0702bdfd1a8",
+      "raster": [375, 812],
+      "bytes": 25720
+    },
+    {
+      "file": "activity-tablet.jpg",
+      "sha256": "005e6a1cbc2e178a4e38d79ed3f1ed94207581fd01b892366f8ac629d8bec650",
+      "raster": [1024, 844],
+      "bytes": 48712
+    },
+    {
+      "file": "components-desktop.jpg",
+      "sha256": "b62caefbb7382c89d831845a3875b9f91ad121374b8d48515c219bf4533506d8",
+      "raster": [1425, 835],
+      "bytes": 75850
+    },
+    {
+      "file": "components-mobile.jpg",
+      "sha256": "4c3e8218fa9f88ed2b451aedeaf68bf567bcc6cf9f9fbd7c9d030e774e521a9a",
+      "raster": [375, 812],
+      "bytes": 39930
+    },
+    {
+      "file": "components-tablet.jpg",
+      "sha256": "ae9585943849692c9c039a4efd9eb397556a0930361b9590a696cec488bffc9a",
+      "raster": [1009, 832],
+      "bytes": 71341
+    },
+    {
+      "file": "dashboard-desktop.jpg",
+      "sha256": "1b4932a7d4dad4b7b5784fa02d083fb4eb9cafe687f2e53242e6b4bd6326f6b9",
+      "raster": [1440, 844],
+      "bytes": 127140
+    },
+    {
+      "file": "dashboard-mobile.jpg",
+      "sha256": "0d70e62a777f79c3cab1e6a2f8a4ec8462f11130440838fcc8e6f92c8d9b542a",
+      "raster": [375, 812],
+      "bytes": 44843
+    },
+    {
+      "file": "dashboard-tablet.jpg",
+      "sha256": "712faedce34cc43dc865f390fe61d4167002320f4233aaae549f5fb940817c97",
+      "raster": [1009, 832],
+      "bytes": 122513
+    },
+    {
+      "file": "identities-gallery-desktop.jpg",
+      "sha256": "e08a4e22dc72b24290a489a1a05745f2d64ab9146846de6cd041f3f62b796ae9",
+      "raster": [1425, 835],
+      "bytes": 114800
+    },
+    {
+      "file": "identities-gallery-mobile.jpg",
+      "sha256": "ba5f4c34de58fe0679f83dca46eb407e2b0cd28d722a45b5391d1a5d062d2652",
+      "raster": [375, 812],
+      "bytes": 40436
+    },
+    {
+      "file": "identities-gallery-tablet.jpg",
+      "sha256": "b9c664dc056c3340908c8bcd8289a3bfe7e8cc3b1fb084b6842fc4b9b9a2e869",
+      "raster": [1009, 832],
+      "bytes": 82806
+    },
+    {
+      "file": "identities-list-desktop.jpg",
+      "sha256": "150a0eeb0b40466563e8ba5396f35077247ec82c92cb0a0868de1466ce00489b",
+      "raster": [1425, 835],
+      "bytes": 89293
+    },
+    {
+      "file": "identities-list-mobile.jpg",
+      "sha256": "b3fa97b9ab2fca0f9b806e6d1cd50c25b929f6a8a0bfd1c25376d22cc42985f8",
+      "raster": [375, 812],
+      "bytes": 35563
+    },
+    {
+      "file": "identities-list-tablet.jpg",
+      "sha256": "1219b34f55030dc3969f6c5ffb65e48c751ffbfe2e9ec961bf23f2cebe8c3d15",
+      "raster": [1009, 832],
+      "bytes": 75076
+    },
+    {
+      "file": "long-name-mobile-full.jpg",
+      "sha256": "b3aca47416eb31185729c1bb1c0d7ffd3f3cbb12381485530b026c97f48d77d8",
+      "raster": [375, 1265],
+      "bytes": 48392
+    },
+    {
+      "file": "mobile-more.jpg",
+      "sha256": "026fafe8586200796ad4095e33a1605957b4a5f9c293c24989eb80e049b1320e",
+      "raster": [375, 812],
+      "bytes": 26585
+    },
+    {
+      "file": "plants-filters-mobile.jpg",
+      "sha256": "d21c32b70e5a541ed146288656c23ee1615bcbdca6a7c45a7eb9453bf2da2925",
+      "raster": [375, 812],
+      "bytes": 13781
+    },
+    {
+      "file": "plants-gallery-desktop.jpg",
+      "sha256": "ae22c3a729ad0047b0aef007ff05a1bfbc181e34b68942a0b0d2f237ea3cd4ef",
+      "raster": [1425, 835],
+      "bytes": 117679
+    },
+    {
+      "file": "plants-gallery-mobile.jpg",
+      "sha256": "680429ce46d32dc0ad61214a1e220555089fa38355a456a1215d8e4c5e07fbf8",
+      "raster": [375, 812],
+      "bytes": 39385
+    },
+    {
+      "file": "plants-gallery-tablet.jpg",
+      "sha256": "67d1ba118cb7edf1558e040d0cc2e0869ba9abb03c6465d8588048b5578060c9",
+      "raster": [1009, 832],
+      "bytes": 84422
+    },
+    {
+      "file": "plants-inspector-desktop.jpg",
+      "sha256": "8189e5414d9711df62ab55a89bd827bbcb274d4d41f20bb565056733b1b16748",
+      "raster": [1440, 844],
+      "bytes": 71000
+    },
+    {
+      "file": "plants-list-desktop.jpg",
+      "sha256": "83052b63059884998866f3415cc8f104778eb330590c6d2fe6b8d2013d3b7acb",
+      "raster": [1425, 835],
+      "bytes": 93884
+    },
+    {
+      "file": "plants-list-mobile.jpg",
+      "sha256": "7341001e8c1c3b7f9f445ec5004f929711edabc0f85eb9da50a7064e2174598b",
+      "raster": [375, 812],
+      "bytes": 34378
+    },
+    {
+      "file": "plants-list-tablet.jpg",
+      "sha256": "e14e8f88a368821881e14dd8316a545759b3930cb353c0877e149d70ac4eb2f7",
+      "raster": [1009, 832],
+      "bytes": 80442
+    },
+    {
+      "file": "plants-preview-mobile.jpg",
+      "sha256": "3a05bde2b1a38b6a59ea43e94b810da0c660e25e00365e3d5a34a2c56b7678c0",
+      "raster": [375, 812],
+      "bytes": 28047
+    },
+    {
+      "file": "saved-view-exercise-mobile.jpg",
+      "sha256": "9113dc68a6b9c63ec92ade356b06809e0ad42f899ede2baa7561213f9d64bb23",
+      "raster": [375, 812],
+      "bytes": 33098
+    },
+    {
+      "file": "seeds-gallery-desktop.jpg",
+      "sha256": "72997cc7f02c2df9304fbb7f4fe51efbbe38ddfce3f3ba237e60fa02fcd57916",
+      "raster": [1425, 835],
+      "bytes": 126682
+    },
+    {
+      "file": "seeds-gallery-mobile.jpg",
+      "sha256": "f063fa7463e858a34f1bf35c41c493c0b5a039a9fedc66a70058c95fadbc2812",
+      "raster": [375, 812],
+      "bytes": 39417
+    },
+    {
+      "file": "seeds-gallery-tablet.jpg",
+      "sha256": "0ebb36b7e1e991480416af95a8be31d562619e3bf509f24b0d0484beeca954ad",
+      "raster": [1009, 832],
+      "bytes": 92188
+    },
+    {
+      "file": "seeds-list-desktop.jpg",
+      "sha256": "cc306f8602bac40876b6c1de748cd3a78c3e1a83aff92c372edee7dd4db7973c",
+      "raster": [1425, 835],
+      "bytes": 102907
+    },
+    {
+      "file": "seeds-list-mobile.jpg",
+      "sha256": "d65cb34b978b07ac6dc8032394487f2d9e7e38b95a09b0282bb34d57959e01a5",
+      "raster": [375, 812],
+      "bytes": 31898
+    },
+    {
+      "file": "seeds-list-tablet.jpg",
+      "sha256": "dd4cbf6150f6b07e8bcaf73e1f17921fe056bc8435ac5ddbfed94dd41e7a3b5c",
+      "raster": [1009, 832],
+      "bytes": 86378
+    },
+    {
+      "file": "state-empty-desktop.jpg",
+      "sha256": "9cf073e30e9bea07484f027951267f34268ededdc6ebb0de2b6e4fdda57a1111",
+      "raster": [1440, 844],
+      "bytes": 61021
+    },
+    {
+      "file": "state-error-desktop.jpg",
+      "sha256": "03bd09f5bcb7606331673fb53bb7ce24db92b990e7e05486c64d9ab97edee870",
+      "raster": [1440, 844],
+      "bytes": 62337
+    },
+    {
+      "file": "state-loading-desktop.jpg",
+      "sha256": "86ef0457ff2f0c6d4bdb200ee926920cb626cf7b6a625a412420d80d20aadf72",
+      "raster": [1440, 844],
+      "bytes": 59434
+    },
+    {
+      "file": "theme-dashboard-botanical-dark-mobile.jpg",
+      "sha256": "758f00b997ec0f10c7f6f677789e5a180b12763d98cfce2b26920a75f5e757b0",
+      "raster": [375, 812],
+      "bytes": 41912
+    },
+    {
+      "file": "theme-dashboard-botanical-dark-tablet.jpg",
+      "sha256": "54fd8d03c85ca1398df259ad7d5a938bb13692f758432d824afdafd48cb64f48",
+      "raster": [1009, 832],
+      "bytes": 102545
+    },
+    {
+      "file": "theme-dashboard-botanical-dark.jpg",
+      "sha256": "8c426289494677035de05c31074298ab498ddb4c9109ecc8c9604ffde88215b3",
+      "raster": [1440, 844],
+      "bytes": 165208
+    },
+    {
+      "file": "theme-dashboard-botanical-light-mobile.jpg",
+      "sha256": "5fd1679fd8fb339e50afce06cd0b95fc039a757f559dee1fd78392b5bd918f4e",
+      "raster": [375, 812],
+      "bytes": 42659
+    },
+    {
+      "file": "theme-dashboard-botanical-light-tablet.jpg",
+      "sha256": "761477963cf45e479983d661de0bad89e939ce814609e053025e7a1ae22e6809",
+      "raster": [1009, 832],
+      "bytes": 97052
+    },
+    {
+      "file": "theme-dashboard-botanical-light.jpg",
+      "sha256": "b329158d5f961a4589580495d955aef17137a6d4f70f3dcbb3758f06481ee067",
+      "raster": [1440, 844],
+      "bytes": 168109
+    },
+    {
+      "file": "theme-dashboard-herbarium-dark-mobile.jpg",
+      "sha256": "b13e91a37983327844328135ce45c84873df15566baab5a86ebd7ce49d78f561",
+      "raster": [375, 812],
+      "bytes": 42097
+    },
+    {
+      "file": "theme-dashboard-herbarium-dark-tablet.jpg",
+      "sha256": "e49ce15eb0af849129705acc3adc9124ed7b5f3c62d1f1b98bd17561652a8451",
+      "raster": [1009, 832],
+      "bytes": 103295
+    },
+    {
+      "file": "theme-dashboard-herbarium-dark.jpg",
+      "sha256": "ddbebd55a651506c872eb7d0bf2839ab7f4cf67fef5d3645172bcb92a1ae59c8",
+      "raster": [1440, 844],
+      "bytes": 166248
+    },
+    {
+      "file": "theme-dashboard-herbarium-light-mobile.jpg",
+      "sha256": "4747e438c7319018df8239b7460e0b2c21be183a4cdafb834add3cbf46a367be",
+      "raster": [375, 812],
+      "bytes": 42830
+    },
+    {
+      "file": "theme-dashboard-herbarium-light-tablet.jpg",
+      "sha256": "e5975260f88db699b270a3eb7c730ba5463e9e1289dc0af26e95351a1614fe3f",
+      "raster": [1009, 832],
+      "bytes": 100981
+    },
+    {
+      "file": "theme-dashboard-herbarium-light.jpg",
+      "sha256": "f569d5705e797c2aa84edb2d30795c57c48374de3700db397bb64e68a6a9edaa",
+      "raster": [1440, 844],
+      "bytes": 167928
+    },
+    {
+      "file": "theme-dashboard-mineral-dark-mobile.jpg",
+      "sha256": "1b2c586f678e6803786477b481882894e8933f29d542cd61cbbdd17d905dec9f",
+      "raster": [375, 812],
+      "bytes": 42230
+    },
+    {
+      "file": "theme-dashboard-mineral-dark-tablet.jpg",
+      "sha256": "b311557ac5a3fa9b2a91069354d69e75deee5990b270f47461ce9b5937d280b8",
+      "raster": [1009, 832],
+      "bytes": 103545
+    },
+    {
+      "file": "theme-dashboard-mineral-dark.jpg",
+      "sha256": "9f2ac45b079626067094bc3cb2912409d4229c4f7c2ff05cb2e6011a49d0a07c",
+      "raster": [1440, 844],
+      "bytes": 166451
+    },
+    {
+      "file": "theme-dashboard-mineral-light-mobile.jpg",
+      "sha256": "a738f826dc2f297ee4993eb78efd2e81af9a407406d02369f4d3457a83df9545",
+      "raster": [375, 812],
+      "bytes": 42778
+    },
+    {
+      "file": "theme-dashboard-mineral-light-tablet.jpg",
+      "sha256": "a3e0f6559206aba23e69d1b1b238b2e78ac6ad4ed5ecba40e637b429a92da1f8",
+      "raster": [1009, 832],
+      "bytes": 105297
+    },
+    {
+      "file": "theme-dashboard-mineral-light.jpg",
+      "sha256": "bb6445d18c3050acaae582ac2c13d0437b1a6d1cf361a95c37bdf9345b6413b3",
+      "raster": [1440, 844],
+      "bytes": 168341
+    },
+    {
+      "file": "theme-plants-botanical-dark-mobile.jpg",
+      "sha256": "ddc8cf8457eafdc36189fd7d357c61463e304116ced8836a767ce2953e22ac44",
+      "raster": [375, 812],
+      "bytes": 36670
+    },
+    {
+      "file": "theme-plants-botanical-dark-tablet.jpg",
+      "sha256": "76c33dc4d49ef1546690dace2d92ad71842b146855a40e25478856abfacd3698",
+      "raster": [1009, 832],
+      "bytes": 70150
+    },
+    {
+      "file": "theme-plants-botanical-dark.jpg",
+      "sha256": "89f905bbfee96fa72dbfc3fc51a9a9f5921bd87d48f1bdd8f1a2409d31b80cc7",
+      "raster": [1425, 835],
+      "bytes": 115356
+    },
+    {
+      "file": "theme-plants-botanical-light-mobile.jpg",
+      "sha256": "2aaa453320b87212d20cb528510a993a01a0918e2d969b01be9a85f39db248cd",
+      "raster": [375, 812],
+      "bytes": 37315
+    },
+    {
+      "file": "theme-plants-botanical-light-tablet.jpg",
+      "sha256": "fe3a6d932754637e26750a5626c1db2516c83a5396789bb5dfa689328b4a1b72",
+      "raster": [1009, 832],
+      "bytes": 71389
+    },
+    {
+      "file": "theme-plants-botanical-light.jpg",
+      "sha256": "2ad494e5f2b7242fb2a688a4ac579c6b3a32b2092c0788264749b1639725f4e3",
+      "raster": [1425, 835],
+      "bytes": 117805
+    },
+    {
+      "file": "theme-plants-herbarium-dark-mobile.jpg",
+      "sha256": "d1ce9c2d83dbf64a9147badea3144667eb621a98d5105699538ec40075d6e712",
+      "raster": [375, 812],
+      "bytes": 37068
+    },
+    {
+      "file": "theme-plants-herbarium-dark-tablet.jpg",
+      "sha256": "e2b3d7be4fe3847910ff2438d04198104362d1f700ef68eb204f9433994a49c0",
+      "raster": [1009, 832],
+      "bytes": 70850
+    },
+    {
+      "file": "theme-plants-herbarium-dark.jpg",
+      "sha256": "5e98668b39b3357a94ef25fb157823a0fbf43345bd8d5118630de9de698bb03f",
+      "raster": [1425, 835],
+      "bytes": 116559
+    },
+    {
+      "file": "theme-plants-herbarium-light-mobile.jpg",
+      "sha256": "e2aa913cb57b54b3b28e8b5493a1e26ca34e7a371849ead80608336ddb889ce5",
+      "raster": [375, 812],
+      "bytes": 37365
+    },
+    {
+      "file": "theme-plants-herbarium-light-tablet.jpg",
+      "sha256": "63d2f9ef7c2fbe2aa1763bc51c670fb6d7c547a3fac0fac83d4cec5b08a6606b",
+      "raster": [1009, 832],
+      "bytes": 71983
+    },
+    {
+      "file": "theme-plants-herbarium-light.jpg",
+      "sha256": "319ffbed445a66df6c639235baae31eb70a2975a5997afa0a6cc3afbca43d2e1",
+      "raster": [1425, 835],
+      "bytes": 118171
+    },
+    {
+      "file": "theme-plants-mineral-dark-mobile.jpg",
+      "sha256": "018fbf2ac3ca62a8bb922d2d9aa458f1f70655e9a6d139a4b3cf072cd57d97fe",
+      "raster": [375, 812],
+      "bytes": 37074
+    },
+    {
+      "file": "theme-plants-mineral-dark-tablet.jpg",
+      "sha256": "942a54ef097fde4dae00e7541086803838df68326e58fbc683fc8b13ebedd3e1",
+      "raster": [1009, 832],
+      "bytes": 71194
+    },
+    {
+      "file": "theme-plants-mineral-dark.jpg",
+      "sha256": "d5ae7558258787e1c677426eaf7e76b075fd8caac0cf03cf557dfee4252f5c37",
+      "raster": [1425, 835],
+      "bytes": 117266
+    },
+    {
+      "file": "theme-plants-mineral-light-mobile.jpg",
+      "sha256": "d144c9c906803565dc76f5e605affc94f61bbd3d12a90c702381db69dbdbecc9",
+      "raster": [375, 812],
+      "bytes": 37531
+    },
+    {
+      "file": "theme-plants-mineral-light-tablet.jpg",
+      "sha256": "82d385a70c6031e206548b3b37b221b3c44f626b9f6ecf5eb0d0e68f13f3482d",
+      "raster": [1009, 832],
+      "bytes": 72029
+    },
+    {
+      "file": "theme-plants-mineral-light.jpg",
+      "sha256": "a6ac4eee8790484a46b25880423739624cad44ea125d4a48aa2c5f5f7f770e63",
+      "raster": [1425, 835],
+      "bytes": 119045
+    }
+  ]
+}

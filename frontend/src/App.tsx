@@ -1,5 +1,6 @@
 import { geographyRoute, type GeographyView } from "./geography/routes";
 import { Icon } from "./components/Icon";
+import { navigationIcons } from "./components/navigationIcons";
 import { ActionButton, IconButton } from "./components/Action";
 import {
   collectionPageParent,
@@ -604,6 +605,7 @@ function ApplicationShell() {
                           followNavigation(event, item.id);
                         }}
                       >
+                        <Icon name={navigationIcons[item.id]} shell />
                         {item.label}
                       </a>
                     </Fragment>
@@ -624,7 +626,7 @@ function ApplicationShell() {
                 followNavigation(event, "settings");
               }}
             >
-              <Icon name="settings" shell />
+              <Icon name={navigationIcons.settings} shell />
               Settings
             </a>
             <ThemeControl />
@@ -860,6 +862,7 @@ function ApplicationShell() {
               followNavigation(event, item.id as Section);
             }}
           >
+            <Icon name={navigationIcons[item.id as Section]} shell />
             {item.label}
           </a>
         ))}
@@ -921,6 +924,7 @@ function ApplicationShell() {
                         followNavigation(event, item.id);
                       }}
                     >
+                      <Icon name={navigationIcons[item.id]} shell />
                       {item.label}
                     </a>
                   </Fragment>
@@ -939,7 +943,7 @@ function ApplicationShell() {
                   followNavigation(event, "settings");
                 }}
               >
-                <Icon name="settings" shell />
+                <Icon name={navigationIcons.settings} shell />
                 Settings
               </a>
               <ThemeControl />

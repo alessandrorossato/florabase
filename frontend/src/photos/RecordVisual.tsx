@@ -37,6 +37,7 @@ export function RecordVisual({
   compact = false,
   allowExternalCover = false,
   className = "",
+  showSource = false,
 }: {
   photo?: PrimaryPhoto | null;
   fallbackPhoto?: PrimaryPhoto | null;
@@ -48,6 +49,7 @@ export function RecordVisual({
   // Collection/activity never opt in merely because an identity has an external cover.
   allowExternalCover?: boolean;
   className?: string;
+  showSource?: boolean;
 }) {
   const identities = useContext(RecordIdentities);
   const identity = summary
@@ -111,6 +113,19 @@ export function RecordVisual({
               : `${kind === "group" ? "Plant group" : kind[0].toUpperCase() + kind.slice(1)} image placeholder`}
           </span>
         </>
+      )}
+      {showSource && (
+        <span className="record-visual__source">
+          {source
+            ? primary
+              ? "Record primary photo"
+              : source === inherited
+                ? "Source primary photo"
+                : "Identity cover · reference"
+            : broken.size
+              ? "Image unavailable"
+              : "No image"}
+        </span>
       )}
     </span>
   );

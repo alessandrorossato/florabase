@@ -1909,6 +1909,67 @@
         "title": "DashboardCounts",
         "type": "object"
       },
+      "DashboardImage": {
+        "properties": {
+          "attribution": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Attribution"
+          },
+          "licence_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Licence Label"
+          },
+          "licence_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Licence Url"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "thumbnail_url": {
+            "title": "Thumbnail Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "thumbnail_url",
+          "attribution",
+          "licence_label",
+          "licence_url",
+          "source_url"
+        ],
+        "title": "DashboardImage",
+        "type": "object"
+      },
       "DashboardOverview": {
         "properties": {
           "current_identities": {
@@ -1989,6 +2050,53 @@
         "title": "DashboardOverview",
         "type": "object"
       },
+      "DashboardPhoto": {
+        "description": "One actual individual Plant, with separately identified permitted imagery.",
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "image": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DashboardImage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reference_image": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DashboardImage"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "scientific_name": {
+            "title": "Scientific Name",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "scientific_name",
+          "image",
+          "reference_image"
+        ],
+        "title": "DashboardPhoto",
+        "type": "object"
+      },
       "DashboardResponse": {
         "properties": {
           "counts": {
@@ -1996,6 +2104,13 @@
           },
           "overview": {
             "$ref": "#/components/schemas/DashboardOverview"
+          },
+          "photos": {
+            "items": {
+              "$ref": "#/components/schemas/DashboardPhoto"
+            },
+            "title": "Photos",
+            "type": "array"
           },
           "recent_events": {
             "items": {

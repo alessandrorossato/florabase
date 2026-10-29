@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>Design review · Florabase UI System v1</title
+  ><link rel="stylesheet" href="review.css" />
+  <header>
+    <nav aria-label="Design review">
+      <a href="index.html">Florabase · UI System v1</a
+      ><a href="compare.html">Five A/B decisions</a
+      ><a href="prototype.html">Interactive study</a
+      ><a href="README.md">Design proposal</a><a href="credits.html">Credits</a>
+    </nav>
+  </header>
+  <main class="wrap">
+    <section class="notice" aria-label="Current operator decision">
+      <strong
+        >Proposal B and Gate B are approved. Production Wave 1 is ready for
+        screen review.</strong
+      >
+      <a href="wave1/index.html"
+        >Review the actual migrated Dashboard, Seeds and Plants</a
+      >.
+      <a href="gate-b/index.html"
+        >Review the current Gate B candidate and before/after</a
+      >
+      ·
+      <a href="http://localhost:15284/ui-lab/#/dashboard"
+        >Open the working React prototype</a
+      >. The alternatives and recommendations below are preserved Gate A
+      history.
+    </section>
+    <p class="eyebrow">Product UX direction · Gate A · 26 October 2026</p>
+    <h1>A botanical workspace built around the task at hand.</h1>
+    <p class="lead">
+      Five substantial layout decisions. Compact inventories, useful
+      photography, clear recorded evidence and forms that expose the right
+      context.
+    </p>
+    <div class="actions">
+      <a class="button primary" href="compare.html"
+        >Review the five alternatives</a
+      ><a class="button" href="prototype.html?page=seeds"
+        >Try selection and preview</a
+      ><a class="button" href="ux-critique.md">Read the critical review</a>
+    </div>
+    <div class="facts">
+      <div><b>28</b>families including shell</div>
+      <div><b>25</b>main design variants</div>
+      <div><b>7</b>composed archetypes</div>
+    </div>
+    <p class="notice">
+      This is a concrete design candidate. Photography is licensed reference
+      illustration, not a saved cover or specimen assignment. Controls
+      demonstrate local design interactions; they cannot modify application
+      records. Choose product directions before Gate B implementation.
+    </p>
+    <section>
+      <h2>Decisions with real alternatives</h2>
+      <div class="grid">
+        <article class="card">
+          <a href="compare.html#dashboard"
+            ><img
+              src="/renders/dashboard-a-1440.jpg"
+              alt="Dashboard approach A desktop design"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Dashboard</h3>
+            <small>A · Work first / B · Collection portrait</small>
+            <p>Daily work first; the factual holdings strip stays compact.</p>
+            <strong>Recommended: A</strong>
+            <div class="actions">
+              <a class="button" href="compare.html#dashboard">Compare A / B</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="compare.html#seeds"
+            ><img
+              src="/renders/seeds-a-1440.jpg"
+              alt="Seeds approach A desktop design"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Seeds</h3>
+            <small>A · Inventory table / B · Rich operational rows</small>
+            <p>
+              Stock, storage and date compare in columns; preview opens only on
+              request.
+            </p>
+            <strong>Recommended: A</strong>
+            <div class="actions">
+              <a class="button" href="compare.html#seeds">Compare A / B</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="compare.html#plants"
+            ><img
+              src="/renders/plants-a-1440.jpg"
+              alt="Plants / groups approach A desktop design"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Plants / groups</h3>
+            <small>A · Operational table / B · Photographic browse</small>
+            <p>
+              Maintenance needs type/location/lifecycle; photo browsing is
+              secondary.
+            </p>
+            <strong>Recommended: A</strong>
+            <div class="actions">
+              <a class="button" href="compare.html#plants">Compare A / B</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="compare.html#identities"
+            ><img
+              src="/renders/identities-a-1440.jpg"
+              alt="Botanical identities approach A desktop design"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Botanical identities</h3>
+            <small>A · Visual reference index / B · Analytical index</small>
+            <p>
+              Reference recognition and actual coverage. No cover is invented.
+            </p>
+            <strong>Recommended: A / B without covers</strong>
+            <div class="actions">
+              <a class="button" href="compare.html#identities">Compare A / B</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="compare.html#form"
+            ><img
+              src="/renders/form-a-1440.jpg"
+              alt="Create / Edit approach A desktop design"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Create / Edit</h3>
+            <small>A · One active section / B · Continuous anchored form</small>
+            <p>
+              Maintenance benefits from comparing sections; guided alternative
+              remains explicit.
+            </p>
+            <strong>Recommended: B</strong>
+            <div class="actions">
+              <a class="button" href="compare.html#form">Compare A / B</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+    <section>
+      <h2>Representative mobile workflows</h2>
+      <p>
+        One compact shell. Essential facts stay visible; selection, utilities
+        and forms remain reachable.
+      </p>
+      <div class="mobile-strip">
+        <figure>
+          <figcaption>Inventory</figcaption>
+          <a href="/renders/seeds-a-390.jpg"
+            ><img
+              src="/renders/seeds-a-390.jpg"
+              alt="Inventory mobile design, open full render"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Reference</figcaption>
+          <a href="/renders/identities-a-390.jpg"
+            ><img
+              src="/renders/identities-a-390.jpg"
+              alt="Reference mobile design, open full render"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Calendar agenda</figcaption>
+          <a href="/renders/calendar-a-390.jpg"
+            ><img
+              src="/renders/calendar-a-390.jpg"
+              alt="Calendar agenda mobile design, open full render"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Anchored form</figcaption>
+          <a href="/renders/form-b-390.jpg"
+            ><img
+              src="/renders/form-b-390.jpg"
+              alt="Anchored form mobile design, open full render"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+    </section>
+    <section>
+      <h2>All page-family specimens</h2>
+      <div class="grid">
+        <article class="card">
+          <a href="prototype.html?page=dashboard"
+            ><img
+              src="/renders/dashboard-a-1440.jpg"
+              alt="Dashboard desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Dashboard</h3>
+            <div class="actions">
+              <a href="prototype.html?page=dashboard">Interactive</a
+              ><a href="/renders/dashboard-a-1024.jpg">Tablet</a
+              ><a href="/renders/dashboard-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=seeds"
+            ><img
+              src="/renders/seeds-a-1440.jpg"
+              alt="Seeds / SeedLots desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Seeds / SeedLots</h3>
+            <div class="actions">
+              <a href="prototype.html?page=seeds">Interactive</a
+              ><a href="/renders/seeds-a-1024.jpg">Tablet</a
+              ><a href="/renders/seeds-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=plants"
+            ><img
+              src="/renders/plants-a-1440.jpg"
+              alt="Plants / PlantGroups desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Plants / PlantGroups</h3>
+            <div class="actions">
+              <a href="prototype.html?page=plants">Interactive</a
+              ><a href="/renders/plants-a-1024.jpg">Tablet</a
+              ><a href="/renders/plants-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=identities"
+            ><img
+              src="/renders/identities-a-1440.jpg"
+              alt="Botanical Identities desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Botanical Identities</h3>
+            <div class="actions">
+              <a href="prototype.html?page=identities">Interactive</a
+              ><a href="/renders/identities-a-1024.jpg">Tablet</a
+              ><a href="/renders/identities-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=identity"
+            ><img
+              src="/renders/identity-a-1440.jpg"
+              alt="Identity six-section hub desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Identity six-section hub</h3>
+            <div class="actions">
+              <a href="prototype.html?page=identity">Interactive</a
+              ><a href="/renders/identity-a-1024.jpg">Tablet</a
+              ><a href="/renders/identity-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=journal"
+            ><img
+              src="/renders/journal-a-1440.jpg"
+              alt="Journal desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Journal</h3>
+            <div class="actions">
+              <a href="prototype.html?page=journal">Interactive</a
+              ><a href="/renders/journal-a-1024.jpg">Tablet</a
+              ><a href="/renders/journal-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=history"
+            ><img
+              src="/renders/history-a-1440.jpg"
+              alt="History desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>History</h3>
+            <div class="actions">
+              <a href="prototype.html?page=history">Interactive</a
+              ><a href="/renders/history-a-1024.jpg">Tablet</a
+              ><a href="/renders/history-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=schedule"
+            ><img
+              src="/renders/schedule-a-1440.jpg"
+              alt="Schedule List desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Schedule List</h3>
+            <div class="actions">
+              <a href="prototype.html?page=schedule">Interactive</a
+              ><a href="/renders/schedule-a-1024.jpg">Tablet</a
+              ><a href="/renders/schedule-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=calendar"
+            ><img
+              src="/renders/calendar-a-1440.jpg"
+              alt="Schedule Calendar desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Schedule Calendar</h3>
+            <div class="actions">
+              <a href="prototype.html?page=calendar">Interactive</a
+              ><a href="/renders/calendar-a-1024.jpg">Tablet</a
+              ><a href="/renders/calendar-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=locations"
+            ><img
+              src="/renders/locations-a-1440.jpg"
+              alt="Locations hierarchy desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Locations hierarchy</h3>
+            <div class="actions">
+              <a href="prototype.html?page=locations">Interactive</a
+              ><a href="/renders/locations-a-1024.jpg">Tablet</a
+              ><a href="/renders/locations-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=location"
+            ><img
+              src="/renders/location-a-1440.jpg"
+              alt="Location detail desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Location detail</h3>
+            <div class="actions">
+              <a href="prototype.html?page=location">Interactive</a
+              ><a href="/renders/location-a-1024.jpg">Tablet</a
+              ><a href="/renders/location-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=suppliers"
+            ><img
+              src="/renders/suppliers-a-1440.jpg"
+              alt="Suppliers desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Suppliers</h3>
+            <div class="actions">
+              <a href="prototype.html?page=suppliers">Interactive</a
+              ><a href="/renders/suppliers-a-1024.jpg">Tablet</a
+              ><a href="/renders/suppliers-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=supplier"
+            ><img
+              src="/renders/supplier-a-1440.jpg"
+              alt="Supplier detail desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Supplier detail</h3>
+            <div class="actions">
+              <a href="prototype.html?page=supplier">Interactive</a
+              ><a href="/renders/supplier-a-1024.jpg">Tablet</a
+              ><a href="/renders/supplier-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=orders"
+            ><img
+              src="/renders/orders-a-1440.jpg"
+              alt="Orders desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Orders</h3>
+            <div class="actions">
+              <a href="prototype.html?page=orders">Interactive</a
+              ><a href="/renders/orders-a-1024.jpg">Tablet</a
+              ><a href="/renders/orders-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=order"
+            ><img
+              src="/renders/order-a-1440.jpg"
+              alt="Order detail desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Order detail</h3>
+            <div class="actions">
+              <a href="prototype.html?page=order">Interactive</a
+              ><a href="/renders/order-a-1024.jpg">Tablet</a
+              ><a href="/renders/order-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=record"
+            ><img
+              src="/renders/record-a-1440.jpg"
+              alt="Collection record detail desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Collection record detail</h3>
+            <div class="actions">
+              <a href="prototype.html?page=record">Interactive</a
+              ><a href="/renders/record-a-1024.jpg">Tablet</a
+              ><a href="/renders/record-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=form"
+            ><img
+              src="/renders/form-a-1440.jpg"
+              alt="Create / Edit desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Create / Edit</h3>
+            <div class="actions">
+              <a href="prototype.html?page=form">Interactive</a
+              ><a href="/renders/form-a-1024.jpg">Tablet</a
+              ><a href="/renders/form-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=components"
+            ><img
+              src="/renders/components-a-1440.jpg"
+              alt="Component design specimens desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Component design specimens</h3>
+            <div class="actions">
+              <a href="prototype.html?page=components">Interactive</a
+              ><a href="/renders/components-a-1024.jpg">Tablet</a
+              ><a href="/renders/components-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=specialized"
+            ><img
+              src="/renders/specialized-a-1440.jpg"
+              alt="Maps / Tree boundary desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Maps / Tree boundary</h3>
+            <div class="actions">
+              <a href="prototype.html?page=specialized">Interactive</a
+              ><a href="/renders/specialized-a-1024.jpg">Tablet</a
+              ><a href="/renders/specialized-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+        <article class="card">
+          <a href="prototype.html?page=media"
+            ><img
+              src="/renders/media-a-1440.jpg"
+              alt="Media integration boundary desktop design specimen"
+              loading="lazy"
+          /></a>
+          <div class="body">
+            <h3>Media integration boundary</h3>
+            <div class="actions">
+              <a href="prototype.html?page=media">Interactive</a
+              ><a href="/renders/media-a-1024.jpg">Tablet</a
+              ><a href="/renders/media-a-390.jpg">Mobile</a>
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+    <section>
+      <h2>Contextual record and edit examples</h2>
+      <p>
+        Group size keeps exact, approximate and unknown values. Edit retains the
+        existing stock, date, provenance and Order relationship.
+      </p>
+      <div class="actions">
+        <a class="button" href="prototype.html?page=plants&amp;type=group"
+          >Plant groups</a
+        ><a class="button" href="/renders/groups-a-390.jpg">Groups on mobile</a
+        ><a
+          class="button"
+          href="prototype.html?page=form&amp;mode=edit&amp;variant=b"
+          >Continuous Edit</a
+        ><a class="button" href="/renders/edit-b-390.jpg">Edit on mobile</a>
+      </div>
+    </section>
+    <section>
+      <h2>Implementation contract for review</h2>
+      <div class="doclinks">
+        <a href="ux-critique.md">KEEP / REFINE / REDESIGN</a
+        ><a href="architecture.md">Archetypes and ownership</a
+        ><a href="component-contracts.md">22 component contracts</a
+        ><a href="tokens-responsive-accessibility.md"
+          >Tokens, focus and responsiveness</a
+        ><a href="scaffolding-and-showcase.md">Gate B scaffold and living lab</a
+        ><a href="migration-and-regression.md">Migration, Media and CI-004</a
+        ><a href="evidence-and-references.md">Evidence and honest limits</a
+        ><a href="validation.json">Measured design verification</a>
+      </div>
+    </section>
+  </main>
+  <footer class="credit">
+    Gate A product direction · synthetic Review v5 · baseline ee34874 · no
+    production UI changes · React templates, scaffold and living lab remain Gate
+    B.
+  </footer>
+</html>

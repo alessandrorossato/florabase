@@ -1,0 +1,494 @@
+[
+  {
+    "key": "dashboard",
+    "palette": "botanical",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "client": 1440,
+    "height": 844,
+    "scroll": [1440, 844],
+    "width": 1440
+  },
+  {
+    "key": "plants",
+    "palette": "botanical",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "client": 1425,
+    "height": 844,
+    "scroll": [1425, 1153],
+    "width": 1440
+  },
+  {
+    "key": "dashboard",
+    "palette": "botanical",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "client": 1440,
+    "height": 844,
+    "scroll": [1440, 844],
+    "width": 1440
+  },
+  {
+    "key": "plants",
+    "palette": "botanical",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "client": 1425,
+    "height": 844,
+    "scroll": [1425, 1153],
+    "width": 1440
+  },
+  {
+    "key": "dashboard",
+    "palette": "herbarium",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "herbarium"
+    },
+    "client": 1440,
+    "height": 844,
+    "scroll": [1440, 844],
+    "width": 1440
+  },
+  {
+    "key": "plants",
+    "palette": "herbarium",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "herbarium"
+    },
+    "client": 1425,
+    "height": 844,
+    "scroll": [1425, 1153],
+    "width": 1440
+  },
+  {
+    "key": "dashboard",
+    "palette": "herbarium",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "herbarium"
+    },
+    "client": 1440,
+    "height": 844,
+    "scroll": [1440, 844],
+    "width": 1440
+  },
+  {
+    "key": "plants",
+    "palette": "herbarium",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "herbarium"
+    },
+    "client": 1425,
+    "height": 844,
+    "scroll": [1425, 1153],
+    "width": 1440
+  },
+  {
+    "key": "dashboard",
+    "palette": "mineral",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "mineral"
+    },
+    "client": 1440,
+    "height": 844,
+    "scroll": [1440, 844],
+    "width": 1440
+  },
+  {
+    "key": "plants",
+    "palette": "mineral",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "mineral"
+    },
+    "client": 1425,
+    "height": 844,
+    "scroll": [1425, 1153],
+    "width": 1440
+  },
+  {
+    "key": "dashboard",
+    "palette": "mineral",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "mineral"
+    },
+    "client": 1440,
+    "height": 844,
+    "scroll": [1440, 844],
+    "width": 1440
+  },
+  {
+    "key": "plants",
+    "palette": "mineral",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "mineral"
+    },
+    "client": 1425,
+    "height": 844,
+    "scroll": [1425, 1153],
+    "width": 1440
+  },
+  {
+    "key": "dashboard",
+    "device": "tablet",
+    "palette": "botanical",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "client": 1009,
+    "height": 844,
+    "scroll": [1009, 898],
+    "width": 1024
+  },
+  {
+    "key": "plants",
+    "device": "tablet",
+    "palette": "botanical",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "client": 1009,
+    "height": 844,
+    "scroll": [1009, 2028],
+    "width": 1024
+  },
+  {
+    "key": "dashboard",
+    "device": "tablet",
+    "palette": "botanical",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "client": 1009,
+    "height": 844,
+    "scroll": [1009, 898],
+    "width": 1024
+  },
+  {
+    "key": "plants",
+    "device": "tablet",
+    "palette": "botanical",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "client": 1009,
+    "height": 844,
+    "scroll": [1009, 2028],
+    "width": 1024
+  },
+  {
+    "key": "dashboard",
+    "device": "tablet",
+    "palette": "herbarium",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "herbarium"
+    },
+    "client": 1009,
+    "height": 844,
+    "scroll": [1009, 898],
+    "width": 1024
+  },
+  {
+    "key": "plants",
+    "device": "tablet",
+    "palette": "herbarium",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "herbarium"
+    },
+    "client": 1009,
+    "height": 844,
+    "scroll": [1009, 2028],
+    "width": 1024
+  },
+  {
+    "key": "dashboard",
+    "device": "tablet",
+    "palette": "herbarium",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "herbarium"
+    },
+    "client": 1009,
+    "height": 844,
+    "scroll": [1009, 898],
+    "width": 1024
+  },
+  {
+    "key": "plants",
+    "device": "tablet",
+    "palette": "herbarium",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "herbarium"
+    },
+    "client": 1009,
+    "height": 844,
+    "scroll": [1009, 2028],
+    "width": 1024
+  },
+  {
+    "key": "dashboard",
+    "device": "tablet",
+    "palette": "mineral",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "mineral"
+    },
+    "client": 1009,
+    "height": 844,
+    "scroll": [1009, 898],
+    "width": 1024
+  },
+  {
+    "key": "plants",
+    "device": "tablet",
+    "palette": "mineral",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "mineral"
+    },
+    "client": 1009,
+    "height": 844,
+    "scroll": [1009, 2028],
+    "width": 1024
+  },
+  {
+    "key": "dashboard",
+    "device": "tablet",
+    "palette": "mineral",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "mineral"
+    },
+    "client": 1009,
+    "height": 844,
+    "scroll": [1009, 898],
+    "width": 1024
+  },
+  {
+    "key": "plants",
+    "device": "tablet",
+    "palette": "mineral",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "mineral"
+    },
+    "client": 1009,
+    "height": 844,
+    "scroll": [1009, 2028],
+    "width": 1024
+  },
+  {
+    "key": "dashboard",
+    "device": "mobile",
+    "palette": "botanical",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "client": 375,
+    "height": 844,
+    "scroll": [375, 1965],
+    "width": 390
+  },
+  {
+    "key": "plants",
+    "device": "mobile",
+    "palette": "botanical",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "client": 375,
+    "height": 844,
+    "scroll": [375, 2559],
+    "width": 390
+  },
+  {
+    "key": "dashboard",
+    "device": "mobile",
+    "palette": "botanical",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "client": 375,
+    "height": 844,
+    "scroll": [375, 1965],
+    "width": 390
+  },
+  {
+    "key": "plants",
+    "device": "mobile",
+    "palette": "botanical",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "client": 375,
+    "height": 844,
+    "scroll": [375, 2559],
+    "width": 390
+  },
+  {
+    "key": "dashboard",
+    "device": "mobile",
+    "palette": "herbarium",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "herbarium"
+    },
+    "client": 375,
+    "height": 844,
+    "scroll": [375, 1965],
+    "width": 390
+  },
+  {
+    "key": "plants",
+    "device": "mobile",
+    "palette": "herbarium",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "herbarium"
+    },
+    "client": 375,
+    "height": 844,
+    "scroll": [375, 2559],
+    "width": 390
+  },
+  {
+    "key": "dashboard",
+    "device": "mobile",
+    "palette": "herbarium",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "herbarium"
+    },
+    "client": 375,
+    "height": 844,
+    "scroll": [375, 1965],
+    "width": 390
+  },
+  {
+    "key": "plants",
+    "device": "mobile",
+    "palette": "herbarium",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "herbarium"
+    },
+    "client": 375,
+    "height": 844,
+    "scroll": [375, 2559],
+    "width": 390
+  },
+  {
+    "key": "dashboard",
+    "device": "mobile",
+    "palette": "mineral",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "mineral"
+    },
+    "client": 375,
+    "height": 844,
+    "scroll": [375, 1965],
+    "width": 390
+  },
+  {
+    "key": "plants",
+    "device": "mobile",
+    "palette": "mineral",
+    "appearance": "light",
+    "attributes": {
+      "appearance": "light",
+      "palette": "mineral"
+    },
+    "client": 375,
+    "height": 844,
+    "scroll": [375, 2559],
+    "width": 390
+  },
+  {
+    "key": "dashboard",
+    "device": "mobile",
+    "palette": "mineral",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "mineral"
+    },
+    "client": 375,
+    "height": 844,
+    "scroll": [375, 1965],
+    "width": 390
+  },
+  {
+    "key": "plants",
+    "device": "mobile",
+    "palette": "mineral",
+    "appearance": "dark",
+    "attributes": {
+      "appearance": "dark",
+      "palette": "mineral"
+    },
+    "client": 375,
+    "height": 844,
+    "scroll": [375, 2559],
+    "width": 390
+  }
+]

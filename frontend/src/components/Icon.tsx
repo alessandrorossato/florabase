@@ -1,6 +1,132 @@
 import type { ReactNode, SVGProps } from "react";
 
 const shapes = {
+  eye: (
+    <>
+      <path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12Z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  document: (
+    <>
+      <path d="M5 3h10l4 4v14H5ZM14 3v5h5M8 12h8M8 16h6" />
+    </>
+  ),
+  overview: (
+    <>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+    </>
+  ),
+  seed: (
+    <>
+      <rect x="5" y="2" width="14" height="20" rx="1" />
+      <path d="M5 6h14M9 16c-3-4 3-8 6-5 3 4-3 8-6 5Zm0 0 6-5" />
+    </>
+  ),
+  sprout: (
+    <>
+      <path d="M12 21V11M12 15C5 15 3 11 3 5c6 0 9 3 9 10ZM12 11c0-5 3-8 9-8 0 6-3 9-9 8Z" />
+    </>
+  ),
+  plant: (
+    <>
+      <path d="M19 3C6 2 2 10 7 17c8 5 14-4 12-14ZM4 21 15 8" />
+    </>
+  ),
+  harvest: (
+    <>
+      <path d="M3 10h18l-3 11H6ZM7 10l5-8 5 8M9 14v3m6-3v3" />
+    </>
+  ),
+  pin: (
+    <>
+      <path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 0 1 16 0Z" />
+      <circle cx="12" cy="10" r="3" />
+    </>
+  ),
+  journal: (
+    <>
+      <path d="M5 3h15v18H5ZM8 3v18M3 7h4M3 12h4M3 17h4M11 8h6M11 12h6" />
+    </>
+  ),
+  history: (
+    <>
+      <path d="M3 11a9 9 0 1 1 2 7M3 4v7h7M12 7v5l4 2" />
+    </>
+  ),
+  calendar: (
+    <>
+      <rect x="3" y="5" width="18" height="16" rx="2" />
+      <path d="M7 2v6m10-6v6M3 11h18M7 15h2m6 0h2M7 18h2" />
+    </>
+  ),
+  flower: (
+    <>
+      <path d="M12 8C5-1 1 8 8 12c-9 7 0 13 4 4 6 9 14 0 4-4 8-6 0-13-4-4Z" />
+      <circle cx="12" cy="12" r="2" />
+    </>
+  ),
+  taxonomy: (
+    <>
+      <rect x="9" y="2" width="6" height="5" rx="1" />
+      <rect x="2" y="17" width="6" height="5" rx="1" />
+      <rect x="16" y="17" width="6" height="5" rx="1" />
+      <path d="M12 7v5M5 17v-5h14v5" />
+    </>
+  ),
+  image: (
+    <>
+      <rect x="3" y="3" width="18" height="18" rx="2" />
+      <circle cx="8" cy="8" r="2" />
+      <path d="m3 18 6-6 4 4 4-7 4 6" />
+    </>
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <ellipse cx="12" cy="12" rx="4" ry="9" />
+      <path d="M3 12h18M5 6h14M5 18h14" />
+    </>
+  ),
+  store: (
+    <>
+      <path d="M3 10h18l-2-7H5ZM5 10v11h14V10M9 21v-7h6v7M3 10c0 4 4 4 5 1 1 3 6 3 7 0 1 3 6 3 6-1" />
+    </>
+  ),
+  parcel: (
+    <>
+      <path d="m3 6 9-4 9 4v12l-9 4-9-4ZM3 6l9 4 9-4M12 10v12M8 4l9 4v5" />
+    </>
+  ),
+  tag: (
+    <>
+      <path d="M3 3h9l10 10-9 9L3 12Z" />
+      <circle cx="8" cy="8" r="1.5" />
+    </>
+  ),
+  exchange: <path d="M3 7h17l-4-4m4 4-4 4M21 17H4l4-4m-4 4 4 4" />,
+  gear: (
+    <>
+      <path d="m9 3 1-1h4l1 3 3 1 3-1 2 4-2 2v3l2 2-2 4-3-1-3 1-1 3h-4l-1-3-3-1-3 1-2-4 2-2v-3L1 9l2-4 3 1Z" />
+      <circle cx="12" cy="12" r="3" />
+    </>
+  ),
+  list: (
+    <>
+      <path d="M8 5h13M8 12h13M8 19h13M3 5h1M3 12h1M3 19h1" />
+    </>
+  ),
+  gallery: (
+    <>
+      <rect x="3" y="3" width="7" height="7" rx="1" />
+      <rect x="14" y="3" width="7" height="7" rx="1" />
+      <rect x="3" y="14" width="7" height="7" rx="1" />
+      <rect x="14" y="14" width="7" height="7" rx="1" />
+    </>
+  ),
   maximize: <path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5" />,
   menu: <path d="M3 6h18M3 12h18M3 18h18" />,
   "panel-close": (

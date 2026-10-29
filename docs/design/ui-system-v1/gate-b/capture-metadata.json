@@ -1,0 +1,1331 @@
+[
+  {
+    "key": "dashboard",
+    "device": "desktop",
+    "client": 1440,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 491.84375,
+          "height": 155.625,
+          "left": 229,
+          "right": 436.5,
+          "top": 336.21875,
+          "width": 207.5,
+          "x": 229,
+          "y": 336.21875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/aloe.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 491.84375,
+          "height": 155.625,
+          "left": 450.5,
+          "right": 658,
+          "top": 336.21875,
+          "width": 207.5,
+          "x": 450.5,
+          "y": 336.21875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/lavender.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 491.84375,
+          "height": 155.625,
+          "left": 672,
+          "right": 879.5,
+          "top": 336.21875,
+          "width": 207.5,
+          "x": 672,
+          "y": 336.21875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/sage.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 491.84375,
+          "height": 155.625,
+          "left": 893.5,
+          "right": 1101,
+          "top": 336.21875,
+          "width": 207.5,
+          "x": 893.5,
+          "y": 336.21875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 695.4609375,
+          "height": 155.625,
+          "left": 229,
+          "right": 436.5,
+          "top": 539.8359375,
+          "width": 207.5,
+          "x": 229,
+          "y": 539.8359375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/basil.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 695.4609375,
+          "height": 155.625,
+          "left": 450.5,
+          "right": 658,
+          "top": 539.8359375,
+          "width": 207.5,
+          "x": 450.5,
+          "y": 539.8359375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/echinacea.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 695.4609375,
+          "height": 155.625,
+          "left": 672,
+          "right": 879.5,
+          "top": 539.8359375,
+          "width": 207.5,
+          "x": 672,
+          "y": 539.8359375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/sunflower.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 695.4609375,
+          "height": 155.625,
+          "left": 893.5,
+          "right": 1101,
+          "top": 539.8359375,
+          "width": 207.5,
+          "x": 893.5,
+          "y": 539.8359375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      }
+    ],
+    "nextWork": {
+      "bottom": 787.171875,
+      "height": 487.953125,
+      "left": 1126,
+      "right": 1416,
+      "top": 299.21875,
+      "width": 290,
+      "x": 1126,
+      "y": 299.21875
+    },
+    "scale": 1,
+    "scroll": [1440, 844],
+    "viewport": [1440, 844]
+  },
+  {
+    "key": "plants-gallery",
+    "device": "desktop",
+    "client": 1425,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 414.1328125,
+          "height": 164.84375,
+          "left": 466.796875,
+          "right": 686.59375,
+          "top": 249.2890625,
+          "width": 219.796875,
+          "x": 466.796875,
+          "y": 249.2890625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 774.9609375,
+          "height": 164.84375,
+          "left": 466.796875,
+          "right": 686.59375,
+          "top": 610.1171875,
+          "width": 219.796875,
+          "x": 466.796875,
+          "y": 610.1171875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [1425, 1153],
+    "viewport": [1440, 844]
+  },
+  {
+    "key": "plants-list",
+    "device": "desktop",
+    "client": 1425,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 388.2734375,
+          "height": 48,
+          "left": 245,
+          "right": 293,
+          "top": 340.2734375,
+          "width": 48,
+          "x": 245,
+          "y": 340.2734375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 773.234375,
+          "height": 48,
+          "left": 245,
+          "right": 293,
+          "top": 725.234375,
+          "width": 48,
+          "x": 245,
+          "y": 725.234375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [1425, 1168],
+    "viewport": [1440, 844]
+  },
+  {
+    "key": "seeds-list",
+    "device": "desktop",
+    "client": 1425,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 389.265625,
+          "height": 48,
+          "left": 245,
+          "right": 293,
+          "top": 341.265625,
+          "width": 48,
+          "x": 245,
+          "y": 341.265625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 544.2421875,
+          "height": 48,
+          "left": 245,
+          "right": 293,
+          "top": 496.2421875,
+          "width": 48,
+          "x": 245,
+          "y": 496.2421875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 621.234375,
+          "height": 48,
+          "left": 245,
+          "right": 293,
+          "top": 573.234375,
+          "width": 48,
+          "x": 245,
+          "y": 573.234375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/echinacea.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 857.171875,
+          "height": 48,
+          "left": 245,
+          "right": 293,
+          "top": 809.171875,
+          "width": 48,
+          "x": 245,
+          "y": 809.171875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/sage.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [1425, 1000],
+    "viewport": [1440, 844]
+  },
+  {
+    "key": "seeds-gallery",
+    "device": "desktop",
+    "client": 1425,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 414.1328125,
+          "height": 164.84375,
+          "left": 466.796875,
+          "right": 686.59375,
+          "top": 249.2890625,
+          "width": 219.796875,
+          "x": 466.796875,
+          "y": 249.2890625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 414.1328125,
+          "height": 164.84375,
+          "left": 942.3984375,
+          "right": 1162.1953125,
+          "top": 249.2890625,
+          "width": 219.796875,
+          "x": 942.3984375,
+          "y": 249.2890625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 414.140625,
+          "height": 164.8515625,
+          "left": 1180.1953125,
+          "right": 1400,
+          "top": 249.2890625,
+          "width": 219.8046875,
+          "x": 1180.1953125,
+          "y": 249.2890625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/echinacea.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 858.9296875,
+          "height": 164.8515625,
+          "left": 704.59375,
+          "right": 924.3984375,
+          "top": 694.078125,
+          "width": 219.8046875,
+          "x": 704.59375,
+          "y": 694.078125
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/sage.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [1425, 1249],
+    "viewport": [1440, 844]
+  },
+  {
+    "key": "identities-gallery",
+    "device": "desktop",
+    "client": 1425,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 414.1328125,
+          "height": 164.84375,
+          "left": 466.796875,
+          "right": 686.59375,
+          "top": 249.2890625,
+          "width": 219.796875,
+          "x": 466.796875,
+          "y": 249.2890625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 748.9765625,
+          "height": 164.84375,
+          "left": 466.796875,
+          "right": 686.59375,
+          "top": 584.1328125,
+          "width": 219.796875,
+          "x": 466.796875,
+          "y": 584.1328125
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [1425, 1101],
+    "viewport": [1440, 844]
+  },
+  {
+    "key": "identities-list",
+    "device": "desktop",
+    "client": 1425,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 382.2890625,
+          "height": 48,
+          "left": 245,
+          "right": 293,
+          "top": 334.2890625,
+          "width": 48,
+          "x": 245,
+          "y": 334.2890625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 747.2890625,
+          "height": 48,
+          "left": 245,
+          "right": 293,
+          "top": 699.2890625,
+          "width": 48,
+          "x": 245,
+          "y": 699.2890625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [1425, 1106],
+    "viewport": [1440, 844]
+  },
+  {
+    "key": "activity",
+    "device": "desktop",
+    "client": 1440,
+    "dpr": 1,
+    "images": [],
+    "scale": 1,
+    "scroll": [1440, 844],
+    "viewport": [1440, 844]
+  },
+  {
+    "key": "components",
+    "device": "desktop",
+    "client": 1425,
+    "dpr": 1,
+    "images": [],
+    "scale": 1,
+    "scroll": [1425, 852],
+    "viewport": [1440, 844]
+  },
+  {
+    "key": "dashboard",
+    "device": "tablet",
+    "client": 1009,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 465.9609375,
+          "height": 125.7421875,
+          "left": 201,
+          "right": 368.6640625,
+          "top": 340.21875,
+          "width": 167.6640625,
+          "x": 201,
+          "y": 340.21875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/aloe.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 465.9609375,
+          "height": 125.7421875,
+          "left": 382.6640625,
+          "right": 550.328125,
+          "top": 340.21875,
+          "width": 167.6640625,
+          "x": 382.6640625,
+          "y": 340.21875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/lavender.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 465.96875,
+          "height": 125.75,
+          "left": 564.328125,
+          "right": 732,
+          "top": 340.21875,
+          "width": 167.671875,
+          "x": 564.328125,
+          "y": 340.21875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/sage.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 639.703125,
+          "height": 125.7421875,
+          "left": 201,
+          "right": 368.6640625,
+          "top": 513.9609375,
+          "width": 167.6640625,
+          "x": 201,
+          "y": 513.9609375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 639.703125,
+          "height": 125.7421875,
+          "left": 382.6640625,
+          "right": 550.328125,
+          "top": 513.9609375,
+          "width": 167.6640625,
+          "x": 382.6640625,
+          "y": 513.9609375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/basil.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 639.7109375,
+          "height": 125.75,
+          "left": 564.328125,
+          "right": 732,
+          "top": 513.9609375,
+          "width": 167.671875,
+          "x": 564.328125,
+          "y": 513.9609375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/echinacea.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 813.4453125,
+          "height": 125.7421875,
+          "left": 201,
+          "right": 368.6640625,
+          "top": 687.703125,
+          "width": 167.6640625,
+          "x": 201,
+          "y": 687.703125
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/sunflower.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 813.4453125,
+          "height": 125.7421875,
+          "left": 382.6640625,
+          "right": 550.328125,
+          "top": 687.703125,
+          "width": 167.6640625,
+          "x": 382.6640625,
+          "y": 687.703125
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      }
+    ],
+    "nextWork": {
+      "bottom": 878.4296875,
+      "height": 575.2109375,
+      "left": 749,
+      "right": 989,
+      "top": 303.21875,
+      "width": 240,
+      "x": 749,
+      "y": 303.21875
+    },
+    "scale": 1,
+    "scroll": [1009, 898],
+    "viewport": [1024, 844]
+  },
+  {
+    "key": "plants-gallery",
+    "device": "tablet",
+    "client": 1009,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 499.0390625,
+          "height": 187.75,
+          "left": 469.328125,
+          "right": 719.6640625,
+          "top": 311.2890625,
+          "width": 250.3359375,
+          "x": 469.328125,
+          "y": 311.2890625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 1266.484375,
+          "height": 187.7421875,
+          "left": 201,
+          "right": 451.328125,
+          "top": 1078.7421875,
+          "width": 250.328125,
+          "x": 201,
+          "y": 1078.7421875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [1009, 2028],
+    "viewport": [1024, 844]
+  },
+  {
+    "key": "plants-list",
+    "device": "tablet",
+    "client": 1009,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 450.2734375,
+          "height": 48,
+          "left": 217,
+          "right": 265,
+          "top": 402.2734375,
+          "width": 48,
+          "x": 217,
+          "y": 402.2734375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 835.234375,
+          "height": 48,
+          "left": 217,
+          "right": 265,
+          "top": 787.234375,
+          "width": 48,
+          "x": 217,
+          "y": 787.234375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [1009, 1274],
+    "viewport": [1024, 844]
+  },
+  {
+    "key": "seeds-list",
+    "device": "tablet",
+    "client": 1009,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 460.265625,
+          "height": 48,
+          "left": 217,
+          "right": 265,
+          "top": 412.265625,
+          "width": 48,
+          "x": 217,
+          "y": 412.265625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 624.234375,
+          "height": 48,
+          "left": 217,
+          "right": 265,
+          "top": 576.234375,
+          "width": 48,
+          "x": 217,
+          "y": 576.234375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 701.2265625,
+          "height": 48,
+          "left": 217,
+          "right": 265,
+          "top": 653.2265625,
+          "width": 48,
+          "x": 217,
+          "y": 653.2265625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/echinacea.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 982.1484375,
+          "height": 48,
+          "left": 217,
+          "right": 265,
+          "top": 934.1484375,
+          "width": 48,
+          "x": 217,
+          "y": 934.1484375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/sage.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [1009, 1134],
+    "viewport": [1024, 844]
+  },
+  {
+    "key": "seeds-gallery",
+    "device": "tablet",
+    "client": 1009,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 499.0390625,
+          "height": 187.75,
+          "left": 469.328125,
+          "right": 719.6640625,
+          "top": 311.2890625,
+          "width": 250.3359375,
+          "x": 469.328125,
+          "y": 311.2890625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 948.734375,
+          "height": 187.7421875,
+          "left": 201,
+          "right": 451.328125,
+          "top": 760.9921875,
+          "width": 250.328125,
+          "x": 201,
+          "y": 760.9921875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 948.7421875,
+          "height": 187.75,
+          "left": 469.328125,
+          "right": 719.6640625,
+          "top": 760.9921875,
+          "width": 250.3359375,
+          "x": 469.328125,
+          "y": 760.9921875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/echinacea.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 1404.4453125,
+          "height": 187.75,
+          "left": 469.328125,
+          "right": 719.6640625,
+          "top": 1216.6953125,
+          "width": 250.3359375,
+          "x": 469.328125,
+          "y": 1216.6953125
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/sage.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [1009, 1776],
+    "viewport": [1024, 844]
+  },
+  {
+    "key": "identities-gallery",
+    "device": "tablet",
+    "client": 1009,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 495.2890625,
+          "height": 184,
+          "left": 464.328125,
+          "right": 709.6640625,
+          "top": 311.2890625,
+          "width": 245.3359375,
+          "x": 464.328125,
+          "y": 311.2890625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 1203.265625,
+          "height": 183.9921875,
+          "left": 201,
+          "right": 446.328125,
+          "top": 1019.2734375,
+          "width": 245.328125,
+          "x": 201,
+          "y": 1019.2734375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [1009, 1909],
+    "viewport": [1024, 844]
+  },
+  {
+    "key": "identities-list",
+    "device": "tablet",
+    "client": 1009,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 444.2890625,
+          "height": 48,
+          "left": 217,
+          "right": 265,
+          "top": 396.2890625,
+          "width": 48,
+          "x": 217,
+          "y": 396.2890625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 809.2890625,
+          "height": 48,
+          "left": 217,
+          "right": 265,
+          "top": 761.2890625,
+          "width": 48,
+          "x": 217,
+          "y": 761.2890625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [1009, 1208],
+    "viewport": [1024, 844]
+  },
+  {
+    "key": "activity",
+    "device": "tablet",
+    "client": 1024,
+    "dpr": 1,
+    "images": [],
+    "scale": 1,
+    "scroll": [1024, 844],
+    "viewport": [1024, 844]
+  },
+  {
+    "key": "components",
+    "device": "tablet",
+    "client": 1009,
+    "dpr": 1,
+    "images": [],
+    "scale": 1,
+    "scroll": [1009, 870],
+    "viewport": [1024, 844]
+  },
+  {
+    "key": "dashboard",
+    "device": "mobile",
+    "client": 375,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 776.3125,
+          "height": 122.625,
+          "left": 17,
+          "right": 180.5,
+          "top": 653.6875,
+          "width": 163.5,
+          "x": 17,
+          "y": 653.6875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/aloe.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 776.3125,
+          "height": 122.625,
+          "left": 194.5,
+          "right": 358,
+          "top": 653.6875,
+          "width": 163.5,
+          "x": 194.5,
+          "y": 653.6875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/lavender.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 946.9296875,
+          "height": 122.625,
+          "left": 17,
+          "right": 180.5,
+          "top": 824.3046875,
+          "width": 163.5,
+          "x": 17,
+          "y": 824.3046875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/sage.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 946.9296875,
+          "height": 122.625,
+          "left": 194.5,
+          "right": 358,
+          "top": 824.3046875,
+          "width": 163.5,
+          "x": 194.5,
+          "y": 824.3046875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 1117.546875,
+          "height": 122.625,
+          "left": 17,
+          "right": 180.5,
+          "top": 994.921875,
+          "width": 163.5,
+          "x": 17,
+          "y": 994.921875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/basil.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 1117.546875,
+          "height": 122.625,
+          "left": 194.5,
+          "right": 358,
+          "top": 994.921875,
+          "width": 163.5,
+          "x": 194.5,
+          "y": 994.921875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/echinacea.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 1288.1640625,
+          "height": 122.625,
+          "left": 17,
+          "right": 180.5,
+          "top": 1165.5390625,
+          "width": 163.5,
+          "x": 17,
+          "y": 1165.5390625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/sunflower.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 1288.1640625,
+          "height": 122.625,
+          "left": 194.5,
+          "right": 358,
+          "top": 1165.5390625,
+          "width": 163.5,
+          "x": 194.5,
+          "y": 1165.5390625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      }
+    ],
+    "nextWork": {
+      "bottom": 1875.09375,
+      "height": 487.953125,
+      "left": 16,
+      "right": 359,
+      "top": 1387.140625,
+      "width": 343,
+      "x": 16,
+      "y": 1387.140625
+    },
+    "scale": 1,
+    "scroll": [375, 1965],
+    "viewport": [390, 844]
+  },
+  {
+    "key": "plants-gallery",
+    "device": "mobile",
+    "client": 375,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 746.8984375,
+          "height": 124.125,
+          "left": 192.5,
+          "right": 358,
+          "top": 622.7734375,
+          "width": 165.5,
+          "x": 192.5,
+          "y": 622.7734375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 1713.1796875,
+          "height": 124.125,
+          "left": 17,
+          "right": 182.5,
+          "top": 1589.0546875,
+          "width": 165.5,
+          "x": 17,
+          "y": 1589.0546875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [375, 2559],
+    "viewport": [390, 844]
+  },
+  {
+    "key": "plants-list",
+    "device": "mobile",
+    "client": 375,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 803.7734375,
+          "height": 48,
+          "left": 33,
+          "right": 81,
+          "top": 755.7734375,
+          "width": 48,
+          "x": 33,
+          "y": 755.7734375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 1408.7734375,
+          "height": 48,
+          "left": 33,
+          "right": 81,
+          "top": 1360.7734375,
+          "width": 48,
+          "x": 33,
+          "y": 1360.7734375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [375, 2197],
+    "viewport": [390, 844]
+  },
+  {
+    "key": "seeds-list",
+    "device": "mobile",
+    "client": 375,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 843.71875,
+          "height": 48,
+          "left": 33,
+          "right": 81,
+          "top": 795.71875,
+          "width": 48,
+          "x": 33,
+          "y": 795.71875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 1295.6015625,
+          "height": 48,
+          "left": 33,
+          "right": 81,
+          "top": 1247.6015625,
+          "width": 48,
+          "x": 33,
+          "y": 1247.6015625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 1534.546875,
+          "height": 48,
+          "left": 33,
+          "right": 81,
+          "top": 1486.546875,
+          "width": 48,
+          "x": 33,
+          "y": 1486.546875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/echinacea.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 2221.3671875,
+          "height": 48,
+          "left": 33,
+          "right": 81,
+          "top": 2173.3671875,
+          "width": 48,
+          "x": 33,
+          "y": 2173.3671875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/sage.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [375, 2651],
+    "viewport": [390, 844]
+  },
+  {
+    "key": "seeds-gallery",
+    "device": "mobile",
+    "client": 375,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 690.8984375,
+          "height": 124.125,
+          "left": 192.5,
+          "right": 358,
+          "top": 566.7734375,
+          "width": 165.5,
+          "x": 192.5,
+          "y": 566.7734375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 1108.9609375,
+          "height": 124.125,
+          "left": 192.5,
+          "right": 358,
+          "top": 984.8359375,
+          "width": 165.5,
+          "x": 192.5,
+          "y": 984.8359375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 1557.03125,
+          "height": 124.125,
+          "left": 17,
+          "right": 182.5,
+          "top": 1432.90625,
+          "width": 165.5,
+          "x": 17,
+          "y": 1432.90625
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/echinacea.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 1975.09375,
+          "height": 124.125,
+          "left": 192.5,
+          "right": 358,
+          "top": 1850.96875,
+          "width": 165.5,
+          "x": 192.5,
+          "y": 1850.96875
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/sage.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [375, 2517],
+    "viewport": [390, 844]
+  },
+  {
+    "key": "identities-gallery",
+    "device": "mobile",
+    "client": 375,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 690.8984375,
+          "height": 124.125,
+          "left": 192.5,
+          "right": 358,
+          "top": 566.7734375,
+          "width": 165.5,
+          "x": 192.5,
+          "y": 566.7734375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 1525.25,
+          "height": 124.125,
+          "left": 17,
+          "right": 182.5,
+          "top": 1401.125,
+          "width": 165.5,
+          "x": 17,
+          "y": 1401.125
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [375, 2301],
+    "viewport": [390, 844]
+  },
+  {
+    "key": "identities-list",
+    "device": "mobile",
+    "client": 375,
+    "dpr": 1,
+    "images": [
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 747.7734375,
+          "height": 48,
+          "left": 33,
+          "right": 81,
+          "top": 699.7734375,
+          "width": 48,
+          "x": 33,
+          "y": 699.7734375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+      },
+      {
+        "loaded": true,
+        "rect": {
+          "bottom": 1352.7734375,
+          "height": 48,
+          "left": 33,
+          "right": 81,
+          "top": 1304.7734375,
+          "width": 48,
+          "x": 33,
+          "y": 1304.7734375
+        },
+        "src": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+      }
+    ],
+    "scale": 1,
+    "scroll": [375, 2075],
+    "viewport": [390, 844]
+  },
+  {
+    "key": "activity",
+    "device": "mobile",
+    "client": 375,
+    "dpr": 1,
+    "images": [],
+    "scale": 1,
+    "scroll": [375, 965],
+    "viewport": [390, 844]
+  },
+  {
+    "key": "components",
+    "device": "mobile",
+    "client": 375,
+    "dpr": 1,
+    "images": [],
+    "scale": 1,
+    "scroll": [375, 1405],
+    "viewport": [390, 844]
+  }
+]

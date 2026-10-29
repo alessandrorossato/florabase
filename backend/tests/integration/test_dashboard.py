@@ -1,11 +1,20 @@
 from datetime import UTC, date, datetime, timedelta
+from uuid import uuid7
 
 import pytest
-from sqlalchemy import Connection, event, select
+from sqlalchemy import Connection, delete, event, select, text
 from sqlalchemy.orm import Session
 
+from florabase.attachments.model import Attachment
 from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_profiles.model import BotanicalProfile, BotanicalProfileNativeRange
+from florabase.collection_photos.model import (
+    BotanicalIdentityCoverImage,
+    CollectionPrimaryPhoto,
+    LocalCollectionPhoto,
+    MediaAsset,
+)
+from florabase.collection_views.dashboard import photographs
 from florabase.collection_views.service import dashboard
 from florabase.events.schemas import EventCreate
 from florabase.events.service import create_event
@@ -262,3 +271,153 @@ def test_stored_material_and_native_range_only_profile_are_current(
         record_disposition(db, inventory.id, DispositionCreate(kind="consumed", mode="use_all"))
         depleted = dashboard(db, DAY).overview
         assert depleted.current_identities == depleted.identities_with_profile == 0
+
+
+def test_photographs_sample_actual_plants_with_explicit_primary_and_reference_fallbacks(
+    database_connection: Connection,
+) -> None:
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as db:
+        assert photographs(db) == []
+        identity = BotanicalIdentity(scientific_name="Aloe vera")
+        db.add(identity)
+        db.flush()
+        plants = [
+            Plant(
+                botanical_identity_id=identity.id, direct_origin_kind="unknown", label=f"Plant {i}"
+            )
+            for i in range(3)
+        ]
+        db.add_all(plants)
+        db.add(
+            Plant(botanical_identity_id=identity.id, direct_origin_kind="unknown", lifecycle="dead")
+        )
+        db.add(PlantGroup(botanical_identity_id=identity.id, direct_origin_kind="unknown"))
+        db.flush()
+
+        def asset(index: int) -> MediaAsset:
+            attachment_id = uuid7()
+            attachment = Attachment(
+                id=attachment_id,
+                storage_key=f"objects/{attachment_id.hex[:2]}/{attachment_id.hex}",
+                original_filename=f"photo-{index}.jpg",
+                media_type="image/jpeg",
+                byte_size=100,
+                sha256=f"{index:064x}",
+                state="active",
+            )
+            db.add(attachment)
+            db.flush()
+            image = MediaAsset(
+                kind="local",
+                attachment_id=attachment.id,
+                attribution="Recorded creator",
+                state="active",
+            )
+            db.add(image)
+            db.flush()
+            return image
+
+        primary, cover = asset(1), asset(2)
+        link = LocalCollectionPhoto(plant_id=plants[0].id, media_asset_id=primary.id)
+        db.add(link)
+        db.flush()
+        db.add(CollectionPrimaryPhoto(plant_id=plants[0].id, local_collection_photo_id=link.id))
+        db.add(
+            BotanicalIdentityCoverImage(
+                botanical_identity_id=identity.id, media_asset_id=cover.id, source_mode="local"
+            )
+        )
+        db.flush()
+        statements: list[str] = []
+
+        def capture(
+            _c: object, _cursor: object, statement: str, _p: object, _ctx: object, _many: object
+        ) -> None:
+            statements.append(statement)
+
+        event.listen(database_connection, "before_cursor_execute", capture)
+        try:
+            result = photographs(db)
+        finally:
+            event.remove(database_connection, "before_cursor_execute", capture)
+        assert {item.id for item in result} == {plant.id for plant in plants}
+        assert len(statements) == 5
+        chosen = next(item for item in result if item.id == plants[0].id)
+        assert chosen.image is not None
+        assert str(primary.id) in chosen.image.thumbnail_url
+        assert chosen.image.attribution == "Recorded creator"
+        assert all(
+            item.reference_image and str(cover.id) in item.reference_image.thumbnail_url
+            for item in result
+        )
+        db.execute(
+            delete(CollectionPrimaryPhoto).where(CollectionPrimaryPhoto.plant_id == plants[0].id)
+        )
+        db.delete(link)
+        db.execute(
+            delete(BotanicalIdentityCoverImage).where(
+                BotanicalIdentityCoverImage.botanical_identity_id == identity.id
+            )
+        )
+        db.flush()
+        primary.state = "pending_delete"
+        cover.state = "pending_delete"
+        db.flush()
+        assert all(item.image is None and item.reference_image is None for item in photographs(db))
+
+
+def test_dashboard_sampling_is_not_first_page_biased_and_is_seed_testable(
+    database_connection: Connection,
+) -> None:
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as db:
+        identity = BotanicalIdentity(scientific_name="Sampling population")
+        db.add(identity)
+        db.flush()
+        plants = [
+            Plant(
+                botanical_identity_id=identity.id,
+                direct_origin_kind="unknown",
+                label=f"Plant {i:03}",
+            )
+            for i in range(200)
+        ]
+        db.add_all(plants)
+        db.flush()
+        db.execute(text("SELECT setseed(0.42)"))
+        first = photographs(db)
+        db.execute(text("SELECT setseed(0.42)"))
+        assert [item.id for item in photographs(db)] == [item.id for item in first]
+        assert len({item.id for item in first}) == 8
+        assert any(item.id in {plant.id for plant in plants[100:]} for item in first)
+
+
+def test_dashboard_remote_only_reference_is_never_a_thumbnail(
+    database_connection: Connection,
+) -> None:
+    with Session(bind=database_connection, join_transaction_mode="create_savepoint") as db:
+        identity = BotanicalIdentity(scientific_name="Aloe vera", cultivar_name="Gold")
+        db.add(identity)
+        db.flush()
+        plant = Plant(botanical_identity_id=identity.id, direct_origin_kind="unknown")
+        remote = MediaAsset(
+            kind="external",
+            state="active",
+            attribution="Recorded reference creator",
+            image_url="https://example.invalid/never-fetch.jpg",
+            source_url="https://example.invalid/source",
+        )
+        db.add_all([plant, remote])
+        db.flush()
+        db.add(
+            BotanicalIdentityCoverImage(
+                botanical_identity_id=identity.id, media_asset_id=remote.id, source_mode="external"
+            )
+        )
+        db.flush()
+        result = photographs(db)
+        assert len(result) == 1
+        assert result[0].id == plant.id
+        assert result[0].title == "Aloe vera \u2018Gold\u2019"
+        assert result[0].image is None
+        assert result[0].reference_image is None
+        assert "never-fetch" not in result[0].model_dump_json()

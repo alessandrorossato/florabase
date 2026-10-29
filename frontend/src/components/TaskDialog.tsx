@@ -25,6 +25,7 @@ export function TaskDialog({
   className,
   dismissOnBackdrop = false,
   returnFocusTo,
+  fallbackFocusTo,
   modal = true,
 }: {
   id?: string;
@@ -34,13 +35,19 @@ export function TaskDialog({
   className?: string;
   dismissOnBackdrop?: boolean;
   returnFocusTo?: RefObject<HTMLElement | null>;
+  fallbackFocusTo?: RefObject<HTMLElement | null>;
   modal?: boolean;
 }) {
   const dialog = useRef<HTMLDialogElement>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
+    if (returnFocusTo?.current) returnFocus.current = returnFocusTo.current;
+  });
+
+  useEffect(() => {
     const element = dialog.current;
+    const fallback = fallbackFocusTo?.current;
     if (!element) return;
     if (!modal) {
       element.setAttribute("open", "");
@@ -58,9 +65,15 @@ export function TaskDialog({
     return () => {
       if (typeof element.close === "function") element.close();
       else element.removeAttribute("open");
-      returnFocus.current?.focus();
+      const target = returnFocus.current;
+      (target?.isConnected
+        ? target
+        : fallback?.isConnected
+          ? fallback
+          : null
+      )?.focus();
     };
-  }, [returnFocusTo, modal]);
+  }, [returnFocusTo, fallbackFocusTo, modal]);
 
   return (
     <dialog

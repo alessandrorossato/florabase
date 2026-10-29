@@ -1,0 +1,867 @@
+[
+  {
+    "key": "dashboard-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1425, 992],
+    "sha256": "7611b3c7a2595059706088a697b4db4e9927277ab7c15f9007ba777fbe60fddc",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/dashboard-a-1440.jpg"
+  },
+  {
+    "key": "dashboard-b-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1425, 1163],
+    "sha256": "b93aed426999c6926c787a13149630556bbc6c6f8cd76de25416f3aa2654b230",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/dashboard-b-1440.jpg"
+  },
+  {
+    "key": "seeds-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1425, 995],
+    "sha256": "83b96192f4e59837b059735b7e82b328d17244493fec63c624e633eb40716b8d",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/seeds-a-1440.jpg"
+  },
+  {
+    "key": "seeds-b-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1425, 1074],
+    "sha256": "440ba9955bc510229567372e4d0e0564bb081b376eb0e9f855021fdd59511e9b",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/seeds-b-1440.jpg"
+  },
+  {
+    "key": "plants-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1425, 1082],
+    "sha256": "6608f31c24ed96b2de67e7a8f14d3cf696c0e94e68ac74e9eaf01c7f9de28d8e",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/plants-a-1440.jpg"
+  },
+  {
+    "key": "plants-b-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1425, 1349],
+    "sha256": "e43d9835149af9b6cfa657cbf93001c29aa11c73c2cc91ac4b19b84c42fc73fc",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/plants-b-1440.jpg"
+  },
+  {
+    "key": "identities-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1425, 1489],
+    "sha256": "14c30420dac53d47183ca4ecb97a05abf2a14a66b28ac91ffb1211be86e31883",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/identities-a-1440.jpg"
+  },
+  {
+    "key": "identities-b-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1425, 1055],
+    "sha256": "c16672474a170944f8f6dd8d6285f200121f9c4bfa9a295df79d0e9398faab73",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/identities-b-1440.jpg"
+  },
+  {
+    "key": "identity-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1440, 900],
+    "sha256": "e8635fe05678b3842de9c04c9754677a6219924f712b05251c931801371e0f73",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/identity-a-1440.jpg"
+  },
+  {
+    "key": "journal-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1425, 1052],
+    "sha256": "6a307a4e1147680a22bb6c1307e44e11219d9d8a2a9206386870327f27bb31f4",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/journal-a-1440.jpg"
+  },
+  {
+    "key": "history-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1440, 900],
+    "sha256": "4d32c8aae11f1283f29d473c7477f95e2b635cae39aae89c226d1547061daeb5",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/history-a-1440.jpg"
+  },
+  {
+    "key": "schedule-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1425, 1008],
+    "sha256": "3ad4568c580f9de33b46c07f5f29802c984c480d67d9071ac0c75df0e252c5a6",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/schedule-a-1440.jpg"
+  },
+  {
+    "key": "calendar-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1425, 934],
+    "sha256": "7af9b6a4d629b7f672c07e0a45ff728c69246f986c07e0c764a7ed7adf198ec1",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/calendar-a-1440.jpg"
+  },
+  {
+    "key": "locations-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1425, 1102],
+    "sha256": "f5d436edccb1fa2f6866807579da50a72f3c967cea5f0d3d69a5bd23ed5c65de",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/locations-a-1440.jpg"
+  },
+  {
+    "key": "location-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1425, 938],
+    "sha256": "325c0d2e6b5525c1b916fedd98e6c9a7da38ebfc8238d46b0c50e86492b47481",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/location-a-1440.jpg"
+  },
+  {
+    "key": "suppliers-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1440, 900],
+    "sha256": "992b126bdade31b49442d1ba9e58df96d1f4cd9eb20c951a020729346256188d",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/suppliers-a-1440.jpg"
+  },
+  {
+    "key": "supplier-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1440, 900],
+    "sha256": "d03307629131ab565848a9f8bea7c00e3376162e7212951f8ac9fc1bbef2bd94",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/supplier-a-1440.jpg"
+  },
+  {
+    "key": "orders-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1440, 900],
+    "sha256": "7c54164fc0070171f1f4dfbdcc87a643c176de55086803ff75839924eac1d80e",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/orders-a-1440.jpg"
+  },
+  {
+    "key": "order-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1440, 900],
+    "sha256": "3bc9333fb3c8b36e04cfc787c3e86f05c222ff1bd117dae703f68f59435498f2",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/order-a-1440.jpg"
+  },
+  {
+    "key": "record-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1440, 900],
+    "sha256": "300cf181b12853b6396e30a2700a0805b166a245d725288292b1b8780d91bd58",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/record-a-1440.jpg"
+  },
+  {
+    "key": "form-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1440, 900],
+    "sha256": "595a4bcf6b31f560888f1aa4f690195190e7a5d9545593f6ac70ac4b52a598fe",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/form-a-1440.jpg"
+  },
+  {
+    "key": "form-b-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1425, 1526],
+    "sha256": "7e6c3cf27ff238ef18d3b2dbb95b87e6238644d27c8e980c63b2aec0dbc8479a",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/form-b-1440.jpg"
+  },
+  {
+    "key": "specialized-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1440, 900],
+    "sha256": "ef6230f98064677347ba683e80e6c4dcf13aa33e15fa83bf982281e4688b19aa",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/specialized-a-1440.jpg"
+  },
+  {
+    "key": "media-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1440, 900],
+    "sha256": "fdb711024909448d5f295f1416e5b3ebf4008b84d76496887d0cc6392efa8a6b",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/media-a-1440.jpg"
+  },
+  {
+    "key": "components-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1425, 1324],
+    "sha256": "1ee0d20d2897118c51f4b3937907c0dd33b50e746d4aae7ed9cfd1c742f0f05d",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/components-a-1440.jpg"
+  },
+  {
+    "key": "dashboard-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2123],
+    "sha256": "38ad9f8b17de135580fc0c203a4fd1c0a8b439619f79bd156da4bbbf705e6fec",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/dashboard-a-390.jpg"
+  },
+  {
+    "key": "dashboard-b-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2074],
+    "sha256": "4b45de66d5023fa707113841a9a45f788540840480341d708f33b03ba44fc46e",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/dashboard-b-390.jpg"
+  },
+  {
+    "key": "seeds-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2171],
+    "sha256": "da05b6f8ad528e202d9260afeeb062f4196e58f49e32f811743160fd9e5afa91",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/seeds-a-390.jpg"
+  },
+  {
+    "key": "seeds-b-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2268],
+    "sha256": "d78b4eb6e652597ab56e4eec05f75b00d4d8804393d9c18cd67f583d876d2fbb",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/seeds-b-390.jpg"
+  },
+  {
+    "key": "plants-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2233],
+    "sha256": "fec02ec167496e271862302588a2499c4bdd630791bf979b3869e003ee187f9a",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/plants-a-390.jpg"
+  },
+  {
+    "key": "plants-b-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2339],
+    "sha256": "b1044177b94ed25f642075fea0e82ad525de1b2635320d6c7c2347ed75d32c02",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/plants-b-390.jpg"
+  },
+  {
+    "key": "identities-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2315],
+    "sha256": "c72e10f78435956c4c362a41eef9130b6906ccfd856775e262f6f4b8a21224a9",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/identities-a-390.jpg"
+  },
+  {
+    "key": "identities-b-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 1953],
+    "sha256": "aa7c6d99e43c4e7e757c3fd19cc57f4c8bccaeadebecdc53de4e530fa1eaa349",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/identities-b-390.jpg"
+  },
+  {
+    "key": "identity-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 1643],
+    "sha256": "843d30b3cea2ad34e143ee3c675629b34160cf0fc9f025068866d7d3481cdd59",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/identity-a-390.jpg"
+  },
+  {
+    "key": "journal-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 1399],
+    "sha256": "36be2e638ba1224e4a85d5ec4fc5d9adedb464983af555bd74353a554c7773f5",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/journal-a-390.jpg"
+  },
+  {
+    "key": "history-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 1243],
+    "sha256": "9648560aa45c0be3aeaa3bb71324f92ddb764fe87b62f6117810444e7cec827f",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/history-a-390.jpg"
+  },
+  {
+    "key": "schedule-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 1592],
+    "sha256": "b3283376c4dae9088d6e73d9a54b067761b3cd9e476e3c42efa796a8a2d4e898",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/schedule-a-390.jpg"
+  },
+  {
+    "key": "calendar-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 1624],
+    "sha256": "80042fd5bc8d1142a97d418d5142ef9183e083e9405fea97797db7807f680c99",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/calendar-a-390.jpg"
+  },
+  {
+    "key": "locations-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2149],
+    "sha256": "73a062fc38a2f33508a84dbf71733ef64522d8cf249478f6f2a2572c24588b0c",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/locations-a-390.jpg"
+  },
+  {
+    "key": "location-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 1128],
+    "sha256": "d83a4a313e78b9973f106a16177d9c0bb75a3f02289036b440d0f4def2204e15",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/location-a-390.jpg"
+  },
+  {
+    "key": "suppliers-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 1687],
+    "sha256": "4127fc2b4f2a3d3726d01bb5a1cea5ba7a6233f6fcb74ed540a3f5b5fd01cafd",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/suppliers-a-390.jpg"
+  },
+  {
+    "key": "supplier-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 939],
+    "sha256": "02ee30a7f6da2725955c3e88ea401a68a80252aed181c92d3a656c0394e48e83",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/supplier-a-390.jpg"
+  },
+  {
+    "key": "orders-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 1855],
+    "sha256": "f27be5439b4086f43300189f8d7df045bf3bd7f65928ee82589e8fd002845e98",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/orders-a-390.jpg"
+  },
+  {
+    "key": "order-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 1055],
+    "sha256": "77cec6cc30d6ec3369261d24bbb0ff0435c182e449c73af29440e252f916a769",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/order-a-390.jpg"
+  },
+  {
+    "key": "record-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 1128],
+    "sha256": "f6beb0b682040b96bc2157432384fd13d3944d9a0d13ecd146b17170ea9d5fa1",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/record-a-390.jpg"
+  },
+  {
+    "key": "form-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 1235],
+    "sha256": "94ecebac4e9985e4a32708ffa3d672aee5743a5314d998901d63d9e3349c8615",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/form-a-390.jpg"
+  },
+  {
+    "key": "form-b-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2277],
+    "sha256": "4f2888640b0568180a82d2fbf9b9ff9dd8dccf3de62195e4c15e40b39de1c7a5",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/form-b-390.jpg"
+  },
+  {
+    "key": "specialized-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 1341],
+    "sha256": "07dcc3724d4f01210489b3733ccaceb66164c8ffebc7c01a75bfaa14db46d3e4",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/specialized-a-390.jpg"
+  },
+  {
+    "key": "media-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 1317],
+    "sha256": "fe0bb7a41fd1f0a2d38854828eccf0f28ab1a5d80a6a8a8610182156a0fe92dc",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/media-a-390.jpg"
+  },
+  {
+    "key": "components-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2561],
+    "sha256": "94f1c70def353f1f09d1ee35027915f323c3007caa7a83f70f9214943717b240",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/components-a-390.jpg"
+  },
+  {
+    "key": "dashboard-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1150],
+    "sha256": "0244d31d91519c61fa7b7af3dc6eb8cef99cc69cc252aa4a1896fa49aefd9304",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/dashboard-a-1024.jpg"
+  },
+  {
+    "key": "dashboard-b-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1113],
+    "sha256": "afb0298d2922b447987414aed21db66302116f02d1e6250bb9785261fcad6ea5",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/dashboard-b-1024.jpg"
+  },
+  {
+    "key": "seeds-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1156],
+    "sha256": "3c087b9642c757f46ad42986060bcbf823d0a7896d194b25066123e79f4cd36c",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/seeds-a-1024.jpg"
+  },
+  {
+    "key": "seeds-b-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1162],
+    "sha256": "3a5ed497f9236e2602999ee4472021c9ef586c8b0ae2755d09920a61e098fa1b",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/seeds-b-1024.jpg"
+  },
+  {
+    "key": "plants-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1176],
+    "sha256": "8d643ea0e1a4e4af632b16c3c0ec79dd1dc7a65a159a9d5dacf86e595b49fcef",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/plants-a-1024.jpg"
+  },
+  {
+    "key": "plants-b-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1753],
+    "sha256": "9a3000454c5ab78427fd7fcf52f3f00a03db454955591be554e6106d80288f05",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/plants-b-1024.jpg"
+  },
+  {
+    "key": "identities-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1873],
+    "sha256": "939e63be500e8b358f51f75b94ecedf02d6323606da572c1533a28a49e1ce2f1",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/identities-a-1024.jpg"
+  },
+  {
+    "key": "identities-b-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1109],
+    "sha256": "e9d0844ec788fe74042629d1d0fb08f95cbc69b5f75e0b7964a13d434f4ec22c",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/identities-b-1024.jpg"
+  },
+  {
+    "key": "identity-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 911],
+    "sha256": "57b240c84ed2d96fe17c28cc44883e5238c7b3894ef5818cc8fafa6b033327a7",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/identity-a-1024.jpg"
+  },
+  {
+    "key": "journal-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1100],
+    "sha256": "eac4bb3b4f9689cc8f25c60cccc904ecf900f396dcdc639528f3a258c37d15c9",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/journal-a-1024.jpg"
+  },
+  {
+    "key": "history-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 947],
+    "sha256": "5443f696b83abb055a0c84a7e2fb271d27c16192878563675a39de361ee2cfbe",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/history-a-1024.jpg"
+  },
+  {
+    "key": "schedule-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1056],
+    "sha256": "c5749a923146bfa4594871b9ebeea781d7505b81c4da716a59200c5904d0c86e",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/schedule-a-1024.jpg"
+  },
+  {
+    "key": "calendar-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 982],
+    "sha256": "5bebda3999b6abbffb11cd56a434e84fc43fea845c8928e4c491e1e24f546eef",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/calendar-a-1024.jpg"
+  },
+  {
+    "key": "locations-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1757],
+    "sha256": "86e7730d336af393ad06786a810d4f03fb44d6ce63b6845e4d934ca860dc512c",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/locations-a-1024.jpg"
+  },
+  {
+    "key": "location-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 922],
+    "sha256": "cc860f5d8b51708d9775591041f7ff488fb3a01028686856189b17394e9dfdda",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/location-a-1024.jpg"
+  },
+  {
+    "key": "suppliers-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 903],
+    "sha256": "3bcbc24046d58349ebb74f6261f5e94f7e791c9960ae4379004d32f869bab6a4",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/suppliers-a-1024.jpg"
+  },
+  {
+    "key": "supplier-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1024, 900],
+    "sha256": "b9aef386d28a42dd9c794c54a890261389b02ae59fd3a408620512c89db5bf46",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/supplier-a-1024.jpg"
+  },
+  {
+    "key": "orders-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 931],
+    "sha256": "3cde944a6bd31c0548bb84fcce8810e347c5fb6d121bb2867f16634a20d7bc1a",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/orders-a-1024.jpg"
+  },
+  {
+    "key": "order-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1024, 900],
+    "sha256": "f0f992ea75201b82a729b4b982e4ad723b5762c0ee3beea0d0e727c6b5ab9e5e",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/order-a-1024.jpg"
+  },
+  {
+    "key": "record-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1024, 900],
+    "sha256": "0535ec0626ed2707b2a394f469f6303fd9c05459ff6ab9a376c4068f8fa639be",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/record-a-1024.jpg"
+  },
+  {
+    "key": "form-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1024, 900],
+    "sha256": "1b7b442103e7091ab665cb1187ef915ff7ad346de550e03ee62811c64380cda7",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/form-a-1024.jpg"
+  },
+  {
+    "key": "form-b-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1528],
+    "sha256": "2251e0c49566de2331debcf766c736dd90e882b5982f8466410fe269905db662",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/form-b-1024.jpg"
+  },
+  {
+    "key": "specialized-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1024, 900],
+    "sha256": "cc2251b5cedb7c23c547186ff96ba0356bfe02ff6b7cbd6b3ec9883bf29191aa",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/specialized-a-1024.jpg"
+  },
+  {
+    "key": "media-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1024, 900],
+    "sha256": "d5fb68c810b98807da953359e9267f1437cec3617b0a09f81e63b8937c1bd08c",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/media-a-1024.jpg"
+  },
+  {
+    "key": "components-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1492],
+    "sha256": "3d1c817cdfef49ffbcb68656e359e5effec0e931d502b19aca3e468526208bb6",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/components-a-1024.jpg"
+  },
+  {
+    "key": "theme-botanical-light-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1156],
+    "sha256": "3c087b9642c757f46ad42986060bcbf823d0a7896d194b25066123e79f4cd36c",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/theme-botanical-light-1024.jpg"
+  },
+  {
+    "key": "theme-form-botanical-light-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2277],
+    "sha256": "4f2888640b0568180a82d2fbf9b9ff9dd8dccf3de62195e4c15e40b39de1c7a5",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/theme-form-botanical-light-390.jpg"
+  },
+  {
+    "key": "theme-botanical-dark-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1156],
+    "sha256": "6f29d14c95f40c4879ad71ee4ff5d94909a2f7bff986386902e902b50146b64b",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/theme-botanical-dark-1024.jpg"
+  },
+  {
+    "key": "theme-form-botanical-dark-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2277],
+    "sha256": "088e51168cb8f71e9731999fa0e0413a3f83a6ef2dd2048db362895cfc8925f2",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/theme-form-botanical-dark-390.jpg"
+  },
+  {
+    "key": "theme-herbarium-light-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1156],
+    "sha256": "01574d072f39e3960a1dc941dc7a4305dd4d0d1ec6c528e91c7d5afd552a88a7",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/theme-herbarium-light-1024.jpg"
+  },
+  {
+    "key": "theme-form-herbarium-light-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2277],
+    "sha256": "bea3c1016fe2fbdf27bf4f7fbe6b70900aad81dd15faed17186fa566081e2d92",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/theme-form-herbarium-light-390.jpg"
+  },
+  {
+    "key": "theme-herbarium-dark-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1156],
+    "sha256": "c54bf95280304b7a96313e727a72178d5d47b35587a6b7ff6d68c7dae3305642",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/theme-herbarium-dark-1024.jpg"
+  },
+  {
+    "key": "theme-form-herbarium-dark-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2277],
+    "sha256": "2d753ae5b8873208212b7f010eee73daac657452914c84d48a536a9ee24630e4",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/theme-form-herbarium-dark-390.jpg"
+  },
+  {
+    "key": "theme-mineral-light-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1156],
+    "sha256": "49e84f6a7dcea864f074842805a9befe0bea7e9d96f4758405a868e0758c2779",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/theme-mineral-light-1024.jpg"
+  },
+  {
+    "key": "theme-form-mineral-light-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2277],
+    "sha256": "e8d46198e505ea84e7384fc40090bca3c95f6988648e822970de12af3c463513",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/theme-form-mineral-light-390.jpg"
+  },
+  {
+    "key": "theme-mineral-dark-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1156],
+    "sha256": "b0a6f5fcc7b6c6aaf96ed53436e15126d7fbc7c5e26d9f5ad55f91d38478db2e",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/theme-mineral-dark-1024.jpg"
+  },
+  {
+    "key": "theme-form-mineral-dark-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2277],
+    "sha256": "6d566e9f69841ddb907bb03da31d1c460532278e0581e434c40aedef63dc916a",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/theme-form-mineral-dark-390.jpg"
+  },
+  {
+    "key": "groups-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1440, 900],
+    "sha256": "1a44ee27710b71821a847f796d5d8ed9fc36f207f75c97f47936fae619e45e4a",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/groups-a-1440.jpg"
+  },
+  {
+    "key": "groups-a-1024",
+    "cssViewport": [1024, 900],
+    "raster": [1009, 1088],
+    "sha256": "45b901a4062367ed7381beecd74c4560d96be8d4461ea3cfe10c6a1f1484de63",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/groups-a-1024.jpg"
+  },
+  {
+    "key": "groups-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2131],
+    "sha256": "a5e532394bd9ec6a45e2f520510b7f453e07c29bb7e4dbd5a536b790f456d676",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/groups-a-390.jpg"
+  },
+  {
+    "key": "groups-b-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 1994],
+    "sha256": "9f26c6124e9f09423f36b26452872a95c5d65d072b60a8638d9bfc8e1910ade4",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/groups-b-390.jpg"
+  },
+  {
+    "key": "edit-a-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1440, 900],
+    "sha256": "648f82e76e68f69e015478a5ddb4b7261a06ff20c1ac06218fb9717e948a0173",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/edit-a-1440.jpg"
+  },
+  {
+    "key": "edit-a-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 1265],
+    "sha256": "83ec3cbf9ce600b98f62e77b9559e6e31ce93a58f671991a94dd37c2e3415c72",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/edit-a-390.jpg"
+  },
+  {
+    "key": "edit-b-1440",
+    "cssViewport": [1440, 900],
+    "raster": [1425, 1768],
+    "sha256": "892e93897d6cbf59ac6205ba3554501ff4220d1673853a8bb5215605ec33e691",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/edit-b-1440.jpg"
+  },
+  {
+    "key": "edit-b-390",
+    "cssViewport": [390, 844],
+    "raster": [375, 2548],
+    "sha256": "2204ada6dc8de7b1ec494a2fc8670e9ab875fd40059d5168eaf5233330a373d3",
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/renders/edit-b-390.jpg"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/sans/source-sans-3-latin-wght-italic.woff2",
+    "sha256": "9a15dafc2c2b2414aaa9d6c30830d9aab4361329d8495b1574633603b994b411"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/sans/source-sans-3-latin-ext-wght-italic.woff2",
+    "sha256": "6fe10a66ec416f77a26309b645471d032ad8175063bb605b886e9b7e57efaaa8"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/sans/source-sans-3-vietnamese-wght-italic.woff2",
+    "sha256": "a9dedfb0c65bcd734e9a4b2dcefb382f1d9cdc784e1238c5431708d7dcd45ae8"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/sans/source-sans-3-cyrillic-ext-wght-italic.woff2",
+    "sha256": "e31d1fc39f2fa419e06bebc48b3bd1c6876b349e2effa4a629e0b947a7fd241b"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/sans/source-sans-3-greek-wght-normal.woff2",
+    "sha256": "5360981f035cd4307cd65e4cf46a27693a2409702d3234403c534d9e656d7844"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/sans/source-sans-3-greek-ext-wght-italic.woff2",
+    "sha256": "4c9e2fb8dbc56263b83752747ad6ad08dbb171d1d9dadd55a2181a5c200c9363"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/sans/source-sans-3-cyrillic-wght-normal.woff2",
+    "sha256": "b6b721e08d0324b9e743858e8260463085d4c5e1e684f036f9d4a8ca6c62996f"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/sans/source-sans-3-greek-wght-italic.woff2",
+    "sha256": "34177ef48786984f32c045dd5b4a717a69cd6f14b6da5adbaf7b7a2e62470bc7"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/sans/source-sans-3-greek-ext-wght-normal.woff2",
+    "sha256": "3576fb9237b1a58cb5b38369bd63074a6f884dbeb9f88069690b6bc67ee5d3ff"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/sans/source-sans-3-cyrillic-ext-wght-normal.woff2",
+    "sha256": "6aba01e1a800f890b4d91094c4cf5e1769aaf77085371a3ad96065d586186796"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/sans/source-sans-3-cyrillic-wght-italic.woff2",
+    "sha256": "747ba5266ef049efc6d67eaa99058a81efa134ec00483c246ed388ef288186d2"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/sans/source-sans-3-latin-wght-normal.woff2",
+    "sha256": "7a19a7027e125257d310c6dbd78ae3a30b5ea1e3794d60b12bb28227a003bfda"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/sans/source-sans-3-vietnamese-wght-normal.woff2",
+    "sha256": "ff34bf5a131a3f9d194f47b4ff7de95aceef5dad72b74709a5d5bf2c069e1f86"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/sans/source-sans-3-latin-ext-wght-normal.woff2",
+    "sha256": "a85a7459bdb3cdc1136751e151a506bae653fc29ada3ca86237477df6f1b59e6"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-greek-standard-normal.woff2",
+    "sha256": "d69b8909cbccf5948675c7de331858d40f48b1ef3e4a9fc5ddfaa8c097fb434b"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-latin-opsz-normal.woff2",
+    "sha256": "f2ea9c12d2fe9bd3a9589b02ad2c0909da88f30938c91adc838c4f4098f9f9e0"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-cyrillic-standard-normal.woff2",
+    "sha256": "e553fa829fd9ae0900931584f73c6b894539558b598d5ee7c4907140a1f29f05"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-cyrillic-opsz-italic.woff2",
+    "sha256": "db1083ed2d695783955e1144c0ad784b6cbb7fa564524d6697e0aa09b7228ac0"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-cyrillic-ext-wght-italic.woff2",
+    "sha256": "a7b0970988134a51e86c6c4a0bfb10ef95a705bba5e5a143881539429f664e91"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-latin-ext-opsz-normal.woff2",
+    "sha256": "155f6e701097cc269cf8d5d7ac86795f263f1afbeb47c14d1d747108c9335389"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-greek-wght-normal.woff2",
+    "sha256": "d84b0c5fda036126b6bb9205b144500fe08fec6d54d8bdd60645bc3e6577490b"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-greek-opsz-italic.woff2",
+    "sha256": "d29b0cfc1b6bdca3d8ccca2b242f04f7c13d50934d31ea46fe19eb2313bc01bb"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-cyrillic-standard-italic.woff2",
+    "sha256": "db1083ed2d695783955e1144c0ad784b6cbb7fa564524d6697e0aa09b7228ac0"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-cyrillic-ext-wght-normal.woff2",
+    "sha256": "f423aab1098e5b0dae59d200aadbb9433e687f505425c7e73d1f65ae2b59016e"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-cyrillic-ext-opsz-italic.woff2",
+    "sha256": "99a84c1761574935d04279e0b02dc7116a06e578fd1d2d553604273ab0d496a5"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-cyrillic-wght-normal.woff2",
+    "sha256": "25e85aef8acff54f91ea7e85c9c2c260caf97101fdef194ed6b8b58bc34ce3eb"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-latin-standard-normal.woff2",
+    "sha256": "f2ea9c12d2fe9bd3a9589b02ad2c0909da88f30938c91adc838c4f4098f9f9e0"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-cyrillic-ext-standard-normal.woff2",
+    "sha256": "c4fbd9994039466f864b5f025fdb214f0f58a8c2f888d99c1885efcd516baf2d"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-vietnamese-standard-italic.woff2",
+    "sha256": "71e3725632d812d331d1680e95c62a0fcf16f898a9b1de576ca90e9c487e1438"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-greek-wght-italic.woff2",
+    "sha256": "86596ea15a6d48ec748a31c626910622bd1524e6e18a82682a8ed9c7bb3d26d5"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-latin-wght-normal.woff2",
+    "sha256": "c1df4596be5029233ed2afbb8b2f6ea20784b3fb1aa5d6b5c6519ccd85eb3dfb"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-cyrillic-opsz-normal.woff2",
+    "sha256": "e553fa829fd9ae0900931584f73c6b894539558b598d5ee7c4907140a1f29f05"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-latin-opsz-italic.woff2",
+    "sha256": "96e6393209728ab93c334ae739af8a040cd2006c82e8614d6465a8084db88f89"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-vietnamese-wght-italic.woff2",
+    "sha256": "7fe6ce7982612bca2290399a7b881950926592cdbe7dda0d5e6911451f3561c5"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-greek-standard-italic.woff2",
+    "sha256": "d29b0cfc1b6bdca3d8ccca2b242f04f7c13d50934d31ea46fe19eb2313bc01bb"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-latin-ext-standard-italic.woff2",
+    "sha256": "2078240cee94e627d0e180d56d74a11b2a1d387bbd61a9b7269f0a43df756896"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-vietnamese-wght-normal.woff2",
+    "sha256": "63b54e70d3bfb018162640bfb0015be46a2ec96f3c00d4170c8a02d0ff9d5abd"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-latin-ext-wght-normal.woff2",
+    "sha256": "41529a5b38008d9ea01e28ec18693a714a3216669ee477d83a5b9db999369625"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-cyrillic-ext-standard-italic.woff2",
+    "sha256": "99a84c1761574935d04279e0b02dc7116a06e578fd1d2d553604273ab0d496a5"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-cyrillic-wght-italic.woff2",
+    "sha256": "264fdd043a30e2f21a636f62d966b20fc7133b70002526763e8edb9852c51bb6"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-cyrillic-ext-opsz-normal.woff2",
+    "sha256": "c4fbd9994039466f864b5f025fdb214f0f58a8c2f888d99c1885efcd516baf2d"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-vietnamese-standard-normal.woff2",
+    "sha256": "e08ad84517b0cf6f4090101fedb82f9897cf5fb8b1684c65530f476c2803492d"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-latin-wght-italic.woff2",
+    "sha256": "663e7ef3037a56dce81dfc33f68c1e6445995ffd8887991b3c0b68a7689c9da5"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-latin-ext-wght-italic.woff2",
+    "sha256": "515639854d3566c43860d2005770645c590df8b43a0144c70fe2566c33015ede"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-greek-opsz-normal.woff2",
+    "sha256": "d69b8909cbccf5948675c7de331858d40f48b1ef3e4a9fc5ddfaa8c097fb434b"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-vietnamese-opsz-italic.woff2",
+    "sha256": "71e3725632d812d331d1680e95c62a0fcf16f898a9b1de576ca90e9c487e1438"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-vietnamese-opsz-normal.woff2",
+    "sha256": "e08ad84517b0cf6f4090101fedb82f9897cf5fb8b1684c65530f476c2803492d"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-latin-ext-standard-normal.woff2",
+    "sha256": "155f6e701097cc269cf8d5d7ac86795f263f1afbeb47c14d1d747108c9335389"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-latin-standard-italic.woff2",
+    "sha256": "96e6393209728ab93c334ae739af8a040cd2006c82e8614d6465a8084db88f89"
+  },
+  {
+    "file": "/home/alessandro/.codex/visualizations/2026/10/26/01a178c9-0d81-73f2-96a2-42047619aba9/ui-system-v1/fonts/serif/source-serif-4-latin-ext-opsz-italic.woff2",
+    "sha256": "2078240cee94e627d0e180d56d74a11b2a1d387bbd61a9b7269f0a43df756896"
+  }
+]

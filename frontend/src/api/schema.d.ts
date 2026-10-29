@@ -3170,6 +3170,19 @@ export interface components {
             /** Events */
             events: number;
         };
+        /** DashboardImage */
+        DashboardImage: {
+            /** Attribution */
+            attribution: string | null;
+            /** Licence Label */
+            licence_label: string | null;
+            /** Licence Url */
+            licence_url: string | null;
+            /** Source Url */
+            source_url: string | null;
+            /** Thumbnail Url */
+            thumbnail_url: string;
+        };
         /** DashboardOverview */
         DashboardOverview: {
             /** Current Identities */
@@ -3202,10 +3215,29 @@ export interface components {
             /** Upcoming */
             upcoming: components["schemas"]["ScheduleResponse"][];
         };
+        /**
+         * DashboardPhoto
+         * @description One actual individual Plant, with separately identified permitted imagery.
+         */
+        DashboardPhoto: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            image: components["schemas"]["DashboardImage"] | null;
+            reference_image: components["schemas"]["DashboardImage"] | null;
+            /** Scientific Name */
+            scientific_name: string;
+            /** Title */
+            title: string;
+        };
         /** DashboardResponse */
         DashboardResponse: {
             counts: components["schemas"]["DashboardCounts"];
             overview: components["schemas"]["DashboardOverview"];
+            /** Photos */
+            photos?: components["schemas"]["DashboardPhoto"][];
             /** Recent Events */
             recent_events: components["schemas"]["EventResponse"][];
         };

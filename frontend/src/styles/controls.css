@@ -115,3 +115,32 @@
   width: 18px;
   height: 18px;
 }
+
+/* Destination pictograms remain decorative; navigation labels own accessible names. */
+.desktop-sidebar .navigation-link,
+.mobile-navigation-groups .navigation-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.navigation-link .control-icon {
+  flex-shrink: 0;
+}
+.mobile-navigation .control-icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+/* Mobile account controls already live in More; desktop collapse has no mobile target. */
+@media (max-width: 48rem) {
+  .desktop-sidebar .sidebar-toggle--hide,
+  .desktop-sidebar > .desktop-sidebar__content,
+  .desktop-sidebar > .sidebar-utility {
+    display: none;
+  }
+  .desktop-sidebar > .sidebar-top {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+}
