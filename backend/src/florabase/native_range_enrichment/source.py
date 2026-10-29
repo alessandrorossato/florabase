@@ -3,8 +3,11 @@
 import json
 import sqlite3
 from contextlib import closing
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
+from types import MappingProxyType
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -17,6 +20,51 @@ CITATION = (
     "Facilitated by the Royal Botanic Gardens, Kew. [WWW document] "
     "URL https://doi.org/10.34885/rvc3-4d77 [accessed 06 Jan 2026]."
 )
+
+
+WcvpVersion = Literal["15", "16"]
+
+
+@dataclass(frozen=True)
+class Release:
+    version: WcvpVersion
+    archive_url: str
+    checksum: str
+    citation: str
+    member_sizes: tuple[int, int, int]
+    crosswalk_version: str
+    license: str = LICENSE
+
+
+RELEASES = MappingProxyType(
+    {
+        "15": Release(
+            "15",
+            ARCHIVE_URL,
+            ARCHIVE_SHA256,
+            CITATION,
+            (17_827, 298_218_467, 141_066_449),
+            "wcvp15-wgsrpd2-cldr48.2.1-v1",
+        ),
+        "16": Release(
+            "16",
+            "https://sftp.kew.org/pub/data-repositories/WCVP/wcvp.zip",
+            "d32ea2b3a85e489b14e83bcc9eae7274532e1d113753f7be290d4b2dfde573fa",
+            "Govaerts R (ed.). 2026. WCVP: World Checklist of Vascular Plants. "
+            "Facilitated by the Royal Botanic Gardens, Kew. [WWW document] "
+            "URL https://doi.org/10.34885/egs6-cp24 [accessed 04 Jun 2026].",
+            (18_112, 300_826_661, 141_657_561),
+            "wcvp16-wgsrpd2-cldr48.2.1-v1",
+        ),
+    }
+)
+
+
+def reviewed_release(version: str) -> Release:
+    try:
+        return RELEASES[version]
+    except KeyError as error:
+        raise ValueError("Unreviewed WCVP version") from error
 
 
 class SourceUnavailableError(Exception):
@@ -55,6 +103,31 @@ class SourceMetadata(BaseModel):
     retrieved_at: str
     coverage: str = "complete"
 
+    @classmethod
+    def for_release(cls, version: WcvpVersion, retrieved_at: str) -> SourceMetadata:
+        release = reviewed_release(version)
+        return cls(
+            version=release.version,
+            archive_url=release.archive_url,
+            checksum=release.checksum,
+            license=release.license,
+            citation=release.citation,
+            retrieved_at=retrieved_at,
+        )
+
+    def reviewed_release(self) -> Release:
+        release = reviewed_release(self.version)
+        if (
+            self.archive_url != release.archive_url
+            or self.checksum != release.checksum
+            or self.license != release.license
+            or self.citation != release.citation
+            or self.provider != "kew_wcvp"
+            or self.coverage != "complete"
+        ):
+            raise ValueError("Source metadata does not match the reviewed release")
+        return release
+
     @field_validator("retrieved_at")
     @classmethod
     def retrieval_timestamp(cls, value: str) -> str:
@@ -65,8 +138,9 @@ class SourceMetadata(BaseModel):
 
 
 class WcvpSource:
-    def __init__(self, path: Path | None):
+    def __init__(self, path: Path | None, version: WcvpVersion = "15"):
         self.path = path
+        self.release = reviewed_release(version)
 
     def _connect(self) -> sqlite3.Connection:
         if self.path is None or not self.path.is_file() or self.path.stat().st_size > 2_000_000_000:
@@ -82,16 +156,8 @@ class WcvpSource:
                 if row is None:
                     raise ValueError("Missing metadata")
                 metadata = SourceMetadata.model_validate_json(row[0])
-                if (
-                    metadata.version != VERSION
-                    or metadata.checksum != ARCHIVE_SHA256
-                    or metadata.archive_url != ARCHIVE_URL
-                    or metadata.license != LICENSE
-                    or metadata.citation != CITATION
-                    or metadata.provider != "kew_wcvp"
-                    or metadata.coverage != "complete"
-                ):
-                    raise ValueError("Snapshot does not match reviewed release")
+                if metadata.reviewed_release() != self.release:
+                    raise ValueError("Snapshot does not match the selected release")
                 return metadata
         except (OSError, sqlite3.Error, ValueError) as error:
             raise SourceUnavailableError("The WCVP snapshot is unavailable or invalid.") from error

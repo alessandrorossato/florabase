@@ -312,3 +312,110 @@ test("missing snapshot does not prevent viewing recorded ranges", async () => {
     screen.queryByRole("button", { name: "Search WCVP taxa" }),
   ).not.toBeInTheDocument();
 });
+
+test("v16 requires an explicit choice and confirmation, then uses its checksum and proposal", async () => {
+  const v16 = { ...source, version: "16", checksum: "b".repeat(64) };
+  let currentLink = link;
+  const fetch = vi
+    .spyOn(globalThis, "fetch")
+    .mockImplementation((input, init) => {
+      const url = new URL(requestUrl(input), "http://localhost");
+      const selectedSource =
+        url.searchParams.get("version") === "16" ? v16 : source;
+      if (url.pathname.endsWith("/source"))
+        return Promise.resolve(
+          json({ available: true, source: selectedSource, link: currentLink }),
+        );
+      if (url.pathname.endsWith("/taxa")) return Promise.resolve(json([taxon]));
+      if (url.pathname.endsWith("/link")) {
+        expect(selectedSource.version).toBe("16");
+        expect(JSON.parse(requestBody(init?.body))).toEqual({
+          external_id: "100",
+          checksum: v16.checksum,
+        });
+        currentLink = { ...link, source: v16 };
+        return Promise.resolve(json(currentLink));
+      }
+      if (url.pathname.endsWith("/proposals"))
+        return Promise.resolve(
+          json(
+            init?.method === "POST"
+              ? { ...proposal, source: selectedSource }
+              : [],
+          ),
+        );
+      throw new Error(`Unexpected ${url.href}`);
+    });
+  const user = userEvent.setup();
+  render(
+    <NativeRangeEnrichmentPanel identityId={identityId} onApplied={vi.fn()} />,
+  );
+  await user.click(
+    screen.getByRole("button", { name: "Check trusted source" }),
+  );
+  const selector = await screen.findByLabelText("WCVP source version");
+  expect(selector).toHaveValue("15");
+  await screen.findByRole("button", { name: "Retrieve source proposal" });
+  await user.selectOptions(selector, "16");
+  await screen.findByText(/Kew WCVP v16 · source/);
+  expect(
+    screen.queryByRole("button", { name: "Retrieve source proposal" }),
+  ).not.toBeInTheDocument();
+  expect(fetch.mock.calls.some(([, init]) => init?.method === "PUT")).toBe(
+    false,
+  );
+  await user.type(screen.getByLabelText(/WCVP scientific name/), "Fixture");
+  await user.click(screen.getByRole("button", { name: "Search WCVP taxa" }));
+  await user.click(await screen.findByRole("radio"));
+  expect(screen.getByText(/, WCVP v16 · 100/)).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Confirm this taxon" }));
+  await user.click(
+    await screen.findByRole("button", { name: "Retrieve source proposal" }),
+  );
+  expect(await screen.findByText(/Frozen Kew WCVP v16/)).toBeInTheDocument();
+  const writes = fetch.mock.calls.filter(
+    ([, init]) => init?.method === "PUT" || init?.method === "POST",
+  );
+  expect(writes).toHaveLength(2);
+  expect(writes.every(([url]) => requestUrl(url).endsWith("?version=16"))).toBe(
+    true,
+  );
+});
+
+test("missing selected v16 keeps frozen v15 history inspectable", async () => {
+  vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
+    const url = new URL(requestUrl(input), "http://localhost");
+    if (url.pathname.endsWith("/source"))
+      return Promise.resolve(
+        json({
+          available: false,
+          source: null,
+          link,
+          message: "Snapshot unavailable",
+        }),
+      );
+    if (url.pathname.endsWith("/proposals"))
+      return Promise.resolve(
+        json([{ ...proposal, applied_at: "2026-10-09T01:00:00Z" }]),
+      );
+    throw new Error(`Unexpected ${url.href}`);
+  });
+  const user = userEvent.setup();
+  render(
+    <NativeRangeEnrichmentPanel identityId={identityId} onApplied={vi.fn()} />,
+  );
+  await user.click(
+    screen.getByRole("button", { name: "Check trusted source" }),
+  );
+  await user.selectOptions(screen.getByLabelText("WCVP source version"), "16");
+  await screen.findByText(/Snapshot unavailable/);
+  expect(screen.getByText(/Confirmed taxon:/)).toHaveTextContent("WCVP v15");
+  await user.click(await screen.findByText(/Recent retained proposals/));
+  await user.click(
+    screen.getByRole("button", { name: /Fixture species.*Applied/ }),
+  );
+  expect(await screen.findByText(/Frozen Kew WCVP v15/)).toBeInTheDocument();
+  expect(
+    screen.queryByRole("button", { name: "Apply reviewed changes" }),
+  ).not.toBeInTheDocument();
+});

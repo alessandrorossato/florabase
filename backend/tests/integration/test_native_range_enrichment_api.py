@@ -1,6 +1,7 @@
 import json
 import sqlite3
 from pathlib import Path
+from typing import Any
 from uuid import uuid7
 
 import pytest
@@ -137,3 +138,103 @@ def test_reprovisioned_source_marks_confirmed_link_stale(
     assert status["available"] is True
     assert status["link"]["stale"] is True
     assert request("POST", path + "/proposals", headers=headers)[0] == 409
+
+
+@pytest.mark.parametrize("installed", [(), ("15",), ("16",), ("15", "16")])
+def test_explicit_release_http_configuration(
+    authenticated_browser: tuple[str, str],
+    identity_id: object,
+    source: WcvpSource,
+    tmp_path: Path,
+    installed: tuple[str, ...],
+) -> None:
+    import asyncio
+
+    import httpx
+
+    from florabase.core.config import get_settings
+    from florabase.native_range_enrichment.snapshot import (
+        DISTRIBUTION_FIELDS,
+        NAMES_FIELDS,
+        build_index,
+    )
+    from florabase.native_range_enrichment.source import RELEASES, SourceMetadata
+
+    from .test_botanical_profile_api import settings
+
+    def release_request(
+        method: str, url: str, *, headers: dict[str, str], body: dict[str, str] | None = None
+    ) -> tuple[int, httpx.Headers, Any]:
+        async def send() -> tuple[int, httpx.Headers, Any]:
+            async with httpx.AsyncClient(
+                transport=httpx.ASGITransport(app=app), base_url="https://florabase.example"
+            ) as client:
+                response = await client.request(method, url, headers=headers, json=body)
+                return response.status_code, response.headers, response.json()
+
+        return asyncio.run(send())
+
+    path16 = tmp_path / "v16.sqlite"
+    names = [
+        dict.fromkeys(NAMES_FIELDS, "")
+        | {
+            "plant_name_id": "100",
+            "taxon_name": "Fixture species",
+            "taxon_rank": "Species",
+            "taxon_status": "Accepted",
+            "accepted_plant_name_id": "100",
+        }
+    ]
+    rows = [
+        dict.fromkeys(DISTRIBUTION_FIELDS, "")
+        | {
+            "plant_locality_id": "1",
+            "plant_name_id": "100",
+            "area_code_l3": "BOL",
+            "introduced": "0",
+            "extinct": "0",
+            "location_doubtful": "0",
+        }
+    ]
+    build_index(path16, names, rows, SourceMetadata.for_release("16", "2026-10-28T00:00:00Z"))
+    chosen = settings().model_copy(
+        update={
+            "wcvp_snapshot_path": source.path if "15" in installed else None,
+            "wcvp_v16_snapshot_path": path16 if "16" in installed else None,
+        }
+    )
+    app.dependency_overrides[get_settings] = lambda: chosen
+    path = f"/api/v1/botanical-identities/{identity_id}/native-range-enrichment"
+    cookie, csrf = authenticated_browser
+    headers = {"cookie": cookie, "origin": "https://florabase.example", "x-csrf-token": csrf}
+    assert release_request("GET", path + "/source", headers=headers)[2]["available"] == (
+        "15" in installed
+    )
+    assert release_request("GET", path + "/source?version=17", headers=headers)[0] == 422
+    for version in ("15", "16"):
+        query = f"?version={version}"
+        status = release_request("GET", path + "/source" + query, headers=headers)[2]
+        assert status["available"] == (version in installed)
+        code, _, candidates = release_request(
+            "GET", path + f"/taxa?q=Fixture&version={version}", headers=headers
+        )
+        assert code == (200 if version in installed else 503)
+        if version not in installed:
+            continue
+        assert candidates[0]["external_id"] == "100"
+        assert (
+            release_request(
+                "PUT",
+                path + "/link" + query,
+                headers=headers,
+                body={
+                    "external_id": "100",
+                    "checksum": RELEASES[version].checksum,
+                },
+            )[2]["source"]["version"]
+            == version
+        )
+        code, _, proposal = release_request("POST", path + "/proposals" + query, headers=headers)
+        assert code == 201
+        assert proposal["source"]["version"] == version
+        assert proposal["crosswalk_version"] == RELEASES[version].crosswalk_version

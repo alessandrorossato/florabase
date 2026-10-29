@@ -1,3 +1,30 @@
+## 2026-10-29 — WCVP-VERSION-001 explicit v15/v16 implementation for review
+
+- Added immutable two-release definitions, separate optional v16 path and explicit provisioning;
+  v15 stays default. Wrong archive/version/schema and cross-version destination replacement refuse.
+  Atomic publication rechecks destination ownership under a per-file lock.
+- Search, exact-taxon confirmation and proposals use an explicit selected release. Native range UI
+  names both selected and confirmed versions. Frozen Apply dispatches from original release/hash
+  and matching approved crosswalk without reading an optional index. Reconfirmation rotates the
+  existing link UUID; no automatic migration, identity rename, text overwrite or range deletion.
+- Preserved all twelve geographic equivalences and existing v15 evidence formats/constraints.
+  Refreshed locked geography rows before Apply validation to detect another transaction's changes.
+  No Alembic migration or protected dataset/environment change was necessary.
+- Focused backend60/PostgreSQL38/frontend8 tests passed, strict backend/frontend typing passed;
+  Review adapter4, four live foreign-runtime refusals, repeated seed IDs, graph117 and whitespace
+  checks passed. The planner selects FULL for configuration impact; canonical exact-tree results
+  are retained in the final feature-verification receipt rather than inferred from focused checks.
+- Separate Review http://localhost:15281 uses six synthetic scenarios and real independent v15/v16
+  indices. Browser inspection confirmed explicit v16 browsing preserves a v15 link and inspectable
+  frozen v15 proposal, with add/keep-only geography. Operator acceptance remains pending.
+- Production-format v16 index:952,799,232bytes; build208.48s; Python peak RSS44,872KiB. Temporary
+  disk/cgroup peaks, physical mobile/AT/real zoom and large-collection performance remain unmeasured.
+  Docker default subnet pools were exhausted; only this task's isolated networks use checked-free
+  explicit subnets. Existing resources were preserved; disposable ownership/cleanup guards retained.
+- [Contract, compatibility and provisioning](wcvp-version-001.md),
+  [Review/checklist](review/wcvp-version-001/README.md). Feature is implemented, awaiting operator
+  review; all changes unstaged/uncommitted. No push, merge or delivery.
+
 # Engineering progress
 
 ## 2026-10-27 — UI-SYSTEM-001 Gate B review candidate, Proposal B refined
