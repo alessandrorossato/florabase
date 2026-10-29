@@ -6062,3 +6062,16 @@ Status remains implemented pending canonical verification.
   remains in_progress until acceptance and the policy-selected FULL gate succeed. Independent QA
   owns canonical verification and protected delivery; no push, PR or merge in implementation.
   FLORABASE_UI_SYSTEM_V1_WAVE1_READY_FOR_INDEPENDENT_QA.
+
+### UI-SYSTEM-001 — independent QA corrections (2026-10-29)
+
+- Corrected the UI Lab fixture boundary by keeping the already approved, attributed botanical images
+  beside the frontend module that uses them; the canonical Docker context can now resolve them.
+- Kept Dashboard recent activity visible on entry, preserving its existing content and native
+  disclosure behavior. Updated only accessible-name assertions to match the approved
+  `Individual Plants` metric label; counts and destinations are unchanged.
+- Gave the lazy SeedLot creation assertion enough time for its route chunk to load, without changing
+  the expected form or identity assertion. Reused stable button nodes in the 100-record selection
+  boundary test to avoid repeating expensive accessible-name queries.
+- Focused checks passed: Propagation/UX/Dashboard **34/34**, bulk cap **1/1**, media return focus
+  **1/1**, and UI Lab **4/4**. Canonical FULL verification passed on the final reconciled tree.

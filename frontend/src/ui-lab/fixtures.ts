@@ -1,11 +1,11 @@
-import aloe from "../../../scripts/fixtures/botanical-v5/aloe.jpg";
-import lavender from "../../../scripts/fixtures/botanical-v5/lavender.jpg";
-import sage from "../../../scripts/fixtures/botanical-v5/sage.jpg";
-import fig from "../../../scripts/fixtures/botanical-v5/fig.jpg";
-import basil from "../../../scripts/fixtures/botanical-v5/basil.jpg";
-import echinacea from "../../../scripts/fixtures/botanical-v5/echinacea.jpg";
-import sunflower from "../../../scripts/fixtures/botanical-v5/sunflower.jpg";
-import tomato from "../../../scripts/fixtures/botanical-v5/tomato.jpg";
+import aloe from "./assets/aloe.jpg";
+import lavender from "./assets/lavender.jpg";
+import sage from "./assets/sage.jpg";
+import fig from "./assets/fig.jpg";
+import basil from "./assets/basil.jpg";
+import echinacea from "./assets/echinacea.jpg";
+import sunflower from "./assets/sunflower.jpg";
+import tomato from "./assets/tomato.jpg";
 
 export interface ExampleRecord {
   key: string;

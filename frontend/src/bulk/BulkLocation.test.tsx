@@ -582,23 +582,15 @@ test("modifier selection never exceeds 100 and cannot start from an ineligible r
       </>
     );
   }
-  render(<LimitHarness />);
-  fireEvent.click(screen.getByRole("button", { name: "Plant 101" }), {
-    ctrlKey: true,
-  });
+  const { container } = render(<LimitHarness />);
+  const buttons = container.querySelectorAll<HTMLButtonElement>("button");
+  fireEvent.click(buttons[101], { ctrlKey: true });
   expect(screen.getByLabelText("Selection mode")).toHaveTextContent("false");
   for (let index = 0; index < 101; index++)
-    fireEvent.click(
-      screen.getByRole("button", { name: `Plant ${String(index)}` }),
-      { ctrlKey: true },
-    );
+    fireEvent.click(buttons[index], { ctrlKey: true });
   expect(screen.getByLabelText("Selected count")).toHaveTextContent("100");
-  fireEvent.click(screen.getByRole("button", { name: "Plant 0" }), {
-    metaKey: true,
-  });
+  fireEvent.click(buttons[0], { metaKey: true });
   expect(screen.getByLabelText("Selected count")).toHaveTextContent("99");
-  fireEvent.click(screen.getByRole("button", { name: "Plant 100" }), {
-    metaKey: true,
-  });
+  fireEvent.click(buttons[100], { metaKey: true });
   expect(screen.getByLabelText("Selected count")).toHaveTextContent("100");
 });

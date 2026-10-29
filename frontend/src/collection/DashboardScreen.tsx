@@ -217,7 +217,7 @@ export function DashboardOverview() {
         </section>
       </div>
       <div className="dashboard-secondary-strip">
-        <details className="dashboard-activity-disclosure">
+        <details className="dashboard-activity-disclosure" open>
           <summary>
             Recent activity · {data.recent_activity.length} latest entries
           </summary>

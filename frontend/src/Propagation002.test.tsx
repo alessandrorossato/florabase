@@ -280,7 +280,11 @@ test("BotanicalIdentity contextual SeedLot creation preselects the identity", as
   window.location.hash = `/seeds?action=create&identity=${identityId}`;
   render(<App />);
   expect(
-    await screen.findByRole("heading", { name: "Add seed lot" }),
+    await screen.findByRole(
+      "heading",
+      { name: "Add seed lot" },
+      { timeout: 5000 },
+    ),
   ).toBeInTheDocument();
   expect(screen.getByLabelText("Botanical identity")).toHaveValue(
     identity.display_label,

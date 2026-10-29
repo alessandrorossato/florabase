@@ -137,7 +137,7 @@ test("Dashboard keeps its counts, actions, and chronological Event context", asy
   for (const [name, count] of [
     ["Seed lots", "2"],
     ["Sowings", "1"],
-    ["Plants", "3"],
+    ["Individual Plants", "3"],
     ["Plant groups", "1"],
   ]) {
     expect(

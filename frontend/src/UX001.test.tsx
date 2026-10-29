@@ -122,7 +122,7 @@ test("Dashboard is the default workspace with grouped desktop and five-item mobi
   for (const label of [
     "Seed lots: 8",
     "Sowings: 4",
-    "Plants: 12",
+    "Individual Plants: 12",
     "Plant groups: 3",
   ]) {
     expect(
