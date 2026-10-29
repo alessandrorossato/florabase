@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>A/B comparisons · Florabase UI System v1</title
+  ><link rel="stylesheet" href="review.css" />
+  <header>
+    <nav aria-label="Design review">
+      <a href="index.html">Florabase · UI System v1</a
+      ><a href="compare.html">Five A/B decisions</a
+      ><a href="prototype.html">Interactive study</a
+      ><a href="README.md">Design proposal</a><a href="credits.html">Credits</a>
+    </nav>
+  </header>
+  <main class="wrap">
+    <section class="notice" aria-label="Current operator decision">
+      <strong>Proposal B is selected, with refinements.</strong>
+      <a href="gate-b/index.html"
+        >Review the current Gate B candidate and before/after</a
+      >
+      ·
+      <a href="http://localhost:15284/ui-lab/#/dashboard"
+        >Open the working React prototype</a
+      >. The alternatives and recommendations below are preserved Gate A
+      history.
+    </section>
+    <p class="eyebrow">Five independent product choices</p>
+    <h1>Compare structure, density and interaction.</h1>
+    <p>
+      Each pair uses the same source data and semantic foundation. Open a live
+      specimen to test the hierarchy; images below are full-page design renders.
+      Links also show mobile and tablet. These are alternatives, not approved
+      product migrations.
+    </p>
+    <div class="actions">
+      <a class="button" href="#dashboard">Dashboard</a
+      ><a class="button" href="#seeds">Seeds</a
+      ><a class="button" href="#plants">Plants / groups</a
+      ><a class="button" href="#identities">Botanical identities</a
+      ><a class="button" href="#form">Create / Edit</a>
+    </div>
+    <section id="dashboard">
+      <h2>Dashboard</h2>
+      <p class="recommend">
+        <strong>Recommend A.</strong> Daily work first; the factual holdings
+        strip stays compact.
+      </p>
+      <div class="pair">
+        <figure>
+          <figcaption>A · Work first</figcaption>
+          <div class="actions">
+            <a class="button" href="prototype.html?page=dashboard&variant=a"
+              >Try A</a
+            ><a href="/renders/dashboard-a-390.jpg">Mobile</a
+            ><a href="/renders/dashboard-a-1024.jpg">Tablet</a>
+          </div>
+          <a href="/renders/dashboard-a-1440.jpg"
+            ><img
+              src="/renders/dashboard-a-1440.jpg"
+              alt="Dashboard A · Work first full desktop design"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>B · Collection portrait</figcaption>
+          <div class="actions">
+            <a class="button" href="prototype.html?page=dashboard&variant=b"
+              >Try B</a
+            ><a href="/renders/dashboard-b-390.jpg">Mobile</a
+            ><a href="/renders/dashboard-b-1024.jpg">Tablet</a>
+          </div>
+          <a href="/renders/dashboard-b-1440.jpg"
+            ><img
+              src="/renders/dashboard-b-1440.jpg"
+              alt="Dashboard B · Collection portrait full desktop design"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+    </section>
+    <section id="seeds">
+      <h2>Seeds</h2>
+      <p class="recommend">
+        <strong>Recommend A.</strong> Stock, storage and date compare in
+        columns; preview opens only on request.
+      </p>
+      <div class="pair">
+        <figure>
+          <figcaption>A · Inventory table</figcaption>
+          <div class="actions">
+            <a class="button" href="prototype.html?page=seeds&variant=a"
+              >Try A</a
+            ><a href="/renders/seeds-a-390.jpg">Mobile</a
+            ><a href="/renders/seeds-a-1024.jpg">Tablet</a>
+          </div>
+          <a href="/renders/seeds-a-1440.jpg"
+            ><img
+              src="/renders/seeds-a-1440.jpg"
+              alt="Seeds A · Inventory table full desktop design"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>B · Rich operational rows</figcaption>
+          <div class="actions">
+            <a class="button" href="prototype.html?page=seeds&variant=b"
+              >Try B</a
+            ><a href="/renders/seeds-b-390.jpg">Mobile</a
+            ><a href="/renders/seeds-b-1024.jpg">Tablet</a>
+          </div>
+          <a href="/renders/seeds-b-1440.jpg"
+            ><img
+              src="/renders/seeds-b-1440.jpg"
+              alt="Seeds B · Rich operational rows full desktop design"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+    </section>
+    <section id="plants">
+      <h2>Plants / groups</h2>
+      <p class="recommend">
+        <strong>Recommend A.</strong> Maintenance needs type/location/lifecycle;
+        photo browsing is secondary.
+      </p>
+      <div class="pair">
+        <figure>
+          <figcaption>A · Operational table</figcaption>
+          <div class="actions">
+            <a class="button" href="prototype.html?page=plants&variant=a"
+              >Try A</a
+            ><a href="/renders/plants-a-390.jpg">Mobile</a
+            ><a href="/renders/plants-a-1024.jpg">Tablet</a>
+          </div>
+          <a href="/renders/plants-a-1440.jpg"
+            ><img
+              src="/renders/plants-a-1440.jpg"
+              alt="Plants / groups A · Operational table full desktop design"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>B · Photographic browse</figcaption>
+          <div class="actions">
+            <a class="button" href="prototype.html?page=plants&variant=b"
+              >Try B</a
+            ><a href="/renders/plants-b-390.jpg">Mobile</a
+            ><a href="/renders/plants-b-1024.jpg">Tablet</a>
+          </div>
+          <a href="/renders/plants-b-1440.jpg"
+            ><img
+              src="/renders/plants-b-1440.jpg"
+              alt="Plants / groups B · Photographic browse full desktop design"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+    </section>
+    <section id="identities">
+      <h2>Botanical identities</h2>
+      <p class="recommend">
+        <strong>Recommend A / B without covers.</strong> Reference recognition
+        and actual coverage. No cover is invented.
+      </p>
+      <div class="pair">
+        <figure>
+          <figcaption>A · Visual reference index</figcaption>
+          <div class="actions">
+            <a class="button" href="prototype.html?page=identities&variant=a"
+              >Try A</a
+            ><a href="/renders/identities-a-390.jpg">Mobile</a
+            ><a href="/renders/identities-a-1024.jpg">Tablet</a>
+          </div>
+          <a href="/renders/identities-a-1440.jpg"
+            ><img
+              src="/renders/identities-a-1440.jpg"
+              alt="Botanical identities A · Visual reference index full desktop design"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>B · Analytical index</figcaption>
+          <div class="actions">
+            <a class="button" href="prototype.html?page=identities&variant=b"
+              >Try B</a
+            ><a href="/renders/identities-b-390.jpg">Mobile</a
+            ><a href="/renders/identities-b-1024.jpg">Tablet</a>
+          </div>
+          <a href="/renders/identities-b-1440.jpg"
+            ><img
+              src="/renders/identities-b-1440.jpg"
+              alt="Botanical identities B · Analytical index full desktop design"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+    </section>
+    <section id="form">
+      <h2>Create / Edit</h2>
+      <p class="recommend">
+        <strong>Recommend B.</strong> Maintenance benefits from comparing
+        sections; guided alternative remains explicit.
+      </p>
+      <div class="pair">
+        <figure>
+          <figcaption>A · One active section</figcaption>
+          <div class="actions">
+            <a class="button" href="prototype.html?page=form&variant=a">Try A</a
+            ><a href="/renders/form-a-390.jpg">Mobile</a
+            ><a href="/renders/form-a-1024.jpg">Tablet</a>
+          </div>
+          <a href="/renders/form-a-1440.jpg"
+            ><img
+              src="/renders/form-a-1440.jpg"
+              alt="Create / Edit A · One active section full desktop design"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>B · Continuous anchored form</figcaption>
+          <div class="actions">
+            <a class="button" href="prototype.html?page=form&variant=b">Try B</a
+            ><a href="/renders/form-b-390.jpg">Mobile</a
+            ><a href="/renders/form-b-1024.jpg">Tablet</a>
+          </div>
+          <a href="/renders/form-b-1440.jpg"
+            ><img
+              src="/renders/form-b-1440.jpg"
+              alt="Create / Edit B · Continuous anchored form full desktop design"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+    </section>
+  </main>
+  <footer class="credit">
+    Gate A product direction · synthetic Review v5 · baseline ee34874 · no
+    production UI changes · React templates, scaffold and living lab remain Gate
+    B.
+  </footer>
+</html>

@@ -1,0 +1,710 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>Proposal B refined · Gate B review</title
+  ><link rel="stylesheet" href="../review.css" /><style>
+    .pair img {
+      width: 100%;
+      height: auto;
+    }
+    .after {
+      display: grid;
+      gap: 16px;
+    }
+    .responsive {
+      display: grid;
+      grid-template-columns: 2fr 1.4fr 0.7fr;
+      gap: 16px;
+      align-items: start;
+    }
+    .responsive img {
+      width: 100%;
+      height: auto;
+    }
+    .notice a {
+      font-weight: 650;
+    }
+    figure {
+      min-width: 0;
+      margin: 0;
+    }
+    figcaption {
+      padding: 8px 0;
+    }
+    .themes {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+    @media (max-width: 720px) {
+      .responsive,
+      .themes {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+  <header>
+    <nav aria-label="Gate B review">
+      <a href="../index.html">Gate A archive</a
+      ><a href="http://localhost:15284/ui-lab/#/dashboard">Working Proposal B</a
+      ><a href="http://localhost:15284/ui-lab/#/components">React showcase</a
+      ><a href="README.md">Scope and migration</a
+      ><a href="verification.md">Verification</a>
+    </nav>
+  </header>
+  <main class="wrap">
+    <p class="notice">
+      <strong>Gate B approved.</strong> This prototype and its captures are
+      historical.
+      <a href="../wave1/index.html">Open the actual production Wave 1 review</a
+      >.
+    </p>
+    <p class="eyebrow">Operator-selected B · refined · bounded Gate B</p>
+    <h1>Review the working templates and final Dashboard.</h1>
+    <p class="lead">
+      Switch List/Gallery on the same records. Keep the collection visible; make
+      planned work and canonical navigation useful.
+    </p>
+    <p class="notice">
+      Current review candidate:
+      <a href="http://localhost:15284/ui-lab/#/dashboard"
+        >open the real React prototype</a
+      >. Eight photographs are licensed reference illustrations, never assigned
+      specimen photos. This lab contains captured synthetic facts and cannot
+      modify records. Production migration and canonical verification await
+      operator review.
+    </p>
+    <div class="actions">
+      <a class="button" href="#dashboard">Dashboard</a>
+      <a class="button" href="#plants">Plants</a>
+      <a class="button" href="#seeds">Seeds</a>
+      <a class="button" href="#identities">Botanical identities</a>
+    </div>
+    <section id="dashboard">
+      <h2>Dashboard</h2>
+      <p>One KPI strip, eight photographs in 4×2 and Next work.</p>
+      <div class="pair">
+        <figure>
+          <figcaption>
+            Before · original Gate A Proposal B · full-page study
+          </figcaption>
+          <a href="/renders/dashboard-b-1440.jpg"
+            ><img
+              src="/renders/dashboard-b-1440.jpg"
+              alt="Original B Dashboard"
+              loading="lazy"
+          /></a>
+        </figure>
+        <div class="after">
+          <figure>
+            <figcaption>
+              After · working React dashboard · viewport 1440×844 ·
+              <a href="http://localhost:15284/ui-lab/#/dashboard">Try it</a>
+            </figcaption>
+            <a href="/renders/gate-b/dashboard-desktop.jpg"
+              ><img
+                src="/renders/gate-b/dashboard-desktop.jpg"
+                alt="Refined B dashboard desktop viewport"
+                loading="lazy"
+            /></a>
+          </figure>
+        </div>
+      </div>
+      <h3>dashboard · responsive viewport captures</h3>
+      <div class="responsive">
+        <figure>
+          <figcaption>1440×844 CSS px</figcaption>
+          <a href="/renders/gate-b/dashboard-desktop.jpg"
+            ><img
+              src="/renders/gate-b/dashboard-desktop.jpg"
+              alt="dashboard desktop"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>1024×844 CSS px</figcaption>
+          <a href="/renders/gate-b/dashboard-tablet.jpg"
+            ><img
+              src="/renders/gate-b/dashboard-tablet.jpg"
+              alt="dashboard tablet"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>390×844 CSS px</figcaption>
+          <a href="/renders/gate-b/dashboard-mobile.jpg"
+            ><img
+              src="/renders/gate-b/dashboard-mobile.jpg"
+              alt="dashboard mobile"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+    </section>
+    <section id="plants">
+      <h2>Plants</h2>
+      <p>Same records in List/Gallery; optional contextual inspector.</p>
+      <div class="pair">
+        <figure>
+          <figcaption>
+            Before · original Gate A Proposal B · full-page study
+          </figcaption>
+          <a href="/renders/plants-b-1440.jpg"
+            ><img
+              src="/renders/plants-b-1440.jpg"
+              alt="Original B Plants"
+              loading="lazy"
+          /></a>
+        </figure>
+        <div class="after">
+          <figure>
+            <figcaption>
+              After · working React plants-list · viewport 1440×844 ·
+              <a href="http://localhost:15284/ui-lab/#/plants?view=list"
+                >Try it</a
+              >
+            </figcaption>
+            <a href="/renders/gate-b/plants-list-desktop.jpg"
+              ><img
+                src="/renders/gate-b/plants-list-desktop.jpg"
+                alt="Refined B plants-list desktop viewport"
+                loading="lazy"
+            /></a>
+          </figure>
+          <figure>
+            <figcaption>
+              After · working React plants-gallery · viewport 1440×844 ·
+              <a href="http://localhost:15284/ui-lab/#/plants?view=gallery"
+                >Try it</a
+              >
+            </figcaption>
+            <a href="/renders/gate-b/plants-gallery-desktop.jpg"
+              ><img
+                src="/renders/gate-b/plants-gallery-desktop.jpg"
+                alt="Refined B plants-gallery desktop viewport"
+                loading="lazy"
+            /></a>
+          </figure>
+        </div>
+      </div>
+      <h3>plants-list · responsive viewport captures</h3>
+      <div class="responsive">
+        <figure>
+          <figcaption>1440×844 CSS px</figcaption>
+          <a href="/renders/gate-b/plants-list-desktop.jpg"
+            ><img
+              src="/renders/gate-b/plants-list-desktop.jpg"
+              alt="plants-list desktop"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>1024×844 CSS px</figcaption>
+          <a href="/renders/gate-b/plants-list-tablet.jpg"
+            ><img
+              src="/renders/gate-b/plants-list-tablet.jpg"
+              alt="plants-list tablet"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>390×844 CSS px</figcaption>
+          <a href="/renders/gate-b/plants-list-mobile.jpg"
+            ><img
+              src="/renders/gate-b/plants-list-mobile.jpg"
+              alt="plants-list mobile"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+      <h3>plants-gallery · responsive viewport captures</h3>
+      <div class="responsive">
+        <figure>
+          <figcaption>1440×844 CSS px</figcaption>
+          <a href="/renders/gate-b/plants-gallery-desktop.jpg"
+            ><img
+              src="/renders/gate-b/plants-gallery-desktop.jpg"
+              alt="plants-gallery desktop"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>1024×844 CSS px</figcaption>
+          <a href="/renders/gate-b/plants-gallery-tablet.jpg"
+            ><img
+              src="/renders/gate-b/plants-gallery-tablet.jpg"
+              alt="plants-gallery tablet"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>390×844 CSS px</figcaption>
+          <a href="/renders/gate-b/plants-gallery-mobile.jpg"
+            ><img
+              src="/renders/gate-b/plants-gallery-mobile.jpg"
+              alt="plants-gallery mobile"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+    </section>
+    <section id="seeds">
+      <h2>Seeds</h2>
+      <p>Operational List default with truthful stock, dates and location.</p>
+      <div class="pair">
+        <figure>
+          <figcaption>
+            Before · original Gate A Proposal B · full-page study
+          </figcaption>
+          <a href="/renders/seeds-b-1440.jpg"
+            ><img
+              src="/renders/seeds-b-1440.jpg"
+              alt="Original B Seeds"
+              loading="lazy"
+          /></a>
+        </figure>
+        <div class="after">
+          <figure>
+            <figcaption>
+              After · working React seeds-list · viewport 1440×844 ·
+              <a href="http://localhost:15284/ui-lab/#/seeds?view=list"
+                >Try it</a
+              >
+            </figcaption>
+            <a href="/renders/gate-b/seeds-list-desktop.jpg"
+              ><img
+                src="/renders/gate-b/seeds-list-desktop.jpg"
+                alt="Refined B seeds-list desktop viewport"
+                loading="lazy"
+            /></a>
+          </figure>
+          <figure>
+            <figcaption>
+              After · working React seeds-gallery · viewport 1440×844 ·
+              <a href="http://localhost:15284/ui-lab/#/seeds?view=gallery"
+                >Try it</a
+              >
+            </figcaption>
+            <a href="/renders/gate-b/seeds-gallery-desktop.jpg"
+              ><img
+                src="/renders/gate-b/seeds-gallery-desktop.jpg"
+                alt="Refined B seeds-gallery desktop viewport"
+                loading="lazy"
+            /></a>
+          </figure>
+        </div>
+      </div>
+      <h3>seeds-list · responsive viewport captures</h3>
+      <div class="responsive">
+        <figure>
+          <figcaption>1440×844 CSS px</figcaption>
+          <a href="/renders/gate-b/seeds-list-desktop.jpg"
+            ><img
+              src="/renders/gate-b/seeds-list-desktop.jpg"
+              alt="seeds-list desktop"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>1024×844 CSS px</figcaption>
+          <a href="/renders/gate-b/seeds-list-tablet.jpg"
+            ><img
+              src="/renders/gate-b/seeds-list-tablet.jpg"
+              alt="seeds-list tablet"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>390×844 CSS px</figcaption>
+          <a href="/renders/gate-b/seeds-list-mobile.jpg"
+            ><img
+              src="/renders/gate-b/seeds-list-mobile.jpg"
+              alt="seeds-list mobile"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+      <h3>seeds-gallery · responsive viewport captures</h3>
+      <div class="responsive">
+        <figure>
+          <figcaption>1440×844 CSS px</figcaption>
+          <a href="/renders/gate-b/seeds-gallery-desktop.jpg"
+            ><img
+              src="/renders/gate-b/seeds-gallery-desktop.jpg"
+              alt="seeds-gallery desktop"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>1024×844 CSS px</figcaption>
+          <a href="/renders/gate-b/seeds-gallery-tablet.jpg"
+            ><img
+              src="/renders/gate-b/seeds-gallery-tablet.jpg"
+              alt="seeds-gallery tablet"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>390×844 CSS px</figcaption>
+          <a href="/renders/gate-b/seeds-gallery-mobile.jpg"
+            ><img
+              src="/renders/gate-b/seeds-gallery-mobile.jpg"
+              alt="seeds-gallery mobile"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+    </section>
+    <section id="identities">
+      <h2>Botanical identities</h2>
+      <p>Recognition and collection coverage with an explicit mode switch.</p>
+      <div class="pair">
+        <figure>
+          <figcaption>
+            Before · original Gate A Proposal B · full-page study
+          </figcaption>
+          <a href="/renders/identities-b-1440.jpg"
+            ><img
+              src="/renders/identities-b-1440.jpg"
+              alt="Original B Botanical identities"
+              loading="lazy"
+          /></a>
+        </figure>
+        <div class="after">
+          <figure>
+            <figcaption>
+              After · working React identities-list · viewport 1440×844 ·
+              <a href="http://localhost:15284/ui-lab/#/identities?view=list"
+                >Try it</a
+              >
+            </figcaption>
+            <a href="/renders/gate-b/identities-list-desktop.jpg"
+              ><img
+                src="/renders/gate-b/identities-list-desktop.jpg"
+                alt="Refined B identities-list desktop viewport"
+                loading="lazy"
+            /></a>
+          </figure>
+          <figure>
+            <figcaption>
+              After · working React identities-gallery · viewport 1440×844 ·
+              <a href="http://localhost:15284/ui-lab/#/identities?view=gallery"
+                >Try it</a
+              >
+            </figcaption>
+            <a href="/renders/gate-b/identities-gallery-desktop.jpg"
+              ><img
+                src="/renders/gate-b/identities-gallery-desktop.jpg"
+                alt="Refined B identities-gallery desktop viewport"
+                loading="lazy"
+            /></a>
+          </figure>
+        </div>
+      </div>
+      <h3>identities-list · responsive viewport captures</h3>
+      <div class="responsive">
+        <figure>
+          <figcaption>1440×844 CSS px</figcaption>
+          <a href="/renders/gate-b/identities-list-desktop.jpg"
+            ><img
+              src="/renders/gate-b/identities-list-desktop.jpg"
+              alt="identities-list desktop"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>1024×844 CSS px</figcaption>
+          <a href="/renders/gate-b/identities-list-tablet.jpg"
+            ><img
+              src="/renders/gate-b/identities-list-tablet.jpg"
+              alt="identities-list tablet"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>390×844 CSS px</figcaption>
+          <a href="/renders/gate-b/identities-list-mobile.jpg"
+            ><img
+              src="/renders/gate-b/identities-list-mobile.jpg"
+              alt="identities-list mobile"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+      <h3>identities-gallery · responsive viewport captures</h3>
+      <div class="responsive">
+        <figure>
+          <figcaption>1440×844 CSS px</figcaption>
+          <a href="/renders/gate-b/identities-gallery-desktop.jpg"
+            ><img
+              src="/renders/gate-b/identities-gallery-desktop.jpg"
+              alt="identities-gallery desktop"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>1024×844 CSS px</figcaption>
+          <a href="/renders/gate-b/identities-gallery-tablet.jpg"
+            ><img
+              src="/renders/gate-b/identities-gallery-tablet.jpg"
+              alt="identities-gallery tablet"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>390×844 CSS px</figcaption>
+          <a href="/renders/gate-b/identities-gallery-mobile.jpg"
+            ><img
+              src="/renders/gate-b/identities-gallery-mobile.jpg"
+              alt="identities-gallery mobile"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+    </section>
+    <section>
+      <h2>Six themes on the actual components</h2>
+      <p>
+        Botanical, Herbarium and Mineral in Light/Dark. Theme specimens also
+        exist at tablet and mobile sizes.
+      </p>
+      <div class="themes">
+        <figure>
+          <figcaption>Botanical Light · Dashboard</figcaption>
+          <a href="/renders/gate-b/theme-dashboard-botanical-light.jpg"
+            ><img
+              src="/renders/gate-b/theme-dashboard-botanical-light.jpg"
+              alt="botanical light Dashboard"
+              loading="lazy" /></a
+          ><a href="/renders/gate-b/theme-plants-botanical-light.jpg"
+            >Gallery desktop</a
+          >
+          ·
+          <a href="/renders/gate-b/theme-plants-botanical-light-tablet.jpg"
+            >Tablet</a
+          >
+          ·
+          <a href="/renders/gate-b/theme-plants-botanical-light-mobile.jpg"
+            >Mobile</a
+          >
+        </figure>
+        <figure>
+          <figcaption>Botanical Dark · Dashboard</figcaption>
+          <a href="/renders/gate-b/theme-dashboard-botanical-dark.jpg"
+            ><img
+              src="/renders/gate-b/theme-dashboard-botanical-dark.jpg"
+              alt="botanical dark Dashboard"
+              loading="lazy" /></a
+          ><a href="/renders/gate-b/theme-plants-botanical-dark.jpg"
+            >Gallery desktop</a
+          >
+          ·
+          <a href="/renders/gate-b/theme-plants-botanical-dark-tablet.jpg"
+            >Tablet</a
+          >
+          ·
+          <a href="/renders/gate-b/theme-plants-botanical-dark-mobile.jpg"
+            >Mobile</a
+          >
+        </figure>
+        <figure>
+          <figcaption>Herbarium Light · Dashboard</figcaption>
+          <a href="/renders/gate-b/theme-dashboard-herbarium-light.jpg"
+            ><img
+              src="/renders/gate-b/theme-dashboard-herbarium-light.jpg"
+              alt="herbarium light Dashboard"
+              loading="lazy" /></a
+          ><a href="/renders/gate-b/theme-plants-herbarium-light.jpg"
+            >Gallery desktop</a
+          >
+          ·
+          <a href="/renders/gate-b/theme-plants-herbarium-light-tablet.jpg"
+            >Tablet</a
+          >
+          ·
+          <a href="/renders/gate-b/theme-plants-herbarium-light-mobile.jpg"
+            >Mobile</a
+          >
+        </figure>
+        <figure>
+          <figcaption>Herbarium Dark · Dashboard</figcaption>
+          <a href="/renders/gate-b/theme-dashboard-herbarium-dark.jpg"
+            ><img
+              src="/renders/gate-b/theme-dashboard-herbarium-dark.jpg"
+              alt="herbarium dark Dashboard"
+              loading="lazy" /></a
+          ><a href="/renders/gate-b/theme-plants-herbarium-dark.jpg"
+            >Gallery desktop</a
+          >
+          ·
+          <a href="/renders/gate-b/theme-plants-herbarium-dark-tablet.jpg"
+            >Tablet</a
+          >
+          ·
+          <a href="/renders/gate-b/theme-plants-herbarium-dark-mobile.jpg"
+            >Mobile</a
+          >
+        </figure>
+        <figure>
+          <figcaption>Mineral Light · Dashboard</figcaption>
+          <a href="/renders/gate-b/theme-dashboard-mineral-light.jpg"
+            ><img
+              src="/renders/gate-b/theme-dashboard-mineral-light.jpg"
+              alt="mineral light Dashboard"
+              loading="lazy" /></a
+          ><a href="/renders/gate-b/theme-plants-mineral-light.jpg"
+            >Gallery desktop</a
+          >
+          ·
+          <a href="/renders/gate-b/theme-plants-mineral-light-tablet.jpg"
+            >Tablet</a
+          >
+          ·
+          <a href="/renders/gate-b/theme-plants-mineral-light-mobile.jpg"
+            >Mobile</a
+          >
+        </figure>
+        <figure>
+          <figcaption>Mineral Dark · Dashboard</figcaption>
+          <a href="/renders/gate-b/theme-dashboard-mineral-dark.jpg"
+            ><img
+              src="/renders/gate-b/theme-dashboard-mineral-dark.jpg"
+              alt="mineral dark Dashboard"
+              loading="lazy" /></a
+          ><a href="/renders/gate-b/theme-plants-mineral-dark.jpg"
+            >Gallery desktop</a
+          >
+          ·
+          <a href="/renders/gate-b/theme-plants-mineral-dark-tablet.jpg"
+            >Tablet</a
+          >
+          ·
+          <a href="/renders/gate-b/theme-plants-mineral-dark-mobile.jpg"
+            >Mobile</a
+          >
+        </figure>
+      </div>
+    </section>
+    <section>
+      <h2>Working states and interaction evidence</h2>
+      <div class="themes">
+        <figure>
+          <figcaption>Shared components and semantic icons</figcaption>
+          <a href="/renders/gate-b/components-desktop.jpg"
+            ><img
+              src="/renders/gate-b/components-desktop.jpg"
+              alt="Shared components and semantic icons"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>ActivityPage composition</figcaption>
+          <a href="/renders/gate-b/activity-desktop.jpg"
+            ><img
+              src="/renders/gate-b/activity-desktop.jpg"
+              alt="ActivityPage composition"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Desktop contextual inspector</figcaption>
+          <a href="/renders/gate-b/plants-inspector-desktop.jpg"
+            ><img
+              src="/renders/gate-b/plants-inspector-desktop.jpg"
+              alt="Desktop contextual inspector"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Mobile navigation</figcaption>
+          <a href="/renders/gate-b/mobile-more.jpg"
+            ><img
+              src="/renders/gate-b/mobile-more.jpg"
+              alt="Mobile navigation"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Compact record preview</figcaption>
+          <a href="/renders/gate-b/plants-preview-mobile.jpg"
+            ><img
+              src="/renders/gate-b/plants-preview-mobile.jpg"
+              alt="Compact record preview"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>House filters</figcaption>
+          <a href="/renders/gate-b/plants-filters-mobile.jpg"
+            ><img
+              src="/renders/gate-b/plants-filters-mobile.jpg"
+              alt="House filters"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Canonical Saved View exercise</figcaption>
+          <a href="/renders/gate-b/saved-view-exercise-mobile.jpg"
+            ><img
+              src="/renders/gate-b/saved-view-exercise-mobile.jpg"
+              alt="Canonical Saved View exercise"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>
+            Long scientific name and upright cultivar · full-page capture
+          </figcaption>
+          <a href="/renders/gate-b/long-name-mobile-full.jpg"
+            ><img
+              src="/renders/gate-b/long-name-mobile-full.jpg"
+              alt="Long scientific name and upright cultivar · full-page capture"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Loading</figcaption>
+          <a href="/renders/gate-b/state-loading-desktop.jpg"
+            ><img
+              src="/renders/gate-b/state-loading-desktop.jpg"
+              alt="Loading"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Error with Retry</figcaption>
+          <a href="/renders/gate-b/state-error-desktop.jpg"
+            ><img
+              src="/renders/gate-b/state-error-desktop.jpg"
+              alt="Error with Retry"
+              loading="lazy"
+          /></a>
+        </figure>
+        <figure>
+          <figcaption>Empty result</figcaption>
+          <a href="/renders/gate-b/state-empty-desktop.jpg"
+            ><img
+              src="/renders/gate-b/state-empty-desktop.jpg"
+              alt="Empty result"
+              loading="lazy"
+          /></a>
+        </figure>
+      </div>
+    </section>
+    <p class="notice">
+      Comparison limits: the old studies are full-page captures and the new
+      primary screenshots show the actual viewport, including development review
+      chrome. They do not assert identical data excerpts or live application
+      migration. Desktop Dashboard fit is measured separately; smaller sizes and
+      long content scroll naturally. No actual zoom sweep, physical-device or
+      assistive-technology claim.
+    </p>
+    <p>
+      Review: Dashboard balance and density; List/Gallery composition and
+      defaults; labels/icons; toolbar wrapping; optional inspector. Approving
+      these precedes broad migration.
+    </p>
+  </main>
+</html>

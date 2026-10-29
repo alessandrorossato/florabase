@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Florabase · Wave 1 final refinements</title>
+    <link rel="stylesheet" href="../gallery.css" />
+    <script src="gallery.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <nav aria-label="Review destinations">
+        <a href="http://localhost:15279/#/dashboard">Actual Review</a
+        ><a href="README.md">Final contracts</a
+        ><a href="gallery-final.html">Final Plants Gallery</a><a href="verification.md">Checks and limits</a
+        ><a href="bulk-operations.md">Bulk proposal</a
+        ><a href="../index.html">Earlier Wave 1 evidence</a>
+      </nav>
+    </header>
+    <main>
+      <p class="eyebrow">
+        Approved Wave 1 framework · final Plants Gallery refinement · 29 October 2026
+      </p>
+      <h1>Wave 1 — final UX refinements</h1>
+      <p>
+        Compact Lists and Galleries, three explicit actions, contextual
+        overlays, modifier-assisted existing selection and a Dashboard sampled
+        from actual individual Plants. Approve these actual screens before
+        independent QA, canonical FULL and delivery.
+      </p>
+      <section>
+        <h2>Previous Wave 1 / refined candidate</h2>
+        <div class="controls">
+          <label
+            >Screen
+            <select id="page">
+              <option value="dashboard">Dashboard</option>
+              <option value="seeds">Seeds</option>
+              <option value="plants">Plants</option>
+            </select></label
+          ><label
+            >View
+            <select id="view">
+              <option value="list">List</option>
+              <option value="gallery">Gallery</option>
+            </select></label
+          ><label
+            >Viewport
+            <select id="width">
+              <option>1440</option>
+              <option>1024</option>
+              <option>880</option>
+              <option>390</option>
+            </select>
+            × 844</label
+          ><label
+            >Appearance
+            <select id="theme">
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select></label
+          >
+        </div>
+        <div class="comparison">
+          <figure>
+            <figcaption>
+              Previous Wave 1 · retained actual application
+            </figcaption>
+            <a id="before-link"><img id="before" alt="Previous Wave 1" /></a>
+          </figure>
+          <figure>
+            <figcaption>Final refinement · actual application</figcaption>
+            <a id="after-link"
+              ><img id="after" alt="Final refined candidate"
+            /></a>
+          </figure>
+        </div>
+        <p id="measurement" role="status"></p>
+        <p>
+          The collection is retained. Dashboard formerly displayed MediaAssets;
+          it now displays eight distinct sampled Plant records with Plant detail
+          links. Missing photographs stay honest; identity reference images do
+          not claim specimen provenance.
+        </p>
+      </section>
+      <section>
+        <h2>Persistent inspector / contextual overlay — same Plant</h2>
+        <p>
+          Same retained Basil mother Plant, search, desktop width and Dark
+          appearance. The earlier inspector consumes inventory width; the
+          current candidate opens an accessible bounded modal over the
+          full-width inventory.
+        </p>
+        <div class="comparison">
+          <figure>
+            <figcaption>Before · persistent right inspector</figcaption>
+            <a href="/renders/wave1/plants-preview-1440-dark.jpg"
+              ><img
+                src="/renders/wave1/plants-preview-1440-dark.jpg"
+                alt="Previous Basil mother Plant right inspector"
+            /></a>
+          </figure>
+          <figure>
+            <figcaption>After · contextual overlay</figcaption>
+            <a
+              href="/renders/wave1-final/plants-overlay-comparison-1440-dark.jpg"
+              ><img
+                src="/renders/wave1-final/plants-overlay-comparison-1440-dark.jpg"
+                alt="Same Basil mother Plant in the contextual overlay"
+            /></a>
+          </figure>
+        </div>
+      </section>
+      <section>
+        <h2>Interaction and responsive evidence</h2>
+        <p>
+          Overlay and selection captures at 1440, 1024, 880 and 390 in
+          Light/Dark. Desktop Ctrl/Cmd initiation, visible checkboxes, explicit
+          Select records/Exit, view retention and focused routing are covered by
+          actual interactions and focused tests. Physical-device, screen-reader
+          and true browser-zoom certification remain manual.
+        </p>
+        <div id="contexts" class="evidence"></div>
+      </section>
+      <section>
+        <h2>Acceptance and next steps</h2>
+        <p>
+          At 1440×844, eight distinct Plant cards, all four KPIs and all five
+          Next work entries fit without document scrolling; smaller viewports
+          scroll normally. Source/geometry/digests are recorded in
+          <a href="captures.json">the capture manifest</a>.
+          <a href="bulk-operations.md">Bulk operations</a> and
+          <a href="README.md">future Dashboard customization</a> are
+          recommendations only; no new bulk mutation or widget manager is
+          implemented.
+        </p>
+        <p>
+          Review data and media are preserved. No stage, commit, push, PR, merge
+          or canonical FULL was performed.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>

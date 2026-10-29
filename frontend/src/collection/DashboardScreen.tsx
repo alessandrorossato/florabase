@@ -1,3 +1,5 @@
+import { Icon, type IconName } from "../components/Icon";
+import { DashboardPhotos } from "./DashboardPhotos";
 import { useEffect, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
@@ -24,16 +26,16 @@ type State =
   | { status: "ready"; value: DashboardResponse }
   | { status: "error" };
 const actions = [
-  ["New seed lot", "#/seeds?action=create"],
-  ["New sowing", "#/sowings?action=create"],
-  ["New plant", "#/plants?action=create&kind=plant"],
-  ["New plant group", "#/plants?action=create&kind=group"],
-  ["Record harvest", "#/harvests?action=create"],
-  ["New botanical identity", "#/identities?action=create"],
-  ["New supplier", "#/suppliers?action=create"],
-  ["New location", "#/locations?action=create"],
-  ["New local place", "#/geography?action=create"],
-];
+  ["New seed lot", "#/seeds?action=create", "seed"],
+  ["New sowing", "#/sowings?action=create", "sprout"],
+  ["New plant", "#/plants?action=create&kind=plant", "plant"],
+  ["New plant group", "#/plants?action=create&kind=group", "layers"],
+  ["Record harvest", "#/harvests?action=create", "harvest"],
+  ["New botanical identity", "#/identities?action=create", "flower"],
+  ["New supplier", "#/suppliers?action=create", "store"],
+  ["New location", "#/locations?action=create", "pin"],
+  ["New local place", "#/geography?action=create", "globe"],
+] satisfies [string, string, IconName][];
 
 function isDashboardResponse(value: unknown): value is DashboardResponse {
   if (typeof value !== "object" || value === null) return false;
@@ -66,7 +68,17 @@ export function DashboardOverview() {
       .then((value: unknown) => {
         if (!isDashboardResponse(value))
           throw new Error("Invalid Dashboard response");
-        if (!controller.signal.aborted) setState({ status: "ready", value });
+        if (!controller.signal.aborted)
+          setState((current) => ({
+            status: "ready",
+            value: {
+              ...value,
+              photos:
+                current.status === "ready"
+                  ? current.value.photos
+                  : value.photos,
+            },
+          }));
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
@@ -95,17 +107,12 @@ export function DashboardOverview() {
   return (
     <div className="dashboard-content">
       <section aria-labelledby="collection-snapshot-title">
-        <SectionHeader
-          id="collection-snapshot-title"
-          title="Collection snapshot"
-        >
-          <span className="dashboard-context">
-            Current holdings · <time dateTime={data.today}>{data.today}</time>
-          </span>
-        </SectionHeader>
+        <h3 id="collection-snapshot-title" className="sr-only">
+          Collection snapshot
+        </h3>
         <div className="dashboard-metrics">
           <Metric
-            label="Plants"
+            label="Individual Plants"
             value={counts.active_plants}
             context="Active individual records"
             href="#/plants?type=plant"
@@ -131,16 +138,18 @@ export function DashboardOverview() {
         </div>
         <p className="dashboard-membership">
           <strong>{data.current_identities}</strong> botanical identities
-          represented in current material, including stored harvests.{" "}
+          represented in current material, including stored harvests ·{" "}
+          <time dateTime={data.today}>{data.today}</time>.{" "}
           <a href="#/species-distribution?scope=current">Explore collection</a>
         </p>
       </section>
       <div className="dashboard-columns">
+        <DashboardPhotos photos={state.value.photos ?? []} />
         <section
           className="dashboard-attention"
           aria-labelledby="attention-title"
         >
-          <SectionHeader id="attention-title" title="Attention & upcoming">
+          <SectionHeader id="attention-title" title="Next work">
             <a href="#/schedule">Open Schedule</a>
           </SectionHeader>
           <div className="dashboard-attention-counts">
@@ -166,9 +175,7 @@ export function DashboardOverview() {
               </a>
             ))}
           </div>
-          <p className="dashboard-context">
-            Planned work · next 7 days starts tomorrow
-          </p>
+          <p className="dashboard-context">Next 7 days starts tomorrow</p>
           {data.upcoming.length ? (
             <ol className="dashboard-rows">
               {data.upcoming.map((item) => (
@@ -208,52 +215,68 @@ export function DashboardOverview() {
             </EmptyState>
           )}
         </section>
-        <section
-          className="dashboard-recent"
-          aria-labelledby="recent-activity-title"
+      </div>
+      <div className="dashboard-secondary-strip">
+        <details className="dashboard-activity-disclosure">
+          <summary>
+            Recent activity · {data.recent_activity.length} latest entries
+          </summary>
+          <section
+            className="dashboard-recent"
+            aria-labelledby="recent-activity-title"
+          >
+            <SectionHeader id="recent-activity-title" title="Recent activity">
+              <span className="dashboard-section-links">
+                <a href="#/events">Open Journal</a>
+                <a href="#/history">Open History</a>
+              </span>
+            </SectionHeader>
+            <p className="dashboard-context">
+              Recorded observations and operational facts
+            </p>
+            {data.recent_activity.length ? (
+              <ol className="dashboard-rows">
+                {data.recent_activity.map((entry) => (
+                  <li key={entry.key}>
+                    <article>
+                      <div className="dashboard-activity-heading">
+                        <StatusBadge>
+                          {historyOrigin(entry).surface}
+                        </StatusBadge>
+                        <time>{historyDateLabel(entry)}</time>
+                        {entry.status === "reversed" && (
+                          <StatusBadge>Reversed</StatusBadge>
+                        )}
+                      </div>
+                      <a
+                        className="dashboard-row-title"
+                        href={historyHref(entry.primary, entry.source_kind)}
+                      >
+                        {entry.title}
+                      </a>
+                      <p>
+                        {entry.primary.label}
+                        {entry.context ? ` · ${entry.context}` : ""}
+                      </p>
+                    </article>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <EmptyState>
+                No recent activity. Journal observations and recorded operations
+                will appear here.
+              </EmptyState>
+            )}
+          </section>
+        </details>
+        <nav
+          className="dashboard-secondary-links"
+          aria-label="Activity destinations"
         >
-          <SectionHeader id="recent-activity-title" title="Recent activity">
-            <span className="dashboard-section-links">
-              <a href="#/events">Open Journal</a>
-              <a href="#/history">Open History</a>
-            </span>
-          </SectionHeader>
-          <p className="dashboard-context">
-            Recorded observations and operational facts
-          </p>
-          {data.recent_activity.length ? (
-            <ol className="dashboard-rows">
-              {data.recent_activity.map((entry) => (
-                <li key={entry.key}>
-                  <article>
-                    <div className="dashboard-activity-heading">
-                      <StatusBadge>{historyOrigin(entry).surface}</StatusBadge>
-                      <time>{historyDateLabel(entry)}</time>
-                      {entry.status === "reversed" && (
-                        <StatusBadge>Reversed</StatusBadge>
-                      )}
-                    </div>
-                    <a
-                      className="dashboard-row-title"
-                      href={historyHref(entry.primary, entry.source_kind)}
-                    >
-                      {entry.title}
-                    </a>
-                    <p>
-                      {entry.primary.label}
-                      {entry.context ? ` · ${entry.context}` : ""}
-                    </p>
-                  </article>
-                </li>
-              ))}
-            </ol>
-          ) : (
-            <EmptyState>
-              No recent activity. Journal observations and recorded operations
-              will appear here.
-            </EmptyState>
-          )}
-        </section>
+          <a href="#/events">Open Journal</a>
+          <a href="#/history">Open History</a>
+        </nav>
       </div>
     </div>
   );
@@ -283,8 +306,9 @@ export function DashboardScreen() {
             />
             <OverflowMenu label="Quick add ▾" ariaLabel="Quick add">
               <nav className="dashboard-quick-add" aria-label="Quick actions">
-                {actions.map(([label, href]) => (
+                {actions.map(([label, href, icon]) => (
                   <a key={label} href={href}>
+                    <Icon name={icon} />
                     {label}
                   </a>
                 ))}

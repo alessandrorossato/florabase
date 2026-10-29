@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en" data-palette="botanical" data-appearance="light">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>Florabase · Eight targeted proposals</title
+  ><style>
+    @import url("/source/frontend/src/styles/tokens.css");
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: var(--background, #f6f7f3);
+      color: var(--text, #1e2621);
+      font: 15px/1.5 var(--font-ui, system-ui);
+    }
+    body > header,
+    body > main {
+      padding: 24px;
+    }
+    a {
+      color: var(--primary, #2f684f);
+    }
+    h1 {
+      font-size: 28px;
+    }
+    h2 {
+      font-size: 24px;
+      margin: 0 0 8px;
+    }
+    h3 {
+      font-size: 18px;
+      margin: 0 0 12px;
+    }
+    p {
+      margin: 8px 0 16px;
+    }
+    .comparison {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 24px;
+    }
+    .comparison > section {
+      min-width: 0;
+    }
+    .baseline {
+      width: 100%;
+      height: 420px;
+      object-fit: contain;
+      object-position: top;
+      background: var(--surface-subtle, #eef1ec);
+    }
+    figure {
+      margin: 0 0 16px;
+    }
+    figcaption,
+    .muted,
+    small {
+      font-size: 13px;
+      color: var(--text-muted, #667068);
+    }
+    .specimen {
+      padding: 24px;
+      background: var(--surface, #fff);
+      border: 1px solid var(--border, #dde3dc);
+      border-radius: 10px;
+      min-height: 420px;
+    }
+    .specimen > section {
+      padding: 16px 0;
+    }
+    .head,
+    .line {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .head > div:first-child {
+      flex: 1 1 230px;
+    }
+    .head {
+      flex-wrap: wrap;
+    }
+    .tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-start;
+      flex: 2 1 320px;
+    }
+    .search {
+      flex: 1 1 224px;
+    }
+    .crumb {
+      font-size: 13px;
+      margin-bottom: 24px;
+      color: var(--text-muted);
+    }
+    button,
+    input,
+    select {
+      font: inherit;
+      min-height: 44px;
+      border: 1px solid var(--border-strong, #7c8980);
+      border-radius: 6px;
+      padding: 8px 12px;
+      background: var(--surface, #fff);
+      color: inherit;
+      max-width: 100%;
+    }
+    button {
+      cursor: default;
+    }
+    input,
+    select {
+      width: 100%;
+      display: block;
+    }
+    label {
+      display: block;
+      margin-bottom: 16px;
+    }
+    .primary {
+      background: var(--primary, #2f684f);
+      color: var(--on-primary, #fff);
+    }
+    .danger {
+      background: var(--danger, #b54747);
+      color: var(--on-primary, #fff);
+    }
+    .safe-focus {
+      outline: 3px solid var(--focus-ring, #3d6f8e);
+      outline-offset: 3px;
+    }
+    .footer {
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+      margin-top: 24px;
+    }
+    .chips {
+      margin: 12px 0 24px;
+      font-size: 13px;
+    }
+    .drawer {
+      max-width: 360px;
+      margin-left: auto;
+    }
+    .phone {
+      max-width: 390px;
+      border: 1px solid var(--border);
+    }
+    .phone main {
+      padding: 16px;
+    }
+    .mobilehead {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .phone .head {
+      display: block;
+    }
+    .phone .tools {
+      display: flex;
+    }
+    .phone .search {
+      flex-basis: 100%;
+    }
+    .record {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+      overflow-wrap: anywhere;
+    }
+    .record p {
+      margin: 4px 0;
+    }
+    .placeholder {
+      width: 64px;
+      height: 64px;
+      flex-shrink: 0;
+      background: var(--surface-subtle);
+      display: grid;
+      place-items: center;
+    }
+    .bottom {
+      padding: 12px;
+      background: var(--surface-subtle);
+      font-size: 13px;
+    }
+    .tabs {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 0 16px;
+      margin-bottom: 24px;
+    }
+    .tabs span {
+      color: var(--primary);
+      font-weight: bold;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .metrics b,
+    .metrics small {
+      display: block;
+    }
+    .metrics b {
+      font-size: 28px;
+    }
+    .rule {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+    }
+    .confirm {
+      max-width: 440px;
+      margin: 48px auto;
+    }
+    .form {
+      max-width: 560px;
+    }
+    fieldset {
+      border: 0;
+      padding: 16px 0;
+      margin: 0;
+      border-top: 1px solid var(--border);
+    }
+    legend {
+      font-weight: bold;
+    }
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .photo {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    .ratio {
+      aspect-ratio: 4/3;
+      background: var(--surface-subtle);
+      padding: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .sr {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    .facts {
+      max-width: 100ch;
+    }
+    .facts dt {
+      font-weight: 600;
+      margin-top: 12px;
+    }
+    .facts dd {
+      margin-left: 0;
+    }
+    :focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 3px;
+    }
+    @media (max-width: 1000px) {
+      .comparison {
+        grid-template-columns: 1fr;
+      }
+      .photo-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .metrics {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+  <header>
+    <a href="../gallery.html">Screenshot gallery</a>
+    <h1>Eight targeted visual proposals</h1>
+    <p>
+      Real current baseline beside a labelled static proposal. No broad UI
+      change is implemented.
+    </p>
+  </header>
+  <main>
+    <ol>
+      <li>
+        <a href="01-headers.html">Directory header alignment</a> · F09/F03:
+        the1024px column header retains horizontal flex bases as vertical
+        height, pushing Media content below the viewport; desktop alignment also
+        differs.
+      </li>
+      <li>
+        <a href="02-filter-drawer.html">One live filter drawer</a> · F06:
+        title/close/footer and scroll composition varies among drawers and small
+        tasks.
+      </li>
+      <li>
+        <a href="03-mobile.html">Mobile shell and readable rows</a> · F02:
+        duplicated mobile chrome and right-column metadata restrict the reading
+        area.
+      </li>
+      <li>
+        <a href="04-surfaces.html">Reduce redundant detail containers</a> · F05:
+        accepted Identity detail debt includes several nested surfaces.
+      </li>
+      <li>
+        <a href="05-safe-focus.html"
+          >Safe focus in a destructive confirmation</a
+        >
+        · F01: destructive Delete is the first focused control in the real
+        confirmation.
+      </li>
+      <li>
+        <a href="06-editors.html"
+          >Shared editor framing, retained business rules</a
+        >
+        · F06: contextual and direct editors already exist but framing/footer
+        varies.
+      </li>
+      <li>
+        <a href="07-media.html"
+          >Full-width photography with contextual inspection</a
+        >
+        · F04: an unused permanent preview rail narrows the gallery and reduces
+        photographic density.
+      </li>
+      <li>
+        <a href="08-states.html">Factual empty, loading and recovery states</a>
+        · F07: message spacing, announcements and recovery placement vary across
+        equivalent states.
+      </li>
+    </ol>
+    <p>
+      Recommended decision: approve shared grammar plus safe destructive focus
+      and mobile readability first, retain specialized workspaces, and let Media
+      own photography.
+    </p>
+  </main>
+</html>

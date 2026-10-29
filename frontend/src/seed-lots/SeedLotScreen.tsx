@@ -1,3 +1,13 @@
+import {
+  DirectoryPage,
+  DirectoryViewSwitcher,
+  DirectoryRecords,
+  DirectoryRow,
+  DirectoryCard,
+  DirectoryInspector,
+  DirectoryRecordActions,
+} from "../components/DirectoryPage";
+import { useDirectoryPresentation } from "../components/directoryPresentation";
 import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
 import { ActionButton, ActionLink } from "../components/Action";
 import "../components/collection-page.css";
@@ -272,6 +282,7 @@ function SeedLotPreview({
   return (
     <QuickPreview>
       <RecordVisual
+        showSource
         photo={lot.primary_photo ?? null}
         label={recordName(lot, "Seed lot")}
         compact
@@ -296,6 +307,36 @@ function SeedLotPreview({
         )}
       </div>
       <dl className="record-preview__facts">
+        <div>
+          <dt>Source</dt>
+          <dd>
+            {sourceLabels[lot.source_kind]}
+            {lot.source_detail ? ` · ${lot.source_detail}` : ""}
+          </dd>
+        </div>
+        <div>
+          <dt>Material provenance</dt>
+          <dd>
+            {lot.material_provenance ? (
+              <a href={`#/geography?place=${lot.material_provenance.id}`}>
+                {lot.material_provenance.display_path}
+              </a>
+            ) : (
+              "Not recorded"
+            )}
+          </dd>
+        </div>
+        {lot.order && (
+          <div>
+            <dt>Order</dt>
+            <dd>
+              <a href={`#/orders/${lot.order.id}`}>
+                {lot.order.order_reference ?? "Purchase order"}
+              </a>
+            </dd>
+          </div>
+        )}
+
         <div>
           <dt>Status</dt>
           <dd>{lifecycleLabels[lot.lifecycle]}</dd>
@@ -784,6 +825,11 @@ export function SeedLotScreen({
   const recordName = useRecordName();
 
   const auth = useAuth();
+  const presentation = useDirectoryPresentation("seed_lots");
+  const DirectoryItem =
+    presentation.view === "list" ? DirectoryRow : DirectoryCard;
+  const directoryList = useRef<HTMLUListElement | null>(null);
+
   const [inventory, setInventory] = useState<InventoryState>({
     status: "loading",
   });
@@ -842,6 +888,7 @@ export function SeedLotScreen({
   const [orderContextError, setOrderContextError] = useState(false);
   const editBaseline = useRef("");
   const editTrigger = useRef<HTMLButtonElement | null>(null);
+  const selectedTrigger = useRef<HTMLButtonElement | null>(null);
   const directEditHandled = useRef(false);
   const edit = useEditRoute({
     routeIsEdit: initialTab === "edit",
@@ -1068,6 +1115,7 @@ export function SeedLotScreen({
   const bulk = useBulkSelection(
     JSON.stringify(view.state) + String(initialId) + String(editing),
     bulkChoices,
+    true,
   );
   if (!references && inventory.status === "loading") {
     return (
@@ -1958,544 +2006,601 @@ export function SeedLotScreen({
   ) : null;
 
   return (
-    <section
-      className="workspace seeds-workspace"
-      aria-labelledby="seeds-title"
-    >
-      <div
-        className="seed-context-page"
-        inert={edit.modal}
-        aria-hidden={edit.modal || undefined}
-      >
-        <WorkspaceIntro
-          contextOnly={detailOpen || (editing && !edit.modal)}
-          {...seedPage}
-          tools={
-            !(detailOpen || (editing && !edit.modal)) && (
-              <DirectoryTools
-                context={
-                  identityFilter ? (
-                    <a href={`#/identities/${identityFilter}?tab=overview`}>
-                      Return to botanical identity
-                    </a>
-                  ) : undefined
-                }
-                onReset={() => {
-                  view.replace({
-                    ...view.state,
-                    lifecycle: "all",
-                    identity_id: "",
-                  });
-                }}
-                name="Seeds"
-                search={
-                  <DirectorySearch
-                    hideLabel
-                    id="seed-search"
-                    label="Search seed inventory"
-                    placeholder="Search lots, identity or location"
-                    value={search}
-                    onChange={setSearch}
-                  />
-                }
-                savedViews={
-                  <SavedViews
-                    presentation="dialog"
-                    surface="seed_lots"
-                    state={view.savedState}
-                  />
-                }
-                filters={
-                  <>
-                    <BotanicalIdentityFilter
-                      choices={Array.from(
-                        new Map(
-                          lots.map((lot) => [
-                            lot.botanical_identity_id,
-                            {
-                              id: lot.botanical_identity_id,
-                              label: lot.botanical_identity.display_label,
-                            },
-                          ]),
-                        ).values(),
-                      )}
-                      value={identityFilter}
-                      onChange={(id) => {
-                        view.update("identity_id", id);
-                      }}
-                    />
-                    <DirectoryFilterSelect
-                      label="Lifecycle"
-                      value={filter}
-                      onChange={setFilter}
-                      options={[
-                        { value: "active", label: "Active" },
-                        { value: "history", label: "History" },
-                        { value: "all", label: "All" },
-                      ]}
-                    />
-                  </>
-                }
-                activeFilters={[
-                  ...(identityFilter
-                    ? [
-                        {
-                          label: "Botanical identity",
-                          value:
-                            references.identities.find(
-                              ({ id }) => id === identityFilter,
-                            )?.display_label ?? identityFilter,
-                          onRemove: () => {
-                            view.update("identity_id", "");
-                          },
-                        },
-                      ]
-                    : []),
-                  ...(filter !== "all"
-                    ? [
-                        {
-                          label: "Lifecycle",
-                          value: filter === "active" ? "Active" : "History",
-                          onRemove: () => {
-                            setFilter("all");
-                          },
-                        },
-                      ]
-                    : []),
-                ]}
-                actions={
-                  <ActionButton
-                    icon="add"
-                    type="button"
-                    ref={creationTriggerRef}
-                    data-collection-return="create"
-                    aria-expanded={creationExpanded}
-                    aria-controls="new-seed-lot-panel"
-                    onClick={() => {
-                      if (creationExpanded) focusCreation();
-                      else startCreate();
-                    }}
-                  >
-                    New seed lot
-                  </ActionButton>
-                }
-              />
-            )
-          }
-        />
-        {orderContextError && (
-          <div role="alert" className="notice notice--error">
-            <p>
-              Could not load the Order context. No seed lot has been created.
-            </p>
-            <button
-              type="button"
-              onClick={() => {
-                setAttempt((value) => value + 1);
-              }}
-            >
-              Retry Order context
-            </button>
-          </div>
-        )}
-        {initialOrderId &&
-          startCreating &&
-          !orderContext &&
-          !orderContextError && <p role="status">Loading Order context…</p>}
-        <div
-          className={`seed-master-detail operational-layout directory-preview-layout${detailOpen || (editing && !edit.modal) ? " is-detail-view" : ""}`}
-        >
-          <section
-            className="seed-master"
-            aria-labelledby="seed-inventory-title"
+    <DirectoryPage
+      titleId="seeds-title"
+      className="seeds-workspace"
+      header={null}
+      content={
+        <>
+          <div
+            className="seed-context-page"
+            inert={edit.modal}
+            aria-hidden={edit.modal || undefined}
           >
-            <h3 className="sr-only" id="seed-inventory-title">
-              Seed lot inventory
-            </h3>
-            <BulkToolbar
-              selection={bulk}
-              visible={bulkChoices}
-              onSuccess={() => {
-                setSelectedId(null);
-                setDetailOpen(false);
-                setAttempt((value) => value + 1);
+            <WorkspaceIntro
+              contextOnly={detailOpen || (editing && !edit.modal)}
+              {...seedPage}
+              tools={
+                !(detailOpen || (editing && !edit.modal)) && (
+                  <DirectoryTools
+                    context={
+                      identityFilter ? (
+                        <a href={`#/identities/${identityFilter}?tab=overview`}>
+                          Return to botanical identity
+                        </a>
+                      ) : undefined
+                    }
+                    onReset={() => {
+                      view.replace({
+                        ...view.state,
+                        lifecycle: "all",
+                        identity_id: "",
+                      });
+                    }}
+                    name="Seeds"
+                    search={
+                      <DirectorySearch
+                        hideLabel
+                        id="seed-search"
+                        label="Search seed inventory"
+                        placeholder="Search lots, identity or location"
+                        value={search}
+                        onChange={setSearch}
+                      />
+                    }
+                    presentation={
+                      <DirectoryViewSwitcher
+                        value={presentation.view}
+                        onChange={presentation.select}
+                      />
+                    }
+                    savedViews={
+                      <SavedViews
+                        presentation="dialog"
+                        surface="seed_lots"
+                        state={view.savedState}
+                      />
+                    }
+                    filters={
+                      <>
+                        <BotanicalIdentityFilter
+                          choices={Array.from(
+                            new Map(
+                              lots.map((lot) => [
+                                lot.botanical_identity_id,
+                                {
+                                  id: lot.botanical_identity_id,
+                                  label: lot.botanical_identity.display_label,
+                                },
+                              ]),
+                            ).values(),
+                          )}
+                          value={identityFilter}
+                          onChange={(id) => {
+                            view.update("identity_id", id);
+                          }}
+                        />
+                        <DirectoryFilterSelect
+                          label="Lifecycle"
+                          value={filter}
+                          onChange={setFilter}
+                          options={[
+                            { value: "active", label: "Active" },
+                            { value: "history", label: "History" },
+                            { value: "all", label: "All" },
+                          ]}
+                        />
+                      </>
+                    }
+                    activeFilters={[
+                      ...(identityFilter
+                        ? [
+                            {
+                              label: "Botanical identity",
+                              value:
+                                references.identities.find(
+                                  ({ id }) => id === identityFilter,
+                                )?.display_label ?? identityFilter,
+                              onRemove: () => {
+                                view.update("identity_id", "");
+                              },
+                            },
+                          ]
+                        : []),
+                      ...(filter !== "all"
+                        ? [
+                            {
+                              label: "Lifecycle",
+                              value: filter === "active" ? "Active" : "History",
+                              onRemove: () => {
+                                setFilter("all");
+                              },
+                            },
+                          ]
+                        : []),
+                    ]}
+                    actions={
+                      <ActionButton
+                        icon="add"
+                        type="button"
+                        ref={creationTriggerRef}
+                        data-collection-return="create"
+                        aria-expanded={creationExpanded}
+                        aria-controls="new-seed-lot-panel"
+                        onClick={() => {
+                          if (creationExpanded) focusCreation();
+                          else startCreate();
+                        }}
+                      >
+                        New seed lot
+                      </ActionButton>
+                    }
+                  />
+                )
+              }
+            />
+            {orderContextError && (
+              <div role="alert" className="notice notice--error">
+                <p>
+                  Could not load the Order context. No seed lot has been
+                  created.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAttempt((value) => value + 1);
+                  }}
+                >
+                  Retry Order context
+                </button>
+              </div>
+            )}
+            {initialOrderId &&
+              startCreating &&
+              !orderContext &&
+              !orderContextError && <p role="status">Loading Order context…</p>}
+            <div
+              className={`seed-master-detail operational-layout directory-preview-layout${detailOpen || (editing && !edit.modal) ? " is-detail-view" : ""}`}
+            >
+              <section
+                className="seed-master"
+                aria-labelledby="seed-inventory-title"
+              >
+                <h3 className="sr-only" id="seed-inventory-title">
+                  Seed lot inventory
+                </h3>
+                <BulkToolbar
+                  selection={bulk}
+                  visible={bulkChoices}
+                  onSuccess={() => {
+                    setSelectedId(null);
+                    setDetailOpen(false);
+                    setAttempt((value) => value + 1);
+                  }}
+                />
+                {inventory.status === "ready" && (
+                  <DirectoryResults
+                    count={visible.length}
+                    actions={
+                      <BulkSelect
+                        selection={bulk}
+                        visible={bulkChoices}
+                        onStart={() => {
+                          setSelectedId(null);
+                          setDetailOpen(false);
+                        }}
+                      />
+                    }
+                  />
+                )}
+                {lots.length === 0 ? (
+                  <div className="empty-state">
+                    <h3>No seeds recorded yet</h3>
+                    <p>
+                      Add a seed lot with only its botanical identity;
+                      everything unknown can remain unknown.
+                    </p>
+                  </div>
+                ) : visible.length === 0 ? (
+                  <div className="empty-state">
+                    <h3>No matching seed lots</h3>
+                    <p>
+                      Try another search or lifecycle view. Historical records
+                      remain available under History or All.
+                    </p>
+                  </div>
+                ) : (
+                  <DirectoryRecords
+                    view={presentation.view}
+                    label="Seed inventory"
+                    listRef={directoryList}
+                  >
+                    {visible.map((lot, bulkIndex) => (
+                      <DirectoryItem
+                        onClick={(event) => {
+                          bulk.recordClick(event, bulkChoices[bulkIndex]);
+                        }}
+                        key={lot.id}
+                        selected={
+                          bulk.checked({ kind: "seed_lot", id: lot.id }) ||
+                          selectedId === lot.id
+                        }
+                      >
+                        <BulkCheckbox
+                          selection={bulk}
+                          choice={bulkChoices[bulkIndex]}
+                        />
+                        <button
+                          type="button"
+                          className="ui-directory-trigger"
+                          aria-pressed={selectedId === lot.id}
+                          onClick={(event) => {
+                            if (bulk.recordClick(event, bulkChoices[bulkIndex]))
+                              return;
+                            if (creationExpanded)
+                              closeCreation({ returnFocus: false });
+                            selectedTrigger.current = event.currentTarget;
+                            setSelectedId(lot.id);
+                            const isMobile =
+                              window.matchMedia("(max-width: 48rem)").matches;
+                            setDetailOpen(isMobile);
+                            if (isMobile) setRecordRoute(`#/seeds/${lot.id}`);
+                            setEditing(false);
+                            setSave({ status: "idle" });
+                          }}
+                        >
+                          <span className="ui-directory-record-identity">
+                            <RecordVisual
+                              showSource={presentation.view === "gallery"}
+                              photo={lot.primary_photo ?? null}
+                              label={recordName(lot, "Seed lot")}
+                              compact
+
+                              identity={lot.botanical_identity}
+                              kind={"seed"}
+                            />
+                            <span className="ui-directory-record-name">
+                              <strong>
+                                {recordName(lot, "Unlabelled seed lot")}
+                              </strong>
+                              <small>
+                                <BotanicalName
+                                  label={lot.botanical_identity.display_label}
+                                  scientificName={scientificNames.get(
+                                    lot.botanical_identity_id,
+                                  )}
+                                />
+                              </small>
+                            </span>
+                          </span>
+                          <span className="ui-directory-record-facts">
+                            <strong>
+                              {quantityLabel(lot)}
+                              {lot.quantity && lot.lifecycle === "active"
+                                ? " remaining"
+                                : ""}
+                            </strong>
+                            {lot.lifecycle !== "active" && (
+                              <small>Recorded quantity</small>
+                            )}
+                          </span>
+
+                          <span
+                            className={`lifecycle-badge lifecycle-badge--${lot.lifecycle}`}
+                          >
+                            {lifecycleLabels[lot.lifecycle]}
+                          </span>
+                        </button>
+                        <DirectoryRecordActions
+                          label={recordName(lot, "Unlabelled seed lot")}
+                          onPreview={(trigger) => {
+                            selectedTrigger.current = trigger;
+                            setSelectedId(lot.id);
+                            setDetailOpen(false);
+                            setEditing(false);
+                            setSave({ status: "idle" });
+                          }}
+                          onDetails={(trigger) => {
+                            selectedTrigger.current = trigger;
+                            setSelectedId(lot.id);
+                            setDetailOpen(true);
+                            setRecordRoute(`#/seeds/${lot.id}`);
+                            setEditing(false);
+                          }}
+                          onEdit={(trigger) => {
+                            startEdit(lot, trigger);
+                          }}
+                        />
+                      </DirectoryItem>
+                    ))}
+                  </DirectoryRecords>
+                )}
+              </section>
+              {(creationExpanded ||
+                editing ||
+                detailOpen ||
+                visible.some((lot) => lot.id === selectedId)) && (
+                <section
+                  id={creationExpanded ? "new-seed-lot-panel" : undefined}
+                  className={
+                    creationExpanded
+                      ? "seed-detail-pane seed-creation-panel"
+                      : "seed-detail-pane"
+                  }
+                  ref={creationExpanded ? creationPanelRef : undefined}
+                  aria-label="Seed lot detail and editor"
+                >
+                  {save.status === "success" && (
+                    <div className="notice notice--success" role="status">
+                      {save.message}
+                    </div>
+                  )}
+                  {editing && !edit.modal ? (
+                    editor
+                  ) : selected ? (
+                    detailOpen ? (
+                      <div className="selected-seed">
+                        <Detail
+                          lot={selected}
+                          headingRef={detailHeading}
+                          scientificName={scientificNames.get(
+                            selected.botanical_identity_id,
+                          )}
+                          onConversionChanged={() => {
+                            void listSeedLots()
+                              .then((lots) => {
+                                setInventory({ status: "ready", lots });
+                              })
+                              .catch((failure: unknown) => {
+                                if (
+                                  failure instanceof ApiError &&
+                                  failure.status === 401
+                                )
+                                  auth.sessionExpired();
+                                else setInventory({ status: "error" });
+                              });
+                          }}
+                          initialTab={initialTab}
+                          onPrimaryChanged={(photo) => {
+                            setInventory((current) =>
+                              current.status === "ready"
+                                ? {
+                                    status: "ready",
+                                    lots: current.lots.map((lot) =>
+                                      lot.id === selected.id
+                                        ? { ...lot, primary_photo: photo }
+                                        : lot,
+                                    ),
+                                  }
+                                : current,
+                            );
+                          }}
+                          onEdit={(event) => {
+                            startEdit(selected, event.currentTarget);
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <DirectoryInspector
+                        title="Seed lot inspection"
+                        returnFocusTo={selectedTrigger}
+                        fallbackFocusTo={directoryList}
+                        onClose={() => {
+                          setSelectedId(null);
+                        }}
+                      >
+                        <SeedLotPreview
+                          lot={selected}
+                          onOpen={() => {
+                            setDetailOpen(true);
+                            setRecordRoute(`#/seeds/${selected.id}`);
+                          }}
+                          onEdit={(event) => {
+                            startEdit(selected, event.currentTarget);
+                          }}
+                        />
+                      </DirectoryInspector>
+                    )
+                  ) : (
+                    <div className="empty-state seed-detail-empty">
+                      <h3>Select a seed lot</h3>
+                      <p>
+                        Choose a lot from the inventory to inspect or edit it
+                        without losing your place in the list.
+                      </p>
+                    </div>
+                  )}
+                </section>
+              )}
+            </div>
+          </div>
+          {edit.modal && editor}
+          {candidateOrderId && (
+            <PurchaseContextDialog
+              orderId={candidateOrderId}
+              seedLotId={selected?.id}
+              seedLotLabel={
+                selected?.label ?? selected?.botanical_identity.display_label
+              }
+              expectedSeedVersion={selected?.updated_at}
+              context={{
+                source_kind: form.sourceKind,
+                supplier_id: form.supplierId || null,
+                acquisition_date: form.acquisitionDate,
+                order_id: form.orderId || null,
+              }}
+              csrf={csrfToken}
+              onCancel={() => {
+                setCandidateOrderId("");
+              }}
+              onApplied={(result) => {
+                setForm((current) => ({
+                  ...current,
+                  orderId: result.context.order_id ?? "",
+                  sourceKind: result.context.source_kind,
+                  supplierId: result.context.supplier_id ?? "",
+                  acquisitionDate: result.context.acquisition_date ?? null,
+                }));
+                setPurchaseConfirmation(result.confirmation);
+                if (result.seed_lot) {
+                  const authoritative = result.seed_lot;
+                  editBaseline.current = JSON.stringify(
+                    formFrom(authoritative),
+                  );
+                  setInventory((current) =>
+                    current.status === "ready"
+                      ? {
+                          ...current,
+                          lots: current.lots.map((lot) =>
+                            lot.id === authoritative.id ? authoritative : lot,
+                          ),
+                        }
+                      : current,
+                  );
+                }
+                setSave({
+                  status: "success",
+                  message: result.seed_lot
+                    ? "Reviewed acquisition fields were saved. Other form drafts remain unsaved."
+                    : "Purchase context applied to this draft. Create the SeedLot to save it.",
+                });
+                setCandidateOrderId("");
               }}
             />
-            {inventory.status === "ready" && (
-              <DirectoryResults
-                count={visible.length}
-                actions={
-                  <BulkSelect
-                    selection={bulk}
-                    visible={bulkChoices}
-                    onStart={() => {
-                      setSelectedId(null);
-                      setDetailOpen(false);
-                    }}
-                  />
-                }
-              />
-            )}
-            {lots.length === 0 ? (
-              <div className="empty-state">
-                <h3>No seeds recorded yet</h3>
-                <p>
-                  Add a seed lot with only its botanical identity; everything
-                  unknown can remain unknown.
-                </p>
-              </div>
-            ) : visible.length === 0 ? (
-              <div className="empty-state">
-                <h3>No matching seed lots</h3>
-                <p>
-                  Try another search or lifecycle view. Historical records
-                  remain available under History or All.
-                </p>
-              </div>
-            ) : (
-              <ul
-                className="seed-list"
-                aria-label="Seed inventory"
-                tabIndex={0}
-              >
-                {visible.map((lot, bulkIndex) => (
-                  <li
-                    key={lot.id}
-                    className={bulk.active ? "bulk-selection-row" : undefined}
-                    data-selected={
-                      bulk.checked({ kind: "seed_lot", id: lot.id }) ||
-                      undefined
-                    }
-                  >
-                    <BulkCheckbox
-                      selection={bulk}
-                      choice={bulkChoices[bulkIndex]}
-                    />
-                    <button
-                      type="button"
-                      className="seed-row"
-                      aria-pressed={selectedId === lot.id}
-                      onClick={() => {
-                        if (bulk.active) {
-                          bulk.toggle(bulkChoices[bulkIndex]);
-                          return;
-                        }
-                        if (creationExpanded)
-                          closeCreation({ returnFocus: false });
-                        setSelectedId(lot.id);
-                        const isMobile =
-                          window.matchMedia("(max-width: 48rem)").matches;
-                        setDetailOpen(isMobile);
-                        if (isMobile) setRecordRoute(`#/seeds/${lot.id}`);
-                        setEditing(false);
-                        setSave({ status: "idle" });
-                      }}
-                    >
-                      <span className="seed-primary">
-                        <RecordVisual
-                          photo={lot.primary_photo ?? null}
-                          label={recordName(lot, "Seed lot")}
-                          compact
-
-                          identity={lot.botanical_identity}
-                          kind={"seed"}
-                        />
-                        <span className="seed-primary__text">
-                          <strong>
-                            {recordName(lot, "Unlabelled seed lot")}
-                          </strong>
-                          <small>
-                            <BotanicalName
-                              label={lot.botanical_identity.display_label}
-                              scientificName={scientificNames.get(
-                                lot.botanical_identity_id,
-                              )}
-                            />
-                          </small>
-                        </span>
-                      </span>
-                      <span className="seed-quantity">
-                        <strong>
-                          {quantityLabel(lot)}
-                          {lot.quantity && lot.lifecycle === "active"
-                            ? " remaining"
-                            : ""}
-                        </strong>
-                        {lot.lifecycle !== "active" && (
-                          <small>Recorded quantity</small>
-                        )}
-                      </span>
-
-                      <span
-                        className={`lifecycle-badge lifecycle-badge--${lot.lifecycle}`}
+          )}
+          {context && (
+            <ContextDialog
+              title={
+                context.kind === "identity"
+                  ? "Create botanical identity"
+                  : context.kind === "supplier"
+                    ? "Create supplier"
+                    : context.kind === "location"
+                      ? "Create storage location"
+                      : "Create local geographic place"
+              }
+              onClose={closeContext}
+            >
+              <form onSubmit={(event) => void submitContext(event)}>
+                {context.kind === "identity" ? (
+                  <>
+                    <div className="field">
+                      <FieldLabel required htmlFor="context-scientific-name">
+                        Scientific name
+                      </FieldLabel>
+                      <input
+                        id="context-scientific-name"
+                        name="scientific_name"
+                        required
+                        defaultValue={context.query}
+                      />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="context-cultivar">Cultivar</label>
+                      <input id="context-cultivar" name="cultivar_name" />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="context-common">Common name</label>
+                      <input id="context-common" name="common_name" />
+                    </div>
+                  </>
+                ) : context.kind === "supplier" ? (
+                  <>
+                    <div className="field">
+                      <FieldLabel required htmlFor="context-name">
+                        Name
+                      </FieldLabel>
+                      <input
+                        id="context-name"
+                        name="name"
+                        required
+                        defaultValue={context.query}
+                      />
+                    </div>
+                    <div className="field">
+                      <label htmlFor="context-kind">Kind</label>
+                      <select
+                        id="context-kind"
+                        name="kind"
+                        defaultValue="seller"
                       >
-                        {lifecycleLabels[lot.lifecycle]}
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
-          <section
-            id={creationExpanded ? "new-seed-lot-panel" : undefined}
-            className={
-              creationExpanded
-                ? "seed-detail-pane seed-creation-panel"
-                : "seed-detail-pane"
-            }
-            ref={creationExpanded ? creationPanelRef : undefined}
-            aria-label="Seed lot detail and editor"
-          >
-            {save.status === "success" && (
-              <div className="notice notice--success" role="status">
-                {save.message}
-              </div>
-            )}
-            {editing && !edit.modal ? (
-              editor
-            ) : selected ? (
-              detailOpen ? (
-                <div className="selected-seed">
-                  <Detail
-                    lot={selected}
-                    headingRef={detailHeading}
-                    scientificName={scientificNames.get(
-                      selected.botanical_identity_id,
-                    )}
-                    onConversionChanged={() => {
-                      void listSeedLots()
-                        .then((lots) => {
-                          setInventory({ status: "ready", lots });
-                        })
-                        .catch((failure: unknown) => {
-                          if (
-                            failure instanceof ApiError &&
-                            failure.status === 401
-                          )
-                            auth.sessionExpired();
-                          else setInventory({ status: "error" });
-                        });
-                    }}
-                    initialTab={initialTab}
-                    onPrimaryChanged={(photo) => {
-                      setInventory((current) =>
-                        current.status === "ready"
-                          ? {
-                              status: "ready",
-                              lots: current.lots.map((lot) =>
-                                lot.id === selected.id
-                                  ? { ...lot, primary_photo: photo }
-                                  : lot,
-                              ),
-                            }
-                          : current,
-                      );
-                    }}
-                    onEdit={(event) => {
-                      startEdit(selected, event.currentTarget);
-                    }}
-                  />
+                        <option value="seller">Seller</option>
+                        <option value="nursery">Nursery</option>
+                        <option value="supermarket">Supermarket</option>
+                        <option value="person">Person</option>
+                        <option value="exchange">Exchange</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="field">
+                      <label htmlFor="context-name">Name</label>
+                      <input
+                        id="context-name"
+                        name="name"
+                        required
+                        defaultValue={context.query}
+                      />
+                    </div>
+                    <ReferencePicker
+                      label={"Parent"}
+                      required={context.kind === "place"}
+                      choices={
+                        context.kind === "location"
+                          ? locationsForScope(
+                              references.locations,
+                              "seed_lots",
+                            ).map((item) => ({
+                              id: item.id,
+                              label: item.display_path,
+                              retired: Boolean(item.retired_at),
+                            }))
+                          : references.places.map((item) => ({
+                              id: item.id,
+                              label: item.display_path,
+                              retired: Boolean(item.retired_at),
+                            }))
+                      }
+                      value=""
+                      onChange={(id) => {
+                        const hidden =
+                          document.querySelector<HTMLInputElement>(
+                            "#context-parent-id",
+                          );
+                        if (hidden) hidden.value = id;
+                      }}
+                    />
+                    <input
+                      type="hidden"
+                      id="context-parent-id"
+                      name="parent_id"
+                    />
+                  </>
+                )}
+                {contextError && (
+                  <div className="notice notice--error" role="alert">
+                    {contextError}
+                  </div>
+                )}
+                <div className="actions">
+                  <button type="submit" disabled={contextSaving}>
+                    {contextSaving ? "Creating…" : "Create and select"}
+                  </button>
+                  <button
+                    type="button"
+                    className="button--secondary"
+                    onClick={closeContext}
+                  >
+                    Cancel
+                  </button>
                 </div>
-              ) : (
-                <SeedLotPreview
-                  lot={selected}
-                  onOpen={() => {
-                    setDetailOpen(true);
-                    setRecordRoute(`#/seeds/${selected.id}`);
-                  }}
-                  onEdit={(event) => {
-                    startEdit(selected, event.currentTarget);
-                  }}
-                />
-              )
-            ) : (
-              <div className="empty-state seed-detail-empty">
-                <h3>Select a seed lot</h3>
-                <p>
-                  Choose a lot from the inventory to inspect or edit it without
-                  losing your place in the list.
-                </p>
-              </div>
-            )}
-          </section>
-        </div>
-      </div>
-      {edit.modal && editor}
-      {candidateOrderId && (
-        <PurchaseContextDialog
-          orderId={candidateOrderId}
-          seedLotId={selected?.id}
-          seedLotLabel={
-            selected?.label ?? selected?.botanical_identity.display_label
-          }
-          expectedSeedVersion={selected?.updated_at}
-          context={{
-            source_kind: form.sourceKind,
-            supplier_id: form.supplierId || null,
-            acquisition_date: form.acquisitionDate,
-            order_id: form.orderId || null,
-          }}
-          csrf={csrfToken}
-          onCancel={() => {
-            setCandidateOrderId("");
-          }}
-          onApplied={(result) => {
-            setForm((current) => ({
-              ...current,
-              orderId: result.context.order_id ?? "",
-              sourceKind: result.context.source_kind,
-              supplierId: result.context.supplier_id ?? "",
-              acquisitionDate: result.context.acquisition_date ?? null,
-            }));
-            setPurchaseConfirmation(result.confirmation);
-            if (result.seed_lot) {
-              const authoritative = result.seed_lot;
-              editBaseline.current = JSON.stringify(formFrom(authoritative));
-              setInventory((current) =>
-                current.status === "ready"
-                  ? {
-                      ...current,
-                      lots: current.lots.map((lot) =>
-                        lot.id === authoritative.id ? authoritative : lot,
-                      ),
-                    }
-                  : current,
-              );
-            }
-            setSave({
-              status: "success",
-              message: result.seed_lot
-                ? "Reviewed acquisition fields were saved. Other form drafts remain unsaved."
-                : "Purchase context applied to this draft. Create the SeedLot to save it.",
-            });
-            setCandidateOrderId("");
-          }}
-        />
-      )}
-      {context && (
-        <ContextDialog
-          title={
-            context.kind === "identity"
-              ? "Create botanical identity"
-              : context.kind === "supplier"
-                ? "Create supplier"
-                : context.kind === "location"
-                  ? "Create storage location"
-                  : "Create local geographic place"
-          }
-          onClose={closeContext}
-        >
-          <form onSubmit={(event) => void submitContext(event)}>
-            {context.kind === "identity" ? (
-              <>
-                <div className="field">
-                  <FieldLabel required htmlFor="context-scientific-name">
-                    Scientific name
-                  </FieldLabel>
-                  <input
-                    id="context-scientific-name"
-                    name="scientific_name"
-                    required
-                    defaultValue={context.query}
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="context-cultivar">Cultivar</label>
-                  <input id="context-cultivar" name="cultivar_name" />
-                </div>
-                <div className="field">
-                  <label htmlFor="context-common">Common name</label>
-                  <input id="context-common" name="common_name" />
-                </div>
-              </>
-            ) : context.kind === "supplier" ? (
-              <>
-                <div className="field">
-                  <FieldLabel required htmlFor="context-name">
-                    Name
-                  </FieldLabel>
-                  <input
-                    id="context-name"
-                    name="name"
-                    required
-                    defaultValue={context.query}
-                  />
-                </div>
-                <div className="field">
-                  <label htmlFor="context-kind">Kind</label>
-                  <select id="context-kind" name="kind" defaultValue="seller">
-                    <option value="seller">Seller</option>
-                    <option value="nursery">Nursery</option>
-                    <option value="supermarket">Supermarket</option>
-                    <option value="person">Person</option>
-                    <option value="exchange">Exchange</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="field">
-                  <label htmlFor="context-name">Name</label>
-                  <input
-                    id="context-name"
-                    name="name"
-                    required
-                    defaultValue={context.query}
-                  />
-                </div>
-                <ReferencePicker
-                  label={"Parent"}
-                  required={context.kind === "place"}
-                  choices={
-                    context.kind === "location"
-                      ? locationsForScope(
-                          references.locations,
-                          "seed_lots",
-                        ).map((item) => ({
-                          id: item.id,
-                          label: item.display_path,
-                          retired: Boolean(item.retired_at),
-                        }))
-                      : references.places.map((item) => ({
-                          id: item.id,
-                          label: item.display_path,
-                          retired: Boolean(item.retired_at),
-                        }))
-                  }
-                  value=""
-                  onChange={(id) => {
-                    const hidden =
-                      document.querySelector<HTMLInputElement>(
-                        "#context-parent-id",
-                      );
-                    if (hidden) hidden.value = id;
-                  }}
-                />
-                <input type="hidden" id="context-parent-id" name="parent_id" />
-              </>
-            )}
-            {contextError && (
-              <div className="notice notice--error" role="alert">
-                {contextError}
-              </div>
-            )}
-            <div className="actions">
-              <button type="submit" disabled={contextSaving}>
-                {contextSaving ? "Creating…" : "Create and select"}
-              </button>
-              <button
-                type="button"
-                className="button--secondary"
-                onClick={closeContext}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </ContextDialog>
-      )}
-    </section>
+              </form>
+            </ContextDialog>
+          )}
+        </>
+      }
+    />
   );
 }

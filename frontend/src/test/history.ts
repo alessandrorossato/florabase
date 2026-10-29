@@ -15,3 +15,18 @@ export async function browserBack() {
     });
   });
 }
+
+export async function browserForward() {
+  await act(async () => {
+    await new Promise<void>((resolve) => {
+      window.addEventListener(
+        "popstate",
+        () => {
+          resolve();
+        },
+        { once: true },
+      );
+      window.history.forward();
+    });
+  });
+}

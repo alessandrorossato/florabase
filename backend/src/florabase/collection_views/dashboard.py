@@ -5,19 +5,127 @@ from datetime import date
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
+from florabase.attachments.model import Attachment, AttachmentState
+from florabase.botanical_identities.model import BotanicalIdentity
 from florabase.botanical_profiles.model import (
     PROFILE_FIELDS,
     BotanicalProfile,
     BotanicalProfileNativeRange,
 )
-from florabase.collection_views.schemas import DashboardOverview
+from florabase.collection_photos.model import (
+    BotanicalIdentityCoverImage,
+    CollectionPrimaryPhoto,
+    ExternalImageReference,
+    LocalCollectionPhoto,
+    MediaAsset,
+)
+from florabase.collection_views.schemas import DashboardImage, DashboardOverview, DashboardPhoto
 from florabase.explore.service import collection_records
 from florabase.history.service import list_history
+from florabase.plants.model import Plant
 from florabase.schedule.model import ScheduledActivity
 from florabase.schedule.service import responses as schedule_responses
 from florabase.seed_lots.model import SeedLot
 from florabase.sowings.model import Sowing
 from florabase.taxonomy.model import WfoLink
+
+
+def photographs(database: Session) -> list[DashboardPhoto]:
+    """Uniform DB sampling over all active individuals, before bounded visual lookups.
+
+    PostgreSQL random() is evaluated per eligible row: no first-page bias. A response is
+    a visit snapshot; the client retains it through ordinary rerenders/day refreshes.
+    """
+    rows = database.execute(
+        select(Plant, BotanicalIdentity)
+        .join(BotanicalIdentity, BotanicalIdentity.id == Plant.botanical_identity_id)
+        .where(Plant.lifecycle == "active")
+        .order_by(func.random())
+        .limit(8)
+    ).all()
+    if not rows:
+        return []
+    ids = [plant.id for plant, _identity in rows]
+    identity_ids = [identity.id for _plant, identity in rows]
+    # Resolve explicit primary links and identity covers separately; never fetch remote URLs.
+    local = dict(
+        database.execute(
+            select(CollectionPrimaryPhoto.plant_id, LocalCollectionPhoto.media_asset_id)
+            .join(
+                LocalCollectionPhoto,
+                LocalCollectionPhoto.id == CollectionPrimaryPhoto.local_collection_photo_id,
+            )
+            .where(
+                CollectionPrimaryPhoto.plant_id.in_(ids),
+                LocalCollectionPhoto.plant_id == CollectionPrimaryPhoto.plant_id,
+            )
+        )
+        .tuples()
+        .all()
+    )
+    external = dict(
+        database.execute(
+            select(CollectionPrimaryPhoto.plant_id, ExternalImageReference.media_asset_id)
+            .join(
+                ExternalImageReference,
+                ExternalImageReference.id == CollectionPrimaryPhoto.external_image_reference_id,
+            )
+            .where(
+                CollectionPrimaryPhoto.plant_id.in_(ids),
+                ExternalImageReference.plant_id == CollectionPrimaryPhoto.plant_id,
+            )
+        )
+        .tuples()
+        .all()
+    )
+    covers = dict(
+        database.execute(
+            select(
+                BotanicalIdentityCoverImage.botanical_identity_id,
+                BotanicalIdentityCoverImage.media_asset_id,
+            ).where(BotanicalIdentityCoverImage.botanical_identity_id.in_(identity_ids))
+        )
+        .tuples()
+        .all()
+    )
+    asset_ids = set(local.values()) | set(external.values()) | set(covers.values())
+    images = (
+        {
+            asset.id: DashboardImage(
+                thumbnail_url=f"/api/v1/media-assets/{asset.id}/thumbnail"
+                + (f"?v={attachment.sha256}" if asset.kind == "external" else ""),
+                attribution=asset.attribution,
+                licence_label=asset.licence_label,
+                licence_url=asset.licence_url,
+                source_url=asset.source_url,
+            )
+            for asset, attachment in database.execute(
+                select(MediaAsset, Attachment)
+                .join(Attachment, Attachment.id == MediaAsset.attachment_id)
+                .where(
+                    MediaAsset.id.in_(asset_ids),
+                    MediaAsset.state == "active",
+                    Attachment.state == AttachmentState.ACTIVE,
+                )
+            )
+        }
+        if asset_ids
+        else {}
+    )
+    return [
+        DashboardPhoto(
+            id=plant.id,
+            title=plant.label
+            or (
+                identity.scientific_name
+                + (f" \u2018{identity.cultivar_name}\u2019" if identity.cultivar_name else "")
+            ),
+            scientific_name=identity.scientific_name,
+            image=images.get(local.get(plant.id) or external.get(plant.id)),
+            reference_image=images.get(covers.get(identity.id)),
+        )
+        for plant, identity in rows
+    ]
 
 
 def overview(database: Session, today: date) -> DashboardOverview:

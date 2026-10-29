@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Florabase · Production Wave 1 review</title>
+    <link rel="stylesheet" href="gallery.css" />
+    <script src="gallery.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <nav aria-label="Review destinations">
+        <a href="http://localhost:15279/#/dashboard"
+          >Open actual production Review</a
+        ><a href="README.md">Architecture / inventory / Wave 2</a
+        ><a href="verification.md">Checks and limits</a
+        ><a href="http://localhost:15284/ui-lab/#/components"
+          >Scaffolding demo</a
+        ><a href="../gate-b/index.html">Approved Gate B history</a>
+      </nav>
+    </header>
+    <main><p><strong>Earlier Wave 1 review snapshot.</strong> <a href="refinements/index.html">Open the current final UX refinements and approval gallery.</a></p>
+      <p class="eyebrow">
+        Gate B approved · production Wave 1 · 27 October 2026
+      </p>
+      <h1>Dashboard, Seeds and Plants — actual application.</h1>
+      <p>
+        The candidate remains unstaged and uncommitted. Canonical FULL and
+        delivery await the operator's review. These are authenticated API-backed
+        screens; the developer lab is listed separately.
+      </p>
+      <section aria-labelledby="comparison-title">
+        <h2 id="comparison-title">Before / after</h2>
+        <div class="controls">
+          <label
+            >Screen
+            <select id="page">
+              <option value="dashboard">Dashboard</option>
+              <option value="seeds">Seeds</option>
+              <option value="plants">Plants</option>
+            </select></label
+          >
+          <label id="view-label"
+            >Representation
+            <select id="view">
+              <option value="list">List</option>
+              <option value="gallery">Gallery</option>
+            </select></label
+          >
+          <label
+            >CSS viewport
+            <select id="width">
+              <option>1440</option>
+              <option>1024</option>
+              <option>880</option>
+              <option>390</option>
+            </select>
+            × 844</label
+          >
+          <label
+            >Appearance
+            <select id="theme">
+              <option value="light">Botanical Light</option>
+              <option value="dark">Botanical Dark</option>
+            </select></label
+          >
+        </div>
+        <p id="comparison-note" role="status"></p>
+        <div class="comparison">
+          <figure>
+            <figcaption>
+              Before · delivered audit, 26 October · ee34874
+            </figcaption>
+            <a id="before-link"
+              ><img id="before" alt="Delivered production baseline"
+            /></a>
+            <p id="before-note"></p>
+          </figure>
+          <figure>
+            <figcaption>
+              After · current production candidate · c77a1c5 + unstaged changes
+            </figcaption>
+            <a id="after-link"
+              ><img id="after" alt="Current production candidate"
+            /></a>
+            <p id="after-note"></p>
+          </figure>
+        </div>
+      </section>
+      <section aria-labelledby="acceptance-title">
+        <h2 id="acceptance-title">Desktop acceptance</h2>
+        <p>
+          At 1440×844, both Light and Dark show four authoritative KPIs, eight
+          loaded distinct protected thumbnails, all five Next work entries and
+          the activity destinations. Four columns × two rows, 4:3 images.
+          Document extent is 1440×844; smaller viewports scroll naturally. Full
+          recorded evidence is in the manifest.
+        </p>
+        <p>
+          <a href="http://127.0.0.1:15285/#/dashboard"
+            >Separate actual two-image Review</a
+          >: two stored illustrations, zero collection records. It uses the
+          other loopback hostname to keep its sign-in cookie separate from the
+          primary Review.
+        </p>
+        <div id="special" class="evidence"></div>
+      </section>
+      <section aria-labelledby="checks-title">
+        <h2 id="checks-title">Focused verification</h2>
+        <p>
+          402 distinct frontend tests across 20 files passed across the final
+          scoped runs, plus five PostgreSQL Dashboard integration cases, three
+          backend contract cases, three scaffold-generator cases and 24
+          impact-inventory checks. Static checks, API drift and production build
+          passed. The lab and generated example are excluded from production.
+        </p>
+        <p>
+          Browser evidence covers all five compositions at 1440, 1024, 880 and
+          390 pixels in Light/Dark. Real bulk selection and Back/Forward,
+          desktop/native-modal Quick Preview, focus return, mobile detail, empty
+          results and long-label fallbacks were exercised.
+        </p>
+        <p>
+          Physical-device, screen-reader and true browser-zoom certification,
+          live-provider checks, large-library performance and canonical FULL
+          remain unverified. Loading/network-failure behavior is covered by
+          component tests; no fake API failure was installed in production to
+          obtain a screenshot.
+        </p>
+      </section>
+      <section aria-labelledby="context-title">
+        <h2 id="context-title">Context and developer evidence</h2>
+        <p>
+          Each image links to its full JPEG. Long-record supplemental captures
+          use full-page images. The generated scaffold demonstration is
+          development-only and has no collection API.
+        </p>
+        <div id="contexts" class="evidence"></div>
+      </section>
+      <footer>
+        <p>
+          Source/base c77a1c5330de949168bf5f7c90d0f533af1bc320 · retained v5
+          Review dataset ·
+          <a href="captures.json">Capture metadata and digests</a> ·
+          <a href="dashboard-geometry.json">Measured Dashboard geometry</a>
+        </p>
+      </footer>
+    </main>
+  </body>
+</html>

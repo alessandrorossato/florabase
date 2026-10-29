@@ -1,0 +1,1694 @@
+[
+  {
+    "id": "dashboard-1024-dark",
+    "note": "Final Dashboard with shared typography tokens and natural scrolling at smaller widths.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:12:05.478Z",
+    "dashboard": {
+      "footerBottom": 1045.8359375,
+      "work": 5
+    },
+    "document": [1009, 1062],
+    "dpr": 1,
+    "photos": [
+      {
+        "height": 101.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1a45-723d-8c8f-62927ac56db9/thumbnail",
+        "width": 135.6640625
+      },
+      {
+        "height": 101.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1a22-7543-a754-854656f6c736/thumbnail",
+        "width": 135.6640625
+      },
+      {
+        "height": 101.75,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-19ed-72ef-bad0-5cc4e935aa47/thumbnail",
+        "width": 135.671875
+      },
+      {
+        "height": 101.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-19bd-7683-bab2-75b3ebefee27/thumbnail",
+        "width": 135.6640625
+      },
+      {
+        "height": 101.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1984-735a-b56a-ee435f1585c2/thumbnail",
+        "width": 135.6640625
+      },
+      {
+        "height": 101.75,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-194c-70d6-9c36-1b2b0fee3b05/thumbnail",
+        "width": 135.671875
+      },
+      {
+        "height": 101.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-18fb-75f5-a155-eb4ee4f3ebc5/thumbnail",
+        "width": 135.6640625
+      },
+      {
+        "height": 101.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-188d-710b-b63c-6e2a5db5d7a0/thumbnail",
+        "width": 135.6640625
+      }
+    ],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/dashboard",
+    "viewport": [1024, 844],
+    "sha256": "cee9c25d4f07f1e29de0d29c9d16b0713127f5eeafd736546a6bc71c0e0233d7",
+    "raster": [1009, 832],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "dashboard-1024-light",
+    "note": "Final Dashboard using shared semantic typography tokens; smaller widths scroll naturally.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:16:46.712Z",
+    "dashboard": {
+      "footerBottom": 1052.109375,
+      "work": 5
+    },
+    "document": [1009, 1068],
+    "dpr": 1,
+    "photos": [
+      {
+        "height": 109.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1a45-723d-8c8f-62927ac56db9/thumbnail",
+        "width": 146.328125
+      },
+      {
+        "height": 109.75,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1a22-7543-a754-854656f6c736/thumbnail",
+        "width": 146.3359375
+      },
+      {
+        "height": 109.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-19ed-72ef-bad0-5cc4e935aa47/thumbnail",
+        "width": 146.328125
+      },
+      {
+        "height": 109.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-19bd-7683-bab2-75b3ebefee27/thumbnail",
+        "width": 146.328125
+      },
+      {
+        "height": 109.75,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1984-735a-b56a-ee435f1585c2/thumbnail",
+        "width": 146.3359375
+      },
+      {
+        "height": 109.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-194c-70d6-9c36-1b2b0fee3b05/thumbnail",
+        "width": 146.328125
+      },
+      {
+        "height": 109.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-18fb-75f5-a155-eb4ee4f3ebc5/thumbnail",
+        "width": 146.328125
+      },
+      {
+        "height": 109.75,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-188d-710b-b63c-6e2a5db5d7a0/thumbnail",
+        "width": 146.3359375
+      }
+    ],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/dashboard",
+    "viewport": [1024, 844],
+    "sha256": "54805ba643180f54c05c1a4fec216945bc747f21c2977ee20d6ee70c3208a1ab",
+    "raster": [1009, 832],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "dashboard-1440-dark",
+    "note": "Final token-based typography, Botanical Dark, sidebar 252px; complete desktop viewport.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:12:05.218Z",
+    "dashboard": {
+      "footerBottom": 825.8828125,
+      "work": 5
+    },
+    "document": [1440, 844],
+    "dpr": 1,
+    "photos": [
+      {
+        "height": 148.5,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1a45-723d-8c8f-62927ac56db9/thumbnail",
+        "width": 198
+      },
+      {
+        "height": 148.5,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1a22-7543-a754-854656f6c736/thumbnail",
+        "width": 198
+      },
+      {
+        "height": 148.5,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-19ed-72ef-bad0-5cc4e935aa47/thumbnail",
+        "width": 198
+      },
+      {
+        "height": 148.5,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-19bd-7683-bab2-75b3ebefee27/thumbnail",
+        "width": 198
+      },
+      {
+        "height": 148.5,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1984-735a-b56a-ee435f1585c2/thumbnail",
+        "width": 198
+      },
+      {
+        "height": 148.5,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-194c-70d6-9c36-1b2b0fee3b05/thumbnail",
+        "width": 198
+      },
+      {
+        "height": 148.5,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-18fb-75f5-a155-eb4ee4f3ebc5/thumbnail",
+        "width": 198
+      },
+      {
+        "height": 148.5,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-188d-710b-b63c-6e2a5db5d7a0/thumbnail",
+        "width": 198
+      }
+    ],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/dashboard",
+    "viewport": [1440, 844],
+    "sha256": "72076322e09f5e9b1c28c9a138042d6dd71bc7650871b83c28355a181fc8199e",
+    "raster": [1440, 844],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "dashboard-1440-light",
+    "note": "Final token-based typography; 252px sidebar; all eight images and five activities fit at 1440×844.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:12:04.673Z",
+    "dashboard": {
+      "footerBottom": 825.8828125,
+      "work": 5
+    },
+    "document": [1440, 844],
+    "dpr": 1,
+    "photos": [
+      {
+        "height": 148.5,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1a45-723d-8c8f-62927ac56db9/thumbnail",
+        "width": 198
+      },
+      {
+        "height": 148.5,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1a22-7543-a754-854656f6c736/thumbnail",
+        "width": 198
+      },
+      {
+        "height": 148.5,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-19ed-72ef-bad0-5cc4e935aa47/thumbnail",
+        "width": 198
+      },
+      {
+        "height": 148.5,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-19bd-7683-bab2-75b3ebefee27/thumbnail",
+        "width": 198
+      },
+      {
+        "height": 148.5,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1984-735a-b56a-ee435f1585c2/thumbnail",
+        "width": 198
+      },
+      {
+        "height": 148.5,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-194c-70d6-9c36-1b2b0fee3b05/thumbnail",
+        "width": 198
+      },
+      {
+        "height": 148.5,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-18fb-75f5-a155-eb4ee4f3ebc5/thumbnail",
+        "width": 198
+      },
+      {
+        "height": 148.5,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-188d-710b-b63c-6e2a5db5d7a0/thumbnail",
+        "width": 198
+      }
+    ],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/dashboard",
+    "viewport": [1440, 844],
+    "sha256": "822039d06b14608e60728ac430c58a545a59dc8dd25dddfa5ecc4408f92ae379",
+    "raster": [1440, 844],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "dashboard-390-dark",
+    "note": "Final Dashboard with shared typography tokens and natural scrolling at smaller widths.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:12:05.944Z",
+    "dashboard": {
+      "footerBottom": 2237.40625,
+      "work": 5
+    },
+    "document": [375, 2253],
+    "dpr": 1,
+    "photos": [
+      {
+        "height": 122.625,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1a45-723d-8c8f-62927ac56db9/thumbnail",
+        "width": 163.5
+      },
+      {
+        "height": 122.625,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1a22-7543-a754-854656f6c736/thumbnail",
+        "width": 163.5
+      },
+      {
+        "height": 122.625,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-19ed-72ef-bad0-5cc4e935aa47/thumbnail",
+        "width": 163.5
+      },
+      {
+        "height": 122.625,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-19bd-7683-bab2-75b3ebefee27/thumbnail",
+        "width": 163.5
+      },
+      {
+        "height": 122.625,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1984-735a-b56a-ee435f1585c2/thumbnail",
+        "width": 163.5
+      },
+      {
+        "height": 122.625,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-194c-70d6-9c36-1b2b0fee3b05/thumbnail",
+        "width": 163.5
+      },
+      {
+        "height": 122.625,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-18fb-75f5-a155-eb4ee4f3ebc5/thumbnail",
+        "width": 163.5
+      },
+      {
+        "height": 122.625,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-188d-710b-b63c-6e2a5db5d7a0/thumbnail",
+        "width": 163.5
+      }
+    ],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/dashboard",
+    "viewport": [390, 844],
+    "sha256": "730cc078709cd4219af4a44d5ac9df60e71f07c9d125c003d8d169111b5748ee",
+    "raster": [375, 812],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "dashboard-390-light",
+    "note": "Final Dashboard using shared semantic typography tokens; smaller widths scroll naturally.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:16:46.287Z",
+    "dashboard": {
+      "footerBottom": 2237.40625,
+      "work": 5
+    },
+    "document": [375, 2253],
+    "dpr": 1,
+    "photos": [
+      {
+        "height": 122.625,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1a45-723d-8c8f-62927ac56db9/thumbnail",
+        "width": 163.5
+      },
+      {
+        "height": 122.625,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1a22-7543-a754-854656f6c736/thumbnail",
+        "width": 163.5
+      },
+      {
+        "height": 122.625,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-19ed-72ef-bad0-5cc4e935aa47/thumbnail",
+        "width": 163.5
+      },
+      {
+        "height": 122.625,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-19bd-7683-bab2-75b3ebefee27/thumbnail",
+        "width": 163.5
+      },
+      {
+        "height": 122.625,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1984-735a-b56a-ee435f1585c2/thumbnail",
+        "width": 163.5
+      },
+      {
+        "height": 122.625,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-194c-70d6-9c36-1b2b0fee3b05/thumbnail",
+        "width": 163.5
+      },
+      {
+        "height": 122.625,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-18fb-75f5-a155-eb4ee4f3ebc5/thumbnail",
+        "width": 163.5
+      },
+      {
+        "height": 122.625,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-188d-710b-b63c-6e2a5db5d7a0/thumbnail",
+        "width": 163.5
+      }
+    ],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/dashboard",
+    "viewport": [390, 844],
+    "sha256": "992730f7c75a05a1baf7da2f0b2e8a70535fef9cfefc81f69e990b299fc3cb06",
+    "raster": [375, 812],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "dashboard-880-dark",
+    "note": "Final Dashboard with shared typography tokens and natural scrolling at smaller widths.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:12:05.692Z",
+    "dashboard": {
+      "footerBottom": 1154.015625,
+      "work": 5
+    },
+    "document": [865, 1170],
+    "dpr": 1,
+    "photos": [
+      {
+        "height": 65.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1a45-723d-8c8f-62927ac56db9/thumbnail",
+        "width": 87.6640625
+      },
+      {
+        "height": 65.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1a22-7543-a754-854656f6c736/thumbnail",
+        "width": 87.6640625
+      },
+      {
+        "height": 65.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-19ed-72ef-bad0-5cc4e935aa47/thumbnail",
+        "width": 87.6640625
+      },
+      {
+        "height": 65.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-19bd-7683-bab2-75b3ebefee27/thumbnail",
+        "width": 87.6640625
+      },
+      {
+        "height": 65.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1984-735a-b56a-ee435f1585c2/thumbnail",
+        "width": 87.6640625
+      },
+      {
+        "height": 65.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-194c-70d6-9c36-1b2b0fee3b05/thumbnail",
+        "width": 87.6640625
+      },
+      {
+        "height": 65.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-18fb-75f5-a155-eb4ee4f3ebc5/thumbnail",
+        "width": 87.6640625
+      },
+      {
+        "height": 65.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-188d-710b-b63c-6e2a5db5d7a0/thumbnail",
+        "width": 87.6640625
+      }
+    ],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/dashboard",
+    "viewport": [880, 844],
+    "sha256": "9def59d1239f7f71920203e07b03738bee82e6052d9712808cf9c636aab5ae7a",
+    "raster": [865, 830],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "dashboard-880-light",
+    "note": "Final Dashboard using shared semantic typography tokens; smaller widths scroll naturally.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:16:46.503Z",
+    "dashboard": {
+      "footerBottom": 1130.0546875,
+      "work": 5
+    },
+    "document": [865, 1146],
+    "dpr": 1,
+    "photos": [
+      {
+        "height": 73.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1a45-723d-8c8f-62927ac56db9/thumbnail",
+        "width": 98.328125
+      },
+      {
+        "height": 73.75,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1a22-7543-a754-854656f6c736/thumbnail",
+        "width": 98.3359375
+      },
+      {
+        "height": 73.75,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-19ed-72ef-bad0-5cc4e935aa47/thumbnail",
+        "width": 98.3359375
+      },
+      {
+        "height": 73.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-19bd-7683-bab2-75b3ebefee27/thumbnail",
+        "width": 98.328125
+      },
+      {
+        "height": 73.75,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-1984-735a-b56a-ee435f1585c2/thumbnail",
+        "width": 98.3359375
+      },
+      {
+        "height": 73.75,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-194c-70d6-9c36-1b2b0fee3b05/thumbnail",
+        "width": 98.3359375
+      },
+      {
+        "height": 73.7421875,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-18fb-75f5-a155-eb4ee4f3ebc5/thumbnail",
+        "width": 98.328125
+      },
+      {
+        "height": 73.75,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a178d0-188d-710b-b63c-6e2a5db5d7a0/thumbnail",
+        "width": 98.3359375
+      }
+    ],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/dashboard",
+    "viewport": [880, 844],
+    "sha256": "17a86c84e6bd7ec65ab054ff1f10639cb54909d6a54f90d719d3b240bebf6e90",
+    "raster": [865, 830],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "dashboard-two-images-1440",
+    "note": "Final real sparse Review with exactly two loaded protected images and zero collection records; no duplicated slots.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:19:40.462Z",
+    "dashboard": {
+      "footerBottom": 554.1875,
+      "work": 0
+    },
+    "document": [1440, 844],
+    "dpr": 1,
+    "photos": [
+      {
+        "height": 149.25,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a17d97-17de-71c9-8fc1-8a050b57962e/thumbnail",
+        "width": 199
+      },
+      {
+        "height": 149.25,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a17d97-1765-752a-add7-2145bd268540/thumbnail",
+        "width": 199
+      }
+    ],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://127.0.0.1:15285/#/dashboard",
+    "viewport": [1440, 844],
+    "sha256": "7d80c0c21d79445b06a0056fbd3a67701d75cfc98a2bf7301d89939c4cc7c747",
+    "raster": [1440, 844],
+    "environment": "florabase-ui-wave1-sparse-bc88",
+    "dataset": "two-image fixture, no collection records"
+  },
+  {
+    "id": "dashboard-two-images-attribution-1440",
+    "note": "Final reference-image attribution disclosure retains creators, source URLs and licences.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:19:40.955Z",
+    "dashboard": {
+      "footerBottom": 775.125,
+      "work": 0
+    },
+    "document": [1440, 844],
+    "dpr": 1,
+    "photos": [
+      {
+        "height": 149.25,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a17d97-17de-71c9-8fc1-8a050b57962e/thumbnail",
+        "width": 199
+      },
+      {
+        "height": 149.25,
+        "loaded": true,
+        "url": "/api/v1/media-assets/01a17d97-1765-752a-add7-2145bd268540/thumbnail",
+        "width": 199
+      }
+    ],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://127.0.0.1:15285/#/dashboard",
+    "viewport": [1440, 844],
+    "sha256": "fa946b0490386b91e9e832cb26bd8b3550310fc57c404a4ac4bfc6db0356c004",
+    "raster": [1440, 844],
+    "environment": "florabase-ui-wave1-sparse-bc88",
+    "dataset": "two-image fixture, no collection records"
+  },
+  {
+    "id": "mobile-navigation-390-dark",
+    "note": "Actual house Navigation dialog; frozen groups and account actions remain reachable.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:01:12.370Z",
+    "dashboard": null,
+    "document": [390, 1609],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds/01a178d0-18a8-7499-b79e-ae27292aa82c",
+    "viewport": [390, 844],
+    "sha256": "22ad5224913fdbcc62c233290f826e21985eb9781a3cdddcc657e2bcc2cfeccc",
+    "raster": [390, 844],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plant-groups-1440-light",
+    "note": "Actual Group scope, same Basil search; quantity six belongs to one Group record.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:16:48.001Z",
+    "dashboard": null,
+    "document": [1440, 844],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Basil&type=group",
+    "viewport": [1440, 844],
+    "sha256": "67032c0f27a49bac1872f8aaecd371052c9b1fff6e1c4ecfa53073966b7fdf0e",
+    "raster": [1440, 844],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plant-groups-bulk-list-1440-light",
+    "note": "One concrete Group remains checked across Gallery/List and its canonical filters remain intact.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:16:48.894Z",
+    "dashboard": null,
+    "document": [1440, 844],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=list&q=Basil&type=group",
+    "viewport": [1440, 844],
+    "sha256": "042d6e110c573f0ae574219895e5f6966aaa3e4ddd3db3d6ee8aca4f23dc2227",
+    "raster": [1440, 844],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-detail-390-dark",
+    "note": "Existing mobile list-to-detail workflow remains intact with actual Plant facts and tabs.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:56:00.022Z",
+    "dashboard": null,
+    "document": [375, 1404],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants/01a178cf-c91c-723e-b884-0dcd42fbfb4a",
+    "viewport": [390, 844],
+    "sha256": "c92de13303c9e198a387509a6790745193dec07c321c9ded6f3dfee11a739f6b",
+    "raster": [375, 812],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-empty-identity-guidance-1440",
+    "note": "Actual empty sparse Review: identity prerequisite and missing-target fallback remain existing domain behavior.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:47:48.260Z",
+    "dashboard": null,
+    "document": [1440, 844],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://127.0.0.1:15285/#/plants/01900000-0000-7000-8000-000000000999",
+    "viewport": [1440, 844],
+    "sha256": "ad14354d17b122674bcb35a863319f379a315aa9ce076cda4b8e57458ca8ce3e",
+    "raster": [1440, 844],
+    "environment": "florabase-ui-wave1-sparse-bc88",
+    "dataset": "two-image fixture, no collection records"
+  },
+  {
+    "id": "plants-empty-search-1440-dark",
+    "note": "Actual API-backed inventory narrowed to zero results; filters retained.",
+    "url": "http://localhost:15279/#/plants?view=list&q=protected+photo",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:30:40.184Z",
+    "dashboard": null,
+    "document": [1440, 844],
+    "images": [],
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "viewport": [1440, 844],
+    "sha256": "4d255498b3af8c6e556738f575e9b881dec0bf9aa98c16251d306cd759a4c39b",
+    "raster": [1440, 844],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-filtered-gallery-1440-dark",
+    "note": "Actual Basil results: one record primary photo and honest image fallbacks.",
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Basil",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:30:50.422Z",
+    "dashboard": null,
+    "document": [1440, 844],
+    "images": [
+      {
+        "alt": "Primary photo for Preview — Basil mother plant",
+        "loaded": true
+      }
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "viewport": [1440, 844],
+    "sha256": "ef7b9257e625dc3bfeb7b47aaa9fb652ed51dabb8ccafa0ef354932ea1cbcaee",
+    "raster": [1440, 844],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-gallery-1024-dark",
+    "note": "Actual authenticated production screen; CSS viewport 1024×844, Botanical dark.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:52:21.131Z",
+    "dashboard": null,
+    "document": [1009, 3734],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery",
+    "viewport": [1024, 844],
+    "sha256": "1a8dc070ed074bf29272330508922650a3c65976d53ebeba2246ba9af6c810c2",
+    "raster": [1009, 832],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-gallery-1024-light",
+    "note": "Actual authenticated production screen; CSS viewport 1024×844, Botanical light.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:48:30.699Z",
+    "dashboard": null,
+    "document": [1009, 3734],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery",
+    "viewport": [1024, 844],
+    "sha256": "bc7eed7fe0dc9d6db0520614796b72bc33cf8343e63c4932aa1b487b5243398e",
+    "raster": [1009, 832],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-gallery-1440-dark",
+    "note": "Actual authenticated production screen; CSS viewport 1440×844, Botanical dark.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:51:51.405Z",
+    "dashboard": null,
+    "document": [1425, 2288],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery",
+    "viewport": [1440, 844],
+    "sha256": "7eb884f62c529bc56699c5c5a607977547e27c463c54db557d0c1c2308c0d691",
+    "raster": [1425, 835],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-gallery-1440-light",
+    "note": "Actual authenticated production screen; CSS viewport 1440×844, Botanical light.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:48:18.819Z",
+    "dashboard": null,
+    "document": [1425, 2288],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery",
+    "viewport": [1440, 844],
+    "sha256": "f323f0b01c004fa2c445584b81f1abf30be92ae6e909977ec564cd923caf7092",
+    "raster": [1425, 835],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-gallery-390-dark",
+    "note": "Actual authenticated production screen; CSS viewport 390×844, Botanical dark.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:52:31.114Z",
+    "dashboard": null,
+    "document": [375, 5457],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery",
+    "viewport": [390, 844],
+    "sha256": "f9a931a471a79e492857c388421113b3656d635647834fbe19072fa265a71b20",
+    "raster": [375, 812],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-gallery-390-light",
+    "note": "Actual authenticated production screen; CSS viewport 390×844, Botanical light.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:51:45.260Z",
+    "dashboard": null,
+    "document": [375, 5457],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery",
+    "viewport": [390, 844],
+    "sha256": "1a42b1f0a88a0096d68f33534a0652e067836cad4a772b730857cec11ef9c5fe",
+    "raster": [375, 812],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-gallery-880-dark",
+    "note": "Actual authenticated production screen; CSS viewport 880×844, Botanical dark.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:52:26.116Z",
+    "dashboard": null,
+    "document": [865, 5589],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery",
+    "viewport": [880, 844],
+    "sha256": "6a9d77674a8f692118648f2cbe492885b4c6a7363632de6de5cdad035bf0cc18",
+    "raster": [865, 830],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-gallery-880-light",
+    "note": "Actual authenticated production screen; CSS viewport 880×844, Botanical light.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:48:35.749Z",
+    "dashboard": null,
+    "document": [865, 5589],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery",
+    "viewport": [880, 844],
+    "sha256": "60867d130c950b5f940256bff59c51d4c9b6623f4fb8da8340a8b38dcbbbc8e8",
+    "raster": [865, 830],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-list-1024-dark",
+    "note": "Actual authenticated production screen; CSS viewport 1024×844, Botanical dark.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:52:20.429Z",
+    "dashboard": null,
+    "document": [1009, 3791],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=list",
+    "viewport": [1024, 844],
+    "sha256": "ff5ad5d13499ea7e4f2f6cb7a7e568935eef8f80f71856f6fbda3e0f2011ad4a",
+    "raster": [1009, 832],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-list-1024-light",
+    "note": "Actual authenticated production screen; CSS viewport 1024×844, Botanical light.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:48:29.983Z",
+    "dashboard": null,
+    "document": [1009, 3791],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=list",
+    "viewport": [1024, 844],
+    "sha256": "19bc3f9d73799f5e6fac628897990e20df2e780cf2e34e9db5496a7ad622a7a1",
+    "raster": [1009, 832],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-list-1440-dark",
+    "note": "Actual authenticated production screen; CSS viewport 1440×844, Botanical dark.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:51:50.502Z",
+    "dashboard": null,
+    "document": [1425, 2095],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=list",
+    "viewport": [1440, 844],
+    "sha256": "d62975d005af0f3f40a07b990e8e0dcd30357649df1a5608d8e0046ecc7d6ca6",
+    "raster": [1425, 835],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-list-1440-light",
+    "note": "Actual authenticated production screen; CSS viewport 1440×844, Botanical light.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:48:18.108Z",
+    "dashboard": null,
+    "document": [1425, 2095],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=list",
+    "viewport": [1440, 844],
+    "sha256": "03fbc336da78506f560dca5a8f57de47d9ba34ef5db754afa987925603c45daf",
+    "raster": [1425, 835],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-list-390-dark",
+    "note": "Actual authenticated production screen; CSS viewport 390×844, Botanical dark.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:52:30.448Z",
+    "dashboard": null,
+    "document": [375, 4431],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=list",
+    "viewport": [390, 844],
+    "sha256": "4ecfebaad0644c3edcfd870d1b0e371d2d91bcf9b7743863ec403887dd0113db",
+    "raster": [375, 812],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-list-390-light",
+    "note": "Actual authenticated production screen; CSS viewport 390×844, Botanical light.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:51:44.602Z",
+    "dashboard": null,
+    "document": [375, 4431],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=list",
+    "viewport": [390, 844],
+    "sha256": "7541443d3247365845bb0779f21c9af6dfb02c8e0ca2ede2738e9f9317f4e207",
+    "raster": [375, 812],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-list-880-dark",
+    "note": "Actual authenticated production screen; CSS viewport 880×844, Botanical dark.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:52:25.447Z",
+    "dashboard": null,
+    "document": [865, 3844],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=list",
+    "viewport": [880, 844],
+    "sha256": "54c52f49733805454c1c7afa44931a3fb87d1265e0ae191c4ea8e780cb4076ba",
+    "raster": [865, 830],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-list-880-light",
+    "note": "Actual authenticated production screen; CSS viewport 880×844, Botanical light.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:48:35.094Z",
+    "dashboard": null,
+    "document": [865, 3844],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=list",
+    "viewport": [880, 844],
+    "sha256": "6d09461cf5b4b2752754e17d409f2798c58d78f73df8d675857a97d336f6c246",
+    "raster": [865, 830],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-long-label-390-dark",
+    "note": "Actual long synthetic cultivar and location wrap naturally; no ellipsis or horizontal overflow.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:55:58.236Z",
+    "dashboard": null,
+    "document": [375, 1049],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Capsicum",
+    "viewport": [390, 844],
+    "sha256": "2bf0387bc4b73bd833ca84d72f4230e147c15ac915b0faa6038b8ac7de82276a",
+    "raster": [375, 812],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4",
+    "fullPageSupplement": "plants-long-label-390-dark-full.jpg",
+    "fullPageSha256": "47d4158e31f1e5e87371fbc20bca2e90333dde47c3228f5b061e310c53c15e18"
+  },
+  {
+    "id": "plants-preview-1440-dark",
+    "note": "Settled actual API-backed Plant inspector; record image is the existing synthetic fixture illustration.",
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Basil",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:32:27.732Z",
+    "dashboard": null,
+    "document": [1425, 846],
+    "images": [
+      {
+        "alt": "Primary photo for Preview — Basil mother plant",
+        "loaded": true
+      },
+      {
+        "alt": "Primary photo for Preview — Basil mother plant",
+        "loaded": true
+      }
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "viewport": [1440, 844],
+    "sha256": "9af03aff56ef8bd73ef2e5485c0db649425610698af486c5fca918cd9722fe0c",
+    "raster": [1425, 835],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "plants-preview-880-dark",
+    "note": "Actual native modal inspector at 880px, Close focused; Escape returns to the connected record.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:01:13.758Z",
+    "dashboard": null,
+    "document": [880, 844],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/plants?view=gallery&q=Basil",
+    "viewport": [880, 844],
+    "sha256": "96e19a8baa0681542329c0bf726a68736d07891027da953fc49a65b15008ca64",
+    "raster": [880, 844],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "scaffold-generated-example-1280",
+    "note": "Development-only generated source demonstration; no production/API evidence claimed. Keyboard view switch retains typed search.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:04:13.100Z",
+    "dashboard": null,
+    "document": [1265, 1096],
+    "dpr": 2,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15284/ui-lab/#/components",
+    "viewport": [1280, 720],
+    "sha256": "75929d11e6b86a37e2a122f605e0770939fb9ea27fd825e554461faaa049a253",
+    "raster": [1265, 712],
+    "environment": "development-only UI lab",
+    "dataset": "development-only synthetic specimens"
+  },
+  {
+    "id": "seeds-detail-390-dark",
+    "note": "Existing mobile detail retains actual inventory precision, media and contextual operations.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:00:45.048Z",
+    "dashboard": null,
+    "document": [375, 1609],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds/01a178d0-18a8-7499-b79e-ae27292aa82c",
+    "viewport": [390, 844],
+    "sha256": "ad5e425d318cc987e2b09a9a0e3ef9fb74250a9b1824c0edea05f530bb4b0e76",
+    "raster": [375, 812],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-empty-1440",
+    "note": "Actual isolated sparse Review with no seed lots, actual empty API response.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:47:18.444Z",
+    "dashboard": null,
+    "document": [1440, 844],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://127.0.0.1:15285/#/seeds",
+    "viewport": [1440, 844],
+    "sha256": "9a7fd64d8ea324e3344daac304fa6b0fa1aa98fb9e2a816d32facb3b2685568e",
+    "raster": [1440, 844],
+    "environment": "florabase-ui-wave1-sparse-bc88",
+    "dataset": "two-image fixture, no collection records"
+  },
+  {
+    "id": "seeds-filtered-list-1440-dark",
+    "note": "View-only transition preserves search, lifecycle and selected lot.",
+    "url": "http://localhost:15279/#/seeds?view=list&q=Aloe",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:28:50.393Z",
+    "dashboard": null,
+    "document": [1440, 844],
+    "images": [
+      {
+        "alt": "Primary photo for Review v5 — protected photo example Aloe vera",
+        "loaded": true
+      },
+      {
+        "alt": "Primary photo for Review v5 — protected photo example Aloe vera",
+        "loaded": true
+      }
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "viewport": [1440, 844],
+    "sha256": "f1510e8f1616cab8fe542b435fdf6d3565cae665207ac5b29045d83a81bcbad0",
+    "raster": [1440, 844],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-filtered-preview-1440-dark",
+    "note": "Search Aloe, Active scope, on-demand desktop inspector.",
+    "url": "http://localhost:15279/#/seeds?view=gallery&q=Aloe",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:28:49.969Z",
+    "dashboard": null,
+    "document": [1440, 844],
+    "images": [
+      {
+        "alt": "Primary photo for Review v5 — protected photo example Aloe vera",
+        "loaded": true
+      },
+      {
+        "alt": "Primary photo for Review v5 — protected photo example Aloe vera",
+        "loaded": true
+      }
+    ],
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "viewport": [1440, 844],
+    "sha256": "40270faf9de176209650c4e885d31538e93ec1e191d4dc991272835042588fa8",
+    "raster": [1440, 844],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-gallery-1024-dark",
+    "note": "Actual authenticated production screen; CSS viewport 1024×844, Botanical dark.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:52:19.168Z",
+    "dashboard": null,
+    "document": [1009, 7062],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?view=gallery",
+    "viewport": [1024, 844],
+    "sha256": "37df88d131c89c59aabf0bd530fab8cf6f47aad919a0e9a104c63c7e23abca35",
+    "raster": [1009, 832],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-gallery-1024-light",
+    "note": "Actual authenticated production screen; CSS viewport 1024×844, Botanical light.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:48:28.413Z",
+    "dashboard": null,
+    "document": [1009, 7062],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?view=gallery",
+    "viewport": [1024, 844],
+    "sha256": "6360f3f76bb0166ee335227dc6f2b492f971b799d456cdbd91ab5ac7702de305",
+    "raster": [1009, 832],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-gallery-1440-dark",
+    "note": "Actual authenticated production screen; CSS viewport 1440×844, Botanical dark.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:51:49.271Z",
+    "dashboard": null,
+    "document": [1425, 4236],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?view=gallery",
+    "viewport": [1440, 844],
+    "sha256": "3b0967886449cda26c22cce93035f8654b2586f4c509619ca19e9cf6b37cb5b7",
+    "raster": [1425, 835],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-gallery-1440-light",
+    "note": "Actual authenticated production screen; CSS viewport 1440×844, Botanical light.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:48:16.882Z",
+    "dashboard": null,
+    "document": [1425, 4236],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?view=gallery",
+    "viewport": [1440, 844],
+    "sha256": "72944620375ca733e522a65e9de36325f2d63017ab8ede2cd5546f8456a9a752",
+    "raster": [1425, 835],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-gallery-390-dark",
+    "note": "Actual authenticated production screen; CSS viewport 390×844, Botanical dark.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:52:29.289Z",
+    "dashboard": null,
+    "document": [375, 10574],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?view=gallery",
+    "viewport": [390, 844],
+    "sha256": "c80722931a4269edb8164c58d3f2cba5c0d175d73d8c4b0f5c988be8f956ef89",
+    "raster": [375, 812],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-gallery-390-light",
+    "note": "Actual authenticated production screen; CSS viewport 390×844, Botanical light.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:51:43.332Z",
+    "dashboard": null,
+    "document": [375, 10574],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?view=gallery",
+    "viewport": [390, 844],
+    "sha256": "5d8876bfcc050134c2d982aa4b5ef2309e3c0c5df3d35970f234a3168faa3994",
+    "raster": [375, 812],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-gallery-880-dark",
+    "note": "Actual authenticated production screen; CSS viewport 880×844, Botanical dark.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:52:24.186Z",
+    "dashboard": null,
+    "document": [865, 10129],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?view=gallery",
+    "viewport": [880, 844],
+    "sha256": "e9cbde1b7d89081dfffea22eb7ecfce4bc490e4464d094baaaedb0546f39071a",
+    "raster": [865, 830],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-gallery-880-light",
+    "note": "Actual authenticated production screen; CSS viewport 880×844, Botanical light.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:48:33.727Z",
+    "dashboard": null,
+    "document": [865, 10129],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?view=gallery",
+    "viewport": [880, 844],
+    "sha256": "0f1635f3892afbb6a318a44a11462332bcc6799ce444d94cea4dd14fcdcb3702",
+    "raster": [865, 830],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-list-1024-dark",
+    "note": "Actual authenticated production screen; CSS viewport 1024×844, Botanical dark.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:52:18.277Z",
+    "dashboard": null,
+    "document": [1009, 6498],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?view=list",
+    "viewport": [1024, 844],
+    "sha256": "067b67edff11f953525ee073ee1ccdb09fb5b92f8ba583feccf4d13ef7885f73",
+    "raster": [1009, 832],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-list-1024-light",
+    "note": "Actual authenticated production screen; CSS viewport 1024×844, Botanical light.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:48:27.567Z",
+    "dashboard": null,
+    "document": [1009, 6498],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?view=list",
+    "viewport": [1024, 844],
+    "sha256": "155d0f03984558044f4a9fba7d2757760a3232608351703caef1f82057f74027",
+    "raster": [1009, 832],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-list-1440-dark",
+    "note": "Actual authenticated production screen; CSS viewport 1440×844, Botanical dark.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:51:48.347Z",
+    "dashboard": null,
+    "document": [1425, 3991],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?view=list",
+    "viewport": [1440, 844],
+    "sha256": "50eae3330c251a8a185867871f17d378fbcb3ccd30bb83ac284a9b7b8d2146fd",
+    "raster": [1425, 835],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-list-1440-light",
+    "note": "Actual authenticated production screen; CSS viewport 1440×844, Botanical light.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:48:15.924Z",
+    "dashboard": null,
+    "document": [1425, 3991],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?view=list",
+    "viewport": [1440, 844],
+    "sha256": "983c6173b42f50cead5613f7453155afccf2016b335610f302fca50b3190f95a",
+    "raster": [1425, 835],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-list-390-dark",
+    "note": "Actual authenticated production screen; CSS viewport 390×844, Botanical dark.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:52:28.317Z",
+    "dashboard": null,
+    "document": [375, 9641],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?view=list",
+    "viewport": [390, 844],
+    "sha256": "4320e5b0ff4200144940e4829e6b653da5dc680e2c2a6481ae32b3afb81144d6",
+    "raster": [375, 812],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-list-390-light",
+    "note": "Actual authenticated production screen; CSS viewport 390×844, Botanical light.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:51:42.399Z",
+    "dashboard": null,
+    "document": [375, 9641],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?view=list",
+    "viewport": [390, 844],
+    "sha256": "ef6f771ea5368f727a72a25c992978862567c708724c0efa325ee21e36312efa",
+    "raster": [375, 812],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-list-880-dark",
+    "note": "Actual authenticated production screen; CSS viewport 880×844, Botanical dark.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:52:23.307Z",
+    "dashboard": null,
+    "document": [865, 6878],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?view=list",
+    "viewport": [880, 844],
+    "sha256": "b7e8c4f3e38d0cc58ae20d31f37a23ad10fec8e05daf5c0e1929da421880ae0d",
+    "raster": [865, 830],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-list-880-light",
+    "note": "Actual authenticated production screen; CSS viewport 880×844, Botanical light.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T13:48:32.881Z",
+    "dashboard": null,
+    "document": [865, 6878],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "light",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?view=list",
+    "viewport": [880, 844],
+    "sha256": "cd42a1c56a5ac3cb8c29efb09d891cade7eeb08d4be1d3cac24f818c3371e3dd",
+    "raster": [865, 830],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4"
+  },
+  {
+    "id": "seeds-long-label-390-dark",
+    "note": "Long cultivar, exact remaining quantity and long physical storage hierarchy wrap in the actual record.",
+    "source": "c77a1c5 + unstaged Wave 1 candidate",
+    "capturedAt": "2026-10-27T14:00:43.378Z",
+    "dashboard": null,
+    "document": [375, 1207],
+    "dpr": 1,
+    "photos": [],
+    "scale": 1,
+    "theme": {
+      "appearance": "dark",
+      "palette": "botanical"
+    },
+    "url": "http://localhost:15279/#/seeds?q=Capsicum&view=gallery",
+    "viewport": [390, 844],
+    "sha256": "a86815c4290041a35b5f8fb31537dde7036b42ce2f66a14b9919e9b1a06b1614",
+    "raster": [375, 812],
+    "environment": "florabase-ui-audit-bc88",
+    "dataset": "retained Extended Botanical Review Dataset v5 over v4",
+    "fullPageSupplement": "seeds-long-label-390-dark-full.jpg",
+    "fullPageSha256": "fdac6f24ee955c8df57f1666ff5f1f8278d46d5e1f2037a1abe2af3d2ca6325e"
+  }
+]

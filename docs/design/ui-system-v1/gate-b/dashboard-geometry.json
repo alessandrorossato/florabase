@@ -1,0 +1,267 @@
+{
+  "cards": [
+    {
+      "label": "Aloe vera",
+      "rect": {
+        "bottom": 526.8359375,
+        "height": 191.6171875,
+        "left": 228,
+        "right": 437.5,
+        "top": 335.21875,
+        "width": 209.5,
+        "x": 228,
+        "y": 335.21875
+      }
+    },
+    {
+      "label": "Lavandula angustifolia",
+      "rect": {
+        "bottom": 526.8359375,
+        "height": 191.6171875,
+        "left": 449.5,
+        "right": 659,
+        "top": 335.21875,
+        "width": 209.5,
+        "x": 449.5,
+        "y": 335.21875
+      }
+    },
+    {
+      "label": "Salvia officinalis",
+      "rect": {
+        "bottom": 526.8359375,
+        "height": 191.6171875,
+        "left": 671,
+        "right": 880.5,
+        "top": 335.21875,
+        "width": 209.5,
+        "x": 671,
+        "y": 335.21875
+      }
+    },
+    {
+      "label": "Ficus carica",
+      "rect": {
+        "bottom": 526.8359375,
+        "height": 191.6171875,
+        "left": 892.5,
+        "right": 1102,
+        "top": 335.21875,
+        "width": 209.5,
+        "x": 892.5,
+        "y": 335.21875
+      }
+    },
+    {
+      "label": "Ocimum basilicum",
+      "rect": {
+        "bottom": 730.453125,
+        "height": 191.6171875,
+        "left": 228,
+        "right": 437.5,
+        "top": 538.8359375,
+        "width": 209.5,
+        "x": 228,
+        "y": 538.8359375
+      }
+    },
+    {
+      "label": "Echinacea purpurea",
+      "rect": {
+        "bottom": 730.453125,
+        "height": 191.6171875,
+        "left": 449.5,
+        "right": 659,
+        "top": 538.8359375,
+        "width": 209.5,
+        "x": 449.5,
+        "y": 538.8359375
+      }
+    },
+    {
+      "label": "Helianthus annuus",
+      "rect": {
+        "bottom": 730.453125,
+        "height": 191.6171875,
+        "left": 671,
+        "right": 880.5,
+        "top": 538.8359375,
+        "width": 209.5,
+        "x": 671,
+        "y": 538.8359375
+      }
+    },
+    {
+      "label": "Solanum lycopersicum",
+      "rect": {
+        "bottom": 730.453125,
+        "height": 191.6171875,
+        "left": 892.5,
+        "right": 1102,
+        "top": 538.8359375,
+        "width": 209.5,
+        "x": 892.5,
+        "y": 538.8359375
+      }
+    }
+  ],
+  "document": {
+    "height": 844,
+    "width": 1440
+  },
+  "dpr": 1,
+  "header": {
+    "bottom": 149.234375,
+    "height": 73.234375,
+    "left": 228,
+    "right": 1416,
+    "top": 76,
+    "width": 1188,
+    "x": 228,
+    "y": 76
+  },
+  "images": [
+    {
+      "fit": "cover",
+      "loaded": true,
+      "rect": {
+        "bottom": 491.84375,
+        "height": 155.625,
+        "left": 229,
+        "right": 436.5,
+        "top": 336.21875,
+        "width": 207.5,
+        "x": 229,
+        "y": 336.21875
+      },
+      "source": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/aloe.jpg"
+    },
+    {
+      "fit": "cover",
+      "loaded": true,
+      "rect": {
+        "bottom": 491.84375,
+        "height": 155.625,
+        "left": 450.5,
+        "right": 658,
+        "top": 336.21875,
+        "width": 207.5,
+        "x": 450.5,
+        "y": 336.21875
+      },
+      "source": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/lavender.jpg"
+    },
+    {
+      "fit": "cover",
+      "loaded": true,
+      "rect": {
+        "bottom": 491.84375,
+        "height": 155.625,
+        "left": 672,
+        "right": 879.5,
+        "top": 336.21875,
+        "width": 207.5,
+        "x": 672,
+        "y": 336.21875
+      },
+      "source": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/sage.jpg"
+    },
+    {
+      "fit": "cover",
+      "loaded": true,
+      "rect": {
+        "bottom": 491.84375,
+        "height": 155.625,
+        "left": 893.5,
+        "right": 1101,
+        "top": 336.21875,
+        "width": 207.5,
+        "x": 893.5,
+        "y": 336.21875
+      },
+      "source": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/fig.jpg"
+    },
+    {
+      "fit": "cover",
+      "loaded": true,
+      "rect": {
+        "bottom": 695.4609375,
+        "height": 155.625,
+        "left": 229,
+        "right": 436.5,
+        "top": 539.8359375,
+        "width": 207.5,
+        "x": 229,
+        "y": 539.8359375
+      },
+      "source": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/basil.jpg"
+    },
+    {
+      "fit": "cover",
+      "loaded": true,
+      "rect": {
+        "bottom": 695.4609375,
+        "height": 155.625,
+        "left": 450.5,
+        "right": 658,
+        "top": 539.8359375,
+        "width": 207.5,
+        "x": 450.5,
+        "y": 539.8359375
+      },
+      "source": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/echinacea.jpg"
+    },
+    {
+      "fit": "cover",
+      "loaded": true,
+      "rect": {
+        "bottom": 695.4609375,
+        "height": 155.625,
+        "left": 672,
+        "right": 879.5,
+        "top": 539.8359375,
+        "width": 207.5,
+        "x": 672,
+        "y": 539.8359375
+      },
+      "source": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/sunflower.jpg"
+    },
+    {
+      "fit": "cover",
+      "loaded": true,
+      "rect": {
+        "bottom": 695.4609375,
+        "height": 155.625,
+        "left": 893.5,
+        "right": 1101,
+        "top": 539.8359375,
+        "width": 207.5,
+        "x": 893.5,
+        "y": 539.8359375
+      },
+      "source": "/@fs/home/alessandro/.codex/worktrees/bc88/florabase/scripts/fixtures/botanical-v5/tomato.jpg"
+    }
+  ],
+  "kpis": {
+    "bottom": 279.21875,
+    "height": 113.984375,
+    "left": 228,
+    "right": 1416,
+    "top": 165.234375,
+    "width": 1188,
+    "x": 228,
+    "y": 165.234375
+  },
+  "next": {
+    "bottom": 787.171875,
+    "height": 487.953125,
+    "left": 1126,
+    "right": 1416,
+    "top": 299.21875,
+    "width": 290,
+    "x": 1126,
+    "y": 299.21875
+  },
+  "scale": 1,
+  "viewport": [1440, 844]
+}

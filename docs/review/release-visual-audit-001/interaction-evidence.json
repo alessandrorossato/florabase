@@ -1,0 +1,268 @@
+{
+  "interactions": [
+    {
+      "case": "Media destructive dialog initial focus",
+      "result": {
+        "tag": "BUTTON",
+        "text": "Delete media asset"
+      }
+    },
+    {
+      "case": "Confirmation Cancel returns focus",
+      "result": {
+        "tag": "BUTTON",
+        "text": "Delete media asset"
+      }
+    },
+    {
+      "case": "Mobile filters Escape return",
+      "result": {
+        "dialogCount": 0,
+        "text": "Filters (1)"
+      }
+    },
+    {
+      "case": "Actual browser zoom shortcut attempt",
+      "before": {
+        "dpr": 1,
+        "h": 844,
+        "scale": 1,
+        "w": 1440
+      },
+      "after": {
+        "dpr": 1,
+        "h": 844,
+        "scale": 1,
+        "w": 1440
+      },
+      "limitation": "Only count zoom if browser devicePixelRatio/layout actually change; viewport resizing is separate."
+    }
+  ],
+  "headerMeasures": [
+    {
+      "page": "seeds",
+      "measurements": {
+        "headers": [
+          {
+            "height": 98,
+            "top": 63.046875
+          }
+        ],
+        "search": [
+          {
+            "height": 44,
+            "top": 64.046875,
+            "width": 353.359375
+          }
+        ],
+        "title": [
+          {
+            "text": "Overview",
+            "top": -75
+          },
+          {
+            "text": "Collection",
+            "top": 25
+          },
+          {
+            "text": "Activity",
+            "top": 301
+          },
+          {
+            "text": "Explore",
+            "top": 489
+          },
+          {
+            "text": "Sourcing",
+            "top": 721
+          },
+          {
+            "text": "Seeds",
+            "top": 69.046875
+          }
+        ],
+        "viewport": [1440, 844]
+      }
+    },
+    {
+      "page": "identities",
+      "measurements": {
+        "headers": [
+          {
+            "height": 94,
+            "top": 71.046875
+          }
+        ],
+        "search": [
+          {
+            "height": 44,
+            "top": 96.046875,
+            "width": 421.0078125
+          }
+        ],
+        "title": [
+          {
+            "text": "Overview",
+            "top": -75
+          },
+          {
+            "text": "Collection",
+            "top": 25
+          },
+          {
+            "text": "Activity",
+            "top": 301
+          },
+          {
+            "text": "Explore",
+            "top": 489
+          },
+          {
+            "text": "Sourcing",
+            "top": 721
+          },
+          {
+            "text": "Botanical identities",
+            "top": 75.046875
+          }
+        ],
+        "viewport": [1440, 844]
+      }
+    },
+    {
+      "page": "media",
+      "measurements": {
+        "headers": [
+          {
+            "height": 94,
+            "top": 79.046875
+          }
+        ],
+        "search": [
+          {
+            "height": 44,
+            "top": 104.046875,
+            "width": 383.0859375
+          }
+        ],
+        "title": [
+          {
+            "text": "Overview",
+            "top": -85
+          },
+          {
+            "text": "Collection",
+            "top": 15
+          },
+          {
+            "text": "Activity",
+            "top": 291
+          },
+          {
+            "text": "Explore",
+            "top": 479
+          },
+          {
+            "text": "Sourcing",
+            "top": 711
+          },
+          {
+            "text": "Media",
+            "top": 83.046875
+          }
+        ],
+        "viewport": [1440, 844]
+      }
+    },
+    {
+      "page": "suppliers",
+      "measurements": {
+        "headers": [
+          {
+            "height": 94,
+            "top": 63.046875
+          }
+        ],
+        "search": [
+          {
+            "height": 44,
+            "top": 88.046875,
+            "width": 471.7734375
+          }
+        ],
+        "title": [
+          {
+            "text": "Overview",
+            "top": -229
+          },
+          {
+            "text": "Collection",
+            "top": -129
+          },
+          {
+            "text": "Activity",
+            "top": 147
+          },
+          {
+            "text": "Explore",
+            "top": 335
+          },
+          {
+            "text": "Sourcing",
+            "top": 567
+          },
+          {
+            "text": "Suppliers",
+            "top": 67.046875
+          }
+        ],
+        "viewport": [1440, 844]
+      }
+    },
+    {
+      "page": "orders",
+      "measurements": {
+        "headers": [
+          {
+            "height": 94,
+            "top": 63.046875
+          }
+        ],
+        "search": [
+          {
+            "height": 44,
+            "top": 88.046875,
+            "width": 397.0859375
+          }
+        ],
+        "title": [
+          {
+            "text": "Overview",
+            "top": -273
+          },
+          {
+            "text": "Collection",
+            "top": -173
+          },
+          {
+            "text": "Activity",
+            "top": 103
+          },
+          {
+            "text": "Explore",
+            "top": 291
+          },
+          {
+            "text": "Sourcing",
+            "top": 523
+          },
+          {
+            "text": "Orders",
+            "top": 67.046875
+          }
+        ],
+        "viewport": [1440, 844]
+      }
+    }
+  ]
+}

@@ -1,6 +1,7 @@
 from datetime import date
+from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from florabase.botanical_identities.schemas import BotanicalIdentityResponse
 from florabase.events.schemas import EventResponse
@@ -37,10 +38,29 @@ class DashboardOverview(BaseModel):
     recent_activity: list[HistoryEntry]
 
 
+class DashboardImage(BaseModel):
+    thumbnail_url: str
+    attribution: str | None
+    licence_label: str | None
+    licence_url: str | None
+    source_url: str | None
+
+
+class DashboardPhoto(BaseModel):
+    """One actual individual Plant, with separately identified permitted imagery."""
+
+    id: UUID
+    title: str
+    scientific_name: str
+    image: DashboardImage | None
+    reference_image: DashboardImage | None
+
+
 class DashboardResponse(BaseModel):
     overview: DashboardOverview
     counts: DashboardCounts
     recent_events: list[EventResponse]
+    photos: list[DashboardPhoto] = Field(default_factory=list)
 
 
 class BotanicalIdentityCollectionResponse(BaseModel):

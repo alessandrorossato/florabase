@@ -1,0 +1,423 @@
+<!doctype html>
+<html lang="en" data-palette="botanical" data-appearance="light">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  /><title>Mobile shell and readable rows · Florabase proposal</title
+  ><style>
+    @import url("/source/frontend/src/styles/tokens.css");
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: var(--background, #f6f7f3);
+      color: var(--text, #1e2621);
+      font: 15px/1.5 var(--font-ui, system-ui);
+    }
+    body > header,
+    body > main {
+      padding: 24px;
+    }
+    a {
+      color: var(--primary, #2f684f);
+    }
+    h1 {
+      font-size: 28px;
+    }
+    h2 {
+      font-size: 24px;
+      margin: 0 0 8px;
+    }
+    h3 {
+      font-size: 18px;
+      margin: 0 0 12px;
+    }
+    p {
+      margin: 8px 0 16px;
+    }
+    .comparison {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 24px;
+    }
+    .comparison > section {
+      min-width: 0;
+    }
+    .baseline {
+      width: 100%;
+      height: 420px;
+      object-fit: contain;
+      object-position: top;
+      background: var(--surface-subtle, #eef1ec);
+    }
+    figure {
+      margin: 0 0 16px;
+    }
+    figcaption,
+    .muted,
+    small {
+      font-size: 13px;
+      color: var(--text-muted, #667068);
+    }
+    .specimen {
+      padding: 24px;
+      background: var(--surface, #fff);
+      border: 1px solid var(--border, #dde3dc);
+      border-radius: 10px;
+      min-height: 420px;
+    }
+    .specimen > section {
+      padding: 16px 0;
+    }
+    .head,
+    .line {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .head > div:first-child {
+      flex: 1 1 230px;
+    }
+    .head {
+      flex-wrap: wrap;
+    }
+    .tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: flex-start;
+      flex: 2 1 320px;
+    }
+    .search {
+      flex: 1 1 224px;
+    }
+    .crumb {
+      font-size: 13px;
+      margin-bottom: 24px;
+      color: var(--text-muted);
+    }
+    button,
+    input,
+    select {
+      font: inherit;
+      min-height: 44px;
+      border: 1px solid var(--border-strong, #7c8980);
+      border-radius: 6px;
+      padding: 8px 12px;
+      background: var(--surface, #fff);
+      color: inherit;
+      max-width: 100%;
+    }
+    button {
+      cursor: default;
+    }
+    input,
+    select {
+      width: 100%;
+      display: block;
+    }
+    label {
+      display: block;
+      margin-bottom: 16px;
+    }
+    .primary {
+      background: var(--primary, #2f684f);
+      color: var(--on-primary, #fff);
+    }
+    .danger {
+      background: var(--danger, #b54747);
+      color: var(--on-primary, #fff);
+    }
+    .safe-focus {
+      outline: 3px solid var(--focus-ring, #3d6f8e);
+      outline-offset: 3px;
+    }
+    .footer {
+      display: flex;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 12px;
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+      margin-top: 24px;
+    }
+    .chips {
+      margin: 12px 0 24px;
+      font-size: 13px;
+    }
+    .drawer {
+      max-width: 360px;
+      margin-left: auto;
+    }
+    .phone {
+      max-width: 390px;
+      border: 1px solid var(--border);
+    }
+    .phone main {
+      padding: 16px;
+    }
+    .mobilehead {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .phone .head {
+      display: block;
+    }
+    .phone .tools {
+      display: flex;
+    }
+    .phone .search {
+      flex-basis: 100%;
+    }
+    .record {
+      display: flex;
+      gap: 12px;
+      padding: 12px 0;
+      border-top: 1px solid var(--border);
+      overflow-wrap: anywhere;
+    }
+    .record p {
+      margin: 4px 0;
+    }
+    .placeholder {
+      width: 64px;
+      height: 64px;
+      flex-shrink: 0;
+      background: var(--surface-subtle);
+      display: grid;
+      place-items: center;
+    }
+    .bottom {
+      padding: 12px;
+      background: var(--surface-subtle);
+      font-size: 13px;
+    }
+    .tabs {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      padding: 12px 0 16px;
+      margin-bottom: 24px;
+    }
+    .tabs span {
+      color: var(--primary);
+      font-weight: bold;
+    }
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .metrics b,
+    .metrics small {
+      display: block;
+    }
+    .metrics b {
+      font-size: 28px;
+    }
+    .rule {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+    }
+    .confirm {
+      max-width: 440px;
+      margin: 48px auto;
+    }
+    .form {
+      max-width: 560px;
+    }
+    fieldset {
+      border: 0;
+      padding: 16px 0;
+      margin: 0;
+      border-top: 1px solid var(--border);
+    }
+    legend {
+      font-weight: bold;
+    }
+    .photo-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+    .photo {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    .ratio {
+      aspect-ratio: 4/3;
+      background: var(--surface-subtle);
+      padding: 12px;
+      display: grid;
+      place-items: center;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+    .sr {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+    .facts {
+      max-width: 100ch;
+    }
+    .facts dt {
+      font-weight: 600;
+      margin-top: 12px;
+    }
+    .facts dd {
+      margin-left: 0;
+    }
+    :focus-visible {
+      outline: 3px solid var(--focus-ring);
+      outline-offset: 3px;
+    }
+    @media (max-width: 1000px) {
+      .comparison {
+        grid-template-columns: 1fr;
+      }
+      .photo-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .metrics {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+  <header>
+    <a href="index.html">All eight proposals</a> ·
+    <a href="../gallery.html">Real screenshot gallery</a>
+    <h1>Mobile shell and readable rows</h1>
+    <p>
+      Proposed static composition · audit only · no production behavior, saved
+      data or implementation acceptance.
+    </p>
+  </header>
+  <main>
+    <div class="comparison">
+      <section>
+        <h2>Before · real Florabase</h2>
+        <figure>
+          <a href="/evidence/assets/092-seeds-primary-390-botanical-light.jpg"
+            ><img
+              class="baseline"
+              src="/evidence/assets/092-seeds-primary-390-botanical-light.jpg"
+              alt="Real Florabase seeds, primary"
+          /></a>
+          <figcaption>
+            Real baseline 092 · 390×844 CSS · botanical light · main ee34874
+          </figcaption>
+        </figure>
+      </section>
+      <section>
+        <h2>After · proposed structure</h2>
+        <div class="specimen">
+          <section class="phone">
+            <div class="mobilehead">
+              <b>Florabase</b
+              ><button class="secondary" type="button">Navigation</button>
+            </div>
+            <main>
+              <div class="crumb">Collection / Seeds</div>
+              <div class="head">
+                <div>
+                  <h2>Seeds</h2>
+                  <p>Track seed lots from acquisition through history.</p>
+                </div>
+                <div class="tools">
+                  <label class="search"
+                    ><span class="sr">Search</span
+                    ><input
+                      type="search"
+                      placeholder="Search lots, identity or location" /></label
+                  ><button class="secondary" type="button">Filters (1)</button
+                  ><button class="secondary" type="button">Saved views</button
+                  ><button class="primary" type="button">
+                    ＋ New seed lot
+                  </button>
+                </div>
+              </div>
+              <div class="chips">Lifecycle: Active ×</div>
+              <div class="record">
+                <div class="placeholder" aria-label="Seed image placeholder">
+                  ♧
+                </div>
+                <div>
+                  <strong>Review v5 — packet 04 — Acer palmatum</strong>
+                  <p><i>Acer palmatum</i></p>
+                  <p>Active · <b>103 seeds remaining</b></p>
+                </div>
+              </div>
+              <div class="record">
+                <div class="placeholder" aria-label="Seed image placeholder">
+                  ♧
+                </div>
+                <div>
+                  <strong>Review v5 — packet 04 — Acer palmatum</strong>
+                  <p><i>Acer palmatum</i></p>
+                  <p>Active · <b>103 seeds remaining</b></p>
+                </div>
+              </div>
+              <p class="muted">
+                Unknown quantities remain explicit; selection and bulk mode
+                retain separate controls.
+              </p>
+            </main>
+            <nav class="bottom">Home · Seeds · Sowings · Plants · More</nav>
+          </section>
+        </div>
+        <p>
+          Uses the existing token source and font stack; local fallback fonts
+          may differ. Controls are inert layout specimens. This is not a
+          screenshot of an implemented result.
+        </p>
+      </section>
+    </div>
+    <dl class="facts">
+      <dt>Current inconsistency</dt>
+      <dd>
+        F02: duplicated mobile chrome and right-column metadata restrict the
+        reading area.
+      </dd>
+      <dt>Recommendation</dt>
+      <dd>
+        Keep the same destinations, move secondary shell controls into the
+        existing labelled More surface and place row quantity/status below the
+        identity at narrow width. Operator approval is required for shell
+        composition.
+      </dd>
+      <dt>Reuse/extend</dt>
+      <dd>
+        App shell + existing More dialog; current Collection row grammar and
+        RecordVisual.
+      </dd>
+      <dt>Pages affected</dt>
+      <dd>
+        All mobile pages; first migrate one Collection directory and compare
+        siblings.
+      </dd>
+      <dt>Expected improvement</dt>
+      <dd>
+        More of the record name is readable before scrolling; essential actions
+        stay labelled.
+      </dd>
+      <dt>Accessibility</dt>
+      <dd>
+        Retain 44px controls, navigation names/current state, bulk checkboxes
+        and bottom-bar/keyboard clearance.
+      </dd>
+      <dt>Complexity</dt>
+      <dd>Medium</dd>
+      <dt>Regression risk</dt>
+      <dd>High for shell focus/navigation; medium for row wrapping.</dd>
+    </dl>
+  </main>
+</html>

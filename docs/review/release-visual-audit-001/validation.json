@@ -1,0 +1,24 @@
+{
+  "source_commit": "ee3487412fe458cbdf7145154c54a58b66132cae",
+  "selected_capture_integrity": "270/270 SHA-256, files and DOM sidecars",
+  "primary_coverage": "162/162 = 27 states x 3 CSS viewports x Botanical Light/Dark",
+  "html_files": 10,
+  "local_html_references_checked": 863,
+  "gallery_script_syntax_checks": 1,
+  "before_after_proposals": 8,
+  "binary_files_in_candidate": 0,
+  "index_empty": true,
+  "scope": "docs-only plus new audit registry entry; no canonical gate",
+  "formatting": "Scoped Prettier check passed for the audit package; registry retained its existing formatting",
+  "feature_graph": "116 valid",
+  "whitespace": "git diff --check and package text whitespace passed",
+  "browser_validation": "Gallery filters: Media17, primary desktop BotanicalLight27; two comparisons, no broken comparator images/overflow; 8 proposal pages have no broken images or document overflow at desktop",
+  "not_run": [
+    "canonical FULL verification",
+    "application test/build suites",
+    "actual125%/150% browser zoom",
+    "screen reader/physical touch",
+    "source-backed WFO graph/fullscreen",
+    "native/physical QR print"
+  ]
+}

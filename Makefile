@@ -294,3 +294,12 @@ smoke-uat-preview: ## Prove UAT seed/auth/reset/persistence/ownership transition
 .PHONY: sourcing-preview-up sourcing-preview-status sourcing-preview-seed sourcing-preview-bootstrap-owner sourcing-preview-stop sourcing-preview-remove sourcing-preview-compose
 
 .PHONY: uat-preview-sync test-dependabot-policy
+
+.PHONY: ui-lab ui-page
+ui-lab: ## Open the development-only UI laboratory on loopback (no API/database required)
+	cd frontend && node node_modules/vite/bin/vite.js --host 127.0.0.1 --port 15284 --strictPort
+
+ui-page: export FLORABASE_UI_PAGE_NAME = $(NAME)
+ui-page: export FLORABASE_UI_PAGE_ARCHETYPE = $(ARCHETYPE)
+ui-page: ## Scaffold an approved composition: NAME=Example ARCHETYPE=directory|activity
+	@python3 scripts/ui_page.py

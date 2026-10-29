@@ -1,0 +1,688 @@
+.ui-directory-page {
+  min-width: 0;
+}
+.ui-directory-frame {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+}
+.ui-directory-frame--selected {
+  grid-template-columns: minmax(0, 1fr) 20rem;
+}
+.ui-directory-main {
+  min-width: 0;
+}
+.ui-directory-records {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.ui-directory-records--list {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  background: var(--surface);
+}
+.ui-directory-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--border);
+  min-width: 0;
+}
+.ui-directory-row:last-child {
+  border-bottom: 0;
+}
+.ui-directory-name {
+  flex: 1.25;
+  min-width: 0;
+  display: grid;
+  gap: var(--space-1);
+  overflow-wrap: anywhere;
+}
+.ui-directory-name > a,
+.ui-directory-card h3 > a {
+  font: var(--type-strong);
+  color: var(--text);
+}
+.ui-directory-name .scientific-name,
+.ui-directory-card .scientific-name {
+  font-family: var(--font-botanical);
+}
+.ui-directory-metadata {
+  flex: 1.5;
+  min-width: 0;
+  font: var(--type-small);
+  overflow-wrap: anywhere;
+}
+.ui-directory-metadata dl {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.ui-directory-metadata dl > div {
+  min-width: 5rem;
+  flex: 1;
+}
+.ui-directory-metadata dt {
+  color: var(--text-muted);
+}
+.ui-directory-metadata dd {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+}
+.ui-directory-thumbnail {
+  width: 3rem;
+  height: 3rem;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: var(--radius-small);
+  background: var(--surface-subtle);
+}
+.ui-directory-record-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.ui-directory-record-actions button {
+  white-space: nowrap;
+}
+.ui-record-selection {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+.ui-directory-records--gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: var(--space-4);
+}
+.ui-directory-card {
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+  overflow: hidden;
+}
+.ui-directory-visual {
+  aspect-ratio: 4/3;
+  background: var(--surface-subtle);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+}
+.ui-directory-visual > * {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+.ui-directory-visual img,
+.ui-directory-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  max-height: none;
+  border-radius: 0;
+}
+.ui-directory-card-body {
+  padding: var(--space-3);
+  display: grid;
+  gap: var(--space-2);
+}
+.ui-directory-card h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.ui-directory-no-image {
+  display: grid;
+  place-items: center;
+  padding: var(--space-3);
+  text-align: center;
+  color: var(--text-muted);
+  font: var(--type-small);
+}
+.ui-directory-card[data-selected],
+.ui-directory-row[data-selected] {
+  background: var(--primary-subtle);
+  box-shadow: inset 3px 0 var(--primary);
+}
+.ui-directory-inspector {
+  align-self: start;
+  position: sticky;
+  top: var(--space-4);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+  background: var(--surface);
+  min-width: 0;
+}
+.ui-inspector-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.ui-inspector-heading h3 {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.ui-view-switcher {
+  display: flex;
+  gap: var(--space-1);
+}
+.ui-view-switcher [aria-pressed="true"] {
+  background: var(--primary-subtle);
+  color: var(--primary);
+  border-color: var(--primary);
+}
+@media (max-width: 75rem) {
+  .ui-directory-frame--selected {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 48rem) {
+  .ui-directory-row {
+    display: grid;
+    grid-template-columns: 3rem minmax(0, 1fr) auto;
+    gap: var(--space-2);
+  }
+  .ui-directory-row .ui-directory-thumbnail {
+    grid-area: 1 / 1 / 3 / 2;
+    align-self: start;
+  }
+  .ui-directory-row .ui-directory-name {
+    grid-area: 1 / 2;
+  }
+  .ui-directory-row .ui-directory-metadata {
+    grid-area: 2 / 2;
+  }
+  .ui-directory-row .ui-directory-record-actions {
+    grid-area: 1 / 3 / 3 / 4;
+    flex-direction: column;
+    width: auto;
+  }
+  .ui-directory-record-actions {
+    justify-content: flex-end;
+    width: 100%;
+  }
+  .ui-directory-records--gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+  .ui-directory-card-body {
+    padding: var(--space-2);
+  }
+  .ui-directory-card .ui-directory-record-actions {
+    justify-content: space-between;
+  }
+  .ui-directory-card .ui-directory-record-actions button {
+    padding-inline: var(--space-2);
+  }
+}
+@media (max-width: 22rem) {
+  .ui-directory-records--gallery {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Domain-owned record buttons retain their operations and bulk eligibility. */
+.ui-directory-row--composed {
+  padding: 0;
+  gap: 0;
+}
+.ui-directory-card--composed {
+  position: relative;
+}
+.ui-directory-trigger {
+  display: grid;
+  grid-template-columns:
+    minmax(12rem, 1.3fr) minmax(6rem, 0.65fr) minmax(8rem, 1fr)
+    auto;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+  min-height: var(--control-height);
+  padding: var(--space-3);
+  background: transparent;
+  color: var(--text);
+  border: 0;
+  border-radius: 0;
+  text-align: left;
+  font: var(--type-body);
+  overflow-wrap: anywhere;
+}
+.ui-directory-trigger:not(:disabled):hover {
+  background: var(--surface-hover);
+}
+.ui-directory-trigger:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: -3px;
+}
+.ui-directory-record-identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.ui-directory-record-name {
+  display: grid;
+  gap: var(--space-1);
+  min-width: 0;
+}
+.ui-directory-record-name strong {
+  font: var(--type-strong);
+}
+.ui-directory-record-name small {
+  font: var(--type-small);
+}
+.ui-directory-record-facts {
+  display: grid;
+  font: var(--type-small);
+}
+.ui-directory-record-location {
+  font: var(--type-small);
+  color: var(--text-muted);
+}
+.ui-directory-open {
+  font: var(--type-small);
+  color: var(--primary);
+  grid-column: 1 / -1;
+  justify-self: end;
+}
+.ui-directory-trigger .record-visual {
+  flex-shrink: 0;
+  width: 3rem;
+  height: 3rem;
+}
+.ui-directory-card--composed .ui-directory-trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 0 0 var(--space-3);
+  gap: var(--space-2);
+  height: 100%;
+}
+.ui-directory-card--composed .ui-directory-record-identity {
+  display: grid;
+  gap: 0;
+}
+.ui-directory-card--composed .record-visual {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  border: 0;
+  border-radius: 0;
+  position: relative;
+}
+.ui-directory-card--composed .record-visual > img {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0;
+}
+.record-visual__source {
+  position: absolute;
+  bottom: var(--space-2);
+  left: var(--space-2);
+  right: var(--space-2);
+  padding: 2px 6px;
+  font: var(--type-small);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-small);
+}
+.ui-directory-card--composed .ui-directory-record-name,
+.ui-directory-card--composed .ui-directory-record-facts,
+.ui-directory-card--composed .ui-directory-record-location {
+  padding-inline: var(--space-3);
+}
+.ui-directory-card--composed .lifecycle-badge {
+  margin-inline: var(--space-3);
+  align-self: start;
+}
+.ui-directory-card--composed .ui-directory-open {
+  margin-inline: var(--space-3);
+  align-self: end;
+  margin-top: auto;
+}
+.ui-directory-card--composed > .bulk-checkbox {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 1;
+  padding: var(--space-2);
+  background: var(--surface);
+  border-radius: var(--radius-small);
+}
+.app-content
+  .ui-directory-page
+  .operational-layout.directory-preview-layout:not(.is-detail-view) {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
+}
+.app-content
+  .ui-directory-page
+  .operational-layout.directory-preview-layout:not(.is-detail-view):has(
+    .ui-directory-inspector
+  ) {
+  grid-template-columns: minmax(0, 1fr) 22rem;
+}
+.ui-directory-page .seed-detail-pane:has(> dialog[open]) {
+  display: contents;
+}
+.ui-directory-page .ui-directory-inspector .quick-preview {
+  position: static;
+  border: 0;
+  padding: 0;
+  max-height: none;
+  overflow: visible;
+}
+.ui-directory-page .ui-directory-inspector .quick-preview > .eyebrow {
+  display: none;
+}
+.ui-directory-page .ui-directory-inspector .ui-inspector-heading {
+  flex-wrap: wrap;
+}
+.ui-directory-page .ui-directory-inspector h3 {
+  font: var(--type-h3);
+}
+@media (max-width: 75rem) {
+  .app-content
+    .ui-directory-page
+    .operational-layout.directory-preview-layout:not(.is-detail-view):has(
+      .ui-directory-inspector
+    ) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ui-directory-trigger {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .ui-directory-record-location {
+    grid-column: 1;
+  }
+  .ui-directory-trigger > .lifecycle-badge {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .ui-directory-open {
+    grid-column: 2;
+    grid-row: 3;
+  }
+}
+@media (max-width: 48rem) {
+  .ui-directory-row--composed {
+    display: flex;
+  }
+  .ui-directory-trigger {
+    gap: var(--space-2);
+    padding: var(--space-2);
+  }
+  .ui-directory-record-identity {
+    gap: var(--space-2);
+  }
+}
+
+.app-content .ui-directory-page .page-header {
+  align-items: start;
+  gap: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+}
+.app-content .ui-directory-page .page-header .page-identity {
+  flex: 1 1 12rem;
+}
+.app-content .ui-directory-page .page-header .page-tools {
+  flex: 4 1 52rem;
+}
+.app-content .ui-directory-page .page-header h2 {
+  font: var(--type-h2);
+  margin: 0 0 var(--space-1);
+}
+@media (max-width: 75rem) {
+  .app-content .ui-directory-page .page-header .page-tools {
+    flex-basis: 100%;
+  }
+}
+@media (min-width: 75.01rem) {
+  .ui-directory-row .ui-directory-trigger {
+    grid-template-columns:
+      minmax(12rem, 1.3fr) minmax(6rem, 0.65fr) minmax(8rem, 1fr)
+      auto auto;
+  }
+  .ui-directory-row .ui-directory-open {
+    grid-column: auto;
+    justify-self: end;
+  }
+}
+
+/* Final Wave 1 hierarchy: bounded identity, quantity, lifecycle, visible actions. */
+.ui-directory-frame--selected {
+  grid-template-columns: minmax(0, 1fr);
+}
+.ui-directory-records--gallery {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.ui-directory-row--composed > .ui-directory-trigger {
+  flex: 1;
+  grid-template-columns: minmax(0, 1fr) minmax(7rem, 0.35fr) minmax(
+      5rem,
+      0.25fr
+    );
+}
+.ui-directory-record-name strong,
+.ui-directory-record-name small {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+.ui-directory-row--composed > .ui-directory-record-actions {
+  flex: 0 0 auto;
+  padding: var(--space-2);
+}
+.ui-directory-record-actions .control-icon-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: var(--space-2);
+}
+.ui-directory-record-actions .control-icon-button__label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.ui-directory-card--composed {
+  display: flex;
+  flex-direction: column;
+}
+.ui-directory-card--composed .ui-directory-trigger {
+  flex: 1;
+  height: auto;
+  padding-bottom: var(--space-2);
+}
+.ui-directory-card--composed > .ui-directory-record-actions {
+  border-top: 1px solid var(--border);
+  padding: var(--space-1) var(--space-2);
+  justify-content: space-between;
+}
+.ui-directory-card--composed .record-visual > svg {
+  width: 2rem;
+  height: 2rem;
+}
+.ui-directory-card--composed .ui-directory-record-name {
+  min-height: 3.5rem;
+}
+.ui-directory-preview-overlay {
+  width: min(42rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+}
+.ui-directory-preview-overlay .quick-preview {
+  position: static;
+  max-height: none;
+  border: 0;
+  padding: 0;
+  overflow: visible;
+}
+.ui-directory-preview-overlay .quick-preview > .eyebrow {
+  display: none;
+}
+.ui-directory-preview-overlay .record-visual {
+  max-width: 12rem;
+}
+@media (max-width: 75rem) {
+  .ui-directory-records--gallery {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 48rem) {
+  .ui-directory-records--gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ui-directory-row--composed {
+    flex-wrap: wrap;
+  }
+  .ui-directory-row--composed > .ui-directory-trigger {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .ui-directory-row--composed .ui-directory-trigger > .lifecycle-badge {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .ui-directory-row--composed > .ui-directory-record-actions {
+    width: 100%;
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+  .ui-directory-preview-overlay {
+    width: 100vw;
+    height: 100dvh;
+    max-height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+  }
+}
+.ui-directory-preview-overlay .record-visual:not(:has(img)) {
+  width: 3rem;
+  height: 3rem;
+  min-height: 0;
+}
+.ui-directory-preview-overlay .record-visual:not(:has(img)) svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.ui-directory-preview-overlay
+  .record-visual:not(:has(img))
+  .record-visual__source {
+  display: none;
+}
+/* Beat the legacy domain preview sizing without changing its full detail page. */
+.app-content
+  .ui-directory-preview-overlay
+  .quick-preview
+  > .record-visual:not(:has(img)) {
+  width: 3rem;
+  height: 3rem;
+  min-height: 0;
+}
+.app-content
+  .ui-directory-preview-overlay
+  .quick-preview
+  > .record-visual:not(:has(img))
+  svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+.task-dialog.ui-directory-preview-overlay {
+  max-width: min(42rem, calc(100vw - 2rem));
+}
+@media (max-width: 48rem) {
+  .task-dialog.ui-directory-preview-overlay {
+    width: 100%;
+    max-width: 100%;
+    min-height: 100dvh;
+  }
+}
+
+/* Photographic presentation retains domain-owned interactions and image-source captions. */
+.ui-directory-records--photo-titles {
+  align-items: start;
+}
+.ui-directory-records--photo-titles .ui-directory-record-identity {
+  position: relative;
+}
+.ui-directory-records--photo-titles .record-visual:has(img)::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: min(75%, 7rem);
+  background: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 80%),
+    rgb(0 0 0 / 55%) 65%,
+    transparent
+  );
+}
+.ui-directory-records--photo-titles
+  .ui-directory-record-identity:has(.record-visual img)
+  .ui-directory-record-name
+  strong {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  right: 3.5rem;
+  color: #fff;
+  -webkit-line-clamp: 2;
+}
+.ui-directory-records--photo-titles
+  .ui-directory-record-identity:has(.record-visual img)
+  .ui-directory-record-name {
+  min-height: 0;
+  padding-top: var(--space-2);
+}
+.ui-directory-records--photo-titles .record-visual:not(:has(img)) {
+  width: 3rem;
+  height: 3rem;
+  aspect-ratio: 1;
+  margin: var(--space-3);
+  border-radius: var(--radius-small);
+  background: var(--surface-subtle);
+}
+.ui-directory-records--photo-titles
+  .record-visual:not(:has(img))
+  .record-visual__source {
+  display: none;
+}
+.ui-directory-records--photo-titles
+  .ui-directory-card--composed
+  > .ui-directory-record-actions {
+  border-top: 0;
+  justify-content: flex-end;
+  gap: var(--space-1);
+}
+.ui-directory-records--photo-titles
+  .ui-directory-record-actions
+  .control-icon-button {
+  background: transparent;
+  border-color: transparent;
+  width: 2.75rem;
+  height: 2.75rem;
+}
+.ui-directory-records--photo-titles
+  .ui-directory-record-actions
+  .control-icon-button:hover {
+  background: var(--surface-hover);
+}

@@ -14,6 +14,7 @@ export interface ActiveDirectoryFilter {
 export function DirectoryTools({
   name,
   search,
+  presentation,
   savedViews,
   actions,
   filters,
@@ -23,6 +24,7 @@ export function DirectoryTools({
 }: {
   name: string;
   search?: ReactNode;
+  presentation?: ReactNode;
   savedViews?: ReactNode;
   actions?: ReactNode;
   filters?: ReactNode;
@@ -40,6 +42,7 @@ export function DirectoryTools({
         aria-label={`${name} toolbar`}
       >
         {search}
+        {presentation}
         {filters && (
           <ActionButton
             icon="filter"

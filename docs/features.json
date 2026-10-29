@@ -2060,6 +2060,63 @@
       ],
       "priority": "P1",
       "status": "implemented"
+    },
+    {
+      "id": "RELEASE-VISUAL-AUDIT-001",
+      "category": "ux",
+      "description": "Audit the delivered v0.1 interface through real synthetic Review captures and propose bounded UI Foundation consolidation before implementation",
+      "acceptance_criteria": [
+        "Source-derived route and contextual-state inventory records current canonical navigation and direct-entry variants",
+        "Authenticated isolated v5 Review evidence records source, fixture, measured viewport, theme, state, raster dimensions and explicit source or manual-test limitations",
+        "Navigable gallery and page coverage matrix distinguish settled current captures from unavailable, missing or excluded acquisitions",
+        "Prioritized findings, existing component ownership and eight screenshot-based visual proposals preserve UI Foundation and domain semantics",
+        "Incremental implementation waves and Media/Taxonomy integration boundaries support an operator decision without production UI changes or canonical verification",
+        "Audit candidate remains unstaged and uncommitted with no push, PR, merge, protected environment takeover or application record edits after isolated fixture initialization"
+      ],
+      "dependencies": [
+        "GLOBAL-VISUAL-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
+      "id": "UI-SYSTEM-001",
+      "category": "ux",
+      "description": "Gate-led UI System v1 and product UX redesign using approved archetypes, current Foundation and truthful domain contracts",
+      "acceptance_criteria": [
+        "Gate A provides a complete KEEP/REFINE/REDESIGN critique, substantial alternative mockups, responsive design evidence and explicit operator decisions before implementation",
+        "Approved Gate B reuses shared primitives to implement bounded composed page archetypes without moving domain logic into a universal template",
+        "Operator-selected Proposal B supports same-data List/Gallery with presentation preference and canonical URL/Saved Views boundaries, distinct labelled semantic navigation icons and a prominent factual Dashboard strip",
+        "Dashboard review evidence shows up to eight distinct randomly selected actual Plant records with truthful primary, identity-reference or missing imagery in a 4x2 grid; header, KPIs and useful Next work fit the measured 1440x844 baseline while smaller layouts scroll naturally",
+        "Approved Gate B provides a safe repository-native page scaffold, a dev-only living React showcase excluded from production and at least two working archetype examples",
+        "Focused accessibility, responsive, theme and behavior regressions plus the CI-004 policy-selected canonical gate verify the final implementation without weakening protected checks",
+        "Progressive migration and Media/Taxonomy/map integration preserve production workflows, source semantics, URL state, quantities, date precision and independent form save boundaries",
+        "Approved production Wave 1 migrates actual Dashboard, Seeds and Plants with retained domain behavior, real authenticated review evidence, List/Gallery history and focused checks before operator review and canonical FULL",
+        "Operator final refinements provide compact Lists/Galleries, three explicit record actions, accessible overlay previews, modifier-assisted existing bulk selection, Plant-level random Dashboard samples and a separate cross-domain bulk proposal before final production UI approval"
+      ],
+      "dependencies": [
+        "GLOBAL-VISUAL-001",
+        "RELEASE-VISUAL-AUDIT-001",
+        "CI-004"
+      ],
+      "priority": "P1",
+      "status": "in_progress"
+    },
+    {
+      "id": "DASHBOARD-CUSTOMIZATION-001",
+      "category": "ux",
+      "description": "Settings-based basic Dashboard widget visibility, order, optional preferred photographic content and reset to defaults",
+      "acceptance_criteria": [
+        "Operator approves bounded widget choices and Settings interaction before implementation",
+        "Widget visibility and order retain keyboard and responsive access with a reset-to-default layout",
+        "Preferred photographic content remains truthful to Plant records and permitted image provenance",
+        "Persistence and compatibility with the existing Dashboard domain queries are independently verified without speculative drag-and-drop infrastructure"
+      ],
+      "dependencies": [
+        "UI-SYSTEM-001"
+      ],
+      "priority": "P3",
+      "status": "planned"
     }
   ]
 }

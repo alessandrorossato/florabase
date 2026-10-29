@@ -1,5 +1,6 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useState, type MouseEvent } from "react";
 import type { BulkReference } from "./api";
+import { isFreshDirectoryNavigation } from "../components/recordNavigation";
 export interface BulkChoice extends BulkReference {
   label: string;
   eligible: boolean;
@@ -11,6 +12,7 @@ export const BULK_LIMIT = 100;
 export function useBulkSelection(
   directoryScope: string,
   visible: BulkChoice[],
+  preservePresentationSelection = false,
 ) {
   const entryId = useId();
   const scope =
@@ -34,7 +36,20 @@ export function useBulkSelection(
     setSelection({ scope, active: false, keys: [], dialog: false });
   };
   useEffect(() => {
-    const reset = () => {
+    const canonicalHash = () => {
+      const [path, query] = window.location.hash.split("?", 2);
+      const params = new URLSearchParams(query);
+      params.delete("view");
+      return `${path}?${params}`;
+    };
+    const currentHash = canonicalHash();
+    const reset = (event: Event) => {
+      if (
+        preservePresentationSelection &&
+        !isFreshDirectoryNavigation(event) &&
+        canonicalHash() === currentHash
+      )
+        return;
       setSelection({ scope, active: false, keys: [], dialog: false });
     };
     window.addEventListener("hashchange", reset);
@@ -43,8 +58,33 @@ export function useBulkSelection(
       window.removeEventListener("hashchange", reset);
       window.removeEventListener("popstate", reset);
     };
-  }, [scope]);
+  }, [scope, preservePresentationSelection]);
   return {
+    recordClick: (event: MouseEvent<HTMLElement>, row: BulkChoice) => {
+      if (event.defaultPrevented || event.button !== 0) return false;
+      const button =
+        event.target instanceof Element ? event.target.closest("button") : null;
+      if (button && !button.matches(".ui-directory-trigger")) return false;
+      const target = event.target;
+      if (
+        target instanceof Element &&
+        target.closest(
+          "a, input, select, textarea, label, .ui-directory-record-actions",
+        )
+      )
+        return false;
+      if (!current.active && !event.ctrlKey && !event.metaKey) return false;
+      event.preventDefault();
+      if (!row.eligible) return true;
+      const key = bulkKey(row);
+      const keys = current.keys.includes(key)
+        ? current.keys.filter((value) => value !== key)
+        : current.keys.length < BULK_LIMIT
+          ? [...current.keys, key]
+          : current.keys;
+      setSelection({ ...current, active: true, keys });
+      return true;
+    },
     entryId,
     focusEntry: () => {
       document.getElementById(entryId)?.focus();

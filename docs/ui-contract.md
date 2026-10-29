@@ -479,3 +479,48 @@ and content-aligned gutters. New Harvest aligns the first Source and Material co
 Quantity full-width. Location State defaults to Active with Retired/All available in the shared drawer;
 Saved Views records this preference. Contextual Parent location uses the existing reference picker, not
 an unbounded native options menu; full paths wrap inside the control width and root is explicit.
+
+## UI System v1 — approved Gate B and production Wave 1
+
+The operator selected Proposal B with selectable List/Gallery, distinct semantic navigation icons,
+a prominent factual Dashboard strip and eight distinct botanical photographs at the desktop baseline.
+The [Gate B contract](design/ui-system-v1/gate-b/implementation.md) defines reusable DirectoryPage,
+DirectoryViewSwitcher, DirectoryRow/Card, optional DirectoryInspector and ActivityPage compositions,
+plus `make ui-page` and the development-only React lab. Reuse existing PageHeader, DirectoryTools,
+semantic tokens, typed Icon, controls, photo behavior and TaskDialog rather than another framework.
+Domain APIs, filters, quantities, scientific names, partial dates and form save boundaries remain owned
+by their capability. Maps/tree/calendar/timelines retain their specialized representation controls.
+
+The view-only hash parameter overrides a browser presentation preference, then the page default.
+It preserves other URL/history dimensions and selected records where still applicable. Saved Views v1
+continues to store only its validated canonical filters, excluding mode/selection/pagination; reopening
+uses the current presentation preference and existing page-one behavior. The lab's reference photos
+never establish ownership, primary-photo or cover assignments. Production photo integration retains
+protected local thumbnails, explicit external opt-in and truthful unavailable states.
+
+Gate B is approved. [Production Wave 1](design/ui-system-v1/wave1/README.md) applies these compositions
+to the real Dashboard, Seeds and Plants; other capabilities remain separate migration increments.
+Compact directory headings use existing type-h2; Dashboard uses type-h1/type-metric with the existing
+small/label scale. Native disclosure preserves recent activity without clipping the desktop baseline.
+Presentation-only Back/Forward preserves safe selection, while canonical scope/fresh navigation resets
+it. The [approved prototype](design/ui-system-v1/gate-b/README.md) remains historical evidence.
+No canonical verification receipt or delivery approval is implied. Preserve the Gate A alternatives as history. Structural page
+changes require desktop/tablet/mobile, long-content, state and keyboard evidence; delivery follows CI-004.
+
+
+### Wave 1 final operator refinements — 29 October 2026
+
+The [final refinements](design/ui-system-v1/wave1/refinements/README.md) supersede the earlier
+Wave 1 inspector and MediaAsset-based Dashboard photo presentation. Seeds/Plants use bounded
+identity, quantity where meaningful, lifecycle and three always-visible icon actions with tooltips:
+Quick Preview, Details and Edit. Location/source/provenance stay in Preview/Details.
+Preview uses the existing TaskDialog on every width, without reserving a directory column;
+mobile is full-height with natural internal scrolling and connected-trigger/list focus return.
+Ctrl/Cmd selection extends the existing bulk hook; keyboard/touch retain Select records and Exit.
+Presentation-only switching preserves eligible visible choices; canonical scope/navigation changes
+clear them. Existing 100-record, server-preview, atomic Location Apply contracts remain unchanged.
+Dashboard samples active individual Plants across the full eligible relation, retains the sample
+for a visit and links to Plant details. Only permitted stored primary/reference images load;
+reference and missing imagery are explicit. Eight distinct Plant cards, the KPI strip and all five
+Next work items fit the measured desktop baseline. No missing photo is replaced by an invented
+record relationship. Future bulk operations and Settings widget customization remain proposals.

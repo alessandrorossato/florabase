@@ -37,6 +37,10 @@ Infrastructure, security, dependencies, migrations, unknown changes and releases
 ## Engineering conventions
 
 - New UI follows [UI Foundation v0.1](docs/ui-contract.md); reuse semantic tokens and shared primitives.
+  Start new page compositions from the approved archetype guidance and `make ui-page`
+  ([UI System v1 candidate](docs/design/ui-system-v1/gate-b/implementation.md)). Reuse PageHeader,
+  DirectoryTools and house dialogs; domain code retains API, URL/filter, validation and save ownership.
+  Broad production migration requires the operator's Gate B review; maps/tree/calendar keep their own controls.
 
 - Use Python type hints and modern SQLAlchemy 2.x APIs. Ruff owns formatting/imports; mypy is strict.
 - Keep TypeScript strict. ESLint and Prettier own lint and format. Use semantic HTML and cover

@@ -1,0 +1,146 @@
+[
+  {
+    "page": "dashboard",
+    "width": 1440,
+    "theme": "light",
+    "id": "037",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:27:12.114Z"
+  },
+  {
+    "page": "seeds",
+    "width": 1440,
+    "theme": "light",
+    "id": "038",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:27:55.352Z"
+  },
+  {
+    "page": "plants",
+    "width": 1440,
+    "theme": "light",
+    "id": "040",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:27:58.324Z"
+  },
+  {
+    "page": "dashboard",
+    "width": 1024,
+    "theme": "light",
+    "id": "064",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:28:53.872Z"
+  },
+  {
+    "page": "seeds",
+    "width": 1024,
+    "theme": "light",
+    "id": "065",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:28:55.697Z"
+  },
+  {
+    "page": "plants",
+    "width": 1024,
+    "theme": "light",
+    "id": "067",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:28:57.975Z"
+  },
+  {
+    "page": "dashboard",
+    "width": 390,
+    "theme": "light",
+    "id": "091",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:29:28.968Z"
+  },
+  {
+    "page": "seeds",
+    "width": 390,
+    "theme": "light",
+    "id": "092",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:29:30.587Z"
+  },
+  {
+    "page": "plants",
+    "width": 390,
+    "theme": "light",
+    "id": "094",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:29:32.836Z"
+  },
+  {
+    "page": "dashboard",
+    "width": 390,
+    "theme": "dark",
+    "id": "118",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:30:13.986Z"
+  },
+  {
+    "page": "seeds",
+    "width": 390,
+    "theme": "dark",
+    "id": "119",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:30:16.401Z"
+  },
+  {
+    "page": "plants",
+    "width": 390,
+    "theme": "dark",
+    "id": "121",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:30:18.957Z"
+  },
+  {
+    "page": "dashboard",
+    "width": 1024,
+    "theme": "dark",
+    "id": "145",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:30:48.148Z"
+  },
+  {
+    "page": "dashboard",
+    "width": 1440,
+    "theme": "dark",
+    "id": "199",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:35:47.039Z"
+  },
+  {
+    "page": "seeds",
+    "width": 1440,
+    "theme": "dark",
+    "id": "200",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:35:48.772Z"
+  },
+  {
+    "page": "plants",
+    "width": 1440,
+    "theme": "dark",
+    "id": "202",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:35:51.619Z"
+  },
+  {
+    "page": "seeds",
+    "width": 1024,
+    "theme": "dark",
+    "id": "226",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:36:20.791Z"
+  },
+  {
+    "page": "plants",
+    "width": 1024,
+    "theme": "dark",
+    "id": "228",
+    "source": "ee3487412fe458cbdf7145154c54a58b66132cae",
+    "capturedAt": "2026-10-26T15:36:23.135Z"
+  }
+]
