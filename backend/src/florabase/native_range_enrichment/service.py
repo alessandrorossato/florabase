@@ -10,7 +10,6 @@ from florabase.botanical_profiles.model import BotanicalProfile, BotanicalProfil
 from florabase.geographic_places.model import GeographicPlace
 from florabase.geographic_places.service import display_path, list_geographic_places
 from florabase.native_range_enrichment.crosswalk import (
-    CROSSWALK_VERSION,
     EQUIVALENT,
     GEOGRAPHY_SOURCE,
     classify,
@@ -30,8 +29,6 @@ from florabase.native_range_enrichment.schemas import (
     WcvpLinkResponse,
 )
 from florabase.native_range_enrichment.source import (
-    ARCHIVE_SHA256,
-    VERSION,
     SourceMetadata,
     Taxon,
     WcvpSource,
@@ -189,7 +186,7 @@ def propose(database: Session, identity_id: UUID, source: WcvpSource) -> Proposa
         source=metadata,
         taxon=taxon,
         retrieved_at=datetime.now(UTC),
-        crosswalk_version=CROSSWALK_VERSION,
+        crosswalk_version=metadata.reviewed_release().crosswalk_version,
         choices=sorted(choices.values(), key=lambda p: (p.path.casefold(), p.place_id)),
         assertions=assertions,
     )
@@ -227,17 +224,22 @@ def apply(
     database: Session, identity_id: UUID, proposal_id: UUID, selection: ApplyWrite
 ) -> ApplicationResponse:
     proposal = inspect_proposal(database, identity_id, proposal_id)
-    # Canonical range writers already lock places before identity; use the same order.
+    try:
+        release = proposal.source.reviewed_release()
+    except ValueError as error:
+        raise EnrichmentConflictError("The frozen source release is not approved.") from error
     selected = set(selection.selected_place_ids)
     choices = {c.place_id: c for c in proposal.choices if c.change in {"ADD", "KEEP"}}
     if not selected <= choices.keys():
         raise EnrichmentConflictError("Only reviewed mapped native ranges may be selected.")
+    # Canonical range writers already lock places before identity; use the same order.
     places = list(
         database.scalars(
             select(GeographicPlace)
             .where(GeographicPlace.id.in_(selected))
             .order_by(GeographicPlace.id)
             .with_for_update()
+            .execution_options(populate_existing=True)
         )
     )
     if len(places) != len(selected) or any(
@@ -259,9 +261,7 @@ def apply(
         or proposal.identity_snapshot != identity_snapshot(identity)
         or proposal.destination_version != range_version(database, identity_id)
         or proposal.current_ids != current_ids(database, identity_id)
-        or proposal.crosswalk_version != CROSSWALK_VERSION
-        or proposal.source.version != VERSION
-        or proposal.source.checksum != ARCHIVE_SHA256
+        or proposal.crosswalk_version != release.crosswalk_version
         or link.source != proposal.source.model_dump(mode="json")
         or link.taxon != proposal.taxon.model_dump(mode="json")
     ):

@@ -23,6 +23,7 @@ from florabase.native_range_enrichment.source import (
     SourceUnavailableError,
     Taxon,
     WcvpSource,
+    WcvpVersion,
 )
 
 
@@ -168,13 +169,14 @@ def test_index_rejects_duplicate_ids_unknown_flags_and_missing_taxon_atomically(
     assert not list(tmp_path.glob("wcvp-*.sqlite"))
 
 
-def test_archive_checksum_and_schema_fail_closed(tmp_path: Path) -> None:
+@pytest.mark.parametrize("version", ["15", "16"])
+def test_archive_checksum_and_schema_fail_closed(tmp_path: Path, version: WcvpVersion) -> None:
     archive = tmp_path / "bad.zip"
     with ZipFile(archive, "w") as z:
         z.writestr("../../unsafe", "not a source")
         z.writestr("wcvp_names.csv", "wrong|schema\n1|2\n")
     with pytest.raises(ValueError, match="checksum"):
-        install_archive(archive, tmp_path / "index.sqlite", "2026-10-09T00:00:00Z")
+        install_archive(archive, tmp_path / "index.sqlite", "2026-10-09T00:00:00Z", version)
     with ZipFile(archive) as z, pytest.raises(ValueError, match="schema"):
         list(csv_rows(z, "wcvp_names.csv", NAMES_FIELDS))
     with ZipFile(archive, "w") as z:
@@ -270,3 +272,62 @@ def test_csv_invalid_utf8_and_source_timestamp_fail_closed(tmp_path: Path) -> No
         list(csv_rows(z, "wcvp_names.csv", NAMES_FIELDS))
     with pytest.raises(ValidationError):
         SourceMetadata(retrieved_at="2026-10-09T00:00:00")
+
+
+@pytest.mark.parametrize("version", ["15", "16"])
+def test_reviewed_versions_are_explicit_and_indices_cannot_be_relabelled(
+    tmp_path: Path, version: str
+) -> None:
+    from typing import cast
+
+    from florabase.native_range_enrichment.source import RELEASES, WcvpVersion
+
+    chosen = cast(WcvpVersion, version)
+    metadata = SourceMetadata.for_release(chosen, "2026-10-28T20:31:34Z")
+    path = tmp_path / "versioned.sqlite"
+    build_index(path, [name()], [distribution()], metadata)
+    selected = WcvpSource(path, chosen)
+    assert selected.metadata() == metadata
+    assert selected.search("Fixture")[0].eligible
+    assert selected.distribution("100")[0]["area_code_l3"] == "BOL"
+    assert metadata.reviewed_release() == RELEASES[version]
+    other: WcvpVersion = "16" if version == "15" else "15"
+    before = path.read_bytes()
+    with pytest.raises(SourceUnavailableError):
+        WcvpSource(path, other).metadata()
+    with pytest.raises(ValueError, match="overwrite"):
+        build_index(path, [name()], [], SourceMetadata.for_release(other, "2026-10-28T00:00:00Z"))
+    assert path.read_bytes() == before
+    forged = metadata.model_copy(update={"citation": "unapproved"})
+    with pytest.raises(ValueError, match="metadata"):
+        build_index(path, [name()], [], forged)
+    with pytest.raises(ValueError, match="Unreviewed"):
+        selected.metadata().model_copy(update={"version": "17"}).reviewed_release()
+
+
+def test_simultaneous_provisioning_never_replaces_another_release(tmp_path: Path) -> None:
+    from concurrent.futures import ThreadPoolExecutor
+    from typing import cast
+
+    from florabase.native_range_enrichment.source import WcvpVersion
+
+    path = tmp_path / "shared.sqlite"
+
+    def provision(version: str) -> str:
+        try:
+            build_index(
+                path,
+                [name()],
+                [],
+                SourceMetadata.for_release(cast(WcvpVersion, version), "2026-10-28T00:00:00Z"),
+            )
+            return version
+        except ValueError:
+            return "refused"
+
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(provision, ["15", "16"]))
+    assert results.count("refused") == 1
+    winner = next(v for v in results if v != "refused")
+    assert WcvpSource(path, cast(WcvpVersion, winner)).metadata().version == winner
+    assert not list(tmp_path.glob("wcvp-*.sqlite"))

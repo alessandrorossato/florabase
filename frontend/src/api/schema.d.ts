@@ -8602,7 +8602,9 @@ export interface operations {
     };
     confirmWcvpTaxon: {
         parameters: {
-            query?: never;
+            query?: {
+                version?: "15" | "16";
+            };
             header?: {
                 "X-CSRF-Token"?: string | null;
             };
@@ -8670,7 +8672,9 @@ export interface operations {
     };
     createNativeRangeProposal: {
         parameters: {
-            query?: never;
+            query?: {
+                version?: "15" | "16";
+            };
             header?: {
                 "X-CSRF-Token"?: string | null;
             };
@@ -8773,7 +8777,9 @@ export interface operations {
     };
     getNativeRangeSource: {
         parameters: {
-            query?: never;
+            query?: {
+                version?: "15" | "16";
+            };
             header?: never;
             path: {
                 identity_id: string;
@@ -8806,6 +8812,7 @@ export interface operations {
         parameters: {
             query: {
                 q: string;
+                version?: "15" | "16";
             };
             header?: never;
             path: {

@@ -1,0 +1,20 @@
+{
+  "python": "3.14.7",
+  "wall_seconds": 208.47717447699983,
+  "user_cpu_seconds": 173.690996,
+  "system_cpu_seconds": 15.660703999999999,
+  "max_rss_kib": 44872,
+  "index_bytes": 952799232,
+  "source": {
+    "provider": "kew_wcvp",
+    "version": "16",
+    "archive_url": "https://sftp.kew.org/pub/data-repositories/WCVP/wcvp.zip",
+    "checksum": "d32ea2b3a85e489b14e83bcc9eae7274532e1d113753f7be290d4b2dfde573fa",
+    "license": "https://creativecommons.org/licenses/by/3.0/",
+    "citation": "Govaerts R (ed.). 2026. WCVP: World Checklist of Vascular Plants. Facilitated by the Royal Botanic Gardens, Kew. [WWW document] URL https://doi.org/10.34885/egs6-cp24 [accessed 04 Jun 2026].",
+    "retrieved_at": "2026-10-28T20:31:34.536724+00:00",
+    "coverage": "complete"
+  },
+  "taxa": 1448984,
+  "distributions": 1995338
+}

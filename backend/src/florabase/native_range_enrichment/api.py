@@ -24,7 +24,12 @@ from florabase.native_range_enrichment.schemas import (
     WcvpLinkResponse,
     WcvpLinkWrite,
 )
-from florabase.native_range_enrichment.source import SourceUnavailableError, Taxon, WcvpSource
+from florabase.native_range_enrichment.source import (
+    SourceUnavailableError,
+    Taxon,
+    WcvpSource,
+    WcvpVersion,
+)
 
 router = APIRouter(
     prefix="/botanical-identities/{identity_id}/native-range-enrichment",
@@ -35,8 +40,14 @@ Reader = Annotated[AuthenticatedActor, Depends(require_authenticated_actor)]
 Writer = Annotated[AuthenticatedActor, Depends(require_csrf)]
 
 
-def source_dependency(settings: Annotated[Settings, Depends(get_settings)]) -> WcvpSource:
-    return WcvpSource(settings.wcvp_snapshot_path)
+def source_dependency(
+    settings: Annotated[Settings, Depends(get_settings)],
+    version: Annotated[WcvpVersion, Query()] = "15",
+) -> WcvpSource:
+    return WcvpSource(
+        settings.wcvp_snapshot_path if version == "15" else settings.wcvp_v16_snapshot_path,
+        version,
+    )
 
 
 Source = Annotated[WcvpSource, Depends(source_dependency)]
@@ -76,7 +87,11 @@ def source_status(
     linked = service.link_response(link, record) if link else None
     try:
         metadata = source.metadata()
-        if linked is not None and linked.source != metadata:
+        if (
+            linked is not None
+            and linked.source.version == metadata.version
+            and linked.source != metadata
+        ):
             linked.stale = True
         return SourceStatus(available=True, source=metadata, link=linked)
     except SourceUnavailableError as error:

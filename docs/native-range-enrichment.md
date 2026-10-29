@@ -1,7 +1,8 @@
 # Reviewable structured native-range enrichment (ENRICHMENT-001)
 
 The optional trusted-source panel in BotanicalIdentity → Native ranges uses the reviewed
-**Kew WCVP version 15** archive. [Exact source approval](native-range-enrichment-source-v15.md)
+**Kew WCVP version 15** archive by default.
+[WCVP-VERSION-001](wcvp-version-001.md) adds explicitly selected, separately provisioned v16. [Exact source approval](native-range-enrichment-source-v15.md)
 records its schema, licence, attribution, complete inspection and checksum. Only explicit Apply
 writes canonical `BotanicalProfileNativeRange` relationships. Opening, searching, confirming a
 source link and retrieving proposals never create a profile or change recorded ranges or text.
@@ -22,7 +23,8 @@ false meaning. No existing opaque external IDs or provider links are rewritten.
 
 ## Geography contract
 
-Crosswalk **`wcvp15-wgsrpd2-cldr48.2.1-v1`** derives exact equivalence from the official
+Crosswalk **`wcvp15-wgsrpd2-cldr48.2.1-v1`** (v15) or
+**`wcvp16-wgsrpd2-cldr48.2.1-v1`** (v16) derives the same exact equivalence from the official
 [WGSRPD second edition](https://www.tdwg.org/standards/wgsrpd/), Table 4's level-3, single
 level-4 `OO`, and single ISO code entries. It resolves canonical GeographicPlaces only by the
 existing source tuple `unicode_cldr / 48.2.1 / iso_3166_1_alpha_2 / <code>`.
@@ -75,10 +77,9 @@ range insertion/update/deletion, so edit-and-restore cannot conceal an interveni
 Concurrent applications of one frozen proposal yield one success and one conflict.
 
 **Frozen-source policy:** an already retained proposal may be applied against its explicitly displayed
-version-15 evidence even if the optional index disappears or is reprovisioned. Apply requires no
-provider/cache access; it validates durable source/link evidence and the current implementation's
-pinned release and crosswalk. Link reconfirmation invalidates earlier proposals. Future approved
-source/crosswalk versions will require fresh proposals. A source failure cannot silently refresh or
+original v15 or v16 evidence even if the optional index disappears or is reprovisioned. Apply requires no
+provider/cache access; it validates durable source/link evidence and the original approved
+pinned release and its matching crosswalk. Link reconfirmation invalidates earlier proposals. A deliberate release change requires a new exact-taxon confirmation and fresh proposals. A source failure cannot silently refresh or
 replace evidence. Confirm Apply explicitly names the frozen source version.
 
 ## Durable provenance and lifecycle
@@ -126,7 +127,8 @@ The standalone CLI is independent of startup, PostgreSQL and health checks:
 python -m florabase.native_range_enrichment.snapshot /wcvp/wcvp-v15.sqlite
 ```
 
-It accepts only the fixed official HTTPS v15 archive; no user-supplied URL. Connect/read timeouts
+It accepts only the two pinned official HTTPS releases, with `--version 15|16` (default15);
+no user-supplied URL. Use a separate destination for each release. Connect/read timeouts
 are 10/60 seconds, total streamed-download bound 240 seconds, compressed bound 100 MB, redirects
 rejected, ZIP/octet-stream content required and SHA-256 pinned. ZIP members must match the exact
 three reviewed names and uncompressed sizes; members stream without extraction. UTF-8, pipe
@@ -145,7 +147,7 @@ python -m florabase.native_range_enrichment.snapshot /wcvp/wcvp-v15.sqlite \
 The reviewed complete index holds 1,441,152 taxa and 1,986,879 distribution assertions and occupies
 948,400,128 bytes. Allow roughly 2 GB for existing/temporary indexes plus the 89,508,082-byte archive
 in download temporary storage. Download scratch space is removed on completion/failure. Only the
-current index is retained; reprovisioning is an explicit operator action, with no automated refresh.
+current index for each separately configured release is retained; reprovisioning is an explicit operator action, with no automated refresh.
 The index is replaceable reference data, not collection backup authority. PostgreSQL provenance
 belongs in normal database backups; optional source indexes can be rebuilt from the pinned archive.
 
@@ -155,7 +157,7 @@ runtime user into a separately managed directory, then supply a read-only bind m
 source/build contexts and uploads; do not expose a database or introduce startup downloads.
 The default setting is absent. No production/DEV/Stable Preview source cache was provisioned here.
 
-For this worktree's synthetic UAT, the existing read/write source bind contains the ignored
+For the original ENRICHMENT-001 synthetic UAT, the existing source bind contains the ignored
 `backend/src/.source-cache/wcvp-v15.sqlite`; `compose.uat.yaml` selects that optional path.
 `.gitignore` and the backend Docker exclusion keep it out of Git and images. The official audit
 archive remains outside the repository. The [handoff](enrichment-001-handoff.md) records validation
