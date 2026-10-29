@@ -6075,3 +6075,59 @@ Status remains implemented pending canonical verification.
   boundary test to avoid repeating expensive accessible-name queries.
 - Focused checks passed: Propagation/UX/Dashboard **34/34**, bulk cap **1/1**, media return focus
   **1/1**, and UI Lab **4/4**. Canonical FULL verification passed on the final reconciled tree.
+
+## 2026-10-29 — UI System v1 Wave 2 ready for operator UAT
+
+- Verified clean primary `main` and freshly fetched `origin/main` at `afcfbab` (Wave 1 PR #129).
+  Canonical `make feature-start BRANCH=feat/ui-system-v1-wave2` attached the existing isolated
+  Codex `bf7a` worktree. [Compliance matrix and handoff](design/ui-system-v1/wave2/README.md)
+  distinguish shared adaptations, existing compliant editors and genuine Calendar/domain exceptions.
+- Journal, History and Schedule now compose through ActivityPage and shared DirectoryTools, replacing
+  the duplicated Activity drawer/chips. Suppliers/Orders adopt shared full-width List/Gallery,
+  explicit Preview/Details/Edit, close-first overlay previews and reconnected focus return.
+  Domain chronology, APIs, canonical filters/Saved Views, pagination, calendar controls, transaction/
+  packet relationships and existing create/detail/edit behavior remain capability-owned.
+- Independently owned populated canonical Review at **http://localhost:15174** is healthy, on code/DB
+  `20261013_0042`, with guarded v4/80 and v5/252 synthetic fixture references. Evidence gallery at
+  **http://localhost:15285** contains **154 settled captures**: all 144 primary combinations across
+  eight presentation states, measured 1440/1024/390×844 CSS and all six themes, plus ten contextual
+  samples. Actual JPEG raster dimensions/digests are recorded separately. No horizontal overflow.
+  Invalid resize/stale and failed acquisitions are excluded. DEV, existing data, foreign Docker
+  resources and WCVP implementation worktrees were preserved.
+- Untouched-main archive baseline **97/97**; final focused boundary **144/144 in 12 files** passed,
+  including four new Sourcing navigation/pagination/focus cases. Complete frontend ESLint,
+  TypeScript, Prettier, production build, API drift, 120-feature graph and whitespace pass.
+  Initial broad `make check` stopped at transient-source formatting during dependency bootstrap;
+  it is not counted as a baseline or FULL pass. Earlier test/static failures were corrected.
+- Live mobile Preview/Escape/Edit/Cancel focus and exact return URLs, Journal immediate filters/
+  reset/empty results and Calendar overflow/period/Today were checked without browser domain writes.
+  Physical devices, AT, actual browser zoom, forced colors, injected live failures and scale remain
+  explicit limits. The handoff lists operator UAT scenarios and existing genuine exceptions.
+- CI-004 plans **FULL** for shared Activity composition/styling. Per canonical UI review order,
+  operator acceptance and independent correctness review precede the one final `make feature-verify`;
+  canonical FULL/integration/migration cycling are still pending. `UI-SYSTEM-WAVE2-001` is
+  `implemented`, not `verified`. Source remains unstaged/uncommitted; no push, PR or merge.
+  Stop marker: `FLORABASE_UI_SYSTEM_V1_WAVE2_READY_FOR_OPERATOR_UAT`.
+
+## 2026-10-29 — Wave 2 operator approved; local commit for independent QA
+
+- Operator reports **all six UAT scenarios PASSED**, freezes the approved UI/UX scope and authorizes
+  the local implementation commit before independent QA and canonical FULL. No new UAT or design
+  cycle is requested. [Independent QA handoff](design/ui-system-v1/wave2/independent-qa.md).
+- Audited the complete candidate diff and both untracked additions. Before these documentation-only
+  status updates, the exact source fingerprint matched the approved evidence:
+  `dc0c69259ad891bdf536cf82c5960e3f1726f4b5d61b6baf22e7b4ed533fd6b9`.
+  Activity/Sourcing implementation and tests remain unchanged. Only Wave 2 source, regression tests,
+  CSS and documentation are included; no credentials, screenshots, fixtures, build output or caches.
+- Fresh `origin/main` is `5b2e2a1fadffa30de4e9129fe01750c71efb6d6c` (WCVP-VERSION-001 #130),
+  one commit beyond this candidate's base `afcfbab334622d64cca2cdb2ea4c8f6a51ad957f`.
+  Implementation paths do not overlap; only `docs/features.json` and `docs/progress.md` overlap.
+  Reconciliation is required before canonical verification; it is deliberately left to QA rather
+  than importing unrelated WCVP changes into the approved implementation commit. Primary main,
+  other worktrees and existing Review/DEV/UAT environments are unchanged.
+- Retained evidence revalidated: **154/154** screenshot digests and **144 passed tests in 12 files**;
+  prior lint/typing/format/build/API drift evidence remains attached to the unchanged implementation.
+  Current feature graph **120 valid** and diff whitespace pass. No canonical gate was run or duplicated.
+- `UI-SYSTEM-WAVE2-001` remains `implemented`; independent QA reconciles current main, reviews/fixes
+  objective defects, freezes source/index and runs one CI-004-selected canonical **FULL** gate.
+  No push, PR, merge or feature-finish in this local-commit task.

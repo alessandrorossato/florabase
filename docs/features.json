@@ -2117,6 +2117,26 @@
       ],
       "priority": "P3",
       "status": "planned"
+    },
+    {
+      "id": "UI-SYSTEM-WAVE2-001",
+      "category": "ux",
+      "description": "Extend approved UI System v1 compositions to Activity and Sourcing while preserving domain workflows",
+      "acceptance_criteria": [
+        "An implementation-derived compliance matrix distinguishes shared adaptations, compliant forms/details and genuine calendar or domain exceptions against merged Wave 1 PR 129",
+        "Journal, History and Schedule reuse ActivityPage and DirectoryTools without changing chronology, date precision, canonical filters, Saved Views support, calendar controls, permissions or transitions",
+        "Suppliers and Orders reuse shared directory List/Gallery, explicit Preview/Details/Edit and close-first responsive preview dialogs while retaining exact canonical search, Supplier scope, pagination, URL/browser history and focus return",
+        "Existing Sourcing create/detail/contextual and direct edit, purchase reconciliation, independent packets, unknown Supplier/date/price and photo ownership retain their delivered contracts",
+        "An independently owned populated Review, focused behavior regressions, strict typing, lint, formatting, build and API drift evidence support operator UAT",
+        "Settled desktop/tablet/mobile evidence covers all six themes with explicit manual-test limits; operator visual acceptance, independent correctness review and the CI-004-selected canonical FULL gate precede verification and delivery"
+      ],
+      "dependencies": [
+        "UI-SYSTEM-001",
+        "ORDER-001",
+        "SUPPLIER-003"
+      ],
+      "priority": "P1",
+      "status": "implemented"
     }
   ]
 }

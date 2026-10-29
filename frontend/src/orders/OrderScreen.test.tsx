@@ -118,7 +118,7 @@ function mount(initialId?: string, initialTab?: string) {
   );
 }
 function orderRow() {
-  return screen.findByRole("button", { name: /REF-1/ });
+  return screen.findByRole("button", { name: "Quick preview REF-1" });
 }
 beforeEach(() => {
   window.history.replaceState(null, "", "#/orders");
@@ -144,7 +144,7 @@ test("directory exposes exact price, partial date, authoritative count and a hid
   const user = userEvent.setup();
   mount();
   const row = await orderRow();
-  expect(row).toHaveAttribute("aria-pressed", "false");
+  expect(row.closest("li")).not.toHaveAttribute("data-selected");
   expect(screen.getByText("EUR 42.5000")).toBeVisible();
   expect(screen.getByText("2026-10 · Nursery")).toBeVisible();
   expect(screen.getByLabelText("Directory results")).toHaveTextContent(
@@ -155,12 +155,14 @@ test("directory exposes exact price, partial date, authoritative count and a hid
   );
 
   await user.click(row);
-  expect(row).toHaveAttribute("aria-pressed", "true");
+  expect(row.closest("li")).toHaveAttribute("data-selected", "true");
   expect(screen.getByRole("link", { name: "Open details" })).toHaveAttribute(
     "href",
     `#/orders/${id}`,
   );
 
+  if (screen.queryByRole("dialog", { name: "Order inspection" }))
+    await user.click(screen.getByRole("button", { name: "Close preview" }));
   fireEvent.change(screen.getByLabelText("Search Orders"), {
     target: { value: "ABC" },
   });
@@ -687,4 +689,67 @@ test("a missing Supplier filter UUID stays exact and visible", async () => {
       name: `Unavailable Supplier — ${missing} (unavailable)`,
     }),
   ).toBeVisible();
+});
+
+test("Order presentation preserves Supplier, query, current page and preview focus", async () => {
+  window.history.replaceState(
+    { review: true },
+    "",
+    `#/orders?q=REF&supplier_id=${supplierId}&view=list`,
+  );
+  vi.mocked(listOrders).mockResolvedValue({
+    items: [detail],
+    total: 51,
+    offset: 0,
+    limit: 50,
+  });
+  const user = userEvent.setup();
+  mount();
+  await orderRow();
+  await user.click(screen.getByRole("button", { name: "Next Orders" }));
+  await waitFor(() => {
+    expect(listOrders).toHaveBeenLastCalledWith(
+      "REF",
+      supplierId,
+      50,
+      expect.any(AbortSignal),
+    );
+  });
+  await orderRow();
+  const requests = vi.mocked(listOrders).mock.calls.length;
+  await user.click(screen.getByRole("button", { name: "Gallery" }));
+  expect(window.location.hash).toBe(
+    `#/orders?q=REF&supplier_id=${supplierId}&view=gallery`,
+  );
+  expect(window.history.state).toEqual({ review: true });
+  expect(listOrders).toHaveBeenCalledTimes(requests);
+  expect(screen.getByRole("list", { name: "Orders" })).toHaveClass(
+    "ui-directory-records--gallery",
+  );
+  expect(screen.getByRole("button", { name: "Previous Orders" })).toBeVisible();
+  await user.click(await orderRow());
+  expect(
+    screen.getByRole("dialog", { name: "Order inspection" }),
+  ).toBeVisible();
+  expect(screen.getByRole("button", { name: "Close preview" })).toHaveFocus();
+  await user.keyboard("{Escape}");
+  expect(await orderRow()).toHaveFocus();
+  window.localStorage.removeItem("florabase.directory-view.v1.orders");
+});
+
+test("Order row Edit keeps the existing contextual editor and focus return", async () => {
+  const user = userEvent.setup();
+  mount();
+  const edit = await screen.findByRole("button", {
+    name: "Edit REF-1",
+  });
+  await user.click(edit);
+  const editor = screen.getByRole("dialog", { name: "Edit Order" });
+  expect(
+    screen.queryByRole("dialog", { name: "Order inspection" }),
+  ).not.toBeInTheDocument();
+  await user.click(within(editor).getByRole("button", { name: "Cancel" }));
+  await waitFor(() => {
+    expect(edit).toHaveFocus();
+  });
 });
