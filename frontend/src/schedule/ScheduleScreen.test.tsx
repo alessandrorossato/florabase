@@ -816,7 +816,10 @@ test("Calendar reset stays in the toolbar and preserves its month/day and browse
   mount();
   await screen.findByText("No activities match this month and its filters.");
   const controls = screen.getByRole("group", { name: "Active filters" });
-  const reset = within(controls).getByRole("button", { name: "Clear filters" });
+  expect(
+    within(controls).getByRole("button", { name: "Remove status filter" }),
+  ).toBeVisible();
+  const reset = screen.getByRole("button", { name: "Clear filters" });
   expect(screen.getAllByRole("button", { name: "Clear filters" })).toHaveLength(
     1,
   );
@@ -905,12 +908,7 @@ test.each(["completed", "cancelled"] as const)(
     vi.mocked(api.listSchedule).mockResolvedValue(page([]));
     mount();
     expect(await screen.findByText(`No ${status} activities.`)).toBeVisible();
-    expect(
-      within(screen.getByRole("group", { name: "Active filters" })).getByRole(
-        "button",
-        { name: "Clear filters" },
-      ),
-    ).toBeVisible();
+    expect(screen.getByRole("button", { name: "Clear filters" })).toBeVisible();
   },
 );
 

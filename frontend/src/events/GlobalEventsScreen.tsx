@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { Page } from "../components/WorkspaceUI";
+import { ActivityPage } from "../components/ActivityPage";
 import "./activity.css";
 import { listGlobalEvents, type EventResponse } from "../collection/api";
 import { RecordLauncher } from "./RecordLauncher";
@@ -65,80 +65,88 @@ export function GlobalEventsScreen() {
   );
 
   return (
-    <Page titleId="global-events-title" className="activity-page">
-      <ActivityPageHeader
-        name="Journal"
-        titleId="global-events-title"
-        subtitle="Record collection work and keep observations and notes."
-        primaryAction={<RecordLauncher />}
-        query={view.state.q}
-        onSearch={(q) => {
-          view.update("q", q);
-        }}
-        filterCount={filter.length > 0 ? 1 : 0}
-        resetFilters={() => {
-          setFilter([]);
-        }}
-        savedViews={
-          <SavedViews
-            presentation="dialog"
-            surface="events"
-            state={view.savedState}
+    <ActivityPage
+      titleId="global-events-title"
+      className="activity-page"
+      header={
+        <ActivityPageHeader
+          name="Journal"
+          titleId="global-events-title"
+          subtitle="Record collection work and keep observations and notes."
+          primaryAction={<RecordLauncher />}
+          query={view.state.q}
+          onSearch={(q) => {
+            view.update("q", q);
+          }}
+          resetFilters={() => {
+            setFilter([]);
+          }}
+          savedViews={
+            <SavedViews
+              presentation="dialog"
+              surface="events"
+              state={view.savedState}
+            />
+          }
+          activeFilters={
+            filter.length
+              ? [
+                  {
+                    label: "Entry type",
+                    value: selectionLabel(filter, entryLabels),
+                    onRemove: () => {
+                      setFilter([]);
+                    },
+                  },
+                ]
+              : []
+          }
+        >
+          <ActivityChoices
+            title="Entry type"
+            labels={entryLabels}
+            selected={filter}
+            onChange={setFilter}
           />
-        }
-        summary={
-          <button
-            className="filter-chip"
-            type="button"
-            aria-label="Remove entry type filter"
-            onClick={() => {
-              setFilter([]);
-            }}
-          >
-            Entry type: {selectionLabel(filter, entryLabels)} ×
-          </button>
-        }
-      >
-        <ActivityChoices
-          title="Entry type"
-          labels={entryLabels}
-          selected={filter}
-          onChange={setFilter}
-        />
-      </ActivityPageHeader>
-      {state.status === "loading" && <p role="status">Loading Journal…</p>}
-      {state.status === "error" && (
-        <div className="notice notice--error" role="alert">
-          <p>Florabase could not load Journal.</p>
-          <button
-            type="button"
-            onClick={() => {
-              setAttempt((value) => value + 1);
-            }}
-          >
-            Retry
-          </button>
-        </div>
-      )}
-      {state.status === "ready" && (
+        </ActivityPageHeader>
+      }
+      chronology={
         <>
-          <DirectoryResults count={visible.length} />
-          {notebookEvents(state.events).length === 0 ? (
-            <div className="empty-state">
-              <p>
-                No Journal entries yet. Choose a Plant or Plant group to record
-                an observation, note or action.
-              </p>
+          {state.status === "loading" && <p role="status">Loading Journal…</p>}
+          {state.status === "error" && (
+            <div className="notice notice--error" role="alert">
+              <p>Florabase could not load Journal.</p>
+              <button
+                type="button"
+                onClick={() => {
+                  setAttempt((value) => value + 1);
+                }}
+              >
+                Retry
+              </button>
             </div>
-          ) : visible.length === 0 ? (
-            <p className="notice" role="status">
-              No Journal entries match this search or filter.
-            </p>
-          ) : (
-            <EventFeed journal events={visible} />
+          )}
+          {state.status === "ready" && (
+            <>
+              <DirectoryResults count={visible.length} />
+              {notebookEvents(state.events).length === 0 ? (
+                <div className="empty-state">
+                  <p>
+                    No Journal entries yet. Choose a Plant or Plant group to
+                    record an observation, note or action.
+                  </p>
+                </div>
+              ) : visible.length === 0 ? (
+                <p className="notice" role="status">
+                  No Journal entries match this search or filter.
+                </p>
+              ) : (
+                <EventFeed journal events={visible} />
+              )}
+            </>
           )}
         </>
-      )}
-    </Page>
+      }
+    />
   );
 }

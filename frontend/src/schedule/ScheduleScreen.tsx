@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { FormActions } from "../components/ReferenceUI";
-import { Page } from "../components/WorkspaceUI";
+import { ActivityPage } from "../components/ActivityPage";
 import { ActivityChoices } from "../events/ActivityFilters";
 import { selectionLabel } from "../events/filterSelection";
 import { ActivityPageHeader } from "../events/ActivityPageHeader";
@@ -773,279 +773,273 @@ export function ScheduleScreen() {
     return item.due_on <= localDay(horizon) ? "Next 7 days" : "Later";
   }
   return (
-    <Page className="schedule-workspace activity-page" titleId="schedule-title">
-      <ActivityPageHeader
-        name="Schedule"
-        titleId="schedule-title"
-        subtitle="Future work planned for your collection."
-        query={state.q}
-        onSearch={(q) => {
-          update({ ...state, q }, true);
-        }}
-        filterCount={
-          Number(state.status.length > 0 && state.status.length < 3) +
-          Number(state.window !== "all") +
-          Number(
-            state.activity_kind.length > 0 && state.activity_kind.length < 8,
-          ) +
-          Number(state.target_kind.length > 0) +
-          Number(Boolean(state.target_id))
-        }
-        resetFilters={() => {
-          update({
-            ...defaultState,
-            status: [],
-            q: state.q,
-            view: state.view,
-            month: state.month,
-            date: state.date,
-          });
-        }}
-        primaryAction={
-          owner && (
-            <button
-              type="button"
-              className="schedule-create"
-              aria-label="Schedule activity"
-              onClick={() => {
-                open("create");
+    <ActivityPage
+      className="schedule-workspace activity-page"
+      titleId="schedule-title"
+      header={
+        <ActivityPageHeader
+          name="Schedule"
+          titleId="schedule-title"
+          subtitle="Future work planned for your collection."
+          query={state.q}
+          onSearch={(q) => {
+            update({ ...state, q }, true);
+          }}
+          resetFilters={() => {
+            update({
+              ...defaultState,
+              status: [],
+              q: state.q,
+              view: state.view,
+              month: state.month,
+              date: state.date,
+            });
+          }}
+          primaryAction={
+            owner && (
+              <button
+                type="button"
+                className="schedule-create"
+                aria-label="Schedule activity"
+                onClick={() => {
+                  open("create");
+                }}
+              >
+                + Schedule activity
+              </button>
+            )
+          }
+          activeFilters={[
+            ...(state.status.length > 0 && state.status.length < 3
+              ? [
+                  {
+                    label: "Status",
+                    value: selectionLabel(state.status, statusLabels),
+                    onRemove: () => {
+                      update({ ...state, status: [] });
+                    },
+                  },
+                ]
+              : []),
+            ...(state.window !== "all"
+              ? [
+                  {
+                    label: "Date window",
+                    value: windowLabels[state.window],
+                    onRemove: () => {
+                      update({ ...state, window: "all" });
+                    },
+                  },
+                ]
+              : []),
+            ...(state.activity_kind.length > 0 && state.activity_kind.length < 8
+              ? [
+                  {
+                    label: "Activity kind",
+                    value: selectionLabel(state.activity_kind, activityLabels),
+                    onRemove: () => {
+                      update({ ...state, activity_kind: [] });
+                    },
+                  },
+                ]
+              : []),
+            ...(state.target_kind.length
+              ? [
+                  {
+                    label: "Target type",
+                    value: selectionLabel(state.target_kind, targetLabels),
+                    onRemove: () => {
+                      update({ ...state, target_kind: [], target_id: "" });
+                    },
+                  },
+                ]
+              : []),
+            ...(state.target_id
+              ? [
+                  {
+                    label: "Target",
+                    value: "Selected record",
+                    onRemove: () => {
+                      update({ ...state, target_id: "" });
+                    },
+                  },
+                ]
+              : []),
+          ]}
+        >
+          <ActivityChoices
+            title="Status"
+            labels={statusLabels}
+            selected={state.status}
+            onChange={(status) => {
+              update({ ...state, status: status.length === 3 ? [] : status });
+            }}
+          />
+          <label className="field activity-window-field">
+            Date window
+            <select
+              value={state.window}
+              onChange={(event) => {
+                update({
+                  ...state,
+                  window: event.target.value as ScheduleState["window"],
+                });
               }}
             >
-              + Schedule activity
-            </button>
-          )
-        }
-        summary={
-          <>
-            {state.status.length > 0 && state.status.length < 3 && (
-              <button
-                type="button"
-                className="filter-chip"
-                aria-label="Remove status filter"
-                onClick={() => {
-                  update({ ...state, status: [] });
-                }}
-              >
-                Status: {selectionLabel(state.status, statusLabels)} ×
-              </button>
-            )}
-            {state.window !== "all" && (
-              <button
-                type="button"
-                className="filter-chip"
-                aria-label="Remove date window filter"
-                onClick={() => {
-                  update({ ...state, window: "all" });
-                }}
-              >
-                {windowLabels[state.window]} ×
-              </button>
-            )}
-            {state.activity_kind.length > 0 &&
-              state.activity_kind.length < 8 && (
-                <button
-                  type="button"
-                  className="filter-chip"
-                  aria-label="Remove activity kind filter"
-                  onClick={() => {
-                    update({ ...state, activity_kind: [] });
-                  }}
-                >
-                  Activity kind:{" "}
-                  {selectionLabel(state.activity_kind, activityLabels)} ×
-                </button>
-              )}
-            {state.target_kind.length > 0 && (
-              <button
-                type="button"
-                className="filter-chip"
-                aria-label="Remove target type filter"
-                onClick={() => {
-                  update({ ...state, target_kind: [], target_id: "" });
-                }}
-              >
-                Target type: {selectionLabel(state.target_kind, targetLabels)} ×
-              </button>
-            )}
-            {state.target_id && (
-              <button
-                type="button"
-                className="filter-chip"
-                aria-label="Clear target filter"
-                onClick={() => {
-                  update({ ...state, target_id: "" });
-                }}
-              >
-                Selected record ×
-              </button>
-            )}
-          </>
-        }
-      >
-        <ActivityChoices
-          title="Status"
-          labels={statusLabels}
-          selected={state.status}
-          onChange={(status) => {
-            update({ ...state, status: status.length === 3 ? [] : status });
-          }}
-        />
-        <label className="field activity-window-field">
-          Date window
-          <select
-            value={state.window}
-            onChange={(event) => {
-              update({
-                ...state,
-                window: event.target.value as ScheduleState["window"],
-              });
+              {Object.entries(windowLabels).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <ActivityChoices
+            title="Activity kind"
+            labels={activityLabels}
+            selected={state.activity_kind}
+            onChange={(activity_kind) => {
+              update({ ...state, activity_kind });
             }}
-          >
-            {Object.entries(windowLabels).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <ActivityChoices
-          title="Activity kind"
-          labels={activityLabels}
-          selected={state.activity_kind}
-          onChange={(activity_kind) => {
-            update({ ...state, activity_kind });
-          }}
-        />
-        <ActivityChoices
-          title="Target type"
-          labels={targetLabels}
-          selected={state.target_kind}
-          onChange={(target_kind) => {
-            update({ ...state, target_kind, target_id: "" });
-          }}
-        />
-      </ActivityPageHeader>
-      {state.view === "list" && (
-        <div className="schedule-view-heading">
-          <h3>{page ? `${String(page.total)} activities` : "Activities"}</h3>
-          <div className="schedule-view-controls">{viewSwitcher}</div>
-        </div>
-      )}
-      {notice && <p role="status">{notice}</p>}
-      {state.view === "calendar" ? (
-        <ScheduleCalendar
-          key={state.month}
-          state={state}
-          viewSwitcher={viewSwitcher}
-          page={page ?? null}
-          error={loadError}
-          today={projectionDay}
-          owner={owner}
-          onChange={update}
-          onRetry={() => {
-            setAttempt((a) => a + 1);
-          }}
-          onAction={open}
-          onCreate={(due) => {
-            setError("");
-            setDialog({ action: "create", item: null, target: null, due });
-          }}
-        />
-      ) : loadError ? (
-        <div role="alert">
-          <p>Florabase could not load Schedule.</p>
-          <button
-            onClick={() => {
-              setAttempt((a) => a + 1);
+          />
+          <ActivityChoices
+            title="Target type"
+            labels={targetLabels}
+            selected={state.target_kind}
+            onChange={(target_kind) => {
+              update({ ...state, target_kind, target_id: "" });
             }}
-          >
-            Retry Schedule
-          </button>
-        </div>
-      ) : !page ? (
-        <p role="status">Loading scheduled activities…</p>
-      ) : (
+          />
+        </ActivityPageHeader>
+      }
+      chronology={
         <>
-          {!page.items.length && (
-            <EmptyScheduleList state={state} onExpire={expire} />
+          {state.view === "list" && (
+            <div className="schedule-view-heading">
+              <h3>
+                {page ? `${String(page.total)} activities` : "Activities"}
+              </h3>
+              <div className="schedule-view-controls">{viewSwitcher}</div>
+            </div>
           )}
-          {groups.map((heading) => {
-            const items = page.items.filter((item) => group(item) === heading);
-            return items.length ? (
-              <section
-                className="schedule-group"
-                key={heading}
-                aria-label={heading}
-              >
-                <h3>{heading}</h3>
-                <ol className="schedule-list">
-                  {items.map((item) => (
-                    <li key={item.id}>
-                      <ScheduleActivityRow
-                        item={item}
-                        owner={owner}
-                        onAction={open}
-                        today={projectionDay}
-                      />
-                    </li>
-                  ))}
-                </ol>
-              </section>
-            ) : null;
-          })}
-          {page.items.length > 0 && page.total > 50 && (
-            <nav className="button-row" aria-label="Schedule pages">
+          {notice && <p role="status">{notice}</p>}
+          {state.view === "calendar" ? (
+            <ScheduleCalendar
+              key={state.month}
+              state={state}
+              viewSwitcher={viewSwitcher}
+              page={page ?? null}
+              error={loadError}
+              today={projectionDay}
+              owner={owner}
+              onChange={update}
+              onRetry={() => {
+                setAttempt((a) => a + 1);
+              }}
+              onAction={open}
+              onCreate={(due) => {
+                setError("");
+                setDialog({ action: "create", item: null, target: null, due });
+              }}
+            />
+          ) : loadError ? (
+            <div role="alert">
+              <p>Florabase could not load Schedule.</p>
               <button
-                disabled={!offset}
                 onClick={() => {
-                  setOffset((o) => Math.max(0, o - 50));
+                  setAttempt((a) => a + 1);
                 }}
               >
-                Previous
+                Retry Schedule
               </button>
-              <span>Page {Math.floor(offset / 50) + 1}</span>
-              <button
-                disabled={offset + 50 >= page.total}
-                onClick={() => {
-                  setOffset((o) => o + 50);
-                }}
-              >
-                Next
-              </button>
-            </nav>
+            </div>
+          ) : !page ? (
+            <p role="status">Loading scheduled activities…</p>
+          ) : (
+            <>
+              {!page.items.length && (
+                <EmptyScheduleList state={state} onExpire={expire} />
+              )}
+              {groups.map((heading) => {
+                const items = page.items.filter(
+                  (item) => group(item) === heading,
+                );
+                return items.length ? (
+                  <section
+                    className="schedule-group"
+                    key={heading}
+                    aria-label={heading}
+                  >
+                    <h3>{heading}</h3>
+                    <ol className="schedule-list">
+                      {items.map((item) => (
+                        <li key={item.id}>
+                          <ScheduleActivityRow
+                            item={item}
+                            owner={owner}
+                            onAction={open}
+                            today={projectionDay}
+                          />
+                        </li>
+                      ))}
+                    </ol>
+                  </section>
+                ) : null;
+              })}
+              {page.items.length > 0 && page.total > 50 && (
+                <nav className="button-row" aria-label="Schedule pages">
+                  <button
+                    disabled={!offset}
+                    onClick={() => {
+                      setOffset((o) => Math.max(0, o - 50));
+                    }}
+                  >
+                    Previous
+                  </button>
+                  <span>Page {Math.floor(offset / 50) + 1}</span>
+                  <button
+                    disabled={offset + 50 >= page.total}
+                    onClick={() => {
+                      setOffset((o) => o + 50);
+                    }}
+                  >
+                    Next
+                  </button>
+                </nav>
+              )}
+            </>
+          )}
+          {dialog && (
+            <ActivityDialog
+              key={`${dialog.action}:${dialog.item?.id ?? "new"}:${String(dialog.item?.version ?? 0)}`}
+              dialog={dialog}
+              busy={busy}
+              error={error}
+              onClose={close}
+              onReload={() => {
+                void reload();
+              }}
+              onSave={(payload) => {
+                void save(() =>
+                  writeActivity(dialog.item?.id ?? null, payload, csrf),
+                );
+              }}
+              onTransition={(event) => {
+                if (dialog.item) {
+                  const item = dialog.item;
+                  void save(() =>
+                    transitionActivity(
+                      item,
+                      dialog.action === "cancel" ? "cancel" : "complete",
+                      csrf,
+                      event,
+                    ),
+                  );
+                }
+              }}
+            />
           )}
         </>
-      )}
-      {dialog && (
-        <ActivityDialog
-          key={`${dialog.action}:${dialog.item?.id ?? "new"}:${String(dialog.item?.version ?? 0)}`}
-          dialog={dialog}
-          busy={busy}
-          error={error}
-          onClose={close}
-          onReload={() => {
-            void reload();
-          }}
-          onSave={(payload) => {
-            void save(() =>
-              writeActivity(dialog.item?.id ?? null, payload, csrf),
-            );
-          }}
-          onTransition={(event) => {
-            if (dialog.item) {
-              const item = dialog.item;
-              void save(() =>
-                transitionActivity(
-                  item,
-                  dialog.action === "cancel" ? "cancel" : "complete",
-                  csrf,
-                  event,
-                ),
-              );
-            }
-          }}
-        />
-      )}
-    </Page>
+      }
+    />
   );
 }

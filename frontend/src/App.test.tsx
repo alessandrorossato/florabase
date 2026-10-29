@@ -1869,10 +1869,14 @@ test("supplier filtering, keyboard selection, optional details, editing, and lif
   const filter = await screen.findByLabelText("Filter suppliers");
   await user.type(filter, "sales@example.com");
   expect(screen.queryByText("Local nursery")).not.toBeInTheDocument();
-  const record = screen.getByRole("button", { name: /Rare Palm Seeds/i });
+  const record = screen.getByRole("button", {
+    name: "Quick preview Rare Palm Seeds",
+  });
   record.focus();
   await user.keyboard("{Enter}");
-  expect(record).toHaveAttribute("aria-pressed", "true");
+  expect(
+    await screen.findByRole("complementary", { name: "Quick preview" }),
+  ).toBeVisible();
   expect(
     screen.queryByRole("link", { name: "Visit supplier website" }),
   ).not.toBeInTheDocument();
@@ -1934,7 +1938,9 @@ test("Quick Preview edit returns to the preview and restores its Edit trigger", 
   });
   const user = await openSuppliers();
   await user.click(
-    await screen.findByRole("button", { name: /Rare Palm Seeds/i }),
+    await screen.findByRole("button", {
+      name: "Quick preview Rare Palm Seeds",
+    }),
   );
   const preview = await screen.findByRole("complementary", {
     name: "Quick preview",
@@ -3099,7 +3105,9 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
     expect(screen.getByRole("button", { name: "New supplier" })).toHaveFocus();
   });
   await user.click(
-    await screen.findByRole("button", { name: /Rare Palm Seeds/i }),
+    await screen.findByRole("button", {
+      name: "Quick preview Rare Palm Seeds",
+    }),
   );
   await user.click(screen.getByRole("link", { name: "Open details" }));
   const editSupplier = await screen.findByRole("button", {

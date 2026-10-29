@@ -43,41 +43,8 @@ body:has(.activity-page dialog[open]) {
   flex: 2 1 36rem;
   min-width: 0;
 }
-.activity-page .page-tools .activity-toolbar {
-  margin: 0;
-  align-items: center;
-}
-.activity-page .page-header p {
-  margin: 0;
-}
 .activity-page .page-header h2 {
-  margin: var(--space-1) 0 var(--space-2);
-}
-.activity-page .page-header .overflow-trigger {
-  color: var(--on-primary);
-  background: var(--primary);
-  border-color: var(--primary);
-}
-.activity-page .page-header .overflow-trigger:hover {
-  background: var(--primary-hover);
-}
-.activity-page .activity-toolbar .dashboard-search-field {
-  flex: 1 1 14rem;
-  min-width: 0;
-  margin: 0;
-}
-.activity-toolbar {
-  margin-bottom: var(--space-3);
-}
-.activity-toolbar .saved-views__controls {
-  margin: 0;
-}
-.activity-filter-summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
+  font: var(--type-h2);
 }
 .activity-source-filters label {
   display: flex;
@@ -221,9 +188,6 @@ body:has(.activity-page dialog[open]) {
   }
 }
 @media (max-width: 48rem) {
-  .activity-page .activity-toolbar .dashboard-search-field {
-    flex-basis: 100%;
-  }
   .app-content > .activity-page.ui-page,
   .app-content > .activity-page.ui-page:has(#global-events-title) {
     padding: 0 0 var(--space-16);
@@ -243,41 +207,6 @@ body:has(.activity-page dialog[open]) {
   }
 }
 
-/* Dashboard's live drawer grammar, bounded to the Activity family. */
-.task-dialog.dashboard-filter-drawer.activity-filter-drawer {
-  inset: 0 0 auto auto;
-  margin: 0;
-  width: min(34rem, 100%);
-  height: auto;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  padding: 0;
-}
-.activity-filter-drawer .section-heading {
-  margin: 0;
-  padding: var(--space-4) var(--space-6);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.activity-filter-drawer .dashboard-drawer-fields {
-  min-height: 0;
-  overflow-y: auto;
-  margin: 0;
-  padding: var(--space-4) var(--space-6);
-}
-.activity-filter-drawer .dashboard-drawer-actions {
-  margin: auto 0 0;
-  padding: var(--space-4) var(--space-6);
-  background: var(--surface);
-  flex-shrink: 0;
-}
-.activity-filter-drawer .dashboard-drawer-actions > button:last-child {
-  margin-left: auto;
-}
-.activity-filter-drawer .activity-choice-group {
-  display: block;
-}
 .activity-choice-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -296,8 +225,8 @@ body:has(.activity-page dialog[open]) {
   flex-shrink: 0;
   margin: 0;
 }
-.activity-filter-drawer .activity-year-field,
-.activity-filter-drawer .activity-window-field {
+.activity-year-field,
+.activity-window-field {
   max-width: 16rem;
   margin: 0;
 }
@@ -305,13 +234,12 @@ body:has(.activity-page dialog[open]) {
   color: var(--text-muted);
   font: var(--type-small);
 }
+.activity-filter-fields {
+  display: grid;
+  gap: var(--space-4);
+}
 @media (max-width: 36rem) {
   .activity-choice-grid {
     grid-template-columns: 1fr;
-  }
-  .activity-filter-drawer .section-heading,
-  .activity-filter-drawer .dashboard-drawer-fields,
-  .activity-filter-drawer .dashboard-drawer-actions {
-    padding-inline: var(--space-4);
   }
 }
