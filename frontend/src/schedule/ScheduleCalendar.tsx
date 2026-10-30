@@ -36,6 +36,7 @@ const weekdays = [
 export function ScheduleCalendar({
   state,
   viewSwitcher,
+  navigation,
   page,
   error,
   today,
@@ -47,6 +48,7 @@ export function ScheduleCalendar({
 }: {
   state: ScheduleState;
   viewSwitcher?: ReactNode;
+  navigation?: ReactNode;
   page: SchedulePage | null;
   error: boolean;
   today: string;
@@ -121,49 +123,59 @@ export function ScheduleCalendar({
     );
   }
   return (
-    <section className="schedule-calendar" aria-labelledby="calendar-period">
-      <div className="schedule-view-heading">
-        <h3 id="calendar-period" aria-live="polite">
-          {monthLabel(state.month)}
-        </h3>
-        <div className="schedule-view-controls">
-          {viewSwitcher}
-          <nav className="schedule-compact-nav" aria-label="Calendar period">
-            <button
-              type="button"
-              className="button--secondary"
-              aria-label="Previous month"
-              disabled={state.month === "0001-01"}
-              onClick={() => {
-                navigate(shiftMonth(state.month, -1));
-              }}
-            >
-              <span aria-hidden="true">‹</span>
-            </button>
-            <button
-              type="button"
-              className="button--secondary schedule-period-today"
-              onClick={() => {
-                setDrawerOpen(false);
-                onChange({ ...state, month: today.slice(0, 7), date: today });
-              }}
-            >
-              Today
-            </button>
-            <button
-              type="button"
-              className="button--secondary"
-              aria-label="Next month"
-              disabled={state.month === "9999-12"}
-              onClick={() => {
-                navigate(shiftMonth(state.month, 1));
-              }}
-            >
-              <span aria-hidden="true">›</span>
-            </button>
-          </nav>
+    <section
+      className="schedule-calendar"
+      aria-labelledby={navigation === undefined ? "calendar-period" : undefined}
+      aria-label={
+        navigation === undefined
+          ? undefined
+          : `${monthLabel(state.month)} scheduled work`
+      }
+    >
+      {navigation ?? (
+        <div className="schedule-view-heading">
+          <h3 id="calendar-period" aria-live="polite">
+            {monthLabel(state.month)}
+          </h3>
+          <div className="schedule-view-controls">
+            {viewSwitcher}
+            <nav className="schedule-compact-nav" aria-label="Calendar period">
+              <button
+                type="button"
+                className="button--secondary"
+                aria-label="Previous month"
+                disabled={state.month === "0001-01"}
+                onClick={() => {
+                  navigate(shiftMonth(state.month, -1));
+                }}
+              >
+                <span aria-hidden="true">‹</span>
+              </button>
+              <button
+                type="button"
+                className="button--secondary schedule-period-today"
+                onClick={() => {
+                  setDrawerOpen(false);
+                  onChange({ ...state, month: today.slice(0, 7), date: today });
+                }}
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                className="button--secondary"
+                aria-label="Next month"
+                disabled={state.month === "9999-12"}
+                onClick={() => {
+                  navigate(shiftMonth(state.month, 1));
+                }}
+              >
+                <span aria-hidden="true">›</span>
+              </button>
+            </nav>
+          </div>
         </div>
-      </div>
+      )}
       {error ? (
         <ErrorState onRetry={onRetry}>
           Florabase could not load Calendar.

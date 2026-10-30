@@ -122,3 +122,41 @@
     width: 100%;
   }
 }
+
+.schedule-period-bar {
+  border-block: 1px solid var(--border);
+  padding-block: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.schedule-jump {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font: var(--type-small);
+}
+.schedule-jump input {
+  width: auto;
+}
+.schedule-date-strip {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+}
+.schedule-date-strip button {
+  display: grid;
+  justify-items: center;
+  padding: var(--space-2) var(--space-1);
+  min-width: 0;
+  font: var(--type-small);
+}
+.schedule-date-strip button[aria-pressed="true"] {
+  background: var(--primary-subtle);
+  color: var(--text);
+  border-color: var(--primary);
+  box-shadow: inset 0 -3px var(--primary);
+}
+.schedule-attention {
+  font: var(--type-small);
+}

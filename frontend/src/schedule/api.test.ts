@@ -1,6 +1,6 @@
 import { beforeEach, expect, test, vi } from "vitest";
 import { requestJson } from "../auth/api";
-import { listCalendar, type SchedulePage } from "./api";
+import { listSchedule, listCalendar, type SchedulePage } from "./api";
 import { readScheduleState } from "./state";
 vi.mock("../auth/api", () => ({ requestJson: vi.fn() }));
 beforeEach(() => {
@@ -97,4 +97,23 @@ test("Schedule sends every selected value and unrestricted statuses as real stor
     "cancelled",
   ]);
   expect(url.searchParams.getAll("status")).not.toContain("all");
+});
+
+test("selected-day Agenda uses server bounds rather than filtering a loaded page", async () => {
+  vi.mocked(requestJson).mockResolvedValue(page(0, 0));
+  await listSchedule(
+    readScheduleState("#/schedule?date=2024-02-29&month=2024-02&q=aloe"),
+    50,
+    50,
+    undefined,
+    "2024-02-29",
+  );
+  const url = new URL(
+    vi.mocked(requestJson).mock.calls[0][0],
+    "http://localhost",
+  );
+  expect(url.searchParams.get("due_from")).toBe("2024-02-29");
+  expect(url.searchParams.get("due_to")).toBe("2024-02-29");
+  expect(url.searchParams.get("offset")).toBe("50");
+  expect(url.searchParams.get("q")).toBe("aloe");
 });

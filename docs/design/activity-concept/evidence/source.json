@@ -1,0 +1,33 @@
+{
+  "base": "76c0911dbf7ca5dc5f64b1a8d1de8c57c676c70e",
+  "branch": "feat/activity-concept-schedule-prototype",
+  "source_files": {
+    "frontend/activity-lab/index.html": "473e8bda36958e05b5d03dd4ae04fc8ac079a4261eb2353cfc1db6b6bc1f19a4",
+    "frontend/src/schedule/ScheduleScreen.tsx": "4eed3966d1c1e67a99158be5177c956fddd9c055b580c21ce88f48f39cfd5dce",
+    "frontend/src/ui-pages/ScheduleUxPrototype/README.md": "4a3a415100d4340d1100116cac77fe2a12a0cf3b85403281b33fe738034d4d20",
+    "frontend/src/ui-pages/ScheduleUxPrototype/ScheduleUxPrototype.test.tsx": "7acfd39b0940a7aee87f71a238ad9a895a95279ec056ecac34582fba7036b6dd",
+    "frontend/src/ui-pages/ScheduleUxPrototype/ScheduleUxPrototype.tsx": "731aafaa5a8b349525f4f3a5b90d13bbcaf104954800106c6d7bfe787cc311f1",
+    "frontend/src/ui-pages/ScheduleUxPrototype/fixtures.ts": "340022cc395cb6a530e86d76c0b0db4dec4589582cbcbd99562a70bcbb7e3164",
+    "frontend/src/ui-pages/ScheduleUxPrototype/main.tsx": "71ca28c23da6af464b443d548d9e54340f71f24f387fe44c8fa1fd81bffa53c7",
+    "frontend/src/ui-pages/ScheduleUxPrototype/model.ts": "0c768ffdb9b2691f0a9321d73b84f68598dd9bb98c191e1d038b58dfe609616d",
+    "frontend/src/ui-pages/ScheduleUxPrototype/mount.tsx": "f8951311de2bf1153d3320f9bcab78dd8802eb13cea27cebb2b5506c362f889c",
+    "frontend/src/ui-pages/ScheduleUxPrototype/prototype.css": "866f08831a2be6af889717ceee77ad86de00197250250459e960c87ecd517d88"
+  },
+  "fixture_today": "2026-10-30",
+  "primary_captures": 54,
+  "context_captures": 6,
+  "note": "Local concept/prototype source identity, not a canonical verification receipt.",
+  "capture_source_files": {
+    "frontend/activity-lab/index.html": "473e8bda36958e05b5d03dd4ae04fc8ac079a4261eb2353cfc1db6b6bc1f19a4",
+    "frontend/src/schedule/ScheduleScreen.tsx": "4eed3966d1c1e67a99158be5177c956fddd9c055b580c21ce88f48f39cfd5dce",
+    "frontend/src/ui-pages/ScheduleUxPrototype/README.md": "4a3a415100d4340d1100116cac77fe2a12a0cf3b85403281b33fe738034d4d20",
+    "frontend/src/ui-pages/ScheduleUxPrototype/ScheduleUxPrototype.test.tsx": "7acfd39b0940a7aee87f71a238ad9a895a95279ec056ecac34582fba7036b6dd",
+    "frontend/src/ui-pages/ScheduleUxPrototype/ScheduleUxPrototype.tsx": "b519f3235c28aac6282eb9ea62b8aee37fa0cf7f8b259ecb4ced1b9fd608946a",
+    "frontend/src/ui-pages/ScheduleUxPrototype/fixtures.ts": "340022cc395cb6a530e86d76c0b0db4dec4589582cbcbd99562a70bcbb7e3164",
+    "frontend/src/ui-pages/ScheduleUxPrototype/main.tsx": "71ca28c23da6af464b443d548d9e54340f71f24f387fe44c8fa1fd81bffa53c7",
+    "frontend/src/ui-pages/ScheduleUxPrototype/model.ts": "0c768ffdb9b2691f0a9321d73b84f68598dd9bb98c191e1d038b58dfe609616d",
+    "frontend/src/ui-pages/ScheduleUxPrototype/mount.tsx": "f8951311de2bf1153d3320f9bcab78dd8802eb13cea27cebb2b5506c362f889c",
+    "frontend/src/ui-pages/ScheduleUxPrototype/prototype.css": "7de0a43fbaff47cb86b2f860bbd340e5bf4957cbbec801d03af7b2a91ea08384"
+  },
+  "capture_note": "Captures precede one final active-filter-count correction for selecting every Activity kind. All pictured default-filter render states are unchanged; final source and capture-source digests are retained separately. Month screenshots are historical: operator subsequently requested the same separate period-navigation toolbar as Agenda/Week, with month steps and Jump to date."
+}

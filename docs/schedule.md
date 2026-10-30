@@ -162,3 +162,15 @@ union within each dimension and intersect across dimensions before count/page. E
 require exactly one type. Overdue still requires planned status and a due day before today, even
 when combined with terminal statuses. Filters count dimensions, and each summary removes a complete
 dimension. Reset/Done is the sole footer. List URLs retain month/day for reversible view switching.
+
+## Agenda / Month UX candidate
+
+The production UX candidate names the existing List presentation **Agenda** (default) and Calendar
+**Month**, retaining their canonical URLs. Both share the approved explicit period/Today/date-jump
+navigation. Agenda is continuous by default; choosing a day sends exact inclusive server bounds
+before count/page, and All dates clears that date while retaining filters/search. Counts within
+chronological groups describe the current ordered page. The collection-wide planned-overdue link
+remains available outside the displayed month/day and preserves other active filters.
+Existing dialogs, ownership, terminal transitions and actual Event contracts are unchanged.
+Week remains a development-only prototype. [Operator UAT handoff](design/schedule-ux/README.md)
+records real persistence checks, isolated Review access, visual evidence and the pending FULL gate.

@@ -18,8 +18,13 @@ export function listSchedule(
   offset = 0,
   limit = 50,
   signal?: AbortSignal,
+  dueDay?: string,
 ): Promise<SchedulePage> {
   const p = scheduleParams(state);
+  if (dueDay) {
+    p.set("due_from", dueDay);
+    p.set("due_to", dueDay);
+  }
   p.set("today", localDay());
   p.set("offset", String(offset));
   p.set("limit", String(limit));
