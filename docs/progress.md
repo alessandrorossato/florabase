@@ -6496,3 +6496,29 @@ Status remains implemented pending canonical verification.
   introduced. Per operator direction, canonical FULL and delivery await UAT. `SCHEDULE-UX-001` is
   implemented, not verified. No PR, push, merge or feature-finish performed.
   **FLORABASE_SCHEDULE_UX_READY_FOR_OPERATOR_UAT**.
+
+## 2026-10-30 — Wave 3 isolated cross-application QA
+
+- Created isolated branch `qa/wave3-independent` from the unchanged Wave 3 checkpoint
+  `81962b2407e3ff1187753b1eabcffe3b9dfefae0` (tree `9fee87874fd67af7bc6c359d8e38724948ea4f10`).
+  Confirmed local `origin/main` is `fbce3c4cfad26bdfa3297d53a1e65a7ec6a0ad65` and merged it
+  without rewriting history. The only conflict was the append-only progress log; both prior
+  milestones were retained. Integration commit: `2be886a1cfc997365e1cfe2ba7ab4bbe58079471`.
+- Cross-application review found the shared DirectoryPage, DirectoryTools, DirectoryResults,
+  DirectoryInspector, Saved Views, and status patterns consistently used by Collection and
+  Sourcing. Media and botanical identities use directory tools with their own content previews;
+  Taxonomy, Geography, Locations hierarchy, Journal, History, Schedule, labels/import-export,
+  and Settings retain justified specialized interactions. No bounded corrective code change
+  was supported by evidence; domain semantics and specialized navigation remain intact.
+- **557/557** focused tests pass across **32** suites covering Collection, Sourcing, shared
+  directory/visuals, Schedule, Reference, Explore, History, and Location routing. Strict
+  TypeScript, affected-file ESLint, Prettier, 123-feature validation, and staged/working diff
+  whitespace checks pass. One initial filtered run skipped 525 cases and lint initially included
+  an ignored CSS file; both commands were corrected and the full selected suites rerun cleanly.
+- Existing evidence records Wave 3 responsive widths 1440/1024/390 and all six themes, and
+  Schedule responsive/six-theme captures are checked in under `docs/design/schedule-ux/evidence/`.
+  An attempted read-only browser inspection could not attach because the in-app browser reported
+  its user handle unavailable; no new live visual, zoom, device, screen-reader, or operator UAT
+  evidence is claimed. No FULL, push, PR, main merge, feature-finish, Review reassignment, or
+  resource cleanup was performed. Additional short visual/UAT review remains appropriate before
+  operator acceptance.
