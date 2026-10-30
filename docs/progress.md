@@ -27,6 +27,21 @@
 
 # Engineering progress
 
+## 2026-10-30 — SCHEDULE-UX-001 operator UAT and independent QA
+
+- Operator reports all six Schedule UX UAT scenarios passed and explicitly authorizes independent
+  QA, necessary blocking fixes, canonical FULL verification, protected PR delivery, merge and
+  feature-finish. Approved design scope remains frozen.
+- Fetched `origin/main`; latest remains `76c0911dbf7ca5dc5f64b1a8d1de8c57c676c70e`, an ancestor
+  of candidate `5b7d9f4eafbe5ed6cd1a79e51d332aebc6b2ee6c`; no reconciliation or design change is
+  needed. Independent code/evidence review found no blocking defect and required no source fix.
+- Schedule Review `florabase-uat-preview-smoke-28ce00000001` at `http://localhost:25288/#/schedule`
+  is healthy and owned by this worktree: frontend/backend/PostgreSQL healthy, code/database revision
+  `20261013_0042`, fixture v4 ready with 66 references. Existing UAT data and resources are retained.
+- Canonical FULL, protected delivery, post-merge verification and feature-finish are authorized and
+  pending. This milestone does not claim their completion. Physical device, AT, actual zoom,
+  exhaustive dialog/theme, injected outage, midnight rollover and scale testing remain limitations.
+
 ## 2026-10-27 — UI-SYSTEM-001 Gate B review candidate, Proposal B refined
 
 - Operator selected B and authorized bounded React implementation in the existing `bc88` worktree,

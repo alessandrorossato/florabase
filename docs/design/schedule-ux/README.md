@@ -101,7 +101,13 @@ Host frontend checks use Node 24.22.1 / available pnpm 11.25.0, against unchange
 repository declares pnpm 11.19.0. Physical devices, AT, actual browser zoom, exhaustive modal/theme
 combinations, injected live network outages, midnight rollover and large-dataset load were not tested.
 Error and focus regressions are component tests; real stale HTTP writes were separately exercised.
-Operator acceptance and independent correctness review remain pending.
+The operator reports all six Schedule UX UAT scenarios passed. Independent QA of the committed
+implementation and evidence found no blocking defect; no corrective source change was required.
+The retained Review was healthy at QA time (frontend/backend/PostgreSQL healthy, fixture v4 ready,
+66 records, schema `20261013_0042`). Physical devices, assistive-technology testing, actual browser
+zoom, exhaustive dialog/theme combinations, injected live network failures, midnight rollover and
+large-collection performance remain unverified. These are recorded limitations, not acceptance
+failures in the tested workflows.
 
 ## Operator UAT checklist
 
@@ -118,7 +124,9 @@ Operator acceptance and independent correctness review remain pending.
 6. Use two views to produce a stale edit; confirm conflict, retained draft and explicit Reload current
    activity. Check pristine/dirty cancellation, keyboard Escape and return focus.
 7. Inspect desktop/tablet/mobile and preferred themes. Confirm Month's common navigation refinement
-   and the absence of production Week. Report any blocker before canonical verification.
+   and the absence of production Week. The operator reports this UAT checklist passed across six
+   scenarios; see the progress milestone for the authorized independent QA and delivery phase.
 
-After approval: independent review, freeze, one policy-selected FULL gate, then normal operator-owned
-delivery. No PR, merge, push or feature-finish belongs to this pre-UAT task.
+After UAT: independent review, freeze, one policy-selected FULL gate, then normal protected delivery.
+The separate operator authorization for the delivery phase is recorded in the task handoff; its
+actual gate, PR, merge and cleanup results are recorded only after they occur.
