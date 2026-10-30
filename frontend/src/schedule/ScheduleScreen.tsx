@@ -63,7 +63,7 @@ function message(error: unknown): string {
   return "Florabase could not save this activity. Your entries are still here; try again.";
 }
 
-function ActivityDialog({
+export function ActivityDialog({
   dialog,
   busy,
   error,

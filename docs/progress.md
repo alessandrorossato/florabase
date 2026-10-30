@@ -6158,3 +6158,33 @@ Status remains implemented pending canonical verification.
 - `UI-SYSTEM-WAVE2-001` remains `implemented`; independent QA reconciles current main, reviews/fixes
   objective defects, freezes source/index and runs one CI-004-selected canonical **FULL** gate.
   No push, PR, merge or feature-finish in this local-commit task.
+
+## 2026-10-30 — Activity concept and isolated Schedule UX review
+
+- Freshly fetched `origin/main` / primary `main` at `76c0911` (PR #131); initialized the existing
+  clean Codex `28ce` worktree as `feat/activity-concept-schedule-prototype` with `make feature-init`.
+  [Study and handoff](design/activity-concept/handoff.md) audit actual Event/Journal/History/Schedule
+  and media contracts, distinguish new Journal storage/API requirements, provide recording-first
+  journeys/wireframes, compact read-only History guidance and an official-source Schedule matrix.
+- Added a separate development-only frontend Schedule prototype at loopback **15286/activity-lab/**,
+  with Agenda, compact date rail, optional date-only Week, reused Month and responsive inspection.
+  Actual Schedule rows, target pickers and guarded ActivityDialog are reused; the sole production
+  source edit exports that dialog without behavioral changes. Synthetic fetch never forwards requests;
+  changes and explicit Event receipts remain in memory. No Journal persistence/API, generated contract,
+  shared primitive, Wave 3 worktree, Docker or Review resource changed.
+- Baseline **75/75**; final **86/86** tests in six suites, including **11** new prototype cases.
+  Complete frontend ESLint/Prettier, strict TypeScript, production build, existing UI Lab exclusion,
+  Activity prototype exclusion across **125** emitted text assets, **122-feature** graph, local links,
+  capture integrity and diff whitespace pass. Node 24.22.1 / available pnpm 11.25.0 differs from the
+  declared pnpm 11.19.0; lockfile and dependencies are unchanged.
+- **54** primary settled captures cover three views × desktop/tablet/mobile × six themes; all have
+  measured 844px-high viewports and no horizontal document overflow. **Six** contextual captures and
+  native synthetic completion/filter/inspection/discard smoke supplement them. Raster sizes/digests,
+  source manifest and explicit manual/AT/zoom/backend limits are recorded. Week dense-day columns,
+  mobile header density, selected-day paging at scale and cross-period overdue attention remain
+  operator decisions before production integration; no usability or independent acceptance is claimed.
+- `ACTIVITY-CONCEPT-001` is `implemented` for the study only, not `verified`. A reviewed local study
+  commit follows focused checks and final diff review. Per task scope no canonical FULL/feature-verify,
+  PostgreSQL/migration/API gate,
+  protected delivery, push, PR, merge or feature-finish ran. Operator decisions and phased production
+  work are in the handoff. **FLORABASE_ACTIVITY_CONCEPT_AND_SCHEDULE_UX_REVIEW_READY**.
