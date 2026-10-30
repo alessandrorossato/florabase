@@ -1870,7 +1870,7 @@ test("supplier filtering, keyboard selection, optional details, editing, and lif
   await user.type(filter, "sales@example.com");
   expect(screen.queryByText("Local nursery")).not.toBeInTheDocument();
   const record = screen.getByRole("button", {
-    name: "Quick preview Rare Palm Seeds",
+    name: /^(?!Details |Edit ).*Rare Palm Seeds/,
   });
   record.focus();
   await user.keyboard("{Enter}");
@@ -1939,7 +1939,7 @@ test("Quick Preview edit returns to the preview and restores its Edit trigger", 
   const user = await openSuppliers();
   await user.click(
     await screen.findByRole("button", {
-      name: "Quick preview Rare Palm Seeds",
+      name: /^(?!Details |Edit ).*Rare Palm Seeds/,
     }),
   );
   const preview = await screen.findByRole("complementary", {
@@ -2180,6 +2180,17 @@ test("location hierarchy renders paths and supports keyboard selection", async (
   expect(
     screen.queryByRole("button", { name: /Seed cabinet/ }),
   ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("list", { name: "Location hierarchy" }),
+  ).toHaveAttribute("tabindex", "0");
+  const expandHouse = await screen.findByRole("button", {
+    name: "Expand House",
+  });
+  expect(expandHouse.querySelector("svg")).toHaveAttribute(
+    "data-icon",
+    "chevron-down",
+  );
+  expect(expandHouse).toHaveAttribute("aria-expanded", "false");
   await user.click(await screen.findByRole("button", { name: "Expand House" }));
   await user.click(screen.getByRole("button", { name: "Expand Seed cabinet" }));
   const drawer = await screen.findByRole("button", {
@@ -2317,8 +2328,11 @@ test("Location detail deep links stay synchronized with hash navigation", async 
   window.history.pushState(null, "", "#/locations/missing-location");
   window.dispatchEvent(new HashChangeEvent("hashchange"));
   expect(
-    await screen.findByRole("heading", { name: "Select a location" }),
+    await screen.findByRole("heading", { name: "Location not found" }),
   ).toBeInTheDocument();
+  expect(
+    screen.getByRole("link", { name: "Return to Locations" }),
+  ).toHaveAttribute("href", "#/locations");
 });
 
 test("Botanical identity detail deep links stay synchronized with hash navigation", async () => {
@@ -3106,7 +3120,7 @@ test("UX-005 create and edit dialogs remain open under the production StrictMode
   });
   await user.click(
     await screen.findByRole("button", {
-      name: "Quick preview Rare Palm Seeds",
+      name: /^(?!Details |Edit ).*Rare Palm Seeds/,
     }),
   );
   await user.click(screen.getByRole("link", { name: "Open details" }));

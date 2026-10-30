@@ -1,6 +1,7 @@
 import {
   DirectoryPage,
   DirectoryRecords,
+  DirectoryTrigger,
   DirectoryRow,
   DirectoryCard,
   DirectoryRecordActions,
@@ -1452,16 +1453,50 @@ export function OrderScreen({
                       {visible.map((order) => (
                         <DirectoryItem
                           key={order.id}
+                          previewId={order.id}
                           selected={previewOpen && selectedId === order.id}
+
+                          onClick={(event) => {
+                            if (
+                              event.defaultPrevented ||
+                              event.ctrlKey ||
+                              event.metaKey ||
+                              event.shiftKey ||
+                              event.altKey
+                            )
+                              return;
+                            const target = event.target;
+                            if (
+                              !(target instanceof Element) ||
+                              target.closest(
+                                ".ui-directory-record-actions, input, select, textarea, label",
+                              )
+                            )
+                              return;
+                            const trigger =
+                              event.currentTarget.querySelector<HTMLButtonElement>(
+                                ".sourcing-preview-trigger",
+                              );
+                            if (!trigger) return;
+                            event.preventDefault();
+                            selectedTrigger.current = trigger;
+                            setSelectedId(order.id);
+                            setPreviewOpen(true);
+                          }}
                         >
                           <div className="sourcing-record-identity">
-                            <RecordVisual
-                              kind="order"
-                              label={orderTitle(order)}
-                              photo={null}
-                              compact
-                              showSource={presentation.view === "gallery"}
-                            />
+                            <DirectoryTrigger
+                              className="sourcing-preview-trigger"
+                              aria-label={`Quick preview ${orderTitle(order)}`}
+                            >
+                              <RecordVisual
+                                kind="order"
+                                label={orderTitle(order)}
+                                photo={null}
+                                compact
+                                showSource={presentation.view === "gallery"}
+                              />
+                            </DirectoryTrigger>
                             <div className="sourcing-record-name">
                               <a href={`#/orders/${order.id}`}>
                                 {orderTitle(order)}
@@ -1479,14 +1514,10 @@ export function OrderScreen({
                               {order.seed_lot_count === 1 ? "lot" : "lots"}
                             </small>
                           </div>
-                          <div data-preview-id={order.id}>
+                          <div>
                             <DirectoryRecordActions
                               label={orderTitle(order)}
-                              onPreview={(trigger) => {
-                                selectedTrigger.current = trigger;
-                                setSelectedId(order.id);
-                                setPreviewOpen(true);
-                              }}
+
                               onDetails={() => {
                                 setRecordRoute(`#/orders/${order.id}`);
                               }}

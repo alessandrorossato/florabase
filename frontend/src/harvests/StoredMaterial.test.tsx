@@ -378,7 +378,7 @@ it("directory defaults to active and retained depleted state remains reachable",
   expect(await screen.findByText("1 record")).toBeVisible();
   expect(
     screen.getByRole("link", { name: /Coffee seed harvest.*10 items/ }),
-  ).toHaveAttribute("href", "#/harvests/harvest");
+  ).toHaveAttribute("href", "#/harvests/harvest?inventory=inventory");
   await userEvent.click(screen.getByRole("button", { name: /^Filters/ }));
   await userEvent.selectOptions(screen.getByLabelText("State"), "depleted");
   await userEvent.click(screen.getByRole("button", { name: "Done" }));

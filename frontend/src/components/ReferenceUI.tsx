@@ -4,6 +4,8 @@ import { Icon } from "./Icon";
 import { ActionButton, IconButton } from "./Action";
 import { registerControlLayer } from "./controlLayers";
 import {
+  Children,
+  isValidElement,
   useEffect,
   useLayoutEffect,
   useId,
@@ -156,18 +158,33 @@ export function StatStrip({
 export function QuickPreview({
   children,
   tabIndex,
+  compact = false,
 }: {
   children: ReactNode;
   tabIndex?: number;
+  compact?: boolean;
 }) {
+  const parts = Children.toArray(children);
+  const isFooter = (child: ReactNode) =>
+    isValidElement<{ className?: string }>(child) &&
+    child.props.className?.includes("record-preview__actions");
   return (
     <aside
-      className="quick-preview"
+      className={`quick-preview${compact ? " quick-preview--compact" : ""}`}
       aria-label="Quick preview"
       tabIndex={tabIndex}
     >
       <p className="eyebrow">Quick preview</p>
-      {children}
+      {compact ? (
+        <>
+          <div className="quick-preview-body">
+            {parts.filter((child) => !isFooter(child))}
+          </div>
+          {parts.filter(isFooter)}
+        </>
+      ) : (
+        children
+      )}
     </aside>
   );
 }
@@ -189,7 +206,7 @@ export function RecordPreview({
   actions: ReactNode;
 }) {
   return (
-    <QuickPreview>
+    <QuickPreview compact>
       {visual}
       <p className="record-preview__type">{type}</p>
       <h3>{title}</h3>

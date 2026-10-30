@@ -396,6 +396,7 @@ test("reselecting Seeds protects an edited form until changes are discarded", as
       name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
     }),
   );
+  await openSelectedDetails(user);
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   await user.type(screen.getByLabelText("Lot label"), " changed");
   await user.click(
@@ -498,8 +499,10 @@ test("selection shows complete details without internal identifiers and opens co
     name: "Seed lot inventory",
   });
   expect(
-    screen.queryByRole("region", { name: "Seed lot detail and editor" }),
-  ).not.toBeInTheDocument();
+    within(
+      screen.getByRole("region", { name: "Seed lot detail and editor" }),
+    ).getByRole("heading", { name: "Select a seed lot" }),
+  ).toBeInTheDocument();
   expect(inventory).toHaveClass("seed-master");
   expect(inventory.parentElement).toHaveClass("seed-master-detail");
   expect(screen.getByRole("button", { name: "New seed lot" })).toHaveAttribute(
@@ -510,6 +513,7 @@ test("selection shows complete details without internal identifiers and opens co
     name: /Clitoria ternatea/,
   });
   await user.click(selectedRow);
+  await openSelectedDetails(user);
   expect(selectedRow).toHaveAttribute("aria-pressed", "true");
   expect(
     screen.getByRole("region", { name: "Seed lot detail and editor" }),
@@ -1066,6 +1070,7 @@ test("one PUT supports lost to active and exhausted zero to active positive corr
   await user.click(
     await screen.findByRole("button", { name: /Clitoria ternatea/ }),
   );
+  await openSelectedDetails(user);
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   await user.selectOptions(screen.getByLabelText("Lifecycle"), "active");
   await openSection(user, "Seed details");
@@ -1281,6 +1286,7 @@ test("retired current references remain visible in edit while ordinary retired c
   await user.click(
     await screen.findByRole("button", { name: /Clitoria ternatea/ }),
   );
+  await openSelectedDetails(user);
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   await openSection(user, "Acquisition");
   expect(screen.getByRole("combobox", { name: "Supplier" })).toHaveValue(
@@ -1395,6 +1401,7 @@ test("update and stale-reference failures retain the editable lot", async () => 
   await user.click(
     await screen.findByRole("button", { name: /Clitoria ternatea/ }),
   );
+  await openSelectedDetails(user);
   await user.click(screen.getByRole("button", { name: "Edit seed lot" }));
   await user.clear(screen.getByLabelText("Lot label"));
   await user.type(screen.getByLabelText("Lot label"), "Unsaved correction");
@@ -1461,7 +1468,11 @@ test("BULK-001 seed selection is transient, visible-only and reset by search", a
   );
   expect(
     screen.getByRole("button", { name: "Select records" }).parentElement,
-  ).toBe(screen.getByLabelText("Directory results").parentElement);
+  ).toBe(
+    screen
+      .getByLabelText("Directory results")
+      .parentElement?.querySelector(".directory-pagination-controls"),
+  );
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   await user.click(screen.getByRole("button", { name: "Select records" }));
   await user.click(screen.getByRole("button", { name: "Select visible" }));
@@ -2343,6 +2354,7 @@ test("Overview keeps current-state facts and Sowings has one canonical start act
       name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
     }),
   );
+  await openSelectedDetails(user);
   const inventory = screen.getByLabelText("Current inventory");
   expect(screen.getByRole("heading", { name: "At a glance" })).toBeVisible();
   expect(
@@ -2421,6 +2433,7 @@ test("Details empty Sowings and Lineage are plain messages while Photos retains 
       name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
     }),
   );
+  await openSelectedDetails(user);
   await user.click(screen.getByRole("tab", { name: "Sowings" }));
   expect(
     (await screen.findByText("No sowings yet.")).closest(".empty-state"),
@@ -2615,10 +2628,12 @@ test.each(["list", "gallery"])(
       }),
     );
     const preview = screen.getByRole("button", {
-      name: "Quick preview Blue packet",
+      name: /^(?!Details |Edit ).*Blue packet/,
     });
-    fireEvent.click(preview, { ctrlKey: true });
-    const overlay = screen.getByRole("dialog", { name: "Seed lot inspection" });
+    await user.click(preview);
+    const overlay = screen.getByRole("complementary", {
+      name: "Seed lot inspection",
+    });
     expect(screen.queryByRole("checkbox")).toBeNull();
     expect(
       within(overlay).getByRole("button", { name: "Close preview" }),
@@ -2663,7 +2678,58 @@ test("directory Edit invokes the supported editor without opening Preview", asyn
     await screen.findByRole("dialog", { name: "Edit Blue packet" }),
   ).toBeVisible();
   expect(
-    screen.queryByRole("dialog", { name: "Seed lot inspection" }),
+    screen.queryByRole("complementary", { name: "Seed lot inspection" }),
   ).toBeNull();
   expect(window.location.hash).toContain("tab=edit");
+});
+
+/** Domain scenarios enter the explicit Details action after previewing a surface. */
+async function openSelectedDetails(user: ReturnType<typeof userEvent.setup>) {
+  const selected = document.querySelector<HTMLButtonElement>(
+    ".ui-directory-trigger[aria-pressed='true']",
+  );
+  const row = selected?.closest("li");
+  if (!row)
+    throw new Error(
+      "A record must be previewed before opening its Details action",
+    );
+  await user.click(within(row).getByRole("button", { name: /^Details / }));
+}
+
+test("whole-record highlight follows preview and bulk selection, then restores the empty inspector", async () => {
+  mockApi(directoryHandler([lot()]));
+  const user = await openSeeds();
+  const list = screen.getByRole("list", { name: "Seed inventory" });
+  const trigger = within(list).getByRole("button", {
+    name: /^(?!Details |Edit ).*Blue packet/,
+  });
+  const row = trigger.closest("li");
+  if (!row) throw new Error("The Preview surface must belong to a record.");
+  expect(
+    screen.getByRole("heading", { name: "Select a seed lot" }),
+  ).toBeVisible();
+  await user.click(trigger);
+  expect(row).toHaveAttribute("data-selected", "true");
+  expect(
+    within(row).getByRole("group", { name: "Actions for Blue packet" }),
+  ).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Select records" }));
+  expect(row).not.toHaveAttribute("data-selected");
+  const checkbox = screen.getByRole("checkbox", {
+    name: /Select Seed Lot.*Blue packet/i,
+  });
+  await user.click(checkbox);
+  expect(row).toHaveAttribute("data-selected", "true");
+  await user.click(checkbox);
+  expect(row).not.toHaveAttribute("data-selected");
+  await user.click(screen.getByRole("button", { name: "Exit selection" }));
+  expect(
+    screen.getByRole("heading", { name: "Select a seed lot" }),
+  ).toBeVisible();
+  await user.click(trigger);
+  await user.click(screen.getByRole("button", { name: "Close preview" }));
+  expect(row).not.toHaveAttribute("data-selected");
+  expect(
+    screen.getByRole("heading", { name: "Select a seed lot" }),
+  ).toBeVisible();
 });

@@ -1,3 +1,4 @@
+import { Icon } from "./Icon";
 import { useId, type ReactNode } from "react";
 
 /** UI Foundation v0.1. PageHeader remains in ReferenceUI for existing consumers. */
@@ -65,10 +66,29 @@ export function Metric({
 export function StatusBadge({
   children,
   attention = false,
+  compactState,
 }: {
   children: ReactNode;
   attention?: boolean;
+  compactState?: "active" | "inactive";
 }) {
+  const statusLabel =
+    typeof children === "string"
+      ? children
+      : compactState === "active"
+        ? "Active"
+        : "Inactive";
+  if (compactState)
+    return (
+      <span
+        role="img"
+        aria-label={statusLabel}
+        title={statusLabel}
+        className={`ui-status-indicator ui-status-indicator--${compactState}`}
+      >
+        <Icon name={compactState === "active" ? "check" : "close"} />
+      </span>
+    );
   return (
     <span className={`ui-badge${attention ? " ui-badge--attention" : ""}`}>
       {children}

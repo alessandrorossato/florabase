@@ -161,7 +161,7 @@ test("directory exposes exact price, partial date, authoritative count and a hid
     `#/orders/${id}`,
   );
 
-  if (screen.queryByRole("dialog", { name: "Order inspection" }))
+  if (screen.queryByRole("complementary", { name: "Order inspection" }))
     await user.click(screen.getByRole("button", { name: "Close preview" }));
   fireEvent.change(screen.getByLabelText("Search Orders"), {
     target: { value: "ABC" },
@@ -729,7 +729,7 @@ test("Order presentation preserves Supplier, query, current page and preview foc
   expect(screen.getByRole("button", { name: "Previous Orders" })).toBeVisible();
   await user.click(await orderRow());
   expect(
-    screen.getByRole("dialog", { name: "Order inspection" }),
+    screen.getByRole("complementary", { name: "Order inspection" }),
   ).toBeVisible();
   expect(screen.getByRole("button", { name: "Close preview" })).toHaveFocus();
   await user.keyboard("{Escape}");
@@ -746,7 +746,7 @@ test("Order row Edit keeps the existing contextual editor and focus return", asy
   await user.click(edit);
   const editor = screen.getByRole("dialog", { name: "Edit Order" });
   expect(
-    screen.queryByRole("dialog", { name: "Order inspection" }),
+    screen.queryByRole("complementary", { name: "Order inspection" }),
   ).not.toBeInTheDocument();
   await user.click(within(editor).getByRole("button", { name: "Cancel" }));
   await waitFor(() => {

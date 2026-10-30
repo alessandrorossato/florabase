@@ -619,7 +619,7 @@
 
 /* Photographic presentation retains domain-owned interactions and image-source captions. */
 .ui-directory-records--photo-titles {
-  align-items: start;
+  align-items: stretch;
 }
 .ui-directory-records--photo-titles .ui-directory-record-identity {
   position: relative;
@@ -685,4 +685,159 @@
   .ui-directory-record-actions
   .control-icon-button:hover {
   background: var(--surface-hover);
+}
+
+/* Nonmodal directory inspection. Editors and destructive confirmations remain house dialogs. */
+.app-content .ui-directory-side-preview .quick-preview {
+  display: block;
+  position: static;
+  padding: 0;
+  border: 0;
+  max-height: none;
+  overflow: visible;
+}
+.ui-directory-side-preview .quick-preview > .eyebrow {
+  display: none;
+}
+.ui-directory-side-preview {
+  max-height: calc(100dvh - 3rem);
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+}
+.app-content .ui-directory-side-preview .quick-preview > .record-visual {
+  display: flex;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  max-height: none;
+  aspect-ratio: 4 / 3;
+  box-sizing: border-box;
+}
+.app-content .ui-directory-side-preview .quick-preview > .record-visual img {
+  display: block;
+  object-fit: contain;
+  min-width: 0;
+  min-height: 0;
+}
+.app-content
+  .ui-directory-side-preview
+  .quick-preview
+  > .record-visual:not(:has(img)) {
+  width: 3rem;
+  height: 3rem;
+  aspect-ratio: 1;
+}
+.app-content
+  .sowings-workspace
+  .operational-layout:not(.is-detail-view):has(.ui-directory-side-preview),
+.app-content .harvest-directory-layout:has(.ui-directory-side-preview) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+  align-items: start;
+  gap: var(--space-4);
+  overflow: visible;
+}
+.sowing-detail-pane:has(.ui-directory-side-preview) {
+  min-width: 0;
+}
+@media (max-width: 75rem) {
+  .app-content
+    .sowings-workspace
+    .operational-layout:not(.is-detail-view):has(.ui-directory-side-preview),
+  .app-content .harvest-directory-layout:has(.ui-directory-side-preview) {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+  }
+  .harvest-directory-layout:has(.ui-directory-side-preview)
+    .harvest-directory-row {
+    grid-template-columns: 3rem minmax(0, 1fr);
+  }
+  .harvest-directory-layout:has(.ui-directory-side-preview) .harvest-row-meta {
+    grid-column: 2;
+  }
+}
+@media (max-width: 48rem) {
+  .app-content
+    .sowings-workspace
+    .operational-layout:not(.is-detail-view):has(.ui-directory-side-preview),
+  .app-content .harvest-directory-layout:has(.ui-directory-side-preview) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sowing-detail-pane:has(.ui-directory-side-preview),
+  .harvest-directory-layout > .ui-directory-side-preview {
+    grid-row: 1;
+  }
+  .app-content .ui-directory-side-preview {
+    position: static;
+    width: 100%;
+    max-height: 42dvh;
+    box-sizing: border-box;
+  }
+}
+
+/* Source provenance remains in the accessible text and native title, without a photo band. */
+.ui-directory-records .record-visual:has(img) .record-visual__source {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.app-content .ui-directory-frame:has(> .ui-directory-side-preview),
+.app-content
+  .ui-directory-page
+  .operational-layout:not(.is-detail-view):has(.ui-directory-side-preview),
+.app-content .sourcing-directory-layout:has(.ui-directory-side-preview) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
+  gap: var(--space-4);
+  align-items: start;
+}
+.ui-directory-page:has(.ui-directory-side-preview)
+  .ui-directory-records--gallery {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+}
+@media (max-width: 75rem) {
+  .app-content .ui-directory-frame:has(> .ui-directory-side-preview),
+  .app-content
+    .ui-directory-page
+    .operational-layout:not(.is-detail-view):has(.ui-directory-side-preview),
+  .app-content .sourcing-directory-layout:has(.ui-directory-side-preview) {
+    grid-template-columns: minmax(0, 1fr) 18rem;
+  }
+}
+@media (max-width: 48rem) {
+  .app-content .ui-directory-frame:has(> .ui-directory-side-preview),
+  .app-content
+    .ui-directory-page
+    .operational-layout:not(.is-detail-view):has(.ui-directory-side-preview),
+  .app-content .sourcing-directory-layout:has(.ui-directory-side-preview) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .seed-detail-pane:has(.ui-directory-side-preview),
+  .ui-directory-frame > .ui-directory-side-preview,
+  .sourcing-directory-layout > .ui-directory-side-preview {
+    grid-row: 1;
+  }
+}
+
+.ui-directory-side-preview .record-visual {
+  position: relative;
+}
+.app-content
+  .ui-directory-page
+  .operational-layout:not(.is-detail-view)
+  > .seed-detail-pane:has(.ui-directory-side-preview) {
+  display: block;
+}
+.ui-directory-side-preview .record-visual__source {
+  background: transparent;
+  border: 0;
+  color: white;
+  text-shadow:
+    0 1px 3px black,
+    0 0 2px black;
 }

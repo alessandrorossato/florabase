@@ -535,3 +535,62 @@ period/day/agenda controls and `view=list|calendar`; Suppliers keeps its search-
 Sourcing presentation is browser-local/URL-only and never enters Saved Views or domain requests.
 All six operator UAT scenarios have passed and the UI/UX scope is frozen. Independent correctness
 review, reconciliation with PR #130 and canonical FULL verification remain pending.
+
+
+### Wave 3 operator refinement — nonmodal directory inspection (2026-10-30)
+
+DirectoryInspector now defaults to a nonmodal side panel across its Collection and
+Sourcing consumers. Desktop/tablet keep the directory and inspector in separate
+columns; narrow screens stack a bounded, scrollable inspector above the directory
+so neither a backdrop nor the panel obscures records. Close receives initial focus;
+Tab remains free to enter the directory, and Close/Escape restore the current
+connected Preview trigger or its fallback. Active task dialogs and control layers
+retain Escape priority. Explicit Details and contextual editing remain separate
+intentions; TaskDialog still owns editing and destructive confirmation.
+
+Photographic gallery source captions remain accessible and available as native
+hover titles without a dark strip on the photo. Photo/placeholder cards stretch to
+a common row height with actions aligned at the bottom. Source labels in previews
+stay anchored inside their own image box. Locations adopts Geography management's
+chevrons, focusable hierarchy root, branch rows and compact deep indentation,
+retaining Location counts, filtering, scopes and parent protections.
+
+### UI System v1 global directory refinement (2026-10-30)
+
+This supersedes the historical Wave 1 three-action/modal contract above for
+compatible record directories. Seeds, Plants/groups, Sowings, Harvests, Suppliers
+and Orders use record-surface Quick Preview with explicit sibling Details/Edit.
+Native keyboard activation, focus descriptions and existing Ctrl/Cmd selection
+remain available; selection mode takes precedence. Modified Sourcing title links
+retain their native destination/new-tab behavior. Preview never traps Tab or dims
+the directory. Escape/Close use the latest connected trigger without scrolling it.
+
+The shared workspace keeps identity, primary tools and filter summaries outside
+one bounded results scrollport. Desktop/tablet reserve a stable inspector column;
+compact Preview has a scrollable body and accessible footer. Mobile stacks a short
+photo/name/actions panel above results; full metadata is in Details. Very short
+viewports fall back to page flow so controls remain reachable. Navigation retains
+its own scroll region. Gallery rows grow to their content rather than compressing.
+
+Active records use a semantic check next to the name with a full accessible status
+and hover/focus description. Only genuine binary inactive states use a cross;
+exhausted, completed, retired, reversed, cancelled and unknown retain exact meaning.
+Stored Material keeps exact inventory navigation; Locations/Geography keep trees.
+Journal, History, Schedule, Maps, Taxonomy and Media keep their specialized models.
+No backend, Saved View schema or lifecycle semantics change.
+
+Record hover/selection fills the complete directory row or card, including its
+Details/Edit area. Keyboard Preview focus outlines that same complete record;
+individual action focus remains local. Bulk checked state takes visual precedence
+over the previous Preview identity. Reserved Collection inspector columns show
+their existing Select-a-record guidance when idle; mobile omits that empty panel.
+Seeds Gallery uses Plants' quiet, right-aligned icon actions. Bounded directory
+scrollbars use thin native controls and current semantic theme colors.
+
+Collection pagination refinement: Seeds, Plants/groups and Sowings place metadata,
+page controls and Select records above the list/inspector grid. Default 20 records,
+50/100/All choices, matching/global totals and displayed ranges are presentation
+state; Saved Views and APIs retain domain ownership. Bulk selection addresses the
+current page and preserves existing safety limits. Photo-card identity text stays
+in normal flow. At <=400px, workspace scrolling takes precedence over retaining a
+fixed toolbar when paging plus Preview would leave an unusable results region.

@@ -1,10 +1,20 @@
-import { type ReactNode, type MouseEventHandler, type RefObject } from "react";
+import {
+  type ReactNode,
+  type MouseEventHandler,
+  type RefObject,
+  type ComponentPropsWithRef,
+  useEffect,
+  useRef,
+  useCallback,
+} from "react";
+import { Tooltip } from "./Tooltip";
 import { IconButton } from "./Action";
 import { ActionButton } from "./Action";
 import { Page } from "./WorkspaceUI";
 import { TaskDialog } from "./TaskDialog";
 import type { DirectoryView } from "./directoryPresentation";
 import "../styles/directory.css";
+import "../styles/directory-workspace.css";
 
 /** Named layout slots only. The caller owns loading, URLs, filtering and mutations. */
 export function DirectoryPage({
@@ -73,6 +83,25 @@ export function DirectoryViewSwitcher({
   );
 }
 
+/** A native record surface; status description is shared with pointer and keyboard users. */
+export function DirectoryTrigger({
+  description = "Open Quick Preview",
+  children,
+  ...props
+}: ComponentPropsWithRef<"button"> & { description?: string }) {
+  return (
+    <Tooltip content={description}>
+      <button
+        type="button"
+        {...props}
+        className={`ui-directory-trigger ${props.className ?? ""}`}
+      >
+        {children}
+      </button>
+    </Tooltip>
+  );
+}
+
 interface RecordPresentation {
   label: string;
   name: ReactNode;
@@ -90,6 +119,7 @@ interface RecordPresentation {
 
 /** Existing domains can supply their own complete interaction without nesting buttons. */
 interface DirectoryRecordComposition {
+  previewId?: string;
   children: ReactNode;
   onClick?: MouseEventHandler<HTMLLIElement>;
   selected?: boolean;
@@ -99,10 +129,8 @@ function RecordControls({
   label,
   checked,
   onCheck,
-  selected,
-  onPreview,
-  previewRef,
   actions,
+  href,
 }: RecordPresentation) {
   return (
     <div className="ui-directory-record-actions">
@@ -118,17 +146,9 @@ function RecordControls({
           <span className="sr-only">Select {label}</span>
         </label>
       )}
-      <ActionButton
-        ref={previewRef}
-        variant="secondary"
-        aria-label={`Quick preview ${label}`}
-        aria-pressed={selected ?? false}
-        onClick={(e) => {
-          onPreview(e.currentTarget);
-        }}
-      >
-        Preview
-      </ActionButton>
+      <a className="button-link button--secondary" href={href}>
+        Details {label}
+      </a>
       {actions}
     </div>
   );
@@ -159,68 +179,80 @@ export function DirectoryRecords({
   );
 }
 
+function RecordSurface({
+  previewRef,
+  selected,
+  onPreview,
+  label,
+  visual,
+  name,
+  status,
+  metadata,
+  gallery = false,
+}: RecordPresentation & { gallery?: boolean }) {
+  return (
+    <DirectoryTrigger
+      ref={previewRef}
+      aria-label={`Quick preview ${label}`}
+      aria-pressed={selected ?? false}
+      onClick={(event) => {
+        onPreview(event.currentTarget);
+      }}
+    >
+      <span
+        className={gallery ? "ui-directory-visual" : "ui-directory-thumbnail"}
+      >
+        {visual ?? (
+          <span className="ui-directory-no-image">No image for {label}</span>
+        )}
+      </span>
+      <span className="ui-directory-record-name">
+        <strong>{name}</strong>
+      </span>
+      {status}
+      <span className="ui-directory-metadata">{metadata}</span>
+    </DirectoryTrigger>
+  );
+}
 export function DirectoryRow(
   props: RecordPresentation | DirectoryRecordComposition,
 ) {
-  if ("children" in props)
-    return (
-      <li
-        onClick={props.onClick}
-        className="ui-directory-row ui-directory-row--composed"
-        data-selected={props.selected ? true : undefined}
-      >
-        {props.children}
-      </li>
-    );
   return (
     <li
-      className="ui-directory-row"
+      data-preview-id={"children" in props ? props.previewId : undefined}
+      onClick={"children" in props ? props.onClick : undefined}
+      className="ui-directory-row ui-directory-row--composed"
       data-selected={props.selected ? true : undefined}
     >
-      <div className="ui-directory-thumbnail">{props.visual}</div>
-      <div className="ui-directory-name">
-        <a href={props.href}>{props.name}</a>
-        {props.status}
-      </div>
-      <div className="ui-directory-metadata">{props.metadata}</div>
-      <RecordControls {...props} />
+      {"children" in props ? (
+        props.children
+      ) : (
+        <>
+          <RecordSurface {...props} />
+          <RecordControls {...props} />
+        </>
+      )}
     </li>
   );
 }
-
 export function DirectoryCard(
   props: RecordPresentation | DirectoryRecordComposition,
 ) {
-  if ("children" in props)
-    return (
-      <li
-        onClick={props.onClick}
-        className="ui-directory-card ui-directory-card--composed"
-        data-selected={props.selected ? true : undefined}
-      >
-        {props.children}
-      </li>
-    );
   return (
     <li
-      className="ui-directory-card"
+      data-preview-id={"children" in props ? props.previewId : undefined}
+      onClick={"children" in props ? props.onClick : undefined}
+      className="ui-directory-card ui-directory-card--composed"
       data-selected={props.selected ? true : undefined}
     >
-      <div className="ui-directory-visual">
-        {props.visual ?? (
-          <span className="ui-directory-no-image">
-            No image for {props.label}
-          </span>
-        )}
-      </div>
-      <div className="ui-directory-card-body">
-        <h3>
-          <a href={props.href}>{props.name}</a>
-        </h3>
-        {props.status}
-        <div className="ui-directory-metadata">{props.metadata}</div>
-        <RecordControls {...props} />
-      </div>
+      {"children" in props ? (
+        props.children
+      ) : (
+        <>
+          <RecordSurface {...props} gallery />
+          <RecordControls {...props} />
+        </>
+      )}
     </li>
   );
 }
@@ -231,13 +263,26 @@ export function DirectoryInspector({
   onClose,
   returnFocusTo,
   fallbackFocusTo,
+  mode = "side",
 }: {
   title: string;
   children: ReactNode;
   onClose: () => void;
   returnFocusTo: RefObject<HTMLElement | null>;
   fallbackFocusTo: RefObject<HTMLElement | null>;
+  mode?: "modal" | "side";
 }) {
+  if (mode === "side")
+    return (
+      <SideInspector
+        title={title}
+        onClose={onClose}
+        returnFocusTo={returnFocusTo}
+        fallbackFocusTo={fallbackFocusTo}
+      >
+        {children}
+      </SideInspector>
+    );
   return (
     <TaskDialog
       title={title}
@@ -258,15 +303,84 @@ export function DirectoryInspector({
   );
 }
 
-/** Three separate intentions; domain callers retain route and editor ownership. */
+/** Nonmodal Collection inspection; no backdrop, inert directory or focus trap. */
+function SideInspector({
+  title,
+  children,
+  onClose,
+  returnFocusTo,
+  fallbackFocusTo,
+}: {
+  title: string;
+  children: ReactNode;
+  onClose: () => void;
+  returnFocusTo: RefObject<HTMLElement | null>;
+  fallbackFocusTo: RefObject<HTMLElement | null>;
+}) {
+  const closeButton = useRef<HTMLButtonElement>(null);
+  const latest = useRef({ onClose, returnFocusTo, fallbackFocusTo });
+  useEffect(() => {
+    latest.current = { onClose, returnFocusTo, fallbackFocusTo };
+  });
+  const dismiss = useCallback(() => {
+    const current = latest.current;
+    current.onClose();
+    const trigger = current.returnFocusTo.current;
+    const fallback = current.fallbackFocusTo.current;
+    (trigger?.isConnected
+      ? trigger
+      : fallback?.isConnected
+        ? fallback
+        : null
+    )?.focus({ preventScroll: true });
+  }, []);
+  useEffect(() => {
+    closeButton.current?.focus({ preventScroll: true });
+    function escape(event: KeyboardEvent) {
+      if (
+        event.key !== "Escape" ||
+        event.defaultPrevented ||
+        document.querySelector("dialog[open]")
+      )
+        return;
+      event.preventDefault();
+      dismiss();
+    }
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("keydown", escape);
+    };
+  }, [dismiss]);
+  return (
+    <aside
+      className="ui-directory-inspector ui-directory-side-preview"
+      aria-label={title}
+    >
+      <div className="ui-inspector-heading">
+        <h3>{title}</h3>
+        <ActionButton
+          ref={closeButton}
+          aria-label="Close preview"
+          title="Close preview"
+          icon="close"
+          variant="quiet"
+          onClick={dismiss}
+        >
+          Close preview
+        </ActionButton>
+      </div>
+      <div className="ui-inspector-content">{children}</div>
+    </aside>
+  );
+}
+
+/** Explicit navigation/edit actions; the record surface owns Preview. */
 export function DirectoryRecordActions({
   label,
-  onPreview,
   onDetails,
   onEdit,
 }: {
   label: string;
-  onPreview: (trigger: HTMLButtonElement) => void;
   onDetails: (trigger: HTMLButtonElement) => void;
   onEdit: (trigger: HTMLButtonElement) => void;
 }) {
@@ -276,14 +390,6 @@ export function DirectoryRecordActions({
       role="group"
       aria-label={`Actions for ${label}`}
     >
-      <IconButton
-        icon="eye"
-        label={`Quick preview ${label}`}
-        tooltip="Quick Preview"
-        onClick={(e) => {
-          onPreview(e.currentTarget);
-        }}
-      />
       <IconButton
         icon="document"
         label={`Details ${label}`}

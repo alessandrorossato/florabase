@@ -1,3 +1,8 @@
+import {
+  DirectoryInspector,
+  DirectoryRecordActions,
+} from "../components/DirectoryPage";
+import "./directory.css";
 import { ActionButton } from "../components/Action";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import { RecordIdentities } from "../components/recordPresentation";
@@ -121,6 +126,8 @@ export function HarvestScreen({
   const auth = useAuth();
   const recordIdentities = useContext(RecordIdentities);
   const headingId = useId();
+  const previewTrigger = useRef<HTMLButtonElement>(null);
+  const directoryList = useRef<HTMLUListElement>(null);
   const [records, setRecords] = useState<Harvest[] | null>(null);
   const [detail, setDetail] = useState<Harvest | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -283,11 +290,6 @@ export function HarvestScreen({
         />
       </section>
     );
-  function choose(record: Harvest) {
-    if (window.matchMedia("(max-width: 64rem)").matches)
-      window.location.assign(`#/harvests/${record.id}`);
-    else setSelectedId(record.id);
-  }
   async function remove() {
     if (!detail || pending) return;
     setPending(true);
@@ -317,7 +319,7 @@ export function HarvestScreen({
         eyebrow="Collection"
         title="Harvests"
         titleId={headingId}
-        description="Record material collected from Plants and Plant groups."
+        description="Harvests from your collection."
         contextOnly={Boolean(displayId)}
         actions={
           storedMode && (
@@ -658,17 +660,20 @@ export function HarvestScreen({
                   </p>
                 ) : (
                   <ul
+                    ref={directoryList}
+                    tabIndex={0}
                     className="harvest-directory"
                     aria-label="Harvest directory"
                   >
                     {filtered.map((record) => (
-                      <li key={record.id}>
+                      <li key={record.id} className="harvest-action-row">
                         <button
                           type="button"
                           className={`harvest-directory-row${record.id === selectedId ? " is-selected" : ""}`}
                           aria-pressed={record.id === selectedId}
-                          onClick={() => {
-                            choose(record);
+                          onClick={(event) => {
+                            previewTrigger.current = event.currentTarget;
+                            setSelectedId(record.id);
                           }}
                         >
                           <Visual harvest={record} />
@@ -692,68 +697,80 @@ export function HarvestScreen({
                             <small>{directoryMaterialSummary(record)}</small>
                           </span>
                         </button>
+                        <DirectoryRecordActions
+                          label={record.display_title}
+
+                          onDetails={() => {
+                            setRecordRoute(`#/harvests/${record.id}`);
+                          }}
+                          onEdit={() => {
+                            openEditor(record);
+                          }}
+                        />
                       </li>
                     ))}
                   </ul>
                 )}
               </div>
               {selected ? (
-                <QuickPreview>
-                  <Visual harvest={selected} />
-                  <h3>{selected.display_title}</h3>
-                  <p>
-                    <BotanicalName
-                      label={selected.source.botanical_identity.display_label}
-                      scientificName={
-                        recordIdentities.get(
-                          selected.source.botanical_identity.id,
-                        )?.scientific_name
-                      }
-                    />
-                  </p>
-                  <dl className="record-preview__facts">
-                    <div>
-                      <dt>Source</dt>
-                      <dd>
-                        <a href={sourceHref(selected)}>
-                          {selected.source.display_name}
-                        </a>
-                      </dd>
+                <DirectoryInspector
+                  mode="side"
+                  title="Harvest inspection"
+                  returnFocusTo={previewTrigger}
+                  fallbackFocusTo={directoryList}
+                  onClose={() => {
+                    setSelectedId(null);
+                  }}
+                >
+                  <QuickPreview compact>
+                    <Visual harvest={selected} />
+                    <h3>{selected.display_title}</h3>
+                    <p>
+                      <BotanicalName
+                        label={selected.source.botanical_identity.display_label}
+                        scientificName={
+                          recordIdentities.get(
+                            selected.source.botanical_identity.id,
+                          )?.scientific_name
+                        }
+                      />
+                    </p>
+                    <dl className="record-preview__facts">
+                      <div>
+                        <dt>Source</dt>
+                        <dd>
+                          <a href={sourceHref(selected)}>
+                            {selected.source.display_name}
+                          </a>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Date</dt>
+                        <dd>{formatPartialDate(selected.occurred_on)}</dd>
+                      </div>
+                    </dl>
+                    <p>{directoryMaterialSummary(selected)}</p>
+                    <div className="actions record-preview__actions">
+                      <a
+                        className="button-link"
+                        href={`#/harvests/${selected.id}`}
+                      >
+                        Open details
+                      </a>
+                      <ActionButton
+                        icon="edit"
+                        type="button"
+                        className="button--secondary"
+                        onClick={() => {
+                          openEditor(selected);
+                        }}
+                      >
+                        Edit
+                      </ActionButton>
                     </div>
-                    <div>
-                      <dt>Date</dt>
-                      <dd>{formatPartialDate(selected.occurred_on)}</dd>
-                    </div>
-                  </dl>
-                  <p>{directoryMaterialSummary(selected)}</p>
-                  <div className="actions record-preview__actions">
-                    <a
-                      className="button-link"
-                      href={`#/harvests/${selected.id}`}
-                    >
-                      Open details
-                    </a>
-                    <ActionButton
-                      icon="edit"
-                      type="button"
-                      className="button--secondary"
-                      onClick={() => {
-                        openEditor(selected);
-                      }}
-                    >
-                      Edit
-                    </ActionButton>
-                  </div>
-                </QuickPreview>
-              ) : (
-                <aside className="selected-seed seed-detail-empty harvest-preview-empty">
-                  <h3>Select a Harvest</h3>
-                  <p>
-                    Choose a row for a Quick Preview, then open details for
-                    photos, history and collection operations.
-                  </p>
-                </aside>
-              )}
+                  </QuickPreview>
+                </DirectoryInspector>
+              ) : null}
             </div>
           )}
         </>

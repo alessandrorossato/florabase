@@ -1,3 +1,5 @@
+import { Icon } from "../components/Icon";
+import "./hierarchy.css";
 import { ActionButton } from "../components/Action";
 import { ReferencePicker } from "../seed-lots/ReferencePicker";
 import "../harvests/collection-visual.css";
@@ -342,10 +344,12 @@ function LocationTree({
   if (children.length === 0) return null;
   return (
     <ul
+      tabIndex={parentId ? undefined : 0}
+      aria-label={parentId ? undefined : "Location hierarchy"}
       className={
         !parentId
           ? "location-tree"
-          : `location-tree location-tree--nested${depth > 3 ? " location-tree--compact-depth" : ""}`
+          : `location-tree location-tree--nested${depth >= 3 ? " location-tree--compact-depth" : ""}`
       }
     >
       {children.map((location) => {
@@ -366,7 +370,7 @@ function LocationTree({
                     onToggle(location.id);
                   }}
                 >
-                  {isExpanded ? "−" : "+"}
+                  <Icon name="chevron-down" />
                 </button>
               ) : (
                 <span className="location-tree-spacer" aria-hidden="true" />
@@ -388,7 +392,7 @@ function LocationTree({
                     <span className="record-state">Retired</span>
                   )}
                 </span>
-                {depth > 3 && (
+                {depth >= 3 && (
                   <small
                     className="location-path"
                     title={location.display_path}
@@ -714,7 +718,7 @@ export function LocationScreen({
           title="Locations"
           titleId="locations-title"
           eyebrow="Collection"
-          description="Manage where seeds, sowings, plants, groups, and harvested material are kept."
+          description="Where your collection lives."
           tools={
             <DirectoryTools
               onReset={() => {
@@ -1185,10 +1189,25 @@ export function LocationScreen({
               </article>
             ) : (
               <div className="empty-state">
-                <h3>Select a location</h3>
-                <p>
-                  Choose a location from the hierarchy to use or maintain it.
-                </p>
+                {directory.status === "loading" ? (
+                  <p role="status">Loading Location detail…</p>
+                ) : directory.status === "error" ? (
+                  <div role="alert">
+                    <h3>Could not load Location</h3>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDirectory({ status: "loading" });
+                        setAttempt((value) => value + 1);
+                      }}
+                    >
+                      Retry Location
+                    </button>
+                  </div>
+                ) : (
+                  <h3>Location not found</h3>
+                )}
+                <a href="#/locations">Return to Locations</a>
               </div>
             )}
           </div>

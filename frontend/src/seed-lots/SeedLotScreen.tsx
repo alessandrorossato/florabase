@@ -1,7 +1,10 @@
+import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { StatusBadge } from "../components/WorkspaceUI";
 import {
   DirectoryPage,
   DirectoryViewSwitcher,
   DirectoryRecords,
+  DirectoryTrigger,
   DirectoryRow,
   DirectoryCard,
   DirectoryInspector,
@@ -280,7 +283,7 @@ function SeedLotPreview({
   const recordName = useRecordName();
 
   return (
-    <QuickPreview>
+    <QuickPreview compact>
       <RecordVisual
         showSource
         photo={lot.primary_photo ?? null}
@@ -806,7 +809,7 @@ const seedPage = {
   eyebrow: "Collection",
   title: "Seeds",
   titleId: "seeds-title",
-  description: "Track seed lots from acquisition through sowing and history.",
+  description: "Your seeds, stock and storage.",
 };
 
 export function SeedLotScreen({
@@ -1083,7 +1086,7 @@ export function SeedLotScreen({
     };
   }, [initialTab, edit.modal, selected]);
 
-  const visible = useMemo(() => {
+  const filtered = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     return lots.filter((lot) => {
       if (identityFilter && lot.botanical_identity_id !== identityFilter)
@@ -1106,6 +1109,11 @@ export function SeedLotScreen({
     });
   }, [identityFilter, filter, lots, search]);
 
+  const pagination = useDirectoryPagination(
+    filtered,
+    JSON.stringify(view.state) + filtered.map((record) => record.id).join(","),
+  );
+  const visible = pagination.visible;
   const bulkChoices = visible.map((lot) => ({
     kind: "seed_lot" as const,
     id: lot.id,
@@ -2023,6 +2031,7 @@ export function SeedLotScreen({
               tools={
                 !(detailOpen || (editing && !edit.modal)) && (
                   <DirectoryTools
+                    stableFilterSummary
                     context={
                       identityFilter ? (
                         <a href={`#/identities/${identityFilter}?tab=overview`}>
@@ -2120,20 +2129,22 @@ export function SeedLotScreen({
                         : []),
                     ]}
                     actions={
-                      <ActionButton
-                        icon="add"
-                        type="button"
-                        ref={creationTriggerRef}
-                        data-collection-return="create"
-                        aria-expanded={creationExpanded}
-                        aria-controls="new-seed-lot-panel"
-                        onClick={() => {
-                          if (creationExpanded) focusCreation();
-                          else startCreate();
-                        }}
-                      >
-                        New seed lot
-                      </ActionButton>
+                      <>
+                        <ActionButton
+                          icon="add"
+                          type="button"
+                          ref={creationTriggerRef}
+                          data-collection-return="create"
+                          aria-expanded={creationExpanded}
+                          aria-controls="new-seed-lot-panel"
+                          onClick={() => {
+                            if (creationExpanded) focusCreation();
+                            else startCreate();
+                          }}
+                        >
+                          New seed lot
+                        </ActionButton>
+                      </>
                     }
                   />
                 )
@@ -2159,6 +2170,23 @@ export function SeedLotScreen({
               startCreating &&
               !orderContext &&
               !orderContextError && <p role="status">Loading Order context…</p>}
+            {inventory.status === "ready" && (
+              <DirectoryResults
+                count={filtered.length}
+                total={lots.length}
+                pagination={pagination}
+                actions={
+                  <BulkSelect
+                    selection={bulk}
+                    visible={bulkChoices}
+                    onStart={() => {
+                      setSelectedId(null);
+                      setDetailOpen(false);
+                    }}
+                  />
+                }
+              />
+            )}
             <div
               className={`seed-master-detail operational-layout directory-preview-layout${detailOpen || (editing && !edit.modal) ? " is-detail-view" : ""}`}
             >
@@ -2178,21 +2206,6 @@ export function SeedLotScreen({
                     setAttempt((value) => value + 1);
                   }}
                 />
-                {inventory.status === "ready" && (
-                  <DirectoryResults
-                    count={visible.length}
-                    actions={
-                      <BulkSelect
-                        selection={bulk}
-                        visible={bulkChoices}
-                        onStart={() => {
-                          setSelectedId(null);
-                          setDetailOpen(false);
-                        }}
-                      />
-                    }
-                  />
-                )}
                 {lots.length === 0 ? (
                   <div className="empty-state">
                     <h3>No seeds recorded yet</h3>
@@ -2222,17 +2235,19 @@ export function SeedLotScreen({
                         }}
                         key={lot.id}
                         selected={
-                          bulk.checked({ kind: "seed_lot", id: lot.id }) ||
-                          selectedId === lot.id
+                          bulk.active
+                            ? bulk.checked({ kind: "seed_lot", id: lot.id })
+                            : selectedId === lot.id
                         }
                       >
                         <BulkCheckbox
                           selection={bulk}
                           choice={bulkChoices[bulkIndex]}
                         />
-                        <button
+                        <DirectoryTrigger
                           type="button"
                           className="ui-directory-trigger"
+                          description={`${lifecycleLabels[lot.lifecycle]} · Open Quick Preview`}
                           aria-pressed={selectedId === lot.id}
                           onClick={(event) => {
                             if (bulk.recordClick(event, bulkChoices[bulkIndex]))
@@ -2241,10 +2256,7 @@ export function SeedLotScreen({
                               closeCreation({ returnFocus: false });
                             selectedTrigger.current = event.currentTarget;
                             setSelectedId(lot.id);
-                            const isMobile =
-                              window.matchMedia("(max-width: 48rem)").matches;
-                            setDetailOpen(isMobile);
-                            if (isMobile) setRecordRoute(`#/seeds/${lot.id}`);
+                            setDetailOpen(false);
                             setEditing(false);
                             setSave({ status: "idle" });
                           }}
@@ -2263,6 +2275,9 @@ export function SeedLotScreen({
                               <strong>
                                 {recordName(lot, "Unlabelled seed lot")}
                               </strong>
+                              {lot.lifecycle === "active" && (
+                                <StatusBadge>Active</StatusBadge>
+                              )}
                               <small>
                                 <BotanicalName
                                   label={lot.botanical_identity.display_label}
@@ -2285,21 +2300,17 @@ export function SeedLotScreen({
                             )}
                           </span>
 
-                          <span
-                            className={`lifecycle-badge lifecycle-badge--${lot.lifecycle}`}
-                          >
-                            {lifecycleLabels[lot.lifecycle]}
-                          </span>
-                        </button>
+                          {lot.lifecycle !== "active" && (
+                            <span
+                              className={`lifecycle-badge lifecycle-badge--${lot.lifecycle}`}
+                            >
+                              {lifecycleLabels[lot.lifecycle]}
+                            </span>
+                          )}
+                        </DirectoryTrigger>
                         <DirectoryRecordActions
                           label={recordName(lot, "Unlabelled seed lot")}
-                          onPreview={(trigger) => {
-                            selectedTrigger.current = trigger;
-                            setSelectedId(lot.id);
-                            setDetailOpen(false);
-                            setEditing(false);
-                            setSave({ status: "idle" });
-                          }}
+
                           onDetails={(trigger) => {
                             selectedTrigger.current = trigger;
                             setSelectedId(lot.id);
@@ -2319,6 +2330,7 @@ export function SeedLotScreen({
               {(creationExpanded ||
                 editing ||
                 detailOpen ||
+                visible.length > 0 ||
                 visible.some((lot) => lot.id === selectedId)) && (
                 <section
                   id={creationExpanded ? "new-seed-lot-panel" : undefined}

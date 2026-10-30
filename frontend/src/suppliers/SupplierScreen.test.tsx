@@ -119,6 +119,7 @@ test("Supplier directory and Quick Preview use protected thumbnails and neutral 
   expect(
     screen
       .getAllByRole("img")
+      .filter((image) => image instanceof HTMLImageElement)
       .every((image) => image.getAttribute("src") === thumb),
   ).toBe(true);
   await user.click(screen.getByRole("button", { name: "Close preview" }));
@@ -147,7 +148,11 @@ test("reference-only Supplier primary does not contact its external host", async
   );
   mount();
   await screen.findByRole("button", { name: "Quick preview Review nursery" });
-  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole("img", {
+      name: /Primary photo|Source primary photo|Cover/,
+    }),
+  ).not.toBeInTheDocument();
   expect(
     fetch.mock.calls.every(([url]) =>
       requestUrl(url).startsWith("/api/v1/suppliers"),
@@ -603,7 +608,7 @@ test("Supplier presentation preserves canonical search and preview focus across 
     screen.getByRole("button", { name: "Quick preview Review nursery" }),
   );
   expect(
-    screen.getByRole("dialog", { name: "Supplier inspection" }),
+    screen.getByRole("complementary", { name: "Supplier inspection" }),
   ).toBeVisible();
   expect(screen.getByRole("button", { name: "Close preview" })).toHaveFocus();
   window.history.replaceState(
@@ -639,11 +644,34 @@ test("Supplier row Edit retains contextual guard and returns to its own action",
   await user.click(edit);
   const editor = screen.getByRole("dialog", { name: "Edit Review nursery" });
   expect(
-    screen.queryByRole("dialog", { name: "Supplier inspection" }),
+    screen.queryByRole("complementary", { name: "Supplier inspection" }),
   ).not.toBeInTheDocument();
   await user.click(within(editor).getByRole("button", { name: "Cancel" }));
   await waitFor(() => {
-    expect(edit).toHaveFocus();
+    expect(
+      screen.getByRole("button", { name: "Edit Review nursery" }),
+    ).toHaveFocus();
   });
   expect(window.location.hash).toBe("#/suppliers?view=list");
+});
+
+test("Supplier title click previews while modified links retain native Details navigation", async () => {
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(json([supplier]));
+  const user = userEvent.setup();
+  mount();
+  const link = await screen.findByRole("link", { name: "Review nursery" });
+  const modified = new MouseEvent("click", {
+    bubbles: true,
+    cancelable: true,
+    ctrlKey: true,
+  });
+  fireEvent(link, modified);
+  expect(modified.defaultPrevented).toBe(false);
+  expect(
+    screen.queryByRole("complementary", { name: "Supplier inspection" }),
+  ).not.toBeInTheDocument();
+  await user.click(link);
+  expect(
+    screen.getByRole("complementary", { name: "Supplier inspection" }),
+  ).toBeVisible();
 });

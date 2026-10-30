@@ -745,7 +745,7 @@ export function StoredMaterialDirectory() {
                         bulk.toggle(bulkChoices[bulkIndex]);
                       }
                     }}
-                    href={`#/harvests/${row.harvest_id}`}
+                    href={`#/harvests/${row.harvest_id}?inventory=${row.id}`}
                   >
                     <RecordVisual
                       kind="harvest"

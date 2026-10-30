@@ -304,6 +304,7 @@ test("germination tab keeps simple and dated totals distinct and supports correc
   await user.click(
     await screen.findByRole("button", { name: /Tray A.*Clitoria ternatea/s }),
   );
+  await openSelectedDetails(user);
   await user.click(screen.getByRole("tab", { name: "Germination" }));
   expect(await screen.findByText("No observations yet.")).toBeInTheDocument();
   expect(
@@ -423,6 +424,7 @@ test("compact summaries, search fields, lifecycle views, selection, detail, and 
     name: /Tray A.*Clitoria ternatea.*12 of 20 germinated/s,
   });
   await user.click(selectedRow);
+  await openSelectedDetails(user);
   expect(
     await screen.findByRole("heading", { name: "Source" }),
   ).toBeInTheDocument();
@@ -431,7 +433,7 @@ test("compact summaries, search fields, lifecycle views, selection, detail, and 
   expect(screen.getByText("Check daily.")).toBeInTheDocument();
   const back = screen.getByRole("button", { name: "← Back to Sowings" });
   await user.click(back);
-  expect(selectedRow).toHaveFocus();
+  expect(screen.getByRole("button", { name: "Details Tray A" })).toHaveFocus();
 });
 
 test("germination progress uses only an exact positive seed-count denominator", async () => {
@@ -503,7 +505,9 @@ test("germination progress uses only an exact positive seed-count denominator", 
   await selectDirectoryFilter(user, "Lifecycle", "all");
   const list = await screen.findByRole("list", { name: "Sowing collection" });
   const row = (label: string) =>
-    within(list).getByRole("button", { name: new RegExp(label) });
+    within(list).getByRole("button", {
+      name: new RegExp(`^(?!Quick preview |Details |Edit ).*${label}`),
+    });
   expect(row("Tray A")).toHaveTextContent("12 of 20 germinated · 60%");
   expect(within(row("Tray A")).getByRole("progressbar")).toHaveAttribute(
     "value",
@@ -525,6 +529,7 @@ test("germination progress uses only an exact positive seed-count denominator", 
     within(row("Zero exact seeds")).queryByRole("progressbar"),
   ).not.toBeInTheDocument();
   await user.click(row("Zero exact seeds"));
+  await openSelectedDetails(user);
   expect(
     await screen.findByRole("heading", { name: "Source" }),
   ).toBeInTheDocument();
@@ -560,6 +565,7 @@ test("detail loading and failure have semantic states", async () => {
   await user.click(
     await screen.findByRole("button", { name: /Clitoria ternatea/ }),
   );
+  await openSelectedDetails(user);
   expect(screen.getByRole("status")).toHaveTextContent("Loading Sowing detail");
 
   cleanup();
@@ -890,6 +896,7 @@ test("the single full editor preserves exact values and failed edits, then chang
   await user.click(
     await screen.findByRole("button", { name: /Clitoria ternatea/ }),
   );
+  await openSelectedDetails(user);
   await screen.findByRole("button", { name: "Edit Sowing" });
   await user.click(screen.getByRole("button", { name: "Edit Sowing" }));
   expect(screen.getByLabelText("Amount")).toHaveValue("20");
@@ -977,7 +984,7 @@ test("desktop Sowing selection stays compact until Open details", async () => {
     await screen.findByRole("button", { name: /Tray A.*Clitoria ternatea/ }),
   );
   const preview = await screen.findByRole("complementary", {
-    name: "Quick preview",
+    name: "Sowing inspection",
   });
   expect(
     within(preview).getByRole("heading", { name: "Tray A" }),
@@ -1006,7 +1013,7 @@ test("desktop Sowing selection stays compact until Open details", async () => {
   expect(screen.getByRole("tab", { name: "Lineage" })).toBeInTheDocument();
 });
 
-test("reselecting a previewed record after narrowing the viewport opens its detail", async () => {
+test("reselecting a previewed record after narrowing keeps preview until explicit Details", async () => {
   mockApi(sowingHandler([sowing()]));
   const user = await openSowings();
   setViewportMatches(false);
@@ -1020,6 +1027,7 @@ test("reselecting a previewed record after narrowing the viewport opens its deta
   await user.click(
     screen.getByRole("button", { name: /Tray A.*Clitoria ternatea/ }),
   );
+  await openSelectedDetails(user);
   expect(
     await screen.findByRole("tab", { name: "Lineage" }),
   ).toBeInTheDocument();
@@ -1073,6 +1081,7 @@ test("propagation paths distinguish direct results from retained extracted indiv
   await user.click(
     await screen.findByRole("button", { name: /Tray A.*Clitoria ternatea/s }),
   );
+  await openSelectedDetails(user);
   expect(
     screen.queryByRole("region", { name: "Propagation path" }),
   ).not.toBeInTheDocument();
@@ -1139,7 +1148,7 @@ test("contextual Sowing edit preserves directory, guards dismissal, traps focus 
   const list = screen.getByRole("list", { name: "Sowing collection" });
   await user.click(within(list).getAllByRole("button")[0]);
   const preview = await screen.findByRole("complementary", {
-    name: "Quick preview",
+    name: "Sowing inspection",
   });
   const trigger = within(preview).getByRole("button", {
     name: "Edit",
@@ -1198,9 +1207,11 @@ test("contextual Sowing edit preserves directory, guards dismissal, traps focus 
   await waitFor(() => {
     expect(window.location.hash).toBe(oldHash);
   });
-  expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(
-    screen.getByRole("complementary", { name: "Quick preview" }),
+    screen.queryByRole("dialog", { name: "Edit Sowing" }),
+  ).not.toBeInTheDocument();
+  expect(
+    screen.getByRole("complementary", { name: "Sowing inspection" }),
   ).toBeVisible();
   expect(trigger).toHaveFocus();
 });
@@ -1394,6 +1405,7 @@ test("Sowing Details offers Undo creation in its header without an inline operat
   await user.click(
     await screen.findByRole("button", { name: /Tray A.*Clitoria ternatea/s }),
   );
+  await openSelectedDetails(user);
   const more = screen.getByRole("button", { name: "More record actions" });
   expect(more.closest(".detail-header")).toBeInTheDocument();
   expect(screen.queryByText(/Creation operation/)).not.toBeInTheDocument();
@@ -1454,11 +1466,101 @@ test("identity-scoped Sowings uses the actual SeedLot identity and retains text 
   );
   const user = userEvent.setup();
   render(<App />);
-  expect(await screen.findByRole("button", { name: /Tray A/ })).toBeVisible();
-  expect(screen.queryByRole("button", { name: /Tray B/ })).toBeNull();
+  expect(
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Tray A/,
+    }),
+  ).toBeVisible();
+  expect(
+    screen.queryByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Tray B/,
+    }),
+  ).toBeNull();
   await user.click(
     screen.getByRole("button", { name: "Remove botanical identity filter" }),
   );
-  expect(await screen.findByRole("button", { name: /Tray B/ })).toBeVisible();
+  expect(
+    await screen.findByRole("button", {
+      name: /^(?!Quick preview |Details |Edit ).*Tray B/,
+    }),
+  ).toBeVisible();
   expect(window.location.hash).toContain("q=Tray");
+});
+
+test("Sowing presentation retains search and explicit Preview returns focus", async () => {
+  localStorage.clear();
+  mockApi(sowingHandler([sowing()]));
+  const user = await openSowings();
+  expect(
+    screen.getByRole("button", { name: "List", pressed: true }),
+  ).toBeVisible();
+  await user.type(screen.getByLabelText("Search Sowings"), "Tray");
+  await user.click(screen.getByRole("button", { name: "Gallery" }));
+  expect(screen.getByLabelText("Search Sowings")).toHaveValue("Tray");
+  const preview = screen.getByRole("button", {
+    name: /^(?!Details |Edit ).*Tray A/,
+  });
+  await user.click(preview);
+  expect(
+    await screen.findByRole("complementary", { name: "Sowing inspection" }),
+  ).toBeVisible();
+  await user.keyboard("{Escape}");
+  expect(preview).toHaveFocus();
+  localStorage.clear();
+});
+
+/** Domain scenarios enter the explicit Details action after previewing a surface. */
+async function openSelectedDetails(user: ReturnType<typeof userEvent.setup>) {
+  const selected = document.querySelector<HTMLButtonElement>(
+    ".ui-directory-trigger[aria-pressed='true']",
+  );
+  const row = selected?.closest("li");
+  if (!row)
+    throw new Error(
+      "A record must be previewed before opening its Details action",
+    );
+  await user.click(within(row).getByRole("button", { name: /^Details / }));
+}
+
+test("switching scrolled Sowing surfaces retains the inspector and list position", async () => {
+  mockApi(
+    sowingHandler([sowing(), sowing({ id: "other-sowing", label: "Tray B" })]),
+  );
+  const user = await openSowings();
+  setViewportMatches(false);
+  const list = screen.getByRole("list", { name: "Sowing collection" });
+  expect(
+    screen.getByRole("heading", { name: "Select a Sowing" }),
+  ).toBeVisible();
+  await user.click(
+    within(list).getByRole("button", { name: /^(?!Details |Edit ).*Tray A/ }),
+  );
+  const panel = await screen.findByRole("complementary", {
+    name: "Sowing inspection",
+  });
+  list.scrollTop = 120;
+  fireEvent.scroll(list);
+  await user.click(
+    within(list).getByRole("button", { name: /^(?!Details |Edit ).*Tray B/ }),
+  );
+  expect(screen.getByRole("complementary", { name: "Sowing inspection" })).toBe(
+    panel,
+  );
+  expect(
+    within(list)
+      .getByRole("button", { name: /^(?!Details |Edit ).*Tray B/ })
+      .closest("li"),
+  ).toHaveAttribute("data-selected", "true");
+  expect(list.scrollTop).toBe(120);
+  await user.keyboard("{Escape}");
+  expect(list.querySelector("[data-selected]")).toBeNull();
+  expect(
+    screen.getByRole("heading", { name: "Select a Sowing" }),
+  ).toBeVisible();
+  expect(list.scrollTop).toBe(120);
+  await user.click(
+    within(list).getByRole("button", { name: /^(?!Details |Edit ).*Tray B/ }),
+  );
+  expect(list.scrollTop).toBe(120);
+  expect(window.location.hash).not.toContain("other-sowing");
 });

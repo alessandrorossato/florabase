@@ -1,7 +1,10 @@
+import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { StatusBadge } from "../components/WorkspaceUI";
 import {
   DirectoryPage,
   DirectoryViewSwitcher,
   DirectoryRecords,
+  DirectoryTrigger,
   DirectoryRow,
   DirectoryCard,
   DirectoryInspector,
@@ -831,8 +834,7 @@ const plantPage = {
   eyebrow: "Collection",
   title: "Plants",
   titleId: "plants-title",
-  description:
-    "Manage individual plants and groups, their locations, history, and lineage.",
+  description: "Your plants and growing groups.",
 };
 
 export function PlantScreen({
@@ -1277,7 +1279,7 @@ export function PlantScreen({
     () => (collection.status === "ready" ? collection.records : []),
     [collection],
   );
-  const visible = useMemo(() => {
+  const filtered = useMemo(() => {
     const query = search.trim().toLocaleLowerCase();
     return records.filter((record) => {
       if (
@@ -1323,6 +1325,12 @@ export function PlantScreen({
     typeFilter,
   ]);
 
+  const pagination = useDirectoryPagination(
+    filtered,
+    JSON.stringify(view.state) +
+      filtered.map((record) => recordKey(record)).join(","),
+  );
+  const visible = pagination.visible;
   const bulkChoices = visible.map((record) => ({
     kind:
       record.kind === "plant" ? ("plant" as const) : ("plant_group" as const),
@@ -1338,7 +1346,9 @@ export function PlantScreen({
   const selected =
     detail.status === "ready" && recordKey(detail.record) === selectedKey
       ? detail.record
-      : null;
+      : !mobileDetail && !editing
+        ? (records.find((record) => recordKey(record) === selectedKey) ?? null)
+        : null;
   useEffect(() => {
     if (initialTab !== "edit") {
       directEditHandled.current = false;
@@ -2524,6 +2534,7 @@ export function PlantScreen({
               tools={
                 !(mobileDetail || (editing && !edit.modal)) && (
                   <DirectoryTools
+                    stableFilterSummary
                     context={
                       identityFilter ? (
                         <a href={`#/identities/${identityFilter}?tab=overview`}>
@@ -2649,21 +2660,23 @@ export function PlantScreen({
                         : []),
                     ]}
                     actions={
-                      <ActionButton
-                        icon="add"
-                        type="button"
-                        ref={creationTriggerRef}
-                        data-collection-return="create"
-                        aria-expanded={creationExpanded}
-                        aria-controls="new-plant-panel"
-                        disabled={references.identities.length === 0}
-                        onClick={() => {
-                          if (creationExpanded) focusCreation();
-                          else startCreate();
-                        }}
-                      >
-                        New plant or group
-                      </ActionButton>
+                      <>
+                        <ActionButton
+                          icon="add"
+                          type="button"
+                          ref={creationTriggerRef}
+                          data-collection-return="create"
+                          aria-expanded={creationExpanded}
+                          aria-controls="new-plant-panel"
+                          disabled={references.identities.length === 0}
+                          onClick={() => {
+                            if (creationExpanded) focusCreation();
+                            else startCreate();
+                          }}
+                        >
+                          New plant or group
+                        </ActionButton>
+                      </>
                     }
                   />
                 )
@@ -2684,6 +2697,24 @@ export function PlantScreen({
                   or Plant group. Add one from Botanical identities first.
                 </p>
               </div>
+            )}
+            {collection.status === "ready" && (
+              <DirectoryResults
+                count={filtered.length}
+                total={records.length}
+                pagination={pagination}
+                actions={
+                  <BulkSelect
+                    selection={bulk}
+                    visible={bulkChoices}
+                    onStart={() => {
+                      setSelectedKey(null);
+                      setMobileDetail(false);
+                      setDetail({ status: "idle" });
+                    }}
+                  />
+                }
+              />
             )}
             <div
               className={`plant-master-detail operational-layout directory-preview-layout${mobileDetail || (editing && !edit.modal) ? " is-detail-view" : ""}`}
@@ -2707,22 +2738,6 @@ export function PlantScreen({
                     setAttempt((value) => value + 1);
                   }}
                 />
-                {collection.status === "ready" && (
-                  <DirectoryResults
-                    count={visible.length}
-                    actions={
-                      <BulkSelect
-                        selection={bulk}
-                        visible={bulkChoices}
-                        onStart={() => {
-                          setSelectedKey(null);
-                          setMobileDetail(false);
-                          setDetail({ status: "idle" });
-                        }}
-                      />
-                    }
-                  />
-                )}
                 {records.length === 0 ? (
                   <div className="profile-empty">
                     <h4>No Plants recorded yet</h4>
@@ -2749,29 +2764,32 @@ export function PlantScreen({
                           }}
                           key={recordKey(record)}
                           selected={
-                            bulk.checked({
-                              kind:
-                                record.kind === "plant"
-                                  ? "plant"
-                                  : "plant_group",
-                              id: value.id,
-                            }) || selectedKey === recordKey(record)
+                            bulk.active
+                              ? bulk.checked({
+                                  kind:
+                                    record.kind === "plant"
+                                      ? "plant"
+                                      : "plant_group",
+                                  id: value.id,
+                                })
+                              : selectedKey === recordKey(record)
                           }
                         >
                           <BulkCheckbox
                             selection={bulk}
                             choice={bulkChoices[bulkIndex]}
                           />
-                          <button
+                          <DirectoryTrigger
                             type="button"
                             className="ui-directory-trigger"
+                            description={`${lifecycleLabel(record)} · Open Quick Preview`}
                             aria-pressed={selectedKey === recordKey(record)}
                             onClick={(event) => {
                               if (
                                 bulk.recordClick(event, bulkChoices[bulkIndex])
                               )
                                 return;
-                              selectRecord(record, event.currentTarget);
+                              selectRecord(record, event.currentTarget, true);
                             }}
                           >
                             <span className="ui-directory-record-identity">
@@ -2796,6 +2814,9 @@ export function PlantScreen({
                                     value.botanical_identity.display_label,
                                   )}
                                 </strong>
+                                {value.lifecycle === "active" && (
+                                  <StatusBadge>Active</StatusBadge>
+                                )}
                                 <small>
                                   <BotanicalName
                                     label={
@@ -2815,20 +2836,20 @@ export function PlantScreen({
                               )}
                             </span>
 
-                            <span
-                              className={`lifecycle-badge lifecycle-badge--${value.lifecycle}`}
-                            >
-                              {lifecycleLabel(record)}
-                            </span>
-                          </button>
+                            {value.lifecycle !== "active" && (
+                              <span
+                                className={`lifecycle-badge lifecycle-badge--${value.lifecycle}`}
+                              >
+                                {lifecycleLabel(record)}
+                              </span>
+                            )}
+                          </DirectoryTrigger>
                           <DirectoryRecordActions
                             label={recordName(
                               value,
                               value.botanical_identity.display_label,
                             )}
-                            onPreview={(trigger) => {
-                              selectRecord(record, trigger, true);
-                            }}
+
                             onDetails={(trigger) => {
                               selectRecord(record, trigger);
                               setMobileDetail(true);
@@ -2850,6 +2871,7 @@ export function PlantScreen({
               {(creationExpanded ||
                 editing ||
                 mobileDetail ||
+                visible.length > 0 ||
                 visible.some(
                   (record) => recordKey(record) === selectedKey,
                 )) && (
@@ -2866,9 +2888,11 @@ export function PlantScreen({
                   )}
                   {editing && !edit.modal ? (
                     editor
-                  ) : detail.status === "loading" ? (
+                  ) : detail.status === "loading" &&
+                    (mobileDetail || !selected) ? (
                     <p role="status">Loading Plant detail…</p>
-                  ) : detail.status === "error" ? (
+                  ) : detail.status === "error" &&
+                    (mobileDetail || !selected) ? (
                     <div className="notice notice--error" role="alert">
                       <p>Florabase could not load this record.</p>
                       <button
@@ -3123,6 +3147,27 @@ export function PlantScreen({
                           setDetail({ status: "idle" });
                         }}
                       >
+                        {detail.status === "loading" && (
+                          <p role="status">Refreshing preview…</p>
+                        )}
+                        {detail.status === "error" && (
+                          <div role="alert">
+                            <p>Florabase could not load this record.</p>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (selectedKey)
+                                  setDetail({
+                                    status: "loading",
+                                    key: selectedKey,
+                                  });
+                                setDetailAttempt((value) => value + 1);
+                              }}
+                            >
+                              Retry detail
+                            </button>
+                          </div>
+                        )}
                         <RecordPreview
                           visual={
                             <RecordVisual

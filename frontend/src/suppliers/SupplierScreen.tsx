@@ -1,6 +1,8 @@
+import { StatusBadge } from "../components/WorkspaceUI";
 import {
   DirectoryPage,
   DirectoryRecords,
+  DirectoryTrigger,
   DirectoryRow,
   DirectoryCard,
   DirectoryRecordActions,
@@ -1495,20 +1497,58 @@ export function SupplierScreen({
                       {visible.map((supplier) => (
                         <DirectoryItem
                           key={supplier.id}
+                          previewId={supplier.id}
                           selected={previewOpen && selectedId === supplier.id}
+
+                          onClick={(event) => {
+                            if (
+                              event.defaultPrevented ||
+                              event.ctrlKey ||
+                              event.metaKey ||
+                              event.shiftKey ||
+                              event.altKey
+                            )
+                              return;
+                            const target = event.target;
+                            if (
+                              !(target instanceof Element) ||
+                              target.closest(
+                                ".ui-directory-record-actions, input, select, textarea, label",
+                              )
+                            )
+                              return;
+                            const trigger =
+                              event.currentTarget.querySelector<HTMLButtonElement>(
+                                ".sourcing-preview-trigger",
+                              );
+                            if (!trigger) return;
+                            event.preventDefault();
+                            selectedTrigger.current = trigger;
+                            setSelectedId(supplier.id);
+                            setPreviewOpen(true);
+                          }}
                         >
                           <div className="sourcing-record-identity">
-                            <RecordVisual
-                              kind="supplier"
-                              label={supplier.name}
-                              photo={supplier.primary_photo ?? null}
-                              compact
-                              showSource={presentation.view === "gallery"}
-                            />
+                            <DirectoryTrigger
+                              className="sourcing-preview-trigger"
+                              aria-label={`Quick preview ${supplier.name}`}
+                              description={`${supplier.retired_at ? "Retired" : "Active"} · Open Quick Preview`}
+                            >
+                              <RecordVisual
+                                kind="supplier"
+                                label={supplier.name}
+                                photo={supplier.primary_photo ?? null}
+                                compact
+                                showSource={presentation.view === "gallery"}
+                              />
+                            </DirectoryTrigger>
                             <div className="sourcing-record-name">
                               <a href={`#/suppliers/${supplier.id}`}>
                                 {supplier.name}
                               </a>
+                              {!supplier.retired_at && (
+                                <StatusBadge>Active</StatusBadge>
+                              )}
                               <small>{kindLabels[supplier.kind]}</small>
                             </div>
                           </div>
@@ -1517,20 +1557,18 @@ export function SupplierScreen({
                               {supplier.usage_counts.direct_records_total}
                             </strong>{" "}
                             direct records
-                            <span
-                              className={`lifecycle-badge lifecycle-badge--${supplier.retired_at ? "retired" : "active"}`}
-                            >
-                              {supplier.retired_at ? "Retired" : "Active"}
-                            </span>
+                            {supplier.retired_at && (
+                              <span
+                                className={`lifecycle-badge lifecycle-badge--${supplier.retired_at ? "retired" : "active"}`}
+                              >
+                                {supplier.retired_at ? "Retired" : "Active"}
+                              </span>
+                            )}
                           </div>
-                          <div data-preview-id={supplier.id}>
+                          <div>
                             <DirectoryRecordActions
                               label={supplier.name}
-                              onPreview={(trigger) => {
-                                selectedTrigger.current = trigger;
-                                setSelectedId(supplier.id);
-                                setPreviewOpen(true);
-                              }}
+
                               onDetails={() => {
                                 setRecordRoute(`#/suppliers/${supplier.id}`);
                               }}

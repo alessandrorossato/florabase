@@ -73,8 +73,18 @@ export function RecordVisual({
     (src) => src && !broken.has(src),
   );
   const primary = source === direct;
+  const sourceLabel = source
+    ? primary
+      ? "Record primary photo"
+      : source === inherited
+        ? "Source primary photo"
+        : "Identity cover · reference"
+    : broken.size
+      ? "Image unavailable"
+      : "No image";
   return (
     <span
+      title={showSource ? sourceLabel : undefined}
       className={`record-visual record-visual--${kind}${compact ? " record-visual--compact" : ""} ${className}`}
     >
       {source ? (
@@ -115,17 +125,7 @@ export function RecordVisual({
         </>
       )}
       {showSource && (
-        <span className="record-visual__source">
-          {source
-            ? primary
-              ? "Record primary photo"
-              : source === inherited
-                ? "Source primary photo"
-                : "Identity cover · reference"
-            : broken.size
-              ? "Image unavailable"
-              : "No image"}
-        </span>
+        <span className="record-visual__source">{sourceLabel}</span>
       )}
     </span>
   );

@@ -1,0 +1,15 @@
+.app-content .harvest-directory-layout {
+  display: block;
+}
+.harvest-action-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.harvest-action-row > .harvest-directory-row {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+.harvest-action-row > .ui-directory-record-actions {
+  padding: var(--space-2);
+}

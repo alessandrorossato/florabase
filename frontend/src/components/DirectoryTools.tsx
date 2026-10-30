@@ -21,6 +21,7 @@ export function DirectoryTools({
   onReset,
   activeFilters = [],
   context,
+  stableFilterSummary = false,
 }: {
   name: string;
   search?: ReactNode;
@@ -31,6 +32,7 @@ export function DirectoryTools({
   onReset?: () => void;
   activeFilters?: ActiveDirectoryFilter[];
   context?: ReactNode;
+  stableFilterSummary?: boolean;
 }) {
   const id = useId();
   const [open, setOpen] = useState(false);
@@ -63,11 +65,12 @@ export function DirectoryTools({
         {actions}
       </div>
       {context && <div className="directory-context">{context}</div>}
-      {activeFilters.length > 0 && (
+      {(activeFilters.length > 0 || stableFilterSummary) && (
         <div
           className="directory-filter-summary"
-          role="group"
-          aria-label="Active filters"
+          role={activeFilters.length ? "group" : undefined}
+          aria-label={activeFilters.length ? "Active filters" : undefined}
+          aria-hidden={activeFilters.length ? undefined : true}
         >
           {activeFilters.map((filter) => (
             <button

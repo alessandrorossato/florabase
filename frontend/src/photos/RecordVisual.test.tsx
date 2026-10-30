@@ -165,3 +165,23 @@ test("gallery source labels follow primary-to-reference fallback and never call 
   expect(screen.getByText("Image unavailable")).toBeVisible();
   expect(screen.queryByRole("img")).not.toBeInTheDocument();
 });
+
+test("photo source stays attached to its image and updates after fallback", () => {
+  render(
+    <RecordVisual
+      showSource
+      label="Plant"
+      kind="plant"
+      identity={identity}
+      photo={{ kind: "local", photo_id: "direct", thumbnail_url: "/direct" }}
+    />,
+  );
+  expect(screen.getByTitle("Record primary photo")).toContainElement(
+    screen.getByRole("img"),
+  );
+  fireEvent.error(screen.getByRole("img"));
+  expect(screen.getByTitle("Identity cover · reference")).toContainElement(
+    screen.getByRole("img"),
+  );
+  expect(screen.getByText("Identity cover · reference")).toBeInTheDocument();
+});
