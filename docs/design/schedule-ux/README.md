@@ -93,8 +93,8 @@ see the [concept decision](../activity-concept/journal.md).
   show selected-day mobile reload and the desktop Month summary.
 - Verification-impact planning selects **FULL**; [plan](evidence/verification-plan.txt) includes the
   inherited prototype paths as unclassified. No mapping was relaxed to obtain a lighter gate.
-  Per operator direction, canonical FULL/feature-verify is **deferred until operator UAT**, not passed.
-  PostgreSQL integration suites, migration cycling, API drift gate and protected delivery were not run.
+  Operator UAT and independent QA are complete. Canonical FULL passed on the QA-approved candidate;
+  the final documentation/status commit receives its own exact-tree FULL before delivery.
   Live server/API checks above are focused checks, not a replacement claim for those gates.
 
 Host frontend checks use Node 24.22.1 / available pnpm 11.25.0, against unchanged lockfile/dependencies;
@@ -128,5 +128,5 @@ failures in the tested workflows.
    scenarios; see the progress milestone for the authorized independent QA and delivery phase.
 
 After UAT: independent review, freeze, one policy-selected FULL gate, then normal protected delivery.
-The separate operator authorization for the delivery phase is recorded in the task handoff; its
-actual gate, PR, merge and cleanup results are recorded only after they occur.
+The separate operator authorization for the delivery phase is recorded in the task handoff; actual
+PR, merge and cleanup results are recorded only after they occur.

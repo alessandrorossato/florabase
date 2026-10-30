@@ -38,9 +38,17 @@
 - Schedule Review `florabase-uat-preview-smoke-28ce00000001` at `http://localhost:25288/#/schedule`
   is healthy and owned by this worktree: frontend/backend/PostgreSQL healthy, code/database revision
   `20261013_0042`, fixture v4 ready with 66 references. Existing UAT data and resources are retained.
-- Canonical FULL, protected delivery, post-merge verification and feature-finish are authorized and
-  pending. This milestone does not claim their completion. Physical device, AT, actual zoom,
-  exhaustive dialog/theme, injected outage, midnight rollover and scale testing remain limitations.
+- Canonical `make feature-verify` selected FULL and passed on `89fe6fd` (tree receipt recorded):
+  workflow suites passed; backend 978 passed / 1 skipped (90.06% coverage); frontend 1,077 passed
+  across 100 files; all 766 PostgreSQL integration tests passed; Ruff/Prettier/ESLint/mypy/TypeScript,
+  generated API drift, both production builds and full migration cycle passed. The migration verified
+  `20261013_0042 -> 20261013_0042 -> 20261013_0042 -> 20261013_0042`; disposable integration,
+  migration and selected-build resources reported successful cleanup. No API/schema migration was
+  introduced by Schedule UX.
+- The subsequent feature-status/evidence documentation update requires a second exact-tree FULL
+  before delivery; its result is not presumed here. Protected PR delivery, merge, post-merge checks
+  and feature-finish are authorized but pending. Physical device, AT, actual zoom, exhaustive
+  dialog/theme, injected outage, midnight rollover and scale testing remain limitations.
 
 ## 2026-10-27 — UI-SYSTEM-001 Gate B review candidate, Proposal B refined
 
