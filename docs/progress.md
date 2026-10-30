@@ -6208,3 +6208,26 @@ Status remains implemented pending canonical verification.
   `docs/design/activity-concept/evidence/month-navigation-final.jpg` records the final result.
   This resolves the preceding browser-inspection limitation. Scope remains concept/prototype review;
   no canonical FULL, protected delivery or feature-finish is authorized or performed.
+
+## 2026-10-30 — Schedule production UX ready for operator UAT
+
+- Fetched main remains `76c0911`; `feat/schedule-ux` retains approved prototype through `b8d066f`.
+  Audited active dirty Wave 3 at `548f` and avoided all shared primitive/environment modifications.
+- Production Agenda/Month reuse authenticated Schedule services and actual dialogs; common period,
+  Today and date-jump controls preserve canonical URLs/filters and browser state. Exact selected-day
+  Agenda bounds run server-side before pagination; continuous Agenda remains default. Week stays in
+  the laboratory. Journal persistence, source-derived History and all backend contracts are unchanged.
+- [UAT handoff](design/schedule-ux/README.md): isolated guarded UAT Review at **localhost:25288**,
+  project `florabase-uat-preview-smoke-28ce00000001`, v4/66 baseline, existing code/DB `20261013_0042`.
+  Wave 3 Review at 15174 and DEV remain untouched. Synthetic `preview / preview` access is UAT-only.
+- Baseline **75/75**; final **76/76** in five Schedule/Activity suites, complete ESLint/Prettier,
+  strict TypeScript and production build pass. Real authenticated server smoke covers persistence,
+  reschedule, stale 409, no-Event completion, terminal guards, cancellation and date validation.
+  Native UI save/reload persistence, Month Next/Back/Today and selected-day reload pass.
+- **36** primary responsive/six-theme captures have no horizontal document overflow; two supplemental
+  captures and both reviewed contact sheets accompany raster/digest evidence. Physical devices, AT,
+  actual zoom, live network-failure injection, rollover and scale remain explicit limits.
+- Policy selects FULL, including inherited unclassified laboratory paths; no policy exception was
+  introduced. Per operator direction, canonical FULL and delivery await UAT. `SCHEDULE-UX-001` is
+  implemented, not verified. No PR, push, merge or feature-finish performed.
+  **FLORABASE_SCHEDULE_UX_READY_FOR_OPERATOR_UAT**.

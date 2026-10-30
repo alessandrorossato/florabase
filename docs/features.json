@@ -2175,6 +2175,24 @@
       ],
       "priority": "P1",
       "status": "implemented"
+    },
+    {
+      "id": "SCHEDULE-UX-001",
+      "category": "ux",
+      "description": "Deliver approved Agenda and Month Schedule UX through existing authenticated date-only services",
+      "acceptance_criteria": [
+        "Agenda defaults to a stable server-paged continuous chronology, with exact selected-day server bounds and compact date navigation",
+        "Month uses the approved common navigation bar, exact date selection and bounded existing grid with responsive day inspection",
+        "Existing authenticated create, edit, reschedule, complete and cancel preserve eligibility, expected versions, terminal semantics and explicit occurrence creation",
+        "Canonical List/Calendar URLs, filters, browser history, exact target links, precision and pagination remain compatible; Week stays prototype-only",
+        "An independently isolated populated Review, real persistence and conflict smoke, focused Activity checks, responsive six-theme evidence and operator UAT support later canonical verification"
+      ],
+      "dependencies": [
+        "SCHEDULE-002",
+        "ACTIVITY-CONCEPT-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
     }
   ]
 }
