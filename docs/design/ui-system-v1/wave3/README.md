@@ -556,3 +556,39 @@ summary/parent-layout expectations reflect the new grouped composition while
 preserving pagination and bulk assertions. Strict TypeScript, affected zero-warning
 ESLint, formatting, graph121 and whitespace pass; final CSS/shared recheck recorded
 in progress. No FULL, commit, push, PR, merge or cleanup. Operator acceptance pending.
+
+## Final UAT correction — Sourcing row parity (2026-10-30)
+
+The operator's Supplier screenshot issue also reproduced on Orders. Both pages used a
+custom composition where thumbnails, title links, facts and action wrappers did not
+follow the compact Seeds row rhythm. Record titles are now part of the accessible
+Quick Preview trigger beside the thumbnail; the preview is nonmodal, and Details/Edit
+remain separate direct actions. Supplier Active uses the existing compact status
+indicator with an accessible “Active” name; retired remains an explicit text state.
+Direct-record counts now use a bounded metadata column. Shared directory primitives
+were reused; no shared component was changed. Gallery card identity/actions were
+retained and use the same trigger structure.
+
+Sowings was independently checked in List and Gallery: no missing propagation was
+confirmed. It already has stable toolbar/count/pager controls, internal scrolling,
+nonmodal inspector, row/card Quick Preview, direct Details/Edit, lifecycle labels,
+selection and existing germination/lineage operations. The 34-case Sowing suite
+remains green. No Sowings code or domain semantics changed.
+
+Review was refreshed through its owning feature workflow. Post-refresh status reports
+healthy frontend/backend/database, code and DB head `20261013_0042`, fixture v4 ready
+with 80 records, source bound to this worktree and URL `http://localhost:15174`.
+Before/after visual comparison was performed at the available 1320x900 browser size
+in Mineral Dark and Mineral Light. Suppliers List, Orders List/Gallery, and Sowings
+List/Gallery were inspected; supplier row preview opens the side inspector, while
+the separate Details action routes directly to the record. Current Review appearance
+was restored to Dark, Mineral.
+
+Responsive captures at exactly 1440, 1024 and 390 CSS pixels were not available in
+the connected browser control, which exposes no viewport override; no claim is made
+for those exact dimensions in this correction. Keyboard opening and separate action
+behavior are covered by tests; screen-reader/physical-device/zoom acceptance remains
+operator UAT. Focused suites: **145/145** across Suppliers, Orders, Sowings, Seeds and
+shared directory tests. Strict TypeScript, affected ESLint, Prettier, feature graph
+(123), and `git diff --check` pass. FULL, push, PR, merge and feature-finish remain
+out of scope; operator acceptance is still pending.

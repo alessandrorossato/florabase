@@ -6522,3 +6522,30 @@ Status remains implemented pending canonical verification.
   evidence is claimed. No FULL, push, PR, main merge, feature-finish, Review reassignment, or
   resource cleanup was performed. Additional short visual/UAT review remains appropriate before
   operator acceptance.
+
+## 2026-10-30 — Wave 3 final UAT corrections: Suppliers and Sowings
+
+- Confirmed clean original feature and independent-QA worktrees, then fast-forwarded only
+  `feat/ui-system-v1-wave3` to the approved QA checkpoint `d09fd86118ecc9a17a9aef27e099d8a182ae073d`.
+  The QA branch remains unchanged. Suppliers and Orders shared a confirmed compact-row regression:
+  title links sat apart from preview triggers, thumbnails were oversized, and flexible fact columns
+  widened rows. Both now use a shared-trigger composition, bounded metadata and direct Details/Edit.
+  Active Suppliers use the existing compact accessible status indicator. No shared primitive changed.
+- Independently inspected Sowings List and Gallery; found no missing propagation. Toolbar, internal
+  scrolling, persistent nonmodal preview, explicit Details/Edit, lifecycle, selection, pagination,
+  germination and lineage behavior remain in place; no Sowings source changes were made.
+- Focused regression: **145/145** in 7 test files (Suppliers 13, Orders 20, Sowings 34, Seeds 56,
+  DirectoryPage 16, DirectoryResults 5, DirectoryTools 1). Strict TypeScript, affected-file ESLint,
+  Prettier, `python3 scripts/check-features.py` (123 valid), and `git diff --check` pass.
+- Refreshed only the owner-bound Feature Review using `make feature-review-up`; status reports healthy
+  frontend/backend/database, expected source worktree, code/DB head `20261013_0042`, and fixture v4
+  ready (80 records). Live visual comparison captured inline at 1320x900 in Mineral Dark and Light:
+  Suppliers List, Orders List/Gallery, Sowings List/Gallery. Preview opened a side inspector; direct
+  Supplier Details navigated to its record route. Theme restored to Dark, Mineral.
+- The connected browser offers no viewport override; exact 1440/1024/390 CSS-pixel captures were not
+  possible for this correction. Screen reader, physical device and actual browser zoom remain UAT.
+  Operator checklist: compare Supplier/Order List rows with Seeds; click titles/rows for Preview;
+  verify Details/Edit bypass preview; switch Orders and Sowings List/Gallery; scroll with Preview open;
+  verify pagination and multi-select; verify Sowings lifecycle and germination semantics; repeat at
+  1440/1024/390 and supported themes on operator's responsive test setup. No FULL, push, PR, merge or
+  feature-finish was run. Acceptance remains pending.

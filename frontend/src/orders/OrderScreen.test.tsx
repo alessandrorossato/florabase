@@ -753,3 +753,26 @@ test("Order row Edit keeps the existing contextual editor and focus return", asy
     expect(edit).toHaveFocus();
   });
 });
+
+test("Order title click previews while the explicit Details action navigates directly", async () => {
+  const user = userEvent.setup();
+  mount();
+  const previewTrigger = await orderRow();
+  const row = previewTrigger.closest("li");
+  if (!row) throw new Error("Order preview must belong to a directory row");
+  expect(
+    within(row).queryByRole("link", { name: "REF-1" }),
+  ).not.toBeInTheDocument();
+  await user.click(within(row).getByText("REF-1", { exact: true }));
+  expect(
+    await screen.findByRole("complementary", { name: "Order inspection" }),
+  ).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Close preview" }));
+  await user.click(within(row).getByRole("button", { name: "Details REF-1" }));
+  await waitFor(() => {
+    expect(window.location.hash).toBe(`#/orders/${id}`);
+  });
+  expect(
+    screen.queryByRole("complementary", { name: "Order inspection" }),
+  ).not.toBeInTheDocument();
+});

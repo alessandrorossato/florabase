@@ -1541,22 +1541,24 @@ export function SupplierScreen({
                                 compact
                                 showSource={presentation.view === "gallery"}
                               />
+                              <span className="sourcing-record-name">
+                                <strong>
+                                  <span>{supplier.name}</span>
+                                  {!supplier.retired_at && (
+                                    <StatusBadge compactState="active">
+                                      Active
+                                    </StatusBadge>
+                                  )}
+                                </strong>
+                                <small>{kindLabels[supplier.kind]}</small>
+                              </span>
                             </DirectoryTrigger>
-                            <div className="sourcing-record-name">
-                              <a href={`#/suppliers/${supplier.id}`}>
-                                {supplier.name}
-                              </a>
-                              {!supplier.retired_at && (
-                                <StatusBadge>Active</StatusBadge>
-                              )}
-                              <small>{kindLabels[supplier.kind]}</small>
-                            </div>
                           </div>
                           <div className="sourcing-record-facts">
                             <strong>
                               {supplier.usage_counts.direct_records_total}
-                            </strong>{" "}
-                            direct records
+                            </strong>
+                            <small>direct records</small>
                             {supplier.retired_at && (
                               <span
                                 className={`lifecycle-badge lifecycle-badge--${supplier.retired_at ? "retired" : "active"}`}
@@ -1565,19 +1567,16 @@ export function SupplierScreen({
                               </span>
                             )}
                           </div>
-                          <div>
-                            <DirectoryRecordActions
-                              label={supplier.name}
-
-                              onDetails={() => {
-                                setRecordRoute(`#/suppliers/${supplier.id}`);
-                              }}
-                              onEdit={(trigger) => {
-                                setPreviewOpen(false);
-                                startEdit(supplier, trigger);
-                              }}
-                            />
-                          </div>
+                          <DirectoryRecordActions
+                            label={supplier.name}
+                            onDetails={() => {
+                              setRecordRoute(`#/suppliers/${supplier.id}`);
+                            }}
+                            onEdit={(trigger) => {
+                              setPreviewOpen(false);
+                              startEdit(supplier, trigger);
+                            }}
+                          />
                         </DirectoryItem>
                       ))}
                     </DirectoryRecords>

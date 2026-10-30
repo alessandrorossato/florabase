@@ -1496,16 +1496,14 @@ export function OrderScreen({
                                 compact
                                 showSource={presentation.view === "gallery"}
                               />
+                              <span className="sourcing-record-name">
+                                <strong>{orderTitle(order)}</strong>
+                                <small>
+                                  {orderDate(order.ordered_on)} ·{" "}
+                                  {order.supplier?.name ?? "Supplier unknown"}
+                                </small>
+                              </span>
                             </DirectoryTrigger>
-                            <div className="sourcing-record-name">
-                              <a href={`#/orders/${order.id}`}>
-                                {orderTitle(order)}
-                              </a>
-                              <small>
-                                {orderDate(order.ordered_on)} ·{" "}
-                                {order.supplier?.name ?? "Supplier unknown"}
-                              </small>
-                            </div>
                           </div>
                           <div className="sourcing-record-facts">
                             <strong>{orderPrice(order)}</strong>
@@ -1514,19 +1512,16 @@ export function OrderScreen({
                               {order.seed_lot_count === 1 ? "lot" : "lots"}
                             </small>
                           </div>
-                          <div>
-                            <DirectoryRecordActions
-                              label={orderTitle(order)}
-
-                              onDetails={() => {
-                                setRecordRoute(`#/orders/${order.id}`);
-                              }}
-                              onEdit={(trigger) => {
-                                setPreviewOpen(false);
-                                startEdit(order, trigger);
-                              }}
-                            />
-                          </div>
+                          <DirectoryRecordActions
+                            label={orderTitle(order)}
+                            onDetails={() => {
+                              setRecordRoute(`#/orders/${order.id}`);
+                            }}
+                            onEdit={(trigger) => {
+                              setPreviewOpen(false);
+                              startEdit(order, trigger);
+                            }}
+                          />
                         </DirectoryItem>
                       ))}
                     </DirectoryRecords>

@@ -655,23 +655,31 @@ test("Supplier row Edit retains contextual guard and returns to its own action",
   expect(window.location.hash).toBe("#/suppliers?view=list");
 });
 
-test("Supplier title click previews while modified links retain native Details navigation", async () => {
+test("Supplier title click previews and the explicit Details action navigates directly", async () => {
   vi.spyOn(globalThis, "fetch").mockResolvedValue(json([supplier]));
   const user = userEvent.setup();
   mount();
-  const link = await screen.findByRole("link", { name: "Review nursery" });
-  const modified = new MouseEvent("click", {
-    bubbles: true,
-    cancelable: true,
-    ctrlKey: true,
+  const previewTrigger = await screen.findByRole("button", {
+    name: "Quick preview Review nursery",
   });
-  fireEvent(link, modified);
-  expect(modified.defaultPrevented).toBe(false);
+  const row = previewTrigger.closest("li");
+  if (!row) throw new Error("Supplier preview must belong to a directory row");
   expect(
-    screen.queryByRole("complementary", { name: "Supplier inspection" }),
+    within(row).queryByRole("link", { name: "Review nursery" }),
   ).not.toBeInTheDocument();
-  await user.click(link);
+  expect(within(row).getByRole("img", { name: "Active" })).toBeVisible();
+  await user.click(within(row).getByText("Review nursery", { exact: true }));
   expect(
     screen.getByRole("complementary", { name: "Supplier inspection" }),
   ).toBeVisible();
+  await user.click(screen.getByRole("button", { name: "Close preview" }));
+  await user.click(
+    within(row).getByRole("button", { name: "Details Review nursery" }),
+  );
+  await waitFor(() => {
+    expect(window.location.hash).toBe(`#/suppliers/${id}`);
+  });
+  expect(
+    screen.queryByRole("complementary", { name: "Supplier inspection" }),
+  ).not.toBeInTheDocument();
 });
