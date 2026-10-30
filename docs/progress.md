@@ -6188,3 +6188,14 @@ Status remains implemented pending canonical verification.
   PostgreSQL/migration/API gate,
   protected delivery, push, PR, merge or feature-finish ran. Operator decisions and phased production
   work are in the handoff. **FLORABASE_ACTIVITY_CONCEPT_AND_SCHEDULE_UX_REVIEW_READY**.
+
+### Activity prototype — annotated Month navigation refinement (2026-10-30)
+
+- Applied the operator's two browser annotations only: Month now uses the same separate navigation
+  row as Agenda/Week, with Previous month, Today, Next month and Jump to date. Month retains its grid;
+  the existing embedded compact navigation is hidden only inside this prototype. Shared components
+  and production Schedule behavior are unchanged.
+- Strict frontend TypeScript, scoped ESLint, 11 prototype tests and diff whitespace pass. Existing
+  Month screenshots are historical and the evidence source manifest records the refinement.
+  Browser reinspection was unavailable after the session reported an unavailable browser handle;
+  no fresh graphical acceptance is claimed. No canonical FULL or delivery was run.

@@ -210,3 +210,8 @@
   max-width: none;
   width: 100%;
 }
+
+.prototype-week-strip[hidden],
+.prototype-month-content .schedule-calendar > .schedule-view-heading {
+  display: none;
+}

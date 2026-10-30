@@ -29,7 +29,7 @@ import {
   type ScheduleState,
   type DateWindow,
 } from "../../schedule/state";
-import { dayLabel, monthLabel } from "../../schedule/calendar";
+import { dayLabel, monthLabel, shiftMonth } from "../../schedule/calendar";
 import {
   useAppearance,
   paletteLabels,
@@ -582,7 +582,7 @@ export function ScheduleUxPrototype({ fixture }: { fixture: FixtureSchedule }) {
             }
             chronology={
               <>
-                {ux !== "month" && (
+                {
                   <>
                     <div className="schedule-view-heading">
                       <h3>{monthLabel(selectedDay.slice(0, 7))}</h3>
@@ -595,12 +595,22 @@ export function ScheduleUxPrototype({ fixture }: { fixture: FixtureSchedule }) {
                       <div className="actions">
                         <button
                           className="button--secondary"
-                          disabled={days[0] <= "0001-01-07"}
+                          disabled={
+                            ux === "month"
+                              ? state.month === "0001-01"
+                              : days[0] <= "0001-01-07"
+                          }
                           onClick={() => {
-                            selectDay(shiftDay(selectedDay, -7));
+                            if (ux === "month")
+                              update({
+                                ...state,
+                                month: shiftMonth(state.month, -1),
+                                date: "",
+                              });
+                            else selectDay(shiftDay(selectedDay, -7));
                           }}
                         >
-                          Previous week
+                          Previous {ux === "month" ? "month" : "week"}
                         </button>
                         <button
                           className="button--secondary"
@@ -612,12 +622,22 @@ export function ScheduleUxPrototype({ fixture }: { fixture: FixtureSchedule }) {
                         </button>
                         <button
                           className="button--secondary"
-                          disabled={days[6] >= "9999-12-24"}
+                          disabled={
+                            ux === "month"
+                              ? state.month === "9999-12"
+                              : days[6] >= "9999-12-24"
+                          }
                           onClick={() => {
-                            selectDay(shiftDay(selectedDay, 7));
+                            if (ux === "month")
+                              update({
+                                ...state,
+                                month: shiftMonth(state.month, 1),
+                                date: "",
+                              });
+                            else selectDay(shiftDay(selectedDay, 7));
                           }}
                         >
-                          Next week
+                          Next {ux === "month" ? "month" : "week"}
                         </button>
                         <label className="prototype-jump">
                           Jump to date
@@ -633,7 +653,10 @@ export function ScheduleUxPrototype({ fixture }: { fixture: FixtureSchedule }) {
                           />
                         </label>
                       </div>
-                      <div className="prototype-week-strip">
+                      <div
+                        className="prototype-week-strip"
+                        hidden={ux === "month"}
+                      >
                         {days.map((day) => (
                           <a
                             href={prototypeHash(
@@ -664,11 +687,15 @@ export function ScheduleUxPrototype({ fixture }: { fixture: FixtureSchedule }) {
                       </div>
                     </nav>
                   </>
-                )}
+                }
                 <div
                   className={`prototype-workspace${inspection && !mobile ? " prototype-workspace--inspect" : ""}`}
                 >
-                  <div>
+                  <div
+                    className={
+                      ux === "month" ? "prototype-month-content" : undefined
+                    }
+                  >
                     {ux === "month" ? (
                       <ScheduleCalendar
                         state={state}
