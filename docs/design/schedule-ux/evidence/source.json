@@ -1,0 +1,19 @@
+{
+  "main": "76c0911",
+  "approved_prototype": "b8d066f",
+  "branch": "feat/schedule-ux",
+  "project": "florabase-uat-preview-smoke-28ce00000001",
+  "url": "http://localhost:25288",
+  "source_files": {
+    "frontend/src/schedule/ScheduleScreen.tsx": "bd0cc66ea777e9ed8342ae06a61f690f948198b5579aa3424910d3f7b6ac7fc7",
+    "frontend/src/schedule/UpcomingActivities.tsx": "7f14548dfe2246bc3c352d237b2fb547b61f9cc904b62848057ef8c45e9c058b",
+    "frontend/src/schedule/ScheduleScreen.test.tsx": "3ee95c2bfb3aef09e91039c0edab37c13af31d14332f139b42735bd6419ef54b",
+    "frontend/src/schedule/ScheduleTargetLabel.tsx": "017a9ee34c457ca8d397a2ffc527b3e9df390b04c58673a94c16ca6116a21028",
+    "frontend/src/schedule/ScheduleTargetPicker.tsx": "33b2839d2e5e3a7adde6d25497bd58e2e0b236943a457f4a0387c1d764a85900",
+    "frontend/src/schedule/ScheduleCalendar.tsx": "5465b07382565ae414d5628a2302d92c783349d32d2e225730d25408e5782fca",
+    "frontend/src/schedule/ScheduleNavigation.tsx": "4cb79709c8bd0d1554b88c77644309def27dd09dcb3a358d98c2947a0b46ccd9",
+    "frontend/src/schedule/ScheduleActivityRow.tsx": "c1581f7a04ca4451dea51d1c89a9506ca25fefcada1f9e26e3af756ef7550207",
+    "frontend/src/schedule/api.ts": "dee3309d51a6ba0da3994b39661332bef4ed4a298d48928b30d6269abda63368",
+    "frontend/src/schedule/schedule.css": "d0ab6bc2123c79d18c7c12bbd769d545c4f133b7367c43d97c45aca85a0295ad"
+  }
+}

@@ -430,8 +430,8 @@ test("List and Calendar share filters, link URLs and restore browser state", asy
   );
   const user = userEvent.setup();
   mount();
-  await user.click(screen.getByRole("link", { name: "Calendar" }));
-  expect(screen.getByRole("link", { name: "Calendar" })).toHaveAttribute(
+  await user.click(screen.getByRole("link", { name: "Month" }));
+  expect(screen.getByRole("link", { name: "Month" })).toHaveAttribute(
     "aria-current",
     "page",
   );
@@ -448,13 +448,13 @@ test("List and Calendar share filters, link URLs and restore browser state", asy
       expect.any(AbortSignal),
     );
   });
-  await user.click(screen.getByRole("link", { name: "List" }));
+  await user.click(screen.getByRole("link", { name: "Agenda" }));
   expect(window.location.hash).toBe(
     "#/schedule?window=overdue&activity_kind=repot&q=basil",
   );
   calendarRoute("&status=cancelled&date=2026-10-15");
   fireEvent(window, new PopStateEvent("popstate"));
-  expect(screen.getByRole("link", { name: "Calendar" })).toHaveAttribute(
+  expect(screen.getByRole("link", { name: "Month" })).toHaveAttribute(
     "aria-current",
     "page",
   );
@@ -842,7 +842,7 @@ test("Calendar period changes preserve the active planned status filter", async 
   expect(window.location.hash).toBe("#/schedule?view=calendar&month=2026-11");
   expect(screen.getByRole("button", { name: "Clear filters" })).toBeVisible();
   expect(
-    screen.getByRole("navigation", { name: "Calendar period" }),
+    screen.getByRole("navigation", { name: "Planning dates" }),
   ).toContainElement(screen.getByRole("button", { name: "Today" }));
 });
 
@@ -936,6 +936,7 @@ test("a concurrently emptied last List page returns to existing activities", asy
     0,
     50,
     expect.any(AbortSignal),
+    undefined,
   );
   expect(
     screen.queryByText("No planned activities yet."),
@@ -1123,6 +1124,7 @@ test("Schedule PageTools search and filter drawer preserve query across views an
       0,
       50,
       expect.any(AbortSignal),
+      undefined,
     );
   });
   await user.click(screen.getByRole("button", { name: "Filters (1)" }));
@@ -1135,7 +1137,7 @@ test("Schedule PageTools search and filter drawer preserve query across views an
     "#/schedule?status=planned&status=completed&status=cancelled&q=basil",
   );
   expect(search).toHaveValue("basil");
-  await user.click(screen.getByRole("link", { name: "Calendar" }));
+  await user.click(screen.getByRole("link", { name: "Month" }));
   await waitFor(() => {
     expect(api.listCalendar).toHaveBeenLastCalledWith(
       expect.objectContaining({ q: "basil", view: "calendar" }),
@@ -1289,18 +1291,18 @@ test("checkbox combinations count dimensions, reset preserves period/search and 
   expect(calendarHeading).toContainElement(
     screen.getByRole("navigation", { name: "Schedule view" }),
   );
-  await user.click(screen.getByRole("link", { name: "List" }));
+  await user.click(screen.getByRole("link", { name: "Agenda" }));
   expect(readScheduleState().date).toBe("2026-10-14");
   expect(readScheduleState().month).toBe("2026-10");
   expect(
-    screen.queryByRole("navigation", { name: "Calendar period" }),
-  ).not.toBeInTheDocument();
+    screen.getByRole("navigation", { name: "Planning dates" }),
+  ).toBeInTheDocument();
   expect(
     screen
       .getByRole("navigation", { name: "Schedule view" })
       .closest(".schedule-view-heading"),
   ).toBeInTheDocument();
-  await user.click(screen.getByRole("link", { name: "Calendar" }));
+  await user.click(screen.getByRole("link", { name: "Month" }));
   expect(
     screen.getByRole("button", { name: /Wednesday, 14 October 2026/ }),
   ).toHaveAttribute("aria-pressed", "true");

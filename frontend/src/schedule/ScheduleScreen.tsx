@@ -9,6 +9,7 @@ import { ActivityChoices } from "../events/ActivityFilters";
 import { selectionLabel } from "../events/filterSelection";
 import { ActivityPageHeader } from "../events/ActivityPageHeader";
 import "../events/activity.css";
+import { ScheduleNavigation } from "./ScheduleNavigation";
 import { ScheduleCalendar } from "./ScheduleCalendar";
 import { ScheduleActivityRow } from "./ScheduleActivityRow";
 import { TaskDialog } from "../components/TaskDialog";
@@ -63,7 +64,7 @@ function message(error: unknown): string {
   return "Florabase could not save this activity. Your entries are still here; try again.";
 }
 
-function ActivityDialog({
+export function ActivityDialog({
   dialog,
   busy,
   error,
@@ -574,7 +575,10 @@ export function ScheduleScreen() {
   const expire = useCallback(() => {
     auth.sessionExpired();
   }, [auth]);
-  const queryHash = scheduleHash({ ...state, date: "" });
+  const queryHash = scheduleHash({
+    ...state,
+    date: state.view === "calendar" ? "" : state.date,
+  });
   const key = JSON.stringify([queryHash, offset, attempt, day]);
   const current = result?.key === key ? result : null;
   const page = current?.page;
@@ -594,7 +598,13 @@ export function ScheduleScreen() {
     void (
       queryState.view === "calendar"
         ? listCalendar(queryState, c.signal)
-        : listSchedule(queryState, offset, 50, c.signal)
+        : listSchedule(
+            queryState,
+            offset,
+            50,
+            c.signal,
+            queryState.date || undefined,
+          )
     )
       .then((value) => {
         if (c.signal.aborted) return;
@@ -758,7 +768,7 @@ export function ScheduleScreen() {
             }
           }}
         >
-          {view === "list" ? "List" : "Calendar"}
+          {view === "list" ? "Agenda" : "Month"}
         </a>
       ))}
     </nav>
@@ -802,7 +812,12 @@ export function ScheduleScreen() {
                 className="schedule-create"
                 aria-label="Schedule activity"
                 onClick={() => {
-                  open("create");
+                  setDialog({
+                    action: "create",
+                    item: null,
+                    target: null,
+                    due: state.date || undefined,
+                  });
                 }}
               >
                 + Schedule activity
@@ -913,20 +928,42 @@ export function ScheduleScreen() {
       }
       chronology={
         <>
-          {state.view === "list" && (
-            <div className="schedule-view-heading">
-              <h3>
-                {page ? `${String(page.total)} activities` : "Activities"}
-              </h3>
-              <div className="schedule-view-controls">{viewSwitcher}</div>
-            </div>
+          <ScheduleNavigation
+            state={state}
+            today={projectionDay}
+            switcher={viewSwitcher}
+            onChange={update}
+          />
+          {page && page.overdue_count > 0 && (
+            <p className="schedule-attention">
+              <a
+                href={scheduleHash({
+                  ...state,
+                  view: "list",
+                  date: "",
+                  status: ["planned"],
+                  window: "overdue",
+                })}
+              >
+                {page.overdue_count} planned overdue activities in the
+                collection
+              </a>
+            </p>
           )}
+          {state.view === "list" && page && (
+            <p role="status">
+              {page.total} matching activities
+              {state.date ? ` on ${state.date}` : ""} · counts below refer to
+              this page
+            </p>
+          )}
+          {state.view === "list" && page && <h3>{page.total} activities</h3>}
           {notice && <p role="status">{notice}</p>}
           {state.view === "calendar" ? (
             <ScheduleCalendar
               key={state.month}
               state={state}
-              viewSwitcher={viewSwitcher}
+              navigation={<></>}
               page={page ?? null}
               error={loadError}
               today={projectionDay}

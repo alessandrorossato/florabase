@@ -1,0 +1,21 @@
+Verification base: 76c0911dbf7ca5dc5f64b1a8d1de8c57c676c70e
+Mode: full
+Changed scopes: documentation, schedule
+Affected scopes: activity, documentation, events-regression, locations-regression, plants-regression, schedule, security-regression, seeds-regression, sowings-regression
+FULL reason: unclassified path: frontend/activity-lab/index.html
+FULL reason: unclassified path: frontend/src/ui-pages/ScheduleUxPrototype/README.md
+FULL reason: unclassified path: frontend/src/ui-pages/ScheduleUxPrototype/ScheduleUxPrototype.test.tsx
+FULL reason: unclassified path: frontend/src/ui-pages/ScheduleUxPrototype/ScheduleUxPrototype.tsx
+FULL reason: unclassified path: frontend/src/ui-pages/ScheduleUxPrototype/fixtures.ts
+FULL reason: unclassified path: frontend/src/ui-pages/ScheduleUxPrototype/main.tsx
+FULL reason: unclassified path: frontend/src/ui-pages/ScheduleUxPrototype/model.ts
+FULL reason: unclassified path: frontend/src/ui-pages/ScheduleUxPrototype/mount.tsx
+FULL reason: unclassified path: frontend/src/ui-pages/ScheduleUxPrototype/prototype.css
+Backend: ALL
+Integration: ALL
+Frontend: ALL
+Workflow: test-workflow-helpers, test-feature-workflow, test-preview-workflow, test-environment-workflow, test-uat-preview, test-verification-impact, test-workflow-resources, workflow-check
+Static: feature-graph, whitespace, format-check, lint, typecheck, api-check
+Builds: backend, frontend
+Migration: full-cycle
+Remote PR CI: docs checks only / affected product skips workflow helpers; all product suites and both builds remain exhaustive; main is full

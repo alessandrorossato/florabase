@@ -2154,6 +2154,45 @@
       ],
       "priority": "P1",
       "status": "implemented"
+    },
+    {
+      "id": "ACTIVITY-CONCEPT-001",
+      "category": "ux",
+      "description": "Audit the actual Activity model, propose a recording-first Journal and differentiated History, and demonstrate an isolated date-only Schedule UX prototype",
+      "acceptance_criteria": [
+        "Implementation-derived audit distinguishes delivered Event, Journal, History, Schedule and media capabilities from new persistence, API and domain requirements",
+        "Journal journeys, conceptual wireframes, exact optional subjects, date precision, provenance, source retention, correction and explicitly reviewed promotion are proposed without implementing new Journal storage or APIs",
+        "History remains a compact read-only authoritative projection with source navigation, precision, search, canonical filters, Saved Views and stable pagination",
+        "Official Todoist, Notion Calendar and Sunsama references support a functional comparison and a botanical date-only adaptation without proprietary assets or invented time-based features",
+        "An isolated synthetic frontend prototype reuses existing Schedule controls and workflows, documents functional versus simulated behavior, and records targeted checks plus responsive and six-theme evidence",
+        "Operator decisions and a bounded implementation sequence preserve Wave 3 resources and shared primitives, with no canonical FULL, push, PR, merge or feature-finish"
+      ],
+      "dependencies": [
+        "ACTIVITY-001",
+        "SCHEDULE-001",
+        "HISTORY-001",
+        "UI-SYSTEM-WAVE2-001"
+      ],
+      "priority": "P1",
+      "status": "implemented"
+    },
+    {
+      "id": "SCHEDULE-UX-001",
+      "category": "ux",
+      "description": "Deliver approved Agenda and Month Schedule UX through existing authenticated date-only services",
+      "acceptance_criteria": [
+        "Agenda defaults to a stable server-paged continuous chronology, with exact selected-day server bounds and compact date navigation",
+        "Month uses the approved common navigation bar, exact date selection and bounded existing grid with responsive day inspection",
+        "Existing authenticated create, edit, reschedule, complete and cancel preserve eligibility, expected versions, terminal semantics and explicit occurrence creation",
+        "Canonical List/Calendar URLs, filters, browser history, exact target links, precision and pagination remain compatible; Week stays prototype-only",
+        "An independently isolated populated Review, real persistence and conflict smoke, focused Activity checks, responsive six-theme evidence and operator UAT support later canonical verification"
+      ],
+      "dependencies": [
+        "SCHEDULE-002",
+        "ACTIVITY-CONCEPT-001"
+      ],
+      "priority": "P1",
+      "status": "verified"
     }
   ]
 }
