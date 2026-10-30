@@ -6199,3 +6199,12 @@ Status remains implemented pending canonical verification.
   Month screenshots are historical and the evidence source manifest records the refinement.
   Browser reinspection was unavailable after the session reported an unavailable browser handle;
   no fresh graphical acceptance is claimed. No canonical FULL or delivery was run.
+
+### Activity prototype — final visual closure (2026-10-30)
+
+- Recovered the browser session and verified the annotated Month navigation at the operator's
+  840px viewport: Month uses the common period toolbar, Next month navigates forward and Today
+  restores October 2026. No horizontal overflow (825px document width / 840px viewport).
+  `docs/design/activity-concept/evidence/month-navigation-final.jpg` records the final result.
+  This resolves the preceding browser-inspection limitation. Scope remains concept/prototype review;
+  no canonical FULL, protected delivery or feature-finish is authorized or performed.
