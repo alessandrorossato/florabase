@@ -96,7 +96,7 @@ def _response(database: Session, seed_lot_id: UUID) -> SeedLotResponse:
 @router.get("", response_model=list[SeedLotResponse], operation_id="listSeedLots")
 def list_all(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> list[SeedLotResponse]:
     return responses(database, list_seed_lots(database))
 
@@ -111,7 +111,7 @@ def create(
     payload: SeedLotCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SeedLotResponse:
     require_owner(actor)
     try:
@@ -137,7 +137,7 @@ def create_sowing_transition(
     payload: SeedLotSowingTransitionCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SeedLotSowingTransitionResponse:
     require_owner(actor)
     try:
@@ -170,7 +170,7 @@ def create_sowing_transition(
 def read(
     seed_lot_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SeedLotResponse:
     return _response(database, seed_lot_id)
 
@@ -183,7 +183,7 @@ def read(
 def read_lineage(
     seed_lot_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> LineageResponse:
     _require_seed_lot(database, seed_lot_id)
     try:
@@ -197,7 +197,7 @@ def update(
     seed_lot_id: UUID,
     payload: SeedLotUpdate,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SeedLotResponse:
     require_owner(actor)
     projection = _require_seed_lot(database, seed_lot_id)

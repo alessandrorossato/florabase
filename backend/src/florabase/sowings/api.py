@@ -125,7 +125,7 @@ def _germination_conflict(error: GerminationConflictError) -> HTTPException:
 @router.get("", response_model=list[SowingResponse], operation_id="listSowings")
 def list_all(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> list[SowingResponse]:
     return responses(database, list_sowings(database))
 
@@ -140,7 +140,7 @@ def create(
     payload: SowingCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SowingResponse:
     require_owner(actor)
     try:
@@ -164,7 +164,7 @@ def create_plant_transition(
     payload: SowingPlantTransitionCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SowingPlantTransitionResponse:
     require_owner(actor)
     try:
@@ -203,7 +203,7 @@ def create_plant_group_transition(
     payload: SowingPlantGroupTransitionCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SowingPlantGroupTransitionResponse:
     require_owner(actor)
     try:
@@ -235,7 +235,7 @@ def create_plant_group_transition(
 def read(
     sowing_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SowingResponse:
     return _response(database, sowing_id)
 
@@ -248,7 +248,7 @@ def read(
 def read_germination(
     sowing_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SowingGerminationDetail:
     return _germination_detail(database, sowing_id)
 
@@ -263,7 +263,7 @@ def create_germination_observation(
     sowing_id: UUID,
     payload: GerminationObservationWrite,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SowingGerminationDetail:
     require_owner(actor)
     try:
@@ -284,7 +284,7 @@ def edit_germination_observation(
     observation_id: UUID,
     payload: GerminationObservationWrite,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SowingGerminationDetail:
     require_owner(actor)
     try:
@@ -304,7 +304,7 @@ def remove_germination_observation(
     sowing_id: UUID,
     observation_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SowingGerminationDetail:
     require_owner(actor)
     try:
@@ -323,7 +323,7 @@ def remove_germination_observation(
 def read_propagation_summary(
     sowing_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SowingPropagationSummary:
     try:
         return propagation_summary(database, sowing_id)
@@ -338,7 +338,7 @@ def update(
     sowing_id: UUID,
     payload: SowingUpdate,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SowingResponse:
     require_owner(actor)
     projection = _require_sowing(database, sowing_id)

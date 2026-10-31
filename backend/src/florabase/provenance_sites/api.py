@@ -64,7 +64,7 @@ def _conflict(error: ProvenanceSiteError) -> HTTPException:
 @router.get("", response_model=list[ProvenanceSiteResponse], operation_id="listProvenanceSites")
 def list_all(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> list[ProvenanceSiteResponse]:
     return responses(database, list_provenance_sites(database))
 
@@ -79,7 +79,7 @@ def create(
     payload: ProvenanceSiteCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> ProvenanceSiteResponse:
     require_owner(actor)
     try:
@@ -97,7 +97,7 @@ def create(
 )
 def read_map(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> ProvenanceMapResponse:
     return collection_provenance_map(database)
 
@@ -106,7 +106,7 @@ def read_map(
 def read(
     site_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> ProvenanceSiteResponse:
     return _response(database, _require(database, site_id))
 
@@ -118,7 +118,7 @@ def update(
     site_id: UUID,
     payload: ProvenanceSiteUpdate,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> ProvenanceSiteResponse:
     require_owner(actor)
     try:
@@ -135,7 +135,7 @@ def update(
 def delete(
     site_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> Response:
     require_owner(actor)
     try:

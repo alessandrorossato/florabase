@@ -15,7 +15,7 @@ router = APIRouter(prefix="/dashboard", tags=["collection"])
 @router.get("", response_model=DashboardResponse, operation_id="getDashboard")
 def read_dashboard(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     today: Annotated[
         CalendarDay | None, Query(description="Browser local calendar day; defaults to UTC.")
     ] = None,

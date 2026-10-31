@@ -73,7 +73,7 @@ def _location_response(
 @router.get("", response_model=list[LocationResponse], operation_id="listLocations")
 def list_all(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> list[LocationResponse]:
     locations = list_locations(database)
     usage = location_usage_aggregation(database)
@@ -96,7 +96,7 @@ def create(
     payload: LocationCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> LocationResponse:
     require_owner(actor)
     try:
@@ -111,7 +111,7 @@ def create(
 def read(
     location_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> LocationResponse:
     return _response(database, _require_location(database, location_id))
 
@@ -121,7 +121,7 @@ def update(
     location_id: UUID,
     payload: LocationUpdate,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> LocationResponse:
     require_owner(actor)
     try:
@@ -141,7 +141,7 @@ def update(
 def delete(
     location_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> Response:
     require_owner(actor)
     try:
@@ -169,7 +169,7 @@ def _set_retired(database: Session, location_id: UUID, *, retired: bool) -> Loca
 def retire(
     location_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> LocationResponse:
     require_owner(actor)
     return _set_retired(database, location_id, retired=True)
@@ -183,7 +183,7 @@ def retire(
 def reactivate(
     location_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> LocationResponse:
     require_owner(actor)
     return _set_retired(database, location_id, retired=False)

@@ -31,7 +31,7 @@ from florabase.schedule.schemas import (
 )
 
 router = APIRouter(prefix="/schedule", tags=["schedule"])
-Database = Annotated[Session, Depends(get_database_session)]
+Database = Annotated[Session, Depends(get_database_session, scope="function")]
 Reader = Annotated[AuthenticatedActor, Depends(require_authenticated_actor)]
 Writer = Annotated[AuthenticatedActor, Depends(require_csrf)]
 Day = Annotated[

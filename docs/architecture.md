@@ -60,6 +60,16 @@ Alembic is the only schema-change path, and migrations run explicitly rather tha
 startup. Application-generated UUIDv7 identifiers and UTC timestamps follow
 [ADR 0004](decisions/0004-identifier-strategy.md).
 
+Each HTTP request owns one SQLAlchemy Session from `get_database_session`, always declared as
+`Depends(get_database_session, scope="function")`. Function scope commits after the endpoint and
+response serialization but before the response is sent, so a 2xx is never observable before its
+transaction commits and a commit failure becomes an error response; exceptions roll back. FastAPI's
+default request scope would commit after the response and, if mixed, give one request two sessions,
+so a route-tree test rejects any other declaration. Endpoints may still commit explicitly when they
+need an intermediate durable step (login throttling, Harvest aggregates, media/attachment storage
+phases); the final dependency commit then covers only remaining work. Responses must not need the
+Session after serialization (TX-001).
+
 ## API and generated types
 
 All application routes are under `/api/v1`. The backend generates committed `backend/openapi.json`;

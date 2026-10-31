@@ -45,7 +45,7 @@ from florabase.media.schemas import (
 )
 
 router = APIRouter(tags=["media library"])
-Database = Annotated[Session, Depends(get_database_session)]
+Database = Annotated[Session, Depends(get_database_session, scope="function")]
 Storage = Annotated[AttachmentStorage, Depends(get_attachment_storage)]
 Reader = Annotated[AuthenticatedActor, Depends(require_authenticated_actor)]
 Writer = Annotated[AuthenticatedActor, Depends(require_csrf)]

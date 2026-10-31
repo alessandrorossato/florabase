@@ -48,7 +48,7 @@ def _require_supplier(database: Session, supplier_id: UUID) -> Supplier:
 @router.get("", response_model=list[SupplierListResponse], operation_id="listSuppliers")
 def list_all(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> list[SupplierListResponse]:
     return list_suppliers(database)
 
@@ -63,7 +63,7 @@ def create(
     payload: SupplierCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SupplierResponse:
     require_owner(actor)
     supplier = create_supplier(database, payload)
@@ -75,7 +75,7 @@ def create(
 def read(
     supplier_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SupplierDetailResponse:
     return get_supplier_detail(database, _require_supplier(database, supplier_id))
 
@@ -85,7 +85,7 @@ def update(
     supplier_id: UUID,
     payload: SupplierUpdate,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SupplierResponse:
     require_owner(actor)
     return SupplierResponse.from_model(
@@ -101,7 +101,7 @@ def update(
 def retire(
     supplier_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SupplierResponse:
     require_owner(actor)
     return SupplierResponse.from_model(
@@ -117,7 +117,7 @@ def retire(
 def reactivate(
     supplier_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SupplierResponse:
     require_owner(actor)
     return SupplierResponse.from_model(

@@ -42,7 +42,7 @@ def require_origin(request: Request, settings: Settings) -> None:
 
 def require_authenticated_actor(
     request: Request,
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> AuthenticatedActor:
     raw_token = request.cookies.get(session_cookie_name(settings))

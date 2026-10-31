@@ -27,6 +27,26 @@
 
 # Engineering progress
 
+## 2026-10-31 — TX-001 commit before HTTP success (candidate for independent QA)
+
+- Root cause: every route declared `Depends(get_database_session)` with FastAPI 0.143.0's default
+  request scope, whose exit stack closes only after `await response(...)`; its `session.commit()`
+  therefore ran after the full 2xx was sent. Exceptions were already rolled back in both scopes.
+- Reproduced on unmodified `fbce3c4` over real uvicorn HTTP: with a 2 s commit delay the client
+  received 201 before COMMIT began and a separate connection could not see the row; an injected
+  commit failure still returned 201 with the new id while persisting nothing. Login's AuthSession
+  commit likewise landed after the client held the cookie.
+- Fix: all 132 declarations use `scope="function"` (commit after endpoint and serialization, before
+  send). No endpoint, service, schema, migration or OpenAPI change; generated OpenAPI is identical.
+  A route-tree test requires one function-scoped session per request; ASGI probes check ordering.
+- Nine real-commit PostgreSQL HTTP regressions cover visibility, commit failure → 500, rollback
+  after flush, Schedule/SeedLot, explicit-commit Harvest and failed login, login/CSRF/logout; four
+  fail on the original source. Each restores all 38 ORM table counts.
+- Focused evidence used PostgreSQL 16.15 (no Docker/PostgreSQL 18 available): backend unit
+  981 passed/1 skipped (90.07%); integration 771 passed/1 skipped, the only failure the
+  PostgreSQL-18 version assertion; Ruff, strict mypy and OpenAPI drift passed. The impact plan
+  selects FULL; canonical FULL and independent QA are pending. No push, PR or merge.
+
 ## 2026-10-30 — SCHEDULE-UX-001 operator UAT and independent QA
 
 - Operator reports all six Schedule UX UAT scenarios passed and explicitly authorizes independent

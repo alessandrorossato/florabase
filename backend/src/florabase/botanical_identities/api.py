@@ -50,7 +50,7 @@ def _conflict_detail(existing_id: UUID | None) -> dict[str, str | None]:
 )
 def list_all(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> list[BotanicalIdentityResponse]:
     return [
         BotanicalIdentityResponse.from_model(
@@ -91,7 +91,7 @@ def create(
     payload: BotanicalIdentityCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> BotanicalIdentityResponse:
     require_owner(actor)
     try:
@@ -117,7 +117,7 @@ def create(
 def read(
     botanical_identity_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> BotanicalIdentityResponse:
     botanical_identity = get_botanical_identity(database, botanical_identity_id)
     if botanical_identity is None:
@@ -139,7 +139,7 @@ def read(
 def read_collection(
     botanical_identity_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> BotanicalIdentityCollectionResponse:
     result = botanical_identity_collection(database, botanical_identity_id)
     if result is None:
@@ -162,7 +162,7 @@ def update(
     botanical_identity_id: UUID,
     payload: BotanicalIdentityUpdate,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> BotanicalIdentityResponse:
     require_owner(actor)
     botanical_identity = get_botanical_identity(database, botanical_identity_id)
@@ -192,7 +192,7 @@ def update(
 def delete(
     botanical_identity_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> Response:
     require_owner(actor)
     botanical_identity = get_botanical_identity(database, botanical_identity_id)

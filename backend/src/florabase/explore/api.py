@@ -20,7 +20,7 @@ from florabase.explore.schemas import (
 )
 
 router = APIRouter(prefix="/explore", tags=["explore"])
-Database = Annotated[Session, Depends(get_database_session)]
+Database = Annotated[Session, Depends(get_database_session, scope="function")]
 Reader = Annotated[AuthenticatedActor, Depends(require_authenticated_actor)]
 
 
