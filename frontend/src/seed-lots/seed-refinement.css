@@ -2,6 +2,10 @@
 .app-content .seeds-workspace .seed-master-detail {
   margin-top: var(--space-3);
 }
+.app-content .seeds-workspace .seed-detail-empty {
+  min-block-size: 13rem;
+  align-content: start;
+}
 .app-content .seeds-workspace .operational-layout .collection-form {
   max-width: 60rem;
   padding: var(--space-4) var(--space-6);

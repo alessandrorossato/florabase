@@ -1,3 +1,10 @@
+import { DirectoryInspectorPlaceholder } from "../components/DirectoryPage";
+import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { DirectoryWorkspace } from "../components/DirectoryPage";
+import {
+  DirectoryRecordContent,
+  DirectoryTrigger,
+} from "../components/DirectoryPage";
 import {
   DirectoryInspector,
   DirectoryRecordActions,
@@ -197,8 +204,13 @@ export function HarvestScreen({
         .toLocaleLowerCase()
         .includes(query.trim().toLocaleLowerCase()),
   );
+  const matching = filtered ?? [];
+  const pageFilterKey = JSON.stringify([query, identity, type, material]);
+
+  const pagination = useDirectoryPagination(matching, pageFilterKey);
+  const { visible: pageRecords } = pagination;
   useCollectionPageReturnFocus(Boolean(records) && !creating && !initialId);
-  const selected = filtered?.find((record) => record.id === selectedId);
+  const selected = matching.find((record) => record.id === selectedId);
   const [backgroundId, setBackgroundId] = useState<string | undefined>(
     undefined,
   );
@@ -321,150 +333,6 @@ export function HarvestScreen({
         titleId={headingId}
         description="Harvests from your collection."
         contextOnly={Boolean(displayId)}
-        actions={
-          storedMode && (
-            <button
-              type="button"
-              onClick={() => {
-                openEditor("new");
-              }}
-            >
-              Record harvest
-            </button>
-          )
-        }
-        tools={
-          !displayId &&
-          !storedMode && (
-            <DirectoryTools
-              context={
-                identity ? (
-                  <a href={`#/identities/${identity}?tab=overview`}>
-                    Return to botanical identity
-                  </a>
-                ) : undefined
-              }
-              onReset={() => {
-                view.replace({
-                  ...view.state,
-                  material: "",
-                  source_type: "",
-                  identity_id: "",
-                });
-              }}
-              name="Harvests"
-              search={
-                <DirectorySearch
-                  hideLabel
-                  id={`${headingId}-search`}
-                  label="Search Harvests"
-                  value={query}
-                  onChange={setQuery}
-                  placeholder="Source, title or botanical identity"
-                />
-              }
-              savedViews={
-                <SavedViews
-                  presentation="dialog"
-                  surface="harvests"
-                  state={view.savedState}
-                />
-              }
-              actions={
-                !displayId && (
-                  <button
-                    type="button"
-                    data-collection-return="create"
-                    onClick={() => {
-                      openEditor("new");
-                    }}
-                  >
-                    Record harvest
-                  </button>
-                )
-              }
-              filters={
-                <>
-                  <BotanicalIdentityFilter
-                    choices={identities}
-                    value={identity}
-                    onChange={setIdentity}
-                  />
-                  <div className="field">
-                    <label htmlFor={`${headingId}-material`}>Material</label>
-                    <select
-                      id={`${headingId}-material`}
-                      value={material}
-                      onChange={(event) => {
-                        setMaterial(event.currentTarget.value);
-                      }}
-                    >
-                      <option value="">All materials</option>
-                      {materials.map((item) => (
-                        <option key={item.id} value={item.id}>
-                          {item.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="field">
-                    <label htmlFor={`${headingId}-type`}>Source type</label>
-                    <select
-                      id={`${headingId}-type`}
-                      value={type}
-                      onChange={(event) => {
-                        setType(event.currentTarget.value);
-                      }}
-                    >
-                      <option value="">All sources</option>
-                      <option value="plant">Plant</option>
-                      <option value="plant_group">Plant group</option>
-                    </select>
-                  </div>
-                </>
-              }
-              activeFilters={[
-                ...(identity
-                  ? [
-                      {
-                        label: "Botanical identity",
-                        value:
-                          identities.find((item) => item.id === identity)
-                            ?.label ?? "Selected identity",
-                        onRemove: () => {
-                          setIdentity("");
-                        },
-                      },
-                    ]
-                  : []),
-                ...(material
-                  ? [
-                      {
-                        label: "Material",
-                        value:
-                          materials.find((item) => item.id === material)
-                            ?.label ?? material,
-                        onRemove: () => {
-                          setMaterial("");
-                        },
-                      },
-                    ]
-                  : []),
-                ...(type
-                  ? [
-                      {
-                        label: "Source type",
-                        value: type === "plant" ? "Plant" : "Plant group",
-                        onRemove: () => {
-                          setType("");
-                        },
-                      },
-                    ]
-                  : []),
-              ]}
-            />
-          )
-        }
       />
       {!displayId && (
         <nav className="workspace-view-nav" aria-label="Harvest views">
@@ -488,6 +356,136 @@ export function HarvestScreen({
           </button>
         </nav>
       )}
+      {!displayId && !storedMode && (
+        <DirectoryTools
+          context={
+            identity ? (
+              <a href={`#/identities/${identity}?tab=overview`}>
+                Return to botanical identity
+              </a>
+            ) : undefined
+          }
+          onReset={() => {
+            view.replace({
+              ...view.state,
+              material: "",
+              source_type: "",
+              identity_id: "",
+            });
+          }}
+          name="Harvests"
+          search={
+            <DirectorySearch
+              hideLabel
+              id={`${headingId}-search`}
+              label="Search Harvests"
+              value={query}
+              onChange={setQuery}
+              placeholder="Source, title or botanical identity"
+            />
+          }
+          savedViews={
+            <SavedViews
+              presentation="dialog"
+              surface="harvests"
+              state={view.savedState}
+            />
+          }
+          actions={
+            !displayId && (
+              <button
+                type="button"
+                data-collection-return="create"
+                onClick={() => {
+                  openEditor("new");
+                }}
+              >
+                Record harvest
+              </button>
+            )
+          }
+          filters={
+            <>
+              <BotanicalIdentityFilter
+                choices={identities}
+                value={identity}
+                onChange={setIdentity}
+              />
+              <div className="field">
+                <label htmlFor={`${headingId}-material`}>Material</label>
+                <select
+                  id={`${headingId}-material`}
+                  value={material}
+                  onChange={(event) => {
+                    setMaterial(event.currentTarget.value);
+                  }}
+                >
+                  <option value="">All materials</option>
+                  {materials.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor={`${headingId}-type`}>Source type</label>
+                <select
+                  id={`${headingId}-type`}
+                  value={type}
+                  onChange={(event) => {
+                    setType(event.currentTarget.value);
+                  }}
+                >
+                  <option value="">All sources</option>
+                  <option value="plant">Plant</option>
+                  <option value="plant_group">Plant group</option>
+                </select>
+              </div>
+            </>
+          }
+          activeFilters={[
+            ...(identity
+              ? [
+                  {
+                    label: "Botanical identity",
+                    value:
+                      identities.find((item) => item.id === identity)?.label ??
+                      "Selected identity",
+                    onRemove: () => {
+                      setIdentity("");
+                    },
+                  },
+                ]
+              : []),
+            ...(material
+              ? [
+                  {
+                    label: "Material",
+                    value:
+                      materials.find((item) => item.id === material)?.label ??
+                      material,
+                    onRemove: () => {
+                      setMaterial("");
+                    },
+                  },
+                ]
+              : []),
+            ...(type
+              ? [
+                  {
+                    label: "Source type",
+                    value: type === "plant" ? "Plant" : "Plant group",
+                    onRemove: () => {
+                      setType("");
+                    },
+                  },
+                ]
+              : []),
+          ]}
+        />
+      )}
+
       {error && (
         <div className="notice notice--error" role="alert">
           <p>{error}</p>
@@ -644,15 +642,31 @@ export function HarvestScreen({
           !error && <p role="status">Loading Harvest detail…</p>
         )
       ) : storedMode ? (
-        <StoredMaterialDirectory />
+        <StoredMaterialDirectory
+          actions={
+            <ActionButton
+              icon="add"
+              data-collection-return="create"
+              onClick={() => {
+                openEditor("new");
+              }}
+            >
+              Record harvest
+            </ActionButton>
+          }
+        />
       ) : (
         <>
           {!records && !error && <p role="status">Loading Harvests…</p>}
           {filtered && (
-            <div className="harvest-directory-layout">
+            <DirectoryWorkspace>
+              <DirectoryResults
+                count={matching.length}
+                total={records?.length ?? 0}
+                pagination={matching.length > 0 ? pagination : undefined}
+              />
               <div className="harvest-directory-results">
-                <DirectoryResults count={filtered.length} />
-                {filtered.length === 0 ? (
+                {matching.length === 0 ? (
                   <p className="empty-state">
                     {identity || records?.length
                       ? "No Harvests match these filters."
@@ -662,24 +676,28 @@ export function HarvestScreen({
                   <ul
                     ref={directoryList}
                     tabIndex={0}
-                    className="harvest-directory"
+                    className="harvest-directory ui-directory-records ui-directory-records--list"
                     aria-label="Harvest directory"
                   >
-                    {filtered.map((record) => (
-                      <li key={record.id} className="harvest-action-row">
-                        <button
+                    {pageRecords.map((record) => (
+                      <li
+                        key={record.id}
+                        className="ui-directory-row ui-directory-row--composed"
+                        data-selected={record.id === selectedId || undefined}
+                      >
+                        <DirectoryTrigger
                           type="button"
-                          className={`harvest-directory-row${record.id === selectedId ? " is-selected" : ""}`}
+
                           aria-pressed={record.id === selectedId}
                           onClick={(event) => {
                             previewTrigger.current = event.currentTarget;
                             setSelectedId(record.id);
                           }}
                         >
-                          <Visual harvest={record} />
-                          <span className="harvest-row-content">
-                            <strong>{record.display_title}</strong>
-                            <small className="harvest-row-botanical">
+                          <DirectoryRecordContent
+                            visual={<Visual harvest={record} />}
+                            name={record.display_title}
+                            secondary={
                               <BotanicalName
                                 label={
                                   record.source.botanical_identity.display_label
@@ -690,16 +708,21 @@ export function HarvestScreen({
                                   )?.scientific_name
                                 }
                               />
-                            </small>
-                          </span>
-                          <span className="harvest-row-meta">
-                            <time>{formatPartialDate(record.occurred_on)}</time>
-                            <small>{directoryMaterialSummary(record)}</small>
-                          </span>
-                        </button>
+                            }
+                            summary={
+                              <>
+                                <time>
+                                  {formatPartialDate(record.occurred_on)}
+                                </time>
+                                <small>
+                                  {directoryMaterialSummary(record)}
+                                </small>
+                              </>
+                            }
+                          />
+                        </DirectoryTrigger>
                         <DirectoryRecordActions
                           label={record.display_title}
-
                           onDetails={() => {
                             setRecordRoute(`#/harvests/${record.id}`);
                           }}
@@ -770,8 +793,12 @@ export function HarvestScreen({
                     </div>
                   </QuickPreview>
                 </DirectoryInspector>
+              ) : matching.length > 0 ? (
+                <DirectoryInspectorPlaceholder title="Select a Harvest">
+                  Choose a Harvest row to preview its details.
+                </DirectoryInspectorPlaceholder>
               ) : null}
-            </div>
+            </DirectoryWorkspace>
           )}
         </>
       )}

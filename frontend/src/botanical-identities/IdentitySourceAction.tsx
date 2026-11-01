@@ -7,6 +7,8 @@ import {
 } from "../collection/api";
 import { TaskDialog } from "../components/TaskDialog";
 import { openCollectionPage } from "../components/recordNavigation";
+import { IconButton } from "../components/Action";
+import type { IconName } from "../components/Icon";
 
 /** Source choices use the same eligibility as the existing Sowing and Harvest forms. */
 export function IdentitySourceAction({
@@ -14,11 +16,15 @@ export function IdentitySourceAction({
   kind,
   dialogOnly = false,
   onDismiss,
+  triggerIcon,
+  triggerLabel,
 }: {
   identityId: string;
   kind: "sowing" | "harvest";
   dialogOnly?: boolean;
   onDismiss?: () => void;
+  triggerIcon?: IconName;
+  triggerLabel?: string;
 }) {
   const auth = useAuth();
   const [open, setOpen] = useState(dialogOnly);
@@ -88,18 +94,30 @@ export function IdentitySourceAction({
   }
   return (
     <>
-      {!dialogOnly && (
-        <button
-          type="button"
-          className="button--secondary"
-          onClick={() => {
-            setLoad({ status: "loading" });
-            setOpen(true);
-          }}
-        >
-          {title}
-        </button>
-      )}
+      {!dialogOnly &&
+        (triggerIcon ? (
+          <IconButton
+            icon={triggerIcon}
+            label={triggerLabel ?? title}
+            tooltip={title}
+            className="ui-directory-quick-action"
+            onClick={() => {
+              setLoad({ status: "loading" });
+              setOpen(true);
+            }}
+          />
+        ) : (
+          <button
+            type="button"
+            className="button--secondary"
+            onClick={() => {
+              setLoad({ status: "loading" });
+              setOpen(true);
+            }}
+          >
+            {title}
+          </button>
+        ))}
       {open && (
         <TaskDialog
           title={title}

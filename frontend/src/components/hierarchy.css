@@ -1,0 +1,51 @@
+/* Same recursive branch presentation as Geography management, with Location-owned facts. */
+.app-content .ui-hierarchy-workspace .location-tree {
+  gap: var(--space-2);
+}
+.app-content .ui-hierarchy-workspace .location-tree .ui-hierarchy-record {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+  padding: var(--space-2) var(--space-3);
+}
+.app-content .ui-hierarchy-workspace .location-tree-toggle {
+  border: 0;
+  border-radius: var(--radius-small);
+  background: transparent;
+  display: grid;
+  place-items: center;
+}
+.ui-hierarchy-workspace .location-tree-toggle svg {
+  width: 1rem;
+  height: 1rem;
+}
+.ui-hierarchy-workspace .location-tree-toggle[aria-expanded="false"] svg {
+  transform: rotate(-90deg);
+}
+
+/* Family B keeps the branch explorer and inspector together at every width. */
+.app-content .ui-hierarchy-workspace > .reference-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(18rem, 30%, 25rem);
+  gap: var(--space-4);
+  align-items: start;
+}
+.app-content .ui-hierarchy-workspace > .reference-split > .quick-preview {
+  display: block;
+  position: sticky;
+  top: 0;
+  max-height: 70dvh;
+  overflow: auto;
+}
+@media (max-width: 64rem) {
+  .app-content .ui-hierarchy-workspace > .reference-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-content .ui-hierarchy-workspace > .reference-split > .directory-column {
+    grid-row: 2;
+  }
+  .app-content .ui-hierarchy-workspace > .reference-split > .quick-preview {
+    grid-row: 1;
+    position: static;
+    max-height: 25dvh;
+  }
+}

@@ -137,7 +137,7 @@ test("directory hierarchy renders configured covers and shares them with Quick P
   const card = await screen.findByRole(
     "button",
     {
-      name: /Abelmoschus.*Okra Burgundy/,
+      name: /^Quick preview Abelmoschus.*Okra Burgundy/,
     },
     { timeout: 3000 },
   );
@@ -149,10 +149,14 @@ test("directory hierarchy renders configured covers and shares them with Quick P
     "src",
     `/api/v1/botanical-identities/${identity.id}/cover-image/thumbnail`,
   );
-  const noCover = screen.getByRole("button", { name: /Acer rubrum/ });
+  const noCover = screen.getByRole("button", {
+    name: /^Quick preview Acer rubrum/,
+  });
   expect(within(noCover).getByText("No cover image")).toBeInTheDocument();
   expect(within(noCover).queryByRole("img")).not.toBeInTheDocument();
-  const externalCard = screen.getByRole("button", { name: /Acer palmatum/ });
+  const externalCard = screen.getByRole("button", {
+    name: /^Quick preview Acer palmatum/,
+  });
   const directoryExternalImage = within(externalCard).getByRole("img");
   expect(directoryExternalImage).toHaveAttribute(
     "src",
@@ -179,7 +183,9 @@ test("directory hierarchy renders configured covers and shares them with Quick P
     within(preview).getByLabelText("Active collection records"),
   ).toHaveTextContent("Seed lots1Sowings1Plants2Plant groups0");
   expect(within(preview).queryByRole("tablist")).not.toBeInTheDocument();
-  await user.click(screen.getByRole("button", { name: /Acer palmatum/ }));
+  await user.click(
+    screen.getByRole("button", { name: /^Quick preview Acer palmatum/ }),
+  );
   const externalImage = await within(preview).findByRole("img", {
     name: "Cover for Acer palmatum",
   });
@@ -204,7 +210,9 @@ test("open details, browser back and forward preserve the directory and dedicate
   const user = userEvent.setup();
   render(<App />);
   await user.click(
-    await screen.findByRole("button", { name: /Abelmoschus.*Okra Burgundy/ }),
+    await screen.findByRole("button", {
+      name: /^Quick preview Abelmoschus.*Okra Burgundy/,
+    }),
   );
   await user.click(screen.getByRole("link", { name: "Open details" }));
   const title = await screen.findByRole("heading", {
@@ -226,7 +234,7 @@ test("open details, browser back and forward preserve the directory and dedicate
     window.history.back();
   });
   const card = await screen.findByRole("button", {
-    name: /Abelmoschus.*Okra Burgundy/,
+    name: /^Quick preview Abelmoschus.*Okra Burgundy/,
   });
   expect(card).toHaveAttribute("aria-pressed", "true");
   expect(card).toHaveFocus();
@@ -246,10 +254,12 @@ test("mobile card activation exposes Quick Preview before explicit detail naviga
   const user = userEvent.setup();
   render(<App />);
   await user.click(
-    await screen.findByRole("button", { name: /Abelmoschus.*Okra Burgundy/ }),
+    await screen.findByRole("button", {
+      name: /^Quick preview Abelmoschus.*Okra Burgundy/,
+    }),
   );
-  const preview = await screen.findByRole("dialog", {
-    name: "Botanical identity preview",
+  const preview = await screen.findByRole("complementary", {
+    name: "Botanical identity inspection",
   });
   expect(
     within(preview).getByRole("button", { name: "Start sowing" }),
@@ -447,7 +457,7 @@ test("broken thumbnails have an intentional local fallback", async () => {
   setup();
   render(<App />);
   const card = await screen.findByRole("button", {
-    name: /Abelmoschus.*Okra Burgundy/,
+    name: /^Quick preview Abelmoschus.*Okra Burgundy/,
   });
   fireEvent.error(within(card).getByRole("img"));
   expect(within(card).queryByRole("img")).not.toBeInTheDocument();
@@ -457,7 +467,9 @@ test("broken thumbnails have an intentional local fallback", async () => {
 test("broken configured external covers fall back inside their directory card", async () => {
   setup();
   render(<App />);
-  const card = await screen.findByRole("button", { name: /Acer palmatum/ });
+  const card = await screen.findByRole("button", {
+    name: /^Quick preview Acer palmatum/,
+  });
   fireEvent.error(within(card).getByRole("img"));
   expect(within(card).queryByRole("img")).not.toBeInTheDocument();
   expect(within(card).getByText("Cover unavailable")).toBeInTheDocument();
@@ -525,7 +537,9 @@ test("Identity Quick Preview Add plant opens the normal direct Plant form with i
   const user = userEvent.setup();
   render(<App />);
   await user.click(
-    await screen.findByRole("button", { name: /Abelmoschus.*Okra Burgundy/ }),
+    await screen.findByRole("button", {
+      name: /^Quick preview Abelmoschus.*Okra Burgundy/,
+    }),
   );
   const action = within(
     screen.getByRole("complementary", { name: "Quick preview" }),

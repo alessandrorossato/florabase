@@ -6145,6 +6145,7 @@ Status remains implemented pending canonical verification.
   browser/theme/viewport/zoom/device/AT acceptance, commit, push, PR or merge.
   UI-SYSTEM-001 remains in_progress. See
   [Batch 1 handoff and UAT checklist](design/ui-system-v1/wave3/README.md).
+
 ## 2026-10-29 — UI System v1 Wave 2 ready for operator UAT
 
 - Verified clean primary `main` and freshly fetched `origin/main` at `afcfbab` (Wave 1 PR #129).
@@ -6267,7 +6268,6 @@ Status remains implemented pending canonical verification.
   feature-finish, additional Docker mutation beyond the authorized Review setup and
   fixture seed, or resource cleanup was performed.
 
-
 ### UI-SYSTEM-001 — Wave 3 final operator refinement candidate (2026-10-30)
 
 - Operator has **not accepted** Wave 3 and requested card/photo/preview/hierarchy
@@ -6320,7 +6320,6 @@ Status remains implemented pending canonical verification.
 - Updated [operator checklist and refinement handoff](design/ui-system-v1/wave3/README.md),
   UI contract and Gate B preview guidance. Operator review/acceptance is pending.
   No commit, push, PR, merge or feature-finish in this refinement pass.
-
 
 ### 2026-10-30 — UI System v1 global directory refinement (operator review pending)
 
@@ -6423,6 +6422,27 @@ Status remains implemented pending canonical verification.
   supplements that result; no backend/API change. Updated evidence/UAT notes.
 - No FULL, commit, push, PR, merge or cleanup. Operator acceptance remains pending;
   actual device, zoom and screen-reader limits remain as previously documented.
+
+### 2026-10-30 — Directory quick actions and Carbon pagination follow-up
+
+- Added an explicit Preview icon beside Details/Edit in shared Collection/Sourcing
+  directory actions while retaining row/card Quick Preview. Stored Material now has
+  a nonmodal inspector with Escape/Close focus return and an exact Harvest inventory
+  destination. Preview action names are distinct from record-surface names for assistive
+  technology. Sowings gallery actions use the existing shared bottom-aligned layout.
+- Adopted shared compact Carbon pagination for Harvests, Stored Material, Suppliers,
+  Orders and Botanical identities: 20 by default, 50/100/All, matching/total/range,
+  and filter/size page reset. Orders keep server pagination, with All loading all API
+  pages; bulk semantics remain displayed-page-only. Saved Views, domain filters and
+  navigation contracts remain unchanged.
+- Focused regressions: **257/257** across 10 suites, including Seeds/Plants/Sowings
+  shared-action coverage and Stored Material preview dismissal/focus. Strict TypeScript
+  and zero-warning affected ESLint passed; Prettier, the 123-feature graph and
+  `git diff --check` pass. No canonical FULL or Review environment change was made.
+- Live browser capture was unavailable in the current session, so the annotated
+  1317×900 screenshots remain the visual reference, not new before/after evidence.
+  Responsive browser/device, actual zoom and screen-reader checks remain for operator
+  review. No push, PR, merge or feature-finish.
 
 ## 2026-10-30 — Activity concept and isolated Schedule UX review
 
@@ -6549,3 +6569,87 @@ Status remains implemented pending canonical verification.
   verify pagination and multi-select; verify Sowings lifecycle and germination semantics; repeat at
   1440/1024/390 and supported themes on operator's responsive test setup. No FULL, push, PR, merge or
   feature-finish was run. Acceptance remains pending.
+
+### 2026-10-30 — Directory annotation follow-up
+
+- Removed redundant eye Preview controls from directory action groups while preserving
+  record-surface Quick Preview and direct Details/Edit. Kept domain operations visible
+  in their place: Start sowing for eligible SeedLots and Create Plant/Germination for
+  eligible Sowings, without duplicating operations already shown in the open inspector.
+- Added idle inspector guidance for Suppliers, Orders and Harvests; adjusted desktop
+  inspector alignment below pagination and the Stored Material/Harvest workspace height
+  so the results area can scroll instead of clipping lower content. Supplier status now
+  uses a text label. Botanical Identity Quick Preview retains its common name in the
+  accessible name.
+- Focused Collection regression: **180/180** across 7 files. Expanded integration
+  regression: **316/316** across 10 files, including App, UI Lab and Propagation. The
+  complete frontend suite then passed **1095/1095** across **100** files. Strict
+  TypeScript, full frontend ESLint, changed-file Prettier, 123-feature validation and
+  `git diff --check` pass.
+- No live browser comparison, updated visual evidence, Review refresh, FULL, commit,
+  push, PR or merge was performed. Operator visual review remains necessary for row
+  action balance, inspector sizing and the annotated Stored Material viewport; device,
+  zoom and assistive-technology verification remain open.
+
+### 2026-10-30 — Directory annotation corrections
+
+- Restored SeedLot Start sowing on selected and unselected active rows as a stylized,
+  labelled icon action. Sowings Create Plant and Germination use the same icon-only
+  treatment and remain directly operable alongside Details/Edit.
+- Put Seeds, Sowings and Harvests pagination in a full-width directory grid row above
+  both the results and inspector. Added an idle Harvest inspector, kept preview aligned
+  with the first row, and corrected Stored Material toolbar sizing and stable filter-chip
+  space. Botanical Identity now pages consistently, aligns its Quick Preview with the
+  list and provides contextual row actions for Add seed lot, Add plant, Start sowing and
+  Record harvest.
+- Fixed selected-filter chip dimensions to prevent clipped borders. The first targeted
+  run found tests querying identity cards by a partial species name also matched the new
+  contextual action names; updated those selectors to target Quick Preview explicitly.
+- Regression passed: **389/389** tests across 13 files, including App, UX-001/004,
+  Seeds, Sowings, Plants, Harvests, Stored Material, Botanical Identity actions, shared
+  DirectoryPage, Suppliers, Orders and UI Lab. The formerly failing App/UX-004 pair now
+  passes **130/130**. Affected-file ESLint, TypeScript, changed-source Prettier,
+  123-feature validation and `git diff --check` pass.
+- The existing Review tab was read only; it still shows the pre-refresh Harvest screen.
+  No Review refresh, responsive screenshot set, FULL, commit, push, PR or merge was
+  performed. Live visual confirmation of these corrections at 1440/1024/390 and across
+  themes remains outstanding; operator acceptance is pending.
+
+### 2026-10-31 — UI System v1 same-family consolidation candidate
+
+- Preserved feature HEAD `4b8c038f2373c37c5645125b22c06f019698b66b`, Batch 1 and the clean
+  independent-QA checkpoint `d09fd86118ecc9a17a9aef27e099d8a182ae073d` (already an ancestor).
+  Local and remotely checked main remain `fbce3c4cfad26bdfa3297d53a1e65a7ec6a0ad65`.
+- Documented four page families and moved eight record directories onto shared
+  `DirectoryWorkspace`, typed `DirectoryRecordContent` slots, status/actions and nonmodal
+  inspector geometry. Shared pagination replaces four local copies; Orders retains server
+  pagination. Removed parallel Sourcing/Sowings directory styles and obsolete geometry rules.
+  Domain/API/save/filter ownership, exact inventory routes, quantities and safety guards remain
+  with their existing pages. Locations/Geography share recursive presentation; Location selection
+  now retains the tree at tablet/mobile widths, with explicit Details navigation.
+- Corrected one real creation-focus regression; changed other test expectations only for the
+  documented compact states, idle inspectors, exact Details links and retired layout classes.
+  Complete frontend regression passed **1097/1097 in 100 files**. Later peer-tool changes passed
+  **171/171**, identity styling passed **145/145**. Final mobile comparison found Stored preview
+  content could collapse to zero height; shared minimum sizing/narrow-page flow and scrollable
+  metadata fix this. Stored Active now uses the same accessible check, retaining Depleted text.
+  Final affected cross-consumer regression passed **397/397 in 13 files**; strict TypeScript,
+  full frontend ESLint, Prettier and production build pass. Feature validation: **123 valid**;
+  `git diff --check` passes. Full results and limits: `design/ui-system-v1/consolidation/verification.txt`.
+- Captured **95 unique states**, including eight directories in six themes at 1440px, all eight
+  at 1024/390 in Mineral Dark, five galleries at three widths, two hierarchies at three widths,
+  photos, long names, rich lifecycle, pagination/All/selection, inspector persistence and 720×450
+  stress. Measurements report no horizontal overflow; all 79 list/inspector bounds checks report
+  no overlap. Comparison sheets, checksummed manifest and dirty-source fingerprint accompany
+  the gallery in `design/ui-system-v1/consolidation/evidence/`.
+- Browser smoke verifies Preview/Escape/focus return and direct Details for eight directories;
+  exact inventory destination and scroll persistence remain intact. Harvest confirmation focuses
+  Cancel; Escape returns to More actions without deletion. Unsaved Seed label was not persisted.
+  Native dirty-confirm rejection was not controllable through this browser and remains manual
+  UAT alongside physical devices, screen readers, actual zoom and full theme/width/state coverage.
+- Existing Review remains healthy and owned by `548f`, code/DB `20261013_0042`, fixture v4 ready
+  (80 managed baseline records), extended fixture retained; live source binds include these dirty
+  changes. No credentials recorded. No environment reprovisioning, foreign-worktree changes or
+  resource cleanup. Verification-impact planning selects FULL; it was deliberately not run.
+  Candidate awaits operator UAT and independent final review. No delivery commit, push, PR,
+  main merge or feature-finish.

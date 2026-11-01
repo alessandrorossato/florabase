@@ -1,7 +1,20 @@
-import { ActionLink, ActionButton } from "../components/Action";
+import { StatusBadge } from "../components/WorkspaceUI";
+import { DirectoryInspectorPlaceholder } from "../components/DirectoryPage";
+import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { DirectoryWorkspace } from "../components/DirectoryPage";
+import { ActionLink, ActionButton, IconButton } from "../components/Action";
+import {
+  DirectoryRecordContent,
+  DirectoryTrigger,
+  DirectoryInspector,
+} from "../components/DirectoryPage";
 import { RecordIdentities } from "../components/recordPresentation";
 import { DirectoryTools } from "../components/DirectoryTools";
-import { OverflowMenu, BotanicalName } from "../components/ReferenceUI";
+import {
+  OverflowMenu,
+  BotanicalName,
+  QuickPreview,
+} from "../components/ReferenceUI";
 import { RecordVisual } from "../photos/RecordVisual";
 import { labelComposerHref } from "../labels/labelData";
 import { DirectoryResults } from "../components/DirectoryResults";
@@ -13,7 +26,14 @@ import { ConversionDialog } from "./ConversionDialog";
 import { ConversionHistory } from "./ConversionHistory";
 import type { Conversion } from "./conversionApi";
 import { BotanicalIdentityFilter } from "./BotanicalIdentityFilter";
-import { useContext, useEffect, useId, useRef, useState } from "react";
+import {
+  useContext,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
 import { TaskDialog } from "../components/TaskDialog";
@@ -446,7 +466,9 @@ export function StoredMaterialSection({ harvest }: { harvest: Harvest }) {
   );
 }
 
-export function StoredMaterialDirectory() {
+export function StoredMaterialDirectory({
+  actions,
+}: { actions?: ReactNode } = {}) {
   const recordIdentities = useContext(RecordIdentities);
   const auth = useAuth();
   const [converting, setConverting] = useState<Inventory | null>(null);
@@ -455,6 +477,12 @@ export function StoredMaterialDirectory() {
   const [rows, setRows] = useState<Inventory[] | null>(null);
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const [selectedPreview, setSelectedPreview] = useState<{
+    id: string;
+    filterKey: string;
+  } | null>(null);
+  const selectedTrigger = useRef<HTMLButtonElement | null>(null);
+  const directoryList = useRef<HTMLUListElement | null>(null);
   const view = useDirectoryView("stored_material");
   const query = view.state.q;
   const setQuery = (value: string) => {
@@ -476,6 +504,14 @@ export function StoredMaterialDirectory() {
   const setState = (value: string) => {
     view.update("state", value || "all");
   };
+  const pageFilterKey = JSON.stringify([
+    query,
+    material,
+    location,
+    identity,
+    state,
+  ]);
+
   useEffect(() => {
     const controller = new AbortController();
     void inventoryList(controller.signal)
@@ -506,12 +542,24 @@ export function StoredMaterialDirectory() {
         .toLocaleLowerCase()
         .includes(query.trim().toLocaleLowerCase()),
   );
+  const matching = filtered ?? [];
+  const pagination = useDirectoryPagination(matching, pageFilterKey);
+  const { visible: pageRows } = pagination;
+  const selectedInventory = matching.find(
+    (row) =>
+      row.id === selectedPreview?.id &&
+      selectedPreview.filterKey === pageFilterKey,
+  );
   const bulkChoices = (filtered ?? []).map((row) => ({
     kind: "harvest_inventory" as const,
     id: row.id,
     label: `Stored ${row.material_kind} · ${row.harvest_title} · ${row.source.botanical_identity.display_label}`,
     eligible: row.state === "active",
   }));
+  const pageIds = new Set(pageRows.map((row) => row.id));
+  const pageBulkChoices = bulkChoices.filter((choice) =>
+    pageIds.has(choice.id),
+  );
   const bulk = useBulkSelection(JSON.stringify(view.state), bulkChoices);
   const locations = [
     ...new Map(
@@ -520,6 +568,14 @@ export function StoredMaterialDirectory() {
       ) ?? [],
     ).values(),
   ];
+  const directoryResults = (
+    <DirectoryResults
+      count={matching.length}
+      total={rows?.length ?? matching.length}
+      pagination={matching.length > 0 ? pagination : undefined}
+      actions={<BulkSelect selection={bulk} visible={pageBulkChoices} />}
+    />
+  );
   return (
     <div className="stored-material-directory">
       {created && (
@@ -543,6 +599,8 @@ export function StoredMaterialDirectory() {
       )}
       <DirectoryTools
         name="Stored material"
+        actions={actions}
+        stableFilterSummary
         search={
           <DirectorySearch
             hideLabel
@@ -709,109 +767,245 @@ export function StoredMaterialDirectory() {
       {!rows && !error && <p role="status">Loading stored material…</p>}
       {filtered && (
         <>
-          <DirectoryResults
-            count={filtered.length}
-            actions={<BulkSelect selection={bulk} visible={bulkChoices} />}
-          />
-          {!filtered.length ? (
+          {!matching.length && directoryResults}
+          {!matching.length ? (
             <p className="empty-state">
               {rows?.length
                 ? "No stored material matches these filters."
                 : "No stored material tracked yet. Open a Harvest and choose Track stored material."}
             </p>
           ) : (
-            <ul
-              className="harvest-directory"
-              aria-label="Stored material directory"
-            >
-              {filtered.map((row, bulkIndex) => (
-                <li
-                  key={row.id}
-                  className={bulk.active ? "bulk-selection-row" : undefined}
-                  data-selected={
-                    bulk.checked({ kind: "harvest_inventory", id: row.id }) ||
-                    undefined
-                  }
+            <DirectoryWorkspace>
+              {directoryResults}
+              <div className="harvest-directory-results">
+                <ul
+                  className="harvest-directory ui-directory-records ui-directory-records--list"
+                  aria-label="Stored material directory"
+                  ref={directoryList}
                 >
-                  <BulkCheckbox
-                    selection={bulk}
-                    choice={bulkChoices[bulkIndex]}
-                  />
-                  <a
-                    className="harvest-directory-row"
-                    onClick={(event) => {
-                      if (bulk.active) {
-                        event.preventDefault();
-                        bulk.toggle(bulkChoices[bulkIndex]);
+                  {pageRows.map((row, bulkIndex) => (
+                    <li
+                      key={row.id}
+                      className={`ui-directory-row ui-directory-row--composed${bulk.active ? " bulk-selection-row" : ""}`}
+                      data-selected={
+                        bulk.checked(pageBulkChoices[bulkIndex]) ||
+                        (selectedPreview?.id === row.id &&
+                          selectedPreview.filterKey === pageFilterKey) ||
+                        undefined
                       }
+                    >
+                      <BulkCheckbox
+                        selection={bulk}
+                        choice={pageBulkChoices[bulkIndex]}
+                      />
+                      <DirectoryTrigger
+                        aria-label={
+                          "Quick preview " +
+                          row.harvest_title +
+                          " stored material"
+                        }
+                        description={
+                          row.state === "active"
+                            ? "Active · Open Quick Preview"
+                            : "Depleted · Open Quick Preview"
+                        }
+                        onClick={(event) => {
+                          if (bulk.active) {
+                            bulk.toggle(pageBulkChoices[bulkIndex]);
+                            return;
+                          }
+                          selectedTrigger.current = event.currentTarget;
+                          setSelectedPreview({
+                            id: row.id,
+                            filterKey: pageFilterKey,
+                          });
+                        }}
+                      >
+                        <DirectoryRecordContent
+                          visual={
+                            <RecordVisual
+                              kind="harvest"
+                              identity={row.source.botanical_identity}
+                              fallbackPhoto={row.source.primary_photo}
+                              label={row.harvest_title}
+                            />
+                          }
+                          name={
+                            <>
+                              {
+                                materials.find(
+                                  (m) => m.id === row.material_kind,
+                                )?.label
+                              }{" "}
+                              · {row.harvest_title}
+                            </>
+                          }
+                          secondary={
+                            <BotanicalName
+                              label={
+                                row.source.botanical_identity.display_label
+                              }
+                              scientificName={
+                                recordIdentities.get(
+                                  row.source.botanical_identity.id,
+                                )?.scientific_name
+                              }
+                            />
+                          }
+                          status={
+                            row.state === "active" ? (
+                              <StatusBadge compactState="active">
+                                Active
+                              </StatusBadge>
+                            ) : (
+                              <span className="lifecycle-badge lifecycle-badge--depleted">
+                                Depleted
+                              </span>
+                            )
+                          }
+                          summary={
+                            <>
+                              <strong>{remainingLabel(row)}</strong>
+                              <small title={row.location?.display_path}>
+                                {row.location?.display_path ??
+                                  "Storage Location not recorded"}
+                              </small>
+                            </>
+                          }
+                        />
+                      </DirectoryTrigger>
+                      <div className="ui-directory-record-actions">
+                        {!bulk.active && (
+                          <ActionLink
+                            className="ui-directory-quick-action"
+                            icon="document"
+                            aria-label={
+                              "Details " +
+                              row.harvest_title +
+                              " stored material"
+                            }
+                            title="Details"
+                            href={`#/harvests/${row.harvest_id}?inventory=${row.id}`}
+                          >
+                            <span className="sr-only">Details</span>
+                          </ActionLink>
+                        )}
+                        {!bulk.active && (
+                          <ActionLink
+                            icon="print"
+                            title="Print label"
+                            className="ui-directory-quick-action"
+                            href={labelComposerHref("stored-material", row.id)}
+                          >
+                            <span className="sr-only">Print label</span>
+                          </ActionLink>
+                        )}
+                        {!bulk.active &&
+                          row.material_kind === "seed" &&
+                          row.state === "active" && (
+                            <IconButton
+                              icon="seed"
+                              label="Create Seed lot"
+                              tooltip="Create Seed lot"
+                              className="ui-directory-quick-action"
+                              onClick={() => {
+                                setConverting(row);
+                              }}
+                            />
+                          )}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              {!bulk.active &&
+                (selectedInventory ? (
+                  <DirectoryInspector
+                    title="Stored material inspection"
+                    returnFocusTo={selectedTrigger}
+                    fallbackFocusTo={directoryList}
+                    onClose={() => {
+                      setSelectedPreview(null);
                     }}
-                    href={`#/harvests/${row.harvest_id}?inventory=${row.id}`}
                   >
-                    <RecordVisual
-                      kind="harvest"
-                      identity={row.source.botanical_identity}
-                      fallbackPhoto={row.source.primary_photo}
-                      label={row.harvest_title}
-                    />
-                    <span className="harvest-row-content">
-                      <strong>
-                        {
-                          materials.find((m) => m.id === row.material_kind)
-                            ?.label
-                        }{" "}
-                        · {row.harvest_title}
-                      </strong>
-                      <small className="harvest-row-botanical">
+                    <QuickPreview compact>
+                      <RecordVisual
+                        kind="harvest"
+                        identity={selectedInventory.source.botanical_identity}
+                        fallbackPhoto={selectedInventory.source.primary_photo}
+                        label={selectedInventory.harvest_title}
+                      />
+                      <h3>
+                        {materials.find(
+                          (item) => item.id === selectedInventory.material_kind,
+                        )?.label ?? "Stored material"}{" "}
+                        · {selectedInventory.harvest_title}
+                      </h3>
+                      <p>
                         <BotanicalName
-                          label={row.source.botanical_identity.display_label}
+                          label={
+                            selectedInventory.source.botanical_identity
+                              .display_label
+                          }
                           scientificName={
                             recordIdentities.get(
-                              row.source.botanical_identity.id,
+                              selectedInventory.source.botanical_identity.id,
                             )?.scientific_name
                           }
                         />
-                      </small>
-                    </span>
-                    <span className="harvest-row-meta">
-                      <span
-                        className={`lifecycle-badge lifecycle-badge--${row.state}`}
-                      >
-                        {row.state === "active" ? "Active" : "Depleted"}
-                      </span>
-                      <span>{remainingLabel(row)}</span>
-                      <small>
-                        {row.location?.display_path ??
-                          "Storage Location not recorded"}
-                      </small>
-                    </span>
-                  </a>
-                  <div className="actions stored-directory-actions">
-                    {!bulk.active && (
-                      <ActionLink
-                        icon="print"
-                        className="button-link button--secondary"
-                        href={labelComposerHref("stored-material", row.id)}
-                      >
-                        Print label
-                      </ActionLink>
-                    )}
-                    {!bulk.active &&
-                      row.material_kind === "seed" &&
-                      row.state === "active" && (
-                        <button
-                          type="button"
-                          className="button--secondary"
-                          onClick={() => {
-                            setConverting(row);
-                          }}
-                        >
-                          Create Seed lot
-                        </button>
+                      </p>
+                      <dl className="record-preview__facts">
+                        <div>
+                          <dt>State</dt>
+                          <dd>
+                            {selectedInventory.state === "active"
+                              ? "Active"
+                              : "Depleted"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Remaining</dt>
+                          <dd>{remainingLabel(selectedInventory)}</dd>
+                        </div>
+                        <div>
+                          <dt>Storage</dt>
+                          <dd>
+                            {selectedInventory.location?.display_path ??
+                              "Storage Location not recorded"}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>Source</dt>
+                          <dd>{selectedInventory.source.display_name}</dd>
+                        </div>
+                      </dl>
+                      {selectedInventory.description && (
+                        <p className="preserve-lines">
+                          {selectedInventory.description}
+                        </p>
                       )}
-                  </div>
-                </li>
-              ))}
-            </ul>
+                      <div className="actions record-preview__actions">
+                        <a
+                          className="button-link button--secondary"
+                          href={
+                            "#/harvests/" +
+                            selectedInventory.harvest_id +
+                            "?inventory=" +
+                            selectedInventory.id
+                          }
+                        >
+                          Open Harvest details
+                        </a>
+                      </div>
+                    </QuickPreview>
+                  </DirectoryInspector>
+                ) : (
+                  <DirectoryInspectorPlaceholder title="Select stored material">
+                    Choose an inventory record to inspect its quantity and
+                    storage.
+                  </DirectoryInspectorPlaceholder>
+                ))}
+            </DirectoryWorkspace>
           )}
         </>
       )}

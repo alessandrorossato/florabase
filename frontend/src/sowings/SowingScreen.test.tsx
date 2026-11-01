@@ -506,7 +506,7 @@ test("germination progress uses only an exact positive seed-count denominator", 
   const list = await screen.findByRole("list", { name: "Sowing collection" });
   const row = (label: string) =>
     within(list).getByRole("button", {
-      name: new RegExp(`^(?!Quick preview |Details |Edit ).*${label}`),
+      name: new RegExp(`^(?!Quick preview |Preview |Details |Edit ).*${label}`),
     });
   expect(row("Tray A")).toHaveTextContent("12 of 20 germinated · 60%");
   expect(within(row("Tray A")).getByRole("progressbar")).toHaveAttribute(
@@ -1330,6 +1330,20 @@ test("minimal Sowing row keeps germination while Quick Preview retains source, d
   expect(row).not.toHaveTextContent("2026");
   expect(row).toHaveTextContent("germinated");
   await user.click(row);
+  expect(
+    screen.getByRole("link", { name: "Create plant from Tray A" }),
+  ).toHaveAttribute(
+    "href",
+    `#/plants?action=from-sowing&sowing=${sowing().id}&kind=plant`,
+  );
+  expect(
+    screen.getByRole("link", { name: "Open germination for Tray A" }),
+  ).toHaveAttribute("href", `#/sowings/${sowing().id}?tab=germination`);
+  expect(
+    screen
+      .getByRole("link", { name: "Create plant from Tray A" })
+      .querySelector('[data-icon="plant"]'),
+  ).toBeInTheDocument();
   const preview = screen.getByRole("complementary", { name: "Quick preview" });
   expect(preview).toHaveTextContent("Blue packet");
   expect(preview).toHaveTextContent(location.display_path);
@@ -1468,12 +1482,12 @@ test("identity-scoped Sowings uses the actual SeedLot identity and retains text 
   render(<App />);
   expect(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Tray A/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Tray A/,
     }),
   ).toBeVisible();
   expect(
     screen.queryByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Tray B/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Tray B/,
     }),
   ).toBeNull();
   await user.click(
@@ -1481,7 +1495,7 @@ test("identity-scoped Sowings uses the actual SeedLot identity and retains text 
   );
   expect(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Tray B/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Tray B/,
     }),
   ).toBeVisible();
   expect(window.location.hash).toContain("q=Tray");
@@ -1498,7 +1512,7 @@ test("Sowing presentation retains search and explicit Preview returns focus", as
   await user.click(screen.getByRole("button", { name: "Gallery" }));
   expect(screen.getByLabelText("Search Sowings")).toHaveValue("Tray");
   const preview = screen.getByRole("button", {
-    name: /^(?!Details |Edit ).*Tray A/,
+    name: /^(?!Quick preview |Preview |Details |Edit ).*Tray A/,
   });
   await user.click(preview);
   expect(
@@ -1533,7 +1547,9 @@ test("switching scrolled Sowing surfaces retains the inspector and list position
     screen.getByRole("heading", { name: "Select a Sowing" }),
   ).toBeVisible();
   await user.click(
-    within(list).getByRole("button", { name: /^(?!Details |Edit ).*Tray A/ }),
+    within(list).getByRole("button", {
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Tray A/,
+    }),
   );
   const panel = await screen.findByRole("complementary", {
     name: "Sowing inspection",
@@ -1541,14 +1557,18 @@ test("switching scrolled Sowing surfaces retains the inspector and list position
   list.scrollTop = 120;
   fireEvent.scroll(list);
   await user.click(
-    within(list).getByRole("button", { name: /^(?!Details |Edit ).*Tray B/ }),
+    within(list).getByRole("button", {
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Tray B/,
+    }),
   );
   expect(screen.getByRole("complementary", { name: "Sowing inspection" })).toBe(
     panel,
   );
   expect(
     within(list)
-      .getByRole("button", { name: /^(?!Details |Edit ).*Tray B/ })
+      .getByRole("button", {
+        name: /^(?!Quick preview |Preview |Details |Edit ).*Tray B/,
+      })
       .closest("li"),
   ).toHaveAttribute("data-selected", "true");
   expect(list.scrollTop).toBe(120);
@@ -1559,7 +1579,9 @@ test("switching scrolled Sowing surfaces retains the inspector and list position
   ).toBeVisible();
   expect(list.scrollTop).toBe(120);
   await user.click(
-    within(list).getByRole("button", { name: /^(?!Details |Edit ).*Tray B/ }),
+    within(list).getByRole("button", {
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Tray B/,
+    }),
   );
   expect(list.scrollTop).toBe(120);
   expect(window.location.hash).not.toContain("other-sowing");

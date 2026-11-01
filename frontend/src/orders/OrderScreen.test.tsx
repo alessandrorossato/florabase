@@ -127,7 +127,7 @@ beforeEach(() => {
     items: [detail],
     total: 1,
     offset: 0,
-    limit: 50,
+    limit: 20,
   });
   vi.mocked(getOrder).mockResolvedValue(detail);
   vi.mocked(saveOrder).mockResolvedValue(detail);
@@ -144,11 +144,14 @@ test("directory exposes exact price, partial date, authoritative count and a hid
   const user = userEvent.setup();
   mount();
   const row = await orderRow();
+  expect(
+    screen.getByRole("complementary", { name: "Quick preview" }),
+  ).toHaveTextContent("Select an order");
   expect(row.closest("li")).not.toHaveAttribute("data-selected");
   expect(screen.getByText("EUR 42.5000")).toBeVisible();
   expect(screen.getByText("2026-10 · Nursery")).toBeVisible();
   expect(screen.getByLabelText("Directory results")).toHaveTextContent(
-    "1 record",
+    /1–1 of 1 record/,
   );
   expect(screen.getByText("Search Orders", { selector: "label" })).toHaveClass(
     "sr-only",
@@ -179,6 +182,7 @@ test("directory exposes exact price, partial date, authoritative count and a hid
       supplierId,
       0,
       expect.any(AbortSignal),
+      20,
     );
   });
   expect(
@@ -203,7 +207,7 @@ test("empty, loading and error states are actionable", async () => {
     items: [],
     total: 0,
     offset: 0,
-    limit: 50,
+    limit: 20,
   });
   await userEvent.click(screen.getByRole("button", { name: "Retry Orders" }));
   expect(
@@ -472,17 +476,18 @@ test("opening an Orders Saved View resets pagination", async () => {
     items: [detail],
     total: 51,
     offset: 0,
-    limit: 50,
+    limit: 20,
   });
   const user = userEvent.setup();
   mount();
-  await user.click(await screen.findByRole("button", { name: "Next Orders" }));
+  await user.click(await screen.findByRole("button", { name: "Next page" }));
   await waitFor(() => {
     expect(listOrders).toHaveBeenLastCalledWith(
       "",
       "",
-      50,
+      20,
       expect.any(AbortSignal),
+      20,
     );
   });
   window.history.pushState(null, "", "#/orders?q=REF");
@@ -493,6 +498,7 @@ test("opening an Orders Saved View resets pagination", async () => {
       "",
       0,
       expect.any(AbortSignal),
+      20,
     );
   });
 });
@@ -510,7 +516,7 @@ test("Order detail links an existing physical lot through shared preview and ref
     ],
     total: 1,
     offset: 0,
-    limit: 50,
+    limit: 20,
   });
   vi.mocked(previewPurchase).mockResolvedValue({
     order: detail,
@@ -602,6 +608,7 @@ test("Supplier filter popup stays anchored, wraps long names, and clears before 
       supplierId,
       0,
       expect.any(AbortSignal),
+      20,
     );
   });
   await waitFor(() => {
@@ -633,7 +640,7 @@ test("typing a multi-character search query keeps focus while results are in fli
     items: [detail],
     total: 1,
     offset: 0,
-    limit: 50,
+    limit: 20,
   });
   vi.mocked(listOrders).mockReturnValue(new Promise(() => undefined));
   const user = userEvent.setup();
@@ -650,6 +657,7 @@ test("typing a multi-character search query keeps focus while results are in fli
       "",
       0,
       expect.any(AbortSignal),
+      20,
     );
   });
 });
@@ -660,7 +668,7 @@ test("a missing Supplier filter UUID stays exact and visible", async () => {
     items: [],
     total: 0,
     offset: 0,
-    limit: 50,
+    limit: 20,
   });
   const user = userEvent.setup();
   window.history.replaceState(null, "", `#/orders?supplier_id=${missing}`);
@@ -671,6 +679,7 @@ test("a missing Supplier filter UUID stays exact and visible", async () => {
       missing,
       0,
       expect.any(AbortSignal),
+      20,
     );
   });
   const label = `Unavailable Supplier — ${missing}`;
@@ -701,18 +710,19 @@ test("Order presentation preserves Supplier, query, current page and preview foc
     items: [detail],
     total: 51,
     offset: 0,
-    limit: 50,
+    limit: 20,
   });
   const user = userEvent.setup();
   mount();
   await orderRow();
-  await user.click(screen.getByRole("button", { name: "Next Orders" }));
+  await user.click(screen.getByRole("button", { name: "Next page" }));
   await waitFor(() => {
     expect(listOrders).toHaveBeenLastCalledWith(
       "REF",
       supplierId,
-      50,
+      20,
       expect.any(AbortSignal),
+      20,
     );
   });
   await orderRow();
@@ -726,7 +736,7 @@ test("Order presentation preserves Supplier, query, current page and preview foc
   expect(screen.getByRole("list", { name: "Orders" })).toHaveClass(
     "ui-directory-records--gallery",
   );
-  expect(screen.getByRole("button", { name: "Previous Orders" })).toBeVisible();
+  expect(screen.getByRole("button", { name: "Previous page" })).toBeVisible();
   await user.click(await orderRow());
   expect(
     screen.getByRole("complementary", { name: "Order inspection" }),

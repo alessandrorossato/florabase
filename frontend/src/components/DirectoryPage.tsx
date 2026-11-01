@@ -15,6 +15,7 @@ import { TaskDialog } from "./TaskDialog";
 import type { DirectoryView } from "./directoryPresentation";
 import "../styles/directory.css";
 import "../styles/directory-workspace.css";
+import "../styles/directory-system.css";
 
 /** Named layout slots only. The caller owns loading, URLs, filtering and mutations. */
 export function DirectoryPage({
@@ -99,6 +100,66 @@ export function DirectoryTrigger({
         {children}
       </button>
     </Tooltip>
+  );
+}
+
+export function DirectoryInspectorPlaceholder({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <aside
+      className="ui-directory-inspector ui-directory-side-preview ui-inspector-placeholder"
+      aria-label="Quick preview"
+    >
+      <h3>{title}</h3>
+      <p>{children}</p>
+    </aside>
+  );
+}
+
+/** Shared directory grid: results span the records and inspector columns. */
+export function DirectoryWorkspace({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={`ui-directory-workspace ${className}`}>{children}</div>
+  );
+}
+
+/** Presentation slots only; domain state, routes and operations stay with the caller. */
+export function DirectoryRecordContent({
+  visual,
+  name,
+  secondary,
+  summary,
+  status,
+}: {
+  visual: ReactNode;
+  name: ReactNode;
+  secondary?: ReactNode;
+  summary?: ReactNode;
+  status?: ReactNode;
+}) {
+  return (
+    <span className="ui-record-content">
+      <span className="ui-record-visual">{visual}</span>
+      <span className="ui-record-identity">
+        <span className="ui-record-title">
+          <strong>{name}</strong>
+          {status}
+        </span>
+        {secondary && <span className="ui-record-secondary">{secondary}</span>}
+      </span>
+      {summary != null && <span className="ui-record-summary">{summary}</span>}
+    </span>
   );
 }
 
@@ -264,6 +325,7 @@ export function DirectoryInspector({
   returnFocusTo,
   fallbackFocusTo,
   mode = "side",
+  focusOnOpen = true,
 }: {
   title: string;
   children: ReactNode;
@@ -271,10 +333,12 @@ export function DirectoryInspector({
   returnFocusTo: RefObject<HTMLElement | null>;
   fallbackFocusTo: RefObject<HTMLElement | null>;
   mode?: "modal" | "side";
+  focusOnOpen?: boolean;
 }) {
   if (mode === "side")
     return (
       <SideInspector
+        focusOnOpen={focusOnOpen}
         title={title}
         onClose={onClose}
         returnFocusTo={returnFocusTo}
@@ -305,12 +369,14 @@ export function DirectoryInspector({
 
 /** Nonmodal Collection inspection; no backdrop, inert directory or focus trap. */
 function SideInspector({
+  focusOnOpen,
   title,
   children,
   onClose,
   returnFocusTo,
   fallbackFocusTo,
 }: {
+  focusOnOpen: boolean;
   title: string;
   children: ReactNode;
   onClose: () => void;
@@ -335,7 +401,7 @@ function SideInspector({
     )?.focus({ preventScroll: true });
   }, []);
   useEffect(() => {
-    closeButton.current?.focus({ preventScroll: true });
+    if (focusOnOpen) closeButton.current?.focus({ preventScroll: true });
     function escape(event: KeyboardEvent) {
       if (
         event.key !== "Escape" ||
@@ -350,7 +416,7 @@ function SideInspector({
     return () => {
       document.removeEventListener("keydown", escape);
     };
-  }, [dismiss]);
+  }, [dismiss, focusOnOpen]);
   return (
     <aside
       className="ui-directory-inspector ui-directory-side-preview"
@@ -374,13 +440,15 @@ function SideInspector({
   );
 }
 
-/** Explicit navigation/edit actions; the record surface owns Preview. */
+/** Domain actions plus direct Details and Edit actions for a directory record. */
 export function DirectoryRecordActions({
   label,
+  extraActions,
   onDetails,
   onEdit,
 }: {
   label: string;
+  extraActions?: ReactNode;
   onDetails: (trigger: HTMLButtonElement) => void;
   onEdit: (trigger: HTMLButtonElement) => void;
 }) {
@@ -390,6 +458,7 @@ export function DirectoryRecordActions({
       role="group"
       aria-label={`Actions for ${label}`}
     >
+      {extraActions}
       <IconButton
         icon="document"
         label={`Details ${label}`}

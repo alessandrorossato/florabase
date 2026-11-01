@@ -208,7 +208,7 @@ it("exposes creation only on tracked active seed material", async () => {
       await userEvent.selectOptions(screen.getByLabelText("State"), "depleted");
       await userEvent.click(screen.getByRole("button", { name: "Done" }));
     }
-    await screen.findByText("1 record");
+    await screen.findByLabelText("Directory results");
     expect(
       screen.queryByRole("button", { name: "Create Seed lot" }),
     ).not.toBeInTheDocument();

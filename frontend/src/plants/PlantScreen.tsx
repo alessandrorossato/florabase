@@ -1,3 +1,5 @@
+import { DirectoryInspectorPlaceholder } from "../components/DirectoryPage";
+import { DirectoryWorkspace } from "../components/DirectoryPage";
 import { useDirectoryPagination } from "../components/useDirectoryPagination";
 import { StatusBadge } from "../components/WorkspaceUI";
 import {
@@ -5,6 +7,7 @@ import {
   DirectoryViewSwitcher,
   DirectoryRecords,
   DirectoryTrigger,
+  DirectoryRecordContent,
   DirectoryRow,
   DirectoryCard,
   DirectoryInspector,
@@ -2698,27 +2701,32 @@ export function PlantScreen({
                 </p>
               </div>
             )}
-            {collection.status === "ready" && (
-              <DirectoryResults
-                count={filtered.length}
-                total={records.length}
-                pagination={pagination}
-                actions={
-                  <BulkSelect
-                    selection={bulk}
-                    visible={bulkChoices}
-                    onStart={() => {
-                      setSelectedKey(null);
-                      setMobileDetail(false);
-                      setDetail({ status: "idle" });
-                    }}
-                  />
-                }
-              />
-            )}
-            <div
-              className={`plant-master-detail operational-layout directory-preview-layout${mobileDetail || (editing && !edit.modal) ? " is-detail-view" : ""}`}
+
+            <DirectoryWorkspace
+              className={
+                mobileDetail || (editing && !edit.modal)
+                  ? "plant-master-detail operational-layout is-detail-view"
+                  : undefined
+              }
             >
+              {collection.status === "ready" && (
+                <DirectoryResults
+                  count={filtered.length}
+                  total={records.length}
+                  pagination={pagination}
+                  actions={
+                    <BulkSelect
+                      selection={bulk}
+                      visible={bulkChoices}
+                      onStart={() => {
+                        setSelectedKey(null);
+                        setMobileDetail(false);
+                        setDetail({ status: "idle" });
+                      }}
+                    />
+                  }
+                />
+              )}
               <section
                 className="seed-master plant-master"
                 aria-labelledby="plant-list-title"
@@ -2792,32 +2800,33 @@ export function PlantScreen({
                               selectRecord(record, event.currentTarget, true);
                             }}
                           >
-                            <span className="ui-directory-record-identity">
-                              <RecordVisual
-                                showSource={presentation.view === "gallery"}
-                                photo={value.primary_photo ?? null}
-                                label={
-                                  value.label ??
-                                  (record.kind === "plant"
-                                    ? "plant"
-                                    : "plant group")
-                                }
-                                compact
+                            <DirectoryRecordContent
+                              visual={
+                                <RecordVisual
+                                  showSource={presentation.view === "gallery"}
+                                  photo={value.primary_photo ?? null}
+                                  label={
+                                    value.label ??
+                                    (record.kind === "plant"
+                                      ? "plant"
+                                      : "plant group")
+                                  }
+                                  compact
 
-                                identity={value.botanical_identity}
-                                kind={record.kind}
-                              />
-                              <span className="ui-directory-record-name">
-                                <strong>
+                                  identity={value.botanical_identity}
+                                  kind={record.kind}
+                                />
+                              }
+                              name={
+                                <>
                                   {recordName(
                                     value,
                                     value.botanical_identity.display_label,
                                   )}
-                                </strong>
-                                {value.lifecycle === "active" && (
-                                  <StatusBadge>Active</StatusBadge>
-                                )}
-                                <small>
+                                </>
+                              }
+                              secondary={
+                                <>
                                   <BotanicalName
                                     label={
                                       value.botanical_identity.display_label
@@ -2826,30 +2835,38 @@ export function PlantScreen({
                                       value.botanical_identity_id,
                                     )}
                                   />
-                                </small>
-                              </span>
-                            </span>
-                            <span className="ui-directory-record-facts">
-                              {record.kind === "plant" ? "Plant" : "Group"}
-                              {record.kind === "group" && (
-                                <strong>{quantityLabel(record)}</strong>
-                              )}
-                            </span>
-
-                            {value.lifecycle !== "active" && (
-                              <span
-                                className={`lifecycle-badge lifecycle-badge--${value.lifecycle}`}
-                              >
-                                {lifecycleLabel(record)}
-                              </span>
-                            )}
+                                </>
+                              }
+                              summary={
+                                <>
+                                  {record.kind === "plant" ? "Plant" : "Group"}
+                                  {record.kind === "group" && (
+                                    <strong>{quantityLabel(record)}</strong>
+                                  )}
+                                </>
+                              }
+                              status={
+                                value.lifecycle === "active" ? (
+                                  <StatusBadge compactState="active">
+                                    Active
+                                  </StatusBadge>
+                                ) : (
+                                  <>
+                                    <span
+                                      className={`lifecycle-badge lifecycle-badge--${value.lifecycle}`}
+                                    >
+                                      {lifecycleLabel(record)}
+                                    </span>
+                                  </>
+                                )
+                              }
+                            />
                           </DirectoryTrigger>
                           <DirectoryRecordActions
                             label={recordName(
                               value,
                               value.botanical_identity.display_label,
                             )}
-
                             onDetails={(trigger) => {
                               selectRecord(record, trigger);
                               setMobileDetail(true);
@@ -3273,17 +3290,14 @@ export function PlantScreen({
                       </DirectoryInspector>
                     )
                   ) : (
-                    <div className="selected-seed seed-detail-empty">
-                      <h3>Select a Plant or group</h3>
-                      <p>
-                        Choose a row for a Quick Preview, then open details for
-                        photos, history and collection operations.
-                      </p>
-                    </div>
+                    <DirectoryInspectorPlaceholder title="Select a Plant or group">
+                      Choose a row for a Quick Preview, then open details for
+                      photos, history and collection operations.
+                    </DirectoryInspectorPlaceholder>
                   )}
                 </section>
               )}
-            </div>
+            </DirectoryWorkspace>
             {reintegrationOpen &&
               selected?.kind === "plant" &&
               selected.value.originating_plant_group &&

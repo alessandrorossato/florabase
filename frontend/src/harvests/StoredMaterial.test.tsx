@@ -375,9 +375,13 @@ it("directory defaults to active and retained depleted state remains reachable",
     { ...inventory, id: "depleted", state: "depleted", quantity: null },
   ]);
   wrap(<StoredMaterialDirectory />);
-  expect(await screen.findByText("1 record")).toBeVisible();
+  expect(await screen.findByLabelText("Directory results")).toHaveTextContent(
+    /1–1 of 1 record/,
+  );
   expect(
-    screen.getByRole("link", { name: /Coffee seed harvest.*10 items/ }),
+    screen.getByRole("link", {
+      name: "Details Coffee seed harvest stored material",
+    }),
   ).toHaveAttribute("href", "#/harvests/harvest?inventory=inventory");
   await userEvent.click(screen.getByRole("button", { name: /^Filters/ }));
   await userEvent.selectOptions(screen.getByLabelText("State"), "depleted");
@@ -439,7 +443,7 @@ it("filters stored material by exact source identity with state, material, Locat
   ]);
   const user = userEvent.setup();
   wrap(<StoredMaterialDirectory />);
-  await screen.findByText("2 records");
+  await screen.findByLabelText("Directory results");
   await user.click(screen.getByRole("button", { name: /^Filters/ }));
   await user.type(
     screen.getByRole("combobox", { name: "Botanical identity" }),
@@ -449,7 +453,9 @@ it("filters stored material by exact source identity with state, material, Locat
   expect(
     screen.queryByText("Coffea arabica misleading title"),
   ).not.toBeInTheDocument();
-  expect(screen.getByText("1 record")).toBeVisible();
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    /1–1 of 1 record/,
+  );
   await user.selectOptions(screen.getByLabelText("Material"), "fruit");
   expect(
     screen.getByText("No stored material matches these filters."),
@@ -467,11 +473,15 @@ it("filters stored material by exact source identity with state, material, Locat
   await user.clear(screen.getByLabelText("Search stored material"));
   await user.click(screen.getByRole("button", { name: /^Filters/ }));
   await user.selectOptions(screen.getByLabelText("State"), "");
-  expect(screen.getByText("2 records")).toBeVisible();
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    /1–2 of 2 records/,
+  );
   await user.click(
     screen.getByRole("button", { name: "Clear botanical identity filter" }),
   );
-  expect(screen.getByText("3 records")).toBeVisible();
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    /1–3 of 3 records/,
+  );
   expect(api.inventoryList).toHaveBeenCalledTimes(1);
 });
 
@@ -482,7 +492,7 @@ it("BULK-001 selects only active Stored material and clears on search", async ()
   ]);
   wrap(<StoredMaterialDirectory />);
   const user = userEvent.setup();
-  await screen.findByText("1 record");
+  await screen.findByLabelText("Directory results");
   await user.click(screen.getByRole("button", { name: "Select records" }));
   await user.click(screen.getByRole("button", { name: "Select visible" }));
   expect(screen.getByText("1 selected")).toBeVisible();
@@ -518,7 +528,7 @@ it("uses complete media, identity and metric columns with grouped tools and remo
   ]);
   wrap(<StoredMaterialDirectory />);
   const user = userEvent.setup();
-  await screen.findByText("1 record");
+  await screen.findByLabelText("Directory results");
   const toolbar = screen.getByRole("group", {
     name: "Stored material toolbar",
   });
@@ -528,15 +538,42 @@ it("uses complete media, identity and metric columns with grouped tools and remo
   ).toBeVisible();
   const row = within(
     screen.getByRole("list", { name: "Stored material directory" }),
-  ).getByRole("link", { name: /Coffee seed harvest/ });
-  expect([...row.children].map((element) => element.className)).toEqual([
-    expect.stringContaining("record-visual"),
-    "harvest-row-content",
-    "harvest-row-meta",
-  ]);
+  ).getByRole("button", {
+    name: "Quick preview Coffee seed harvest stored material",
+  });
+  const directoryRow = row.closest("li");
+  if (!directoryRow) throw new Error("Stored material must be in a row");
+  await user.click(
+    within(directoryRow).getByRole("button", {
+      name: "Quick preview Coffee seed harvest stored material",
+    }),
+  );
+  expect(
+    screen.getByRole("complementary", {
+      name: "Stored material inspection",
+    }),
+  ).toBeVisible();
+  expect(
+    screen.getByRole("link", { name: "Open Harvest details" }),
+  ).toHaveAttribute("href", "#/harvests/harvest?inventory=inventory");
+  await user.keyboard("{Escape}");
+  expect(
+    screen.queryByRole("complementary", {
+      name: "Stored material inspection",
+    }),
+  ).not.toBeInTheDocument();
+  expect(
+    within(directoryRow).getByRole("button", {
+      name: "Quick preview Coffee seed harvest stored material",
+    }),
+  ).toHaveFocus();
+  expect(
+    within(row).getByText("Coffee seed harvest", { exact: false }),
+  ).toBeVisible();
   expect(row).toHaveTextContent("Unknown quantity");
   expect(row).toHaveTextContent("Storage Location not recorded");
   expect(row).not.toHaveTextContent("Depleted");
+  expect(within(row).getByRole("img", { name: "Active" })).toBeVisible();
   await user.type(within(toolbar).getByRole("searchbox"), "Coffee");
   await user.click(screen.getByRole("button", { name: "Remove state filter" }));
   expect(within(toolbar).getByRole("searchbox")).toHaveValue("Coffee");
@@ -549,7 +586,13 @@ it("uses complete media, identity and metric columns with grouped tools and remo
           element.getAttribute("aria-label") ??
           document.querySelector(`label[for="${element.id}"]`)?.textContent,
       ),
-  ).toEqual(["Botanical identity", "State", "Storage Location", "Material"]);
+  ).toEqual([
+    "Botanical identity",
+    "State",
+    "Storage Location",
+    "Material",
+    "Records per page",
+  ]);
 });
 
 it("restores focus to More after cancelling an inventory correction", async () => {

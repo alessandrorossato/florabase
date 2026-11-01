@@ -390,7 +390,27 @@ test("Botanical identity directory uses bounded local thumbnails and configured 
   const directory = await screen.findByRole("region", {
     name: "Identity directory",
   });
-  await within(directory).findByRole("button", { name: /Acer rubrum/ });
+  await within(directory).findByRole("button", {
+    name: /^Quick preview Acer rubrum/,
+  });
+  expect(
+    within(directory).getByRole("link", {
+      name: `Add seed lot for ${externalCoverIdentity.display_label}`,
+    }),
+  ).toHaveAttribute(
+    "href",
+    `#/seeds?action=create&identity=${externalCoverIdentity.id}`,
+  );
+  expect(
+    within(directory).getByRole("button", {
+      name: `Start sowing for ${externalCoverIdentity.display_label}`,
+    }),
+  ).toBeVisible();
+  expect(
+    within(directory).getByRole("button", {
+      name: `Record harvest for ${externalCoverIdentity.display_label}`,
+    }),
+  ).toBeVisible();
   const images = Array.from(directory.querySelectorAll("img"));
   expect(images).toHaveLength(2);
   expect(images[0]).toHaveAttribute(

@@ -1,3 +1,4 @@
+import "../components/hierarchy.css";
 import { Icon } from "../components/Icon";
 import { GeographyHeader } from "../geography/GeographyHeader";
 import { ActionButton } from "../components/Action";
@@ -102,7 +103,7 @@ function PlaceButton({
   return (
     <button
       type="button"
-      className="identity-list-item geography-directory-row"
+      className="identity-list-item geography-directory-row ui-hierarchy-record"
       aria-pressed={selectedId === place.id}
       onClick={() => {
         onSelect(place.id);
@@ -488,7 +489,7 @@ export function GeographyScreen({
       aria-labelledby={
         mode === "places" ? "geography-places-title" : "geography-sites-title"
       }
-      className="workspace geography-workspace"
+      className="workspace geography-workspace ui-hierarchy-workspace"
     >
       <GeographyHeader
         view={mode === "places" ? "places" : "sites"}

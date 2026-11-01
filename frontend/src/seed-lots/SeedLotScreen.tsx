@@ -1,3 +1,5 @@
+import { DirectoryInspectorPlaceholder } from "../components/DirectoryPage";
+import { DirectoryWorkspace } from "../components/DirectoryPage";
 import { useDirectoryPagination } from "../components/useDirectoryPagination";
 import { StatusBadge } from "../components/WorkspaceUI";
 import {
@@ -5,6 +7,7 @@ import {
   DirectoryViewSwitcher,
   DirectoryRecords,
   DirectoryTrigger,
+  DirectoryRecordContent,
   DirectoryRow,
   DirectoryCard,
   DirectoryInspector,
@@ -2170,26 +2173,30 @@ export function SeedLotScreen({
               startCreating &&
               !orderContext &&
               !orderContextError && <p role="status">Loading Order context…</p>}
-            {inventory.status === "ready" && (
-              <DirectoryResults
-                count={filtered.length}
-                total={lots.length}
-                pagination={pagination}
-                actions={
-                  <BulkSelect
-                    selection={bulk}
-                    visible={bulkChoices}
-                    onStart={() => {
-                      setSelectedId(null);
-                      setDetailOpen(false);
-                    }}
-                  />
-                }
-              />
-            )}
-            <div
-              className={`seed-master-detail operational-layout directory-preview-layout${detailOpen || (editing && !edit.modal) ? " is-detail-view" : ""}`}
+            <DirectoryWorkspace
+              className={
+                detailOpen || (editing && !edit.modal)
+                  ? "seed-master-detail operational-layout is-detail-view"
+                  : undefined
+              }
             >
+              {inventory.status === "ready" && (
+                <DirectoryResults
+                  count={filtered.length}
+                  total={lots.length}
+                  pagination={pagination}
+                  actions={
+                    <BulkSelect
+                      selection={bulk}
+                      visible={bulkChoices}
+                      onStart={() => {
+                        setSelectedId(null);
+                        setDetailOpen(false);
+                      }}
+                    />
+                  }
+                />
+              )}
               <section
                 className="seed-master"
                 aria-labelledby="seed-inventory-title"
@@ -2261,56 +2268,74 @@ export function SeedLotScreen({
                             setSave({ status: "idle" });
                           }}
                         >
-                          <span className="ui-directory-record-identity">
-                            <RecordVisual
-                              showSource={presentation.view === "gallery"}
-                              photo={lot.primary_photo ?? null}
-                              label={recordName(lot, "Seed lot")}
-                              compact
+                          <DirectoryRecordContent
+                            visual={
+                              <RecordVisual
+                                showSource={presentation.view === "gallery"}
+                                photo={lot.primary_photo ?? null}
+                                label={recordName(lot, "Seed lot")}
+                                compact
 
-                              identity={lot.botanical_identity}
-                              kind={"seed"}
-                            />
-                            <span className="ui-directory-record-name">
-                              <strong>
-                                {recordName(lot, "Unlabelled seed lot")}
-                              </strong>
-                              {lot.lifecycle === "active" && (
-                                <StatusBadge>Active</StatusBadge>
-                              )}
-                              <small>
+                                identity={lot.botanical_identity}
+                                kind={"seed"}
+                              />
+                            }
+                            name={<>{recordName(lot, "Unlabelled seed lot")}</>}
+                            secondary={
+                              <>
                                 <BotanicalName
                                   label={lot.botanical_identity.display_label}
                                   scientificName={scientificNames.get(
                                     lot.botanical_identity_id,
                                   )}
                                 />
-                              </small>
-                            </span>
-                          </span>
-                          <span className="ui-directory-record-facts">
-                            <strong>
-                              {quantityLabel(lot)}
-                              {lot.quantity && lot.lifecycle === "active"
-                                ? " remaining"
-                                : ""}
-                            </strong>
-                            {lot.lifecycle !== "active" && (
-                              <small>Recorded quantity</small>
-                            )}
-                          </span>
-
-                          {lot.lifecycle !== "active" && (
-                            <span
-                              className={`lifecycle-badge lifecycle-badge--${lot.lifecycle}`}
-                            >
-                              {lifecycleLabels[lot.lifecycle]}
-                            </span>
-                          )}
+                              </>
+                            }
+                            summary={
+                              <>
+                                <strong>
+                                  {quantityLabel(lot)}
+                                  {lot.quantity && lot.lifecycle === "active"
+                                    ? " remaining"
+                                    : ""}
+                                </strong>
+                                {lot.lifecycle !== "active" && (
+                                  <small>Recorded quantity</small>
+                                )}
+                              </>
+                            }
+                            status={
+                              lot.lifecycle === "active" ? (
+                                <StatusBadge compactState="active">
+                                  Active
+                                </StatusBadge>
+                              ) : (
+                                <>
+                                  <span
+                                    className={`lifecycle-badge lifecycle-badge--${lot.lifecycle}`}
+                                  >
+                                    {lifecycleLabels[lot.lifecycle]}
+                                  </span>
+                                </>
+                              )
+                            }
+                          />
                         </DirectoryTrigger>
                         <DirectoryRecordActions
                           label={recordName(lot, "Unlabelled seed lot")}
-
+                          extraActions={
+                            lot.lifecycle === "active" ? (
+                              <ActionLink
+                                className="ui-directory-quick-action"
+                                icon="sprout"
+                                aria-label={`Start sowing from ${recordName(lot, "Unlabelled seed lot")}`}
+                                title="Start sowing"
+                                href={`#/sowings?action=start&seedLot=${lot.id}`}
+                              >
+                                <span className="sr-only">Start sowing</span>
+                              </ActionLink>
+                            ) : undefined
+                          }
                           onDetails={(trigger) => {
                             selectedTrigger.current = trigger;
                             setSelectedId(lot.id);
@@ -2414,17 +2439,14 @@ export function SeedLotScreen({
                       </DirectoryInspector>
                     )
                   ) : (
-                    <div className="empty-state seed-detail-empty">
-                      <h3>Select a seed lot</h3>
-                      <p>
-                        Choose a lot from the inventory to inspect or edit it
-                        without losing your place in the list.
-                      </p>
-                    </div>
+                    <DirectoryInspectorPlaceholder title="Select a seed lot">
+                      Choose a lot from the inventory to inspect or edit it
+                      without losing your place in the list.
+                    </DirectoryInspectorPlaceholder>
                   )}
                 </section>
               )}
-            </div>
+            </DirectoryWorkspace>
           </div>
           {edit.modal && editor}
           {candidateOrderId && (

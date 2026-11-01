@@ -1,3 +1,4 @@
+import "../components/hierarchy.css";
 import { Icon } from "../components/Icon";
 import "./hierarchy.css";
 import { ActionButton } from "../components/Action";
@@ -377,7 +378,7 @@ function LocationTree({
               )}
               <button
                 type="button"
-                className="identity-list-item location-directory-row"
+                className="identity-list-item location-directory-row ui-hierarchy-record"
                 title={location.display_path}
                 aria-pressed={selectedId === location.id}
                 onClick={() => {
@@ -711,7 +712,7 @@ export function LocationScreen({
   return (
     <section
       aria-labelledby={initialId ? undefined : "locations-title"}
-      className="workspace locations-workspace"
+      className="workspace locations-workspace ui-hierarchy-workspace"
     >
       {!initialId && (
         <PageHeader
@@ -880,8 +881,6 @@ export function LocationScreen({
                   selectedId={selectedId}
                   onSelect={(id) => {
                     setSelectedId(id);
-                    if (window.innerWidth <= 1088)
-                      window.location.hash = `#/locations/${id}`;
                     setEditing(false);
                     setSave({ status: "idle" });
                   }}

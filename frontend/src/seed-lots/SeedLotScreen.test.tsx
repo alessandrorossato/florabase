@@ -364,7 +364,7 @@ test("reselecting Seeds clears selection, search and lifecycle filter without re
   setViewportMatches(false);
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
     }),
   );
   expect(
@@ -383,8 +383,8 @@ test("reselecting Seeds clears selection, search and lifecycle filter without re
     screen.getByRole("button", { name: "Remove lifecycle filter" }),
   ).toHaveTextContent("Active");
   expect(
-    screen.queryByRole("complementary", { name: "Quick preview" }),
-  ).not.toBeInTheDocument();
+    screen.getByRole("complementary", { name: "Quick preview" }),
+  ).toHaveTextContent("Select a seed lot");
 });
 
 test("reselecting Seeds protects an edited form until changes are discarded", async () => {
@@ -393,7 +393,7 @@ test("reselecting Seeds protects an edited form until changes are discarded", as
   const user = await openSeeds();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
     }),
   );
   await openSelectedDetails(user);
@@ -451,38 +451,41 @@ test("inventory and preview distinguish exact, approximate, unknown and exhauste
   const list = await screen.findByRole("list", { name: "Seed inventory" });
   expect(
     within(list).getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
     }),
   ).toHaveTextContent("50 seeds remaining");
   expect(
     within(list).getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Approximate packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Approximate packet/,
     }),
   ).toHaveTextContent("About 25 seeds");
   expect(
     within(list).getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Unknown packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Unknown packet/,
     }),
   ).toHaveTextContent("Quantity unknown");
   expect(
     within(list).getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Exhausted packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Exhausted packet/,
     }),
   ).toHaveTextContent("0 seedsRecorded quantity");
   expect(list).not.toHaveTextContent(/% used/);
   await user.click(
     within(list).getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
     }),
   );
   const preview = screen.getByRole("complementary", { name: "Quick preview" });
   expect(within(preview).getByText("50 seeds")).toBeInTheDocument();
   expect(
+    screen.getByRole("link", { name: "Start sowing from Blue packet" }),
+  ).toHaveAttribute("href", `#/sowings?action=start&seedLot=${lot().id}`);
+  expect(
     within(preview).getByRole("link", { name: "Start sowing" }),
   ).toHaveAttribute("href", `#/sowings?action=start&seedLot=${lot().id}`);
   await user.click(
     within(list).getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Exhausted packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Exhausted packet/,
     }),
   );
   expect(
@@ -504,7 +507,7 @@ test("selection shows complete details without internal identifiers and opens co
     ).getByRole("heading", { name: "Select a seed lot" }),
   ).toBeInTheDocument();
   expect(inventory).toHaveClass("seed-master");
-  expect(inventory.parentElement).toHaveClass("seed-master-detail");
+  expect(inventory.parentElement).toHaveClass("ui-directory-workspace");
   expect(screen.getByRole("button", { name: "New seed lot" })).toHaveAttribute(
     "aria-expanded",
     "false",
@@ -1436,7 +1439,7 @@ test("desktop selection offers a compact preview before opening SeedLot detail",
   setViewportMatches(false);
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
     }),
   );
   const preview = screen.getByRole("complementary", { name: "Quick preview" });
@@ -1479,7 +1482,7 @@ test("BULK-001 seed selection is transient, visible-only and reset by search", a
   expect(screen.getByText("2 selected")).toBeVisible();
   expect(
     screen.getByRole("checkbox", {
-      name: /^(?!Quick preview |Details |Edit ).*Select Seed Lot.*Blue packet/i,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Select Seed Lot.*Blue packet/i,
     }),
   ).toBeChecked();
   await user.type(
@@ -1585,14 +1588,14 @@ test("BULK-001 successful move refreshes the directory, clears preview and retai
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
   expect(
-    screen.queryByRole("complementary", { name: "Quick preview" }),
-  ).not.toBeInTheDocument();
+    screen.getByRole("complementary", { name: "Quick preview" }),
+  ).toHaveTextContent("Select a seed lot");
   expect(
     screen.getByRole("searchbox", { name: "Search seed inventory" }),
   ).toHaveValue("Blue");
   expect(window.location.hash).toBe(hash);
   const refreshed = screen.getByRole("button", {
-    name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
+    name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
   });
   expect(refreshed).toBeVisible();
   expect(refreshed).not.toHaveTextContent("New bench");
@@ -1964,7 +1967,7 @@ test("directory modal cancellation retains search, inspector and focus; Escape p
   );
   await user.click(
     screen.getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
     }),
   );
   const trigger = within(
@@ -2351,7 +2354,7 @@ test("Overview keeps current-state facts and Sowings has one canonical start act
   const user = await openSeeds();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
     }),
   );
   await openSelectedDetails(user);
@@ -2430,7 +2433,7 @@ test("Details empty Sowings and Lineage are plain messages while Photos retains 
   const user = await openSeeds();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
     }),
   );
   await openSelectedDetails(user);
@@ -2489,7 +2492,7 @@ test("Seed directory retains quantity and storage context in the row and Quick P
   const user = await openSeeds();
   setViewportMatches(false);
   const row = await screen.findByRole("button", {
-    name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
+    name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
   });
   expect(row).not.toHaveTextContent(location.display_path);
   expect(row).toHaveTextContent("remaining");
@@ -2531,12 +2534,12 @@ test("identity-scoped Seeds survives URL reload, composes search and clears with
   const view = render(<App />);
   expect(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
     }),
   ).toBeVisible();
   expect(
     screen.queryByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Other packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Other packet/,
     }),
   ).toBeNull();
   expect(
@@ -2545,14 +2548,14 @@ test("identity-scoped Seeds survives URL reload, composes search and clears with
   view.unmount();
   render(<App />);
   await screen.findByRole("button", {
-    name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
+    name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
   });
   await user.click(
     screen.getByRole("button", { name: "Remove botanical identity filter" }),
   );
   expect(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Other packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Other packet/,
     }),
   ).toBeVisible();
   expect(window.location.hash).toContain("lifecycle=all");
@@ -2561,7 +2564,7 @@ test("identity-scoped Seeds survives URL reload, composes search and clears with
   await waitFor(() => {
     expect(
       screen.queryByRole("button", {
-        name: /^(?!Quick preview |Details |Edit ).*Other packet/,
+        name: /^(?!Quick preview |Preview |Details |Edit ).*Other packet/,
       }),
     ).toBeNull();
   });
@@ -2579,7 +2582,7 @@ test("Seeds List/Gallery keeps canonical filters, preview focus and bulk choices
   await user.type(screen.getByLabelText("Search seed inventory"), "Blue");
   await user.click(
     screen.getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
     }),
   );
   await user.click(screen.getByRole("button", { name: "Gallery" }));
@@ -2595,7 +2598,7 @@ test("Seeds List/Gallery keeps canonical filters, preview focus and bulk choices
   await user.click(screen.getByRole("button", { name: "List" }));
   expect(
     screen.getByRole("checkbox", {
-      name: /^(?!Quick preview |Details |Edit ).*Select Seed Lot.*Blue packet/i,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Select Seed Lot.*Blue packet/i,
     }),
   ).toBeChecked();
   expect(screen.getByText("1 selected")).toBeVisible();
@@ -2606,7 +2609,7 @@ test("Seeds List/Gallery keeps canonical filters, preview focus and bulk choices
   expect(screen.getByLabelText("Search seed inventory")).toHaveValue("Blue");
   expect(
     screen.getByRole("checkbox", {
-      name: /^(?!Quick preview |Details |Edit ).*Select Seed Lot.*Blue packet/i,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Select Seed Lot.*Blue packet/i,
     }),
   ).toBeChecked();
   await browserForward();
@@ -2628,7 +2631,7 @@ test.each(["list", "gallery"])(
       }),
     );
     const preview = screen.getByRole("button", {
-      name: /^(?!Details |Edit ).*Blue packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
     });
     await user.click(preview);
     const overlay = screen.getByRole("complementary", {
@@ -2641,7 +2644,7 @@ test.each(["list", "gallery"])(
     await user.keyboard("{Escape}");
     expect(preview).toHaveFocus();
     const row = screen.getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Blue packet/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
     });
     fireEvent.click(row, { ctrlKey: true });
     expect(
@@ -2701,7 +2704,7 @@ test("whole-record highlight follows preview and bulk selection, then restores t
   const user = await openSeeds();
   const list = screen.getByRole("list", { name: "Seed inventory" });
   const trigger = within(list).getByRole("button", {
-    name: /^(?!Details |Edit ).*Blue packet/,
+    name: /^(?!Quick preview |Preview |Details |Edit ).*Blue packet/,
   });
   const row = trigger.closest("li");
   if (!row) throw new Error("The Preview surface must belong to a record.");

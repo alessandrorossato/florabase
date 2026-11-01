@@ -1,0 +1,91 @@
+FLORABASE UI System v1 consolidation — verification evidence
+2026-10-31; operator UAT candidate, not release verification.
+
+Source
+  Worktree: /home/alessandro/.codex/worktrees/548f/florabase
+  Branch: feat/ui-system-v1-wave3
+  HEAD: 4b8c038f2373c37c5645125b22c06f019698b66b
+  Committed HEAD tree: 4a5a3d7d67fa898dc91b66cb59766e8729487c62
+  Implementation remains dirty; HEAD/tree do not identify the uncommitted candidate.
+  Exact changed frontend file digests: evidence/source-fingerprint.json
+  Local and remotely checked origin/main: fbce3c4cfad26bdfa3297d53a1e65a7ec6a0ad65
+  QA worktree 9d31 clean at d09fd86118ecc9a17a9aef27e099d8a182ae073d,
+  already an ancestor; no reset, amend, merge or rebase performed.
+
+Execution environment
+  Canonical isolated quality runner:
+  python3 scripts/workflow_environment.py quality compose -- run --rm --no-deps frontend ...
+  No competing canonical verification gate; no DEV/UAT/Review provisioning or cleanup.
+
+Functional checks (completed)
+  pnpm exec vitest run --configLoader runner --reporter=dot
+    100 test files, 1097/1097 tests passed, duration 218.69s, start 21:17:13.
+    Includes the Batch 1 domain/safety tests and two new Location width regressions.
+    This full frontend result precedes the final peer/identity/mobile refinements.
+  HarvestScreen, StoredMaterial, Conversion, App after peer toolbar placement:
+    4 files, 171/171 passed, duration 30.82s.
+  App, UX001, UX004, IdentitySourceAction after identity styling/focus preservation:
+    4 files, 145/145 passed, duration 28.03s.
+  FINAL affected cross-consumer regression after Stored compact Active and shared mobile sizing:
+    pnpm exec vitest run --configLoader runner
+      src/harvests/StoredMaterial.test.tsx src/harvests/HarvestScreen.test.tsx
+      src/harvests/Conversion.test.tsx src/App.test.tsx
+      src/components/DirectoryPage.test.tsx src/seed-lots/SeedLotScreen.test.tsx
+      src/sowings/SowingScreen.test.tsx src/plants/PlantScreen.test.tsx
+      src/suppliers/SupplierScreen.test.tsx src/orders/OrderScreen.test.tsx
+      src/botanical-identities/IdentitySourceAction.test.tsx
+      src/UX001.test.tsx src/UX004.test.tsx --reporter=dot
+    13 files, 397/397 passed, duration 80.79s, start 21:38:23.
+  One intervening additional run was interrupted (exit 143) before aggregate completion;
+  it is not counted as passing evidence. The explicit final command above completed.
+  JSDOM reports its unimplemented native confirm() in an existing test path; assertions pass.
+
+Static/build checks (completed on final source)
+  pnpm typecheck                           PASS (strict tsc -b)
+  pnpm lint                                PASS (whole frontend, zero warnings)
+  pnpm format:check                        PASS (whole frontend)
+  pnpm build                               PASS (tsc -b and Vite production build)
+  python3 scripts/check-features.py         PASS (123 features valid)
+  git diff --check                         PASS
+  Documentation/evidence formatting        PASS (Prettier, see progress)
+  python3 scripts/verification_impact.py --json
+    Planning only; mode FULL due shared framework/styles and conservative unknown paths.
+    Canonical FULL deliberately NOT executed before operator acceptance.
+
+Review
+  http://localhost:15174
+  Owner and source: this exact 548f feature worktree; live source mounts include dirty changes.
+  Frontend, backend, database: healthy.
+  Code and DB head: 20261013_0042.
+  Managed fixture v4: ready, 80 baseline records; extended fixtures/operator edits retained.
+  Credentials entered by operator interactively, never read or recorded.
+
+Visual and browser evidence
+  95 unique captures; manifest includes SHA256 hashes and actual image dimensions.
+  8 record directories x 6 themes at configured 1440 CSS px.
+  8 directories x 1024/390 CSS px in Mineral Dark.
+  5 galleries x 1440/1024/390; 2 hierarchy explorers x same three widths.
+  Additional photo/lifecycle/page/selection/scroll/short-height/confirmation states.
+  Paired representative coverage; not the complete theme x width x state product.
+  95 recorded document-overflow checks: all false.
+  79 measured record/inspector-overlap checks: all false.
+  Screenshot raster size may differ from configured CSS viewport around scrollbars;
+  both dimensions are retained rather than changing the image to simulate a viewport.
+  Browser Preview/Escape/focus return and direct Details: all eight directories pass.
+  Stored material Details retains the exact inventory id.
+  Seeds page two: 21–40 of 40 matching, 43 global; All: 40 active records.
+  Seeds internal scroll reached 920.5px with inspector content unchanged.
+  Harvest destructive confirmation: Cancel initially focused; Escape returns to More.
+  Unsaved Seed label was not persisted. No record saved or deleted by visual smoke.
+  Final minimum inspector sizing fixes a confirmed zero-height mobile Stored preview;
+  metadata and operations remain in an independent content scrollport. At 390px, the
+  147px pane scrolled to 318px and exposed Open Harvest details (mobile-inspector-scroll.json).
+
+Remaining operator checks
+  Physical devices, screen readers, actual browser zoom and touch/virtual keyboard.
+  Reject dirty-draft dismissal through the native JavaScript confirmation: IAB did not expose
+  a controllable native dialog; automated guard tests pass, live reject path remains manual.
+  Full theme x width x state coverage and operator domain-operation acceptance.
+  Independent final correctness review and canonical FULL before protected delivery.
+
+No delivery commit, push, PR, main merge, feature-finish or resource deletion.

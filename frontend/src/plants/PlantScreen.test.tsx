@@ -526,14 +526,14 @@ test("unified rows, search, lifecycle and type filters, detail, and Back remain 
   mockApi(plantHandler([plant()], [group()]));
   const user = await openPlants();
   const plantRow = await screen.findByRole("button", {
-    name: /^(?!Quick preview |Details |Edit ).*Avocado #1.*Persea americana.*Plant/s,
+    name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1.*Persea americana.*Plant/s,
   });
   expect(within(plantRow).getByText("Plant")).toBeInTheDocument();
   expect(screen.queryByText("Seedlings 2026")).not.toBeInTheDocument();
 
   await selectDirectoryFilter(user, "Lifecycle", "history");
   const groupRow = screen.getByRole("button", {
-    name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026.*Cyphomandra betacea.*Group.*0 plants/s,
+    name: /^(?!Quick preview |Preview |Details |Edit ).*Seedlings 2026.*Cyphomandra betacea.*Group.*0 plants/s,
   });
   expect(within(groupRow).getByText("Group")).toBeInTheDocument();
   await selectDirectoryFilter(user, "Lifecycle", "all");
@@ -560,7 +560,7 @@ test("unified rows, search, lifecycle and type filters, detail, and Back remain 
   await selectDirectoryFilter(user, "Lifecycle", "all");
   await selectDirectoryFilter(user, "Record type", "plant");
   const selectedRow = screen.getByRole("button", {
-    name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
   });
   await user.click(selectedRow);
   await openSelectedDetails(user);
@@ -1007,7 +1007,7 @@ test("full Plant and group PUT edits preserve form state on failure and apply co
   const user = await openPlants();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
     }),
   );
   await openSelectedDetails(user);
@@ -1030,7 +1030,7 @@ test("full Plant and group PUT edits preserve form state on failure and apply co
   await selectDirectoryFilter(user, "Lifecycle", "history");
   await user.click(
     screen.getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Seedlings 2026/,
     }),
   );
   await openSelectedDetails(user);
@@ -1067,7 +1067,7 @@ test("detail loading, detail failure, authorization, and session expiry are expl
   const user = await openPlants();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
     }),
   );
   expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -1180,7 +1180,7 @@ test("active group extraction is focused, updates exact quantity, opens the Plan
   const user = await openPlants();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Seedlings 2026/,
     }),
   );
   await openSelectedDetails(user);
@@ -1301,7 +1301,7 @@ test("group extraction availability and quantity explanations cover inactive, ex
     }
     await user.click(
       await screen.findByRole("button", {
-        name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+        name: /^(?!Quick preview |Preview |Details |Edit ).*Seedlings 2026/,
       }),
     );
     await openSelectedDetails(user);
@@ -1411,7 +1411,7 @@ test("recorded extraction reintegration explains eligibility, restores authorita
   const user = await openPlants();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Chosen one/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Chosen one/,
     }),
   );
   await openSelectedDetails(user);
@@ -1458,7 +1458,7 @@ test("recorded extraction reintegration explains eligibility, restores authorita
   const blockedUser = await openPlants();
   await blockedUser.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Chosen one/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Chosen one/,
     }),
   );
   await openSelectedDetails(blockedUser);
@@ -1500,7 +1500,7 @@ test("extraction conflict preserves the form, refreshes the group, and does not 
   const user = await openPlants();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Seedlings 2026/,
     }),
   );
   await openSelectedDetails(user);
@@ -1549,7 +1549,7 @@ test("source PlantGroup context is searchable for extracted Plants", async () =>
     "Tamarillo extraction source",
   );
   const result = screen.getByRole("button", {
-    name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+    name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
   });
   expect(result).not.toHaveTextContent("Tamarillo extraction source");
   setViewportMatches(false);
@@ -1564,7 +1564,7 @@ test("source PlantGroup context is searchable for extracted Plants", async () =>
   );
   expect(
     screen.getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
     }),
   ).toBeInTheDocument();
 });
@@ -1618,7 +1618,7 @@ test("explicit Plant transfer records recipient and keeps the historical detail 
   const user = await openPlants();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
     }),
   );
   await openSelectedDetails(user);
@@ -1700,7 +1700,7 @@ test("whole-group transfer has no quantity control and extraction Events link th
   const user = await openPlants();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Seedlings 2026/,
     }),
   );
   await openSelectedDetails(user);
@@ -1781,7 +1781,7 @@ test("Plant Journal entries preserves API order, every label and partial-date pr
   const user = await openPlants();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
     }),
   );
   await openSelectedDetails(user);
@@ -1836,7 +1836,7 @@ test("PlantGroup detail has the same responsive Event journal and a useful empty
   await selectDirectoryFilter(user, "Lifecycle", "history");
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Seedlings 2026/,
     }),
   );
   await openSelectedDetails(user);
@@ -1875,7 +1875,7 @@ test("PlantGroup detail has the same responsive Event journal and a useful empty
   await selectDirectoryFilter(parityUser, "Lifecycle", "history");
   await parityUser.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Seedlings 2026/,
     }),
   );
   await openSelectedDetails(parityUser);
@@ -1931,7 +1931,7 @@ test("Event creation validates movement, explains side effects and authoritative
   const user = await openPlants();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
     }),
   );
   await openSelectedDetails(user);
@@ -2043,7 +2043,7 @@ test("historical edit and delete refresh the target without synthesizing rollbac
   const user = await openPlants();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
     }),
   );
   await openSelectedDetails(user);
@@ -2088,7 +2088,7 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
   const user = await openPlants();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
     }),
   );
   await openSelectedDetails(user);
@@ -2113,7 +2113,7 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
   const failingUser = await openPlants();
   await failingUser.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
     }),
   );
   await openSelectedDetails(failingUser);
@@ -2141,7 +2141,7 @@ test("Event loading, fetch failure and mutation failure remain explicit", async 
   const mutationUser = await openPlants();
   await mutationUser.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
     }),
   );
   await openSelectedDetails(mutationUser);
@@ -2166,7 +2166,7 @@ test("desktop Plant selection previews record facts without mounting Events", as
   setViewportMatches(false);
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
     }),
   );
   const preview = await screen.findByRole("complementary", {
@@ -2190,7 +2190,7 @@ test("reselecting a previewed record after narrowing keeps preview until explici
   setViewportMatches(false);
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
     }),
   );
   expect(
@@ -2199,7 +2199,7 @@ test("reselecting a previewed record after narrowing keeps preview until explici
   setViewportMatches(true);
   await user.click(
     screen.getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
     }),
   );
   await openSelectedDetails(user);
@@ -2320,7 +2320,7 @@ test.each([
     const user = await openPlants();
     setViewportMatches(false);
     const row = screen.getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Seedlings 2026/,
     });
     expect(row).toHaveTextContent(expected);
     await user.click(row);
@@ -2385,7 +2385,7 @@ test("group extraction history uses only recorded group origin and includes reta
   const user = await openPlants();
   await user.click(
     screen.getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Seedlings 2026/,
     }),
   );
   await openSelectedDetails(user);
@@ -2408,7 +2408,7 @@ test("transfer dialog contains keyboard focus and restores the operation trigger
   const user = await openPlants();
   await user.click(
     screen.getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
     }),
   );
   await openSelectedDetails(user);
@@ -2443,7 +2443,7 @@ test.each(["local", "external"] as const)(
     setViewportMatches(false);
     await user.click(
       screen.getByRole("button", {
-        name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+        name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
       }),
     );
     const preview = await screen.findByRole("complementary", {
@@ -2480,7 +2480,7 @@ test("historical group detail labels retained location and zero count without cl
   await selectDirectoryFilter(user, "Lifecycle", "history");
   await user.click(
     screen.getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Seedlings 2026/,
     }),
   );
   await openSelectedDetails(user);
@@ -2537,7 +2537,7 @@ test("Plant detail and correction share a clear record header and identity conte
   const user = await openPlants();
   await user.click(
     screen.getByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
     }),
   );
   await openSelectedDetails(user);
@@ -2594,7 +2594,7 @@ test("Journal editor dismisses pristine forms, protects changed notes and restor
   const user = await openPlants();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Avocado #1/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/,
     }),
   );
   await openSelectedDetails(user);
@@ -2850,14 +2850,14 @@ test.each(["plant", "group"] as const)(
     const row = screen.getByRole("button", {
       name:
         kind === "plant"
-          ? /^(?!Quick preview |Details |Edit ).*Avocado #1/
-          : /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+          ? /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/
+          : /^(?!Quick preview |Preview |Details |Edit ).*Seedlings 2026/,
     });
     expect(row).not.toHaveTextContent(location.display_path);
     expect(row).not.toHaveTextContent("Purchased");
     expect(row).not.toHaveTextContent("From sowing");
     expect(
-      within(row).getByText("Active", { exact: true }),
+      within(row).getByRole("img", { name: "Active" }),
     ).toBeInTheDocument();
     expect(row).toHaveTextContent(kind === "plant" ? "Plant" : "6 plants");
     await user.click(row);
@@ -2943,7 +2943,7 @@ test("Extract Plant browser Back and direct-route Cancel return to the same sour
   const user = await openPlants();
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Seedlings 2026/,
     }),
   );
   await openSelectedDetails(user);
@@ -3009,8 +3009,8 @@ test.each(["plant", "group"] as const)(
       await screen.findByRole("button", {
         name:
           kind === "plant"
-            ? /^(?!Quick preview |Details |Edit ).*Avocado #1/
-            : /^(?!Quick preview |Details |Edit ).*Seedlings 2026/,
+            ? /^(?!Quick preview |Preview |Details |Edit ).*Avocado #1/
+            : /^(?!Quick preview |Preview |Details |Edit ).*Seedlings 2026/,
       }),
     );
     await openSelectedDetails(user);
@@ -3086,28 +3086,28 @@ test("identity scope composes with the Plants ownership model and separate group
   render(<App />);
   expect(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Scoped group/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Scoped group/,
     }),
   ).toBeVisible();
   expect(
     screen.queryByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Scoped plant/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Scoped plant/,
     }),
   ).toBeNull();
   expect(
     screen.queryByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Other plant/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Other plant/,
     }),
   ).toBeNull();
   await selectDirectoryFilter(user, "Record type", "all");
   expect(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Scoped plant/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Scoped plant/,
     }),
   ).toBeVisible();
   expect(
     screen.queryByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Other plant/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Other plant/,
     }),
   ).toBeNull();
   await user.click(
@@ -3115,7 +3115,7 @@ test("identity scope composes with the Plants ownership model and separate group
   );
   expect(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Other plant/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Other plant/,
     }),
   ).toBeVisible();
 });
@@ -3141,7 +3141,7 @@ test("Plants Gallery/List keeps group scope, search, preview focus and bulk choi
   const row = within(
     screen.getByRole("list", { name: "Plants collection" }),
   ).getByRole("button", {
-    name: /^(?!Quick preview |Details |Edit ).*Tamarillo/,
+    name: /^(?!Quick preview |Preview |Details |Edit ).*Tamarillo/,
   });
   await user.click(row);
   expect(row.closest("li")).toHaveAttribute("data-selected", "true");
@@ -3158,7 +3158,7 @@ test("Plants Gallery/List keeps group scope, search, preview focus and bulk choi
   await user.click(screen.getByRole("button", { name: "Gallery" }));
   expect(
     screen.getByRole("checkbox", {
-      name: /^(?!Quick preview |Details |Edit ).*Select Plant group.*Tamarillo/i,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Select Plant group.*Tamarillo/i,
     }),
   ).toBeChecked();
   await browserBack();
@@ -3168,7 +3168,7 @@ test("Plants Gallery/List keeps group scope, search, preview focus and bulk choi
   expect(screen.getByLabelText("Search Plants")).toHaveValue("Tamarillo");
   expect(
     screen.getByRole("checkbox", {
-      name: /^(?!Quick preview |Details |Edit ).*Select Plant group.*Tamarillo/i,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Select Plant group.*Tamarillo/i,
     }),
   ).toBeChecked();
   localStorage.clear();
@@ -3186,7 +3186,7 @@ test.each(["plant", "group"] as const)(
     setViewportMatches(true);
     const label = kind === "plant" ? "Avocado #1" : "Seedlings 2026";
     const trigger = screen.getByRole("button", {
-      name: new RegExp(`^(?!Details |Edit ).*${label}`),
+      name: new RegExp(`^(?!Quick preview |Preview |Details |Edit ).*${label}`),
     });
     await user.click(trigger);
     const preview = await screen.findByRole("complementary", {

@@ -1,3 +1,10 @@
+import { DirectoryInspectorPlaceholder } from "../components/DirectoryPage";
+import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { DirectoryWorkspace } from "../components/DirectoryPage";
+import {
+  DirectoryInspector,
+  DirectoryRecordContent,
+} from "../components/DirectoryPage";
 import { IdentityTaskLink } from "./IdentityTaskLink";
 import {
   identitySections,
@@ -11,8 +18,8 @@ import { identityDirectory } from "./identityNavigation";
 import { IdentityReferenceSummary } from "./IdentityReferenceSummary";
 import "../components/collection-directory.css";
 import { ActionButton, ActionLink } from "../components/Action";
+import { Icon } from "../components/Icon";
 import { IdentitySourceAction } from "./IdentitySourceAction";
-import { TaskDialog } from "../components/TaskDialog";
 import { EditWorkspace } from "../components/EditWorkspace";
 import { useEditRoute } from "../components/useEditRoute";
 import "./botanical-identities.css";
@@ -1147,7 +1154,8 @@ export function BotanicalIdentityScreen({
   startCreating = false,
 }: { initialId?: string; initialTab?: string; startCreating?: boolean } = {}) {
   const auth = useAuth();
-  const [narrowPreview, setNarrowPreview] = useState(false);
+  const previewTrigger = useRef<HTMLButtonElement | null>(null);
+  const [previewFocusRequested, setPreviewFocusRequested] = useState(false);
   const [directory, setDirectory] = useState<DirectoryState>({
     status: "loading",
   });
@@ -1161,6 +1169,7 @@ export function BotanicalIdentityScreen({
     setSelected(null);
   });
   const filter = view.state.q;
+
   const setFilter = (value: string) => {
     view.update("q", value);
   };
@@ -1259,6 +1268,8 @@ export function BotanicalIdentityScreen({
       ].some((value) => value?.toLocaleLowerCase().includes(query)),
     );
   }, [directory, filter]);
+  const pagination = useDirectoryPagination(filteredIdentities, filter);
+  const { visible: pageIdentities } = pagination;
 
   if (
     auth.state.status !== "authenticated" &&
@@ -1271,6 +1282,7 @@ export function BotanicalIdentityScreen({
   async function refreshAndSelect(
     identity: BotanicalIdentityResponse,
   ): Promise<void> {
+    setPreviewFocusRequested(false);
     const identities = await listBotanicalIdentities();
     setDirectory({ status: "ready", identities });
     setSelected(identities.find(({ id }) => id === identity.id) ?? identity);
@@ -1515,7 +1527,7 @@ export function BotanicalIdentityScreen({
         title="Botanical identities"
         titleId="botanical-identities-title"
         eyebrow="Explore"
-        description="Manage the botanical identities that connect collection records and reference data."
+        description="Names that connect your collection."
         tools={
           <DirectoryTools
             name="Botanical identities"
@@ -1568,7 +1580,14 @@ export function BotanicalIdentityScreen({
           {createState.message}
         </p>
       )}
-      <div className="reference-split">
+      <DirectoryWorkspace>
+        {directory.status === "ready" && (
+          <DirectoryResults
+            count={filteredIdentities.length}
+            total={directory.identities.length}
+            pagination={filteredIdentities.length > 0 ? pagination : undefined}
+          />
+        )}
         <div className="directory-column">
           <section
             aria-labelledby="identity-directory-title"
@@ -1578,9 +1597,6 @@ export function BotanicalIdentityScreen({
               Identity directory
             </h3>
 
-            {directory.status === "ready" && (
-              <DirectoryResults count={filteredIdentities.length} />
-            )}
             {directory.status === "loading" && (
               <p aria-live="polite" className="notice">
                 Loading botanical identities…
@@ -1617,35 +1633,95 @@ export function BotanicalIdentityScreen({
               )}
             {filteredIdentities.length > 0 && (
               <ul
-                className="identity-cards"
+                className="identity-cards ui-directory-records ui-directory-records--list"
                 ref={directoryRef}
                 aria-label="Botanical identities"
                 tabIndex={0}
               >
-                {filteredIdentities.map((identity) => (
-                  <li key={identity.id}>
+                {pageIdentities.map((identity) => (
+                  <li
+                    className="identity-directory-item ui-directory-row ui-directory-row--composed"
+                    data-selected={selected?.id === identity.id || undefined}
+                    key={identity.id}
+                  >
                     <button
                       type="button"
-                      className="identity-card"
+                      className="identity-card ui-directory-trigger"
+                      aria-label={`Quick preview ${identity.display_label}${identity.common_name ? ` · ${identity.common_name}` : ""}`}
                       aria-pressed={selected?.id === identity.id}
-                      onClick={() => {
+                      title="Quick Preview"
+                      onClick={(event) => {
+                        previewTrigger.current = event.currentTarget;
+                        setPreviewFocusRequested(true);
                         setSelected(identity);
-                        setNarrowPreview(
-                          window.matchMedia("(max-width: 68rem)").matches,
-                        );
                       }}
                     >
-                      <IdentityImage key={identity.id} identity={identity} />
-                      <span className="identity-card-copy">
-                        <strong>
-                          <IdentityName identity={identity} />
-                        </strong>
-                        {identity.common_name && (
-                          <span>{identity.common_name}</span>
-                        )}
-                        <IdentityCardContext identity={identity} />
-                      </span>
+                      <DirectoryRecordContent
+                        visual={
+                          <IdentityImage
+                            key={identity.id}
+                            identity={identity}
+                          />
+                        }
+                        name={<IdentityName identity={identity} />}
+                        secondary={identity.common_name}
+                        summary={<IdentityCardContext identity={identity} />}
+                      />
                     </button>
+                    <div
+                      className="identity-directory-actions ui-directory-record-actions"
+                      role="group"
+                      aria-label={`Quick actions for ${identity.display_label}`}
+                    >
+                      <IdentityTaskLink
+                        className="control-icon-button button--secondary"
+                        aria-label={`Details ${identity.display_label}`}
+                        title="Details"
+                        href={`#/identities/${identity.id}`}
+                      >
+                        <Icon name="document" />
+                        <span className="sr-only">Details</span>
+                      </IdentityTaskLink>
+                      <IdentityTaskLink
+                        className="control-icon-button button--secondary"
+                        aria-label={`Edit ${identity.display_label}`}
+                        title="Edit"
+                        href={`#/identities/${identity.id}?tab=edit`}
+                      >
+                        <Icon name="edit" />
+                        <span className="sr-only">Edit</span>
+                      </IdentityTaskLink>
+                      <IdentityTaskLink
+                        className="control-icon-button button--secondary"
+                        aria-label={`Add seed lot for ${identity.display_label}`}
+                        title="Add seed lot"
+                        href={`#/seeds?action=create&identity=${identity.id}`}
+                      >
+                        <Icon name="seed" />
+                        <span className="sr-only">Add seed lot</span>
+                      </IdentityTaskLink>
+                      <IdentityTaskLink
+                        className="ui-directory-quick-action"
+                        aria-label={`Add plant for ${identity.display_label}`}
+                        title="Add plant"
+                        href={`#/plants?action=create&identity=${identity.id}&kind=plant`}
+                      >
+                        <Icon name="plant" />
+                        <span className="sr-only">Add plant</span>
+                      </IdentityTaskLink>
+                      <IdentitySourceAction
+                        identityId={identity.id}
+                        kind="sowing"
+                        triggerIcon="sprout"
+                        triggerLabel={`Start sowing for ${identity.display_label}`}
+                      />
+                      <IdentitySourceAction
+                        identityId={identity.id}
+                        kind="harvest"
+                        triggerIcon="harvest"
+                        triggerLabel={`Record harvest for ${identity.display_label}`}
+                      />
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -1832,29 +1908,24 @@ export function BotanicalIdentityScreen({
           )}
         </div>
 
-        {narrowPreview && selected ? (
-          <TaskDialog
-            title="Botanical identity preview"
-            className="identity-preview-dialog"
+        {selected ? (
+          <DirectoryInspector
+            title="Botanical identity inspection"
+            focusOnOpen={previewFocusRequested}
+            returnFocusTo={previewTrigger}
+            fallbackFocusTo={directoryRef}
             onClose={() => {
-              setNarrowPreview(false);
+              setSelected(null);
             }}
           >
-            <button
-              type="button"
-              className="button--secondary"
-              onClick={() => {
-                setNarrowPreview(false);
-              }}
-            >
-              Close preview
-            </button>
             {preview}
-          </TaskDialog>
+          </DirectoryInspector>
         ) : (
-          preview
+          <DirectoryInspectorPlaceholder title="Select a botanical identity">
+            Choose a record to inspect its name and collection.
+          </DirectoryInspectorPlaceholder>
         )}
-      </div>
+      </DirectoryWorkspace>
     </section>
   );
 }

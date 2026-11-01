@@ -105,6 +105,9 @@ test("Supplier directory and Quick Preview use protected thumbnails and neutral 
   const row = await screen.findByRole("button", {
     name: "Quick preview Review nursery",
   });
+  expect(
+    screen.getByRole("complementary", { name: "Quick preview" }),
+  ).toHaveTextContent("Select a supplier");
   const record = row.closest("li");
   if (!record) throw new Error("Supplier action must belong to its record");
   expect(
@@ -592,7 +595,7 @@ test("Supplier presentation preserves canonical search and preview focus across 
   mount();
   await screen.findByRole("button", { name: "Quick preview Review nursery" });
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-  expect(screen.queryByText("Select a supplier")).not.toBeInTheDocument();
+  expect(screen.getByText("Select a supplier")).toBeVisible();
   expect(
     screen.queryByRole("button", { name: "Filters" }),
   ).not.toBeInTheDocument();
@@ -668,6 +671,16 @@ test("Supplier title click previews and the explicit Details action navigates di
     within(row).queryByRole("link", { name: "Review nursery" }),
   ).not.toBeInTheDocument();
   expect(within(row).getByRole("img", { name: "Active" })).toBeVisible();
+  expect(
+    within(
+      within(row).getByRole("group", { name: "Actions for Review nursery" }),
+    ).getAllByRole("button"),
+  ).toHaveLength(2);
+  expect(
+    within(row)
+      .getByRole("group", { name: "Actions for Review nursery" })
+      .querySelector('[data-icon="eye"]'),
+  ).not.toBeInTheDocument();
   await user.click(within(row).getByText("Review nursery", { exact: true }));
   expect(
     screen.getByRole("complementary", { name: "Supplier inspection" }),

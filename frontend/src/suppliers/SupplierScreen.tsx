@@ -1,8 +1,12 @@
+import { DirectoryInspectorPlaceholder } from "../components/DirectoryPage";
+import { useDirectoryPagination } from "../components/useDirectoryPagination";
+import { DirectoryWorkspace } from "../components/DirectoryPage";
 import { StatusBadge } from "../components/WorkspaceUI";
 import {
   DirectoryPage,
   DirectoryRecords,
   DirectoryTrigger,
+  DirectoryRecordContent,
   DirectoryRow,
   DirectoryCard,
   DirectoryRecordActions,
@@ -10,7 +14,6 @@ import {
   DirectoryViewSwitcher,
 } from "../components/DirectoryPage";
 import { useDirectoryPresentation } from "../components/directoryPresentation";
-import "../styles/sourcing-directory.css";
 import { ActionButton } from "../components/Action";
 import "../components/collection-page.css";
 import "../components/collection-directory.css";
@@ -942,6 +945,9 @@ export function SupplierScreen({
     );
   }, [filter, suppliers]);
 
+  const pagination = useDirectoryPagination(visible, filter);
+  const { visible: pageVisible } = pagination;
+
   useEffect(() => {
     if (
       !startCreating ||
@@ -1440,9 +1446,20 @@ export function SupplierScreen({
           }
           content={
             <>
-              <div
-                className={`supplier-master-detail operational-layout directory-preview-layout${creationExpanded ? " is-detail-view" : ""}`}
+              <DirectoryWorkspace
+                className={
+                  creationExpanded
+                    ? "supplier-master-detail operational-layout is-detail-view"
+                    : undefined
+                }
               >
+                {directory.status === "ready" && (
+                  <DirectoryResults
+                    count={visible.length}
+                    total={suppliers.length}
+                    pagination={visible.length > 0 ? pagination : undefined}
+                  />
+                )}
                 <section
                   className="seed-master supplier-master"
                   aria-labelledby="supplier-directory-title"
@@ -1450,9 +1467,7 @@ export function SupplierScreen({
                   <h3 className="sr-only" id="supplier-directory-title">
                     Supplier directory
                   </h3>
-                  {directory.status === "ready" && (
-                    <DirectoryResults count={visible.length} />
-                  )}
+
                   {directory.status === "loading" && (
                     <p aria-live="polite" className="notice">
                       Loading suppliers…
@@ -1494,7 +1509,7 @@ export function SupplierScreen({
                       label="Suppliers"
                       listRef={directoryList}
                     >
-                      {visible.map((supplier) => (
+                      {pageVisible.map((supplier) => (
                         <DirectoryItem
                           key={supplier.id}
                           previewId={supplier.id}
@@ -1528,45 +1543,55 @@ export function SupplierScreen({
                             setPreviewOpen(true);
                           }}
                         >
-                          <div className="sourcing-record-identity">
-                            <DirectoryTrigger
-                              className="sourcing-preview-trigger"
-                              aria-label={`Quick preview ${supplier.name}`}
-                              description={`${supplier.retired_at ? "Retired" : "Active"} · Open Quick Preview`}
-                            >
-                              <RecordVisual
-                                kind="supplier"
-                                label={supplier.name}
-                                photo={supplier.primary_photo ?? null}
-                                compact
-                                showSource={presentation.view === "gallery"}
-                              />
-                              <span className="sourcing-record-name">
-                                <strong>
-                                  <span>{supplier.name}</span>
-                                  {!supplier.retired_at && (
-                                    <StatusBadge compactState="active">
-                                      Active
-                                    </StatusBadge>
+                          <DirectoryTrigger
+                            className="sourcing-preview-trigger"
+                            aria-label={`Quick preview ${supplier.name}`}
+                            description={`${supplier.retired_at ? "Retired" : "Active"} · Open Quick Preview`}
+                          >
+                            <DirectoryRecordContent
+                              visual={
+                                <RecordVisual
+                                  kind="supplier"
+                                  label={supplier.name}
+                                  photo={supplier.primary_photo ?? null}
+                                  compact
+                                  showSource={presentation.view === "gallery"}
+                                />
+                              }
+                              name={
+                                <>
+                                  <>
+                                    <span>{supplier.name}</span>
+                                  </>
+                                </>
+                              }
+                              secondary={<>{kindLabels[supplier.kind]}</>}
+                              summary={
+                                <>
+                                  <strong>
+                                    {supplier.usage_counts.direct_records_total}
+                                  </strong>
+                                  <small>direct records</small>
+                                  {supplier.retired_at && (
+                                    <span
+                                      className={`lifecycle-badge lifecycle-badge--${supplier.retired_at ? "retired" : "active"}`}
+                                    >
+                                      {supplier.retired_at
+                                        ? "Retired"
+                                        : "Active"}
+                                    </span>
                                   )}
-                                </strong>
-                                <small>{kindLabels[supplier.kind]}</small>
-                              </span>
-                            </DirectoryTrigger>
-                          </div>
-                          <div className="sourcing-record-facts">
-                            <strong>
-                              {supplier.usage_counts.direct_records_total}
-                            </strong>
-                            <small>direct records</small>
-                            {supplier.retired_at && (
-                              <span
-                                className={`lifecycle-badge lifecycle-badge--${supplier.retired_at ? "retired" : "active"}`}
-                              >
-                                {supplier.retired_at ? "Retired" : "Active"}
-                              </span>
-                            )}
-                          </div>
+                                </>
+                              }
+                              status={
+                                !supplier.retired_at ? (
+                                  <StatusBadge compactState="active">
+                                    Active
+                                  </StatusBadge>
+                                ) : undefined
+                              }
+                            />
+                          </DirectoryTrigger>
                           <DirectoryRecordActions
                             label={supplier.name}
                             onDetails={() => {
@@ -1612,7 +1637,16 @@ export function SupplierScreen({
                     />
                   </DirectoryInspector>
                 )}
-              </div>
+                {directory.status === "ready" &&
+                  suppliers.length > 0 &&
+                  !previewOpen &&
+                  !editing &&
+                  !edit.modal && (
+                    <DirectoryInspectorPlaceholder title="Select a supplier">
+                      Choose a supplier row to preview its details.
+                    </DirectoryInspectorPlaceholder>
+                  )}
+              </DirectoryWorkspace>
               <div aria-live="polite">
                 {save.status === "saving" && (
                   <p className="notice">Saving the supplier…</p>

@@ -1,7 +1,10 @@
+import { DirectoryInspectorPlaceholder } from "../components/DirectoryPage";
+import { DirectoryWorkspace } from "../components/DirectoryPage";
 import {
   DirectoryPage,
   DirectoryRecords,
   DirectoryTrigger,
+  DirectoryRecordContent,
   DirectoryRow,
   DirectoryCard,
   DirectoryRecordActions,
@@ -9,7 +12,6 @@ import {
   DirectoryViewSwitcher,
 } from "../components/DirectoryPage";
 import { useDirectoryPresentation } from "../components/directoryPresentation";
-import "../styles/sourcing-directory.css";
 import { ActionButton } from "../components/Action";
 import {
   useEffect,
@@ -695,6 +697,7 @@ export function OrderScreen({
     presentation.view === "gallery" ? DirectoryCard : DirectoryRow;
 
   const [offset, setOffset] = useState(0);
+  const [pageSize, setPageSize] = useState("20");
   const [lotOffsetState, setLotOffsetState] = useState({
     id: initialId ?? "",
     offset: 0,
@@ -734,7 +737,7 @@ export function OrderScreen({
     lotOffsetState.id === (initialId ?? "") ? lotOffsetState.offset : 0;
   const pageRequestKey = `${view.state.q}:${view.state.supplier_id}:${String(
     offset,
-  )}:${String(attempt)}`;
+  )}:${pageSize}:${String(attempt)}`;
   const detailRequestKey = `${initialId ?? ""}:${String(lotOffset)}:${String(
     attempt,
   )}`;
@@ -797,12 +800,36 @@ export function OrderScreen({
 
   useEffect(() => {
     const controller = new AbortController();
+    const limit = pageSize === "all" ? 100 : Number(pageSize);
     void listOrders(
       view.state.q,
       view.state.supplier_id,
       offset,
       controller.signal,
+      limit,
     )
+      .then(async (firstPage) => {
+        if (controller.signal.aborted || pageSize !== "all") return firstPage;
+        const pages = Math.ceil(firstPage.total / limit);
+        const remainder = await Promise.all(
+          Array.from({ length: Math.max(0, pages - 1) }, (_, index) =>
+            listOrders(
+              view.state.q,
+              view.state.supplier_id,
+              (index + 1) * limit,
+              controller.signal,
+              limit,
+            ),
+          ),
+        );
+        return {
+          ...firstPage,
+          items: [
+            ...firstPage.items,
+            ...remainder.flatMap((page) => page.items),
+          ],
+        };
+      })
       .then((item) => {
         if (controller.signal.aborted) return;
         setStoredPage(item);
@@ -826,6 +853,7 @@ export function OrderScreen({
     auth,
     attempt,
     offset,
+    pageSize,
     pageRequestKey,
     view.state.q,
     view.state.supplier_id,
@@ -1397,7 +1425,33 @@ export function OrderScreen({
                   </button>
                 </div>
               )}
-              <div className="order-master-detail operational-layout directory-preview-layout">
+              <DirectoryWorkspace>
+                {page && (
+                  <DirectoryResults
+                    count={page.total}
+                    total={page.total}
+                    pagination={{
+                      page:
+                        pageSize === "all"
+                          ? 0
+                          : Math.floor(offset / page.limit),
+                      pages:
+                        pageSize === "all"
+                          ? 1
+                          : Math.max(1, Math.ceil(page.total / page.limit)),
+                      size: pageSize,
+                      from: page.items.length > 0 ? offset + 1 : 0,
+                      to: offset + page.items.length,
+                      setPage: (nextPage) => {
+                        setOffset(nextPage * page.limit);
+                      },
+                      setSize: (nextSize) => {
+                        setOffset(0);
+                        setPageSize(nextSize);
+                      },
+                    }}
+                  />
+                )}
                 <section
                   className="seed-master order-master"
                   aria-labelledby="order-directory-title"
@@ -1405,12 +1459,7 @@ export function OrderScreen({
                   <h3 className="sr-only" id="order-directory-title">
                     Order directory
                   </h3>
-                  {page && (
-                    <DirectoryResults
-                      count={page.items.length}
-                      total={page.total}
-                    />
-                  )}
+
                   {!page && !pageError && (
                     <p aria-live="polite" className="notice">
                       Loading Orders…
@@ -1484,34 +1533,44 @@ export function OrderScreen({
                             setPreviewOpen(true);
                           }}
                         >
-                          <div className="sourcing-record-identity">
-                            <DirectoryTrigger
-                              className="sourcing-preview-trigger"
-                              aria-label={`Quick preview ${orderTitle(order)}`}
-                            >
-                              <RecordVisual
-                                kind="order"
-                                label={orderTitle(order)}
-                                photo={null}
-                                compact
-                                showSource={presentation.view === "gallery"}
-                              />
-                              <span className="sourcing-record-name">
-                                <strong>{orderTitle(order)}</strong>
-                                <small>
+                          <DirectoryTrigger
+                            className="sourcing-preview-trigger"
+                            aria-label={`Quick preview ${orderTitle(order)}`}
+                          >
+                            <DirectoryRecordContent
+                              visual={
+                                <RecordVisual
+                                  kind="order"
+                                  label={orderTitle(order)}
+                                  photo={null}
+                                  compact
+                                  showSource={presentation.view === "gallery"}
+                                />
+                              }
+                              name={
+                                <>
+                                  <>{orderTitle(order)}</>
+                                </>
+                              }
+                              secondary={
+                                <>
                                   {orderDate(order.ordered_on)} ·{" "}
                                   {order.supplier?.name ?? "Supplier unknown"}
-                                </small>
-                              </span>
-                            </DirectoryTrigger>
-                          </div>
-                          <div className="sourcing-record-facts">
-                            <strong>{orderPrice(order)}</strong>
-                            <small>
-                              {order.seed_lot_count} seed{" "}
-                              {order.seed_lot_count === 1 ? "lot" : "lots"}
-                            </small>
-                          </div>
+                                </>
+                              }
+                              summary={
+                                <>
+                                  <strong>{orderPrice(order)}</strong>
+                                  <small>
+                                    {order.seed_lot_count} seed{" "}
+                                    {order.seed_lot_count === 1
+                                      ? "lot"
+                                      : "lots"}
+                                  </small>
+                                </>
+                              }
+                            />
+                          </DirectoryTrigger>
                           <DirectoryRecordActions
                             label={orderTitle(order)}
                             onDetails={() => {
@@ -1525,32 +1584,6 @@ export function OrderScreen({
                         </DirectoryItem>
                       ))}
                     </DirectoryRecords>
-                  )}
-                  {page && (
-                    <div className="actions order-pagination">
-                      {offset > 0 && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setOffset((value) =>
-                              Math.max(0, value - page.limit),
-                            );
-                          }}
-                        >
-                          Previous Orders
-                        </button>
-                      )}
-                      {offset + page.items.length < page.total && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setOffset((value) => value + page.limit);
-                          }}
-                        >
-                          Next Orders
-                        </button>
-                      )}
-                    </div>
                   )}
                 </section>
                 {selected && previewOpen && !editing && !formOpen && (
@@ -1573,7 +1606,16 @@ export function OrderScreen({
                     />
                   </DirectoryInspector>
                 )}
-              </div>
+                {page &&
+                  page.total > 0 &&
+                  !previewOpen &&
+                  !editing &&
+                  !formOpen && (
+                    <DirectoryInspectorPlaceholder title="Select an order">
+                      Choose an order row to preview its details.
+                    </DirectoryInspectorPlaceholder>
+                  )}
+              </DirectoryWorkspace>
               <div aria-live="polite">
                 {success && (
                   <p className="notice notice--success" role="status">

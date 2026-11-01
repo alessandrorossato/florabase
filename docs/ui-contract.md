@@ -507,7 +507,6 @@ it. The [approved prototype](design/ui-system-v1/gate-b/README.md) remains histo
 No canonical verification receipt or delivery approval is implied. Preserve the Gate A alternatives as history. Structural page
 changes require desktop/tablet/mobile, long-content, state and keyboard evidence; delivery follows CI-004.
 
-
 ### Wave 1 final operator refinements — 29 October 2026
 
 The [final refinements](design/ui-system-v1/wave1/refinements/README.md) supersede the earlier
@@ -536,7 +535,6 @@ Sourcing presentation is browser-local/URL-only and never enters Saved Views or 
 All six operator UAT scenarios have passed and the UI/UX scope is frozen. Independent correctness
 review, reconciliation with PR #130 and canonical FULL verification remain pending.
 
-
 ### Wave 3 operator refinement — nonmodal directory inspection (2026-10-30)
 
 DirectoryInspector now defaults to a nonmodal side panel across its Collection and
@@ -559,10 +557,12 @@ retaining Location counts, filtering, scopes and parent protections.
 
 This supersedes the historical Wave 1 three-action/modal contract above for
 compatible record directories. Seeds, Plants/groups, Sowings, Harvests, Suppliers
-and Orders use record-surface Quick Preview with explicit sibling Details/Edit.
+and Orders open the same nonmodal Quick Preview from the record surface. A redundant
+sibling eye action is omitted; domain operations may occupy that action slot where
+appropriate. Details and Edit remain separate direct actions.
 Native keyboard activation, focus descriptions and existing Ctrl/Cmd selection
-remain available; selection mode takes precedence. Modified Sourcing title links
-retain their native destination/new-tab behavior. Preview never traps Tab or dims
+remain available; selection mode takes precedence. Native route links retain their modifier navigation; command buttons retain route
+ownership. Preview never traps Tab or dims
 the directory. Escape/Close use the latest connected trigger without scrolling it.
 
 The shared workspace keeps identity, primary tools and filter summaries outside
@@ -587,10 +587,26 @@ their existing Select-a-record guidance when idle; mobile omits that empty panel
 Seeds Gallery uses Plants' quiet, right-aligned icon actions. Bounded directory
 scrollbars use thin native controls and current semantic theme colors.
 
-Collection pagination refinement: Seeds, Plants/groups and Sowings place metadata,
-page controls and Select records above the list/inspector grid. Default 20 records,
-50/100/All choices, matching/global totals and displayed ranges are presentation
-state; Saved Views and APIs retain domain ownership. Bulk selection addresses the
-current page and preserves existing safety limits. Photo-card identity text stays
-in normal flow. At <=400px, workspace scrolling takes precedence over retaining a
-fixed toolbar when paging plus Preview would leave an unusable results region.
+Collection pagination refinement: Seeds, Plants/groups, Sowings, Harvests,
+Suppliers, Orders, Stored Material and Botanical identities place metadata and
+page controls above results. Default 20 records, 50/100/All choices, matching/global
+totals and displayed ranges are presentation state; Saved Views and APIs retain
+domain ownership. Bulk selection addresses the current page and preserves existing
+safety limits. Photo-card identity text stays in normal flow. At <=400px, workspace
+scrolling takes precedence over retaining a fixed toolbar when paging plus Preview
+would leave an unusable results region.
+
+### Same-family consolidation — current contract (2026-10-31)
+
+The [consolidation specification](design/ui-system-v1/consolidation/README.md) supersedes
+page-specific layout refinements above. Family A uses DirectoryWorkspace and typed
+DirectoryRecordContent slots across Collection, Sourcing and Botanical identities. Legacy
+master/detail geometry classes are reserved for full editor/detail compositions. Tools
+follow page identity; Harvest peer tabs precede each peer's own tools. Pagination spans
+the record and inspector columns. At <=64rem the bounded inspector stacks above records;
+its single content scrollport includes metadata and operations. Programmatic identity
+selection after creation preserves creation-trigger focus. Family B shares hierarchy
+presentation and responsive inspector placement, with explicit Details at all widths.
+Domain state, quantities, relationships, canonical filters, Saved Views, form ownership and
+safety guards remain with their existing capabilities. Operator acceptance and FULL remain
+pending; paired visual coverage and manual device/AT/actual-zoom limits are documented.

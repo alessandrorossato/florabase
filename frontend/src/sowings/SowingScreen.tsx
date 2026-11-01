@@ -1,8 +1,11 @@
+import { DirectoryInspectorPlaceholder } from "../components/DirectoryPage";
+import { DirectoryWorkspace } from "../components/DirectoryPage";
 import { useDirectoryPagination } from "../components/useDirectoryPagination";
 import { StatusBadge } from "../components/WorkspaceUI";
 import {
   DirectoryRecords,
   DirectoryTrigger,
+  DirectoryRecordContent,
   DirectoryRow,
   DirectoryCard,
   DirectoryInspector,
@@ -12,9 +15,8 @@ import {
 import { useDirectoryPresentation } from "../components/directoryPresentation";
 import { BotanicalName } from "../components/ReferenceUI";
 import { RecordIdentities } from "../components/recordPresentation";
-import "./directory.css";
 import { BotanicalIdentityFilter } from "../harvests/BotanicalIdentityFilter";
-import { ActionButton } from "../components/Action";
+import { ActionButton, ActionLink } from "../components/Action";
 import "../components/collection-page.css";
 import { useCollectionPageReturnFocus } from "../components/useCollectionPageReturnFocus";
 import "../components/collection-directory.css";
@@ -1723,27 +1725,31 @@ export function SowingScreen({
             </p>
           </div>
         )}
-        {collection.status === "ready" && (
-          <DirectoryResults
-            count={filtered.length}
-            total={sowings.length}
-            pagination={pagination}
-            actions={
-              <BulkSelect
-                selection={bulk}
-                visible={bulkChoices}
-                onStart={() => {
-                  setSelectedId(null);
-                  setMobileDetail(false);
-                  setDetail({ status: "idle" });
-                }}
-              />
-            }
-          />
-        )}
-        <div
-          className={`sowing-master-detail operational-layout directory-preview-layout${mobileDetail || (editing && !edit.modal) ? " is-detail-view" : ""}`}
+        <DirectoryWorkspace
+          className={
+            mobileDetail || (editing && !edit.modal)
+              ? "sowing-master-detail operational-layout is-detail-view"
+              : undefined
+          }
         >
+          {collection.status === "ready" && (
+            <DirectoryResults
+              count={filtered.length}
+              total={sowings.length}
+              pagination={pagination}
+              actions={
+                <BulkSelect
+                  selection={bulk}
+                  visible={bulkChoices}
+                  onStart={() => {
+                    setSelectedId(null);
+                    setMobileDetail(false);
+                    setDetail({ status: "idle" });
+                  }}
+                />
+              }
+            />
+          )}
           <section
             className="seed-master sowing-master"
             aria-labelledby="sowing-list-title"
@@ -1809,25 +1815,23 @@ export function SowingScreen({
                         setMobileDetail(false);
                       }}
                     >
-                      <span className="ui-directory-record-identity">
-                        <RecordVisual
-                          kind="sowing"
-                          label={recordName(sowing, "Sowing")}
-                          compact
-                          identity={{
-                            id: sowing.seed_lot.botanical_identity_id,
-                            display_label:
-                              sowing.seed_lot.botanical_identity_display_label,
-                          }}
-                        />
-                        <span className="ui-directory-record-name">
-                          <strong>
-                            {recordName(sowing, "Unlabelled sowing")}
-                          </strong>
-                          {sowing.lifecycle === "active" && (
-                            <StatusBadge>Active</StatusBadge>
-                          )}
-                          <small>
+                      <DirectoryRecordContent
+                        visual={
+                          <RecordVisual
+                            kind="sowing"
+                            label={recordName(sowing, "Sowing")}
+                            compact
+                            identity={{
+                              id: sowing.seed_lot.botanical_identity_id,
+                              display_label:
+                                sowing.seed_lot
+                                  .botanical_identity_display_label,
+                            }}
+                          />
+                        }
+                        name={<>{recordName(sowing, "Unlabelled sowing")}</>}
+                        secondary={
+                          <>
                             <BotanicalName
                               label={
                                 sowing.seed_lot.botanical_identity_display_label
@@ -1838,24 +1842,56 @@ export function SowingScreen({
                                 )?.scientific_name
                               }
                             />
-                          </small>
-                        </span>
-                      </span>
-
-                      <span className="ui-directory-record-facts">
-                        <GerminationProgress sowing={sowing} />
-                      </span>
-                      {sowing.lifecycle !== "active" && (
-                        <span
-                          className={`lifecycle-badge lifecycle-badge--${sowing.lifecycle}`}
-                        >
-                          {lifecycleLabels[sowing.lifecycle]}
-                        </span>
-                      )}
+                          </>
+                        }
+                        summary={
+                          <>
+                            <GerminationProgress sowing={sowing} />
+                          </>
+                        }
+                        status={
+                          sowing.lifecycle === "active" ? (
+                            <StatusBadge compactState="active">
+                              Active
+                            </StatusBadge>
+                          ) : (
+                            <>
+                              <span
+                                className={`lifecycle-badge lifecycle-badge--${sowing.lifecycle}`}
+                              >
+                                {lifecycleLabels[sowing.lifecycle]}
+                              </span>
+                            </>
+                          )
+                        }
+                      />
                     </DirectoryTrigger>
                     <DirectoryRecordActions
                       label={recordName(sowing, "Unlabelled sowing")}
-
+                      extraActions={
+                        sowing.lifecycle !== "reversed" ? (
+                          <>
+                            <ActionLink
+                              className="ui-directory-quick-action"
+                              icon="plant"
+                              aria-label={`Create plant from ${recordName(sowing, "Unlabelled sowing")}`}
+                              title="Create Plant"
+                              href={`#/plants?action=from-sowing&sowing=${sowing.id}&kind=plant`}
+                            >
+                              <span className="sr-only">Create Plant</span>
+                            </ActionLink>
+                            <ActionLink
+                              className="ui-directory-quick-action"
+                              icon="sprout"
+                              aria-label={`Open germination for ${recordName(sowing, "Unlabelled sowing")}`}
+                              title="Germination"
+                              href={`#/sowings/${sowing.id}?tab=germination`}
+                            >
+                              <span className="sr-only">Germination</span>
+                            </ActionLink>
+                          </>
+                        ) : undefined
+                      }
                       onDetails={(trigger) => {
                         selectSowing(sowing.id, trigger);
                         setMobileDetail(true);
@@ -2110,14 +2146,13 @@ export function SowingScreen({
                   </DirectoryInspector>
                 )
               ) : (
-                <div className="selected-seed seed-detail-empty">
-                  <h3>Select a Sowing</h3>
-                  <p>Choose a compact row to see its full record.</p>
-                </div>
+                <DirectoryInspectorPlaceholder title="Select a Sowing">
+                  Choose a compact row to see its full record.
+                </DirectoryInspectorPlaceholder>
               )}
             </section>
           )}
-        </div>
+        </DirectoryWorkspace>
       </div>
       {edit.modal && editor}
     </section>

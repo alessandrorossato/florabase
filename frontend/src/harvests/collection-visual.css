@@ -12,26 +12,10 @@
   margin-inline: 0;
   min-width: 0;
 }
-.app-content .harvest-directory-layout,
-.app-content .locations-workspace .reference-split {
-  grid-template-columns: minmax(0, 2.15fr) minmax(18rem, 1fr);
-  gap: var(--space-6);
-}
-.app-content .harvest-directory > li > .harvest-directory-row {
-  display: grid;
-  grid-template-columns: 4rem minmax(0, 1fr) minmax(7rem, auto);
-  gap: var(--space-3);
-  margin: 0;
-  padding: var(--space-3) var(--space-4);
-}
 .app-content .harvest-directory .record-visual {
   width: 4rem;
   height: 4rem;
   box-sizing: border-box;
-}
-.app-content .harvest-directory .harvest-row-content strong,
-.app-content .location-directory-row .location-record-name {
-  font: 400 1.16rem/1.3 var(--font-botanical);
 }
 .app-content :is(.harvest-workspace, .locations-workspace) .quick-preview h3 {
   font: 400 1.375rem/1.3 var(--font-botanical);
@@ -48,15 +32,6 @@
 .harvest-workspace .quick-preview > .record-visual svg {
   width: 5rem;
   height: 5rem;
-}
-.app-content .harvest-directory .harvest-row-meta {
-  max-width: 13rem;
-  min-width: 0;
-  font: var(--type-small);
-  overflow-wrap: anywhere;
-}
-.harvest-row-content small {
-  color: var(--text-muted);
 }
 .app-content
   :is(.harvest-workspace, .locations-workspace)
@@ -229,9 +204,6 @@
   }
 }
 @media (max-width: 64rem) {
-  .app-content .harvest-directory-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
   .app-content .harvest-form .form-sections--page {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -241,18 +213,6 @@
   }
 }
 @media (max-width: 48rem) {
-  .app-content .harvest-directory > li > .harvest-directory-row {
-    grid-template-columns: 4rem minmax(0, 1fr);
-    padding-inline: var(--space-2);
-  }
-  .app-content .harvest-directory .harvest-row-meta {
-    grid-column: 2;
-    width: auto;
-    max-width: none;
-    text-align: left;
-    display: flex;
-    flex-wrap: wrap;
-  }
   .app-content :is(.harvest-detail, .location-detail) .seed-overview-band,
   .app-content .harvest-context-grid,
   .app-content .location-overview-grid {
@@ -442,9 +402,20 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
 }
-.app-content .stored-material-directory .harvest-directory-row {
-  box-sizing: border-box;
-  border-bottom: 0;
+.app-content
+  .harvest-workspace:has(.stored-material-directory)
+  .stored-material-directory {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-block-size: 0;
+  overflow: hidden;
+}
+.app-content
+  .harvest-workspace:has(.stored-material-directory)
+  > .stored-material-directory {
+  flex: 1 1 auto;
+  min-block-size: 0;
 }
 .app-content .stored-directory-actions {
   margin: 0 0 var(--space-3) calc(4rem + var(--space-7));
@@ -582,35 +553,9 @@
   font: var(--type-strong);
   margin-bottom: var(--space-2);
 }
-.app-content .stored-material-directory .harvest-row-content strong {
-  color: var(--text);
-}
-
-/* Match the accepted Plants directory text roles and control geometry. */
-.app-content .harvest-directory-layout {
-  grid-template-columns: minmax(0, 1.3fr) minmax(16rem, 0.8fr);
-  gap: var(--space-8);
-}
-.app-content .harvest-directory .harvest-directory-row {
-  font: var(--type-body);
-  text-decoration: none;
-}
-.app-content .harvest-directory .harvest-row-content {
-  gap: var(--space-1);
-}
 .app-content .harvest-directory .harvest-row-botanical {
   font: 400 0.8125rem/1.45 var(--font-botanical);
   color: var(--text-muted);
-}
-.app-content .harvest-directory .harvest-row-meta {
-  font: var(--type-small);
-  color: var(--text-muted);
-}
-.harvest-row-meta .lifecycle-badge {
-  justify-self: end;
-}
-.app-content .harvest-directory .harvest-row-meta small {
-  font: var(--type-small);
 }
 .app-content .stored-material-directory .stored-directory-actions {
   display: flex;
@@ -655,11 +600,6 @@
 .location-parent-field .reference-menu button {
   white-space: normal;
   overflow-wrap: anywhere;
-}
-@media (max-width: 64rem) {
-  .app-content .harvest-directory-layout {
-    grid-template-columns: minmax(0, 1fr);
-  }
 }
 @media (max-width: 48rem) {
   .app-content .stored-material-directory .stored-directory-actions {

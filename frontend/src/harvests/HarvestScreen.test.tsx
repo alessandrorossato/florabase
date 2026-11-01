@@ -156,8 +156,11 @@ describe("Harvest directory and detail", () => {
   it("shows minimal historical material rows and useful source preview", async () => {
     const user = userEvent.setup();
     wrap(<HarvestScreen />);
+    expect(
+      await screen.findByRole("complementary", { name: "Quick preview" }),
+    ).toHaveTextContent("Select a Harvest");
     const row = await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Coffee — Fruit harvest/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Coffee — Fruit harvest/,
     });
     expect(row).toHaveTextContent("Fruit");
     expect(row).not.toHaveTextContent("12 items");
@@ -165,7 +168,7 @@ describe("Harvest directory and detail", () => {
       within(row).queryByText("Coffee", { exact: true }),
     ).not.toBeInTheDocument();
     await user.click(row);
-    expect(row).toHaveClass("is-selected");
+    expect(row.closest("li")).toHaveAttribute("data-selected", "true");
     expect(row).toHaveAttribute("aria-pressed", "true");
     const preview = screen.getByRole("complementary", {
       name: "Harvest inspection",
@@ -213,7 +216,7 @@ describe("Harvest directory and detail", () => {
     await user.click(screen.getByRole("button", { name: "Retry" }));
     expect(
       await screen.findByRole("button", {
-        name: /^(?!Quick preview |Details |Edit ).*Coffee — Fruit harvest/,
+        name: /^(?!Quick preview |Preview |Details |Edit ).*Coffee — Fruit harvest/,
       }),
     ).toBeVisible();
   });
@@ -420,7 +423,7 @@ it("filters exact source identity across Plants and groups and composes search/m
   const user = userEvent.setup();
   wrap(<HarvestScreen />);
   await screen.findByRole("button", {
-    name: /^(?!Quick preview |Details |Edit ).*misleading title/,
+    name: /^(?!Quick preview |Preview |Details |Edit ).*misleading title/,
   });
   await user.click(screen.getByRole("button", { name: "Filters" }));
   const picker = screen.getByRole("combobox", { name: "Botanical identity" });
@@ -436,19 +439,25 @@ it("filters exact source identity across Plants and groups and composes search/m
   });
   expect(
     screen.queryByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*misleading title/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*misleading title/,
     }),
   ).not.toBeInTheDocument();
-  expect(screen.getByText("2 records")).toBeVisible();
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    /1–2 of 2 records/,
+  );
   await selectDirectoryFilter(user, "Material", "seed");
-  expect(screen.getByText("1 record")).toBeVisible();
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    /1–1 of 1 record/,
+  );
   await selectDirectoryFilter(user, "Source type", "plant");
   expect(screen.getByText("No Harvests match these filters.")).toBeVisible();
   await selectDirectoryFilter(user, "Source type", "plant_group");
   await user.type(screen.getByLabelText("Search Harvests"), "missing");
   expect(screen.getByText("No Harvests match these filters.")).toBeVisible();
   await user.clear(screen.getByLabelText("Search Harvests"));
-  expect(screen.getByText("1 record")).toBeVisible();
+  expect(screen.getByLabelText("Directory results")).toHaveTextContent(
+    /1–1 of 1 record/,
+  );
   await user.click(screen.getByRole("button", { name: /^Filters/ }));
   await user.click(
     screen.getByRole("button", { name: "Clear botanical identity filter" }),
@@ -460,7 +469,7 @@ it("filters exact source identity across Plants and groups and composes search/m
   await selectDirectoryFilter(user, "Material", "");
   await selectDirectoryFilter(user, "Source type", "");
   await screen.findByRole("button", {
-    name: /^(?!Quick preview |Details |Edit ).*misleading title/,
+    name: /^(?!Quick preview |Preview |Details |Edit ).*misleading title/,
   });
 });
 
@@ -471,7 +480,7 @@ it("distinguishes an empty collection from an empty identity result and retains 
   const user = userEvent.setup();
   const view = wrap(<HarvestScreen />);
   await screen.findByRole("button", {
-    name: /^(?!Quick preview |Details |Edit ).*Coffee — Fruit harvest/,
+    name: /^(?!Quick preview |Preview |Details |Edit ).*Coffee — Fruit harvest/,
   });
   await user.click(screen.getByRole("button", { name: /^Filters/ }));
   await user.type(
@@ -490,7 +499,7 @@ it("distinguishes an empty collection from an empty identity result and retains 
 it("BULK-001 does not expose multi-selection for historical Harvest occurrences", async () => {
   wrap(<HarvestScreen />);
   await screen.findByRole("button", {
-    name: /^(?!Quick preview |Details |Edit ).*Coffee — Fruit harvest/,
+    name: /^(?!Quick preview |Preview |Details |Edit ).*Coffee — Fruit harvest/,
   });
   expect(
     screen.queryByRole("button", { name: "Select records" }),
@@ -521,7 +530,7 @@ it("guards every contextual Harvest editor dismissal and returns focus to Edit",
   wrap(<HarvestScreen />);
   await user.click(
     await screen.findByRole("button", {
-      name: /^(?!Quick preview |Details |Edit ).*Coffee — Fruit harvest/,
+      name: /^(?!Quick preview |Preview |Details |Edit ).*Coffee — Fruit harvest/,
     }),
   );
   const trigger = screen.getByRole("button", { name: "Edit" });
@@ -663,7 +672,7 @@ it("keeps photo preview visible and the directory interactive when switching rec
   const user = userEvent.setup();
   wrap(<HarvestScreen />);
   const firstTrigger = await screen.findByRole("button", {
-    name: new RegExp(`^(?!Details |Edit ).*${harvest.display_title}`),
+    name: new RegExp(`^(?!Preview |Details |Edit ).*${harvest.display_title}`),
   });
   await user.click(firstTrigger);
   const preview = screen.getByRole("complementary", {
@@ -676,7 +685,7 @@ it("keeps photo preview visible and the directory interactive when switching rec
     }),
   ).toHaveAttribute("src", harvest.source.primary_photo?.thumbnail_url);
   const next = screen.getByRole("button", {
-    name: /^(?!Details |Edit ).*Second collection/,
+    name: /^(?!Preview |Details |Edit ).*Second collection/,
   });
   await user.click(next);
   expect(

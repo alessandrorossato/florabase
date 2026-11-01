@@ -1,5 +1,7 @@
 # Wave 3 — Collection implementation and operator refinement handoff
 
+**Current candidate (31 October 2026):** the [same-family consolidation specification](../consolidation/README.md), compliance matrix, evidence gallery and UAT checklist supersede the historical page-specific handoffs below. QA reconciliation is already included; operator acceptance and canonical FULL remain pending.
+
 29 October 2026. Branch `feat/ui-system-v1-wave3`, isolated Codex checkout `548f`,
 base `5b2e2a1` (merged Wave 1 #129 plus enrichment #130). Wave 2 remains unmerged;
 its worktree, environments and implementation are not changed. This is a partial
@@ -23,14 +25,14 @@ supersedes the previous UAT-ready handoff; no QA, FULL or delivery is authorized
 
 ## Compliance update
 
-| Surface | Batch 1 status | Remaining scope |
-| --- | --- | --- |
-| SeedLots | Existing approved implementation retained | Targeted later integration regressions |
-| Sowings | Unchanged | Batch 2 List/Gallery, explicit actions, overlay and typography |
-| Plants / PlantGroups | Existing approved implementation retained | Targeted later integration regressions |
-| Harvests | Safe destructive confirmation implemented | Batch 3 directory adaptation |
-| Stored material | Safe tracking confirmation and changed-draft guards implemented | Batch 3 exact inventory destination and integration |
-| Locations | Creation dirty-dismiss protection implemented | Batch 4 direct-detail loading/error/missing recovery |
+| Surface              | Batch 1 status                                                  | Remaining scope                                                |
+| -------------------- | --------------------------------------------------------------- | -------------------------------------------------------------- |
+| SeedLots             | Existing approved implementation retained                       | Targeted later integration regressions                         |
+| Sowings              | Unchanged                                                       | Batch 2 List/Gallery, explicit actions, overlay and typography |
+| Plants / PlantGroups | Existing approved implementation retained                       | Targeted later integration regressions                         |
+| Harvests             | Safe destructive confirmation implemented                       | Batch 3 directory adaptation                                   |
+| Stored material      | Safe tracking confirmation and changed-draft guards implemented | Batch 3 exact inventory destination and integration            |
+| Locations            | Creation dirty-dismiss protection implemented                   | Batch 4 direct-detail loading/error/missing recovery           |
 
 ## Checks and limits
 
@@ -84,7 +86,7 @@ before operator acceptance. No Wave 3 completion marker is appropriate yet.
   checked, StoredMaterial test formatter reported unchanged.
 - `python3 scripts/check-features.py`: 120 valid. `git diff --check`: passed.
 - Commands ran through `python3 scripts/workflow_environment.py quality compose --
-  run --rm --no-deps frontend ...`; test commands used the three named domain files
+run --rm --no-deps frontend ...`; test commands used the three named domain files
   and `pnpm test src/App.test.tsx -t '[Ll]ocation'`.
 - Two test-callback lint errors were corrected. One attempted Compose invocation
   with unsupported `--no-build` failed before tests; the supported invocation passed.
@@ -156,13 +158,13 @@ No canonical FULL gate, push, PR, delivery or cleanup was performed.
 Implementation, focused regressions and the browser visual pass are reviewed.
 This matrix records the current source contract and the in-session visual evidence.
 
-| Surface | Current family and shared UI | Confirmed behavior and domain contracts | Remaining visual checks / risk | Likely files | Priority / effort | Evidence |
-| --- | --- | --- | --- | --- | --- | --- |
-| Sowings | Directory; List default, Gallery optional; DirectoryTools, DirectoryRecords, DirectoryRow/Card, DirectoryRecordActions, DirectoryInspector, Saved Views and presentation hook | Lifecycle/filter/search, bulk selection, exact SeedLot identity, germination, lineage and descendants remain domain-owned; explicit preview/detail/edit paths; preview Escape returns focus | Layout checked at 1440/1024/390; all six themes at 1440; Gallery only at 1024/390. Retry states and screen-reader use remain test/operator checks. | `frontend/src/sowings/SowingScreen.tsx`, `directory.css`, `SowingScreen.test.tsx` | P1 / M | 33 focused tests; inline screenshots in this review session |
-| Harvests | Historical directory List; DirectoryRecordActions and DirectoryInspector | Occurrences remain historical except supported correction/delete; no bulk selection; source, material, notes, Events, media and exact quantities retain existing flows; Preview Escape focus return; Delete Cancel initially focused | Layout checked at all three widths; all six themes at 1440; loading and no-photo content visible. Physical device/zoom/AT not exercised. | `frontend/src/harvests/HarvestScreen.tsx`, `directory.css`, `HarvestScreen.test.tsx` | P1 / M | 16 Harvest tests; preview and dialog interactions; inline screenshots |
-| Stored Material | Existing directory/table with filters, Saved Views and bulk controls | Link targets exact inventory via `?inventory=<id>`; exact item scroll/focus; quantity, disposition, partial and unknown stock semantics unchanged | Layout checked at all three widths; all six themes at 1440; loading visible; live retryable service failure not injected. | `frontend/src/harvests/StoredMaterial.tsx`, `StoredMaterial.test.tsx` | P1 / S | 24 directory tests and Batch 1 dialog checks; inline screenshots |
-| Locations | Existing native hierarchy and detail/editor flows | Tree, search, scope and operations unchanged; detail distinguishes loading, retryable error and missing record with return route; edited draft prompts on dismissal and remains after rejecting discard | Layout checked at all three widths; all six themes at 1440; loading and missing state visible. Retryable error is covered by focused tests, not live failure injection. | `frontend/src/locations/LocationScreen.tsx`, `frontend/src/App.test.tsx` | P1 / S | 19 selected Location App tests; dirty-dismiss browser check; inline screenshots |
-| SeedLots, Plants, PlantGroups | Existing directories; approved Wave 1 composition retained | Shared nonmodal Preview and photo-source strip refinement follow the operator’s all-gallery clarification; domain behavior unchanged | Mixed Plants photo/placeholder row and loaded preview checked in all six themes; device/AT/zoom limits remain | Shared DirectoryPage, directory.css, RecordVisual; consumer tests | P1 / S | Included in 377 passing regressions; inline visual evidence |
+| Surface                       | Current family and shared UI                                                                                                                                                  | Confirmed behavior and domain contracts                                                                                                                                                                                              | Remaining visual checks / risk                                                                                                                                          | Likely files                                                                         | Priority / effort | Evidence                                                                        |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ----------------- | ------------------------------------------------------------------------------- |
+| Sowings                       | Directory; List default, Gallery optional; DirectoryTools, DirectoryRecords, DirectoryRow/Card, DirectoryRecordActions, DirectoryInspector, Saved Views and presentation hook | Lifecycle/filter/search, bulk selection, exact SeedLot identity, germination, lineage and descendants remain domain-owned; explicit preview/detail/edit paths; preview Escape returns focus                                          | Layout checked at 1440/1024/390; all six themes at 1440; Gallery only at 1024/390. Retry states and screen-reader use remain test/operator checks.                      | `frontend/src/sowings/SowingScreen.tsx`, `directory.css`, `SowingScreen.test.tsx`    | P1 / M            | 33 focused tests; inline screenshots in this review session                     |
+| Harvests                      | Historical directory List; DirectoryRecordActions and DirectoryInspector                                                                                                      | Occurrences remain historical except supported correction/delete; no bulk selection; source, material, notes, Events, media and exact quantities retain existing flows; Preview Escape focus return; Delete Cancel initially focused | Layout checked at all three widths; all six themes at 1440; loading and no-photo content visible. Physical device/zoom/AT not exercised.                                | `frontend/src/harvests/HarvestScreen.tsx`, `directory.css`, `HarvestScreen.test.tsx` | P1 / M            | 16 Harvest tests; preview and dialog interactions; inline screenshots           |
+| Stored Material               | Existing directory/table with filters, Saved Views and bulk controls                                                                                                          | Link targets exact inventory via `?inventory=<id>`; exact item scroll/focus; quantity, disposition, partial and unknown stock semantics unchanged                                                                                    | Layout checked at all three widths; all six themes at 1440; loading visible; live retryable service failure not injected.                                               | `frontend/src/harvests/StoredMaterial.tsx`, `StoredMaterial.test.tsx`                | P1 / S            | 24 directory tests and Batch 1 dialog checks; inline screenshots                |
+| Locations                     | Existing native hierarchy and detail/editor flows                                                                                                                             | Tree, search, scope and operations unchanged; detail distinguishes loading, retryable error and missing record with return route; edited draft prompts on dismissal and remains after rejecting discard                              | Layout checked at all three widths; all six themes at 1440; loading and missing state visible. Retryable error is covered by focused tests, not live failure injection. | `frontend/src/locations/LocationScreen.tsx`, `frontend/src/App.test.tsx`             | P1 / S            | 19 selected Location App tests; dirty-dismiss browser check; inline screenshots |
+| SeedLots, Plants, PlantGroups | Existing directories; approved Wave 1 composition retained                                                                                                                    | Shared nonmodal Preview and photo-source strip refinement follow the operator’s all-gallery clarification; domain behavior unchanged                                                                                                 | Mixed Plants photo/placeholder row and loaded preview checked in all six themes; device/AT/zoom limits remain                                                           | Shared DirectoryPage, directory.css, RecordVisual; consumer tests                    | P1 / S            | Included in 377 passing regressions; inline visual evidence                     |
 
 Batches 1–4 initially changed no shared components. The final operator refinement
 updates shared DirectoryInspector, photographic card alignment and source caption
@@ -208,7 +210,6 @@ Operator UAT scenarios:
 5. Repeat the high-value layouts in 1440/1024/390 widths and six themes; use
    keyboard-only navigation and check focus visibility, Escape, long names and
    missing images. Report device and assistive-technology gaps separately.
-
 
 ## Final operator refinement candidate — 30 October 2026
 
@@ -291,7 +292,6 @@ Physical devices, actual browser zoom, screen readers and live service-failure
 injection remain unverified. Operator acceptance is pending; no FULL, commit,
 push, PR, merge or feature-finish occurred in this refinement pass.
 
-
 Final checks: strict TypeScript, zero-warning affected ESLint, all affected
 Prettier checks, 121-feature validation and diff whitespace passed. No test/static
 failure remains. Six settled 1440px mixed photo/placeholder gallery + side-preview
@@ -302,7 +302,6 @@ preview/hierarchy captures establish the responsive adaptation; the earlier floa
 panel trial was replaced with an inline stack so it cannot obscure the directory.
 The final source-marker/health refresh confirms the same owned source and healthy
 frontend/backend/database at migration head 20261013_0042.
-
 
 ## Global workspace refinement — 30 October 2026
 
@@ -322,16 +321,16 @@ is the deliberate accessibility fallback rather than an unusable results region.
 
 ### Updated compliance matrix
 
-| Surface | Current behavior / reuse | Preserved contracts and exception | Evidence |
-| --- | --- | --- | --- |
-| Seeds | Shared bounded List/Gallery, native surface Preview, compact Active check, Details/Edit | Stock precision, physical packet identity, bulk limits, Saved Views and start-sowing destination unchanged | SeedLotScreen suite; 40-record browser scroll, six themes, photo/gallery and 320px captures |
-| Plants / groups | Same shared workspace; persistent preview during detail refresh | Individual/group identity, group lineage, bulk and forms unchanged; Dashboard unchanged | PlantScreen and App suites; responsive sweep |
-| Sowings | Opted into shared workspace; persistent preview, List/Gallery surface actions | Germination, lineage, descendants, quantity and Saved Views unchanged | 34 Sowing tests, including inspector/scroll persistence; responsive sweep |
-| Harvests | Historical directory bounded by shared rules; compact source-aware Preview | History and corrections remain exact; no invented binary lifecycle | 17 Harvest tests including photo/switch; responsive sweep |
-| Suppliers / Orders | Shared workspace, surface/photo Preview; explicit Details/Edit; native modified title links | Retired/order states remain truthful; supplier filters, ordering, paging, URL and editors unchanged | 13 Supplier / 19 Order tests plus App; responsive sweep |
-| Stored Material | Deliberate operational exception: exact inventory destination and selection retained | Never substitutes Harvest/plant navigation for inventory identity; precision/disposition/conversion intact | 24 Stored Material + 10 Conversion tests |
-| Locations | Earlier Geography-style tree refinement retained; no record-row Preview conversion | Counts/scopes, ancestors, protected parents and editing guards retained | App hierarchy/loading/error/dirty-state cases and earlier tree captures |
-| Other workspaces | Journal/History/Schedule, Geography, Maps, Taxonomy and Media remain specialized | No Activity conceptual redesign or foreign-worktree changes | Consumer inventory and complete diff review |
+| Surface            | Current behavior / reuse                                                                    | Preserved contracts and exception                                                                          | Evidence                                                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Seeds              | Shared bounded List/Gallery, native surface Preview, compact Active check, Details/Edit     | Stock precision, physical packet identity, bulk limits, Saved Views and start-sowing destination unchanged | SeedLotScreen suite; 40-record browser scroll, six themes, photo/gallery and 320px captures |
+| Plants / groups    | Same shared workspace; persistent preview during detail refresh                             | Individual/group identity, group lineage, bulk and forms unchanged; Dashboard unchanged                    | PlantScreen and App suites; responsive sweep                                                |
+| Sowings            | Opted into shared workspace; persistent preview, List/Gallery surface actions               | Germination, lineage, descendants, quantity and Saved Views unchanged                                      | 34 Sowing tests, including inspector/scroll persistence; responsive sweep                   |
+| Harvests           | Historical directory bounded by shared rules; compact source-aware Preview                  | History and corrections remain exact; no invented binary lifecycle                                         | 17 Harvest tests including photo/switch; responsive sweep                                   |
+| Suppliers / Orders | Shared workspace, surface/photo Preview; explicit Details/Edit; native modified title links | Retired/order states remain truthful; supplier filters, ordering, paging, URL and editors unchanged        | 13 Supplier / 19 Order tests plus App; responsive sweep                                     |
+| Stored Material    | Deliberate operational exception: exact inventory destination and selection retained        | Never substitutes Harvest/plant navigation for inventory identity; precision/disposition/conversion intact | 24 Stored Material + 10 Conversion tests                                                    |
+| Locations          | Earlier Geography-style tree refinement retained; no record-row Preview conversion          | Counts/scopes, ancestors, protected parents and editing guards retained                                    | App hierarchy/loading/error/dirty-state cases and earlier tree captures                     |
+| Other workspaces   | Journal/History/Schedule, Geography, Maps, Taxonomy and Media remain specialized            | No Activity conceptual redesign or foreign-worktree changes                                                | Consumer inventory and complete diff review                                                 |
 
 ### Diagnosis and verification
 

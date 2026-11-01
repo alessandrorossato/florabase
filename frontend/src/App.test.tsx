@@ -983,11 +983,11 @@ test("client-side filter matches loaded common names and distinguishes zero matc
 
   await user.type(filter, "cherimoya");
   expect(
-    screen.getByRole("button", { name: /Annona cherimola/i }),
+    screen.getByRole("button", { name: /^Quick preview Annona cherimola/i }),
   ).toBeInTheDocument();
   await waitFor(() => {
     expect(
-      screen.queryByRole("button", { name: /Acer palmatum/i }),
+      screen.queryByRole("button", { name: /^Quick preview Acer palmatum/i }),
     ).not.toBeInTheDocument();
   });
   await user.clear(filter);
@@ -1077,7 +1077,9 @@ test("keyboard creation sends generated-contract fields with CSRF and renders th
   expect(screen.getAllByText("Japanese maple")).toHaveLength(2);
   expect(screen.queryByText(botanicalIdentity.id)).not.toBeInTheDocument();
   expect(
-    screen.getByRole("button", { name: /Acer palmatum.*Japanese maple/i }),
+    screen.getByRole("button", {
+      name: /^Quick preview Acer palmatum.*Japanese maple/i,
+    }),
   ).toHaveAttribute("aria-pressed", "true");
   expect(directoryCalls).toBe(2);
   expect(createRequest?.method).toBe("POST");
@@ -4560,11 +4562,11 @@ test("narrow identity selection opens the compact preview with creation actions 
   render(<App />);
   await vi.dynamicImportSettled();
   const row = await screen.findByRole("button", {
-    name: /Acer palmatum.*Bloodgood/,
+    name: /^Quick preview Acer palmatum.*Bloodgood/,
   });
   await user.click(row);
-  const preview = screen.getByRole("dialog", {
-    name: "Botanical identity preview",
+  const preview = screen.getByRole("complementary", {
+    name: "Botanical identity inspection",
   });
   expect(
     within(preview).getByRole("button", { name: "Start sowing" }),
@@ -4748,3 +4750,39 @@ test("Location creation protects changed names and scopes on Escape and Cancel",
   expect(screen.getByRole("dialog", { name: "New location" })).toBeVisible();
   confirm.mockRestore();
 });
+
+test.each([1024, 390])(
+  "Location selection retains its explorer and explicit Details at %ipx",
+  async (width) => {
+    const previousWidth = window.innerWidth;
+    Object.defineProperty(window, "innerWidth", {
+      configurable: true,
+      value: width,
+    });
+    try {
+      authenticatedThen((path) => {
+        if (path === "/api/v1/locations")
+          return jsonResponse([houseLocation, cabinetLocation, drawerLocation]);
+        throw new Error(`unexpected request: ${path}`);
+      });
+      const user = await openLocations();
+      const row = await screen.findByRole("button", { name: /^House/ });
+      await user.click(row);
+      expect(window.location.hash).toBe("#/locations");
+      expect(row).toHaveAttribute("aria-pressed", "true");
+      expect(
+        within(
+          screen.getByRole("complementary", { name: "Quick preview" }),
+        ).getByRole("heading", { name: "House" }),
+      ).toBeVisible();
+      expect(
+        screen.getByRole("link", { name: "Open details" }),
+      ).toHaveAttribute("href", `#/locations/${houseLocation.id}`);
+    } finally {
+      Object.defineProperty(window, "innerWidth", {
+        configurable: true,
+        value: previousWidth,
+      });
+    }
+  },
+);

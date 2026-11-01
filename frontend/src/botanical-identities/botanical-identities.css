@@ -1,4 +1,4 @@
-/* BOTANICAL-IDENTITIES-VISUAL-001: scoped to this detail, directory and editor. */
+/* Identity-specific preview/editor content; directory geometry is shared. */
 .identity-reference-page .identity-preview-actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

@@ -495,10 +495,11 @@ test("record surfaces support keyboard Preview while Details and Edit bypass it"
     </DirectoryRecords>,
   );
   const user = userEvent.setup();
-  expect(
-    document.querySelector('.ui-directory-record-actions [data-icon="eye"]'),
-  ).toBeNull();
   const surface = screen.getByRole("button", { name: /Record one.*Active/ });
+  const actionGroup = screen.getByRole("group", {
+    name: "Actions for Record one",
+  });
+  expect(within(actionGroup).getAllByRole("button")).toHaveLength(2);
   surface.focus();
   await user.keyboard("{Enter}");
   await user.keyboard(" ");

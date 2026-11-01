@@ -38,28 +38,6 @@
   .ui-directory-trigger:focus-visible {
   outline: none;
 }
-
-/* Seeds uses the same light, right-aligned action treatment as Plants Gallery. */
-.seeds-workspace .ui-directory-card--composed > .ui-directory-record-actions {
-  border-top: 0;
-  justify-content: flex-end;
-  gap: var(--space-1);
-}
-.seeds-workspace
-  .ui-directory-card--composed
-  .ui-directory-record-actions
-  .control-icon-button {
-  background: transparent;
-  border-color: transparent;
-  width: 2.75rem;
-  height: 2.75rem;
-}
-.seeds-workspace
-  .ui-directory-card--composed
-  .ui-directory-record-actions
-  .control-icon-button:hover {
-  background: var(--surface-hover);
-}
 @media (forced-colors: active) {
   .app-content .ui-directory-records > [data-selected="true"] {
     outline: 2px solid Highlight;
@@ -76,30 +54,12 @@
   min-block-size: 0;
   overflow: hidden;
 }
-.app-content
-  .ui-directory-page:has(.ui-directory-records)
-  > :not(.ui-directory-frame),
-.harvest-workspace:has(.harvest-directory) > :not(.harvest-directory-layout) {
-  flex: none;
-}
 .app-content .ui-directory-page:has(.ui-directory-records) .ui-directory-frame,
 .app-content .ui-directory-page:has(.ui-directory-records) .ui-directory-main {
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
   min-block-size: 0;
-  overflow: hidden;
-}
-.app-content
-  .ui-directory-page:has(.ui-directory-records)
-  .operational-layout:not(.is-detail-view),
-.app-content .harvest-directory-layout:has(.harvest-directory) {
-  display: grid;
-  flex: 1 1 auto;
-  min-block-size: 0;
-  grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem);
-  align-items: stretch;
-  gap: var(--space-4);
   overflow: hidden;
 }
 .app-content .ui-directory-page:has(.ui-directory-records) .seed-master,
@@ -132,6 +92,29 @@
   overflow: hidden;
   align-self: start;
   padding: var(--space-3);
+}
+.app-content .ui-inspector-placeholder {
+  align-content: start;
+  min-block-size: 11rem;
+  background: var(--surface-subtle);
+  border-style: dashed;
+  color: var(--text-muted);
+}
+.app-content .ui-inspector-placeholder h3 {
+  margin: 0;
+  font: var(--type-strong);
+  color: var(--text);
+}
+.app-content .ui-inspector-placeholder p {
+  margin: 0;
+  font: var(--type-small);
+}
+.app-content
+  :is(.supplier-master-detail, .order-master-detail):has(
+    > .ui-directory-side-preview
+  )
+  > .ui-directory-side-preview {
+  margin-block-start: 3.25rem;
 }
 .ui-directory-side-preview .ui-inspector-content {
   min-block-size: 0;
@@ -233,28 +216,9 @@
 .ui-directory-record-name small {
   grid-column: 1 / -1;
 }
-.sourcing-directory .sourcing-preview-trigger {
-  display: block;
-  inline-size: auto;
-  padding: 0;
-  min-block-size: 0;
-  border: 0;
-  background: transparent;
-}
-.sourcing-directory .ui-directory-card .sourcing-preview-trigger {
-  inline-size: 100%;
-}
 .ui-directory-page .directory-filter-summary {
   max-block-size: 18dvh;
   overflow: auto;
-}
-@media (max-width: 75rem) {
-  .app-content
-    .ui-directory-page:has(.ui-directory-records)
-    .operational-layout:not(.is-detail-view),
-  .app-content .harvest-directory-layout:has(.harvest-directory) {
-    grid-template-columns: minmax(0, 1fr) 18rem;
-  }
 }
 @media (max-width: 48rem) {
   main:has(.ui-directory-page .ui-directory-records),
@@ -279,19 +243,6 @@
     overflow: hidden;
     padding: var(--space-3) var(--space-3)
       calc(5rem + env(safe-area-inset-bottom));
-  }
-  .app-content
-    .ui-directory-page:has(.ui-directory-records)
-    .operational-layout:not(.is-detail-view),
-  .app-content .harvest-directory-layout:has(.harvest-directory) {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr);
-  }
-  .app-content
-    .ui-directory-page:has(.ui-directory-side-preview)
-    .operational-layout:not(.is-detail-view),
-  .app-content .harvest-directory-layout:has(.ui-directory-side-preview) {
-    grid-template-rows: minmax(0, 25dvh) minmax(0, 1fr);
   }
   .app-content .ui-directory-side-preview {
     max-block-size: 25dvh;
@@ -413,24 +364,12 @@ main:has(.harvest-directory) {
   .ui-directory-page .page-identity > p:not(.eyebrow) {
     display: none;
   }
-  .app-content
-    .ui-directory-page:has(.ui-directory-side-preview)
-    .operational-layout:not(.is-detail-view),
-  .app-content .harvest-directory-layout:has(.ui-directory-side-preview) {
-    grid-template-rows: minmax(0, 20dvh) minmax(0, 1fr);
-  }
   .app-content .ui-directory-side-preview {
     max-block-size: 20dvh;
   }
   .app-content .ui-directory-side-preview .quick-preview-body {
     overflow: hidden;
     min-block-size: 2.5rem;
-  }
-  .app-content
-    .ui-directory-side-preview
-    .quick-preview-body
-    > :not(h3):not(.record-visual) {
-    display: none;
   }
   .app-content .ui-directory-side-preview .quick-preview-body > .record-visual {
     float: left;
@@ -534,6 +473,58 @@ main:has(.harvest-directory) {
 .ui-directory-page .directory-tools > button[aria-haspopup="dialog"] {
   min-inline-size: 7rem;
 }
+.app-content
+  .ui-directory-page
+  .operational-layout.directory-preview-layout
+  > .directory-pagination {
+  grid-column: 1 / -1;
+  grid-row: 1;
+}
+.app-content .ui-directory-record-actions .ui-directory-quick-action,
+.app-content .ui-directory-quick-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 2.75rem;
+  width: 2.75rem;
+  min-width: 2.75rem;
+  height: 2.75rem;
+  min-height: 2.75rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-small);
+  background: transparent;
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.app-content .ui-directory-quick-action:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+.app-content .ui-directory-quick-action:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.app-content .ui-directory-quick-action .control-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+.app-content
+  :is(.ui-directory-page, .stored-material-directory)
+  .directory-filter-summary {
+  min-block-size: 3rem;
+  max-block-size: 3rem;
+  align-items: center;
+  box-sizing: border-box;
+  overflow-y: hidden;
+}
+.app-content
+  :is(.ui-directory-page, .stored-material-directory)
+  .directory-filter-summary
+  > button {
+  min-block-size: 2.5rem;
+  box-sizing: border-box;
+}
 .sowings-workspace :is(.lifecycle-badge--failed, .lifecycle-badge--abandoned) {
   color: var(--danger);
   background: var(--danger-subtle);
@@ -599,18 +590,6 @@ main:has(.harvest-directory) {
     min-block-size: min-content;
     overflow: visible;
     flex: none;
-  }
-  .app-content
-    .ui-directory-page:has(.ui-directory-records)
-    .operational-layout:not(.is-detail-view) {
-    flex: none;
-    min-block-size: min-content;
-    grid-template-rows: minmax(16rem, 50dvh);
-  }
-  .app-content
-    .ui-directory-page:has(.ui-directory-side-preview)
-    .operational-layout:not(.is-detail-view) {
-    grid-template-rows: auto minmax(16rem, 50dvh);
   }
   .app-content .ui-directory-records {
     min-block-size: 16rem;
