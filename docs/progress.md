@@ -6829,3 +6829,11 @@ Status remains implemented pending canonical verification.
   browser. Real click Back/Forward on Orders; 500 responses reach real error states on Supplier, Harvest, Order.
 - Unresolved: UI-DETAIL-001 awaits operator acceptance; UI-FLICKER-001 stays partially resolved. See
   `design/ui-system-v1/consolidation/details-cover/README.md`. No FULL, push, PR, merge or origin/main.
+
+### UI System v1 Wave 3 closure disposition — 1 November 2026
+
+- Operator reports the six Gate B UAT checks complete. UI-DETAIL-001 closed for Wave 3 with classified
+  exceptions; UI-FLICKER-001 stays partially resolved with three P3 observations. No application code changed.
+- `origin/main` is `4ca5fe0` (TX-001, #133) and already an ancestor through `31ef765`; no new merge was needed.
+- Migration head is `20261013_0042` on both. QA and canonical verification evidence follow this entry.
+

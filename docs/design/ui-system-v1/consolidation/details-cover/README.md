@@ -1,6 +1,6 @@
 # Details consolidation and botanical cover fallback — 1 November 2026
 
-**Pending final operator UAT.** No protected delivery or canonical FULL gate has run.
+**Closure candidate.** See the Wave 3 closure disposition below. Protected delivery has not run.
 Authoritative worktree: `548f`, branch `feat/ui-system-v1-wave3`.
 
 - Previous completed interaction correction: `107f719273085ec7c2c51a3bb5ed720e31a245ba`.
@@ -170,7 +170,7 @@ C5. Production build, other browsers, assistive technology and real devices were
 
 ### UI-DETAIL-001 — Gate B presentation, 1 November 2026
 
-**Status: open until operator acceptance.** All listed families use `DetailPage`, one title scale
+**Status: closed for Wave 3; see the closure disposition.** All listed families use `DetailPage`, one title scale
 (32 px, 22 px below 48 rem) and flat record presentation. `DetailSummary` replaces the three metric
 patterns in Details. Decision for review: the panel around Seeds, Sowings and Plants is removed
 because `.operational-layout` rules show it was meant to be flat, and the layout rename had lost
@@ -178,6 +178,29 @@ them. Duplicate values between header and summary remain, because removal needs 
 The 1401/1372 px right edges in the audit came from the page scrollbar and panel padding, not from
 different content columns. The Identity collection footprint, provenance `StatStrip` and Stored
 material section stay as they are.
+
+### Wave 3 closure disposition
+
+The operator reports the six Gate B UAT checks complete and asked to close Wave 3 without new scope.
+No reproducible P0/P1 finding remains in this assessment; independent QA and the canonical gate are
+recorded separately.
+
+| Finding | Disposition | Class | Priority |
+| --- | --- | --- | --- |
+| UI-DETAIL-001 | Closed for Wave 3 by operator UAT; differences below stay as listed | — | — |
+| UI-FLICKER-001 directory heading size and position | Corrected and re-measured | — | — |
+| UI-FLICKER-001 mobile gutter shift | Corrected and re-measured at 390, 600, 768 px | — | — |
+| UI-FLICKER-001 overall | **Partially resolved**; the three observations below remain | — | — |
+| Plant/PlantGroup title gap on direct load at 390 px | Deferred: one idle render between loading and record, same final position | Nonblocking visual refinement | P3 |
+| Long breadcrumb wrap at 390 px moves title about 24 px | Deferred: wrap depends on the record name, unknown while loading | Nonblocking visual refinement | P3 |
+| Sowing/Plant context actions above the title | Deferred to approved action work: stable per page, offset from other families | Nonblocking visual refinement | P3 |
+| Identity record navigation, Place back link above the title | Accepted: retained domain navigation, stable per page | Accepted domain exception | — |
+| Different tabs, sections and metrics per family | Accepted: domain content | Accepted domain exception | — |
+| Identity footprint and provenance `StatStrip` not using `DetailSummary` | Accepted: domain presentation | Accepted domain exception | — |
+| Stored material has no Details route | Needs a product decision before any work | Accepted domain exception | — |
+| Values repeated in header and summary | Deferred: needs a content decision | Nonblocking visual refinement | P3 |
+| Unused `.seed-overview-facts` rules | Deferred: harmless cleanup | Nonblocking visual refinement | P3 |
+| Real zoom, screen readers, physical devices, other browsers | Not verified by agents; not claimed | Manual verification gap | — |
 
 ### Acceptance gate
 
