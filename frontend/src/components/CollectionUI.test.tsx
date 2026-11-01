@@ -1,10 +1,41 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
-import { DetailHeader } from "./CollectionUI";
+import { DetailHeader, DetailPage } from "./CollectionUI";
 import { OverflowMenu } from "./ReferenceUI";
 
 afterEach(cleanup);
+
+test("shared Details preserves formatted names, heading focus and domain sections", () => {
+  const ref = { current: null as HTMLHeadingElement | null };
+  render(
+    <DetailPage aria-label="Botanical record">
+      <DetailHeader
+        eyebrow="Botanical identity"
+        title={
+          <>
+            <i>Acer palmatum</i> ‘Bloodgood’
+          </>
+        }
+        headingLevel={2}
+        titleId="record-title"
+        headingRef={ref}
+        visual={<span>Cover</span>}
+      />
+      <section aria-label="Taxonomic evidence">Reference codes</section>
+    </DetailPage>,
+  );
+  const heading = screen.getByRole("heading", { level: 2 });
+  expect(heading).toHaveTextContent("Acer palmatum ‘Bloodgood’");
+  expect(heading.querySelector("i")).toHaveTextContent("Acer palmatum");
+  ref.current?.focus();
+  expect(heading).toHaveFocus();
+  expect(
+    screen.getByRole("article", { name: "Botanical record" }),
+  ).toContainElement(
+    screen.getByRole("region", { name: "Taxonomic evidence" }),
+  );
+});
 
 test("Details groups the primary, daily secondary, Edit and rare menu actions", async () => {
   const edit = vi.fn();

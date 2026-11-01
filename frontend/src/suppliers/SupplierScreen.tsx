@@ -45,6 +45,7 @@ import {
   CollectionCard,
   DetailContext,
   DetailHeader,
+  DetailPage,
   DetailTabs,
   WorkspaceIntro,
 } from "../components/CollectionUI";
@@ -337,7 +338,7 @@ function SupplierDetail({
     supplier.website ?? supplier.email ?? supplier.phone,
   );
   return (
-    <article
+    <DetailPage
       aria-label="Supplier detail"
       className="supplier-detail collection-detail"
     >
@@ -673,7 +674,7 @@ function SupplierDetail({
           </section>
         </div>
       )}
-    </article>
+    </DetailPage>
   );
 }
 

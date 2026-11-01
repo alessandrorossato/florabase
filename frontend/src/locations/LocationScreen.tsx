@@ -1,3 +1,4 @@
+import { HierarchyRow } from "../components/HierarchyRow";
 import {
   useEffect,
   useId,
@@ -21,7 +22,11 @@ import "./hierarchy.css";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { Breadcrumbs, DetailHeader } from "../components/CollectionUI";
+import {
+  Breadcrumbs,
+  DetailHeader,
+  DetailPage,
+} from "../components/CollectionUI";
 import {
   DirectorySearch,
   OverflowMenu,
@@ -376,57 +381,59 @@ function LocationTree({
               ) : (
                 <span className="location-tree-spacer" aria-hidden="true" />
               )}
-              <button
-                type="button"
-                className="identity-list-item location-directory-row ui-hierarchy-record"
-                title={location.display_path}
-                aria-pressed={selectedId === location.id}
-                onClick={() => {
-                  onSelect(location.id);
-                }}
-              >
-                <span>
-                  <strong className="location-record-name">
-                    {location.name}
-                  </strong>
-                  <LifecycleStatus
-                    state={location.retired_at ? "retired" : "active"}
-                  />
-                </span>
-                {depth >= 3 && (
-                  <small
-                    className="location-path"
-                    title={location.display_path}
+              <HierarchyRow selected={selectedId === location.id}>
+                <button
+                  type="button"
+                  className="identity-list-item location-directory-row ui-hierarchy-record"
+                  title={location.display_path}
+                  aria-pressed={selectedId === location.id}
+                  onClick={() => {
+                    onSelect(location.id);
+                  }}
+                >
+                  <span>
+                    <strong className="location-record-name">
+                      {location.name}
+                    </strong>
+                    <LifecycleStatus
+                      state={location.retired_at ? "retired" : "active"}
+                    />
+                  </span>
+                  {depth >= 3 && (
+                    <small
+                      className="location-path"
+                      title={location.display_path}
+                    >
+                      Within{" "}
+                      {
+                        locations.find((item) => item.id === location.parent_id)
+                          ?.name
+                      }
+                    </small>
+                  )}
+                  <CompactUsage location={location} />
+                </button>
+                <div className="ui-hierarchy-record-actions">
+                  <ActionLink
+                    className="ui-directory-quick-action"
+                    icon="document"
+                    title="Open details"
+                    aria-label={`Open details ${location.name}`}
+                    href={`#/locations/${location.id}`}
                   >
-                    Within{" "}
-                    {
-                      locations.find((item) => item.id === location.parent_id)
-                        ?.name
-                    }
-                  </small>
-                )}
-                <CompactUsage location={location} />
-              </button>
-              <div className="ui-hierarchy-record-actions">
-                <ActionLink
-                  className="ui-directory-quick-action"
-                  icon="document"
-                  title="Open details"
-                  aria-label={`Open details ${location.name}`}
-                  href={`#/locations/${location.id}`}
-                >
-                  <span className="sr-only">Open details</span>
-                </ActionLink>
-                <ActionLink
-                  className="ui-directory-quick-action"
-                  icon="edit"
-                  title="Edit"
-                  aria-label={`Edit ${location.name}`}
-                  href={`#/locations/${location.id}?tab=edit`}
-                >
-                  <span className="sr-only">Edit</span>
-                </ActionLink>
-              </div>
+                    <span className="sr-only">Open details</span>
+                  </ActionLink>
+                  <ActionLink
+                    className="ui-directory-quick-action"
+                    icon="edit"
+                    title="Edit"
+                    aria-label={`Edit ${location.name}`}
+                    href={`#/locations/${location.id}?tab=edit`}
+                  >
+                    <span className="sr-only">Edit</span>
+                  </ActionLink>
+                </div>
+              </HierarchyRow>
             </div>
             {hasChildren && isExpanded && (
               <LocationTree
@@ -938,11 +945,11 @@ export function LocationScreen({
           </div>
         )}
         {initialId && (
-          <div className="identity-panel" aria-live="polite">
+          <div className="record-detail-container" aria-live="polite">
             {selected ? (
-              <article
+              <DetailPage
                 aria-label="Location detail"
-                className="reference-detail location-detail"
+                className="location-detail"
               >
                 <Breadcrumbs
                   items={[
@@ -1149,7 +1156,7 @@ export function LocationScreen({
                     </p>
                   </section>
                 </div>
-              </article>
+              </DetailPage>
             ) : (
               <div className="empty-state">
                 {directory.status === "loading" ? (

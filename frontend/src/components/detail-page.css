@@ -1,0 +1,85 @@
+.app-content .ui-detail-page {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  font: var(--type-body);
+}
+.app-content .ui-detail-page .detail-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-4);
+  margin-block: 0 var(--space-4);
+}
+.app-content .ui-detail-page .detail-header :is(h2, h3) {
+  margin: var(--space-1) 0 0;
+  font: var(--type-h2);
+  overflow-wrap: anywhere;
+}
+.app-content .ui-detail-page .detail-header .detail-actions {
+  justify-content: flex-end;
+  margin: 0;
+  max-width: 28rem;
+}
+.app-content .ui-detail-page .detail-identity:has(.detail-visual) {
+  display: grid;
+  grid-template-columns: 4.5rem minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-3);
+}
+.app-content
+  .ui-detail-page
+  .detail-visual
+  :is(.identity-image, .record-visual, img) {
+  width: 4.5rem;
+  height: 4.5rem;
+  object-fit: contain;
+}
+.app-content .ui-detail-page .record-path {
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font: var(--type-small);
+}
+.app-content .ui-detail-page :is(.collection-summary, .record-facts) {
+  font: var(--type-body);
+}
+.app-content
+  .ui-detail-page
+  :is(.collection-summary, .record-facts)
+  :is(dt, dd) {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.app-content .ui-detail-page :is(.collection-summary, .detail-tab-panel) h4 {
+  font: var(--type-strong);
+}
+.app-content .ui-detail-page .detail-tabs {
+  margin-block: var(--space-4);
+  max-width: 100%;
+  overflow-x: auto;
+}
+@media (max-width: 64rem) {
+  .app-content .ui-detail-page .detail-header {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app-content .ui-detail-page .detail-header .detail-actions {
+    justify-content: flex-start;
+    max-width: none;
+  }
+}
+
+.app-content .ui-detail-page .geography-place-inspector {
+  max-width: none;
+}
+.app-content .ui-detail-page .stat-strip {
+  padding: var(--space-4);
+  margin-block: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-normal);
+  background: var(--surface);
+  flex-wrap: wrap;
+}
+.app-content .ui-detail-page .stat-strip dd {
+  font: var(--type-strong);
+}

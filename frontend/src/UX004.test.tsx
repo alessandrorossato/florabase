@@ -376,25 +376,33 @@ test("Reference is textual, contextual editing returns correctly, and Maps stays
   expect(await screen.findByRole("tabpanel", { name: "Maps" })).toBeVisible();
 });
 
-test("work tabs replace the rich Overview summary with compact identity context", async () => {
+test("identity keeps one canonical Details header and its actions across work tabs", async () => {
   setup(`#/identities/${identity.id}`);
   const user = userEvent.setup();
   render(<App />);
-  await screen.findByRole("heading", {
+  const title = await screen.findByRole("heading", {
     level: 2,
     name: identity.display_label,
   });
-  expect(document.querySelector(".identity-summary")).toBeInTheDocument();
-  expect(document.querySelector(".identity-work-header")).toBeNull();
+  const header = title.closest(".detail-header");
+  expect(header).toBeInTheDocument();
+  expect(
+    within(header as HTMLElement).getByRole("button", {
+      name: "Edit botanical identity",
+    }),
+  ).toBeVisible();
   await user.click(screen.getByRole("tab", { name: "Reference" }));
-  expect(document.querySelector(".identity-summary")).toBeNull();
-  expect(document.querySelector(".identity-work-header")).toBeInTheDocument();
   expect(
     await screen.findByRole("heading", { name: "Botanical profile" }),
   ).toBeVisible();
+  expect(
+    screen.getByRole("heading", { level: 2, name: identity.display_label }),
+  ).toBe(title);
   await user.click(screen.getByRole("tab", { name: "History" }));
-  expect(document.querySelector(".identity-summary")).toBeNull();
-  expect(document.querySelector(".identity-work-header")).toBeInTheDocument();
+  expect(
+    screen.getByRole("heading", { level: 2, name: identity.display_label }),
+  ).toBe(title);
+  expect(document.querySelectorAll(".detail-header")).toHaveLength(1);
 });
 
 test("identity forms use named grouping with existing help and close with predictable focus", async () => {

@@ -6749,3 +6749,26 @@ Status remains implemented pending canonical verification.
   records retained. No record was saved/deleted during live smoke. No foreign worktree,
   DEV/UAT/Review provisioning, Docker cleanup, commit, push, PR, merge or feature-finish.
   Checkpoint `db1e71f`, Batch 1 `3669869` and QA/Schedule ancestry remain preserved.
+
+### 2026-11-01 — Details and hierarchy consolidation, Part A (UAT pending)
+
+- Preserved the completed interaction correction in checkpoint `107f719273085ec7c2c51a3bb5ed720e31a245ba`.
+  Reconciled TX-001 `4ca5fe0ae85da0f48e3f4df4f370f98c3747a311` through normal merge
+  `31ef765f19d414a00a350167f08b3887898f7195`; both progress histories retained.
+  Scoped TX-001 infrastructure baseline: 13 passed with `--no-cov`; the initial scoped
+  default-coverage invocation passed its tests but failed the whole-application threshold.
+- Shared HierarchyRow now contains record and trailing Details/Edit in one bordered surface;
+  chevrons remain siblings. Locations and Geography reuse the same grid, wrapping and connectors.
+  Shared DetailPage extends existing CollectionUI/DetailHeader, Breadcrumbs and DetailTabs;
+  Locations, identities, places, Suppliers and Orders retain domain-owned sections and guards.
+  Identity formatted heading, focus target and actions remain stable across tabs. Place Details
+  no longer repeat the directory search/header. Canonical places still have no Edit.
+- Focused Part A regressions: 170/170 in six suites (App, UX004, Suppliers, Orders,
+  CollectionUI, HierarchyRow). Two initial UX004 findings were corrected: restored the named
+  identity detail region and replaced the superseded split-header assertion with stable-header
+  behavior coverage. Strict TypeScript, full frontend ESLint, production build, feature graph
+  (123) and diff checks pass. No FULL. Expanded browser/evidence checks continue with Part B.
+- Reproduced the reported Harvests blank page: Vite served an empty transformed StoredMaterial
+  module while the source export existed. Invalidating that module restored directory and Details
+  without source changes or environment restart. Production build includes both exports.
+- Review remains owner 548f; no foreign resources changed. No protected delivery; final UAT pending.

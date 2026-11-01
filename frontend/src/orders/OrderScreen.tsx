@@ -28,6 +28,7 @@ import {
   Breadcrumbs,
   CollectionCard,
   DetailHeader,
+  DetailPage,
   DetailTabs,
   WorkspaceIntro,
 } from "../components/CollectionUI";
@@ -360,7 +361,7 @@ function OrderDetailView({
   }
 
   return (
-    <article
+    <DetailPage
       aria-label="Order detail"
       className="order-detail collection-detail"
     >
@@ -613,7 +614,7 @@ function OrderDetailView({
           </section>
         </div>
       )}
-    </article>
+    </DetailPage>
   );
 }
 

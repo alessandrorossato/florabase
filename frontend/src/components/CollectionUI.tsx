@@ -1,6 +1,26 @@
 import { ActionButton } from "./Action";
-import type { MouseEventHandler, ReactNode, RefObject } from "react";
+import type {
+  HTMLAttributes,
+  MouseEventHandler,
+  ReactNode,
+  RefObject,
+} from "react";
 import { PageHeader } from "./ReferenceUI";
+import "./detail-page.css";
+
+/** Shared record presentation; routes, tabs, permissions and content remain domain-owned. */
+export function DetailPage({
+  as: Element = "article",
+  className = "",
+  ...props
+}: HTMLAttributes<HTMLElement> & { as?: "article" | "section" | "div" }) {
+  return (
+    <Element
+      {...props}
+      className={`collection-detail ui-detail-page ${className}`}
+    />
+  );
+}
 
 export interface TabItem<TabId extends string = string> {
   id: TabId;
@@ -66,9 +86,11 @@ export function DetailHeader({
   overflow,
   headingRef,
   visual,
+  headingLevel = 3,
+  titleId,
 }: {
   eyebrow: string;
-  title: string;
+  title: ReactNode;
   secondary?: ReactNode;
   status?: ReactNode;
   primaryActions?: ReactNode;
@@ -78,16 +100,23 @@ export function DetailHeader({
   overflow?: ReactNode;
   headingRef?: RefObject<HTMLHeadingElement | null>;
   visual?: ReactNode;
+  headingLevel?: 2 | 3;
+  titleId?: string;
 }) {
+  const Heading = headingLevel === 2 ? "h2" : "h3";
   return (
     <header className="detail-header">
       <div className="detail-identity">
         {visual && <div className="detail-visual">{visual}</div>}
         <div>
           <p className="eyebrow">{eyebrow}</p>
-          <h3 ref={headingRef} tabIndex={headingRef ? -1 : undefined}>
+          <Heading
+            id={titleId}
+            ref={headingRef}
+            tabIndex={headingRef ? -1 : undefined}
+          >
             {title}
-          </h3>
+          </Heading>
           {secondary && <div className="detail-secondary">{secondary}</div>}
           {status && <div className="detail-status">{status}</div>}
         </div>

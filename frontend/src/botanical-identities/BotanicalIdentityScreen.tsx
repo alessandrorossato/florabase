@@ -45,7 +45,12 @@ import {
   getIdentityCollection,
   type BotanicalIdentityCollectionResponse,
 } from "../collection/api";
-import { Breadcrumbs, DetailTabs } from "../components/CollectionUI";
+import {
+  Breadcrumbs,
+  DetailHeader,
+  DetailPage,
+  DetailTabs,
+} from "../components/CollectionUI";
 import { FieldHelp } from "../components/ContextualHelp";
 import {
   DirectorySearch,
@@ -395,7 +400,9 @@ function IdentityDetails({
     </div>
   );
   return (
-    <div
+    <DetailPage
+      as="section"
+      aria-labelledby="identity-summary-title"
       className={`identity-detail-stack${editing ? " identity-detail-stack--editing" : ""}`}
     >
       <Breadcrumbs
@@ -454,58 +461,30 @@ function IdentityDetails({
         />
       )}
       <div className="identity-detail-layout">
-        {tab === "overview" && !(editing && !edit.modal) ? (
-          <section
-            className="identity-summary"
-            aria-labelledby="identity-summary-title"
-          >
-            <div className="identity-summary-row">
-              <a
-                className="identity-header-visual"
-                href={`#/identities/${identity.id}?tab=media`}
-                aria-label="View identity media"
-              >
-                <IdentityImage identity={identity} />
-              </a>
-              <div className="entity-hero-copy">
-                <p className="eyebrow">Botanical identity</p>
-                <h2
-                  id="identity-summary-title"
-                  ref={titleRef}
-                  tabIndex={-1}
-                  className="entity-title"
-                >
-                  <IdentityName identity={identity} />
-                </h2>
-                {identity.common_name && (
-                  <p className="entity-common-name">{identity.common_name}</p>
-                )}
-
-                {!(editing && !edit.modal) && identityActions}
-              </div>
-            </div>
-          </section>
-        ) : (
-          <section
-            className="identity-work-header"
-            aria-labelledby="identity-summary-title"
-          >
-            <IdentityImage identity={identity} />
-            <div className="identity-work-header__copy">
-              <p className="eyebrow">Botanical identity</p>
-              <h2
-                id="identity-summary-title"
-                ref={titleRef}
-                tabIndex={-1}
-                className="identity-work-title"
-              >
-                <IdentityName identity={identity} />
-              </h2>
-              {identity.common_name && <p>{identity.common_name}</p>}
-            </div>
-            {!(editing && !edit.modal) && identityActions}
-          </section>
-        )}
+        <DetailHeader
+          eyebrow="Botanical identity"
+          title={<IdentityName identity={identity} />}
+          headingLevel={2}
+          titleId="identity-summary-title"
+          headingRef={titleRef}
+          visual={
+            <a
+              className="identity-header-visual"
+              href={`#/identities/${identity.id}?tab=media`}
+              aria-label="View identity media"
+            >
+              <IdentityImage identity={identity} />
+            </a>
+          }
+          secondary={
+            identity.common_name ? (
+              <p className="entity-common-name">{identity.common_name}</p>
+            ) : undefined
+          }
+          primaryActions={
+            !(editing && !edit.modal) ? identityActions : undefined
+          }
+        />
         <div className="identity-detail-main">
           {mutationError && !editing && (
             <div className="notice notice--error" role="alert">
@@ -1147,7 +1126,7 @@ function IdentityDetails({
           )}
         </div>
       </div>
-    </div>
+    </DetailPage>
   );
 }
 

@@ -1,3 +1,4 @@
+import { HierarchyRow } from "../components/HierarchyRow";
 import {
   useCallback,
   useEffect,
@@ -19,7 +20,11 @@ import { useDirectoryView } from "../saved-views/useDirectoryView";
 
 import { ApiError } from "../auth/api";
 import { useAuth } from "../auth/context";
-import { DetailHeader } from "../components/CollectionUI";
+import {
+  Breadcrumbs,
+  DetailHeader,
+  DetailPage,
+} from "../components/CollectionUI";
 import {
   DirectorySearch,
   OverflowMenu,
@@ -101,7 +106,7 @@ function PlaceButton({
   onSelect: (id: string) => void;
 }) {
   return (
-    <>
+    <HierarchyRow selected={selectedId === place.id}>
       <button
         type="button"
         className="identity-list-item geography-directory-row ui-hierarchy-record"
@@ -147,7 +152,7 @@ function PlaceButton({
           </ActionLink>
         )}
       </div>
-    </>
+    </HierarchyRow>
   );
 }
 
@@ -522,100 +527,106 @@ export function GeographyScreen({
       }
       className="workspace geography-workspace ui-hierarchy-workspace"
     >
-      <GeographyHeader
-        view={mode === "places" ? "places" : "sites"}
-        description={
-          mode === "places"
-            ? "Manage hierarchical geographic places, canonical and local."
-            : "Manage precise collection-origin sites and their recorded coordinates."
-        }
-        actions={
-          initialSiteId || initialPlaceId ? (
-            mode === "places" ? (
-              <ActionButton
-                icon="add"
-                type="button"
-                ref={creationTriggerRef}
-                aria-haspopup="dialog"
-                onClick={() => {
-                  beginCreate();
-                }}
-              >
-                New local place
-              </ActionButton>
-            ) : (
-              <ActionButton
-                icon="add"
-                type="button"
-                onClick={() => {
-                  setSiteCreating(true);
-                }}
-              >
-                New provenance site
-              </ActionButton>
+      {initialPlaceId ? (
+        <h2 className="sr-only" id="geography-places-title">
+          Geographic place
+        </h2>
+      ) : (
+        <GeographyHeader
+          view={mode === "places" ? "places" : "sites"}
+          description={
+            mode === "places"
+              ? "Manage hierarchical geographic places, canonical and local."
+              : "Manage precise collection-origin sites and their recorded coordinates."
+          }
+          actions={
+            initialSiteId || initialPlaceId ? (
+              mode === "places" ? (
+                <ActionButton
+                  icon="add"
+                  type="button"
+                  ref={creationTriggerRef}
+                  aria-haspopup="dialog"
+                  onClick={() => {
+                    beginCreate();
+                  }}
+                >
+                  New local place
+                </ActionButton>
+              ) : (
+                <ActionButton
+                  icon="add"
+                  type="button"
+                  onClick={() => {
+                    setSiteCreating(true);
+                  }}
+                >
+                  New provenance site
+                </ActionButton>
+              )
+            ) : undefined
+          }
+          tools={
+            !initialSiteId &&
+            !initialPlaceId && (
+              <DirectoryTools
+                name="Geography"
+                search={
+                  <DirectorySearch
+                    hideLabel={!initialSiteId && !initialPlaceId}
+                    id="geography-filter"
+                    label={
+                      mode === "places"
+                        ? "Search places"
+                        : "Search provenance sites"
+                    }
+                    placeholder={
+                      mode === "places" ? "Place or path" : "Provenance site"
+                    }
+                    value={filter}
+                    onChange={setFilter}
+                    className="geography-search"
+                  />
+                }
+                savedViews={
+                  <SavedViews
+                    presentation="dialog"
+                    surface="geography"
+                    state={view.savedState}
+                  />
+                }
+                actions={
+                  mode === "places" ? (
+                    <ActionButton
+                      icon="add"
+                      type="button"
+                      ref={creationTriggerRef}
+                      aria-haspopup="dialog"
+                      onClick={() => {
+                        beginCreate();
+                      }}
+                    >
+                      New local place
+                    </ActionButton>
+                  ) : (
+                    <ActionButton
+                      icon="add"
+                      type="button"
+                      onClick={() => {
+                        setSiteCreating(true);
+                      }}
+                    >
+                      New provenance site
+                    </ActionButton>
+                  )
+                }
+              />
             )
-          ) : undefined
-        }
-        tools={
-          !initialSiteId &&
-          !initialPlaceId && (
-            <DirectoryTools
-              name="Geography"
-              search={
-                <DirectorySearch
-                  hideLabel={!initialSiteId && !initialPlaceId}
-                  id="geography-filter"
-                  label={
-                    mode === "places"
-                      ? "Search places"
-                      : "Search provenance sites"
-                  }
-                  placeholder={
-                    mode === "places" ? "Place or path" : "Provenance site"
-                  }
-                  value={filter}
-                  onChange={setFilter}
-                  className="geography-search"
-                />
-              }
-              savedViews={
-                <SavedViews
-                  presentation="dialog"
-                  surface="geography"
-                  state={view.savedState}
-                />
-              }
-              actions={
-                mode === "places" ? (
-                  <ActionButton
-                    icon="add"
-                    type="button"
-                    ref={creationTriggerRef}
-                    aria-haspopup="dialog"
-                    onClick={() => {
-                      beginCreate();
-                    }}
-                  >
-                    New local place
-                  </ActionButton>
-                ) : (
-                  <ActionButton
-                    icon="add"
-                    type="button"
-                    onClick={() => {
-                      setSiteCreating(true);
-                    }}
-                  >
-                    New provenance site
-                  </ActionButton>
-                )
-              }
-            />
-          )
-        }
-      />
+          }
+        />
+      )}
 
-      {Boolean(initialSiteId ?? initialPlaceId) && (
+      {Boolean(initialSiteId) && (
         <DirectorySearch
           hideLabel={!initialSiteId && !initialPlaceId}
           id="geography-filter"
@@ -740,7 +751,7 @@ export function GeographyScreen({
               </div>
             )}
             {initialPlaceId && (
-              <section aria-label="Geographic place detail">
+              <DetailPage as="section" aria-label="Geographic place detail">
                 <ActionLink
                   icon="back"
                   href={`#/geography/places${filter ? `?q=${encodeURIComponent(filter)}` : ""}`}
@@ -752,6 +763,16 @@ export function GeographyScreen({
                     aria-label="Geographic place record"
                     className="geography-place-inspector"
                   >
+                    <Breadcrumbs
+                      items={[
+                        { label: "Geography", href: "#/geography" },
+                        {
+                          label: "Places",
+                          href: `#/geography/places${filter ? `?q=${encodeURIComponent(filter)}` : ""}`,
+                        },
+                        { label: selected.name },
+                      ]}
+                    />
                     <DetailHeader
                       eyebrow="Geographic place"
                       title={selected.name}
@@ -771,6 +792,18 @@ export function GeographyScreen({
                               : "Local"}
                           </span>
                         </span>
+                      }
+                      secondaryActions={
+                        <ActionButton
+                          icon="add"
+                          ref={creationTriggerRef}
+                          aria-haspopup="dialog"
+                          onClick={() => {
+                            beginCreate();
+                          }}
+                        >
+                          New local place
+                        </ActionButton>
                       }
                       primaryActions={
                         !selected.retired_at ? (
@@ -1081,7 +1114,7 @@ export function GeographyScreen({
                     )}
                   </div>
                 )}
-              </section>
+              </DetailPage>
             )}
           </div>
           {creationExpanded && (
