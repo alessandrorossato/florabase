@@ -81,7 +81,7 @@ def _create_target_event(
 def list_plant_events(
     plant_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> list[EventResponse]:
     return _list_target_events(database, "plant", plant_id)
 
@@ -97,7 +97,7 @@ def create_plant_event(
     payload: EventCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> EventResponse:
     require_owner(actor)
     return _create_target_event(database, "plant", plant_id, payload, response)
@@ -111,7 +111,7 @@ def create_plant_event(
 def list_plant_group_events(
     plant_group_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> list[EventResponse]:
     return _list_target_events(database, "plant_group", plant_group_id)
 
@@ -127,7 +127,7 @@ def create_plant_group_event(
     payload: EventCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> EventResponse:
     require_owner(actor)
     return _create_target_event(database, "plant_group", plant_group_id, payload, response)
@@ -136,7 +136,7 @@ def create_plant_group_event(
 @events_router.get("", response_model=list[EventResponse], operation_id="listEvents")
 def list_all_events_endpoint(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> list[EventResponse]:
     return event_responses(database, list_all_events(database))
 
@@ -145,7 +145,7 @@ def list_all_events_endpoint(
 def read_event(
     event_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> EventResponse:
     return _event_response(database, event_id)
 
@@ -155,7 +155,7 @@ def update_one_event(
     event_id: UUID,
     payload: EventUpdate,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> EventResponse:
     require_owner(actor)
     projection = _require_event(database, event_id)
@@ -172,7 +172,7 @@ def update_one_event(
 def delete_one_event(
     event_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> Response:
     require_owner(actor)
     try:

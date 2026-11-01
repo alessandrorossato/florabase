@@ -16,7 +16,7 @@ from florabase.saved_views.schemas import SavedViewCreate, SavedViewResponse, Sa
 from florabase.saved_views.state import SavedViewSurface
 
 router = APIRouter(prefix="/saved-views", tags=["saved-views"])
-Database = Annotated[Session, Depends(get_database_session)]
+Database = Annotated[Session, Depends(get_database_session, scope="function")]
 Reader = Annotated[AuthenticatedActor, Depends(require_authenticated_actor)]
 Writer = Annotated[AuthenticatedActor, Depends(require_csrf)]
 

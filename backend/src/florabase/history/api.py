@@ -14,7 +14,7 @@ router = APIRouter(prefix="/history", tags=["collection"])
 @router.get("", response_model=HistoryResponse, operation_id="listHistory")
 def read_history(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     category: Annotated[list[HistoryCategory] | None, Query(max_length=6)] = None,
     subject_kind: Annotated[list[HistorySubjectKind] | None, Query(max_length=7)] = None,
     year: Annotated[int | None, Query(ge=1, le=9999)] = None,

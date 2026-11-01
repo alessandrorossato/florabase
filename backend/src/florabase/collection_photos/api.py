@@ -107,7 +107,7 @@ def get_collection_primary_photo(
     target_type: PrimaryTarget,
     target_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PrimaryPhotoResponse | None:
     try:
         return read_primary(database, target_type, target_id)
@@ -125,7 +125,7 @@ def set_collection_primary_photo(
     target_id: UUID,
     payload: PrimaryPhotoSelection,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     storage: Annotated[AttachmentStorage, Depends(get_attachment_storage)],
 ) -> PrimaryPhotoResponse:
     require_owner(actor)
@@ -144,7 +144,7 @@ def clear_collection_primary_photo(
     target_type: PrimaryTarget,
     target_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> Response:
     require_owner(actor)
     try:
@@ -165,7 +165,7 @@ def clear_collection_primary_photo(
 def get_collection_photo_thumbnail(
     photo_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     storage: Annotated[AttachmentStorage, Depends(get_attachment_storage)],
     if_none_match: Annotated[str | None, Header()] = None,
 ) -> Response:
@@ -203,7 +203,7 @@ def get_collection_photo_thumbnail(
 def get_botanical_identity_cover_image(
     botanical_identity_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> LocalCoverResponse | ExternalCoverResponse | None:
     try:
         return read_identity_cover(database, botanical_identity_id)
@@ -225,7 +225,7 @@ def get_botanical_identity_cover_image(
 def get_botanical_identity_cover_thumbnail(
     botanical_identity_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     storage: Annotated[AttachmentStorage, Depends(get_attachment_storage)],
     if_none_match: Annotated[str | None, Header()] = None,
 ) -> Response:
@@ -279,7 +279,7 @@ async def set_local_botanical_identity_cover_image(
     botanical_identity_id: UUID,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     storage: Annotated[AttachmentStorage, Depends(get_attachment_storage)],
     file: Annotated[UploadFile, File(description="JPEG, PNG, or WebP identity cover")],
 ) -> LocalCoverResponse:
@@ -305,7 +305,7 @@ def set_external_botanical_identity_cover_image(
     botanical_identity_id: UUID,
     payload: ExternalCoverWrite,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     storage: Annotated[AttachmentStorage, Depends(get_attachment_storage)],
 ) -> ExternalCoverResponse:
     require_owner(actor)
@@ -325,7 +325,7 @@ def set_external_botanical_identity_cover_image(
 def delete_botanical_identity_cover_image(
     botanical_identity_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     storage: Annotated[AttachmentStorage, Depends(get_attachment_storage)],
 ) -> Response:
     require_owner(actor)
@@ -348,7 +348,7 @@ def list_collection_photos(
     target_type: TargetType,
     target_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> list[LocalPhotoResponse | ExternalImageResponse]:
     try:
         items = list_photos(database, target_type, target_id)
@@ -370,7 +370,7 @@ async def upload_collection_photo(
     target_id: UUID,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     storage: Annotated[AttachmentStorage, Depends(get_attachment_storage)],
     file: Annotated[UploadFile, File(description="JPEG, PNG, or WebP collection photo")],
     caption: Annotated[str | None, Form(max_length=2000)] = None,
@@ -409,7 +409,7 @@ def create_external_image_reference(
     payload: ExternalImageCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> ExternalImageResponse:
     require_owner(actor)
     try:
@@ -429,7 +429,7 @@ def update_collection_photo(
     photo_id: UUID,
     payload: LocalPhotoUpdate,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> LocalPhotoResponse:
     require_owner(actor)
     row = get_local_photo(database, photo_id)
@@ -450,7 +450,7 @@ def update_external_image_reference(
     reference_id: UUID,
     payload: ExternalImageUpdate,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> ExternalImageResponse:
     require_owner(actor)
     reference = get_external_image(database, reference_id)
@@ -467,7 +467,7 @@ def update_external_image_reference(
 def delete_collection_photo(
     photo_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     storage: Annotated[AttachmentStorage, Depends(get_attachment_storage)],
 ) -> Response:
     require_owner(actor)
@@ -489,7 +489,7 @@ def delete_collection_photo(
 def delete_external_image_reference(
     reference_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> Response:
     require_owner(actor)
     reference = get_external_image(database, reference_id)

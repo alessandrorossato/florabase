@@ -60,6 +60,28 @@ Alembic is the only schema-change path, and migrations run explicitly rather tha
 startup. Application-generated UUIDv7 identifiers and UTC timestamps follow
 [ADR 0004](decisions/0004-identifier-strategy.md).
 
+Each HTTP request owns one SQLAlchemy Session from `get_database_session`, always declared as
+`Depends(get_database_session, scope="function")` with FastAPI's default dependency caching.
+Function scope commits after the endpoint and response serialization but before the response is
+sent, so a 2xx is never observable before its transaction commits and a commit failure becomes an
+error response; exceptions roll back. Endpoints may still commit explicitly when they need an
+intermediate durable step (login throttling, Harvest aggregates, media/attachment storage phases);
+the final dependency commit then covers only remaining work (TX-001).
+
+Session lifetime rules for future endpoints:
+
+- Shared transaction identity depends on every Session node in a route's resolved dependency tree,
+  including application- and router-level dependencies and nested authentication/CSRF dependencies,
+  being function-scoped and cached. FastAPI's dependency cache key includes the scope, and an
+  uncached node is solved again, so request scope or `use_cache=False` silently opens a second,
+  independently committed Session. A route-tree test in `tests/test_infrastructure.py` rejects
+  both; keep it passing rather than special-casing a route.
+- The Session is closed before the response is sent. Response bodies, streaming responses and
+  their iterators must be fully built from already-loaded data and must not read the request Session
+  (or lazy-load ORM attributes) after dependency teardown.
+- Background tasks and any work that outlives the request must open, commit and close their own
+  Session; they must not receive or capture the request's Session or its ORM instances.
+
 ## API and generated types
 
 All application routes are under `/api/v1`. The backend generates committed `backend/openapi.json`;

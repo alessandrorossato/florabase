@@ -124,7 +124,7 @@ def _lineage_response(database: Session, subject: LineageKey) -> LineageResponse
 @plants_router.get("", response_model=list[PlantResponse], operation_id="listPlants")
 def list_all_plants(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> list[PlantResponse]:
     return plant_responses(database, list_plants(database))
 
@@ -139,7 +139,7 @@ def create_one_plant(
     payload: PlantCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PlantResponse:
     require_owner(actor)
     try:
@@ -156,7 +156,7 @@ def create_one_plant(
 def read_plant(
     plant_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PlantResponse:
     return _plant_response(database, plant_id)
 
@@ -167,7 +167,7 @@ def read_plant(
 def read_plant_lineage(
     plant_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> LineageResponse:
     _require_plant(database, plant_id)
     return _lineage_response(database, ("plant", plant_id))
@@ -181,7 +181,7 @@ def read_plant_lineage(
 def read_plant_reintegration_eligibility(
     plant_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PlantReintegrationEligibility:
     try:
         evaluation = evaluate_reintegration(database, plant_id)
@@ -227,7 +227,7 @@ def reintegrate_one_plant(
     payload: PlantReintegrationCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PlantReintegrationResponse:
     require_owner(actor)
     try:
@@ -253,7 +253,7 @@ def update_one_plant(
     plant_id: UUID,
     payload: PlantUpdate,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PlantResponse:
     require_owner(actor)
     projection = _require_plant(database, plant_id)
@@ -277,7 +277,7 @@ def transfer_one_plant(
     payload: TransferCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PlantTransferResponse:
     require_owner(actor)
     try:
@@ -298,7 +298,7 @@ def transfer_one_plant(
 )
 def list_all_plant_groups(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> list[PlantGroupResponse]:
     return plant_group_responses(database, list_plant_groups(database))
 
@@ -313,7 +313,7 @@ def create_one_plant_group(
     payload: PlantGroupCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PlantGroupResponse:
     require_owner(actor)
     try:
@@ -337,7 +337,7 @@ def extract_one_plant(
     payload: PlantExtractionCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PlantExtractionResponse:
     require_owner(actor)
     try:
@@ -360,7 +360,7 @@ def extract_one_plant(
 def read_plant_group(
     plant_group_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PlantGroupResponse:
     return _plant_group_response(database, plant_group_id)
 
@@ -373,7 +373,7 @@ def read_plant_group(
 def read_plant_group_lineage(
     plant_group_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> LineageResponse:
     _require_plant_group(database, plant_group_id)
     return _lineage_response(database, ("plant_group", plant_group_id))
@@ -386,7 +386,7 @@ def update_one_plant_group(
     plant_group_id: UUID,
     payload: PlantGroupUpdate,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PlantGroupResponse:
     require_owner(actor)
     projection = _require_plant_group(database, plant_group_id)
@@ -410,7 +410,7 @@ def transfer_one_plant_group(
     payload: TransferCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PlantGroupTransferResponse:
     require_owner(actor)
     try:

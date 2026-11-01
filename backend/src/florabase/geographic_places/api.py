@@ -69,7 +69,7 @@ def _response(database: Session, place: GeographicPlace) -> GeographicPlaceRespo
 @router.get("", response_model=list[GeographicPlaceResponse], operation_id="listGeographicPlaces")
 def list_all(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> list[GeographicPlaceResponse]:
     places = list_geographic_places(database)
     direct, sites, native_ranges = geographic_place_usage(database)
@@ -100,7 +100,7 @@ def create(
     payload: GeographicPlaceCreate,
     response: Response,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> GeographicPlaceResponse:
     require_owner(actor)
     try:
@@ -119,7 +119,7 @@ def create(
 def delete(
     place_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> Response:
     require_owner(actor)
     try:
@@ -137,7 +137,7 @@ def delete(
 def read(
     place_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> GeographicPlaceResponse:
     return _response(database, _require_place(database, place_id))
 
@@ -149,7 +149,7 @@ def update(
     place_id: UUID,
     payload: GeographicPlaceUpdate,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> GeographicPlaceResponse:
     require_owner(actor)
     try:
@@ -179,7 +179,7 @@ def _set_retired(database: Session, place_id: UUID, *, retired: bool) -> Geograp
 def retire(
     place_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> GeographicPlaceResponse:
     require_owner(actor)
     return _set_retired(database, place_id, retired=True)
@@ -193,7 +193,7 @@ def retire(
 def reactivate(
     place_id: UUID,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> GeographicPlaceResponse:
     require_owner(actor)
     return _set_retired(database, place_id, retired=False)

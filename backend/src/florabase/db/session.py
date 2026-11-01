@@ -18,6 +18,14 @@ def check_database() -> None:
 
 
 def get_database_session() -> Iterator[Session]:
+    """Yield the request's single transaction-owning Session.
+
+    Declare it only as ``Depends(get_database_session, scope="function")``. Function scope runs
+    this commit after the endpoint and response serialization but before the response is sent,
+    so a 2xx is never observable before its transaction commits and a commit failure becomes an
+    error response. FastAPI's default request scope would run it after the response is sent, and
+    mixing scopes would give one request two independent sessions.
+    """
     with Session(get_engine()) as session:
         try:
             yield session

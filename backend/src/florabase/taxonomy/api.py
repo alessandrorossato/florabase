@@ -25,7 +25,7 @@ from florabase.taxonomy.schemas import (
 from florabase.taxonomy.source import SourceUnavailableError, WfoCandidate, WfoSource
 
 router = APIRouter(tags=["taxonomy"])
-Database = Annotated[Session, Depends(get_database_session)]
+Database = Annotated[Session, Depends(get_database_session, scope="function")]
 Reader = Annotated[AuthenticatedActor, Depends(require_authenticated_actor)]
 Writer = Annotated[AuthenticatedActor, Depends(require_csrf)]
 Categories = Annotated[list[CollectionRecordCategory] | None, Query(max_length=5)]

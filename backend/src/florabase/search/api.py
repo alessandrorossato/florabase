@@ -16,7 +16,7 @@ router = APIRouter(prefix="/search", tags=["collection"])
 @router.get("", response_model=SearchResponse, operation_id="searchCollection")
 def read_search(
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
     q: Annotated[str, Query(max_length=120)] = "",
     kind: Annotated[list[SearchKind] | None, Query()] = None,
     identity_id: UUID | None = None,

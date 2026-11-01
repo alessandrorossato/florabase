@@ -18,7 +18,7 @@ from florabase.harvests.schemas import HarvestResponse, HarvestWrite
 from florabase.harvests.service import delete_harvest, list_harvests, read_harvest, write_harvest
 
 router = APIRouter(prefix="/harvests", tags=["harvests"])
-Database = Annotated[Session, Depends(get_database_session)]
+Database = Annotated[Session, Depends(get_database_session, scope="function")]
 Reader = Annotated[AuthenticatedActor, Depends(require_authenticated_actor)]
 Writer = Annotated[AuthenticatedActor, Depends(require_csrf)]
 

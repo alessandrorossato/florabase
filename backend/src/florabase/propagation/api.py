@@ -64,7 +64,7 @@ def _evaluate(
 def sowing_eligibility(
     result_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PropagationReversalEligibility:
     return _evaluate(database, "sowing", result_id).eligibility
 
@@ -78,7 +78,7 @@ def reverse_sowing_creation(
     result_id: UUID,
     payload: PropagationReversalCreate,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> SowingCreationReversalResponse:
     require_owner(actor)
     evaluation = _evaluate(database, "sowing", result_id, payload)
@@ -99,7 +99,7 @@ def reverse_sowing_creation(
 def plant_eligibility(
     result_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PropagationReversalEligibility:
     return _evaluate(database, "plant", result_id).eligibility
 
@@ -113,7 +113,7 @@ def reverse_plant_creation(
     result_id: UUID,
     payload: PropagationReversalCreate,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PlantCreationReversalResponse:
     require_owner(actor)
     evaluation = _evaluate(database, "plant", result_id, payload)
@@ -134,7 +134,7 @@ def reverse_plant_creation(
 def plant_group_eligibility(
     result_id: UUID,
     _actor: Annotated[AuthenticatedActor, Depends(require_authenticated_actor)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PropagationReversalEligibility:
     return _evaluate(database, "plant_group", result_id).eligibility
 
@@ -148,7 +148,7 @@ def reverse_plant_group_creation(
     result_id: UUID,
     payload: PropagationReversalCreate,
     actor: Annotated[AuthenticatedActor, Depends(require_csrf)],
-    database: Annotated[Session, Depends(get_database_session)],
+    database: Annotated[Session, Depends(get_database_session, scope="function")],
 ) -> PlantGroupCreationReversalResponse:
     require_owner(actor)
     evaluation = _evaluate(database, "plant_group", result_id, payload)
