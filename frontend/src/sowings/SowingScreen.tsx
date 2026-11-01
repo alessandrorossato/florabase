@@ -369,6 +369,17 @@ function Detail({
       />
       <DetailHeader
         eyebrow="Sowing"
+        visual={
+          <RecordVisual
+            kind="sowing"
+            label={recordName(sowing, "Sowing")}
+            identity={{
+              id: sowing.seed_lot.botanical_identity_id,
+              display_label: sowing.seed_lot.botanical_identity_display_label,
+            }}
+            showSource
+          />
+        }
         title={recordName(sowing, "Unlabelled sowing")}
         secondary={
           <DetailContext
@@ -1816,6 +1827,7 @@ export function SowingScreen({
                           visual={
                             <RecordVisual
                               kind="sowing"
+                              showSource
                               label={recordName(sowing, "Sowing")}
                               compact
                               identity={{

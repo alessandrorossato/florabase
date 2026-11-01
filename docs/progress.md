@@ -6772,3 +6772,33 @@ Status remains implemented pending canonical verification.
   module while the source export existed. Invalidating that module restored directory and Details
   without source changes or environment restart. Production build includes both exports.
 - Review remains owner 548f; no foreign resources changed. No protected delivery; final UAT pending.
+
+### 2026-11-01 — Botanical cover fallback and final Details evidence, Part B (UAT pending)
+
+- Part A checkpoint `83e1c3bad6c4977bdf2a82f2fb3cc2b000f93add` remains standalone.
+  Collection fallback now follows own designated photo → exact eligible botanical cover → placeholder.
+  Removed the own-photo-only Details gates in Seeds/Plants/groups, added the Sowings Details visual,
+  and fixed summary enrichment based on cover metadata rather than the presence of a scientific name.
+  Harvest/Stored no longer substitute a physical source-record photo. Activity's explicit source-photo
+  compatibility is retained. No per-row request, API/schema change, media write or primary change.
+- Final affected run: **458/458 tests in 20 suites**, strict TypeScript, whole frontend ESLint,
+  affected Prettier, production build, **123 valid features**, and diff checks pass. Original Batch 1
+  safety coverage is included; historical 69-case evidence remains intact. No canonical FULL.
+  The earlier 449-case run passed tests but typing exposed the retained Activity caller; its optional
+  contract was restored and a regression added before the final run. Obsolete UX001/UX004 split-header
+  assertions were updated to the intentionally shared header; deferred reads and named regions remain.
+- Browser evidence: five Details families at 1440/1024/390 (15 layout checks), five families in all six
+  themes (30), both hierarchies at all three widths (6), and five 320px narrow-stress checks. Keyboard
+  expansion keeps its route; actions remain inside row boundaries. Location Edit/Escape restores focus.
+  Captures include long paths/cultivar, partial-date/unknown-price Order, missing images, own protected
+  photo, Gallery alignment, restored Harvests loading and exact Stored inventory navigation.
+- Current Review directory has 37/37 identities explicitly showing No cover image. Positive inherited
+  cover, external suppression, image-error and later-own-photo transitions are automated evidence only;
+  no Media/identity association was created for a screenshot. These cases, physical devices, screen
+  readers and actual browser zoom remain operator UAT. 320px stress is not browser zoom.
+- Review owner/source 548f, frontend/backend/db healthy, code/DB `20261013_0042`, fixture v4 ready with
+  80 managed baseline records and extended data retained. Reported Harvests blank page was an empty
+  Vite transformed module; invalidation restored access, including fresh reload/Details/Stored checks.
+  No record saved/deleted, foreign worktree/environment touched, push, PR, protected merge, FULL or cleanup.
+- Current compliance matrix, source fingerprint, exact file list, verification and visual gallery:
+  `design/ui-system-v1/consolidation/details-cover/`. Final operator UAT remains pending.

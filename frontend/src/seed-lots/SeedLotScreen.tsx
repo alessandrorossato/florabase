@@ -408,16 +408,15 @@ function Detail({
       <DetailHeader
         headingRef={headingRef}
         visual={
-          lot.primary_photo && (
-            <div className="collection-primary-detail">
-              <RecordVisual
-                photo={lot.primary_photo}
-                label={recordName(lot, "Seed lot")}
-                identity={lot.botanical_identity}
-                kind={"seed"}
-              />
-            </div>
-          )
+          <div className="collection-primary-detail">
+            <RecordVisual
+              photo={lot.primary_photo}
+              showSource
+              label={recordName(lot, "Seed lot")}
+              identity={lot.botanical_identity}
+              kind={"seed"}
+            />
+          </div>
         }
         eyebrow="Seed lot"
         title={recordName(lot, "Unlabelled seed lot")}

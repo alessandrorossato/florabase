@@ -35,3 +35,22 @@ test("reference-only activity target stays a placeholder without remote loading"
   );
   expect(screen.queryByRole("img")).not.toBeInTheDocument();
 });
+
+test("activity retains its explicitly supplied source-photo evidence", () => {
+  render(
+    <EventTargetPhoto
+      kind="harvest"
+      label="Harvest Event"
+      identity={identity}
+      photo={null}
+      fallbackPhoto={{
+        kind: "local",
+        photo_id: "source",
+        thumbnail_url: "/source-evidence",
+      }}
+    />,
+  );
+  expect(
+    screen.getByRole("img", { name: "Source primary photo for Harvest Event" }),
+  ).toHaveAttribute("src", "/source-evidence");
+});

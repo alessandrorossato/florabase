@@ -40,6 +40,7 @@ export function RecordVisual({
   showSource = false,
 }: {
   photo?: PrimaryPhoto | null;
+  // Activity-owned target/source evidence remains supported. Collection callers omit this.
   fallbackPhoto?: PrimaryPhoto | null;
   identity?: Identity;
   kind: RecordVisualKind;
@@ -53,7 +54,7 @@ export function RecordVisual({
 }) {
   const identities = useContext(RecordIdentities);
   const identity = summary
-    ? "scientific_name" in summary
+    ? "compact_cover_kind" in summary || "compact_external_cover_url" in summary
       ? summary
       : (identities.get(summary.id) ?? summary)
     : undefined;
@@ -78,7 +79,7 @@ export function RecordVisual({
       ? "Record primary photo"
       : source === inherited
         ? "Source primary photo"
-        : "Identity cover · reference"
+        : "Botanical identity cover · reference"
     : broken.size
       ? "Image unavailable"
       : "No image";
@@ -90,7 +91,7 @@ export function RecordVisual({
       {source ? (
         <img
           src={source}
-          alt={`${primary ? "Primary photo" : source === inherited ? "Source primary photo" : "Cover"} for ${label}`}
+          alt={`${primary ? "Primary photo" : source === inherited ? "Source primary photo" : "Botanical identity cover"} for ${label}`}
           loading="lazy"
           decoding="async"
           referrerPolicy={
@@ -125,7 +126,9 @@ export function RecordVisual({
         </>
       )}
       {showSource && (
-        <span className="record-visual__source">{sourceLabel}</span>
+        <span className={compact ? "record-visual__source" : "sr-only"}>
+          {sourceLabel}
+        </span>
       )}
     </span>
   );

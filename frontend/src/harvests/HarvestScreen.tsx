@@ -79,11 +79,11 @@ function Visual({
   return (
     <RecordVisual
       photo={harvest.primary_photo}
-      fallbackPhoto={harvest.source.primary_photo}
       identity={harvest.source.botanical_identity}
       kind="harvest"
       label={harvest.display_title}
       compact={compact}
+      showSource
     />
   );
 }

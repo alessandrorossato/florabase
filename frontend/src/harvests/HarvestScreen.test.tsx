@@ -185,7 +185,8 @@ describe("Harvest directory and detail", () => {
       screen.getByRole("link", { name: /View owned harvest Event/ }),
     ).toHaveAttribute("href", "#/plants/plant-1?tab=events&event=event-1");
     expect(screen.getByText("Picked ripe fruit")).toBeVisible();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/source.jpg");
+    expect(screen.queryByRole("img")).not.toBeInTheDocument();
+    expect(screen.getByText("Harvest image placeholder")).toBeVisible();
     await user.click(
       screen.getByRole("button", { name: "Set primary test image" }),
     );
@@ -646,7 +647,7 @@ it("Harvest deletion opens on Cancel and retains pending and failed confirmation
   expect(more).toHaveFocus();
 });
 
-it("Harvest directory keeps source and owned photos distinct and navigates to the selected record", async () => {
+it("Harvest directory never substitutes source-record photos and navigates to the selected record", async () => {
   const second = {
     ...harvest,
     id: "harvest-2",
@@ -663,10 +664,8 @@ it("Harvest directory keeps source and owned photos distinct and navigates to th
   const first = await screen.findByRole("button", {
     name: new RegExp(`^(?!Open details |Edit ).*${harvest.display_title}`),
   });
-  expect(within(first).getByRole("img")).toHaveAttribute(
-    "src",
-    harvest.source.primary_photo?.thumbnail_url,
-  );
+  expect(within(first).queryByRole("img")).not.toBeInTheDocument();
+  expect(within(first).getByText("Harvest image placeholder")).toBeVisible();
   const next = screen.getByRole("button", {
     name: /^(?!Open details |Edit ).*Second collection/,
   });

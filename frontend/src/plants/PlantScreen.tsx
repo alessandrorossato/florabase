@@ -400,19 +400,18 @@ function Detail({
       />
       <DetailHeader
         visual={
-          value.primary_photo && (
-            <div className="collection-primary-detail">
-              <RecordVisual
-                photo={value.primary_photo}
-                label={
-                  value.label ??
-                  (record.kind === "plant" ? "plant" : "plant group")
-                }
-                identity={value.botanical_identity}
-                kind={record.kind}
-              />
-            </div>
-          )
+          <div className="collection-primary-detail">
+            <RecordVisual
+              photo={value.primary_photo}
+              showSource
+              label={
+                value.label ??
+                (record.kind === "plant" ? "plant" : "plant group")
+              }
+              identity={value.botanical_identity}
+              kind={record.kind}
+            />
+          </div>
         }
         eyebrow={record.kind === "plant" ? "Plant" : "Plant group"}
         title={recordName(

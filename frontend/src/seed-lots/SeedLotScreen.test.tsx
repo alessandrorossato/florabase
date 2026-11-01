@@ -2732,3 +2732,36 @@ test("Seed selection highlights the whole row without navigation; normal click o
     screen.queryByRole("complementary", { name: /Quick preview|inspection/i }),
   ).not.toBeInTheDocument();
 });
+
+test.each(["directory", "details"])(
+  "botanical cover reaches SeedLot %s without designating or copying a record photo",
+  async (surface) => {
+    const current = lot({ primary_photo: null });
+    window.history.replaceState(
+      null,
+      "",
+      surface === "details" ? `#/seeds/${current.id}` : "#/seeds",
+    );
+    const requested: string[] = [];
+    mockApi(
+      directoryHandler([current], (path, init) => {
+        requested.push(`${init?.method ?? "GET"} ${path}`);
+        if (path === "/api/v1/botanical-identities")
+          return json([{ ...identity, compact_cover_kind: "local" }]);
+        return undefined;
+      }),
+    );
+    render(<App />);
+    const cover = await screen.findByRole("img", {
+      name: "Botanical identity cover for Blue packet",
+    });
+    expect(cover).toHaveAttribute(
+      "src",
+      `/api/v1/botanical-identities/${identity.id}/cover-image/thumbnail`,
+    );
+    expect(
+      requested.filter((x) => x === "GET /api/v1/botanical-identities"),
+    ).toHaveLength(1);
+    expect(requested.every((x) => x.startsWith("GET "))).toBe(true);
+  },
+);

@@ -1,0 +1,69 @@
+{
+  "longPath": {
+    "overflow": false,
+    "path": "Review v5 collection → Review v5 propagation house → Review v5 temperate section → Review v5 bench A — long storage hierarchy → Review v5 shelf 03 → Review v5 tray 07",
+    "url": "http://localhost:15174/#/locations/01a18ba5-0ce5-702e-9738-46dddfce7833",
+    "width": 390
+  },
+  "longName": {
+    "heading": "Capsicum annuum ‘Review v5 deliberately long synthetic cultivar for narrow-screen acceptance testing’",
+    "overflow": false,
+    "url": "http://localhost:15174/#/identities/01a18ba5-0cc9-76c1-b941-bb37e2ca42d0",
+    "width": 390
+  },
+  "locationEditor": {
+    "dialogOpen": false,
+    "focus": "Edit location",
+    "url": "http://localhost:15174/#/locations/01a18ba5-0ce5-702e-9738-46dddfce7833"
+  },
+  "ownPhoto": {
+    "images": [
+      {
+        "alt": "Primary photo for Review v5 — protected photo example Aloe vera",
+        "loaded": true,
+        "src": "/api/v1/media-assets/01a18ba5-0e84-7490-8ab8-2fce99599308/thumbnail"
+      }
+    ],
+    "overflow": false,
+    "url": "http://localhost:15174/#/seeds/01a18ba5-0e8a-7397-8e63-aaa7d47d6d80",
+    "width": 390
+  },
+  "gallery": {
+    "firstRow": [
+      {
+        "actions": true,
+        "height": 356.9921875,
+        "top": 316.03125
+      },
+      {
+        "actions": true,
+        "height": 356.9921875,
+        "top": 316.03125
+      },
+      {
+        "actions": true,
+        "height": 356.9921875,
+        "top": 316.03125
+      },
+      {
+        "actions": true,
+        "height": 356.9921875,
+        "image": "/api/v1/media-assets/01a18ba5-0e84-7490-8ab8-2fce99599308/thumbnail",
+        "top": 316.03125
+      }
+    ],
+    "overflow": false,
+    "url": "http://localhost:15174/#/seeds?view=gallery",
+    "width": 1440
+  },
+  "storedInventoryDestination": "http://localhost:15174/#/harvests/01a18ba5-0e53-777a-b73f-e13a6ce1edf6?inventory=01a18ba5-0e56-71cb-b589-ad647e464839",
+  "harvestRecovery": {
+    "initialError": "Vite served empty StoredMaterial module; source export present",
+    "recovery": "module invalidation; fresh reload, Details and Stored material verified",
+    "recordWrites": false
+  },
+  "limitations": [
+    "No identity cover assigned in existing Review data",
+    "Physical devices, screen readers and actual browser zoom not exercised"
+  ]
+}

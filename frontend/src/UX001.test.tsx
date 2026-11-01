@@ -501,8 +501,10 @@ test("Botanical reference deep links use compact context and defer collection wo
   expect(requested).not.toContain(
     `/api/v1/botanical-identities/${identity.id}/cover-image`,
   );
-  expect(document.querySelector(".identity-work-header")).toBeInTheDocument();
-  expect(document.querySelector(".identity-summary")).not.toBeInTheDocument();
+  expect(document.querySelector(".detail-header")).toContainElement(
+    screen.getByRole("heading", { name: identity.display_label, level: 2 }),
+  );
+  expect(document.querySelectorAll(".detail-header")).toHaveLength(1);
   expect(requested).not.toContain(
     `/api/v1/botanical-identities/${identity.id}/collection`,
   );

@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, test } from "vitest";
+import { RecordIdentities } from "../components/recordPresentation";
 import { RecordVisual } from "./RecordVisual";
 import type { BotanicalIdentityResponse } from "../botanical-identities/api";
 const identity: BotanicalIdentityResponse = {
@@ -118,7 +119,7 @@ test("saved external primary and cover resolve to protected local content", () =
   );
 });
 
-test("Harvest falls through direct primary, source primary, safe cover and its own placeholder", () => {
+test("Harvest falls through its own primary, exact identity cover and its own placeholder", () => {
   render(
     <RecordVisual
       kind="harvest"
@@ -129,16 +130,9 @@ test("Harvest falls through direct primary, source primary, safe cover and its o
         photo_id: "harvest",
         thumbnail_url: "/harvest-primary",
       }}
-      fallbackPhoto={{
-        kind: "local",
-        photo_id: "source",
-        thumbnail_url: "/source-primary",
-      }}
     />,
   );
   expect(screen.getByRole("img")).toHaveAttribute("src", "/harvest-primary");
-  fireEvent.error(screen.getByRole("img"));
-  expect(screen.getByRole("img")).toHaveAttribute("src", "/source-primary");
   fireEvent.error(screen.getByRole("img"));
   expect(screen.getByRole("img")).toHaveAttribute(
     "src",
@@ -160,7 +154,9 @@ test("gallery source labels follow primary-to-reference fallback and never call 
   );
   expect(screen.getByText("Record primary photo")).toBeVisible();
   fireEvent.error(screen.getByRole("img"));
-  expect(screen.getByText("Identity cover · reference")).toBeVisible();
+  expect(
+    screen.getByText("Botanical identity cover · reference"),
+  ).toBeVisible();
   fireEvent.error(screen.getByRole("img"));
   expect(screen.getByText("Image unavailable")).toBeVisible();
   expect(screen.queryByRole("img")).not.toBeInTheDocument();
@@ -180,8 +176,93 @@ test("photo source stays attached to its image and updates after fallback", () =
     screen.getByRole("img"),
   );
   fireEvent.error(screen.getByRole("img"));
-  expect(screen.getByTitle("Identity cover · reference")).toContainElement(
-    screen.getByRole("img"),
+  expect(
+    screen.getByTitle("Botanical identity cover · reference"),
+  ).toContainElement(screen.getByRole("img"));
+  expect(
+    screen.getByText("Botanical identity cover · reference"),
+  ).toBeInTheDocument();
+});
+
+test("summary names do not hide cover metadata from the exact referenced identity", () => {
+  render(
+    <RecordIdentities value={new Map([[identity.id, identity]])}>
+      <RecordVisual
+        kind="seed"
+        label="Packet"
+        identity={{
+          id: identity.id,
+          display_label: identity.display_label,
+          scientific_name: identity.scientific_name,
+        }}
+      />
+    </RecordIdentities>,
   );
-  expect(screen.getByText("Identity cover · reference")).toBeInTheDocument();
+  expect(
+    screen.getByRole("img", { name: "Botanical identity cover for Packet" }),
+  ).toHaveAttribute(
+    "src",
+    "/api/v1/botanical-identities/identity/cover-image/thumbnail",
+  );
+});
+
+test("missing and ambiguous identity never borrow a cover from other available identities", () => {
+  const { rerender } = render(
+    <RecordIdentities value={new Map([[identity.id, identity]])}>
+      <RecordVisual kind="group" label="Mixed group" />
+    </RecordIdentities>,
+  );
+  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+  rerender(
+    <RecordIdentities value={new Map([[identity.id, identity]])}>
+      <RecordVisual
+        kind="plant"
+        label="Unknown plant"
+        identity={{ id: "different", display_label: "Okra" }}
+      />
+    </RecordIdentities>,
+  );
+  expect(screen.queryByRole("img")).not.toBeInTheDocument();
+});
+
+test("a newly designated own photo immediately supersedes the botanical reference", () => {
+  const { rerender } = render(
+    <RecordVisual
+      kind="plant"
+      label="Specimen"
+      identity={identity}
+      showSource
+    />,
+  );
+  expect(screen.getByRole("img")).toHaveAccessibleName(
+    "Botanical identity cover for Specimen",
+  );
+  rerender(
+    <RecordVisual
+      kind="plant"
+      label="Specimen"
+      identity={identity}
+      showSource
+      photo={{ kind: "local", photo_id: "new", thumbnail_url: "/new-own" }}
+    />,
+  );
+  expect(
+    screen.getByRole("img", { name: "Primary photo for Specimen" }),
+  ).toHaveAttribute("src", "/new-own");
+  expect(
+    screen.queryByText("Botanical identity cover · reference"),
+  ).not.toBeInTheDocument();
+});
+
+test("an explicit cover removal wins over older shared reference metadata", () => {
+  render(
+    <RecordIdentities value={new Map([[identity.id, identity]])}>
+      <RecordVisual
+        kind="seed"
+        label="Packet"
+        identity={{ ...identity, compact_cover_kind: null }}
+      />
+    </RecordIdentities>,
+  );
+  expect(screen.queryByRole("img")).not.toBeInTheDocument();
 });

@@ -1,5 +1,8 @@
 # Wave 3 — Collection implementation and operator refinement handoff
 
+Current follow-up: [Details consolidation and botanical cover fallback](../consolidation/details-cover/README.md);
+this earlier milestone is retained as historical evidence. Final operator UAT is pending.
+
 **Current candidate (31 October 2026):** the [same-family consolidation specification](../consolidation/README.md), compliance matrix, evidence gallery and UAT checklist supersede the historical page-specific handoffs below. QA reconciliation is already included; operator acceptance and canonical FULL remain pending.
 
 29 October 2026. Branch `feat/ui-system-v1-wave3`, isolated Codex checkout `548f`,

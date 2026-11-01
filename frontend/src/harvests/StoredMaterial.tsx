@@ -824,7 +824,7 @@ export function StoredMaterialDirectory({
                             <RecordVisual
                               kind="harvest"
                               identity={row.source.botanical_identity}
-                              fallbackPhoto={row.source.primary_photo}
+                              showSource
                               label={row.harvest_title}
                             />
                           }

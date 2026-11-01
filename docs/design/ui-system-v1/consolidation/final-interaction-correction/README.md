@@ -1,5 +1,8 @@
 # Final directory interaction correction — 1 November 2026
 
+Current follow-up: [Details consolidation and botanical cover fallback](../details-cover/README.md);
+this earlier milestone is retained as historical evidence. Final operator UAT is pending.
+
 Pending final operator UAT. This is an uncommitted follow-up to
 `db1e71fb85f1396408ed6f07800d4992dea0233d` on `feat/ui-system-v1-wave3` in worktree `548f`.
 Batch 1 checkpoint `3669869` and independent QA/Schedule reconciliation `d09fd86` remain ancestors.

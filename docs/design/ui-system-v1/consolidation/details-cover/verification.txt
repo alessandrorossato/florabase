@@ -1,0 +1,39 @@
+Final frozen frontend candidate: 5e99787c8b80597c603cd5085b11671788598ef8c754d7f32c6c09351044188c
+
+$ vitest run --configLoader runner src/components/DirectoryPage.test.tsx src/components/ReferenceInteractions.test.tsx src/components/Controls.test.tsx src/components/CollectionUI.test.tsx src/components/HierarchyRow.test.tsx src/seed-lots/SeedLotScreen.test.tsx src/sowings/SowingScreen.test.tsx src/plants/PlantScreen.test.tsx src/suppliers/SupplierScreen.test.tsx src/orders/OrderScreen.test.tsx src/harvests/HarvestScreen.test.tsx src/harvests/StoredMaterial.test.tsx src/harvests/Conversion.test.tsx src/App.test.tsx src/UX001.test.tsx src/UX004.test.tsx src/botanical-identities/IdentitySourceAction.test.tsx src/photos/RecordVisual.test.tsx src/events/EventTargetPhoto.test.tsx src/events/EventFeed.test.tsx --fileParallelism=false
+ ✓ src/App.test.tsx (121 tests) 18289ms
+ ✓ src/plants/PlantScreen.test.tsx (62 tests) 14495ms
+ ✓ src/seed-lots/SeedLotScreen.test.tsx (58 tests) 13724ms
+ ✓ src/sowings/SowingScreen.test.tsx (34 tests) 6895ms
+ ✓ src/UX001.test.tsx (7 tests) 2277ms
+ ✓ src/UX004.test.tsx (13 tests) 2140ms
+ ✓ src/harvests/HarvestScreen.test.tsx (17 tests) 2189ms
+ ✓ src/harvests/StoredMaterial.test.tsx (25 tests) 1725ms
+ ✓ src/orders/OrderScreen.test.tsx (20 tests) 1488ms
+ ✓ src/suppliers/SupplierScreen.test.tsx (13 tests) 1026ms
+ ✓ src/harvests/Conversion.test.tsx (10 tests) 879ms
+ ✓ src/components/DirectoryPage.test.tsx (28 tests) 628ms
+ ✓ src/components/ReferenceInteractions.test.tsx (4 tests) 259ms
+ ✓ src/botanical-identities/IdentitySourceAction.test.tsx (7 tests) 273ms
+ ✓ src/components/Controls.test.tsx (9 tests) 206ms
+ ✓ src/events/EventFeed.test.tsx (6 tests) 96ms
+ ✓ src/photos/RecordVisual.test.tsx (18 tests) 112ms
+ ✓ src/components/CollectionUI.test.tsx (2 tests) 101ms
+ ✓ src/components/HierarchyRow.test.tsx (1 test) 91ms
+ ✓ src/events/EventTargetPhoto.test.tsx (3 tests) 68ms
+ Test Files  20 passed (20)
+      Tests  458 passed (458)
+   Start at  17:46:23
+   Duration  76.60s (transform 1.06s, setup 820ms, import 1.56s, tests 66.96s, environment 5.69s)
+$ tsc -b --pretty false
+$ eslint . --max-warnings 0
+All matched files use Prettier code style!
+$ tsc -b && vite build
+✓ built in 227ms
+
+Process exit: 0. Feature graph: 123 features valid. git diff --check: pass.
+Part A: 170/170 in six suites; strict typing/full lint/build/affected format pass.
+Backend TX-001 focused infrastructure baseline: 13 passed with --no-cov.
+Initial scoped default coverage failed the application-wide threshold; not a gate pass.
+Original Batch 1 safeguards are covered by owning suites; historical 69 evidence retained.
+No canonical FULL or protected delivery. Final operator UAT pending.
