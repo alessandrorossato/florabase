@@ -106,22 +106,65 @@ cases, **not claimed as live fixture demonstrations**. No identity/media associa
 manufacture evidence. Operator UAT should exercise those cases with an eligible existing cover.
 Physical devices, assistive screen readers and actual browser zoom remain manual checks.
 
+## Deferred operator UAT findings — 1 November 2026
+
+Wave 3 is accepted as a checkpoint for continued roadmap planning only. Final operator UAT is
+still pending. These findings remain open and must be reviewed before UAT acceptance.
+
+### UI-DETAIL-001 — Details visual inconsistencies
+
+**Status: open; not resolved by this checkpoint.** Affected detail pages: Harvests, Stored
+material, Locations, Suppliers and Orders. The operator reports that these pages do not yet
+fully match the approved Collection detail-page presentation. Reconcile the DetailHeader,
+breadcrumb, action placement, content width, spacing, typography, at-a-glance metrics and section
+layout across the affected pages while retaining their domain-specific information and actions.
+Do not treat the shared `DetailPage` shell or the current evidence gallery as resolution of this
+finding; visual parity still requires operator review and targeted follow-up.
+
+### UI-FLICKER-001 — Title flickering during navigation
+
+**Status: open; cause not yet established.** The operator reports visible page-title flicker
+during view changes. Investigate route remounts, asynchronous loading states, conditional
+rendering, layout shifts, CSS transitions/animations, and shared `DetailPage`/`PageHeader`
+behavior before selecting a fix. Do not suppress animations globally or make a speculative
+change without reproducing and identifying the cause.
+
+Reproduction paths to capture in follow-up UAT: open a Collection directory, open a record's
+Details, then return to the directory; repeat navigation between the affected Details pages
+(Harvests, Stored material, Locations, Suppliers and Orders). Record the source/destination,
+loading state and whether the title changes, disappears or shifts. **No dedicated recording or
+reproducible visual evidence is attached yet**; capture a short recording or before/during/after
+screenshots when the issue is reproduced.
+
+### Acceptance gate
+
+Keep both IDs open in the next UAT pass. UI-DETAIL-001 needs a visual review of all five affected
+pages against the approved Collection detail pattern. UI-FLICKER-001 needs a reproducible path,
+visual evidence and cause-based investigation before any correction is accepted. Neither finding
+changes the current checkpoint's implementation status, and neither is evidence that Wave 3 UAT
+has been completed.
+
 ## Updated operator UAT
 
-1. Compare all five Details families at desktop/tablet/mobile and in your preferred theme.
-   Check formatted botanical names, paths, optional images, actions, tabs, metrics and empty data.
-2. Expand Locations/Geography with pointer and Enter. Open records separately; direct Edit must
+1. Resolve and review open finding UI-DETAIL-001 across Harvests, Stored material, Locations,
+   Suppliers and Orders. Compare all five Details families at desktop/tablet/mobile and in your
+   preferred theme; check formatted botanical names, paths, optional images, actions, tabs,
+   metrics and empty data.
+2. Reproduce and record UI-FLICKER-001 using the paths above. Investigate route remounts, async
+   states, conditional rendering, layout shifts, transitions/animations and shared header behavior;
+   accept a fix only after the cause is demonstrated.
+3. Expand Locations/Geography with pointer and Enter. Open records separately; direct Edit must
    invoke only its owner. Confirm canonical places have no Edit and custom places do.
-3. Check Location scopes, cycle exclusions, direct/inclusive counts and child navigation. Cancel
+4. Check Location scopes, cycle exclusions, direct/inclusive counts and child navigation. Cancel
    editors, then reject dirty dismissal on a temporary draft; do not save unintended changes.
-4. Check identity Reference/Taxonomy/Maps/Media/History and Add to collection source-choice flows.
+5. Check identity Reference/Taxonomy/Maps/Media/History and Add to collection source-choice flows.
    Keep reference classification distinct from collection footprint and lineage.
-5. Inspect Supplier contacts/material/Orders and Order exact prices, missing data, partial dates
+6. Inspect Supplier contacts/material/Orders and Order exact prices, missing data, partial dates
    and physical SeedLot relationships. Check guards before any approved destructive action.
-6. Check Harvests on a fresh reload, historical source/materials, Edit, exact Stored inventory,
+7. Check Harvests on a fresh reload, historical source/materials, Edit, exact Stored inventory,
    approximate versus unknown remaining quantity, and its existing correction/conversion guards.
-7. With an eligible existing botanical cover, verify fallback in Collection List/Gallery/Details,
+8. With an eligible existing botanical cover, verify fallback in Collection List/Gallery/Details,
    own-photo priority, reference attribution, failure fallback and later own-photo replacement.
    Verify blocked external references never load automatically and ambiguous identities never guess.
-8. Test real browser zoom, physical touch devices and screen-reader navigation. Final operator UAT
+9. Test real browser zoom, physical touch devices and screen-reader navigation. Final operator UAT
    and protected verification remain pending; targeted checks are not release verification.
