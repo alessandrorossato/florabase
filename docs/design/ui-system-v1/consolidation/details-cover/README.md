@@ -183,7 +183,11 @@ material section stay as they are.
 
 The operator reports the six Gate B UAT checks complete and asked to close Wave 3 without new scope.
 No reproducible P0/P1 finding remains in this assessment; independent QA and the canonical gate are
-recorded separately.
+recorded here and in `docs/progress.md`.
+
+Independent QA on `8f26918`, in an isolated clone with writes blocked: PASS WITH FINDINGS, no P0/P1.
+1128/1128 frontend tests and TypeScript passed there. Save flows, cover fallback with a real cover,
+production build, other browsers, assistive technology and real devices were not exercised live.
 
 | Finding | Disposition | Class | Priority |
 | --- | --- | --- | --- |
@@ -200,6 +204,16 @@ recorded separately.
 | Stored material has no Details route | Needs a product decision before any work | Accepted domain exception | — |
 | Values repeated in header and summary | Deferred: needs a content decision | Nonblocking visual refinement | P3 |
 | Unused `.seed-overview-facts` rules | Deferred: harmless cleanup | Nonblocking visual refinement | P3 |
+| QA-1: unknown or malformed Seed id renders a blank page, app navigation still works | Deferred; introduced by Wave 3 | Nonblocking functional defect | P2 |
+| QA-2: Back then Forward to a Plant/PlantGroup keeps the directory under the Details URL; row click or reload recovers | Deferred; worsened by Wave 3 | Nonblocking functional defect | P2 |
+| QA-3: opening Details and Back leave focus on `body` in several families; Tab still reaches content, but the opened row position is lost | Deferred; path introduced by Wave 3 | Nonblocking accessibility defect | P2 |
+| QA-4: Plants and Sowings focus a section heading rather than the title | Deferred | Nonblocking accessibility refinement | P3 |
+| QA-5: row Edit then Cancel loses focus on Harvests and Orders | Deferred | Nonblocking accessibility refinement | P3 |
+| QA-6: Edit dialogs focus a breadcrumb or tab rather than a field | Deferred | Nonblocking accessibility refinement | P3 |
+| QA-7: Locations and Geography lose expansion after Back | Deferred | Nonblocking visual refinement | P3 |
+| QA-8: Locations pages have no h2 | Deferred | Nonblocking accessibility refinement | P3 |
+| QA-9: `aria-controls` targets absent for unselected tabs | Deferred | Nonblocking accessibility refinement | P3 |
+| QA-10: unknown ids show a retryable error on some families | Deferred | Nonblocking visual refinement | P3 |
 | Real zoom, screen readers, physical devices, other browsers | Not verified by agents; not claimed | Manual verification gap | — |
 
 ### Acceptance gate

@@ -6836,4 +6836,6 @@ Status remains implemented pending canonical verification.
   exceptions; UI-FLICKER-001 stays partially resolved with three P3 observations. No application code changed.
 - `origin/main` is `4ca5fe0` (TX-001, #133) and already an ancestor through `31ef765`; no new merge was needed.
 - Migration head is `20261013_0042` on both. QA and canonical verification evidence follow this entry.
-
+- Independent QA in an isolated clone: PASS WITH FINDINGS, no P0/P1. Three P2 defects (blank unknown Seed id,
+  Plant Forward keeping the directory, focus on `body` after Details/Back) and P3s are deferred in the Details
+  closure matrix. Operator rule: only P0/P1 are corrected before closure.
